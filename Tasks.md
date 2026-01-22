@@ -101,8 +101,16 @@ Build the essential foundation: Offline menu caching, 2-language support (Amhari
 - [ ] Implement menu data caching (no offline order submission)
 - [ ] Test offline menu browsing
 
-**Files Created:** `src/hooks/useOnlineStatus.ts`, `src/components/OfflineBanner.tsx`, `public/manifest.json`  
-**Files Modified:** `vite.config.ts`, `package.json`
+### Offline Order Sync (Critical for Addis Ababa)
+- [ ] Create `src/lib/offlineQueue.ts` - IndexedDB/localStorage queue for pending orders
+- [ ] Implement order queue when offline
+- [ ] Auto-retry mechanism when connection resumes
+- [ ] Show sync status indicator to user
+- [ ] Handle duplicate order prevention (deduplication by order ID)
+- [ ] Test offline order submission and auto-sync
+
+**Files Created:** `src/hooks/useOnlineStatus.ts`, `src/components/OfflineBanner.tsx`, `public/manifest.json`, `src/lib/offlineQueue.ts`  
+**Files Modified:** `vite.config.ts`, `package.json`, `src/components/cart/CartDrawer.tsx`
 
 ---
 
@@ -169,47 +177,17 @@ Build the essential foundation: Offline menu caching, 2-language support (Amhari
 
 ---
 
-## 1.5 Multi-Restaurant Architecture (Agency Model)
+## 1.5 Multi-Restaurant Architecture (Database-Driven)
 
-### Folder Structure Setup
-- [ ] Create `restaurants/` folder structure:
+### Restaurant Configuration Storage
+- [x] Supabase `restaurants` table with `slug` field (✅ Already implemented)
+- [ ] Add `settings` JSONB column to `restaurants` table for Telegram config:
+  ```sql
+  ALTER TABLE restaurants ADD COLUMN settings JSONB DEFAULT '{}';
+  -- Structure: { "telegram_bot_token": "...", "telegram_owner_chat_id": "...", ... }
   ```
-  restaurants/
-  ├── cafe-lucia/
-  │   ├── config.json
-  │   ├── menu.json
-  │   ├── stations.json
-  │   └── assets/
-  └── skylight-hotel/
-      ├── config.json
-      ├── menu.json
-      ├── stations.json
-      └── assets/
-  ```
-
-### Configuration Files
-- [ ] Create `restaurants/{restaurant-slug}/config.json` template
-- [ ] Create `restaurants/{restaurant-slug}/stations.json` template:
-  ```json
-  {
-    "kitchen": {
-      "telegram_chat_id": "-100123456789",
-      "enabled": true
-    },
-    "bar": {
-      "telegram_chat_id": "-100987654321",
-      "enabled": true
-    },
-    "dessert": {
-      "telegram_chat_id": "-100555555555",
-      "enabled": false
-    },
-    "coffee": {
-      "telegram_chat_id": "-100666666666",
-      "enabled": true
-    }
-  }
-  ```
+- [ ] Create migration: `supabase/migrations/004_add_restaurant_settings.sql`
+- [ ] Update restaurant onboarding to store Telegram config in `settings` JSONB
 
 ### Dynamic Restaurant Loading
 - [x] Create `src/lib/restaurantLoader.ts` - Load restaurant config by slug
@@ -217,31 +195,55 @@ Build the essential foundation: Offline menu caching, 2-language support (Amhari
 - [x] Update `src/App.tsx` to detect restaurant from URL
 - [x] Test multi-restaurant routing
 
-**Files Created:** `restaurants/` folder structure, `src/lib/restaurantLoader.ts`  
-**Files Modified:** `src/App.tsx`, routing configuration
+**Files Created:** `supabase/migrations/004_add_restaurant_settings.sql`  
+**Files Modified:** `src/lib/restaurantLoader.ts`, `src/app/agency-admin/setup/AgencySetupClient.tsx`
 
 ---
 
-## 1.6 Database Architecture (PostgreSQL + Google Sheets Dual)
+## 1.6 Master Webhook Dispatcher Pattern
 
-### PostgreSQL Setup
-- [ ] Design database schema:
-  - [ ] `restaurants` table (id, slug, name, config)
-  - [ ] `orders` table (id, restaurant_id, table, order_id, items, total, timestamp)
-  - [ ] `order_items` table (id, order_id, dish_id, quantity, price, notes)
-  - [ ] `stations` table (id, restaurant_id, name, telegram_chat_id, enabled)
+### Restaurant Config Lookup in n8n
+- [ ] Update n8n workflow to lookup restaurant config from Supabase
+- [ ] Add Postgres node after webhook: `SELECT * FROM restaurants WHERE id = $json.restaurant_id`
+- [ ] Extract Telegram bot token, chat IDs from `restaurants.settings` JSONB
+- [ ] Route orders dynamically based on restaurant config (not hardcoded)
+- [ ] Test multi-restaurant routing with different Telegram bots/groups
 
-- [ ] Create migration files
-- [ ] Set up PostgreSQL connection (environment variables)
-- [ ] Create `src/lib/db.ts` - Database connection and queries
+### n8n Workflow Updates
+- [ ] Update `n8n-workflow-supabase.json` to use restaurant config lookup
+- [ ] Remove hardcoded Telegram tokens (use dynamic lookup)
+- [ ] Add error handling for missing restaurant config
+- [ ] Document master webhook pattern in `docs/N8N_ARCHITECTURE.md`
 
-### Google Sheets Integration (Keep)
-- [ ] Maintain existing Google Sheets logging workflow
-- [ ] Add dual-write logic: PostgreSQL + Google Sheets
-- [ ] Create sync utility for data consistency
+**Files Modified:** `n8n-workflow-supabase.json`  
+**Files Created:** `docs/N8N_ARCHITECTURE.md`
 
-**Files Created:** `src/lib/db.ts`, database migration files  
-**Files Modified:** n8n workflows (add PostgreSQL write)
+---
+
+## 1.7 Kitchen Dashboard (Telegram Mini App) - CRITICAL
+
+### Telegram Mini App Setup
+- [ ] Create Telegram Mini App entry point: `src/app/kitchen/[restaurantId]/page.tsx`
+- [ ] Configure Mini App in Telegram Bot settings
+- [ ] Add Mini App button to kitchen Telegram group (via bot command)
+
+### Kitchen Dashboard Component
+- [ ] Create `src/components/kitchen/KitchenDashboard.tsx` - Main dashboard component
+- [ ] Create `src/components/kitchen/OrderList.tsx` - List of pending orders
+- [ ] Create `src/components/kitchen/OrderCard.tsx` - Individual order display
+- [ ] Implement real-time order fetching (polling every 5-10 seconds from Supabase)
+- [ ] Add sound alert for new orders (Web Audio API, loud notification sound)
+- [ ] Add order status update buttons (Preparing/Ready/Issue)
+- [ ] Style for tablet display (large touch targets, clear typography)
+
+### Order Status Updates
+- [ ] Create API route: `src/app/api/kitchen/update-status/route.ts`
+- [ ] Update order status in Supabase
+- [ ] Trigger n8n webhook for status change notifications (optional)
+- [ ] Test status updates from Kitchen Dashboard
+
+**Files Created:** `src/app/kitchen/[restaurantId]/page.tsx`, `src/components/kitchen/KitchenDashboard.tsx`, `src/components/kitchen/OrderList.tsx`, `src/components/kitchen/OrderCard.tsx`, `src/app/api/kitchen/update-status/route.ts`  
+**Files Modified:** `n8n-workflow-supabase.json` (add status update webhook)
 
 ---
 
@@ -252,7 +254,12 @@ Build the essential foundation: Offline menu caching, 2-language support (Amhari
 - [ ] Menu data loads with all new fields
 - [ ] Multi-restaurant routing works (`/cafe-lucia` vs `/skylight-hotel`)
 - [ ] Station configuration loads per restaurant
-- [ ] Orders write to both PostgreSQL and Google Sheets
+- [ ] Orders write to Supabase correctly
+- [ ] Offline orders queue and sync when connection resumes
+- [ ] Master webhook dispatcher routes to correct restaurant Telegram groups
+- [ ] Kitchen Dashboard displays pending orders
+- [ ] Kitchen Dashboard sound alert plays for new orders
+- [ ] Kitchen Dashboard status updates work correctly
 
 ---
 
@@ -306,23 +313,68 @@ Add rule-based upsells, popularity indicators, ingredient transparency, chef's s
 
 ---
 
-## 2.4 Simple Customer Feedback (Internal Only)
+## 2.4 Menu Management Restrictions (Merchant vs Admin)
 
-### n8n Workflow
-- [ ] Create `docs/n8n-workflows/customer-feedback.json`:
-  - [ ] Trigger: Order marked complete/paid
-  - [ ] Wait 30 minutes (digestion time!)
-  - [ ] Send feedback request via Telegram (if phone captured) OR table display
-  - [ ] Simple 1-5 star + optional comment
-  - [ ] Log response to Google Sheets + PostgreSQL
-  - [ ] If negative (<3 stars), alert manager IMMEDIATELY
-  - [ ] Internal only - no public review integration
+### Field-Level Permissions
+- [ ] Create API route: `src/app/api/menu/update-price/route.ts` - Merchant can update price only
+- [ ] Create API route: `src/app/api/menu/update-availability/route.ts` - Merchant can update availability only
+- [ ] Create API route: `src/app/api/menu/admin/update-photo/route.ts` - Admin only (block merchants)
+- [ ] Create API route: `src/app/api/menu/admin/update-translation/route.ts` - Admin only (block merchants)
+- [ ] Add RLS policies to prevent merchant edits to `image_url`, `name_am`, `description_am` fields
+- [ ] Create migration: `supabase/migrations/005_menu_edit_restrictions.sql`
 
-**Files Created:** `docs/n8n-workflows/customer-feedback.json`
+### Telegram Mini App for Merchant Menu Editing
+- [ ] Create `src/app/merchant/menu/page.tsx` - Merchant menu editing interface
+- [ ] Create `src/components/merchant/PriceEditor.tsx` - Price update component
+- [ ] Create `src/components/merchant/AvailabilityToggle.tsx` - Availability toggle
+- [ ] Integrate with Telegram Mini App (merchant opens via bot command)
+- [ ] Add validation: Block photo/translation edits for merchants
+
+**Files Created:** `src/app/api/menu/update-price/route.ts`, `src/app/api/menu/update-availability/route.ts`, `src/app/api/menu/admin/update-photo/route.ts`, `src/app/api/menu/admin/update-translation/route.ts`, `supabase/migrations/005_menu_edit_restrictions.sql`, `src/app/merchant/menu/page.tsx`, `src/components/merchant/PriceEditor.tsx`, `src/components/merchant/AvailabilityToggle.tsx`
 
 ---
 
-## 2.5 Station Routing (4 Stations Only)
+## 2.5 Audit Logging System
+
+### Database Schema
+- [ ] Create `audit_logs` table in Supabase:
+  ```sql
+  CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    restaurant_id UUID REFERENCES restaurants(id),
+    user_id UUID REFERENCES agency_users(id),
+    action_type TEXT NOT NULL, -- 'price_update', 'availability_update', 'order_status_change'
+    entity_type TEXT NOT NULL, -- 'item', 'order', 'category'
+    entity_id UUID NOT NULL,
+    old_value JSONB,
+    new_value JSONB,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT now()
+  );
+  ```
+- [ ] Create migration: `supabase/migrations/006_audit_logs.sql`
+- [ ] Add RLS policies for audit log access (admins only)
+
+### Logging Middleware
+- [ ] Create `src/lib/auditLogger.ts` - Audit logging utility
+- [ ] Log all price changes (who, when, old_value, new_value)
+- [ ] Log all menu availability changes
+- [ ] Log order lifecycle events (status changes)
+- [ ] Integrate audit logging into menu update API routes
+- [ ] Integrate audit logging into order status update routes
+
+### Admin Audit View
+- [ ] Create `src/app/agency-admin/audit/page.tsx` - Audit log viewing interface
+- [ ] Create `src/components/admin/AuditLogTable.tsx` - Display audit logs
+- [ ] Add filtering by restaurant, user, action type, date range
+- [ ] Add export functionality (CSV/JSON)
+
+**Files Created:** `supabase/migrations/006_audit_logs.sql`, `src/lib/auditLogger.ts`, `src/app/agency-admin/audit/page.tsx`, `src/components/admin/AuditLogTable.tsx`  
+**Files Modified:** All menu update API routes, order status update routes
+
+---
+
+## 2.6 Station Routing (4 Stations Only)
 
 ### n8n Workflow Updates
 - [ ] Update `docs/n8n-workflow-ar-menu-orders.json` with station routing logic
@@ -341,7 +393,7 @@ Add rule-based upsells, popularity indicators, ingredient transparency, chef's s
 
 ---
 
-## 2.6 Kitchen Status Buttons (Internal Only)
+## 2.7 Kitchen Status Buttons (Internal Only)
 
 ### Telegram Inline Buttons (Kitchen Use Only)
 - [ ] Add inline keyboard to kitchen Telegram messages:
@@ -370,7 +422,10 @@ Add rule-based upsells, popularity indicators, ingredient transparency, chef's s
 - [ ] Chef's special banner displays correctly
 - [ ] Orders route to correct station Telegram groups (4 stations)
 - [ ] Status buttons update order status (internal only)
-- [ ] Feedback requests send 30 minutes after order
+- [ ] Merchants can edit prices but not photos/translations
+- [ ] Admin can edit photos and translations
+- [ ] Audit logs capture all price and availability changes
+- [ ] Audit log viewer displays correctly with filters
 
 ---
 
@@ -411,7 +466,7 @@ Complete multi-restaurant onboarding system, rush hour alerts, delay escalation,
 
 ### n8n Workflow Updates
 - [ ] Enhance existing daily/weekly/monthly summary workflows
-- [ ] Pull data from PostgreSQL (primary) + Google Sheets (backup)
+- [ ] Pull data from Supabase (PostgreSQL)
 - [ ] Generate AI-powered summaries (keep existing OpenRouter integration)
 - [ ] Send to owner via Telegram
 - [ ] Include: Orders, revenue, popular items, rush periods
@@ -422,63 +477,76 @@ Complete multi-restaurant onboarding system, rush hour alerts, delay escalation,
 
 ## 3.4 Restaurant Onboarding Automation
 
-### Template System
-- [ ] Create `scripts/create-restaurant.sh` - Automated restaurant setup script
+### Database-Driven Onboarding
+- [ ] Create `scripts/create-restaurant.ts` - Automated restaurant setup script (Node.js)
 - [ ] Script should:
-  - [ ] Create restaurant folder structure
-  - [ ] Copy template config files
-  - [ ] Generate stations.json template
-  - [ ] Create PostgreSQL restaurant record
-  - [ ] Generate QR codes
+  - [ ] Create Supabase restaurant record via API
+  - [ ] Create default stations (kitchen, bar, dessert, coffee)
+  - [ ] Generate QR codes via API
+  - [ ] Setup default Telegram bot configuration in `restaurants.settings` JSONB
+  - [ ] Create agency user association
 
 ### Documentation
 - [ ] Create `docs/ONBOARDING.md` - Step-by-step onboarding guide
-- [ ] Create `docs/RESTAURANT_TEMPLATE.md` - Template structure documentation
+- [ ] Create `docs/RESTAURANT_SETUP.md` - Database-driven setup documentation
 
-**Files Created:** `scripts/create-restaurant.sh`, `docs/ONBOARDING.md`, `docs/RESTAURANT_TEMPLATE.md`
+**Files Created:** `scripts/create-restaurant.ts`, `docs/ONBOARDING.md`, `docs/RESTAURANT_SETUP.md`
 
 ---
 
-## 3.5 Multi-Restaurant n8n Workflow Template
+## 3.5 n8n Queue Mode Deployment
 
-### Master Workflow Template
-- [ ] Create `docs/n8n-workflows/master-restaurant-template.json`
-- [ ] Design workflow with environment variable placeholders:
-  - [ ] `RESTAURANT_SLUG`
-  - [ ] `KITCHEN_CHAT_ID`
-  - [ ] `BAR_CHAT_ID` (optional)
-  - [ ] `DESSERT_CHAT_ID` (optional)
-  - [ ] `COFFEE_CHAT_ID` (optional)
-  - [ ] `OWNER_CHAT_ID`
-  - [ ] `GOOGLE_SHEET_ID`
-  - [ ] `POSTGRES_RESTAURANT_ID`
+### Queue Mode Setup
+- [ ] Deploy n8n in Queue Mode (main + workers) using `infrastructure/n8n/docker-compose.yml`
+- [ ] Configure Redis for job queue
+- [ ] Scale workers: `docker-compose up -d --scale n8n-worker=3`
+- [ ] Test job distribution across workers
+- [ ] Monitor queue health and worker performance
 
-- [ ] Document workflow cloning process
-- [ ] Create `docs/N8N_MULTI_RESTAURANT.md` - Multi-restaurant n8n setup guide
+### Error Trigger Workflow
+- [ ] Create `docs/n8n-workflows/error-trigger.json` - Global error handler
+- [ ] Configure Error Trigger to catch all workflow failures
+- [ ] Setup admin Telegram bot for error notifications
+- [ ] Send error alerts with context (restaurant_id, order_id, error message)
+- [ ] Log errors to Supabase `audit_logs` table
 
-**Files Created:** `docs/n8n-workflows/master-restaurant-template.json`, `docs/N8N_MULTI_RESTAURANT.md`
+### Production Configuration
+- [ ] Configure n8n environment variables (database, Redis, encryption key)
+- [ ] Setup SSL/TLS for n8n webhook endpoints
+- [ ] Configure rate limiting per restaurant
+- [ ] Test failover scenarios (worker crashes, Redis disconnection)
+
+**Files Created:** `docs/n8n-workflows/error-trigger.json`, `docs/N8N_QUEUE_MODE.md`  
+**Files Modified:** `infrastructure/n8n/docker-compose.yml`
 
 ---
 
 ## Week 3 Testing Checklist
 - [ ] Rush hour alerts trigger at correct threshold
 - [ ] Delay escalation alerts after 30/45 minutes
-- [ ] End-of-day summaries pull from PostgreSQL correctly
-- [ ] Restaurant onboarding script creates all required files
-- [ ] Master workflow template clones correctly for new restaurants
+- [ ] End-of-day summaries pull from Supabase correctly
+- [ ] Restaurant onboarding script creates database records correctly
+- [ ] n8n Queue Mode handles multiple restaurants simultaneously
+- [ ] Error Trigger workflow sends notifications to admin bot
 - [ ] Multiple restaurants can operate independently
+- [ ] Workers scale correctly under load
 
 ---
 
 # Final Integration & Testing
 
 ## End-to-End Testing
-- [ ] Complete order flow: Scan QR → Browse → Add to Cart → Submit → Telegram → Sheets + DB
-- [ ] Test offline mode: Menu loads offline (no order submission)
+- [ ] Complete order flow: Scan QR → Browse → Add to Cart → Submit → Telegram → Supabase
+- [ ] Test offline mode: Menu loads offline, orders queue locally
+- [ ] Test offline order sync: Orders auto-submit when connection resumes
 - [ ] Test languages: Amharic and English switch correctly
 - [ ] Test fasting mode: Manual toggle filters correctly
 - [ ] Test station routing: Verify orders go to correct Telegram groups (4 stations)
+- [ ] Test Kitchen Dashboard: Orders display, sound alerts work, status updates function
+- [ ] Test menu management: Merchants can edit prices/availability, cannot edit photos/translations
+- [ ] Test audit logging: All changes are logged correctly
 - [ ] Test multi-restaurant: Switch between restaurants, verify isolation
+- [ ] Test master webhook: Orders route to correct restaurant Telegram bots/groups
 - [ ] Test all n8n workflows: Verify each workflow executes correctly
 
 ## Performance Testing
@@ -492,7 +560,10 @@ Complete multi-restaurant onboarding system, rush hour alerts, delay escalation,
 - [ ] Update `README.md` with multi-restaurant architecture
 - [ ] Update `BLUEPRINT.md` with simplified feature set
 - [ ] Create `docs/MULTI_RESTAURANT.md` - Agency model documentation
-- [ ] Create `docs/DATABASE.md` - PostgreSQL + Google Sheets architecture
+- [ ] Create `docs/DATABASE.md` - Supabase architecture documentation
+- [ ] Create `docs/KITCHEN_DASHBOARD.md` - Kitchen Dashboard setup guide
+- [ ] Create `docs/MENU_MANAGEMENT.md` - Menu editing restrictions documentation
+- [ ] Create `docs/AUDIT_LOGGING.md` - Audit logging system documentation
 - [ ] Update all existing docs with simplified features
 
 ---
@@ -532,10 +603,10 @@ ar-menu-agency/
 
 ## Database Architecture
 
-**Dual Write Pattern:**
-- PostgreSQL (primary, for queries, analytics)
-- Google Sheets (backup, for restaurant owner familiarity)
-- Both updated simultaneously on order submission
+**Single Source of Truth:**
+- Supabase (PostgreSQL) - Primary database for all data
+- n8n workflows handle analytics and reporting
+- No dual-write complexity - simpler, more reliable
 
 ---
 
