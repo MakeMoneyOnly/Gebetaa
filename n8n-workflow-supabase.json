@@ -1,0 +1,553 @@
+{
+    "name": "AGENCY BRAIN - Unified System",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "restaurant-order",
+                "responseMode": "onReceived",
+                "responseCode": 200,
+                "options": {
+                    "rawBody": false
+                }
+            },
+            "id": "webhook-node",
+            "name": "Webhook - Receive Order",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "restaurant-order"
+        },
+        {
+            "parameters": {
+                "values": {
+                    "string": [
+                        {
+                            "name": "TELEGRAM_BOT_TOKEN",
+                            "value": "YOUR_BOT_TOKEN"
+                        },
+                        {
+                            "name": "SUPABASE_URL",
+                            "value": "YOUR_SUPABASE_URL"
+                        },
+                        {
+                            "name": "SUPABASE_SERVICE_KEY",
+                            "value": "YOUR_SUPABASE_SERVICE_KEY"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "config-node",
+            "name": "⚙️ CONFIG",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                450,
+                300
+            ],
+            "notes": "IMPORTANT: Replace ALL values with your actual credentials"
+        },
+        {
+            "parameters": {
+                "jsCode": "// ============================================\n// FORMAT ORDER + FETCH RESTAURANT CONFIG\n// ============================================\n\nconst order = $('Webhook - Receive Order').first().json.body || $('Webhook - Receive Order').first().json;\nconst config = $input.first().json;\n\n// Validate order data\nif (!order || !order.items || order.items.length === 0) {\n  throw new Error('Invalid order: No items received');\n}\n\nconst items = order.items;\nconst table = order.table || order.table_number || 'Unknown';\nconst orderId = order.orderId || order.order_number || `ORD-${Date.now()}`;\nconst restaurantId = order.restaurant_id;\nconst restaurantName = order.restaurant || 'Restaurant';\n\n// Format timestamp\nconst timestamp = new Date(order.timestamp || Date.now());\nconst time = timestamp.toLocaleTimeString('en-US', { \n  hour: 'numeric', \n  minute: '2-digit',\n  hour12: true \n});\n\n// Group items by station\nconst stationGroups = {\n  kitchen: [],\n  bar: [],\n  dessert: [],\n  coffee: []\n};\n\nitems.forEach(item => {\n  const station = item.station || 'kitchen';\n  if (stationGroups[station]) {\n    stationGroups[station].push(item);\n  } else {\n    stationGroups.kitchen.push(item);\n  }\n});\n\n// Build Telegram caption for each station\nconst stationMessages = [];\n\nfor (const [station, stationItems] of Object.entries(stationGroups)) {\n  if (stationItems.length === 0) continue;\n  \n  let caption = `🔔 *NEW ORDER: ${restaurantName}*\\n`;\n  caption += `🪑 TABLE #${table}  |  🎫 ${orderId}  |  ⏰ ${time}\\n\\n`;\n  \n  stationItems.forEach((item, index) => {\n    caption += `${index + 1}. *${item.name}*  ×${item.quantity}`;\n    if (item.notes && item.notes.trim()) {\n      caption += `\\n   📝 ${item.notes}`;\n    }\n    caption += '\\n';\n  });\n  \n  // Add inline keyboard for stock toggle\n  const inlineKeyboard = stationItems.map(item => [{\n    text: `❌ Mark ${item.name} Out of Stock`,\n    callback_data: `stock_${item.id}_false`\n  }]);\n  \n  stationMessages.push({\n    station,\n    caption,\n    items: stationItems,\n    photoItems: stationItems.filter(i => i.image),\n    inlineKeyboard\n  });\n}\n\n// Calculate order total\nconst orderTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);\n\nreturn {\n  json: {\n    table,\n    orderId,\n    restaurantId,\n    time,\n    stationMessages,\n    orderTotal,\n    supabaseUrl: config.SUPABASE_URL,\n    supabaseKey: config.SUPABASE_SERVICE_KEY,\n    telegramToken: config.TELEGRAM_BOT_TOKEN\n  }\n};"
+            },
+            "id": "format-node",
+            "name": "Format Order Data",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "={{ $json.supabaseUrl }}/rest/v1/stations?restaurant_id=eq.{{ $json.restaurantId }}&select=*",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "={{ $json.supabaseKey }}"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{ $json.supabaseKey }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "fetch-stations",
+            "name": "Fetch Station Config",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Merge station config with messages\nconst orderData = $('Format Order Data').first().json;\nconst stations = $input.first().json || [];\n\n// Create station lookup\nconst stationConfig = {};\nfor (const s of stations) {\n  stationConfig[s.station_type] = s;\n}\n\n// Filter to only enabled stations and add chat IDs\nconst messagesToSend = [];\n\nfor (const msg of orderData.stationMessages) {\n  const config = stationConfig[msg.station];\n  if (config && config.enabled && config.telegram_chat_id) {\n    messagesToSend.push({\n      ...msg,\n      chatId: config.telegram_chat_id,\n      telegramToken: orderData.telegramToken\n    });\n  }\n}\n\nreturn messagesToSend.map(m => ({ json: m }));"
+            },
+            "id": "prepare-messages",
+            "name": "Prepare Station Messages",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1050,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://api.telegram.org/bot{{ $json.telegramToken }}/sendMessage",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"chat_id\": \"{{ $json.chatId }}\",\n  \"text\": {{ JSON.stringify($json.caption) }},\n  \"parse_mode\": \"Markdown\",\n  \"reply_markup\": {\n    \"inline_keyboard\": {{ JSON.stringify($json.inlineKeyboard) }}\n  }\n}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "id": "send-telegram",
+            "name": "📱 Send to Telegram",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "telegram-callback",
+                "responseMode": "onReceived",
+                "responseCode": 200,
+                "options": {}
+            },
+            "id": "callback-webhook",
+            "name": "Telegram Callback",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                250,
+                600
+            ],
+            "webhookId": "telegram-callback"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Parse callback data from Telegram\nconst callback = $input.first().json.callback_query;\nconst data = callback.data.split('_');\n// Format: stock_itemId_false\n\nif (data[0] === 'stock') {\n  return {\n    json: {\n      action: 'stock',\n      itemId: data[1],\n      available: data[2] === 'true',\n      messageId: callback.message.message_id,\n      chatId: callback.message.chat.id,\n      callbackId: callback.id\n    }\n  };\n}\n\nreturn { json: { action: 'unknown' } };"
+            },
+            "id": "parse-callback",
+            "name": "Parse Callback",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                450,
+                600
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose"
+                    },
+                    "conditions": [
+                        {
+                            "id": "is-stock-action",
+                            "leftValue": "={{ $json.action }}",
+                            "rightValue": "stock",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "if-stock-action",
+            "name": "Is Stock Action?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                650,
+                600
+            ]
+        },
+        {
+            "parameters": {
+                "method": "PATCH",
+                "url": "={{ $('⚙️ CONFIG').first().json.SUPABASE_URL }}/rest/v1/items?id=eq.{{ $json.itemId }}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "={{ $('⚙️ CONFIG').first().json.SUPABASE_SERVICE_KEY }}"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{ $('⚙️ CONFIG').first().json.SUPABASE_SERVICE_KEY }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"is_available\": {{ $json.available }}\n}",
+                "options": {}
+            },
+            "id": "update-stock",
+            "name": "Update Stock in Supabase",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                850,
+                600
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://api.telegram.org/bot{{ $('⚙️ CONFIG').first().json.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"callback_query_id\": \"{{ $json.callbackId }}\",\n  \"text\": \"✅ Item marked as out of stock\",\n  \"show_alert\": true\n}",
+                "options": {}
+            },
+            "id": "answer-callback",
+            "name": "Answer Callback",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1050,
+                600
+            ]
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 23 * * *"
+                        }
+                    ]
+                }
+            },
+            "id": "schedule-trigger",
+            "name": "Every Night (11 PM)",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                900
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "={{ $('⚙️ CONFIG').first().json.SUPABASE_URL }}/rest/v1/restaurants?select=id,name,owner_telegram_chat_id",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "={{ $('⚙️ CONFIG').first().json.SUPABASE_SERVICE_KEY }}"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{ $('⚙️ CONFIG').first().json.SUPABASE_SERVICE_KEY }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "get-restaurants",
+            "name": "Get Restaurants",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                450,
+                900
+            ]
+        },
+        {
+            "parameters": {
+                "batchSize": 1,
+                "options": {}
+            },
+            "id": "loop-restaurants",
+            "name": "Loop Each Restaurant",
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 2,
+            "position": [
+                650,
+                900
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "={{ $('⚙️ CONFIG').first().json.SUPABASE_URL }}/rest/v1/orders?restaurant_id=eq.{{ $json.id }}&updated_at=gte.{{ new Date(new Date().setHours(0,0,0,0)).toISOString() }}&select=total_price",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "={{ $('⚙️ CONFIG').first().json.SUPABASE_SERVICE_KEY }}"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "=Bearer {{ $('⚙️ CONFIG').first().json.SUPABASE_SERVICE_KEY }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "get-daily-orders",
+            "name": "Fetch Daily Orders",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                850,
+                900
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const orders = $input.all().map(i => i.json);\nconst restaurant = $('Loop Each Restaurant').first().json;\nconst config = $('⚙️ CONFIG').first().json;\n\nif (orders.length === 0 || !orders[0].total_price) {\n  return {\n    json: {\n      hasData: false,\n      chatId: restaurant.owner_telegram_chat_id,\n      msg: `📊 *${restaurant.name} Daily Report*\\nNo orders recorded today.`,\n      telegramToken: config.TELEGRAM_BOT_TOKEN\n    }\n  }\n}\n\nconst totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.total_price) || 0), 0);\n\nreturn {\n  json: {\n    hasData: true,\n    chatId: restaurant.owner_telegram_chat_id,\n    msg: `📊 *${restaurant.name} Daily Report*\\n\\n💰 Revenue: ${totalRevenue.toLocaleString()} ETB\\n📦 Orders: ${orders.length}\\n\\nGood job today!`,\n    telegramToken: config.TELEGRAM_BOT_TOKEN\n  }\n}"
+            },
+            "id": "calc-stats",
+            "name": "Calculate Report",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1050,
+                900
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://api.telegram.org/bot{{ $json.telegramToken }}/sendMessage",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"chat_id\": \"{{ $json.chatId }}\",\n  \"text\": {{ JSON.stringify($json.msg) }},\n  \"parse_mode\": \"Markdown\"\n}",
+                "options": {}
+            },
+            "id": "notify-owner",
+            "name": "Notify Owner",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1250,
+                900
+            ]
+        },
+        {
+            "parameters": {
+                "content": "## 🧠 THE AGENCY BRAIN\n\n**1. Live Orders (Top Flow)**\n- Receives order via Webhook (with Station routing!)\n- Fetches Station Config from Supabase\n- Routes to Kitchen/Bar/Coffee\n- Includes \"Out of Stock\" button\n\n**2. Reporting Loop (Bottom Flow)**\n- Runs every night\n- Loops through ALL active restaurants\n- Calculates daily sales\n- Sends private report to Owner",
+                "height": 450,
+                "width": 350,
+                "color": 4
+            },
+            "id": "docs-note",
+            "name": "Documentation",
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                0,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook - Receive Order": {
+            "main": [
+                [
+                    {
+                        "node": "⚙️ CONFIG",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "⚙️ CONFIG": {
+            "main": [
+                [
+                    {
+                        "node": "Format Order Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Order Data": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Station Config",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Station Config": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare Station Messages",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare Station Messages": {
+            "main": [
+                [
+                    {
+                        "node": "📱 Send to Telegram",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Telegram Callback": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Callback",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Callback": {
+            "main": [
+                [
+                    {
+                        "node": "Is Stock Action?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Stock Action?": {
+            "main": [
+                [
+                    {
+                        "node": "Update Stock in Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Stock in Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Answer Callback",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Every Night (11 PM)": {
+            "main": [
+                [
+                    {
+                        "node": "Get Restaurants",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Restaurants": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Each Restaurant",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Loop Each Restaurant": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Daily Orders",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Daily Orders": {
+            "main": [
+                [
+                    {
+                        "node": "Calculate Report",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Calculate Report": {
+            "main": [
+                [
+                    {
+                        "node": "Notify Owner",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Notify Owner": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Each Restaurant",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "settings": {
+        "executionOrder": "v1"
+    }
+}
