@@ -19,7 +19,7 @@ export async function parseRuleFile(filePath: string): Promise<RuleFile> {
   const lines = content.split('\n')
 
   // Extract frontmatter if present
-  let frontmatter: Record<string, any> = {}
+  const frontmatter: Record<string, string | number | boolean> = {}
   let contentStart = 0
 
   if (content.startsWith('---')) {
