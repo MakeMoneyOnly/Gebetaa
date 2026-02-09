@@ -1,0 +1,113 @@
+/**
+ * Cart and localStorage validation schemas
+ * 
+ * Addresses: localStorage Parsing Without Schema Validation (High Priority Audit Finding #6)
+ * Location: src/context/CartContext.tsx:46-77
+ */
+
+import { z } from 'zod';
+
+/**
+ * Cart Item Schema - validates individual cart items
+ */
+export const CartItemSchema = z.object({
+    id: z.string().uuid('Invalid item ID'),
+    name: z.string().min(1, 'Item name is required'),
+    name_am: z.string().nullable().optional(),
+    price: z.number().positive('Price must be positive'),
+    quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+    image_url: z.string().nullable().optional(),
+    station: z.enum(['kitchen', 'bar', 'dessert', 'coffee']).nullable().optional(),
+    notes: z.string().optional(),
+    modifiers: z.string().optional(),
+});
+
+/**
+ * Cart Storage Schema - validates the entire cart stored in localStorage
+ */
+export const CartStorageSchema = z.object({
+    items: z.array(CartItemSchema),
+    restaurantSlug: z.string(),
+    tableNumber: z.string().nullable(),
+});
+
+/**
+ * Order History Storage Schema - validates order history in localStorage
+ */
+export const OrderHistoryStorageSchema = z.object({
+    items: z.array(CartItemSchema),
+    restaurantSlug: z.string(),
+});
+
+/**
+ * Type exports
+ */
+export type ValidatedCartItem = z.infer<typeof CartItemSchema>;
+export type ValidatedCartStorage = z.infer<typeof CartStorageSchema>;
+export type ValidatedOrderHistoryStorage = z.infer<typeof OrderHistoryStorageSchema>;
+
+/**
+ * Safely parse cart data from localStorage with Zod validation
+ * 
+ * @param data - Raw data from localStorage
+ * @returns Parsed and validated cart data, or null if invalid
+ */
+export function safeParseCartStorage(data: unknown): ValidatedCartStorage | null {
+    const result = CartStorageSchema.safeParse(data);
+    if (result.success) {
+        return result.data;
+    }
+    
+    console.warn('[CartStorage] Validation failed:', result.error.issues);
+    return null;
+}
+
+/**
+ * Safely parse order history from localStorage with Zod validation
+ * 
+ * @param data - Raw data from localStorage
+ * @returns Parsed and validated order history, or null if invalid
+ */
+export function safeParseOrderHistoryStorage(data: unknown): ValidatedOrderHistoryStorage | null {
+    const result = OrderHistoryStorageSchema.safeParse(data);
+    if (result.success) {
+        return result.data;
+    }
+    
+    console.warn('[OrderHistoryStorage] Validation failed:', result.error.issues);
+    return null;
+}
+
+/**
+ * Safely parse JSON from localStorage with error handling
+ * 
+ * @param key - localStorage key
+ * @returns Parsed JSON, or null if not found or invalid
+ */
+export function safeGetLocalStorage<T>(key: string): T | null {
+    try {
+        const stored = localStorage.getItem(key);
+        if (!stored) return null;
+        return JSON.parse(stored) as T;
+    } catch (e) {
+        console.warn(`[localStorage] Failed to parse ${key}:`, e);
+        return null;
+    }
+}
+
+/**
+ * Safely save JSON to localStorage with error handling
+ * 
+ * @param key - localStorage key
+ * @param value - Value to store
+ * @returns true if successful, false otherwise
+ */
+export function safeSetLocalStorage(key: string, value: unknown): boolean {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+    } catch (e) {
+        console.warn(`[localStorage] Failed to save ${key}:`, e);
+        return false;
+    }
+}
