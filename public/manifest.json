@@ -1,6 +1,6 @@
 {
-    "name": "AR Menu",
-    "short_name": "AR Menu",
+    "name": "Gebeta",
+    "short_name": "Gebeta",
     "description": "Digital menu system for restaurants",
     "start_url": "/",
     "display": "standalone",
