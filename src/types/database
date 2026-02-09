@@ -1,0 +1,479 @@
+// Database type definitions for Supabase
+// Auto-generated types should replace this file using: npx supabase gen types typescript
+
+export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[];
+
+export interface Database {
+    public: {
+        Tables: {
+            restaurants: {
+                Row: {
+                    id: string;
+                    name: string;
+                    slug: string;
+                    logo_url: string | null;
+                    hero_image_url: string | null;
+                    brand_color: string;
+                    telegram_chat_id: string | null;
+                    owner_telegram_chat_id: string | null;
+                    location: string | null;
+                    description: string | null;
+                    currency: string;
+                    currency_symbol: string;
+                    contact_phone: string | null;
+                    contact_email: string | null;
+                    hours_weekday: string | null;
+                    hours_weekend: string | null;
+                    features: Json;
+                    social: Json;
+                    created_at: string;
+                    updated_at: string;
+                    settings: Json;
+                };
+                Insert: {
+                    id?: string;
+                    name: string;
+                    slug: string;
+                    logo_url?: string | null;
+                    hero_image_url?: string | null;
+                    brand_color?: string;
+                    telegram_chat_id?: string | null;
+                    owner_telegram_chat_id?: string | null;
+                    location?: string | null;
+                    description?: string | null;
+                    currency?: string;
+                    currency_symbol?: string;
+                    contact_phone?: string | null;
+                    contact_email?: string | null;
+                    hours_weekday?: string | null;
+                    hours_weekend?: string | null;
+                    features?: Json;
+                    social?: Json;
+                    created_at?: string;
+                    updated_at?: string;
+                    settings?: Json;
+                };
+                Update: {
+                    id?: string;
+                    name?: string;
+                    slug?: string;
+                    logo_url?: string | null;
+                    hero_image_url?: string | null;
+                    brand_color?: string;
+                    telegram_chat_id?: string | null;
+                    owner_telegram_chat_id?: string | null;
+                    location?: string | null;
+                    description?: string | null;
+                    currency?: string;
+                    currency_symbol?: string;
+                    contact_phone?: string | null;
+                    contact_email?: string | null;
+                    hours_weekday?: string | null;
+                    hours_weekend?: string | null;
+                    features?: Json;
+                    social?: Json;
+                    created_at?: string;
+                    updated_at?: string;
+                    settings?: Json;
+                };
+            };
+            categories: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    name: string;
+                    name_am: string | null;
+                    order_index: number;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    name: string;
+                    name_am?: string | null;
+                    order_index?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    name?: string;
+                    name_am?: string | null;
+                    order_index?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
+            items: {
+                Row: {
+                    id: string;
+                    category_id: string;
+                    name: string;
+                    name_am: string | null;
+                    description: string | null;
+                    description_am: string | null;
+                    price: number;
+                    image_url: string | null;
+                    is_available: boolean;
+                    is_fasting: boolean;
+                    is_chef_special: boolean;
+                    station: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+                    rating: number;
+                    popularity: number;
+                    order_count: number;
+                    ingredients: string[];
+                    allergens: string[];
+                    pairings: string[];
+                    has_ar: boolean;
+                    model_glb: string | null;
+                    model_usdz: string | null;
+                    model_scale: string;
+                    nutrition: Json;
+                    preparation_time: number;
+                    spicy_level: number;
+                    stock_quantity: number | null;
+                    modifiers: Json;
+                    dietary_tags: string[];
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    category_id: string;
+                    name: string;
+                    name_am?: string | null;
+                    description?: string | null;
+                    description_am?: string | null;
+                    price: number;
+                    image_url?: string | null;
+                    is_available?: boolean;
+                    is_fasting?: boolean;
+                    is_chef_special?: boolean;
+                    station?: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+                    rating?: number;
+                    popularity?: number;
+                    order_count?: number;
+                    ingredients?: string[];
+                    allergens?: string[];
+                    pairings?: string[];
+                    has_ar?: boolean;
+                    model_glb?: string | null;
+                    model_usdz?: string | null;
+                    model_scale?: string;
+                    nutrition?: Json;
+                    preparation_time?: number;
+                    spicy_level?: number;
+                    stock_quantity?: number | null;
+                    modifiers?: Json;
+                    dietary_tags?: string[];
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    category_id?: string;
+                    name?: string;
+                    name_am?: string | null;
+                    description?: string | null;
+                    description_am?: string | null;
+                    price?: number;
+                    image_url?: string | null;
+                    is_available?: boolean;
+                    is_fasting?: boolean;
+                    is_chef_special?: boolean;
+                    station?: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+                    rating?: number;
+                    popularity?: number;
+                    order_count?: number;
+                    ingredients?: string[];
+                    allergens?: string[];
+                    pairings?: string[];
+                    has_ar?: boolean;
+                    model_glb?: string | null;
+                    model_usdz?: string | null;
+                    model_scale?: string;
+                    nutrition?: Json;
+                    preparation_time?: number;
+                    spicy_level?: number;
+                    stock_quantity?: number | null;
+                    modifiers?: Json;
+                    dietary_tags?: string[];
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
+            orders: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    order_number: string;
+                    table_number: string;
+                    items: Json;
+                    total_price: number;
+                    status: 'pending' | 'preparing' | 'ready' | 'served' | 'closed' | 'cancelled';
+                    notes: string | null;
+                    idempotency_key: string;
+                    guest_fingerprint: string;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    order_number?: string;
+                    table_number: string;
+                    items: Json;
+                    total_price: number;
+                    status?: 'pending' | 'preparing' | 'ready' | 'served' | 'closed' | 'cancelled';
+                    notes?: string | null;
+                    idempotency_key: string;
+                    guest_fingerprint: string;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    order_number?: string;
+                    table_number?: string;
+                    items?: Json;
+                    total_price?: number;
+                    status?: 'pending' | 'preparing' | 'ready' | 'served' | 'closed' | 'cancelled';
+                    notes?: string | null;
+                    idempotency_key?: string;
+                    guest_fingerprint?: string;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
+            service_requests: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    table_number: string;
+                    request_type: 'waiter' | 'bill' | 'cutlery';
+                    status: 'pending' | 'acknowledged' | 'completed';
+                    notes: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    table_number: string;
+                    request_type: 'waiter' | 'bill' | 'cutlery';
+                    status?: 'pending' | 'acknowledged' | 'completed';
+                    notes?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    table_number?: string;
+                    request_type?: 'waiter' | 'bill' | 'cutlery';
+                    status?: 'pending' | 'acknowledged' | 'completed';
+                    notes?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
+            audit_log: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    user_id: string | null;
+                    action: string;
+                    entity_type: string;
+                    entity_id: string;
+                    old_value: Json;
+                    new_value: Json;
+                    metadata: Json;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    user_id?: string | null;
+                    action: string;
+                    entity_type: string;
+                    entity_id: string;
+                    old_value?: Json;
+                    new_value?: Json;
+                    metadata?: Json;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    user_id?: string | null;
+                    action?: string;
+                    entity_type?: string;
+                    entity_id?: string;
+                    old_value?: Json;
+                    new_value?: Json;
+                    metadata?: Json;
+                    created_at?: string;
+                };
+            };
+            stations: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    station_type: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+                    name: string;
+                    telegram_chat_id: string | null;
+                    enabled: boolean;
+                    description: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    station_type: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+                    name: string;
+                    telegram_chat_id?: string | null;
+                    enabled?: boolean;
+                    description?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    station_type?: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+                    name?: string;
+                    telegram_chat_id?: string | null;
+                    enabled?: boolean;
+                    description?: string | null;
+                    created_at?: string;
+                };
+            };
+            agency_users: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    role: 'admin' | 'manager' | 'staff';
+                    restaurant_ids: string[];
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id: string;
+                    role?: 'admin' | 'manager' | 'staff';
+                    restaurant_ids?: string[];
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string;
+                    role?: 'admin' | 'manager' | 'staff';
+                    restaurant_ids?: string[];
+                    created_at?: string;
+                };
+            };
+            reviews: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    item_id: string;
+                    user_name: string | null;
+                    rating: number;
+                    comment: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    item_id: string;
+                    user_name?: string | null;
+                    rating: number;
+                    comment?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    item_id?: string;
+                    user_name?: string | null;
+                    rating?: number;
+                    comment?: string | null;
+                    created_at?: string;
+                };
+            };
+        };
+        Views: {
+            [_ in never]: never;
+        };
+        Functions: {
+            [_ in never]: never;
+        };
+        Enums: {
+            [_ in never]: never;
+        };
+    };
+}
+
+// Convenience types
+export type Restaurant = Database['public']['Tables']['restaurants']['Row'];
+export type Category = Database['public']['Tables']['categories']['Row'];
+export type MenuItem = Database['public']['Tables']['items']['Row'];
+export type Order = Database['public']['Tables']['orders']['Row'];
+export type Station = Database['public']['Tables']['stations']['Row'];
+export type AgencyUser = Database['public']['Tables']['agency_users']['Row'];
+export type ServiceRequest = Database['public']['Tables']['service_requests']['Row'];
+export type AuditLog = Database['public']['Tables']['audit_log']['Row'];
+
+// Restaurant settings type
+export interface RestaurantSettings {
+    telegram_bot_token?: string;
+    telegram_chat_id?: string;
+    telegram_kitchen_chat_id?: string;
+    telegram_bar_chat_id?: string;
+    branding?: {
+        primary_color?: string;
+        secondary_color?: string;
+    };
+    enable_ordering?: boolean;
+    qr_base_url?: string;
+}
+
+// Extended types with relations
+export interface CategoryWithItems extends Category {
+    items: MenuItem[];
+}
+
+export interface RestaurantWithMenu extends Restaurant {
+    categories: CategoryWithItems[];
+    stations?: Station[];
+}
+
+// Cart item type
+export interface CartItem {
+    id: string;
+    name: string;
+    name_am?: string | null;
+    price: number;
+    quantity: number;
+    notes?: string;
+    image_url?: string | null;
+    station: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+    modifiers?: string;
+}
+
+// Order item type (in JSON)
+export interface OrderItem {
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    notes?: string;
+    station?: string;
+}
