@@ -1,599 +1,82 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SABA MENU - MOBILE-FIRST DESIGN SYSTEM
-   Optimized for food ordering: clarity, speed, trust
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 @theme {
-  /* Brand color - configurable per restaurant */
-  --color-brand: var(--brand-color, #88F026);
-  --font-sans: 'Manrope', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --color-brand-crimson: #A81818;
+    --color-brand-mint: #E0F2E9;
+    --color-brand-blue: #1848A8;
+    --color-brand-yellow: #F2C94C;
+
+    --color-surface-0: #FFFFFF;
+    --color-surface-1: #F8F8F8;
+
+    --color-glass-black: rgba(0, 0, 0, 0.85);
+
+    --font-inter: var(--font-inter), sans-serif;
+    --font-manrope: var(--font-manrope), sans-serif;
+
+    --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.15);
+    --shadow-float-strong: 0 20px 40px rgba(0, 0, 0, 0.25);
 }
 
 :root {
-  /* ─────────────────────────────────────────────────────────────────────
-     MULTI-TENANT THEMING TOKENS
-     Restaurants can override these via JS: document.documentElement.style.setProperty()
-     ───────────────────────────────────────────────────────────────────── */
-
-  /* Primary brand color - set per restaurant */
-  --brand-color: #88F026;
-  /* Neon Green */
-  --brand-color-light: #A3F452;
-  --brand-color-dark: #6EC11F;
-
-  /* Surface hierarchy (dark theme) */
-  --surface-1: #0A0A0A;
-  --surface-2: #141414;
-  --surface-3: #1F1F1F;
-  --surface-4: #2A2A2A;
-
-  /* Text hierarchy - WCAG AA compliant */
-  --text-1: #FFFFFF;
-  --text-2: #E5E5E5;
-  --text-3: #A3A3A3;
-  --text-4: #737373;
-
-  /* Border colors */
-  --border-1: rgba(255, 255, 255, 0.08);
-  --border-2: rgba(255, 255, 255, 0.12);
-  --border-3: rgba(255, 255, 255, 0.20);
-
-  /* Semantic colors */
-  --color-success: #22C55E;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-info: #3B82F6;
-
-  /* Legacy aliases */
-  --background: var(--surface-1);
-  --foreground: var(--text-1);
-  --primary: var(--brand-color);
-  --primary-foreground: #000000;
-
-  /* ─────────────────────────────────────────────────────────────────────
-     MOBILE SAFE AREAS & LAYOUT
-     ───────────────────────────────────────────────────────────────────── */
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --bottom-nav-height: calc(72px + var(--safe-area-bottom));
-  --header-height: 80px;
-
-  /* ─────────────────────────────────────────────────────────────────────
-     TYPOGRAPHY SCALE - Mobile Optimized
-     ───────────────────────────────────────────────────────────────────── */
-  --text-hero: clamp(36px, 10vw, 48px);
-  --text-display: clamp(28px, 7vw, 36px);
-  --text-headline: clamp(22px, 5.5vw, 26px);
-  --text-title: 18px;
-  --text-body-lg: 16px;
-  --text-body: 14px;
-  --text-label: 13px;
-  --text-caption: 12px;
-  --text-micro: 11px;
-
-  /* ─────────────────────────────────────────────────────────────────────
-     SPACING SCALE (8px base grid)
-     ───────────────────────────────────────────────────────────────────── */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-
-  /* ─────────────────────────────────────────────────────────────────────
-     RADIUS SYSTEM
-     ───────────────────────────────────────────────────────────────────── */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
-  --radius-full: 9999px;
-
-  /* ─────────────────────────────────────────────────────────────────────
-     SHADOWS
-     ───────────────────────────────────────────────────────────────────── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-brand: 0 4px 16px rgba(136, 240, 38, 0.25);
-
-  /* ─────────────────────────────────────────────────────────────────────
-     TOUCH TARGETS - Apple HIG minimum 44px
-     ───────────────────────────────────────────────────────────────────── */
-  --touch-min: 44px;
-  --touch-comfortable: 48px;
+    --background: #FFFFFF;
+    --foreground: #000000;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   BASE STYLES
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-* {
-  border-color: var(--border-1);
-}
-
-html {
-  -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
-  color-scheme: dark;
-}
-
+/* Base Styles */
 body {
-  background: var(--surface-1);
-  color: var(--text-1);
-  font-family: var(--font-sans);
-  font-size: var(--text-body);
-  line-height: 1.5;
-  letter-spacing: -0.01em;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-y: contain;
-  overflow-x: hidden;
-  min-height: 100vh;
+    background-color: var(--color-surface-0);
+    color: var(--foreground);
+    font-family: var(--font-inter);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    /* overscroll-behavior-y: none; REMOVED to fix scroll */
 }
 
-::selection {
-  background: var(--brand-color);
-  color: black;
+/* Utilities from Reference index.html & Native Plan */
+@utility no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   COMPONENT STYLES - Using regular CSS (not @apply with custom classes)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ─────────────────────────────────────────────────────────────────────
-   CARD SYSTEM
-   ───────────────────────────────────────────────────────────────────── */
-
-.card {
-  position: relative;
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-1);
+@utility app-container {
+    min-height: 100dvh;
+    width: 100vw;
+    /* overflow-x: hidden; */
+    /* overflow-y: auto; REMOVED to let Body scroll */
 }
 
-.card-interactive {
-  position: relative;
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-1);
-  transition: all 150ms ease;
+@utility pt-safe {
+    padding-top: env(safe-area-inset-top);
 }
 
-.card-interactive:active {
-  transform: scale(0.98);
-  background: var(--surface-3);
+@utility pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
-.card-elevated {
-  position: relative;
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-1);
-  box-shadow: var(--shadow-md);
+@utility no-select {
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-/* ─────────────────────────────────────────────────────────────────────
-   BUTTON SYSTEM
-   ───────────────────────────────────────────────────────────────────── */
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  font-size: var(--text-label);
-  background: var(--brand-color);
-  color: #000000;
-  min-height: var(--touch-min);
-  box-shadow: var(--shadow-brand);
-  transition: all 150ms ease;
-  border: none;
-  cursor: pointer;
+@utility touch-manipulation {
+    touch-action: manipulation;
 }
 
-.btn-primary:active {
-  transform: scale(0.96);
-  opacity: 0.9;
+@utility badge-scallop {
+    clip-path: polygon(50% 0%, 61% 10%, 75% 6%, 83% 18%, 97% 25%,
+            93% 40%, 100% 50%, 93% 60%, 97% 75%, 83% 82%,
+            75% 94%, 61% 90%, 50% 100%, 39% 90%, 25% 94%,
+            17% 82%, 3% 75%, 7% 60%, 0% 50%, 7% 40%,
+            3% 25%, 17% 18%, 25% 6%, 39% 10%);
 }
 
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: var(--text-label);
-  background: var(--surface-3);
-  color: var(--text-1);
-  border: 1px solid var(--border-2);
-  min-height: var(--touch-min);
-  transition: all 150ms ease;
-  cursor: pointer;
-}
-
-.btn-secondary:active {
-  transform: scale(0.96);
-  background: var(--surface-4);
-}
-
-.btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: var(--text-label);
-  color: var(--text-2);
-  min-height: var(--touch-min);
-  transition: all 150ms ease;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-ghost:active {
-  background: var(--surface-3);
-}
-
-.btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  width: var(--touch-min);
-  height: var(--touch-min);
-  background: var(--surface-3);
-  border: 1px solid var(--border-1);
-  color: var(--text-2);
-  transition: all 150ms ease;
-  cursor: pointer;
-}
-
-.btn-icon:active {
-  transform: scale(0.92);
-  background: var(--surface-4);
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   SEGMENTED CONTROL
-   ───────────────────────────────────────────────────────────────────── */
-
-.segmented-control {
-  display: flex;
-  padding: 4px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-2);
-  border: 1px solid var(--border-1);
-}
-
-.segmented-control-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: var(--text-label);
-  color: var(--text-3);
-  min-height: var(--touch-min);
-  transition: all 200ms ease;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.segmented-control-item[data-active="true"] {
-  background: var(--brand-color);
-  color: #000000;
-  box-shadow: var(--shadow-sm);
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   CHIP/PILL SYSTEM
-   ───────────────────────────────────────────────────────────────────── */
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  font-weight: 500;
-  font-size: var(--text-label);
-  white-space: nowrap;
-  background: var(--surface-3);
-  color: var(--text-2);
-  border: 1px solid var(--border-1);
-  min-height: 36px;
-  transition: all 150ms ease;
-  cursor: pointer;
-}
-
-.chip[data-active="true"] {
-  background: var(--brand-color);
-  color: #000000;
-  border-color: var(--brand-color);
-}
-
-.chip:active {
-  transform: scale(0.96);
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   INPUT SYSTEM
-   ───────────────────────────────────────────────────────────────────── */
-
-.input {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: var(--radius-lg);
-  font-size: var(--text-body);
-  font-weight: 500;
-  background: var(--surface-2);
-  color: var(--text-1);
-  border: 1px solid var(--border-1);
-  min-height: var(--touch-comfortable);
-  transition: border-color 150ms ease;
-}
-
-.input::placeholder {
-  color: var(--text-4);
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--brand-color);
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   TYPOGRAPHY UTILITIES
-   ───────────────────────────────────────────────────────────────────── */
-
-.text-headline {
-  font-size: var(--text-headline);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--text-1);
-}
-
-.text-title {
-  font-size: var(--text-title);
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  color: var(--text-1);
-}
-
-.text-body-lg {
-  font-size: var(--text-body-lg);
-  line-height: 1.5;
-  color: var(--text-2);
-}
-
-.text-body {
-  font-size: var(--text-body);
-  line-height: 1.5;
-  color: var(--text-2);
-}
-
-.text-label {
-  font-size: var(--text-label);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--text-2);
-}
-
-.text-caption {
-  font-size: var(--text-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--text-3);
-}
-
-.text-brand {
-  color: var(--brand-color);
-}
-
-.text-muted {
-  color: var(--text-3);
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   PRICE DISPLAY
-   ───────────────────────────────────────────────────────────────────── */
-
-.price {
-  font-size: var(--text-body-lg);
-  font-weight: 700;
-  color: var(--text-1);
-  letter-spacing: -0.01em;
-}
-
-.price-large {
-  font-size: var(--text-title);
-  font-weight: 800;
-  color: var(--brand-color);
-  letter-spacing: -0.02em;
-}
-
-.price-currency {
-  font-size: 0.75em;
-  font-weight: 600;
-  opacity: 0.7;
-  margin-right: 2px;
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   LAYOUT UTILITIES
-   ───────────────────────────────────────────────────────────────────── */
-
-.mobile-container {
-  width: 100%;
-  max-width: 32rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 16px;
-  padding-right: 16px;
-}
-
-.safe-top {
-  padding-top: var(--safe-area-top);
-}
-
-.safe-bottom {
-  padding-bottom: var(--safe-area-bottom);
-}
-
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   RATING DISPLAY
-   ───────────────────────────────────────────────────────────────────── */
-
-.rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  color: var(--text-2);
-}
-
-.rating-star {
-  color: var(--brand-color);
-  width: 14px;
-  height: 14px;
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   BADGE SYSTEM
-   ───────────────────────────────────────────────────────────────────── */
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-caption);
-  font-weight: 600;
-}
-
-.badge-brand {
-  background: var(--brand-color);
-  color: #000000;
-}
-
-.badge-success {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--color-success);
-}
-
-.badge-muted {
-  background: var(--surface-3);
-  color: var(--text-3);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   ANIMATIONS
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 200ms ease-out;
-}
-
-.animate-slide-up {
-  animation: slide-up 300ms ease-out;
-}
-
-.animate-scale-in {
-  animation: scale-in 200ms ease-out;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   SCROLLBAR HIDING
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-::-webkit-scrollbar {
-  width: 0px;
-  display: none;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   REDUCED MOTION
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-@media (prefers-reduced-motion: reduce) {
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
 }

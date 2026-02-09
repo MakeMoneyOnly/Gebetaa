@@ -1,0 +1,53 @@
+import '@testing-library/jest-dom/vitest';
+import { vi } from 'vitest';
+
+// Mock Supabase client
+vi.mock('@/lib/supabase/client', () => ({
+    getSupabaseClient: vi.fn(() => ({
+        from: vi.fn(() => ({
+            select: vi.fn().mockReturnThis(),
+            insert: vi.fn().mockReturnThis(),
+            update: vi.fn().mockReturnThis(),
+            delete: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
+            single: vi.fn(),
+            maybeSingle: vi.fn(),
+            order: vi.fn().mockReturnThis(),
+            limit: vi.fn().mockReturnThis(),
+        })),
+        auth: {
+            getUser: vi.fn(),
+            signInWithPassword: vi.fn(),
+            signOut: vi.fn(),
+        },
+        channel: vi.fn(() => ({
+            on: vi.fn().mockReturnThis(),
+            subscribe: vi.fn(),
+        })),
+    })),
+}));
+
+// Mock Next.js router
+vi.mock('next/navigation', () => ({
+    useRouter: vi.fn(() => ({
+        push: vi.fn(),
+        replace: vi.fn(),
+        refresh: vi.fn(),
+        back: vi.fn(),
+        forward: vi.fn(),
+    })),
+    useParams: vi.fn(() => ({})),
+    useSearchParams: vi.fn(() => new URLSearchParams()),
+    redirect: vi.fn(),
+    notFound: vi.fn(),
+}));
+
+// Mock next/headers
+vi.mock('next/headers', () => ({
+    cookies: vi.fn(() => ({
+        get: vi.fn(),
+        getAll: vi.fn(() => []),
+        set: vi.fn(),
+    })),
+}));
