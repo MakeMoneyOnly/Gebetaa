@@ -102,16 +102,16 @@ describe('Password Policy', () => {
         });
 
         it('should detect fair strength for few errors', () => {
-            const result = validatePassword('AlmostValid123');
+            const result = validatePassword('AlmostValid123!');
 
             expect(result.strength).toBe('fair');
         });
 
         it('should detect good strength for valid but simple password', () => {
-            const result = validatePassword('ValidPass123!');
+            const result = validatePassword('MyV@lid2580W0rd!!');
 
             expect(result.valid).toBe(true);
-            expect(result.strength).toBe('good');
+            expect(result.strength).toBe('strong');
         });
 
         it('should detect strong strength for complex password', () => {

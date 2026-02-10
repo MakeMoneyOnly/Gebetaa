@@ -61,16 +61,16 @@ export function validateSession(sessionId: string): { valid: boolean; reason?: s
 
     const now = Date.now();
 
+    // Check if session has exceeded max lifetime (8 hours) - check this first
+    if (now - session.createdAt > 8 * 60 * 60 * 1000) {
+        sessions.delete(sessionId);
+        return { valid: false, reason: 'Session exceeded maximum lifetime' };
+    }
+
     // Check if session has expired due to inactivity
     if (now - session.lastActivity > SESSION_TIMEOUT) {
         sessions.delete(sessionId);
         return { valid: false, reason: 'Session expired due to inactivity' };
-    }
-
-    // Check if session has exceeded max lifetime (8 hours)
-    if (now - session.createdAt > 8 * 60 * 60 * 1000) {
-        sessions.delete(sessionId);
-        return { valid: false, reason: 'Session exceeded maximum lifetime' };
     }
 
     // Update last activity
