@@ -13,11 +13,8 @@
  * Requires: graphviz (dot) installed on system
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const fs = require('fs');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { execSync } = require('child_process');
 
 function extractDotBlocks(markdown) {
