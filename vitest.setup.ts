@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
+import 'fake-indexeddb/auto';
 
 // Mock Supabase client
 vi.mock('@/lib/supabase/client', () => ({
