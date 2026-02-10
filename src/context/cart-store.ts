@@ -21,32 +21,27 @@ export const useCartStore = create<CartState>()(
         (set, get) => ({
             items: [],
             addItem: (item, quantity, instructions) =>
-                set((state) => {
-                    const existing = state.items.find((i) => i.id === item.id);
+                set(state => {
+                    const existing = state.items.find(i => i.id === item.id);
                     if (existing) {
                         return {
-                            items: state.items.map((i) =>
-                                i.id === item.id
-                                    ? { ...i, quantity: i.quantity + quantity }
-                                    : i
+                            items: state.items.map(i =>
+                                i.id === item.id ? { ...i, quantity: i.quantity + quantity } : i
                             ),
                         };
                     }
                     return { items: [...state.items, { ...item, quantity, instructions }] };
                 }),
-            removeItem: (itemId) =>
-                set((state) => ({
-                    items: state.items.filter((i) => i.id !== itemId),
+            removeItem: itemId =>
+                set(state => ({
+                    items: state.items.filter(i => i.id !== itemId),
                 })),
             updateQuantity: (itemId, quantity) =>
-                set((state) => ({
-                    items: state.items.map((i) =>
-                        i.id === itemId ? { ...i, quantity } : i
-                    ),
+                set(state => ({
+                    items: state.items.map(i => (i.id === itemId ? { ...i, quantity } : i)),
                 })),
             clearCart: () => set({ items: [] }),
-            subtotal: () =>
-                get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+            subtotal: () => get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
         }),
         {
             name: 'gebeta-cart-storage',

@@ -20,12 +20,10 @@ export async function logAction(entry: AuditLogEntry) {
     try {
         const supabase = await createClient();
 
-        const { error } = await supabase
-            .from('audit_log')
-            .insert({
-                ...entry,
-                created_at: new Date().toISOString()
-            } as Database['public']['Tables']['audit_log']['Insert']);
+        const { error } = await supabase.from('audit_log').insert({
+            ...entry,
+            created_at: new Date().toISOString(),
+        } as Database['public']['Tables']['audit_log']['Insert']);
 
         if (error) {
             console.error('[AuditLogger] Database error:', error);

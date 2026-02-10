@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Security and Rate Limiting Middleware
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT findings:
  * - SEC-002: Rate limiting
  * - SEC-004: CSRF protection
@@ -50,7 +50,6 @@ function checkRateLimit(ip: string): { allowed: boolean; remaining: number; rese
  * Clean up expired rate limit entries periodically
  */
 
-
 // Cleanup should be handled by a periodic job or a more robust store like Redis
 // setInterval is not supported in Edge Runtime
 // setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
@@ -89,7 +88,6 @@ function checkCSRF(request: NextRequest): { valid: boolean; reason?: string } {
         // Check Origin header matches expected origin
         const origin = request.headers.get('origin');
 
-
         // In production, validate against allowed origins
         if (process.env.NODE_ENV === 'production') {
             const allowedOrigins = [
@@ -113,7 +111,8 @@ function checkCSRF(request: NextRequest): { valid: boolean; reason?: string } {
 import { updateSession } from '@/lib/supabase/middleware';
 
 export default async function proxy(request: NextRequest) {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ??
+    const ip =
+        request.headers.get('x-forwarded-for')?.split(',')[0] ??
         request.headers.get('x-real-ip') ??
         'unknown';
 
@@ -127,7 +126,10 @@ export default async function proxy(request: NextRequest) {
 
     // 2. Add Security Headers (to the response returned by Supabase)
     response.headers.set('X-DNS-Prefetch-Control', 'on');
-    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+    response.headers.set(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload'
+    );
 
     // Check request size
     const sizeCheck = checkRequestSize(request);
@@ -135,7 +137,7 @@ export default async function proxy(request: NextRequest) {
         return NextResponse.json(
             {
                 error: 'Request entity too large',
-                maxSize: `${sizeCheck.maxSize / 1024}KB`
+                maxSize: `${sizeCheck.maxSize / 1024}KB`,
             },
             { status: 413 }
         );
@@ -156,8 +158,10 @@ export default async function proxy(request: NextRequest) {
                 {
                     status: 429,
                     headers: {
-                        'Retry-After': Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString()
-                    }
+                        'Retry-After': Math.ceil(
+                            (rateLimit.resetTime - Date.now()) / 1000
+                        ).toString(),
+                    },
                 }
             );
         }

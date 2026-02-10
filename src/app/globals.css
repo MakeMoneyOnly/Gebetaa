@@ -1,13 +1,13 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-    --color-brand-crimson: #A81818;
-    --color-brand-mint: #E0F2E9;
-    --color-brand-blue: #1848A8;
-    --color-brand-yellow: #F2C94C;
+    --color-brand-crimson: #a81818;
+    --color-brand-mint: #e0f2e9;
+    --color-brand-blue: #1848a8;
+    --color-brand-yellow: #f2c94c;
 
-    --color-surface-0: #FFFFFF;
-    --color-surface-1: #F8F8F8;
+    --color-surface-0: #ffffff;
+    --color-surface-1: #f8f8f8;
 
     --color-glass-black: rgba(0, 0, 0, 0.85);
 
@@ -19,7 +19,7 @@
 }
 
 :root {
-    --background: #FFFFFF;
+    --background: #ffffff;
     --foreground: #000000;
 }
 
@@ -68,11 +68,32 @@ body {
 }
 
 @utility badge-scallop {
-    clip-path: polygon(50% 0%, 61% 10%, 75% 6%, 83% 18%, 97% 25%,
-            93% 40%, 100% 50%, 93% 60%, 97% 75%, 83% 82%,
-            75% 94%, 61% 90%, 50% 100%, 39% 90%, 25% 94%,
-            17% 82%, 3% 75%, 7% 60%, 0% 50%, 7% 40%,
-            3% 25%, 17% 18%, 25% 6%, 39% 10%);
+    clip-path: polygon(
+        50% 0%,
+        61% 10%,
+        75% 6%,
+        83% 18%,
+        97% 25%,
+        93% 40%,
+        100% 50%,
+        93% 60%,
+        97% 75%,
+        83% 82%,
+        75% 94%,
+        61% 90%,
+        50% 100%,
+        39% 90%,
+        25% 94%,
+        17% 82%,
+        3% 75%,
+        7% 60%,
+        0% 50%,
+        7% 40%,
+        3% 25%,
+        17% 18%,
+        25% 6%,
+        39% 10%
+    );
 }
 
 @layer utilities {

@@ -1,6 +1,6 @@
 /**
  * Typed Supabase query helpers
- * 
+ *
  * Addresses: Type Safety Gaps with Supabase Queries (Medium Priority Audit Finding #7)
  * Provides centralized, type-safe query functions for common database operations
  */
@@ -13,15 +13,12 @@ type Tables = Database['public']['Tables'];
 
 /**
  * Fetch reviews for a specific menu item
- * 
+ *
  * @param supabase - Supabase client instance
  * @param itemId - The item ID to fetch reviews for
  * @returns Array of reviews ordered by created_at desc
  */
-export async function fetchReviews(
-    supabase: SupabaseClient<Database>,
-    itemId: string
-) {
+export async function fetchReviews(supabase: SupabaseClient<Database>, itemId: string) {
     return supabase
         .from('reviews')
         .select('*')
@@ -32,7 +29,7 @@ export async function fetchReviews(
 
 /**
  * Fetch orders for a restaurant within a time range
- * 
+ *
  * @param supabase - Supabase client instance
  * @param restaurantId - The restaurant ID
  * @param since - ISO timestamp to fetch orders from
@@ -54,7 +51,7 @@ export async function fetchOrdersSince(
 
 /**
  * Fetch pending service requests for a restaurant
- * 
+ *
  * @param supabase - Supabase client instance
  * @param restaurantId - The restaurant ID
  * @returns Array of non-completed service requests
@@ -74,15 +71,12 @@ export async function fetchPendingServiceRequests(
 
 /**
  * Fetch menu items by category
- * 
+ *
  * @param supabase - Supabase client instance
  * @param categoryId - The category ID
  * @returns Array of menu items in the category
  */
-export async function fetchItemsByCategory(
-    supabase: SupabaseClient<Database>,
-    categoryId: string
-) {
+export async function fetchItemsByCategory(supabase: SupabaseClient<Database>, categoryId: string) {
     return supabase
         .from('items')
         .select('*')
@@ -94,31 +88,30 @@ export async function fetchItemsByCategory(
 
 /**
  * Fetch restaurant with full menu (categories + items)
- * 
+ *
  * @param supabase - Supabase client instance
  * @param slug - The restaurant slug
  * @returns Restaurant data with nested categories and items
  */
-export async function fetchRestaurantWithMenu(
-    supabase: SupabaseClient<Database>,
-    slug: string
-) {
+export async function fetchRestaurantWithMenu(supabase: SupabaseClient<Database>, slug: string) {
     return supabase
         .from('restaurants')
-        .select(`
+        .select(
+            `
             *,
             categories:categories(
                 *,
                 items:items(*)
             )
-        `)
+        `
+        )
         .eq('slug', slug)
         .single();
 }
 
 /**
  * Insert a new order with type safety
- * 
+ *
  * @param supabase - Supabase client instance
  * @param order - Order data to insert
  * @returns Inserted order data
@@ -137,7 +130,7 @@ export async function insertOrder(
 
 /**
  * Insert a service request with type safety
- * 
+ *
  * @param supabase - Supabase client instance
  * @param request - Service request data to insert
  * @returns Inserted service request data
@@ -156,7 +149,7 @@ export async function insertServiceRequest(
 
 /**
  * Update order status with type safety
- * 
+ *
  * @param supabase - Supabase client instance
  * @param orderId - The order ID to update
  * @param status - New status value
@@ -178,7 +171,7 @@ export async function updateOrderStatus(
 
 /**
  * Check for existing order by idempotency key
- * 
+ *
  * @param supabase - Supabase client instance
  * @param idempotencyKey - The idempotency key to check
  * @returns Existing order if found, null otherwise
@@ -197,7 +190,7 @@ export async function getOrderByIdempotencyKey(
 
 /**
  * Fetch items by IDs for validation
- * 
+ *
  * @param supabase - Supabase client instance
  * @param itemIds - Array of item IDs to fetch
  * @returns Array of items with validation fields
@@ -210,5 +203,7 @@ export async function fetchItemsForValidation(
         .from('items')
         .select('id, name, price, available, station')
         .in('id', itemIds)
-        .returns<Pick<Tables['items']['Row'], 'id' | 'name' | 'price' | 'available' | 'station'>[]>();
+        .returns<
+            Pick<Tables['items']['Row'], 'id' | 'name' | 'price' | 'available' | 'station'>[]
+        >();
 }

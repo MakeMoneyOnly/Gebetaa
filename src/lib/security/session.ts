@@ -1,6 +1,6 @@
 /**
  * Session Management
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT finding SEC-H2: No Session Timeout
  * Implements secure session management with timeout and activity tracking
  */
@@ -44,7 +44,7 @@ export function createSession(
 export function updateSessionActivity(sessionId: string): boolean {
     const session = sessions.get(sessionId);
     if (!session) return false;
-    
+
     session.lastActivity = Date.now();
     return true;
 }
@@ -54,28 +54,28 @@ export function updateSessionActivity(sessionId: string): boolean {
  */
 export function validateSession(sessionId: string): { valid: boolean; reason?: string } {
     const session = sessions.get(sessionId);
-    
+
     if (!session) {
         return { valid: false, reason: 'Session not found' };
     }
-    
+
     const now = Date.now();
-    
+
     // Check if session has expired due to inactivity
     if (now - session.lastActivity > SESSION_TIMEOUT) {
         sessions.delete(sessionId);
         return { valid: false, reason: 'Session expired due to inactivity' };
     }
-    
+
     // Check if session has exceeded max lifetime (8 hours)
     if (now - session.createdAt > 8 * 60 * 60 * 1000) {
         sessions.delete(sessionId);
         return { valid: false, reason: 'Session exceeded maximum lifetime' };
     }
-    
+
     // Update last activity
     session.lastActivity = now;
-    
+
     return { valid: true };
 }
 
@@ -99,7 +99,7 @@ export function destroySession(sessionId: string): void {
 export function getSessionTimeRemaining(sessionId: string): number {
     const session = sessions.get(sessionId);
     if (!session) return 0;
-    
+
     const expiresAt = session.lastActivity + SESSION_TIMEOUT;
     return Math.max(0, expiresAt - Date.now());
 }
@@ -110,15 +110,17 @@ export function getSessionTimeRemaining(sessionId: string): number {
 export function cleanupExpiredSessions(): number {
     const now = Date.now();
     let cleaned = 0;
-    
+
     for (const [sessionId, session] of sessions.entries()) {
-        if (now - session.lastActivity > SESSION_TIMEOUT ||
-            now - session.createdAt > 8 * 60 * 60 * 1000) {
+        if (
+            now - session.lastActivity > SESSION_TIMEOUT ||
+            now - session.createdAt > 8 * 60 * 60 * 1000
+        ) {
             sessions.delete(sessionId);
             cleaned++;
         }
     }
-    
+
     return cleaned;
 }
 
@@ -138,19 +140,19 @@ export function validateSessionContext(
     if (!session) {
         return { valid: false, reason: 'Session not found' };
     }
-    
+
     // Check if IP has changed (could indicate session hijacking)
     if (session.ipAddress !== ipAddress) {
         // In production, you might want to invalidate the session
         // or require re-authentication
         console.warn(`Session ${sessionId} IP mismatch: ${session.ipAddress} vs ${ipAddress}`);
     }
-    
+
     // Check if user agent has changed significantly
     if (session.userAgent !== userAgent) {
         console.warn(`Session ${sessionId} User-Agent mismatch`);
     }
-    
+
     return { valid: true };
 }
 
@@ -161,11 +163,11 @@ export function validateSessionContext(
 export function extendSession(sessionId: string): boolean {
     const session = sessions.get(sessionId);
     if (!session) return false;
-    
+
     // Only extend if session is still valid
     const validation = validateSession(sessionId);
     if (!validation.valid) return false;
-    
+
     session.lastActivity = Date.now();
     return true;
 }

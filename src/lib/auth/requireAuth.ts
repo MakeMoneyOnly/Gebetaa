@@ -18,7 +18,10 @@ interface AuthResult {
  */
 export async function requireAuth(redirectTo: string = '/agency-admin/login'): Promise<AuthResult> {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
         redirect(redirectTo);
@@ -61,7 +64,11 @@ export async function requireAdmin(): Promise<AuthResult> {
 export async function requireAdminOrManager(): Promise<AuthResult> {
     const auth = await requireAuth();
 
-    if (!auth.agencyUser || !auth.agencyUser.role || !['admin', 'manager'].includes(auth.agencyUser.role)) {
+    if (
+        !auth.agencyUser ||
+        !auth.agencyUser.role ||
+        !['admin', 'manager'].includes(auth.agencyUser.role)
+    ) {
         redirect('/agency-admin/unauthorized');
     }
 
@@ -81,7 +88,10 @@ export async function requireRestaurantAccess(restaurantId: string): Promise<Aut
     }
 
     // Manager/staff only have access to their assigned restaurants
-    if (!auth.agencyUser?.restaurant_ids || !auth.agencyUser.restaurant_ids.includes(restaurantId)) {
+    if (
+        !auth.agencyUser?.restaurant_ids ||
+        !auth.agencyUser.restaurant_ids.includes(restaurantId)
+    ) {
         redirect('/agency-admin/unauthorized');
     }
 

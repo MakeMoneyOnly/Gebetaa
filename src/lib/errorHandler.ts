@@ -94,9 +94,6 @@ export async function safeParseJson(request: Request): Promise<unknown | NextRes
         return await request.json();
     } catch (error) {
         console.error('Failed to parse JSON body:', error);
-        return NextResponse.json(
-            { error: 'Invalid JSON in request body' },
-            { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
     }
 }

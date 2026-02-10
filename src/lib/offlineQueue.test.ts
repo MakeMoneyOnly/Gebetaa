@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { queueOrder, getPendingOrders, removeQueuedOrder, clearAllPendingOrders } from './offlineQueue';
+import {
+    queueOrder,
+    getPendingOrders,
+    removeQueuedOrder,
+    clearAllPendingOrders,
+} from './offlineQueue';
 
 /**
  * Offline Queue Tests
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT finding TEST-001: Offline Support Testing
  * Critical for the "works offline" value proposition
  */
@@ -19,9 +24,7 @@ describe('OrderDatabase', () => {
             const order = {
                 restaurant_id: '550e8400-e29b-41d4-a716-446655440000',
                 table_number: 5,
-                items: [
-                    { id: 'item-1', name: 'Test Item', quantity: 2, price: 10.99 },
-                ],
+                items: [{ id: 'item-1', name: 'Test Item', quantity: 2, price: 10.99 }],
                 total_price: 21.98,
                 notes: 'Test notes',
                 idempotency_key: '550e8400-e29b-41d4-a716-446655440001',
@@ -202,7 +205,7 @@ describe('OrderDatabase', () => {
                 items: [
                     { id: 'item-1', name: 'Burger', quantity: 2, price: 15.99 },
                     { id: 'item-2', name: 'Fries', quantity: 1, price: 5.99 },
-                    { id: 'item-3', name: 'Drink', quantity: 3, price: 2.50 },
+                    { id: 'item-3', name: 'Drink', quantity: 3, price: 2.5 },
                 ],
                 total_price: 42.47,
                 notes: 'No onions on the burger, extra sauce on the side',

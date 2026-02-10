@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -7,8 +7,8 @@ import { CanvasRevealEffect } from '@/components/ui/CanvasRevealEffect';
 import { useState } from 'react';
 
 export default function LoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -16,7 +16,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black relative flex flex-col">
+        <div className="relative flex min-h-screen flex-col bg-black">
             {/* Animated Background */}
             <div className="absolute inset-0 z-0">
                 <CanvasRevealEffect
@@ -30,14 +30,14 @@ export default function LoginPage() {
                     reverse={false}
                 />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,1)_0%,_transparent_100%)]" />
-                <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
+                <div className="absolute top-0 right-0 left-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
             </div>
 
             {/* Content */}
-            <div className="relative z-10 flex flex-col flex-1">
+            <div className="relative z-10 flex flex-1 flex-col">
                 <MiniNavbar />
 
-                <div className="flex-1 flex items-center justify-center px-6 py-12">
+                <div className="flex flex-1 items-center justify-center px-6 py-12">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -45,13 +45,16 @@ export default function LoginPage() {
                         className="w-full max-w-md space-y-8"
                     >
                         {/* Header */}
-                        <div className="text-center space-y-2">
+                        <div className="space-y-2 text-center">
                             <h1 className="text-4xl font-black tracking-tight text-white">
                                 Welcome back
                             </h1>
-                            <p className="text-white/60 font-medium">
+                            <p className="font-medium text-white/60">
                                 Or{' '}
-                                <Link href="/auth/signup" className="text-brand-crimson hover:text-brand-crimson/80 transition-colors font-bold">
+                                <Link
+                                    href="/auth/signup"
+                                    className="text-brand-crimson hover:text-brand-crimson/80 font-bold transition-colors"
+                                >
                                     create a new account
                                 </Link>
                             </p>
@@ -62,16 +65,16 @@ export default function LoginPage() {
                             <div className="space-y-4">
                                 <button
                                     type="button"
-                                    className="w-full backdrop-blur-[2px] flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full py-3 px-4 transition-colors"
+                                    className="flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-white backdrop-blur-[2px] transition-colors hover:bg-white/10"
                                 >
                                     <span className="text-lg">G</span>
                                     <span>Sign in with Google</span>
                                 </button>
 
                                 <div className="flex items-center gap-4">
-                                    <div className="h-px bg-white/10 flex-1" />
-                                    <span className="text-white/40 text-sm">or</span>
-                                    <div className="h-px bg-white/10 flex-1" />
+                                    <div className="h-px flex-1 bg-white/10" />
+                                    <span className="text-sm text-white/40">or</span>
+                                    <div className="h-px flex-1 bg-white/10" />
                                 </div>
 
                                 <div className="space-y-4">
@@ -79,46 +82,58 @@ export default function LoginPage() {
                                         type="email"
                                         placeholder="Email address"
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full backdrop-blur-[1px] bg-white/5 text-white border border-white/10 rounded-full py-3 px-6 focus:outline-none focus:border-white/30 placeholder:text-white/40"
+                                        onChange={e => setEmail(e.target.value)}
+                                        className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3 text-white backdrop-blur-[1px] placeholder:text-white/40 focus:border-white/30 focus:outline-none"
                                         required
                                     />
                                     <input
                                         type="password"
                                         placeholder="Password"
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full backdrop-blur-[1px] bg-white/5 text-white border border-white/10 rounded-full py-3 px-6 focus:outline-none focus:border-white/30 placeholder:text-white/40"
+                                        onChange={e => setPassword(e.target.value)}
+                                        className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-3 text-white backdrop-blur-[1px] placeholder:text-white/40 focus:border-white/30 focus:outline-none"
                                         required
                                     />
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between text-sm">
-                                <label className="flex items-center gap-2 text-white/60 cursor-pointer">
-                                    <input type="checkbox" className="rounded border-white/20 bg-white/5" />
+                                <label className="flex cursor-pointer items-center gap-2 text-white/60">
+                                    <input
+                                        type="checkbox"
+                                        className="rounded border-white/20 bg-white/5"
+                                    />
                                     <span>Remember me</span>
                                 </label>
-                                <Link href="#" className="text-brand-crimson hover:text-brand-crimson/80 transition-colors font-medium">
+                                <Link
+                                    href="#"
+                                    className="text-brand-crimson hover:text-brand-crimson/80 font-medium transition-colors"
+                                >
                                     Forgot password?
                                 </Link>
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full bg-white text-black font-bold py-3 rounded-full hover:bg-white/90 transition-all active:scale-95"
+                                className="w-full rounded-full bg-white py-3 font-bold text-black transition-all hover:bg-white/90 active:scale-95"
                             >
                                 Sign in
                             </button>
                         </form>
 
-                        <p className="text-xs text-white/40 text-center pt-4">
+                        <p className="pt-4 text-center text-xs text-white/40">
                             By signing in, you agree to the{' '}
-                            <Link href="#" className="underline text-white/40 hover:text-white/60 transition-colors">
+                            <Link
+                                href="#"
+                                className="text-white/40 underline transition-colors hover:text-white/60"
+                            >
                                 Terms of Service
-                            </Link>
-                            {' '}and{' '}
-                            <Link href="#" className="underline text-white/40 hover:text-white/60 transition-colors">
+                            </Link>{' '}
+                            and{' '}
+                            <Link
+                                href="#"
+                                className="text-white/40 underline transition-colors hover:text-white/60"
+                            >
                                 Privacy Policy
                             </Link>
                             .
@@ -129,4 +144,3 @@ export default function LoginPage() {
         </div>
     );
 }
-

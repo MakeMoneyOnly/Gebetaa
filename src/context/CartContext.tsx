@@ -50,10 +50,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const addToCart = (newItem: Omit<CartItem, 'uniqueId'>) => {
         trigger('success');
-        setItems((prev) => {
+        setItems(prev => {
             // Check if exact item already exists (same ID and instructions)
             const existingIndex = prev.findIndex(
-                (item) =>
+                item =>
                     item.menuItemId === newItem.menuItemId &&
                     item.instructions === newItem.instructions
             );
@@ -72,27 +72,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const removeFromCart = (uniqueId: string) => {
         trigger('medium');
-        setItems((prev) => prev.filter((item) => item.uniqueId !== uniqueId));
+        setItems(prev => prev.filter(item => item.uniqueId !== uniqueId));
     };
 
     const updateQuantity = (uniqueId: string, delta: number) => {
         trigger('soft');
-        setItems((prev) =>
-            prev.map((item) => {
-                if (item.uniqueId === uniqueId) {
-                    const newQuantity = Math.max(0, item.quantity + delta);
-                    return { ...item, quantity: newQuantity };
-                }
-                return item;
-            }).filter((item) => item.quantity > 0)
+        setItems(prev =>
+            prev
+                .map(item => {
+                    if (item.uniqueId === uniqueId) {
+                        const newQuantity = Math.max(0, item.quantity + delta);
+                        return { ...item, quantity: newQuantity };
+                    }
+                    return item;
+                })
+                .filter(item => item.quantity > 0)
         );
     };
 
     const updateInstructions = (uniqueId: string, instructions: string) => {
-        setItems((prev) =>
-            prev.map((item) =>
-                item.uniqueId === uniqueId ? { ...item, instructions } : item
-            )
+        setItems(prev =>
+            prev.map(item => (item.uniqueId === uniqueId ? { ...item, instructions } : item))
         );
     };
 

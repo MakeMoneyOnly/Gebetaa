@@ -8,7 +8,7 @@ import {
 
 /**
  * HMAC Security Tests
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT finding SEC-H6: HMAC-signed QR codes
  */
 

@@ -3,7 +3,18 @@ import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { FilterShape } from '@/components/ui/FilterShape';
 import { useHaptic } from '@/hooks/useHaptic';
-import { Flame, UtensilsCrossed, Pizza, ChefHat, Leaf, Cookie, Coffee, CupSoda, Beer, Wine } from 'lucide-react';
+import {
+    Flame,
+    UtensilsCrossed,
+    Pizza,
+    ChefHat,
+    Leaf,
+    Cookie,
+    Coffee,
+    CupSoda,
+    Beer,
+    Wine,
+} from 'lucide-react';
 
 const FOOD_CATEGORIES = [
     { id: 'all', name: 'All', icon: <Flame size={20} /> },
@@ -45,45 +56,49 @@ export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: 
     }, [activeTab, onCategoryChange]);
 
     return (
-        <div className="w-full overflow-x-auto no-scrollbar pl-6 py-4 mt-8 mb-0 snap-x snap-mandatory">
+        <div className="no-scrollbar mt-8 mb-0 w-full snap-x snap-mandatory overflow-x-auto py-4 pl-6">
             <div className="flex gap-4 pr-6">
-                {categories.map((cat) => {
+                {categories.map(cat => {
                     const isActive = activeCategoryId === cat.id;
                     return (
                         <button
                             key={cat.id}
                             onClick={() => handleCategoryClick(cat.id)}
-                            className="group flex flex-col items-center gap-2 min-w-[70px] transition-all duration-300 focus:outline-none active:scale-95 snap-center touch-manipulation"
+                            className="group flex min-w-[70px] touch-manipulation snap-center flex-col items-center gap-2 transition-all duration-300 focus:outline-none active:scale-95"
                         >
                             {/* Badge Container */}
                             <div
                                 className={cn(
-                                    "relative w-[70px] h-[70px] flex items-center justify-center transition-all duration-300",
+                                    'relative flex h-[70px] w-[70px] items-center justify-center transition-all duration-300',
                                     isActive ? 'scale-110' : 'scale-100'
                                 )}
                             >
                                 {/* The Custom Filter Shape */}
-                                <div className="absolute inset-0 w-full h-full">
+                                <div className="absolute inset-0 h-full w-full">
                                     <FilterShape
                                         active={isActive}
-                                        color={isActive ? "#A81818" : "#F8F8F8"}
+                                        color={isActive ? '#A81818' : '#F8F8F8'}
                                     />
                                 </div>
 
                                 {/* Icon */}
-                                <div className={cn(
-                                    "relative z-10 transition-colors duration-300",
-                                    isActive ? 'text-white' : 'text-black'
-                                )}>
+                                <div
+                                    className={cn(
+                                        'relative z-10 transition-colors duration-300',
+                                        isActive ? 'text-white' : 'text-black'
+                                    )}
+                                >
                                     {cat.icon}
                                 </div>
                             </div>
 
                             {/* Label */}
-                            <span className={cn(
-                                "text-xs font-bold tracking-wide transition-colors duration-300",
-                                isActive ? 'text-black' : 'text-gray-400'
-                            )}>
+                            <span
+                                className={cn(
+                                    'text-xs font-bold tracking-wide transition-colors duration-300',
+                                    isActive ? 'text-black' : 'text-gray-400'
+                                )}
+                            >
                                 {cat.name}
                             </span>
                         </button>

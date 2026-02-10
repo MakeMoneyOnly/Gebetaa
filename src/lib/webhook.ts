@@ -1,6 +1,6 @@
 /**
  * Webhook utilities with retry logic and exponential backoff
- * 
+ *
  * Addresses: Fire-and-forget webhook pattern - Data Loss Risk (Critical Audit Finding #1)
  * Location: src/app/api/order/route.ts:151-161
  */
@@ -34,13 +34,13 @@ async function logFailedWebhook(orderData: Order, error: unknown): Promise<void>
         error: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString(),
         // Include order data for manual recovery
-        orderData: JSON.stringify(orderData)
+        orderData: JSON.stringify(orderData),
     });
 }
 
 /**
  * Forwards order data to n8n webhook with retry logic and exponential backoff
- * 
+ *
  * @param orderData - The order to forward
  * @param webhookUrl - The n8n webhook URL
  * @param retries - Number of retry attempts (default: 3)
@@ -57,7 +57,7 @@ export async function forwardToWebhook(
         order: orderData,
         action: 'new_order',
         restaurant_id: orderData.restaurant_id,
-        ts: new Date().toISOString()
+        ts: new Date().toISOString(),
     };
 
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -71,7 +71,7 @@ export async function forwardToWebhook(
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-                signal: controller.signal
+                signal: controller.signal,
             });
 
             clearTimeout(timeoutId);
@@ -83,7 +83,6 @@ export async function forwardToWebhook(
 
             // Non-OK response - throw to trigger retry
             throw new Error(`Webhook returned ${response.status}: ${response.statusText}`);
-
         } catch (err) {
             clearTimeout(timeoutId);
 
@@ -95,7 +94,11 @@ export async function forwardToWebhook(
             if (isLastAttempt) {
                 // Log to dead letter queue for manual processing
                 await logFailedWebhook(orderData, err);
-                return { success: false, attempts: attempt + 1, error: err instanceof Error ? err : new Error(errorMessage) };
+                return {
+                    success: false,
+                    attempts: attempt + 1,
+                    error: err instanceof Error ? err : new Error(errorMessage),
+                };
             }
 
             // Exponential backoff: 1s, 2s, 4s, etc.
@@ -113,19 +116,17 @@ export async function forwardToWebhook(
  * Fire-and-forget wrapper for webhook forwarding
  * Use this when you don't need to wait for the result (but still want retries)
  */
-export function forwardToWebhookAsync(
-    orderData: Order,
-    webhookUrl: string,
-    retries = 3
-): void {
+export function forwardToWebhookAsync(orderData: Order, webhookUrl: string, retries = 3): void {
     // Run asynchronously without awaiting
-    forwardToWebhook(orderData, webhookUrl, retries).then(result => {
-        if (!result.success) {
-            console.error('[Webhook] Async forward failed after retries:', result.error);
-        }
-    }).catch(err => {
-        // This should not happen since forwardToWebhook catches all errors,
-        // but we handle it just in case
-        console.error('[Webhook] Unexpected error in async forward:', err);
-    });
+    forwardToWebhook(orderData, webhookUrl, retries)
+        .then(result => {
+            if (!result.success) {
+                console.error('[Webhook] Async forward failed after retries:', result.error);
+            }
+        })
+        .catch(err => {
+            // This should not happen since forwardToWebhook catches all errors,
+            // but we handle it just in case
+            console.error('[Webhook] Unexpected error in async forward:', err);
+        });
 }

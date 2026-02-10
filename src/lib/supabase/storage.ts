@@ -19,21 +19,19 @@ export async function uploadImage(
 ): Promise<string> {
     const fileName = path || `${Date.now()}-${file.name}`;
 
-    const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false
-        });
+    const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+    });
 
     if (error) {
         throw new Error(`Failed to upload image: ${error.message}`);
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
+    const {
+        data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(data.path);
 
     return publicUrl;
 }
@@ -45,9 +43,9 @@ export async function uploadImage(
  * @returns Public URL
  */
 export function getImageUrl(path: string, bucket: string = 'food-images'): string {
-    const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(path);
+    const {
+        data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(path);
 
     return publicUrl;
 }
@@ -58,9 +56,7 @@ export function getImageUrl(path: string, bucket: string = 'food-images'): strin
  * @param bucket - Storage bucket name (default: 'food-images')
  */
 export async function deleteImage(path: string, bucket: string = 'food-images'): Promise<void> {
-    const { error } = await supabase.storage
-        .from(bucket)
-        .remove([path]);
+    const { error } = await supabase.storage.from(bucket).remove([path]);
 
     if (error) {
         throw new Error(`Failed to delete image: ${error.message}`);

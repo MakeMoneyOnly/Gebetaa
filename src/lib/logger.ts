@@ -1,6 +1,6 @@
 /**
  * Centralized Logging Utility
- * 
+ *
  * Addresses: Missing Centralized Error Logging (P2 Audit Finding #11)
  * Provides structured logging with levels and context tracking
  */
@@ -49,7 +49,12 @@ class Logger {
         return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
 
-    private formatEntry(level: LogLevel, message: string, context?: LogContext, requestId?: string): LogEntry {
+    private formatEntry(
+        level: LogLevel,
+        message: string,
+        context?: LogContext,
+        requestId?: string
+    ): LogEntry {
         return {
             level,
             message,
@@ -63,7 +68,7 @@ class Logger {
     private logToConsole(entry: LogEntry): void {
         const prefix = `[${entry.timestamp}] [${entry.level.toUpperCase()}] [${entry.source}]`;
         const requestId = entry.requestId ? ` [${entry.requestId}]` : '';
-        
+
         const logData = {
             ...entry.context,
             ...(entry.requestId && { requestId: entry.requestId }),
@@ -114,7 +119,12 @@ class Logger {
     /**
      * Log error message with optional error object
      */
-    error(message: string, error?: Error | unknown, context?: LogContext, requestId?: string): void {
+    error(
+        message: string,
+        error?: Error | unknown,
+        context?: LogContext,
+        requestId?: string
+    ): void {
         const errorContext: LogContext = {
             ...context,
         };
@@ -145,10 +155,17 @@ class Logger {
         this.info(`API Request: ${method} ${path}`, context, requestId);
     }
 
-    logApiResponse(method: string, path: string, statusCode: number, duration: number, context?: LogContext, requestId?: string): void {
+    logApiResponse(
+        method: string,
+        path: string,
+        statusCode: number,
+        duration: number,
+        context?: LogContext,
+        requestId?: string
+    ): void {
         const level = statusCode >= 400 ? 'error' : statusCode >= 300 ? 'warn' : 'info';
         const message = `API Response: ${method} ${path} - ${statusCode} (${duration}ms)`;
-        
+
         const entry = this.formatEntry(level, message, context, requestId);
         this.logToConsole(entry);
     }

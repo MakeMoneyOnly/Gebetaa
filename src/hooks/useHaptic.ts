@@ -6,7 +6,7 @@ type HapticPattern = 'soft' | 'medium' | 'heavy' | 'success' | 'warning' | 'erro
 
 /**
  * Cross-platform haptic feedback hook.
- * 
+ *
  * - Android (Chrome): Uses the standard Navigator Vibration API
  * - iOS 18+ (Safari): Uses a hidden <input type="checkbox" switch> trick
  *   that triggers Safari's native haptic engine. This is the ONLY way to
@@ -69,40 +69,43 @@ export function useHaptic() {
         }
     }, []);
 
-    const trigger = useCallback((pattern: HapticPattern = 'medium') => {
-        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const trigger = useCallback(
+        (pattern: HapticPattern = 'medium') => {
+            const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
-        if (isIOS) {
-            // iOS: Use the Safari checkbox switch haptic trick (iOS 18+)
-            // This provides a single light haptic tap — it's the only option on web
-            triggerIOSHaptic();
-        } else if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            // Android / other: Use the standard Vibration API
-            switch (pattern) {
-                case 'soft':
-                    navigator.vibrate(20);
-                    break;
-                case 'medium':
-                    navigator.vibrate(40);
-                    break;
-                case 'heavy':
-                    navigator.vibrate(60);
-                    break;
-                case 'success':
-                    navigator.vibrate([30, 50, 30]);
-                    break;
-                case 'warning':
-                    navigator.vibrate([30, 50, 30]);
-                    break;
-                case 'error':
-                    navigator.vibrate([50, 100, 50, 100]);
-                    break;
-                default:
-                    navigator.vibrate(20);
+            if (isIOS) {
+                // iOS: Use the Safari checkbox switch haptic trick (iOS 18+)
+                // This provides a single light haptic tap — it's the only option on web
+                triggerIOSHaptic();
+            } else if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                // Android / other: Use the standard Vibration API
+                switch (pattern) {
+                    case 'soft':
+                        navigator.vibrate(20);
+                        break;
+                    case 'medium':
+                        navigator.vibrate(40);
+                        break;
+                    case 'heavy':
+                        navigator.vibrate(60);
+                        break;
+                    case 'success':
+                        navigator.vibrate([30, 50, 30]);
+                        break;
+                    case 'warning':
+                        navigator.vibrate([30, 50, 30]);
+                        break;
+                    case 'error':
+                        navigator.vibrate([50, 100, 50, 100]);
+                        break;
+                    default:
+                        navigator.vibrate(20);
+                }
             }
-        }
-        // If neither is supported, silently no-op
-    }, [triggerIOSHaptic]);
+            // If neither is supported, silently no-op
+        },
+        [triggerIOSHaptic]
+    );
 
     return { trigger };
 }
