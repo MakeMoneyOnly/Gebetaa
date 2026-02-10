@@ -7,7 +7,7 @@
  * Reference: SKILLS/enterprise/design-system-engineer/SKILL.md
  */
 
-import { designTokens } from './design-tokens';
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // COLOR TOKEN MAPPINGS
@@ -18,7 +18,7 @@ export const colorMappings = {
   '#A81818': 'var(--brand-crimson)',
   '#8B1313': 'var(--brand-crimson-dark)',
   '#FDF2F2': 'var(--brand-crimson-light)',
-  
+
   // Secondary Brand Colors
   '#E0F2E9': 'var(--brand-mint)',
   '#C8E6D5': 'var(--brand-mint-dark)',
@@ -26,7 +26,7 @@ export const colorMappings = {
   '#E8F0FE': 'var(--brand-blue-light)',
   '#F2C94C': 'var(--brand-yellow)',
   '#E5B93C': 'var(--brand-yellow-dark)',
-  
+
   // Semantic Colors
   '#10B981': 'var(--semantic-success)',
   '#ECFDF5': 'var(--semantic-success-light)',
@@ -36,13 +36,13 @@ export const colorMappings = {
   '#FEF2F2': 'var(--semantic-error-light)',
   '#3B82F6': 'var(--semantic-info)',
   '#EFF6FF': 'var(--semantic-info-light)',
-  
+
   // Text Colors
   '#1A1A1A': 'var(--text-primary)',
   '#666666': 'var(--text-secondary)',
   '#9CA3AF': 'var(--text-muted)',
   '#FFFFFF': 'var(--text-inverse)',
-  
+
   // Surface Colors
   '#FAFAFA': 'var(--surface-page)',
   '#E5E5E5': 'var(--surface-border)',

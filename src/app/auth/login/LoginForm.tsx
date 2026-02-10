@@ -24,7 +24,7 @@ function SubmitButton() {
 }
 
 export default function LoginForm() {
-    const [state, formAction] = useFormState(login as any, initialState);
+    const [state, formAction] = useFormState(login, initialState);
 
     return (
         <div className="bg-white py-12 px-8 shadow-apple-lg rounded-[48px] border border-black/5 sm:px-12 backdrop-blur-sm bg-white/95">

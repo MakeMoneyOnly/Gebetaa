@@ -59,8 +59,19 @@ const MOCK_ITEMS = [
 import { DishDetailDrawer } from '@/features/menu/components/DishDetailDrawer';
 import { useState } from 'react';
 
+interface MenuItem {
+    id: string;
+    title: string;
+    price: number;
+    imageUrl: string;
+    rating?: number;
+    shopName?: string;
+}
+
 export default function MenuPage() {
-    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+    const [activeTab, setActiveTab] = useState<'food' | 'drinks'>('food');
+    const [activeCategory, setActiveCategory] = useState('all');
 
     useEffect(() => {
         async function keepScreenOn() {
@@ -78,9 +89,13 @@ export default function MenuPage() {
     return (
         <main className="app-container bg-surface-0 pb-safe">
             <div className="w-full relative">
-                <GuestHero />
+                <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
 
-                <CategoryRail />
+                <CategoryRail
+                    activeTab={activeTab}
+                    activeCategoryId={activeCategory}
+                    onCategoryChange={setActiveCategory}
+                />
 
                 <div className="px-4 pb-20">
                     <div className="flex items-center justify-between mb-4 px-2">

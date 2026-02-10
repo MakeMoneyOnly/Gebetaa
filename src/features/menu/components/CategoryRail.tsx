@@ -1,34 +1,54 @@
 'use client';
-
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Flame, Fish, UtensilsCrossed, Pizza, Leaf, Coffee } from 'lucide-react';
 import { FilterShape } from '@/components/ui/FilterShape';
 import { useHaptic } from '@/hooks/useHaptic';
+import { Flame, UtensilsCrossed, Pizza, ChefHat, Leaf, Cookie, Coffee, CupSoda, Beer, Wine } from 'lucide-react';
 
-const CATEGORIES = [
+const FOOD_CATEGORIES = [
     { id: 'all', name: 'All', icon: <Flame size={20} /> },
-    { id: 'sushi', name: 'Sushi', icon: <Fish size={20} /> },
     { id: 'burger', name: 'Burger', icon: <UtensilsCrossed size={20} /> },
     { id: 'pizza', name: 'Pizza', icon: <Pizza size={20} /> },
+    { id: 'traditional', name: 'Traditional', icon: <ChefHat size={20} /> },
     { id: 'vegan', name: 'Vegan', icon: <Leaf size={20} /> },
-    { id: 'sweet', name: 'Sweet', icon: <Coffee size={20} /> },
+    { id: 'desert', name: 'Desert', icon: <Cookie size={20} /> },
 ];
 
-export function CategoryRail() {
+const DRINK_CATEGORIES = [
+    { id: 'all', name: 'All', icon: <Flame size={20} /> },
+    { id: 'hot-drinks', name: 'Hot Drinks', icon: <Coffee size={20} /> },
+    { id: 'soft-drinks', name: 'Soft Drinks', icon: <CupSoda size={20} /> },
+    { id: 'beer', name: 'Beer', icon: <Beer size={20} /> },
+    { id: 'juice', name: 'Juice', icon: <CupSoda size={20} /> },
+    { id: 'wine', name: 'Wine', icon: <Wine size={20} /> },
+];
+
+interface CategoryRailProps {
+    activeTab: 'food' | 'drinks';
+    activeCategoryId: string;
+    onCategoryChange: (id: string) => void;
+}
+
+export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: CategoryRailProps) {
     const { trigger } = useHaptic();
-    const [activeId, setActiveId] = useState('all');
 
     const handleCategoryClick = (id: string) => {
         trigger('soft');
-        setActiveId(id);
+        onCategoryChange(id);
     };
+
+    const categories = activeTab === 'food' ? FOOD_CATEGORIES : DRINK_CATEGORIES;
+
+    // Reset activeCategoryId to 'all' when tab changes
+    useEffect(() => {
+        onCategoryChange('all');
+    }, [activeTab, onCategoryChange]);
 
     return (
         <div className="w-full overflow-x-auto no-scrollbar pl-6 py-4 mt-8 mb-0 snap-x snap-mandatory">
             <div className="flex gap-4 pr-6">
-                {CATEGORIES.map((cat) => {
-                    const isActive = activeId === cat.id;
+                {categories.map((cat) => {
+                    const isActive = activeCategoryId === cat.id;
                     return (
                         <button
                             key={cat.id}

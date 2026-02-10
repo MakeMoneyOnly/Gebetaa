@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 
 type AgencyUser = Database['public']['Tables']['agency_users']['Row'];
@@ -17,7 +17,7 @@ interface AuthResult {
  * Redirects to login if not authenticated
  */
 export async function requireAuth(redirectTo: string = '/agency-admin/login'): Promise<AuthResult> {
-    const supabase = await createServerSupabaseClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {

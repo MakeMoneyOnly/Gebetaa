@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from './supabase/server';
+import { createClient } from './supabase/server';
 import type { Database } from '@/types/database';
 
 export interface AuditLogEntry {
@@ -18,7 +18,7 @@ export interface AuditLogEntry {
  */
 export async function logAction(entry: AuditLogEntry) {
     try {
-        const supabase = await createServerSupabaseClient();
+        const supabase = await createClient();
 
         const { error } = await supabase
             .from('audit_log')

@@ -21,112 +21,150 @@ const CartDrawer = dynamic(
     { ssr: false }
 );
 
+interface MenuItem {
+    id: string;
+    name: string;
+    title: string;
+    price: number;
+    imageUrl: string;
+    rating?: number;
+    shopName?: string;
+    categories: {
+        name: string;
+        section: string;
+    };
+    preparationTime?: number;
+}
+
 // Simplified Inner Component to consume Context
 function MenuContent() {
-    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
     const [cartOpen, setCartOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'food' | 'drinks'>('food');
+    const [activeCategoryId, setActiveCategoryId] = useState('all');
+    const [realItems, setRealItems] = useState<MenuItem[]>([]);
     const { addToCart, count } = useCart(); // Use global cart
 
-    const MOCK_ITEMS = [
-        {
-            id: '1',
-            title: 'Spicy Tonkotsu',
-            price: 450,
-            imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=962&auto=format&fit=crop',
-            rating: 4.8,
-            shopName: 'Ramen Lord'
-        },
-        {
-            id: '2',
-            title: 'Neon Tacos',
-            price: 280,
-            imageUrl: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?q=80&w=960&auto=format&fit=crop',
-            rating: 4.5,
-            shopName: 'Loco Chino'
-        },
-        {
-            id: '3',
-            title: 'Double Smash',
-            price: 380,
-            imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=999&auto=format&fit=crop',
-            rating: 4.9,
-            shopName: 'Burger Joint'
-        },
-        {
-            id: '4',
-            title: 'Salmon Poke',
-            price: 520,
-            imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop',
-            rating: 4.7,
-            shopName: 'Aloha Bowl'
-        },
-        {
-            id: '5',
-            title: 'Glazed Pop',
-            price: 150,
-            imageUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1000&auto=format&fit=crop',
-            rating: 4.6,
-            shopName: 'Dough & Co.'
-        },
-        {
-            id: '6',
-            title: 'Truffle Pasta',
-            price: 650,
-            imageUrl: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80&w=1000&auto=format&fit=crop',
-            rating: 4.8,
-            shopName: 'Nonna\'s'
-        }
-    ];
-
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setLoading(false);
-        }, 1500);
+        async function fetchMenu() {
+            setLoading(true);
+            const supabase = createClient();
 
-        async function keepScreenOn() {
             try {
-                if ('wakeLock' in navigator && document.visibilityState === 'visible') {
-                    await navigator.wakeLock.request('screen');
+                // Fetch items with explicit columns to avoid ambiguous naming
+                const { data, error } = await supabase
+                    .from('menu_items')
+                    .select(`
+                        id,
+                        name,
+                        price,
+                        image_url,
+                        rating,
+                        preparation_time,
+                        categories!inner (
+                            name,
+                            section
+                        )
+                    `)
+                    .eq('is_available', true);
+
+                if (error) {
+                    console.error('Error fetching menu:', error);
+                    return;
                 }
+
+                // Helper to handle both external URLs and Supabase Storage paths
+                const getSmartImageUrl = (path: string | null) => {
+                    if (!path) return 'https://via.placeholder.com/150';
+                    if (path.startsWith('http') || path.startsWith('fab')) return path;
+
+                    // Use correct bucket name 'menu-images'
+                    const { data } = supabase.storage.from('menu-images').getPublicUrl(path);
+                    return data.publicUrl;
+                };
+
+                const CATEGORY_MAP: Record<string, string> = {
+                    'burgers': 'Burger',
+                    'burger': 'Burger',
+                    'pizza': 'Pizza',
+                    'traditional': 'Traditional',
+                    'vegan': 'Vegan',
+                    'desert': 'Desert',
+                    'dessert': 'Desert',
+                    'main dishes': 'Traditional',
+                    'pasta': 'Pizza',
+                    'gourmet pizza': 'Pizza',
+                    'premium grill': 'Traditional',
+                    'sides': 'Burger',
+                    'breakfast': 'Traditional',
+                    'bakery': 'Desert',
+
+                    // Drinks
+                    'hot drinks': 'Hot Drinks',
+                    'soft drinks': 'Soft Drinks',
+                    'beer': 'Beer',
+                    'beers': 'Beer',
+                    'alcohol': 'Beer',
+                    'juice': 'Juice',
+                    'fresh juices': 'Juice',
+                    'wine': 'Wine',
+                    'cocktails': 'Wine', // Map to closest alcoholic category if not separating
+                    'craft cocktails': 'Wine',
+                    'spirits': 'Wine',
+                    'tea': 'Hot Drinks',
+                    'coffee': 'Hot Drinks'
+                };
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const formattedItems = ((data as any[]) || []).map((item: any): MenuItem => ({
+                    ...item,
+                    title: item.name,
+                    imageUrl: getSmartImageUrl(item.image_url),
+                    preparationTime: item.preparation_time || 15,
+                    shopName: CATEGORY_MAP[item.categories?.name?.toLowerCase()] || 'Saba Grill',
+                    price: Number(item.price)
+                }));
+                setRealItems(formattedItems);
             } catch (err) {
-                // Ignore harmless errors, typical in dev/background tabs
-                console.log('Wake Lock skipped:', err);
+                console.error('Unexpected error:', err);
+            } finally {
+                setLoading(false);
             }
         }
 
-        keepScreenOn();
-
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                keepScreenOn();
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        return () => {
-            clearTimeout(timer);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-        };
+        fetchMenu();
     }, []);
 
-    const handleAddToCart = (item: any, quantity = 1) => {
+    const filteredItems = realItems.filter(item => {
+        const matchesSection = item.categories.section === activeTab;
+        if (!matchesSection) return false;
+
+        if (activeCategoryId === 'all') return true;
+
+        // Match category name (case-insensitive)
+        return item.categories.name.toLowerCase() === activeCategoryId.toLowerCase();
+    });
+
+    const handleAddToCart = (item: MenuItem, quantity = 1) => {
         addToCart({
             menuItemId: item.id,
             title: item.title,
             price: item.price,
-            quantity: quantity,
-            image: item.imageUrl
+            image: item.imageUrl,
+            quantity: quantity
         });
-        setSelectedItem(null);
     };
 
     if (loading) {
         return (
             <main className="app-container bg-surface-0 pb-safe">
-                <GuestHero />
-                <CategoryRail />
+                <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
+                <CategoryRail
+                    activeTab={activeTab}
+                    activeCategoryId={activeCategoryId}
+                    onCategoryChange={setActiveCategoryId}
+                />
                 <MenuSkeleton />
             </main>
         );
@@ -135,21 +173,23 @@ function MenuContent() {
     return (
         <main className="app-container bg-surface-0 pb-safe">
             <div className="w-full relative">
-                <GuestHero />
-                <CategoryRail />
+                <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
+                <CategoryRail
+                    activeTab={activeTab}
+                    activeCategoryId={activeCategoryId}
+                    onCategoryChange={setActiveCategoryId}
+                />
 
                 <div className="px-4 pb-20">
                     <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className="text-2xl font-black text-black no-select">Near You</h2>
-                        <button className="text-sm font-semibold hover:text-brand-crimson transition-all active:scale-95 touch-manipulation">
-                            View All
-                        </button>
+                        <h2 className="text-2xl font-black text-black no-select font-manrope tracking-tighter">Main Menu</h2>
+                        <button className="text-sm font-bold text-brand-crimson font-manrope">View All</button>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-4">
                         {/* Left Column */}
                         <div className="flex-1">
-                            {MOCK_ITEMS.filter((_, i) => i % 2 === 0).map((item) => (
+                            {filteredItems.filter((_, i) => i % 2 === 0).map((item) => (
                                 <MenuCard
                                     key={item.id}
                                     item={item}
@@ -161,7 +201,7 @@ function MenuContent() {
                         </div>
                         {/* Right Column */}
                         <div className="flex-1 pt-6">
-                            {MOCK_ITEMS.filter((_, i) => i % 2 === 1).map((item) => (
+                            {filteredItems.filter((_, i) => i % 2 === 1).map((item) => (
                                 <MenuCard
                                     key={item.id}
                                     item={item}
@@ -178,7 +218,7 @@ function MenuContent() {
                 open={!!selectedItem}
                 onOpenChange={(open) => !open && setSelectedItem(null)}
                 item={selectedItem}
-                onAddToCart={(qty) => handleAddToCart(selectedItem, qty)}
+                onAddToCart={(qty) => selectedItem && handleAddToCart(selectedItem, qty)}
             />
 
             <CartDrawer
@@ -192,7 +232,7 @@ function MenuContent() {
     );
 }
 
-export default function DynamicMenuPage({ params }: { params: { slug: string } }) {
+export default function DynamicMenuPage() {
     return (
         <CartProvider>
             <MenuContent />

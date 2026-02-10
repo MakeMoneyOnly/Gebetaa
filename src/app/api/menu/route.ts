@@ -15,6 +15,7 @@ export async function GET() {
 
         return NextResponse.json(validatedItems.data);
     } catch (error) {
+        console.error('API Error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
         // In a real app, we would save to Supabase here
         return NextResponse.json({ message: 'Item validated successfully', data: validated.data });
     } catch (error) {
+        console.error('POST Error:', error);
         return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
     }
 }

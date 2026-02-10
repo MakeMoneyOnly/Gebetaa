@@ -3,12 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Utensils, CupSoda, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 import { useHaptic } from '@/hooks/useHaptic';
 
-export function GuestHero() {
+interface GuestHeroProps {
+    activeTab: 'food' | 'drinks';
+    onTabChange: (tab: 'food' | 'drinks') => void;
+}
+
+export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
     const { trigger } = useHaptic();
-    const [activeTab, setActiveTab] = useState<'food' | 'drinks'>('food');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // Lock scroll when menu is open
@@ -25,7 +30,7 @@ export function GuestHero() {
 
     const handleTabChange = (tab: 'food' | 'drinks') => {
         trigger('soft');
-        setActiveTab(tab);
+        onTabChange(tab);
     };
 
     const toggleMenu = () => {
@@ -58,7 +63,9 @@ export function GuestHero() {
                         className="fixed inset-0 z-[9999] bg-brand-crimson text-white flex flex-col p-8 pt-safe"
                     >
                         <div className="flex justify-between items-center mb-16 pt-4">
-                            <img src="/Logo.gif" alt="Gebeta Logo" className="h-10 w-auto brightness-0 invert" />
+                            <div className="relative h-10 w-32">
+                                <Image src="/Logo.gif" alt="Gebeta Logo" fill className="object-contain brightness-0 invert" unoptimized />
+                            </div>
                             <button
                                 onClick={toggleMenu}
                                 className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors active:scale-90"
@@ -97,7 +104,9 @@ export function GuestHero() {
             {/* Header */}
             <div className="flex justify-between items-center mb-8 pt-4">
                 <div className="flex items-center">
-                    <img src="/Logo.gif" alt="Gebeta Logo" className="h-10 w-auto" />
+                    <div className="relative h-10 w-32">
+                        <Image src="/Logo.gif" alt="Gebeta Logo" fill className="object-contain" unoptimized />
+                    </div>
                 </div>
                 <button
                     onClick={toggleMenu}

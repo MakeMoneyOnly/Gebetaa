@@ -2,8 +2,7 @@
 
 import { ShoppingBag } from 'lucide-react';
 import { useHaptic } from '@/hooks/useHaptic';
-import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { AnimatePresence, motion } from 'framer-motion';
 

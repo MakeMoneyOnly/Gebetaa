@@ -21,14 +21,29 @@ const CartDrawer = dynamic(
     { ssr: false }
 );
 
+interface MenuItem {
+    id: string;
+    name: string;
+    title: string;
+    price: number;
+    imageUrl: string;
+    rating?: number;
+    shopName?: string;
+    categories: {
+        name: string;
+        section: string;
+    };
+    preparationTime?: number;
+}
+
 // Simplified Inner Component to consume Context
 function MenuContent() {
-    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
     const [cartOpen, setCartOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'food' | 'drinks'>('food');
     const [activeCategory, setActiveCategory] = useState('all');
-    const [realItems, setRealItems] = useState<any[]>([]);
+    const [realItems, setRealItems] = useState<MenuItem[]>([]);
     const { addToCart, count } = useCart(); // Use global cart
 
     useEffect(() => {
@@ -101,7 +116,8 @@ function MenuContent() {
                     'coffee': 'Hot Drinks'
                 };
 
-                const formattedItems = (data || []).map((item: any) => ({
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const formattedItems = ((data as any[]) || []).map((item: any): MenuItem => ({
                     ...item,
                     title: item.name,
                     imageUrl: getSmartImageUrl(item.image_url),
@@ -130,7 +146,7 @@ function MenuContent() {
         return item.categories.name.toLowerCase() === activeCategory.toLowerCase();
     });
 
-    const handleAddToCart = (item: any, quantity = 1) => {
+    const handleAddToCart = (item: MenuItem, quantity = 1) => {
         addToCart({
             menuItemId: item.id,
             title: item.title,
@@ -202,7 +218,7 @@ function MenuContent() {
                 open={!!selectedItem}
                 onOpenChange={(open) => !open && setSelectedItem(null)}
                 item={selectedItem}
-                onAddToCart={(qty) => handleAddToCart(selectedItem, qty)}
+                onAddToCart={(qty) => selectedItem && handleAddToCart(selectedItem, qty)}
             />
 
             <CartDrawer
