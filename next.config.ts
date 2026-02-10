@@ -71,6 +71,7 @@ const withPWA = require('next-pwa')({
 
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   turbopack: {},
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -84,8 +85,16 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'axuegixbqsvztdraenkz.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+        pathname: '/**',
       },
     ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'inline',
   },
   async headers() {
     return [
