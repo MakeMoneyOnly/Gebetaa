@@ -4,6 +4,7 @@ import { Drawer } from 'vaul';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useHaptic } from '@/hooks/useHaptic';
+import Image from 'next/image';
 
 interface CartDrawerProps {
     open: boolean;
@@ -24,7 +25,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-8" />
 
                         <div className="flex justify-between items-end mb-8">
-                            <Drawer.Title className="text-3xl font-black font-manrope">Your Order</Drawer.Title>
+                            <Drawer.Title className="text-3xl font-black font-manrope tracking-tighter">Your Order</Drawer.Title>
                             <span className="text-sm font-bold text-gray-400 uppercase tracking-wide">Table 5</span>
                         </div>
 
@@ -40,9 +41,9 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                                     <div key={item.uniqueId} className="flex flex-col gap-4 border-b border-gray-100 pb-6 last:border-0 last:pb-0">
                                         <div className="flex gap-4">
                                             {/* Image */}
-                                            <div className="w-20 h-20 rounded-2xl bg-gray-100 overflow-hidden shrink-0 shadow-sm">
+                                            <div className="relative w-20 h-20 rounded-2xl bg-gray-100 overflow-hidden shrink-0 shadow-sm">
                                                 {item.image && (
-                                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                                                    <Image src={item.image} alt={item.title} fill className="object-cover" />
                                                 )}
                                             </div>
 
@@ -51,7 +52,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                                                 <div className="flex justify-between items-start">
                                                     <h3 className="font-bold text-lg leading-tight w-[70%]">{item.title}</h3>
                                                     <div className="flex flex-col items-end">
-                                                        <span className="font-black text-brand-crimson">{item.price * item.quantity}</span>
+                                                        <span className="font-black text-brand-crimson">{(item.price * item.quantity).toLocaleString()}</span>
                                                         <span className="text-xs text-brand-crimson/60 font-bold">ETB</span>
                                                     </div>
                                                 </div>
@@ -107,7 +108,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         <div className="flex justify-between items-center mb-6">
                             <span className="text-gray-500 font-medium">Total</span>
                             <div className="flex items-end gap-1">
-                                <span className="text-3xl font-black text-black">{total}</span>
+                                <span className="text-3xl font-black text-black">{total.toLocaleString()}</span>
                                 <span className="text-sm font-bold text-gray-400 mb-1.5">ETB</span>
                             </div>
                         </div>

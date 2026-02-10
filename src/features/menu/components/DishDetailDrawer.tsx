@@ -1,20 +1,48 @@
 'use client';
 
 import { Drawer } from 'vaul';
-import { Minus, Plus, Star } from 'lucide-react';
-import { useState } from 'react';
+import { Minus, Plus, Star, Heart, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useHaptic } from '@/hooks/useHaptic';
+
+interface DishItem {
+    id: string;
+    title: string;
+    price: number;
+    imageUrl: string;
+    rating?: number;
+    shopName?: string;
+    popularity?: number;
+    reviews?: string;
+    categories?: {
+        section: string;
+    };
+    preparationTime?: number;
+}
 
 interface DishDetailDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    item: any;
+    item: DishItem | null;
     onAddToCart?: (quantity: number) => void;
 }
 
 export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart }: DishDetailDrawerProps) {
     const { trigger } = useHaptic();
     const [quantity, setQuantity] = useState(1);
+    const [isLiked, setIsLiked] = useState(false);
+    // Initialize likes with a base value if popularity creates a weird number, ensuring it feels real
+    const [likesCount, setLikesCount] = useState(0);
+
+    useEffect(() => {
+        if (item) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLikesCount(item.popularity || 2100);
+            setQuantity(1);
+            setIsLiked(false);
+        }
+    }, [item]);
 
     const increment = () => {
         trigger('soft');
@@ -32,7 +60,23 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart }: Dish
         onOpenChange(false);
     };
 
+    const toggleLike = () => {
+        trigger('medium');
+        setIsLiked(prev => {
+            setLikesCount(currentLikes => prev ? currentLikes - 1 : currentLikes + 1);
+            return !prev;
+        });
+    };
+
     if (!item) return null;
+
+    // Format likes helper
+    const formatLikes = (count: number) => {
+        if (count >= 1000) {
+            return (count / 1000).toFixed(1) + 'k';
+        }
+        return count.toString();
+    };
 
     return (
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
@@ -46,31 +90,68 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart }: Dish
 
                         {/* Full Width Hero Image Container */}
                         <div className="relative w-full h-[40vh] shrink-0 rounded-t-[32px] overflow-hidden">
-                            <img
+                            <Image
                                 src={item.imageUrl}
                                 alt={item.title}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                priority
                             />
                             {/* Gradient Fade to White at Bottom - Lowered to hide line */}
                             <div className="absolute -bottom-1 left-0 right-0 h-24 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" />
+
+                            {/* Top Right Heart Button */}
+                            <button
+                                onClick={toggleLike}
+                                className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-lg active:scale-90 transition-transform touch-manipulation z-20"
+                            >
+                                <Heart
+                                    size={20}
+                                    className={`transition-colors duration-300 ${isLiked ? 'fill-brand-crimson text-brand-crimson' : 'text-brand-crimson'}`}
+                                    strokeWidth={isLiked ? 0 : 2.5}
+                                />
+                            </button>
                         </div>
 
                         {/* Content Container */}
                         <div className="px-6 relative -mt-6 z-10">
                             {/* Title & Price */}
-                            <div className="flex justify-between items-start mb-2">
-                                <h2 className="text-3xl font-black font-manrope leading-tight text-balance">{item.title}</h2>
+                            <div className="flex justify-between items-start mb-4">
+                                <h2 className="text-3xl font-black font-inter leading-tight text-balance tracking-tighter">{item.title}</h2>
                                 <div className="flex flex-col items-end">
-                                    <span className="text-2xl font-black text-brand-crimson">{item.price * quantity}</span>
+                                    <span className="text-2xl font-black text-brand-crimson">{(item.price * quantity).toLocaleString()}</span>
                                     <span className="text-xs font-bold text-gray-400">ETB</span>
                                 </div>
                             </div>
 
-                            {/* Rating */}
-                            <div className="flex items-center gap-2 mb-6">
-                                <Star size={16} className="fill-brand-yellow text-brand-yellow" />
-                                <span className="font-bold">{item.rating}</span>
-                                <span className="text-gray-400 text-sm">(120+ reviews)</span>
+                            {/* Rating, Like Count, Prep Time Row - Standardized sizing */}
+                            <div className="flex items-center justify-between mb-8 px-1">
+                                {/* Rating Group */}
+                                <div className="flex items-center gap-1.5 min-w-[80px]">
+                                    <Star size={22} className="fill-brand-yellow text-brand-yellow" strokeWidth={0} />
+                                    <span className="font-bold text-gray-500 text-base">{item.rating || 4.5}</span>
+                                    <span className="text-gray-400 text-base font-bold">({item.reviews || '120+'})</span>
+                                </div>
+
+                                {/* Likes Count (Middle) */}
+                                <div className="flex items-center justify-center gap-1.5 min-w-[80px]">
+                                    <Heart
+                                        size={22}
+                                        className={`transition-colors duration-300 ${isLiked ? 'fill-brand-crimson text-brand-crimson' : 'text-gray-300'}`}
+                                        strokeWidth={isLiked ? 0 : 2}
+                                    />
+                                    <span className="font-bold text-gray-500 text-base">{formatLikes(likesCount)}</span>
+                                </div>
+
+                                {/* Prep Time Group */}
+                                {item.categories?.section === 'food' ? (
+                                    <div className="flex items-center justify-end gap-1.5 text-gray-500 font-bold text-base min-w-[80px]">
+                                        <Clock size={22} className="text-gray-400" />
+                                        <span>{item.preparationTime || 15} mins</span>
+                                    </div>
+                                ) : (
+                                    <div className="min-w-[80px]"></div>
+                                )}
                             </div>
 
                             {/* Description */}

@@ -10,7 +10,7 @@ const loginSchema = z.object({
     password: z.string().min(6),
 });
 
-export async function login(formData: FormData) {
+export async function login(prevState: unknown, formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
@@ -23,7 +23,7 @@ export async function login(formData: FormData) {
         return { error: 'Invalid fields' };
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -39,7 +39,7 @@ export async function login(formData: FormData) {
 }
 
 export async function logout() {
-    const supabase = createClient();
+    const supabase = await createClient();
     await supabase.auth.signOut();
     revalidatePath('/', 'layout');
     redirect('/');

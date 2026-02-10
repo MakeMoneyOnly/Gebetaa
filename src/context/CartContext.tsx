@@ -35,6 +35,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const savedCart = localStorage.getItem('gebeta-cart');
         if (savedCart) {
             try {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setItems(JSON.parse(savedCart));
             } catch (e) {
                 console.error('Failed to parse cart', e);

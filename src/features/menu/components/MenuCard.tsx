@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Heart, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 import { useHaptic } from '@/hooks/useHaptic';
 
@@ -47,11 +47,12 @@ export function MenuCard({ item, onClick, onAdd }: { item: MenuItemProps; onClic
                 {/* Flash Photo Effect Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"></div>
 
-                <img
+                <Image
                     src={item.imageUrl}
                     alt={item.title}
+                    width={500}
+                    height={220}
                     className="w-full h-[220px] object-cover"
-                    loading="lazy"
                 />
 
                 {/* Top Floating Elements */}
@@ -63,9 +64,9 @@ export function MenuCard({ item, onClick, onAdd }: { item: MenuItemProps; onClic
                 </button>
 
                 <div className="absolute -top-2 -right-2 z-20 w-[90px] h-[90px]">
-                    <img src="/Price.svg" alt="" className="w-full h-full" />
+                    <Image src="/Price.svg" alt="" width={90} height={90} className="w-full h-full" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white leading-tight">
-                        <span className="text-base font-black">{Math.round(item.price)}</span>
+                        <span className="text-base font-black">{Math.round(item.price).toLocaleString()}</span>
                         <span className="text-xs font-bold">ETB</span>
                     </div>
                 </div>
@@ -83,10 +84,10 @@ export function MenuCard({ item, onClick, onAdd }: { item: MenuItemProps; onClic
             <div className="mt-3 px-1">
                 <h3 className="font-bold text-lg leading-tight text-black">{item.title}</h3>
                 <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{item.shopName}</p>
-                    <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold">★</span>
-                        <span className="text-xs">{item.rating}</span>
+                    <p className="text-xs font-bold text-gray-300 uppercase tracking-tight">{item.shopName}</p>
+                    <div className="flex items-center gap-0.5 mr-1">
+                        <span className="text-xs font-bold text-brand-crimson">★</span>
+                        <span className="text-xs font-bold text-black">{item.rating || 4.5}</span>
                     </div>
                 </div>
             </div>

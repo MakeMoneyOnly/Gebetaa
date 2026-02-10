@@ -125,7 +125,7 @@ export function getCoursePriority(course: CourseType): number {
 
 export function groupItemsByCourse(items: OrderItem[]): Map<CourseType, OrderItem[]> {
   const grouped = new Map<CourseType, OrderItem[]>();
-  
+
   for (const item of items) {
     const course = item.course || 'main';
     if (!grouped.has(course)) {
@@ -133,7 +133,7 @@ export function groupItemsByCourse(items: OrderItem[]): Map<CourseType, OrderIte
     }
     grouped.get(course)!.push(item);
   }
-  
+
   return grouped;
 }
 
@@ -142,27 +142,27 @@ export function shouldStartCourse(
   completedCourses: CourseType[],
   activeCourses: CourseType[]
 ): boolean {
-  const courseIndex = courseSequence.indexOf(course);
-  
+
+
   // Appetizers can always start
   if (course === 'appetizer') return true;
-  
+
   // For mains, appetizers should be completed or in progress
   if (course === 'main') {
-    const appetizerIndex = courseSequence.indexOf('appetizer');
+
     const appetizersCompleted = completedCourses.includes('appetizer');
     const appetizersActive = activeCourses.includes('appetizer');
     return appetizersCompleted || !appetizersActive;
   }
-  
+
   // For desserts, mains should be completed or in progress
   if (course === 'dessert') {
-    const mainIndex = courseSequence.indexOf('main');
+
     const mainsCompleted = completedCourses.includes('main');
     const mainsActive = activeCourses.includes('main');
     return mainsCompleted || !mainsActive;
   }
-  
+
   // Beverages and sides can be prepared anytime
   return true;
 }
@@ -179,44 +179,44 @@ export function calculateOrderPriority(
   const now = new Date().getTime();
   const createdAt = new Date(order.createdAt).getTime();
   const waitTimeMinutes = (now - createdAt) / (1000 * 60);
-  
+
   // Calculate complexity (average of items)
   const complexity = order.items.reduce((sum, item) => sum + (item.complexity || 3), 0) / order.items.length;
-  
+
   // Course position (lower is higher priority within course sequence)
   const coursePosition = Math.min(...order.items.map(item => getCoursePriority(item.course || 'main')));
-  
+
   // Customer type multiplier
   const customerTypeMultipliers: Record<CustomerType, number> = {
     vip: 1.5,
     regular: 1.0,
     new: 0.8,
   };
-  
+
   // Check for high priority modifiers (allergies, special requests)
-  const highPriorityModifiers = order.items.some(item => 
-    item.modifiers?.some(mod => 
+  const highPriorityModifiers = order.items.some(item =>
+    item.modifiers?.some(mod =>
       /allerg|urgent|asap|rush/i.test(mod)
     )
   );
-  
+
   // Calculate weighted priority score
   const weights = config.priorityWeights;
-  
+
   const waitTimeScore = Math.min(waitTimeMinutes / config.slaMinutes, 1) * weights.waitTime;
   const complexityScore = (complexity / 5) * weights.complexity;
   const stationLoadScore = stationMetrics.currentLoad * weights.stationLoad;
   const courseScore = (1 - coursePosition / courseSequence.length) * weights.coursePosition;
   const customerScore = (customerTypeMultipliers[order.customerType] / 1.5) * weights.customerType;
   const modifierScore = highPriorityModifiers ? weights.modifiers : 0;
-  
+
   const priority = waitTimeScore + complexityScore + stationLoadScore + courseScore + customerScore + modifierScore;
-  
+
   // Calculate estimated completion time
   const basePrepTime = order.items.reduce((sum, item) => sum + (item.prepTimeMinutes || 10), 0);
   const loadFactor = 1 + stationMetrics.currentLoad * 0.5;
   const estimatedTime = Math.ceil(basePrepTime * loadFactor / Math.max(stationMetrics.capacity * 0.8, 1));
-  
+
   return {
     orderId: order.id,
     priority: Math.round(priority * 100) / 100,
@@ -243,16 +243,16 @@ export class SmartQueue {
   private stationMetrics: Map<StationType, StationMetrics> = new Map();
   private config: SmartQueueConfig;
   private autoBumpInterval: NodeJS.Timeout | null = null;
-  
+
   constructor(config: Partial<SmartQueueConfig> = {}) {
     this.config = { ...defaultSmartQueueConfig, ...config };
     this.initializeStationMetrics();
-    
+
     if (this.config.autoBumpEnabled) {
       this.startAutoBump();
     }
   }
-  
+
   private initializeStationMetrics(): void {
     const stations: StationType[] = ['kitchen', 'bar', 'service'];
     for (const station of stations) {
@@ -266,109 +266,109 @@ export class SmartQueue {
       });
     }
   }
-  
+
   private startAutoBump(): void {
     this.autoBumpInterval = setInterval(() => {
       this.checkAndBumpOrders();
     }, 60000); // Check every minute
   }
-  
+
   stopAutoBump(): void {
     if (this.autoBumpInterval) {
       clearInterval(this.autoBumpInterval);
       this.autoBumpInterval = null;
     }
   }
-  
+
   addOrder(order: KDSOrder): void {
     if (this.orders.size >= this.config.maxOrdersInQueue) {
       console.warn(`SmartQueue: Maximum queue size reached (${this.config.maxOrdersInQueue})`);
       return;
     }
-    
+
     this.orders.set(order.id, order);
     this.recalculatePriority(order.id);
     this.updateStationMetrics();
   }
-  
+
   updateOrder(orderId: string, updates: Partial<KDSOrder>): KDSOrder | null {
     const order = this.orders.get(orderId);
     if (!order) return null;
-    
+
     const updatedOrder = { ...order, ...updates };
     this.orders.set(orderId, updatedOrder);
     this.recalculatePriority(orderId);
     this.updateStationMetrics();
-    
+
     return updatedOrder;
   }
-  
+
   removeOrder(orderId: string): boolean {
     const removed = this.orders.delete(orderId);
     this.priorities.delete(orderId);
     this.updateStationMetrics();
     return removed;
   }
-  
+
   getOrder(orderId: string): KDSOrder | undefined {
     return this.orders.get(orderId);
   }
-  
+
   getPriority(orderId: string): OrderPriority | undefined {
     return this.priorities.get(orderId);
   }
-  
+
   getAllOrders(): KDSOrder[] {
     return Array.from(this.orders.values());
   }
-  
+
   getSortedOrders(station?: StationType): KDSOrder[] {
     let orders = this.getAllOrders();
-    
+
     if (station) {
-      orders = orders.filter(order => 
+      orders = orders.filter(order =>
         order.items.some(item => (item.station || 'kitchen') === station)
       );
     }
-    
+
     return orders.sort((a, b) => {
       const priorityA = this.priorities.get(a.id)?.priority || 0;
       const priorityB = this.priorities.get(b.id)?.priority || 0;
       return priorityB - priorityA; // Higher priority first
     });
   }
-  
+
   getOrdersByCourse(course: CourseType): KDSOrder[] {
     return this.getAllOrders().filter(order =>
       order.items.some(item => item.course === course)
     );
   }
-  
+
   private recalculatePriority(orderId: string): void {
     const order = this.orders.get(orderId);
     if (!order) return;
-    
+
     const station = order.assignedStation || 'kitchen';
     const metrics = this.stationMetrics.get(station) || this.stationMetrics.get('kitchen')!;
-    
+
     const priority = calculateOrderPriority(order, metrics, this.config);
     this.priorities.set(orderId, priority);
   }
-  
+
   recalculateAllPriorities(): void {
     for (const orderId of this.orders.keys()) {
       this.recalculatePriority(orderId);
     }
   }
-  
+
   private updateStationMetrics(): void {
     const stationCounts = new Map<StationType, { count: number; totalPrepTime: number }>();
-    
+
     // Initialize
     for (const station of ['kitchen', 'bar', 'service'] as StationType[]) {
       stationCounts.set(station, { count: 0, totalPrepTime: 0 });
     }
-    
+
     // Count active orders by station
     for (const order of this.orders.values()) {
       if (order.status === 'preparing' || order.status === 'acknowledged') {
@@ -380,7 +380,7 @@ export class SmartQueue {
         }
       }
     }
-    
+
     // Update metrics
     for (const [stationId, data] of stationCounts) {
       const metrics = this.stationMetrics.get(stationId)!;
@@ -390,43 +390,43 @@ export class SmartQueue {
       metrics.averagePrepTime = data.count > 0 ? data.totalPrepTime / data.count : 0;
     }
   }
-  
+
   getStationMetrics(station: StationType): StationMetrics | undefined {
     return this.stationMetrics.get(station);
   }
-  
+
   getAllStationMetrics(): StationMetrics[] {
     return Array.from(this.stationMetrics.values());
   }
-  
+
   private checkAndBumpOrders(): void {
     const now = new Date().getTime();
-    
+
     for (const [orderId, order] of this.orders) {
       const createdAt = new Date(order.createdAt).getTime();
       const waitTimeMinutes = (now - createdAt) / (1000 * 60);
-      
+
       if (waitTimeMinutes > this.config.slaMinutes && order.status === 'pending') {
         // Auto-escalate order
-        this.updateOrder(orderId, { 
+        this.updateOrder(orderId, {
           priority: (order.priority || 0) + 10,
           notes: `${order.notes || ''} [AUTO-ESCALATED: Exceeded ${this.config.slaMinutes}min SLA]`.trim(),
         });
       }
     }
-    
+
     this.recalculateAllPriorities();
   }
-  
+
   shouldThrottleNewOrders(station: StationType): boolean {
     if (!this.config.capacityThrottleEnabled) return false;
-    
+
     const metrics = this.stationMetrics.get(station);
     if (!metrics) return false;
-    
+
     return metrics.currentLoad > 0.9; // Throttle at 90% capacity
   }
-  
+
   getQueueStats(): {
     totalOrders: number;
     pendingCount: number;
@@ -437,16 +437,16 @@ export class SmartQueue {
   } {
     const orders = this.getAllOrders();
     const now = new Date().getTime();
-    
+
     let totalWaitTime = 0;
     let totalPriority = 0;
-    
+
     for (const order of orders) {
       const createdAt = new Date(order.createdAt).getTime();
       totalWaitTime += (now - createdAt) / (1000 * 60);
       totalPriority += this.priorities.get(order.id)?.priority || 0;
     }
-    
+
     return {
       totalOrders: orders.length,
       pendingCount: orders.filter(o => o.status === 'pending').length,
@@ -456,7 +456,7 @@ export class SmartQueue {
       averagePriority: orders.length > 0 ? totalPriority / orders.length : 0,
     };
   }
-  
+
   dispose(): void {
     this.stopAutoBump();
     this.orders.clear();
