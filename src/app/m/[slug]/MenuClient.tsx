@@ -36,6 +36,19 @@ interface MenuItem {
     preparationTime?: number;
 }
 
+interface RawMenuItem {
+    id: string;
+    name: string;
+    price: number;
+    image_url: string | null;
+    rating?: number;
+    preparation_time?: number;
+    categories: {
+        name: string;
+        section: string;
+    }[];
+}
+
 // Simplified Inner Component to consume Context
 function MenuContent() {
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -118,16 +131,18 @@ function MenuContent() {
                     coffee: 'Hot Drinks',
                 };
 
-                const formattedItems = ((data as any[]) || []).map( // eslint-disable-line @typescript-eslint/no-explicit-any
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (item: any): MenuItem => ({
-                        ...item,
+                const formattedItems = ((data as RawMenuItem[]) || []).map(
+                    (item: RawMenuItem): MenuItem => ({
+                        id: item.id,
+                        name: item.name,
                         title: item.name,
                         imageUrl: getSmartImageUrl(item.image_url),
                         preparationTime: item.preparation_time || 15,
                         shopName:
-                            CATEGORY_MAP[item.categories?.name?.toLowerCase()] || 'Saba Grill',
+                            CATEGORY_MAP[item.categories[0]?.name?.toLowerCase()] || 'Saba Grill',
                         price: Number(item.price),
+                        rating: item.rating,
+                        categories: item.categories[0],
                     })
                 );
                 setRealItems(formattedItems);
