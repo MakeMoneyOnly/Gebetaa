@@ -118,10 +118,9 @@ function MenuContent() {
                     coffee: 'Hot Drinks',
                 };
 
-                /* eslint-disable @typescript-eslint/no-explicit-any */
-                const formattedItems = ((data as any[]) || []).map(
+                const formattedItems = ((data as any[]) || []).map( // eslint-disable-line @typescript-eslint/no-explicit-any
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (item: any): MenuItem => ({
-                        /* eslint-enable @typescript-eslint/no-explicit-any */
                         ...item,
                         title: item.name,
                         imageUrl: getSmartImageUrl(item.image_url),
