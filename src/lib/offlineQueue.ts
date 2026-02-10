@@ -18,7 +18,7 @@ export class OrderDatabase extends Dexie {
     constructor() {
         super('GebetaOrders');
         this.version(1).stores({
-            pending_orders: '++id, idempotency_key, restaurant_id'
+            pending_orders: '++id, idempotency_key, restaurant_id',
         });
     }
 }
@@ -33,7 +33,7 @@ export async function queueOrder(order: Omit<PendingOrder, 'id' | 'created_at' |
         return await db.pending_orders.add({
             ...order,
             created_at: new Date().toISOString(),
-            status: 'pending'
+            status: 'pending',
         });
     } catch (error) {
         console.error('Failed to queue order:', error);
@@ -62,4 +62,3 @@ export async function removeQueuedOrder(id: number) {
 export async function clearAllPendingOrders() {
     return await db.pending_orders.clear();
 }
-

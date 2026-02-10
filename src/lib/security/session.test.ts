@@ -12,7 +12,7 @@ import {
 
 /**
  * Session Management Tests
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT finding SEC-H2: No Session Timeout
  */
 
@@ -224,7 +224,7 @@ describe('Session Management', () => {
         it('should warn but allow for IP mismatch', () => {
             createSession('session-123', 'user-456', '192.168.1.1', 'Mozilla/5.0');
 
-            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
             const result = validateSessionContext('session-123', '192.168.1.2', 'Mozilla/5.0');
 
             expect(result.valid).toBe(true);
@@ -236,7 +236,7 @@ describe('Session Management', () => {
         it('should warn but allow for User-Agent mismatch', () => {
             createSession('session-123', 'user-456', '192.168.1.1', 'Mozilla/5.0');
 
-            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
             const result = validateSessionContext('session-123', '192.168.1.1', 'Chrome/90.0');
 
             expect(result.valid).toBe(true);

@@ -1,6 +1,6 @@
 /**
  * Password Policy Enforcement
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT finding SEC-H3: Weak Password Policy
  * Implements strong password requirements for agency admin users
  */
@@ -53,8 +53,17 @@ export function validatePassword(password: string): PasswordValidationResult {
 
     // Common patterns check
     const commonPatterns = [
-        '123', 'abc', 'qwerty', 'password', 'admin', 'letmein',
-        'welcome', 'monkey', 'dragon', 'master', 'hello'
+        '123',
+        'abc',
+        'qwerty',
+        'password',
+        'admin',
+        'letmein',
+        'welcome',
+        'monkey',
+        'dragon',
+        'master',
+        'hello',
     ];
 
     const lowerPassword = password.toLowerCase();
@@ -82,7 +91,7 @@ export function validatePassword(password: string): PasswordValidationResult {
     return {
         valid: errors.length === 0,
         errors,
-        strength
+        strength,
     };
 }
 
@@ -122,7 +131,10 @@ function hasSequentialChars(password: string): boolean {
 /**
  * Calculate password strength score
  */
-function calculatePasswordStrength(password: string, errorCount: number): 'weak' | 'fair' | 'good' | 'strong' {
+function calculatePasswordStrength(
+    password: string,
+    errorCount: number
+): 'weak' | 'fair' | 'good' | 'strong' {
     if (errorCount > 2) return 'weak';
     if (errorCount > 0) return 'fair';
 

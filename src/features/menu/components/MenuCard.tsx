@@ -17,7 +17,15 @@ interface MenuItemProps {
 }
 
 // Update MenuCard component
-export function MenuCard({ item, onClick, onAdd }: { item: MenuItemProps; onClick?: () => void; onAdd?: () => void }) {
+export function MenuCard({
+    item,
+    onClick,
+    onAdd,
+}: {
+    item: MenuItemProps;
+    onClick?: () => void;
+    onAdd?: () => void;
+}) {
     const { trigger } = useHaptic();
 
     const handleLike = (e: React.MouseEvent) => {
@@ -31,42 +39,47 @@ export function MenuCard({ item, onClick, onAdd }: { item: MenuItemProps; onClic
         onAdd?.();
     };
 
-
-
     return (
         <div
-            className="group relative mb-6 active:scale-[0.98] transition-transform duration-300 touch-manipulation tap-highlight-transparent"
+            className="group tap-highlight-transparent relative mb-6 touch-manipulation transition-transform duration-300 active:scale-[0.98]"
             onClick={() => {
                 trigger('soft');
                 onClick?.();
             }}
         >
             {/* Image Container */}
-            <div className="relative rounded-[32px] overflow-hidden bg-gray-200 shadow-md">
-
+            <div className="relative overflow-hidden rounded-[32px] bg-gray-200 shadow-md">
                 {/* Flash Photo Effect Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"></div>
+                <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100"></div>
 
                 <Image
                     src={item.imageUrl}
                     alt={item.title}
                     width={500}
                     height={220}
-                    className="w-full h-[220px] object-cover"
+                    className="h-[220px] w-full object-cover"
                 />
 
                 {/* Top Floating Elements */}
                 <button
                     onClick={handleLike}
-                    className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white z-20 hover:bg-white hover:text-brand-crimson transition-colors border border-white/20 active:scale-90 touch-manipulation"
+                    className="hover:text-brand-crimson absolute top-3 left-3 z-20 flex h-9 w-9 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-white/30 text-white backdrop-blur-md transition-colors hover:bg-white active:scale-90"
                 >
                     <Heart size={16} fill="currentColor" />
                 </button>
 
-                <div className="absolute -top-2 -right-2 z-20 w-[90px] h-[90px]">
-                    <Image src="/Price.svg" alt="" width={90} height={90} className="w-full h-full" />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white leading-tight">
-                        <span className="text-base font-black">{Math.round(item.price).toLocaleString()}</span>
+                <div className="absolute -top-2 -right-2 z-20 h-[90px] w-[90px]">
+                    <Image
+                        src="/Price.svg"
+                        alt=""
+                        width={90}
+                        height={90}
+                        className="h-full w-full"
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight text-white">
+                        <span className="text-base font-black">
+                            {Math.round(item.price).toLocaleString()}
+                        </span>
                         <span className="text-xs font-bold">ETB</span>
                     </div>
                 </div>
@@ -74,7 +87,7 @@ export function MenuCard({ item, onClick, onAdd }: { item: MenuItemProps; onClic
                 {/* Add Button (Bottom Right of Image) */}
                 <button
                     onClick={handleAdd}
-                    className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-brand-crimson text-white flex items-center justify-center z-20 shadow-lg group-hover:scale-110 active:scale-90 transition-transform touch-manipulation"
+                    className="bg-brand-crimson absolute right-3 bottom-3 z-20 flex h-10 w-10 touch-manipulation items-center justify-center rounded-full text-white shadow-lg transition-transform group-hover:scale-110 active:scale-90"
                 >
                     <Plus size={20} />
                 </button>
@@ -82,11 +95,13 @@ export function MenuCard({ item, onClick, onAdd }: { item: MenuItemProps; onClic
 
             {/* Info Below */}
             <div className="mt-3 px-1">
-                <h3 className="font-bold text-lg leading-tight text-black">{item.title}</h3>
-                <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs font-bold text-gray-300 uppercase tracking-tight">{item.shopName}</p>
-                    <div className="flex items-center gap-0.5 mr-1">
-                        <span className="text-xs font-bold text-brand-crimson">★</span>
+                <h3 className="text-lg leading-tight font-bold text-black">{item.title}</h3>
+                <div className="mt-1 flex items-center justify-between">
+                    <p className="text-xs font-bold tracking-tight text-gray-300 uppercase">
+                        {item.shopName}
+                    </p>
+                    <div className="mr-1 flex items-center gap-0.5">
+                        <span className="text-brand-crimson text-xs font-bold">★</span>
                         <span className="text-xs font-bold text-black">{item.rating || 4.5}</span>
                     </div>
                 </div>

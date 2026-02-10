@@ -1,6 +1,6 @@
 /**
  * Cart and localStorage validation schemas
- * 
+ *
  * Addresses: localStorage Parsing Without Schema Validation (High Priority Audit Finding #6)
  * Location: src/context/CartContext.tsx:46-77
  */
@@ -48,7 +48,7 @@ export type ValidatedOrderHistoryStorage = z.infer<typeof OrderHistoryStorageSch
 
 /**
  * Safely parse cart data from localStorage with Zod validation
- * 
+ *
  * @param data - Raw data from localStorage
  * @returns Parsed and validated cart data, or null if invalid
  */
@@ -57,14 +57,14 @@ export function safeParseCartStorage(data: unknown): ValidatedCartStorage | null
     if (result.success) {
         return result.data;
     }
-    
+
     console.warn('[CartStorage] Validation failed:', result.error.issues);
     return null;
 }
 
 /**
  * Safely parse order history from localStorage with Zod validation
- * 
+ *
  * @param data - Raw data from localStorage
  * @returns Parsed and validated order history, or null if invalid
  */
@@ -73,14 +73,14 @@ export function safeParseOrderHistoryStorage(data: unknown): ValidatedOrderHisto
     if (result.success) {
         return result.data;
     }
-    
+
     console.warn('[OrderHistoryStorage] Validation failed:', result.error.issues);
     return null;
 }
 
 /**
  * Safely parse JSON from localStorage with error handling
- * 
+ *
  * @param key - localStorage key
  * @returns Parsed JSON, or null if not found or invalid
  */
@@ -97,7 +97,7 @@ export function safeGetLocalStorage<T>(key: string): T | null {
 
 /**
  * Safely save JSON to localStorage with error handling
- * 
+ *
  * @param key - localStorage key
  * @param value - Value to store
  * @returns true if successful, false otherwise

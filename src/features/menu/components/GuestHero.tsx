@@ -48,10 +48,12 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
     ];
 
     return (
-        <div className={cn(
-            "relative bg-brand-crimson pt-safe pb-16 px-6 rounded-b-[40px] shadow-lg mb-6 overflow-visible transition-all duration-300",
-            isMenuOpen ? "z-[9999]" : "z-10"
-        )}>
+        <div
+            className={cn(
+                'bg-brand-crimson pt-safe relative mb-6 overflow-visible rounded-b-[40px] px-6 pb-16 shadow-lg transition-all duration-300',
+                isMenuOpen ? 'z-[9999]' : 'z-10'
+            )}
+        >
             {/* Full Screen Menu Overlay */}
             <AnimatePresence>
                 {isMenuOpen && (
@@ -60,15 +62,21 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className="fixed inset-0 z-[9999] bg-brand-crimson text-white flex flex-col p-8 pt-safe"
+                        className="bg-brand-crimson pt-safe fixed inset-0 z-[9999] flex flex-col p-8 text-white"
                     >
-                        <div className="flex justify-between items-center mb-16 pt-4">
+                        <div className="mb-16 flex items-center justify-between pt-4">
                             <div className="relative h-10 w-32">
-                                <Image src="/Logo.gif" alt="Gebeta Logo" fill className="object-contain brightness-0 invert" unoptimized />
+                                <Image
+                                    src="/Logo.gif"
+                                    alt="Gebeta Logo"
+                                    fill
+                                    className="object-contain brightness-0 invert"
+                                    unoptimized
+                                />
                             </div>
                             <button
                                 onClick={toggleMenu}
-                                className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors active:scale-90"
+                                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20 active:scale-90"
                             >
                                 <X size={30} strokeWidth={2.5} />
                             </button>
@@ -82,7 +90,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.1 + index * 0.05 }}
-                                    className="text-4xl font-black tracking-tighter hover:text-brand-yellow transition-colors tap-highlight-transparent"
+                                    className="hover:text-brand-yellow tap-highlight-transparent text-4xl font-black tracking-tighter transition-colors"
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     {item.label}
@@ -90,11 +98,17 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                             ))}
                         </nav>
 
-                        <div className="mt-auto pt-8 border-t border-white/10 pb-safe">
-                            <p className="text-white/60 text-sm font-medium uppercase tracking-widest mb-2">Connect with us</p>
+                        <div className="pb-safe mt-auto border-t border-white/10 pt-8">
+                            <p className="mb-2 text-sm font-medium tracking-widest text-white/60 uppercase">
+                                Connect with us
+                            </p>
                             <div className="flex gap-6 text-xl font-bold">
-                                <a href="#" className="hover:text-brand-yellow transition-colors">Instagram</a>
-                                <a href="#" className="hover:text-brand-yellow transition-colors">Twitter</a>
+                                <a href="#" className="hover:text-brand-yellow transition-colors">
+                                    Instagram
+                                </a>
+                                <a href="#" className="hover:text-brand-yellow transition-colors">
+                                    Twitter
+                                </a>
                             </div>
                         </div>
                     </motion.div>
@@ -102,40 +116,47 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
             </AnimatePresence>
 
             {/* Header */}
-            <div className="flex justify-between items-center mb-8 pt-4">
+            <div className="mb-8 flex items-center justify-between pt-4">
                 <div className="flex items-center">
                     <div className="relative h-10 w-32">
-                        <Image src="/Logo.gif" alt="Gebeta Logo" fill className="object-contain" unoptimized />
+                        <Image
+                            src="/Logo.gif"
+                            alt="Gebeta Logo"
+                            fill
+                            className="object-contain"
+                            unoptimized
+                        />
                     </div>
                 </div>
                 <button
                     onClick={toggleMenu}
-                    className="text-white p-2 rounded-full active:scale-90 transition-all flex flex-col items-end gap-1.5 touch-manipulation"
+                    className="flex touch-manipulation flex-col items-end gap-1.5 rounded-full p-2 text-white transition-all active:scale-90"
                 >
                     <span className="sr-only">Open Menu</span>
-                    <div className="w-8 h-[3px] bg-white rounded-full"></div>
-                    <div className="w-5 h-[3px] bg-white rounded-full"></div>
+                    <div className="h-[3px] w-8 rounded-full bg-white"></div>
+                    <div className="h-[3px] w-5 rounded-full bg-white"></div>
                 </button>
             </div>
 
             {/* Main Copy */}
-            <div className="max-w-lg mx-auto">
-                <h1 className="text-[3.5rem] leading-[0.9] text-white font-black tracking-tighter mb-4 no-select">
+            <div className="mx-auto max-w-lg">
+                <h1 className="no-select mb-4 text-[3.5rem] leading-[0.9] font-black tracking-tighter text-white">
                     Where flavor <br />
-                    goes <span className="font-manrope font-medium italic text-brand-yellow">wild.</span>
+                    goes{' '}
+                    <span className="font-manrope text-brand-yellow font-medium italic">wild.</span>
                 </h1>
-                <p className="text-white/80 text-sm w-full leading-relaxed no-select">
+                <p className="no-select w-full text-sm leading-relaxed text-white/80">
                     Discover the best local bites, trending dishes, and must-try flavors near you.
                 </p>
             </div>
 
             {/* Food/Drinks Tabs */}
-            <div className="absolute -bottom-6 left-6 right-6 z-30">
-                <div className="bg-white rounded-full p-1 shadow-float flex transform-gpu">
+            <div className="absolute right-6 -bottom-6 left-6 z-30">
+                <div className="shadow-float flex transform-gpu rounded-full bg-white p-1">
                     <button
                         onClick={() => handleTabChange('food')}
                         className={cn(
-                            "flex-1 h-12 rounded-full font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 touch-manipulation no-select",
+                            'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'food'
                                 ? 'bg-brand-crimson text-white'
                                 : 'text-gray-500 hover:text-gray-700'
@@ -147,7 +168,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                     <button
                         onClick={() => handleTabChange('drinks')}
                         className={cn(
-                            "flex-1 h-12 rounded-full font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 touch-manipulation no-select",
+                            'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'drinks'
                                 ? 'bg-brand-crimson text-white'
                                 : 'text-gray-500 hover:text-gray-700'

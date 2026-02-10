@@ -1,6 +1,6 @@
 /**
  * Order Service Layer
- * 
+ *
  * Addresses: No Service Layer - Business Logic Scattered (Strategic Audit Finding #10)
  * Provides centralized business logic for order operations
  */
@@ -10,7 +10,7 @@ import type { Database } from '@/types/database';
 import {
     getOrderByIdempotencyKey,
     insertOrder,
-    fetchItemsForValidation
+    fetchItemsForValidation,
 } from '@/lib/supabase/queries';
 
 // Type aliases
@@ -78,7 +78,7 @@ export async function validateOrderItems(
 
         enrichedItems.push({
             ...item,
-            station: dbItem.station || 'kitchen'
+            station: dbItem.station || 'kitchen',
         });
     }
 
@@ -87,14 +87,14 @@ export async function validateOrderItems(
         return {
             isValid: false,
             error: 'Price mismatch. The menu might have been updated.',
-            calculatedTotal
+            calculatedTotal,
         };
     }
 
     return {
         isValid: true,
         calculatedTotal,
-        enrichedItems
+        enrichedItems,
     };
 }
 
@@ -128,7 +128,7 @@ export async function checkRateLimit(
     return {
         allowed,
         remainingOrders: Math.max(0, maxOrders - orderCount),
-        resetTime: new Date(Date.now() + windowMinutes * 60 * 1000)
+        resetTime: new Date(Date.now() + windowMinutes * 60 * 1000),
     };
 }
 
@@ -179,18 +179,13 @@ export async function createOrder(
     }
 
     // 2. Validate items
-    const validation = await validateOrderItems(
-        supabase,
-        orderData.items,
-        orderData.total_price
-    );
+    const validation = await validateOrderItems(supabase, orderData.items, orderData.total_price);
 
     if (!validation.isValid) {
         return { success: false, error: validation.error || 'Validation failed' };
     }
 
     // 3. Generate order number
-
 
     // 4. Insert order - use type assertion to handle DB schema differences
     const orderInsert = {
@@ -216,10 +211,7 @@ export async function createOrder(
 /**
  * Generates a guest fingerprint from IP and user agent
  */
-export function generateGuestFingerprint(
-    ip: string,
-    userAgent: string | null
-): string {
+export function generateGuestFingerprint(ip: string, userAgent: string | null): string {
     return `${ip}-${userAgent || 'unknown'}`;
 }
 

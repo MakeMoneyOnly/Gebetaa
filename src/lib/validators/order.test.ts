@@ -3,7 +3,7 @@ import { OrderItemSchema, CreateOrderSchema, UpdateOrderStatusSchema } from './o
 
 /**
  * Order Validation Schema Tests
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT finding TEST-001: Input Validation Testing
  */
 
@@ -115,7 +115,7 @@ describe('OrderItemSchema', () => {
 
     it('should accept valid station values', () => {
         const stations = ['kitchen', 'bar', 'dessert', 'coffee'] as const;
-        
+
         for (const station of stations) {
             const item = {
                 id: '550e8400-e29b-41d4-a716-446655440000',
@@ -279,8 +279,15 @@ describe('UpdateOrderStatusSchema', () => {
     });
 
     it('should accept all valid status values', () => {
-        const statuses = ['pending', 'preparing', 'ready', 'served', 'closed', 'cancelled'] as const;
-        
+        const statuses = [
+            'pending',
+            'preparing',
+            'ready',
+            'served',
+            'closed',
+            'cancelled',
+        ] as const;
+
         for (const status of statuses) {
             const update = {
                 order_id: '550e8400-e29b-41d4-a716-446655440000',

@@ -16,27 +16,29 @@ export function ServiceRequestButton() {
                     trigger('medium');
                     setOpen(true);
                 }}
-                className="fixed bottom-6 left-6 w-16 h-16 rounded-full bg-brand-crimson text-white shadow-2xl z-40 flex items-center justify-center active:scale-90 transition-transform touch-manipulation"
+                className="bg-brand-crimson fixed bottom-6 left-6 z-40 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full text-white shadow-2xl transition-transform active:scale-90"
             >
                 <Bell size={24} fill="currentColor" />
             </button>
 
             <Drawer.Root open={open} onOpenChange={setOpen}>
                 <Drawer.Portal>
-                    <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[9999]" />
-                    <Drawer.Content className="bg-white flex flex-col rounded-t-[32px] mt-24 fixed bottom-0 left-0 right-0 z-[9999] p-6 pb-safe outline-none">
-                        <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-8" />
+                    <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/40" />
+                    <Drawer.Content className="pb-safe fixed right-0 bottom-0 left-0 z-[9999] mt-24 flex flex-col rounded-t-[32px] bg-white p-6 outline-none">
+                        <div className="mx-auto mb-8 h-1.5 w-12 flex-shrink-0 rounded-full bg-gray-300" />
 
-                        <Drawer.Title className="text-2xl font-black font-manrope mb-6 text-center">Service Request</Drawer.Title>
+                        <Drawer.Title className="font-manrope mb-6 text-center text-2xl font-black">
+                            Service Request
+                        </Drawer.Title>
 
-                        <div className="flex flex-col gap-4 mb-4">
+                        <div className="mb-4 flex flex-col gap-4">
                             <button
                                 onClick={() => {
                                     trigger('success');
                                     alert('Waiter has been notified!');
                                     setOpen(false);
                                 }}
-                                className="w-full h-16 bg-surface-1 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 active:scale-95 transition-transform hover:bg-gray-100"
+                                className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-2xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
                             >
                                 <HandPlatter size={24} className="text-brand-crimson" />
                                 Call for a Waiter
@@ -48,7 +50,7 @@ export function ServiceRequestButton() {
                                     alert('Bill requested!');
                                     setOpen(false);
                                 }}
-                                className="w-full h-16 bg-surface-1 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 active:scale-95 transition-transform hover:bg-gray-100"
+                                className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-2xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
                             >
                                 <Receipt size={24} className="text-brand-crimson" />
                                 Ask for a Bill

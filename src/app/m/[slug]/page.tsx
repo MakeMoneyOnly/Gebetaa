@@ -55,7 +55,8 @@ function MenuContent() {
                 // Fetch items with explicit columns to avoid ambiguous naming
                 const { data, error } = await supabase
                     .from('menu_items')
-                    .select(`
+                    .select(
+                        `
                         id,
                         name,
                         price,
@@ -66,7 +67,8 @@ function MenuContent() {
                             name,
                             section
                         )
-                    `)
+                    `
+                    )
                     .eq('is_available', true);
 
                 if (error) {
@@ -85,46 +87,49 @@ function MenuContent() {
                 };
 
                 const CATEGORY_MAP: Record<string, string> = {
-                    'burgers': 'Burger',
-                    'burger': 'Burger',
-                    'pizza': 'Pizza',
-                    'traditional': 'Traditional',
-                    'vegan': 'Vegan',
-                    'desert': 'Desert',
-                    'dessert': 'Desert',
+                    burgers: 'Burger',
+                    burger: 'Burger',
+                    pizza: 'Pizza',
+                    traditional: 'Traditional',
+                    vegan: 'Vegan',
+                    desert: 'Desert',
+                    dessert: 'Desert',
                     'main dishes': 'Traditional',
-                    'pasta': 'Pizza',
+                    pasta: 'Pizza',
                     'gourmet pizza': 'Pizza',
                     'premium grill': 'Traditional',
-                    'sides': 'Burger',
-                    'breakfast': 'Traditional',
-                    'bakery': 'Desert',
+                    sides: 'Burger',
+                    breakfast: 'Traditional',
+                    bakery: 'Desert',
 
                     // Drinks
                     'hot drinks': 'Hot Drinks',
                     'soft drinks': 'Soft Drinks',
-                    'beer': 'Beer',
-                    'beers': 'Beer',
-                    'alcohol': 'Beer',
-                    'juice': 'Juice',
+                    beer: 'Beer',
+                    beers: 'Beer',
+                    alcohol: 'Beer',
+                    juice: 'Juice',
                     'fresh juices': 'Juice',
-                    'wine': 'Wine',
-                    'cocktails': 'Wine', // Map to closest alcoholic category if not separating
+                    wine: 'Wine',
+                    cocktails: 'Wine', // Map to closest alcoholic category if not separating
                     'craft cocktails': 'Wine',
-                    'spirits': 'Wine',
-                    'tea': 'Hot Drinks',
-                    'coffee': 'Hot Drinks'
+                    spirits: 'Wine',
+                    tea: 'Hot Drinks',
+                    coffee: 'Hot Drinks',
                 };
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const formattedItems = ((data as any[]) || []).map((item: any): MenuItem => ({
-                    ...item,
-                    title: item.name,
-                    imageUrl: getSmartImageUrl(item.image_url),
-                    preparationTime: item.preparation_time || 15,
-                    shopName: CATEGORY_MAP[item.categories?.name?.toLowerCase()] || 'Saba Grill',
-                    price: Number(item.price)
-                }));
+                const formattedItems = ((data as any[]) || []).map(
+                    (item: any): MenuItem => ({
+                        ...item,
+                        title: item.name,
+                        imageUrl: getSmartImageUrl(item.image_url),
+                        preparationTime: item.preparation_time || 15,
+                        shopName:
+                            CATEGORY_MAP[item.categories?.name?.toLowerCase()] || 'Saba Grill',
+                        price: Number(item.price),
+                    })
+                );
                 setRealItems(formattedItems);
             } catch (err) {
                 console.error('Unexpected error:', err);
@@ -152,7 +157,7 @@ function MenuContent() {
             title: item.title,
             price: item.price,
             image: item.imageUrl,
-            quantity: quantity
+            quantity: quantity,
         });
     };
 
@@ -172,7 +177,7 @@ function MenuContent() {
 
     return (
         <main className="app-container bg-surface-0 pb-safe">
-            <div className="w-full relative">
+            <div className="relative w-full">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
                     activeTab={activeTab}
@@ -181,34 +186,42 @@ function MenuContent() {
                 />
 
                 <div className="px-4 pb-20">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        <h2 className="text-2xl font-black text-black no-select font-manrope tracking-tighter">Main Menu</h2>
-                        <button className="text-sm font-bold text-brand-crimson font-manrope">View All</button>
+                    <div className="mb-4 flex items-center justify-between px-2">
+                        <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black">
+                            Main Menu
+                        </h2>
+                        <button className="text-brand-crimson font-manrope text-sm font-bold">
+                            View All
+                        </button>
                     </div>
 
                     <div className="flex gap-4">
                         {/* Left Column */}
                         <div className="flex-1">
-                            {filteredItems.filter((_, i) => i % 2 === 0).map((item) => (
-                                <MenuCard
-                                    key={item.id}
-                                    item={item}
-                                    onClick={() => setSelectedItem(item)}
-                                    // Pass selected item to add handler
-                                    onAdd={() => handleAddToCart(item)}
-                                />
-                            ))}
+                            {filteredItems
+                                .filter((_, i) => i % 2 === 0)
+                                .map(item => (
+                                    <MenuCard
+                                        key={item.id}
+                                        item={item}
+                                        onClick={() => setSelectedItem(item)}
+                                        // Pass selected item to add handler
+                                        onAdd={() => handleAddToCart(item)}
+                                    />
+                                ))}
                         </div>
                         {/* Right Column */}
                         <div className="flex-1 pt-6">
-                            {filteredItems.filter((_, i) => i % 2 === 1).map((item) => (
-                                <MenuCard
-                                    key={item.id}
-                                    item={item}
-                                    onClick={() => setSelectedItem(item)}
-                                    onAdd={() => handleAddToCart(item)}
-                                />
-                            ))}
+                            {filteredItems
+                                .filter((_, i) => i % 2 === 1)
+                                .map(item => (
+                                    <MenuCard
+                                        key={item.id}
+                                        item={item}
+                                        onClick={() => setSelectedItem(item)}
+                                        onAdd={() => handleAddToCart(item)}
+                                    />
+                                ))}
                         </div>
                     </div>
                 </div>
@@ -216,15 +229,12 @@ function MenuContent() {
 
             <DishDetailDrawer
                 open={!!selectedItem}
-                onOpenChange={(open) => !open && setSelectedItem(null)}
+                onOpenChange={open => !open && setSelectedItem(null)}
                 item={selectedItem}
-                onAddToCart={(qty) => selectedItem && handleAddToCart(selectedItem, qty)}
+                onAddToCart={qty => selectedItem && handleAddToCart(selectedItem, qty)}
             />
 
-            <CartDrawer
-                open={cartOpen}
-                onOpenChange={setCartOpen}
-            />
+            <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
 
             <FloatingCart count={count} onClick={() => setCartOpen(true)} />
             <ServiceRequestButton />

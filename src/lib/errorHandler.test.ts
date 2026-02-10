@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 /**
  * Error Handler Tests
- * 
+ *
  * Addresses PLATFORM_AUDIT_REPORT finding TEST-001: Error Handling Testing
  */
 

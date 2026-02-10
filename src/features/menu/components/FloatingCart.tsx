@@ -22,16 +22,16 @@ export function FloatingCart({ count, onClick }: { count: number; onClick?: () =
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }} // Smooth fade up, no spring
+                    transition={{ duration: 0.4, ease: 'easeOut' }} // Smooth fade up, no spring
                     onClick={() => {
                         trigger('medium');
                         onClick?.();
                     }}
-                    className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-brand-crimson text-white shadow-2xl z-50 flex items-center justify-center active:scale-90 transition-transform touch-manipulation"
+                    className="bg-brand-crimson fixed right-6 bottom-6 z-50 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full text-white shadow-2xl transition-transform active:scale-90"
                 >
                     <div className="relative">
                         <ShoppingBag size={24} />
-                        <span className="absolute -top-1 -right-1 bg-white text-brand-crimson text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md animate-in zoom-in">
+                        <span className="text-brand-crimson animate-in zoom-in absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold shadow-md">
                             {count}
                         </span>
                     </div>

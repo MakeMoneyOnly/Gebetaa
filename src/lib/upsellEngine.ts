@@ -13,33 +13,37 @@ export function getSmartUpsells(
     // 1. Explicit Pairings (Manual curation always comes first)
     const recommendations: MenuItem[] = [];
     if (currentItem.pairings && currentItem.pairings.length > 0) {
-        const pairedItems = allItems.filter(i =>
-            currentItem.pairings?.includes(i.id) &&
-            i.available &&
-            i.id !== currentItem.id
+        const pairedItems = allItems.filter(
+            i => currentItem.pairings?.includes(i.id) && i.available && i.id !== currentItem.id
         );
         recommendations.push(...pairedItems);
     }
 
     // 2. If we need more, find items in "Drinks" or "Desserts" category
     if (recommendations.length < limit) {
-        const sideCategories = restaurant.categories.filter(c =>
-            c.name.toLowerCase().includes('drink') ||
-            c.name.toLowerCase().includes('dessert') ||
-            c.name.toLowerCase().includes('side') ||
-            c.name_am?.includes('መጠጥ') ||
-            c.name_am?.includes('ጣፋጭ')
+        const sideCategories = restaurant.categories.filter(
+            c =>
+                c.name.toLowerCase().includes('drink') ||
+                c.name.toLowerCase().includes('dessert') ||
+                c.name.toLowerCase().includes('side') ||
+                c.name_am?.includes('መጠጥ') ||
+                c.name_am?.includes('ጣፋጭ')
         );
 
         const sideItems = sideCategories
             .flatMap(c => c.items)
-            .filter(i =>
-                i.id !== currentItem.id &&
-                i.available &&
-                !recommendations.some(r => r.id === i.id)
+            .filter(
+                i =>
+                    i.id !== currentItem.id &&
+                    i.available &&
+                    !recommendations.some(r => r.id === i.id)
             )
             // Sort by popularity if order_count exists
-            .sort((a, b) => ((a as unknown as { order_count?: number }).order_count || 0) - ((b as unknown as { order_count?: number }).order_count || 0))
+            .sort(
+                (a, b) =>
+                    ((a as unknown as { order_count?: number }).order_count || 0) -
+                    ((b as unknown as { order_count?: number }).order_count || 0)
+            )
             .slice(0, limit - recommendations.length);
 
         recommendations.push(...sideItems);
@@ -48,12 +52,17 @@ export function getSmartUpsells(
     // 3. Last fallback: High popularity items from any category
     if (recommendations.length < limit) {
         const popularItems = allItems
-            .filter(i =>
-                i.id !== currentItem.id &&
-                i.available &&
-                !recommendations.some(r => r.id === i.id)
+            .filter(
+                i =>
+                    i.id !== currentItem.id &&
+                    i.available &&
+                    !recommendations.some(r => r.id === i.id)
             )
-            .sort((a, b) => ((a as unknown as { order_count?: number }).order_count || 0) - ((b as unknown as { order_count?: number }).order_count || 0))
+            .sort(
+                (a, b) =>
+                    ((a as unknown as { order_count?: number }).order_count || 0) -
+                    ((b as unknown as { order_count?: number }).order_count || 0)
+            )
             .slice(0, limit - recommendations.length);
 
         recommendations.push(...popularItems);
