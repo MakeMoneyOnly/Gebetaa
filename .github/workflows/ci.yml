@@ -264,10 +264,18 @@ jobs:
                   urls: |
                       http://localhost:3000
                       http://localhost:3000/m/demo-table
-                  uploadArtifacts: true
-                  temporaryPublicStorage: true
+                  uploadArtifacts: false
+                  temporaryPublicStorage: false
                   budgetPath: ./lighthouse-budget.json
                   configPath: ./lighthouserc.json
+
+            - name: Upload Lighthouse results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: lighthouse-results
+                  path: .lighthouseci/
+                  retention-days: 14
 
     # ========================================
     # Summary Report
