@@ -9,7 +9,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 
 const HMAC_SECRET =
     process.env.QR_HMAC_SECRET ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
     'default-secret-change-in-production';
 
 /**
