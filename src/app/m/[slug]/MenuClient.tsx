@@ -34,6 +34,17 @@ interface MenuItem {
         section: string;
     };
     preparationTime?: number;
+    description?: string;
+    description_am?: string;
+    likesCount?: number;
+    reviewsCount?: number;
+    ingredients?: string[];
+    nutrition?: {
+        calories?: number;
+        protein?: number;
+        carbs?: number;
+        fat?: number;
+    };
 }
 
 interface RawMenuItem {
@@ -43,6 +54,17 @@ interface RawMenuItem {
     image_url: string | null;
     rating?: number;
     preparation_time?: number;
+    description?: string;
+    description_am?: string;
+    likes_count?: number;
+    reviews_count?: number;
+    ingredients?: string[];
+    nutrition?: {
+        calories?: number;
+        protein?: number;
+        carbs?: number;
+        fat?: number;
+    };
     categories: {
         name: string;
         section: string;
@@ -76,6 +98,12 @@ function MenuContent() {
                         image_url,
                         rating,
                         preparation_time,
+                        description,
+                        description_am,
+                        likes_count,
+                        reviews_count,
+                        ingredients,
+                        nutrition,
                         categories!inner (
                             name,
                             section
@@ -142,6 +170,12 @@ function MenuContent() {
                             CATEGORY_MAP[item.categories[0]?.name?.toLowerCase()] || 'Saba Grill',
                         price: Number(item.price),
                         rating: item.rating,
+                        description: item.description || '',
+                        description_am: item.description_am || '',
+                        likesCount: item.likes_count,
+                        reviewsCount: item.reviews_count,
+                        ingredients: item.ingredients,
+                        nutrition: item.nutrition,
                         categories: item.categories[0],
                     })
                 );
@@ -154,6 +188,17 @@ function MenuContent() {
         }
 
         fetchMenu();
+    }, []);
+
+    // Handle recommendations selection from DishDetailDrawer
+    useEffect(() => {
+        const handleSelectDish = (e: any) => {
+            if (e.detail) {
+                setSelectedItem(e.detail);
+            }
+        };
+        window.addEventListener('selectDish', handleSelectDish);
+        return () => window.removeEventListener('selectDish', handleSelectDish);
     }, []);
 
     const filteredItems = realItems.filter(item => {
@@ -247,6 +292,25 @@ function MenuContent() {
                 onOpenChange={open => !open && setSelectedItem(null)}
                 item={selectedItem}
                 onAddToCart={qty => selectedItem && handleAddToCart(selectedItem, qty)}
+                onAddRecommended={(item: any) => handleAddToCart(item, 1)}
+                recommendations={
+                    (() => {
+                        if (!realItems || realItems.length === 0) return [];
+
+                        // 1. Filter out the current item
+                        const otherItems = realItems.filter(i => i.id !== selectedItem?.id);
+
+                        // 2. Try to get items from the same section first (e.g., all food if viewing food)
+                        const sameSection = otherItems.filter(i => i.categories?.section === selectedItem?.categories?.section);
+
+                        // 3. Combine and shuffle for variety
+                        const pool = sameSection.length >= 5 ? sameSection : otherItems;
+                        const shuffled = [...pool].sort(() => 0.5 - Math.random());
+
+                        // 4. Return at least 10 items if available, otherwise all we have
+                        return shuffled.slice(0, 10);
+                    })()
+                }
             />
 
             <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
