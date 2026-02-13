@@ -13,3 +13,35 @@ export function formatCurrency(amount: number, currency = 'ETB') {
         maximumFractionDigits: 0,
     }).format(amount);
 }
+
+export function isRemoteOrDataImageSrc(src: string): boolean {
+    const normalized = src.trim().toLowerCase();
+
+    // Data URLs: Always skip optimization
+    if (normalized.startsWith('data:')) return true;
+
+    // Local images (start with /): Always optimize
+    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+        return false;
+    }
+
+    try {
+        const url = new URL(src);
+        const optimizedDomains = [
+            'images.unsplash.com',
+            'plus.unsplash.com',
+            'axuegixbqsvztdraenkz.supabase.co',
+            'i.pravatar.cc'
+        ];
+
+        // If domain is whitelisted, allow optimization (return false)
+        if (optimizedDomains.includes(url.hostname)) {
+            return false;
+        }
+    } catch {
+        // Ignore invalid URLs
+    }
+
+    // Default: Skip optimization for unknown remote URLs
+    return true;
+}

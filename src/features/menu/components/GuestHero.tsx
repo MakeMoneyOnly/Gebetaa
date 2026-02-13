@@ -70,7 +70,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                                     src="/Logo.gif"
                                     alt="Gebeta Logo"
                                     fill
-                                    className="object-contain brightness-0 invert"
+                                    className="object-contain object-left brightness-0 invert"
                                     unoptimized
                                 />
                             </div>
@@ -123,7 +123,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                             src="/Logo.gif"
                             alt="Gebeta Logo"
                             fill
-                            className="object-contain"
+                            className="object-contain object-left"
                             unoptimized
                         />
                     </div>

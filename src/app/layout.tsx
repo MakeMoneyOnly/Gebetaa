@@ -19,6 +19,7 @@ export const viewport: Viewport = {
     userScalable: false,
     viewportFit: 'cover',
     themeColor: '#A81818',
+    interactiveWidget: 'overlays-content',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

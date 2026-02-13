@@ -1,8 +1,19 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
 
 export function LenisRoot({ children }: { children: ReactNode }) {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // Keep server and first client render identical to avoid hydration mismatches.
+    if (!isMounted) {
+        return <>{children}</>;
+    }
+
     return <ReactLenis root>{children}</ReactLenis>;
 }

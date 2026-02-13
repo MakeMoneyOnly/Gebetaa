@@ -80,6 +80,10 @@ const nextConfig: NextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
+                hostname: 'plus.unsplash.com',
+            },
+            {
+                protocol: 'https',
                 hostname: 'images.unsplash.com',
             },
             {
@@ -123,7 +127,8 @@ const nextConfig: NextConfig = {
                     },
                     {
                         key: 'Content-Security-Policy',
-                        value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data: https://images.unsplash.com https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co;",
+                        value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data: https://images.unsplash.com https://plus.unsplash.com https://*.supabase.co https://grainy-gradients.vercel.app; connect-src 'self' https://*.supabase.co wss://*.supabase.co;",
+
                     },
                     {
                         key: 'Permissions-Policy',

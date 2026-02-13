@@ -5,6 +5,7 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useHaptic } from '@/hooks/useHaptic';
 import Image from 'next/image';
+import { isRemoteOrDataImageSrc } from '@/lib/utils';
 
 interface CartDrawerProps {
     open: boolean;
@@ -19,7 +20,9 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/40" />
-                <Drawer.Content className="fixed right-0 bottom-0 left-0 z-[9999] mt-24 flex h-[85dvh] flex-col rounded-t-[32px] bg-white outline-none">
+                <Drawer.Content
+                    className="fixed right-0 bottom-0 left-0 z-[9999] flex h-[86vh] flex-col rounded-t-[32px] bg-white outline-none"
+                >
                     <div className="no-scrollbar flex-1 overflow-y-auto p-6">
                         {/* Drag Handle */}
                         <div className="mx-auto mb-8 h-1.5 w-12 flex-shrink-0 rounded-full bg-gray-300" />
@@ -55,6 +58,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                                                         alt={item.title}
                                                         fill
                                                         className="object-cover"
+                                                        // Avoid optimizer timeout on remote/data image URLs.
+                                                        unoptimized={item.image ? isRemoteOrDataImageSrc(item.image) : false}
                                                     />
                                                 )}
                                             </div>

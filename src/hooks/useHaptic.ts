@@ -35,6 +35,7 @@ export function useHaptic() {
         input.style.width = '0';
         input.style.height = '0';
         input.tabIndex = -1;
+        input.setAttribute('aria-hidden', 'true');
 
         const label = document.createElement('label');
         label.htmlFor = '__ios_haptic_trigger';
@@ -45,6 +46,7 @@ export function useHaptic() {
         label.style.pointerEvents = 'none';
         label.style.width = '0';
         label.style.height = '0';
+        label.setAttribute('aria-hidden', 'true');
 
         document.body.appendChild(input);
         document.body.appendChild(label);

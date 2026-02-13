@@ -81,4 +81,31 @@ export const FOOD_ITEMS: FoodItem[] = [
         category: 'sushi',
         rating: 4.9,
     },
+    {
+        id: '8',
+        title: 'Special Kitfo',
+        shop: 'Habesha Grill',
+        price: 850.0,
+        imageUrl: `${SUPABASE_STORAGE_URL}/Spicy%20Tonkotsu.webp`,
+        category: 'traditional',
+        rating: 4.8,
+    },
+    {
+        id: '9',
+        title: 'Special Beyaynetu',
+        shop: 'Habesha Grill',
+        price: 600.0,
+        imageUrl: `${SUPABASE_STORAGE_URL}/Neon%20Tacos.webp`, // Placeholder real image
+        category: 'traditional',
+        rating: 4.7,
+    },
+    {
+        id: '10',
+        title: 'Shekla Tibs',
+        shop: 'Habesha Grill',
+        price: 900.0,
+        imageUrl: `${SUPABASE_STORAGE_URL}/Double%20Smash.webp`, // Placeholder real image
+        category: 'traditional',
+        rating: 4.9,
+    },
 ];

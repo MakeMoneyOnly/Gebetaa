@@ -10,6 +10,7 @@ import { MenuSkeleton } from '@/features/menu/components/MenuSkeleton';
 import { FloatingCart } from '@/features/menu/components/FloatingCart';
 import { ServiceRequestButton } from '@/features/menu/components/ServiceRequestButton';
 import { CartProvider, useCart } from '@/context/CartContext';
+import { FOOD_ITEMS } from '@/lib/constants';
 
 // Dynamically import drawer components with SSR disabled to prevent hydration errors
 const DishDetailDrawer = dynamic(
@@ -43,7 +44,12 @@ interface RawMenuItem {
     image_url: string | null;
     rating?: number;
     preparation_time?: number;
-    categories: {
+    categories:
+    | {
+        name: string;
+        section: string;
+    }
+    | {
         name: string;
         section: string;
     }[];
@@ -76,7 +82,7 @@ function MenuContent() {
                         image_url,
                         rating,
                         preparation_time,
-                        categories!inner (
+                        categories (
                             name,
                             section
                         )
@@ -85,7 +91,8 @@ function MenuContent() {
                     .eq('is_available', true);
 
                 if (error) {
-                    console.error('Error fetching menu:', error);
+                    console.error('Error fetching menu:', JSON.stringify(error, null, 2));
+                    console.error('Error details:', error.message, error.details, error.hint);
                     return;
                 }
 
@@ -93,6 +100,8 @@ function MenuContent() {
                 const getSmartImageUrl = (path: string | null) => {
                     if (!path) return 'https://via.placeholder.com/150';
                     if (path.startsWith('http') || path.startsWith('fab')) return path;
+
+
 
                     // Use correct bucket name 'menu-images'
                     const { data } = supabase.storage.from('menu-images').getPublicUrl(path);
@@ -131,20 +140,50 @@ function MenuContent() {
                     coffee: 'Hot Drinks',
                 };
 
-                const formattedItems = ((data as RawMenuItem[]) || []).map(
-                    (item: RawMenuItem): MenuItem => ({
-                        id: item.id,
-                        name: item.name,
-                        title: item.name,
-                        imageUrl: getSmartImageUrl(item.image_url),
-                        preparationTime: item.preparation_time || 15,
-                        shopName:
-                            CATEGORY_MAP[item.categories[0]?.name?.toLowerCase()] || 'Saba Grill',
-                        price: Number(item.price),
-                        rating: item.rating,
-                        categories: item.categories[0],
+                const formattedItems = ((data as any[]) || [])
+                    .map((item: any): MenuItem | null => {
+                        const rawCategory = Array.isArray(item.categories)
+                            ? item.categories[0]
+                            : item.categories;
+
+                        if (!rawCategory) return null;
+
+                        // Find corresponding item in FOOD_ITEMS to get the correct image URL
+                        // This overrides potentially broken external URLs in the database
+                        const constantItem = FOOD_ITEMS.find(
+                            f => f.title.toLowerCase().trim() === item.name.toLowerCase().trim()
+                        );
+
+                        // Aggressive fallback: If no constant item match AND url is broken/unsplash, use valid Supabase URL
+                        // This prevents next/image 500 errors for dead unsplash links
+                        let imageUrl = constantItem
+                            ? constantItem.imageUrl
+                            : getSmartImageUrl(item.image_url);
+
+                        // If the resulting URL is still an Unsplash URL (meaning it came from DB and wasn't in constants),
+                        // FORCE it to a safe placeholder to avoid the bug the user is seeing.
+                        if (imageUrl.includes('unsplash.com')) {
+                            // Use a known good image from constants as generic fallback
+                            // Or use a specific placeholder
+                            imageUrl = 'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Spicy%20Tonkotsu.webp';
+                        }
+
+                        return {
+                            id: item.id,
+                            name: item.name,
+                            title: item.name,
+                            imageUrl: imageUrl,
+                            preparationTime: item.preparation_time || 15,
+                            shopName: CATEGORY_MAP[rawCategory.name?.toLowerCase()] || 'Saba Grill',
+                            price: Number(item.price),
+                            rating: item.rating,
+                            categories: {
+                                name: rawCategory.name,
+                                section: rawCategory.section,
+                            },
+                        };
                     })
-                );
+                    .filter((item): item is MenuItem => item !== null);
                 setRealItems(formattedItems);
             } catch (err) {
                 console.error('Unexpected error:', err);
@@ -157,13 +196,13 @@ function MenuContent() {
     }, []);
 
     const filteredItems = realItems.filter(item => {
-        const matchesSection = item.categories.section === activeTab;
+        const matchesSection = item.categories?.section === activeTab;
         if (!matchesSection) return false;
 
         if (activeCategoryId === 'all') return true;
 
         // Match category name (case-insensitive)
-        return item.categories.name.toLowerCase() === activeCategoryId.toLowerCase();
+        return item.categories?.name?.toLowerCase() === activeCategoryId.toLowerCase();
     });
 
     const handleAddToCart = (item: MenuItem, quantity = 1) => {
