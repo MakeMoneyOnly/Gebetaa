@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useTheme } from 'next-themes';
 
 interface CanvasRevealEffectProps {
     animationSpeed?: number;
@@ -17,23 +18,25 @@ export const CanvasRevealEffect = ({
     containerClassName,
     showGradient = true,
 }: CanvasRevealEffectProps) => {
+    const { resolvedTheme } = useTheme();
     return (
-        <div className={cn('relative h-full w-full', containerClassName)}>
+        <div className={cn('relative h-full w-full bg-transparent', containerClassName)}>
             {/* Simplified animated background using CSS */}
-            <div className="absolute inset-0 opacity-30">
+            <div className="absolute inset-0 opacity-20 dark:opacity-30">
                 <div className="from-brand-crimson/20 to-brand-crimson/10 absolute inset-0 animate-pulse bg-gradient-to-br via-transparent" />
                 <div
                     className="absolute inset-0"
                     style={{
-                        backgroundImage: `radial-gradient(circle, rgba(168, 24, 24, 0.3) 1px, transparent 1px)`,
-                        backgroundSize: '20px 20px',
-                        animation: 'shimmer 3s ease-in-out infinite',
+                        backgroundImage: `radial-gradient(circle, rgba(168, 24, 24, 0.4) 1px, transparent 1px)`,
+                        backgroundSize: '24px 24px',
+                        animation: 'shimmer 4s ease-in-out infinite',
                     }}
                 />
             </div>
-            {showGradient && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-            )}
+            <div className={cn(
+                "absolute inset-0 bg-gradient-to-t to-transparent",
+                "from-background"
+            )} />
             <style jsx>{`
                 @keyframes shimmer {
                     0%,

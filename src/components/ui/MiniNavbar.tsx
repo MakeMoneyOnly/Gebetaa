@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 const AnimatedNavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
-    const defaultTextColor = 'text-gray-300';
-    const hoverTextColor = 'text-white';
-    const textSizeClass = 'text-sm';
+    const defaultTextColor = 'text-white/70 dark:text-gray-300';
+    const hoverTextColor = 'text-white dark:text-white';
+    const textSizeClass = 'text-sm font-bold';
 
     return (
         <a
@@ -54,10 +54,10 @@ export function MiniNavbar() {
 
     const logoElement = (
         <div className="relative flex h-5 w-5 items-center justify-center">
-            <span className="absolute top-0 left-1/2 h-1.5 w-1.5 -translate-x-1/2 transform rounded-full bg-gray-200 opacity-80"></span>
-            <span className="absolute top-1/2 left-0 h-1.5 w-1.5 -translate-y-1/2 transform rounded-full bg-gray-200 opacity-80"></span>
-            <span className="absolute top-1/2 right-0 h-1.5 w-1.5 -translate-y-1/2 transform rounded-full bg-gray-200 opacity-80"></span>
-            <span className="absolute bottom-0 left-1/2 h-1.5 w-1.5 -translate-x-1/2 transform rounded-full bg-gray-200 opacity-80"></span>
+            <span className="absolute top-0 left-1/2 h-1.5 w-1.5 -translate-x-1/2 transform rounded-full bg-white dark:bg-gray-200"></span>
+            <span className="absolute top-1/2 left-0 h-1.5 w-1.5 -translate-y-1/2 transform rounded-full bg-white dark:bg-gray-200"></span>
+            <span className="absolute top-1/2 right-0 h-1.5 w-1.5 -translate-y-1/2 transform rounded-full bg-white dark:bg-gray-200"></span>
+            <span className="absolute bottom-0 left-1/2 h-1.5 w-1.5 -translate-x-1/2 transform rounded-full bg-white dark:bg-gray-200"></span>
         </div>
     );
 
@@ -69,7 +69,7 @@ export function MiniNavbar() {
 
     const loginButtonElement = (
         <Link href="/auth/login">
-            <button className="w-full rounded-full border border-[#333] bg-[rgba(31,31,31,0.62)] px-4 py-2 text-xs text-gray-300 transition-colors duration-200 hover:border-white/50 hover:text-white sm:w-auto sm:px-3 sm:text-sm">
+            <button className="w-full rounded-full bg-foreground/10 dark:bg-white/10 px-4 py-2 text-xs text-foreground font-black dark:text-white/80 transition-all duration-200 hover:bg-foreground/20 dark:hover:bg-white/20 sm:w-auto sm:px-4 sm:text-sm shadow-sm">
                 LogIn
             </button>
         </Link>
@@ -77,9 +77,8 @@ export function MiniNavbar() {
 
     const signupButtonElement = (
         <div className="group relative w-full sm:w-auto">
-            <div className="pointer-events-none absolute inset-0 -m-2 hidden rounded-full bg-gray-100 opacity-40 blur-lg filter transition-all duration-300 ease-out group-hover:-m-3 group-hover:opacity-60 group-hover:blur-xl sm:block"></div>
             <Link href="/auth/signup">
-                <button className="relative z-10 w-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300 px-4 py-2 text-xs font-semibold text-black transition-all duration-200 hover:from-gray-200 hover:to-gray-400 sm:w-auto sm:px-3 sm:text-sm">
+                <button className="relative z-10 w-full rounded-full bg-foreground dark:bg-white px-4 py-2 text-xs font-black text-background dark:text-black transition-all duration-200 hover:scale-105 sm:w-auto sm:px-4 sm:text-sm shadow-lg shadow-black/10">
                     Signup
                 </button>
             </Link>
@@ -91,11 +90,11 @@ export function MiniNavbar() {
             className={cn(
                 'fixed top-6 left-1/2 z-20 -translate-x-1/2 transform',
                 'flex flex-col items-center',
-                'py-3 pr-6 pl-6 backdrop-blur-sm',
+                'py-3 px-6 backdrop-blur-3xl',
                 headerShapeClass,
-                'border border-[#333] bg-[#1f1f1f57]',
-                'w-[calc(100%-2rem)] sm:w-auto',
-                'transition-[border-radius] duration-0 ease-in-out'
+                'bg-black/80 dark:bg-black/80 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_-10px_rgba(255,255,255,0.05)]',
+                'w-auto min-w-[280px] sm:min-w-0',
+                'transition-all duration-300 ease-in-out'
             )}
         >
             <div className="flex w-full items-center justify-between gap-x-6 sm:gap-x-8">
@@ -115,7 +114,7 @@ export function MiniNavbar() {
                 </div>
 
                 <button
-                    className="flex h-8 w-8 items-center justify-center text-gray-300 focus:outline-none sm:hidden"
+                    className="flex h-8 w-8 items-center justify-center text-white dark:text-gray-300 focus:outline-none sm:hidden"
                     onClick={toggleMenu}
                     aria-label={isOpen ? 'Close Menu' : 'Open Menu'}
                 >

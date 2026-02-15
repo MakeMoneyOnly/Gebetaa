@@ -1,39 +1,103 @@
 @import 'tailwindcss';
 
 @theme {
-    --color-brand-crimson: #a81818;
-    --color-brand-mint: #e0f2e9;
-    --color-brand-blue: #1848a8;
-    --color-brand-yellow: #f2c94c;
+    /* Brand Colors - Premium & Vibrant */
+    --color-brand-crimson: #C91D26;
+    --color-brand-crimson-hover: #A0151E;
+    --color-brand-crimson-light: #FFEBEC;
 
-    --color-surface-0: #ffffff;
-    --color-surface-1: #f8f8f8;
+    --color-brand-mint: #E6F7F1;
+    --color-brand-mint-dark: #0F5132;
 
-    --color-glass-black: rgba(0, 0, 0, 0.85);
+    --color-brand-blue: #0F66DE;
+    --color-brand-blue-dark: #003366;
 
+    --color-brand-yellow: #FFC107;
+    --color-brand-gold: #D4AF37;
+
+    /* Base Surfaces mapped to variables */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    /* Surface Colors */
+    --color-surface-0: #FFFFFF;
+    --color-surface-50: #FAFAFA;
+    --color-surface-100: #F3F4F6;
+    --color-surface-200: #E5E7EB;
+    --color-surface-300: #D1D5DB;
+
+    /* Text Colors */
+    --color-text-primary: var(--foreground);
+    --color-text-secondary: #4B5563;
+    --color-text-tertiary: #9CA3AF;
+
+    /* Fonts */
     --font-inter: var(--font-inter), sans-serif;
     --font-manrope: var(--font-manrope), sans-serif;
 
-    --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.15);
-    --shadow-float-strong: 0 20px 40px rgba(0, 0, 0, 0.25);
+    /* Shadows */
+    --shadow-float: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    --shadow-float-strong: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --shadow-glow-crimson: 0 0 20px rgba(201, 29, 38, 0.3);
+
+    /* Animations */
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+/* 
+  Tailwind v4 default dark mode is media-query based. 
+  We must override it to use the class selector for next-themes support.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-    --background: #ffffff;
+    --background: #F8F9FA;
     --foreground: #000000;
 }
 
-/* Base Styles */
-body {
-    background-color: var(--color-surface-0);
-    color: var(--foreground);
-    font-family: var(--font-inter);
-    -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
-    /* overscroll-behavior-y: none; REMOVED to fix scroll */
+/* Ensure .dark override works even with higher specificity */
+[class~="dark"] {
+    --background: #000000;
+    --foreground: #FFFFFF;
 }
 
-/* Utilities from Reference index.html & Native Plan */
+/* Base Configuration */
+body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-manrope);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::selection {
+    background-color: var(--color-brand-crimson);
+    color: white;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-surface-300);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-brand-crimson);
+}
+
+
+/* Custom Utilities */
 @utility no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -43,11 +107,21 @@ body {
     }
 }
 
+@utility glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+@utility glass-panel {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
 @utility app-container {
     min-height: 100dvh;
     width: 100vw;
-    /* overflow-x: hidden; */
-    /* overflow-y: auto; REMOVED to let Body scroll */
 }
 
 @utility pt-safe {
@@ -68,36 +142,15 @@ body {
 }
 
 @utility badge-scallop {
-    clip-path: polygon(
-        50% 0%,
-        61% 10%,
-        75% 6%,
-        83% 18%,
-        97% 25%,
-        93% 40%,
-        100% 50%,
-        93% 60%,
-        97% 75%,
-        83% 82%,
-        75% 94%,
-        61% 90%,
-        50% 100%,
-        39% 90%,
-        25% 94%,
-        17% 82%,
-        3% 75%,
-        7% 60%,
-        0% 50%,
-        7% 40%,
-        3% 25%,
-        17% 18%,
-        25% 6%,
-        39% 10%
-    );
+    clip-path: polygon(50% 0%, 61% 10%, 75% 6%, 83% 18%, 97% 25%, 93% 40%, 100% 50%, 93% 60%, 97% 75%, 83% 82%, 75% 94%, 61% 90%, 50% 100%, 39% 90%, 25% 94%, 17% 82%, 3% 75%, 7% 60%, 0% 50%, 7% 40%, 3% 25%, 17% 18%, 25% 6%, 39% 10%);
 }
 
 @layer utilities {
     .text-balance {
         text-wrap: balance;
+    }
+
+    .text-shadow-sm {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 }
