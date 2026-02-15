@@ -35,27 +35,14 @@ interface MenuItem {
         section: string;
     };
     preparationTime?: number;
+    description?: string;
+    description_am?: string;
+    ingredients?: string[];
+    nutrition?: any;
+    likesCount?: number;
+    popularity?: number;
 }
 
-interface RawMenuItem {
-    id: string;
-    name: string;
-    price: number;
-    image_url: string | null;
-    rating?: number;
-    preparation_time?: number;
-    categories:
-    | {
-        name: string;
-        section: string;
-    }
-    | {
-        name: string;
-        section: string;
-    }[];
-}
-
-// Simplified Inner Component to consume Context
 function MenuContent() {
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
     const [cartOpen, setCartOpen] = useState(false);
@@ -74,25 +61,26 @@ function MenuContent() {
                 // Fetch items with explicit columns to avoid ambiguous naming
                 const { data, error } = await supabase
                     .from('menu_items')
-                    .select(
-                        `
+                    .select(`
                         id,
                         name,
                         price,
                         image_url,
                         rating,
                         preparation_time,
+                        description,
+                        description_am,
+                        popularity,
+                        likes_count,
                         categories (
                             name,
                             section
                         )
-                    `
-                    )
+                    `)
                     .eq('is_available', true);
 
                 if (error) {
                     console.error('Error fetching menu:', JSON.stringify(error, null, 2));
-                    console.error('Error details:', error.message, error.details, error.hint);
                     return;
                 }
 
@@ -100,8 +88,6 @@ function MenuContent() {
                 const getSmartImageUrl = (path: string | null) => {
                     if (!path) return 'https://via.placeholder.com/150';
                     if (path.startsWith('http') || path.startsWith('fab')) return path;
-
-
 
                     // Use correct bucket name 'menu-images'
                     const { data } = supabase.storage.from('menu-images').getPublicUrl(path);
@@ -123,7 +109,6 @@ function MenuContent() {
                     sides: 'Burger',
                     breakfast: 'Traditional',
                     bakery: 'Desert',
-
                     // Drinks
                     'hot drinks': 'Hot Drinks',
                     'soft drinks': 'Soft Drinks',
@@ -133,7 +118,7 @@ function MenuContent() {
                     juice: 'Juice',
                     'fresh juices': 'Juice',
                     wine: 'Wine',
-                    cocktails: 'Wine', // Map to closest alcoholic category if not separating
+                    cocktails: 'Wine',
                     'craft cocktails': 'Wine',
                     spirits: 'Wine',
                     tea: 'Hot Drinks',
@@ -149,22 +134,16 @@ function MenuContent() {
                         if (!rawCategory) return null;
 
                         // Find corresponding item in FOOD_ITEMS to get the correct image URL
-                        // This overrides potentially broken external URLs in the database
                         const constantItem = FOOD_ITEMS.find(
                             f => f.title.toLowerCase().trim() === item.name.toLowerCase().trim()
                         );
 
-                        // Aggressive fallback: If no constant item match AND url is broken/unsplash, use valid Supabase URL
-                        // This prevents next/image 500 errors for dead unsplash links
+                        // Aggressive fallback
                         let imageUrl = constantItem
                             ? constantItem.imageUrl
                             : getSmartImageUrl(item.image_url);
 
-                        // If the resulting URL is still an Unsplash URL (meaning it came from DB and wasn't in constants),
-                        // FORCE it to a safe placeholder to avoid the bug the user is seeing.
                         if (imageUrl.includes('unsplash.com')) {
-                            // Use a known good image from constants as generic fallback
-                            // Or use a specific placeholder
                             imageUrl = 'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Spicy%20Tonkotsu.webp';
                         }
 
@@ -181,6 +160,10 @@ function MenuContent() {
                                 name: rawCategory.name,
                                 section: rawCategory.section,
                             },
+                            description: item.description,
+                            description_am: item.description_am,
+                            popularity: item.popularity,
+                            likesCount: item.likes_count,
                         };
                     })
                     .filter((item): item is MenuItem => item !== null);
@@ -217,7 +200,7 @@ function MenuContent() {
 
     if (loading) {
         return (
-            <main className="app-container bg-surface-0 pb-safe">
+            <main className="app-container bg-[var(--background)] pb-safe transition-colors duration-300">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
                     activeTab={activeTab}
@@ -230,7 +213,7 @@ function MenuContent() {
     }
 
     return (
-        <main className="app-container bg-surface-0 pb-safe">
+        <main className="app-container bg-[var(--background)] pb-safe transition-colors duration-300">
             <div className="relative w-full">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
@@ -241,10 +224,10 @@ function MenuContent() {
 
                 <div className="px-4 pb-20">
                     <div className="mb-4 flex items-center justify-between px-2">
-                        <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black">
+                        <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
                             Main Menu
                         </h2>
-                        <button className="text-brand-crimson font-manrope text-sm font-bold">
+                        <button className="text-black/60 dark:text-white/60 font-manrope text-sm font-bold hover:text-brand-crimson transition-colors">
                             View All
                         </button>
                     </div>
@@ -284,7 +267,7 @@ function MenuContent() {
             <DishDetailDrawer
                 open={!!selectedItem}
                 onOpenChange={open => !open && setSelectedItem(null)}
-                item={selectedItem}
+                item={selectedItem as any}
                 onAddToCart={qty => selectedItem && handleAddToCart(selectedItem, qty)}
             />
 

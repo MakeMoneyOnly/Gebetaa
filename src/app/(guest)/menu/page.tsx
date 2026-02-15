@@ -1,32 +1,34 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GuestHero } from '@/features/menu/components/GuestHero';
 import { CategoryRail } from '@/features/menu/components/CategoryRail';
 import { MenuCard } from '@/features/menu/components/MenuCard';
-
 import { FOOD_ITEMS } from '@/lib/constants';
+import { DishDetailDrawer, DishItem } from '@/features/menu/components/DishDetailDrawer';
 
-// Map FOOD_ITEMS to match MenuCard expectations (shop -> shopName)
-const MOCK_ITEMS = FOOD_ITEMS.map(item => ({
-    ...item,
+// Map FOOD_ITEMS to match DishDetailDrawer/MenuCard expectations
+const MOCK_ITEMS: DishItem[] = FOOD_ITEMS.map(item => ({
+    id: item.id,
+    title: item.title,
+    name: item.title, // Map title to name
+    price: item.price,
+    imageUrl: item.imageUrl,
+    rating: item.rating,
     shopName: item.shop,
+    categories: {
+        name: item.category,
+        section: 'food' // default fallback
+    },
+    // Optional fields
+    description: "Delicious food item",
+    description_am: "ጣፋጭ ምግብ",
+    ingredients: [],
+    nutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 }
 }));
 
-import { DishDetailDrawer } from '@/features/menu/components/DishDetailDrawer';
-import { useState } from 'react';
-
-interface MenuItem {
-    id: string;
-    title: string;
-    price: number;
-    imageUrl: string;
-    rating?: number;
-    shopName?: string;
-}
-
 export default function MenuPage() {
-    const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+    const [selectedItem, setSelectedItem] = useState<DishItem | null>(null);
     const [activeTab, setActiveTab] = useState<'food' | 'drinks'>('food');
     const [activeCategory, setActiveCategory] = useState('all');
 
@@ -47,7 +49,6 @@ export default function MenuPage() {
         <main className="app-container bg-surface-0 pb-safe">
             <div className="relative w-full">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
-
                 <CategoryRail
                     activeTab={activeTab}
                     activeCategoryId={activeCategory}
@@ -56,8 +57,8 @@ export default function MenuPage() {
 
                 <div className="px-4 pb-20">
                     <div className="mb-4 flex items-center justify-between px-2">
-                        <h2 className="no-select text-2xl font-black text-black">Near You</h2>
-                        <button className="hover:text-brand-crimson touch-manipulation text-sm font-semibold transition-all active:scale-95">
+                        <h2 className="no-select text-2xl font-black text-white">Near You</h2>
+                        <button className="hover:text-brand-crimson touch-manipulation text-sm font-semibold text-white/60 transition-all active:scale-95">
                             View All
                         </button>
                     </div>
