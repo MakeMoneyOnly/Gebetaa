@@ -44,4 +44,5 @@
 - [x] **Feature:** Customer Menu (Public View - GuestHero, CategoryRail, MenuCard)
 - [x] **Aesthetics:** Re-aligned Brand with `1/gebeta` reference (Colors, Fonts, Grid)
 - [ ] **Data:** Connect Menu to Real Supabase Data
-- [ ] **Feature:** Admin Dashboard (Private View)
+- [x] **Feature:** Admin Dashboard (UI Shell & Layout)
+- [ ] **Feature:** Admin Dashboard (Data Integration)
