@@ -70,7 +70,7 @@ export async function validateOrderItems(
             return { isValid: false, error: `Item ${item.id} not found` };
         }
 
-        if (!dbItem.available) {
+        if (!dbItem.is_available) {
             return { isValid: false, error: `Item "${item.name}" is sold out` };
         }
 
@@ -186,16 +186,18 @@ export async function createOrder(
     }
 
     // 3. Generate order number
+    const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
     // 4. Insert order - use type assertion to handle DB schema differences
     const orderInsert = {
         restaurant_id: orderData.restaurant_id,
-        table_number: parseInt(orderData.table_number, 10) || 0,
+        table_number: orderData.table_number, // Keep as string
         items: validation.enrichedItems as unknown as OrderInsert['items'],
-        total: orderData.total_price,
+        total_price: orderData.total_price, // Correct field name
         idempotency_key: orderData.idempotency_key,
         guest_fingerprint: orderData.guest_fingerprint,
         status: 'pending',
+        order_number: orderNumber,
     } as OrderInsert;
 
     const { data: order, error } = await insertOrder(supabase, orderInsert);

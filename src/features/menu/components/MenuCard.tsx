@@ -124,14 +124,14 @@ export function MenuCard({
 
             {/* Info Below */}
             <div className="mt-3 px-1">
-                <h3 className="text-lg leading-tight font-bold text-black">{item.title}</h3>
+                <h3 className="text-lg leading-tight font-bold text-black/90 dark:text-white/90">{item.title}</h3>
                 <div className="mt-1 flex items-center justify-between">
-                    <p className="text-xs font-bold tracking-tight text-gray-300 uppercase">
+                    <p className="text-xs font-bold tracking-tight text-black/40 dark:text-white/40 uppercase">
                         {item.shopName}
                     </p>
                     <div className="mr-1 flex items-center gap-0.5">
                         <span className="text-brand-crimson text-xs font-bold">★</span>
-                        <span className="text-xs font-bold text-black">{item.rating || 4.5}</span>
+                        <span className="text-xs font-bold text-black/90 dark:text-white/90">{item.rating || 4.5}</span>
                     </div>
                 </div>
             </div>

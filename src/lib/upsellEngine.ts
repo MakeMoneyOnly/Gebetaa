@@ -14,7 +14,7 @@ export function getSmartUpsells(
     const recommendations: MenuItem[] = [];
     if (currentItem.pairings && currentItem.pairings.length > 0) {
         const pairedItems = allItems.filter(
-            i => currentItem.pairings?.includes(i.id) && i.available && i.id !== currentItem.id
+            i => currentItem.pairings?.includes(i.id) && i.is_available && i.id !== currentItem.id
         );
         recommendations.push(...pairedItems);
     }
@@ -35,7 +35,7 @@ export function getSmartUpsells(
             .filter(
                 i =>
                     i.id !== currentItem.id &&
-                    i.available &&
+                    i.is_available &&
                     !recommendations.some(r => r.id === i.id)
             )
             // Sort by popularity if order_count exists
@@ -55,7 +55,7 @@ export function getSmartUpsells(
             .filter(
                 i =>
                     i.id !== currentItem.id &&
-                    i.available &&
+                    i.is_available &&
                     !recommendations.some(r => r.id === i.id)
             )
             .sort(

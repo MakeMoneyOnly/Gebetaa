@@ -9,7 +9,7 @@ import { isRemoteOrDataImageSrc } from '@/lib/utils';
 import { createClient } from '@/lib/supabase';
 import { MenuCard } from './MenuCard';
 
-interface DishItem {
+export interface DishItem {
     id: string;
     name: string;
     title: string;
@@ -122,11 +122,11 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
     return (
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
             <Drawer.Portal>
-                <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/40" />
-                <Drawer.Content className="fixed right-0 bottom-0 left-0 z-[9999] mt-24 flex h-[92dvh] flex-col overflow-hidden rounded-t-[32px] bg-white outline-none">
+                <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm" />
+                <Drawer.Content className="fixed right-0 bottom-0 left-0 z-[9999] mt-24 flex h-[92dvh] flex-col overflow-hidden rounded-t-[32px] bg-white dark:bg-[#0a0a0a] border-t border-black/5 dark:border-white/10 outline-none transition-colors duration-300">
                     <div className="no-scrollbar relative w-full flex-1 overflow-y-auto">
                         {/* Drag Handle (Floating on Image) */}
-                        <div className="absolute top-3 left-1/2 z-20 h-1.5 w-12 -translate-x-1/2 rounded-full bg-white/50 backdrop-blur-md" />
+                        <div className="absolute top-3 left-1/2 z-20 h-1.5 w-12 -translate-x-1/2 rounded-full bg-white/20 backdrop-blur-md" />
                         <Drawer.Title className="sr-only">{item.title}</Drawer.Title>
 
                         {/* Full Width Hero Image Container */}
@@ -140,8 +140,8 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                                 // Avoid server-side optimizer timeout for remote images.
                                 unoptimized={isRemoteOrDataImage}
                             />
-                            {/* Gradient Fade to White at Bottom - Lowered to hide line */}
-                            <div className="pointer-events-none absolute right-0 -bottom-1 left-0 h-24 bg-gradient-to-t from-white via-white/90 to-transparent" />
+                            {/* Gradient Fade to Background at Bottom */}
+                            <div className="pointer-events-none absolute right-0 -bottom-1 left-0 h-24 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/90 to-transparent" />
 
                             {/* Back Button */}
                             <button
@@ -173,19 +173,19 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                         <div className="relative z-10 -mt-6 px-6">
                             {/* Title & Price */}
                             <div className="mb-4 flex items-start justify-between">
-                                <h2 className="font-inter text-3xl leading-tight font-black tracking-tighter text-balance">
+                                <h2 className="font-inter text-3xl leading-tight font-black tracking-tighter text-balance text-white">
                                     {item.title}
                                 </h2>
                                 <div className="flex flex-col items-end">
                                     <span className="text-brand-crimson text-2xl font-black">
                                         {(item.price * quantity).toLocaleString()}
                                     </span>
-                                    <span className="text-xs font-bold text-gray-400">ETB</span>
+                                    <span className="text-xs font-bold text-white/40">ETB</span>
                                 </div>
                             </div>
 
                             {/* Rating, Like Count, Time Row - Icons on Left */}
-                            <div className="mb-8 flex items-center justify-between px-6">
+                            <div className="mb-8 flex items-center justify-between px-6 py-4 rounded-3xl bg-white/5 border border-white/10">
                                 {/* Rating Group */}
                                 <div className="flex flex-col items-center">
                                     <div className="flex items-center gap-1.5">
@@ -194,12 +194,12 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                                             className="fill-brand-yellow text-brand-yellow"
                                             strokeWidth={0}
                                         />
-                                        <span className="font-manrope text-xl font-black text-gray-900">{item.rating?.toFixed(1) || '4.5'}</span>
+                                        <span className="font-manrope text-xl font-black text-white">{item.rating?.toFixed(1) || '4.5'}</span>
                                     </div>
                                 </div>
 
                                 {/* Divider */}
-                                <div className="h-8 w-px bg-gray-200" />
+                                <div className="h-8 w-px bg-white/10" />
 
                                 {/* Likes Group */}
                                 <div className="flex flex-col items-center">
@@ -209,24 +209,24 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                                             className="text-brand-crimson fill-brand-crimson"
                                             strokeWidth={0}
                                         />
-                                        <span className="font-manrope text-xl font-black text-gray-900">{formatLikes(likesCount)}</span>
+                                        <span className="font-manrope text-xl font-black text-white">{formatLikes(likesCount)}</span>
                                     </div>
                                 </div>
 
                                 {/* Divider */}
-                                <div className="h-8 w-px bg-gray-200" />
+                                <div className="h-8 w-px bg-white/10" />
 
                                 {/* Prep Time Group */}
                                 <div className="flex flex-col items-center">
                                     <div className="flex items-center gap-1.5">
                                         <Clock
                                             size={18}
-                                            className="text-gray-400"
+                                            className="text-white/40"
                                             strokeWidth={2.5}
                                         />
                                         <div className="flex items-baseline gap-0.5">
-                                            <span className="font-manrope text-xl font-black text-gray-900">{item.preparationTime || 15}</span>
-                                            <span className="font-manrope text-xs font-bold text-gray-400">min</span>
+                                            <span className="font-manrope text-xl font-black text-white">{item.preparationTime || 15}</span>
+                                            <span className="font-manrope text-xs font-bold text-white/40">min</span>
                                         </div>
                                     </div>
                                 </div>
@@ -242,7 +242,7 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
 
                             {/* Ingredients (Real Data with Mock fallback) */}
                             <div className="mb-8">
-                                <h3 className="mb-3 font-manrope text-lg font-black tracking-tighter text-black">Ingredients</h3>
+                                <h3 className="mb-3 font-manrope text-lg font-black tracking-tighter text-white">Ingredients</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {(item.ingredients && item.ingredients.length > 0
                                         ? item.ingredients
@@ -250,7 +250,7 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                                     ).map((ing, i) => (
                                         <div
                                             key={i}
-                                            className="flex items-center gap-1.5 rounded-xl bg-gray-50 px-3 py-2 text-sm font-bold text-gray-600"
+                                            className="flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/5 px-3 py-2 text-sm font-bold text-white/70"
                                         >
                                             <div className="h-1.5 w-1.5 rounded-full bg-brand-yellow"></div>
                                             {ing}
@@ -261,7 +261,7 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
 
                             {/* Nutritional Value (Real Data with Mock fallback) */}
                             <div className="mb-8">
-                                <h3 className="mb-3 font-manrope text-lg font-black tracking-tighter text-black">Nutritional Value</h3>
+                                <h3 className="mb-3 font-manrope text-lg font-black tracking-tighter text-white">Nutritional Value</h3>
                                 <div className="grid grid-cols-4 gap-2">
                                     {[
                                         { label: 'Calories', value: item.nutrition?.calories || '540', unit: 'kcal' },
@@ -269,12 +269,12 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                                         { label: 'Carbs', value: item.nutrition?.carbs || '45', unit: 'g' },
                                         { label: 'Fat', value: item.nutrition?.fat || '22', unit: 'g' },
                                     ].map((stat, i) => (
-                                        <div key={i} className="flex flex-col items-center justify-center rounded-2xl bg-gray-50 p-3 py-4">
+                                        <div key={i} className="flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/5 p-3 py-4">
                                             <div className="flex items-baseline gap-0.5">
-                                                <span className="font-manrope text-lg font-black text-gray-900">{stat.value}</span>
-                                                <span className="text-[10px] font-bold text-gray-400">{stat.unit}</span>
+                                                <span className="font-manrope text-lg font-black text-white">{stat.value}</span>
+                                                <span className="text-[10px] font-bold text-white/30">{stat.unit}</span>
                                             </div>
-                                            <span className="mt-1 text-[10px] font-bold text-gray-500 uppercase tracking-tight">{stat.label}</span>
+                                            <span className="mt-1 text-[10px] font-bold text-white/40 uppercase tracking-tight">{stat.label}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -387,13 +387,13 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                     </div>
 
                     {/* Footer / Sticky Cart Action */}
-                    <div className="z-20 border-t border-gray-100 bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+                    <div className="z-20 border-t border-white/10 bg-[#0a0a0a] p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
                         <div className="flex items-center gap-4">
                             {/* Quantity Controls */}
-                            <div className="flex h-14 items-center gap-4 rounded-full bg-gray-100 p-2 px-4">
+                            <div className="flex h-14 items-center gap-4 rounded-full bg-white/5 border border-white/10 p-2 px-4 text-white">
                                 <button
                                     onClick={decrement}
-                                    className="text-brand-crimson flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition-transform active:scale-90"
+                                    className="text-white flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-transform active:scale-90"
                                 >
                                     <Minus size={16} />
                                 </button>
@@ -411,7 +411,7 @@ export function DishDetailDrawer({ open, onOpenChange, item, onAddToCart, onAddR
                             {/* Add to Cart Button */}
                             <button
                                 onClick={handleAddToCart}
-                                className="bg-brand-crimson flex h-14 flex-1 items-center justify-center gap-2 rounded-full text-lg font-bold text-white shadow-lg transition-transform active:scale-95"
+                                className="bg-white hover:bg-white/90 text-black flex h-14 flex-1 items-center justify-center gap-2 rounded-full text-lg font-bold shadow-lg transition-transform active:scale-95"
                             >
                                 Add to Order
                             </button>

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { FilterShape } from '@/components/ui/FilterShape';
 import { useHaptic } from '@/hooks/useHaptic';
+import { useTheme } from 'next-themes';
 import {
     Flame,
     UtensilsCrossed,
@@ -42,6 +43,8 @@ interface CategoryRailProps {
 
 export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: CategoryRailProps) {
     const { trigger } = useHaptic();
+    const { theme, resolvedTheme } = useTheme();
+    const currentTheme = theme === 'system' ? resolvedTheme : theme;
 
     const handleCategoryClick = (id: string) => {
         trigger('soft');
@@ -77,7 +80,7 @@ export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: 
                                 <div className="absolute inset-0 h-full w-full">
                                     <FilterShape
                                         active={isActive}
-                                        color={isActive ? '#A81818' : '#F8F8F8'}
+                                        color={isActive ? '#A81818' : (currentTheme === 'dark' ? '#1a1a1a' : '#f3f4f6')}
                                     />
                                 </div>
 
@@ -85,7 +88,7 @@ export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: 
                                 <div
                                     className={cn(
                                         'relative z-10 transition-colors duration-300',
-                                        isActive ? 'text-white' : 'text-black'
+                                        isActive ? 'text-white' : 'text-black/40 dark:text-white/60'
                                     )}
                                 >
                                     {cat.icon}
@@ -96,7 +99,7 @@ export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: 
                             <span
                                 className={cn(
                                     'text-xs font-bold tracking-wide transition-colors duration-300',
-                                    isActive ? 'text-black' : 'text-gray-400'
+                                    isActive ? 'text-brand-crimson dark:text-white' : 'text-black/30 dark:text-white/40'
                                 )}
                             >
                                 {cat.name}

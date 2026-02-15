@@ -50,10 +50,11 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
     return (
         <div
             className={cn(
-                'bg-brand-crimson pt-safe relative mb-6 overflow-visible rounded-b-[40px] px-6 pb-16 shadow-lg transition-all duration-300',
+                'bg-white dark:bg-black pt-safe relative mb-6 overflow-visible rounded-b-[40px] px-6 pb-16 shadow-2xl transition-all duration-300',
                 isMenuOpen ? 'z-[9999]' : 'z-10'
             )}
         >
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-crimson/10 to-transparent rounded-b-[40px] pointer-events-none" />
             {/* Full Screen Menu Overlay */}
             <AnimatePresence>
                 {isMenuOpen && (
@@ -130,36 +131,36 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                 </div>
                 <button
                     onClick={toggleMenu}
-                    className="flex touch-manipulation flex-col items-end gap-1.5 rounded-full p-2 text-white transition-all active:scale-90"
+                    className="flex touch-manipulation flex-col items-end gap-1.5 rounded-full p-2 text-black dark:text-white transition-all active:scale-90"
                 >
                     <span className="sr-only">Open Menu</span>
-                    <div className="h-[3px] w-8 rounded-full bg-white"></div>
-                    <div className="h-[3px] w-5 rounded-full bg-white"></div>
+                    <div className="h-[3px] w-8 rounded-full bg-black dark:bg-white"></div>
+                    <div className="h-[3px] w-5 rounded-full bg-black dark:bg-white"></div>
                 </button>
             </div>
 
             {/* Main Copy */}
             <div className="mx-auto max-w-lg">
-                <h1 className="no-select mb-4 text-[3.5rem] leading-[0.9] font-black tracking-tighter text-white">
+                <h1 className="no-select mb-4 text-[3.5rem] leading-[0.9] font-black tracking-tighter text-black dark:text-white">
                     Where flavor <br />
                     goes{' '}
                     <span className="font-manrope text-brand-yellow font-medium italic">wild.</span>
                 </h1>
-                <p className="no-select w-full text-sm leading-relaxed text-white/80">
+                <p className="no-select w-full text-sm leading-relaxed text-black/80 dark:text-white/80">
                     Discover the best local bites, trending dishes, and must-try flavors near you.
                 </p>
             </div>
 
             {/* Food/Drinks Tabs */}
             <div className="absolute right-6 -bottom-6 left-6 z-30">
-                <div className="shadow-float flex transform-gpu rounded-full bg-white p-1">
+                <div className="shadow-2xl flex transform-gpu rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 backdrop-blur-xl p-1">
                     <button
                         onClick={() => handleTabChange('food')}
                         className={cn(
                             'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'food'
-                                ? 'bg-brand-crimson text-white'
-                                : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-black text-white dark:bg-white dark:text-black'
+                                : 'text-black/50 dark:text-white/50 hover:text-black/80 dark:hover:text-white/80'
                         )}
                     >
                         <Utensils size={18} />
@@ -170,8 +171,8 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                         className={cn(
                             'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'drinks'
-                                ? 'bg-brand-crimson text-white'
-                                : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-black text-white dark:bg-white dark:text-black'
+                                : 'text-black/50 dark:text-white/50 hover:text-black/80 dark:hover:text-white/80'
                         )}
                     >
                         <CupSoda size={18} />

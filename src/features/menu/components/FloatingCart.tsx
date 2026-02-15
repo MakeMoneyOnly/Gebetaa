@@ -27,11 +27,11 @@ export function FloatingCart({ count, onClick }: { count: number; onClick?: () =
                         trigger('medium');
                         onClick?.();
                     }}
-                    className="bg-brand-crimson fixed right-6 bottom-6 z-50 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full text-white shadow-2xl transition-transform active:scale-90"
+                    className="bg-white/10 backdrop-blur-xl border border-white/20 fixed right-6 bottom-6 z-50 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full text-white shadow-2xl transition-all hover:bg-white/20 active:scale-95"
                 >
                     <div className="relative">
-                        <ShoppingBag size={24} />
-                        <span className="text-brand-crimson animate-in zoom-in absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold shadow-md">
+                        <ShoppingBag size={24} className="text-white" />
+                        <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-crimson text-white text-[10px] font-black shadow-lg ring-2 ring-black">
                             {count}
                         </span>
                     </div>
