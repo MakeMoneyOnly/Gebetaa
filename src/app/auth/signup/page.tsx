@@ -75,13 +75,13 @@ export default function SignUpPage({ className }: SignUpPageProps) {
     };
 
     return (
-        <div className={cn('relative flex min-h-screen w-[100%] flex-col bg-black', className)}>
+        <div className={cn('relative flex min-h-screen w-[100%] flex-col bg-[var(--background)] transition-colors duration-300', className)}>
             <div className="absolute inset-0 z-0">
                 {initialCanvasVisible && (
                     <div className="absolute inset-0">
                         <CanvasRevealEffect
                             animationSpeed={3}
-                            containerClassName="bg-black"
+                            containerClassName="bg-transparent"
                             colors={[
                                 [168, 24, 24], // Gebeta crimson
                                 [168, 24, 24],
@@ -96,7 +96,7 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                     <div className="absolute inset-0">
                         <CanvasRevealEffect
                             animationSpeed={4}
-                            containerClassName="bg-black"
+                            containerClassName="bg-transparent"
                             colors={[
                                 [168, 24, 24],
                                 [168, 24, 24],
@@ -107,8 +107,8 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                     </div>
                 )}
 
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,1)_0%,_transparent_100%)]" />
-                <div className="absolute top-0 right-0 left-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--background)_0%,transparent_100%)] opacity-80 dark:opacity-100" />
+                <div className="absolute top-0 right-0 left-0 h-1/3 bg-gradient-to-b from-background to-transparent" />
             </div>
 
             <div className="relative z-10 flex flex-1 flex-col">
@@ -127,25 +127,25 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                         transition={{ duration: 0.4, ease: 'easeOut' }}
                                         className="space-y-6 text-center"
                                     >
-                                        <div className="space-y-1">
-                                            <h1 className="text-[2.5rem] leading-[1.1] font-bold tracking-tight text-white">
+                                        <div className="space-y-1 text-center">
+                                            <h1 className="text-[2.5rem] leading-[1.1] font-extrabold tracking-tight text-foreground">
                                                 Welcome to Gebeta
                                             </h1>
-                                            <p className="text-[1.8rem] font-light text-white/70">
+                                            <p className="text-[1.8rem] font-medium text-foreground opacity-60">
                                                 Create your account
                                             </p>
                                         </div>
 
                                         <div className="space-y-4">
-                                            <button className="flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-white backdrop-blur-[2px] transition-colors hover:bg-white/10">
+                                            <button className="flex w-full items-center justify-center gap-2 rounded-full bg-white dark:bg-white/5 px-4 py-3 text-foreground dark:text-white backdrop-blur-[2px] transition-all hover:bg-black/5 dark:hover:bg-white/10 shadow-lg shadow-black/5">
                                                 <span className="text-lg">G</span>
-                                                <span>Sign up with Google</span>
+                                                <span className="font-bold">Sign up with Google</span>
                                             </button>
 
                                             <div className="flex items-center gap-4">
-                                                <div className="h-px flex-1 bg-white/10" />
-                                                <span className="text-sm text-white/40">or</span>
-                                                <div className="h-px flex-1 bg-white/10" />
+                                                <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+                                                <span className="text-sm text-foreground/40 dark:text-white/40 font-medium">or</span>
+                                                <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
                                             </div>
 
                                             <form onSubmit={handleEmailSubmit}>
@@ -155,12 +155,12 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                                         placeholder="info@gmail.com"
                                                         value={email}
                                                         onChange={e => setEmail(e.target.value)}
-                                                        className="w-full rounded-full border-1 border-white/10 bg-white/5 px-4 py-3 text-center text-white backdrop-blur-[1px] focus:border focus:border-white/30 focus:outline-none"
+                                                        className="w-full rounded-full border-none bg-white dark:bg-white/5 px-4 py-4 text-center text-foreground dark:text-white backdrop-blur-[1px] focus:outline-none placeholder:text-foreground/40 dark:placeholder:text-white/40 font-bold shadow-lg shadow-black/5"
                                                         required
                                                     />
                                                     <button
                                                         type="submit"
-                                                        className="group absolute top-1.5 right-1.5 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                                                        className="group absolute top-2 right-2 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-foreground dark:bg-white text-background dark:text-black transition-all hover:scale-105 active:scale-95 shadow-md"
                                                     >
                                                         <span className="relative block h-full w-full overflow-hidden">
                                                             <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-full">
@@ -175,25 +175,25 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                             </form>
                                         </div>
 
-                                        <p className="pt-10 text-xs text-white/40">
+                                        <p className="pt-10 text-center text-xs text-foreground/40 dark:text-white/40 font-medium">
                                             By signing up, you agree to the{' '}
                                             <Link
                                                 href="#"
-                                                className="text-white/40 underline transition-colors hover:text-white/60"
+                                                className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
                                             >
                                                 Terms of Service
                                             </Link>
                                             ,{' '}
                                             <Link
                                                 href="#"
-                                                className="text-white/40 underline transition-colors hover:text-white/60"
+                                                className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
                                             >
                                                 Privacy Policy
                                             </Link>
                                             , and{' '}
                                             <Link
                                                 href="#"
-                                                className="text-white/40 underline transition-colors hover:text-white/60"
+                                                className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
                                             >
                                                 Cookie Notice
                                             </Link>
@@ -210,16 +210,16 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                         className="space-y-6 text-center"
                                     >
                                         <div className="space-y-1">
-                                            <h1 className="text-[2.5rem] leading-[1.1] font-bold tracking-tight text-white">
+                                            <h1 className="text-[2.5rem] leading-[1.1] font-bold tracking-tight text-foreground">
                                                 We sent you a code
                                             </h1>
-                                            <p className="text-[1.25rem] font-light text-white/50">
+                                            <p className="text-[1.25rem] font-medium text-foreground opacity-50">
                                                 Please enter it
                                             </p>
                                         </div>
 
                                         <div className="w-full">
-                                            <div className="relative rounded-full border border-white/10 bg-transparent px-5 py-4">
+                                            <div className="relative rounded-full bg-white dark:bg-white/5 backdrop-blur-md px-5 py-4 shadow-xl">
                                                 <div className="flex items-center justify-center">
                                                     {code.map((digit, i) => (
                                                         <div key={i} className="flex items-center">
@@ -243,21 +243,21 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                                                     onKeyDown={e =>
                                                                         handleKeyDown(i, e)
                                                                     }
-                                                                    className="w-8 appearance-none border-none bg-transparent text-center text-xl text-white focus:ring-0 focus:outline-none"
+                                                                    className="w-8 appearance-none border-none bg-transparent text-center text-xl text-foreground dark:text-white focus:ring-0 focus:outline-none"
                                                                     style={{
                                                                         caretColor: 'transparent',
                                                                     }}
                                                                 />
                                                                 {!digit && (
                                                                     <div className="pointer-events-none absolute top-0 left-0 flex h-full w-full items-center justify-center">
-                                                                        <span className="text-xl text-white">
+                                                                        <span className="text-xl text-foreground/20 dark:text-white/20">
                                                                             0
                                                                         </span>
                                                                     </div>
                                                                 )}
                                                             </div>
                                                             {i < 5 && (
-                                                                <span className="text-xl text-white/20">
+                                                                <span className="text-xl text-foreground/10 dark:text-white/20">
                                                                     |
                                                                 </span>
                                                             )}
@@ -269,7 +269,7 @@ export default function SignUpPage({ className }: SignUpPageProps) {
 
                                         <div>
                                             <motion.p
-                                                className="cursor-pointer text-sm text-white/50 transition-colors hover:text-white/70"
+                                                className="cursor-pointer text-sm text-foreground/50 dark:text-white/50 transition-colors hover:text-foreground/70 dark:hover:text-white/70 font-bold"
                                                 whileHover={{ scale: 1.02 }}
                                                 transition={{ duration: 0.2 }}
                                             >
@@ -280,7 +280,7 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                         <div className="flex w-full gap-3">
                                             <motion.button
                                                 onClick={handleBackClick}
-                                                className="w-[30%] rounded-full bg-white px-8 py-3 font-medium text-black transition-colors hover:bg-white/90"
+                                                className="w-[30%] rounded-full bg-foreground/10 dark:bg-white/10 px-8 py-3 font-black text-foreground dark:text-white transition-all hover:bg-foreground/20 dark:hover:bg-white/20"
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 transition={{ duration: 0.2 }}
@@ -288,11 +288,10 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                                 Back
                                             </motion.button>
                                             <motion.button
-                                                className={`flex-1 rounded-full border py-3 font-medium transition-all duration-300 ${
-                                                    code.every(d => d !== '')
-                                                        ? 'cursor-pointer border-transparent bg-white text-black hover:bg-white/90'
-                                                        : 'cursor-not-allowed border-white/10 bg-[#111] text-white/50'
-                                                }`}
+                                                className={`flex-1 rounded-full py-3 font-black transition-all duration-300 shadow-lg ${code.every(d => d !== '')
+                                                    ? 'cursor-pointer bg-white text-black hover:scale-[1.02]'
+                                                    : 'cursor-not-allowed bg-foreground/10 dark:bg-white/5 text-foreground/30 dark:text-white/20'
+                                                    }`}
                                                 disabled={!code.every(d => d !== '')}
                                             >
                                                 Continue
@@ -300,25 +299,25 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                         </div>
 
                                         <div className="pt-16">
-                                            <p className="text-xs text-white/40">
+                                            <p className="text-xs text-foreground/40 dark:text-white/40">
                                                 By signing up, you agree to the{' '}
                                                 <Link
                                                     href="#"
-                                                    className="text-white/40 underline transition-colors hover:text-white/60"
+                                                    className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
                                                 >
                                                     Terms of Service
                                                 </Link>
                                                 ,{' '}
                                                 <Link
                                                     href="#"
-                                                    className="text-white/40 underline transition-colors hover:text-white/60"
+                                                    className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
                                                 >
                                                     Privacy Policy
                                                 </Link>
                                                 , and{' '}
                                                 <Link
                                                     href="#"
-                                                    className="text-white/40 underline transition-colors hover:text-white/60"
+                                                    className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
                                                 >
                                                     Cookie Notice
                                                 </Link>
@@ -335,10 +334,10 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                         className="space-y-6 text-center"
                                     >
                                         <div className="space-y-1">
-                                            <h1 className="text-[2.5rem] leading-[1.1] font-bold tracking-tight text-white">
+                                            <h1 className="text-[2.5rem] leading-[1.1] font-bold tracking-tight text-foreground">
                                                 You&apos;re in!
                                             </h1>
-                                            <p className="text-[1.25rem] font-light text-white/50">
+                                            <p className="text-[1.25rem] font-medium text-foreground opacity-50">
                                                 Welcome to Gebeta
                                             </p>
                                         </div>
@@ -369,7 +368,7 @@ export default function SignUpPage({ className }: SignUpPageProps) {
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ delay: 1 }}
-                                            className="w-full rounded-full bg-white py-3 font-medium text-black transition-colors hover:bg-white/90"
+                                            className="w-full rounded-full bg-black dark:bg-white py-3 font-medium text-white dark:text-black transition-colors hover:opacity-90"
                                         >
                                             Continue to Dashboard
                                         </motion.button>
