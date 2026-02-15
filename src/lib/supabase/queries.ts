@@ -78,12 +78,12 @@ export async function fetchPendingServiceRequests(
  */
 export async function fetchItemsByCategory(supabase: SupabaseClient<Database>, categoryId: string) {
     return supabase
-        .from('items')
+        .from('menu_items')
         .select('*')
         .eq('category_id', categoryId)
         .eq('is_available', true)
         .order('name', { ascending: true })
-        .returns<Tables['items']['Row'][]>();
+        .returns<Tables['menu_items']['Row'][]>();
 }
 
 /**
@@ -101,7 +101,7 @@ export async function fetchRestaurantWithMenu(supabase: SupabaseClient<Database>
             *,
             categories:categories(
                 *,
-                items:items(*)
+                items:menu_items(*)
             )
         `
         )
@@ -200,10 +200,10 @@ export async function fetchItemsForValidation(
     itemIds: string[]
 ) {
     return supabase
-        .from('items')
-        .select('id, name, price, available, station')
+        .from('menu_items')
+        .select('id, name, price, is_available, station')
         .in('id', itemIds)
         .returns<
-            Pick<Tables['items']['Row'], 'id' | 'name' | 'price' | 'available' | 'station'>[]
+            Pick<Tables['menu_items']['Row'], 'id' | 'name' | 'price' | 'is_available' | 'station'>[]
         >();
 }
