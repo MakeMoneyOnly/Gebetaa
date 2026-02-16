@@ -68,8 +68,8 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            - name: Run unit tests
-              run: pnpm run test -- --coverage
+            - name: Run unit tests with coverage
+              run: pnpm run test:coverage
 
     # ========================================
     # SKILL: QA.Auto - Integration Tests
@@ -143,8 +143,8 @@ jobs:
             - name: Install Playwright
               run: pnpm exec playwright install --with-deps
 
-            - name: Run E2E tests
-              run: pnpm run test:e2e
+            - name: Run E2E tests (Chromium)
+              run: pnpm run test:e2e -- --project=chromium
 
             - name: Upload test results
               if: always()
