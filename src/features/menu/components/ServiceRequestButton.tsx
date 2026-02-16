@@ -5,9 +5,61 @@ import { useHaptic } from '@/hooks/useHaptic';
 import { Drawer } from 'vaul';
 import { useState } from 'react';
 
-export function ServiceRequestButton() {
+interface ServiceRequestButtonProps {
+    guestContext:
+        | {
+              slug: string;
+              table: string;
+              sig: string;
+              exp: number;
+          }
+        | null;
+    tableNumber: string | null;
+}
+
+export function ServiceRequestButton({ guestContext, tableNumber }: ServiceRequestButtonProps) {
     const { trigger } = useHaptic();
     const [open, setOpen] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const submitRequest = async (requestType: 'waiter' | 'bill') => {
+        if (!guestContext || !tableNumber) {
+            setError('Unable to send request: invalid or expired table QR context.');
+            return;
+        }
+
+        setSubmitting(true);
+        setMessage(null);
+        setError(null);
+
+        try {
+            const response = await fetch('/api/service-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    guest_context: guestContext,
+                    request_type: requestType,
+                }),
+            });
+
+            const payload = await response.json();
+            if (!response.ok) {
+                setError(payload?.error ?? 'Request failed. Please try again.');
+                return;
+            }
+
+            trigger('success');
+            setMessage(requestType === 'bill' ? 'Bill requested.' : 'Waiter has been notified.');
+            setOpen(false);
+        } catch (requestError) {
+            console.error('Service request failed:', requestError);
+            setError('Network error while sending request.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <>
@@ -33,11 +85,8 @@ export function ServiceRequestButton() {
 
                         <div className="mb-4 flex flex-col gap-4">
                             <button
-                                onClick={() => {
-                                    trigger('success');
-                                    alert('Waiter has been notified!');
-                                    setOpen(false);
-                                }}
+                                disabled={submitting}
+                                onClick={() => submitRequest('waiter')}
                                 className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-2xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
                             >
                                 <HandPlatter size={24} className="text-brand-crimson" />
@@ -45,16 +94,20 @@ export function ServiceRequestButton() {
                             </button>
 
                             <button
-                                onClick={() => {
-                                    trigger('success');
-                                    alert('Bill requested!');
-                                    setOpen(false);
-                                }}
+                                disabled={submitting}
+                                onClick={() => submitRequest('bill')}
                                 className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-2xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
                             >
                                 <Receipt size={24} className="text-brand-crimson" />
                                 Ask for a Bill
                             </button>
+
+                            {message && (
+                                <p className="text-center text-sm font-semibold text-green-600">{message}</p>
+                            )}
+                            {error && (
+                                <p className="text-center text-sm font-semibold text-red-600">{error}</p>
+                            )}
                         </div>
                     </Drawer.Content>
                 </Drawer.Portal>

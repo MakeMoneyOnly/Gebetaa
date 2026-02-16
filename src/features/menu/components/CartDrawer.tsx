@@ -6,15 +6,77 @@ import { useCart } from '@/context/CartContext';
 import { useHaptic } from '@/hooks/useHaptic';
 import Image from 'next/image';
 import { isRemoteOrDataImageSrc } from '@/lib/utils';
+import { useState } from 'react';
 
 interface CartDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    guestContext:
+        | {
+              slug: string;
+              table: string;
+              sig: string;
+              exp: number;
+          }
+        | null;
+    tableNumber: string | null;
 }
 
-export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
-    const { items, total, updateQuantity, updateInstructions } = useCart();
+export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: CartDrawerProps) {
+    const { items, total, updateQuantity, updateInstructions, clearCart } = useCart();
     const { trigger } = useHaptic();
+    const [submitting, setSubmitting] = useState(false);
+    const [orderMessage, setOrderMessage] = useState<string | null>(null);
+    const [orderError, setOrderError] = useState<string | null>(null);
+
+    const handlePlaceOrder = async () => {
+        if (!guestContext || !tableNumber) {
+            setOrderError('Unable to place order: invalid or expired table QR context.');
+            return;
+        }
+
+        if (items.length === 0 || submitting) {
+            return;
+        }
+
+        setSubmitting(true);
+        setOrderError(null);
+        setOrderMessage(null);
+
+        try {
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    guest_context: guestContext,
+                    items: items.map(item => ({
+                        id: item.menuItemId,
+                        name: item.title,
+                        quantity: item.quantity,
+                        price: item.price,
+                        notes: item.instructions,
+                    })),
+                    total_price: total,
+                    notes: undefined,
+                }),
+            });
+
+            const payload = await response.json();
+            if (!response.ok) {
+                setOrderError(payload?.error ?? 'Failed to place order.');
+                return;
+            }
+
+            trigger('success');
+            clearCart();
+            setOrderMessage('Order received. Kitchen has been notified.');
+        } catch (error) {
+            console.error('Order submission failed:', error);
+            setOrderError('Network error while placing order. Please retry.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
@@ -32,7 +94,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                                 Your Order
                             </Drawer.Title>
                             <span className="text-sm font-bold tracking-wide text-white/40 uppercase">
-                                Table 5
+                                Table {tableNumber ?? '--'}
                             </span>
                         </div>
 
@@ -158,16 +220,23 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         </div>
 
                         <button
-                            disabled={items.length === 0}
-                            onClick={() => {
-                                trigger('success');
-                                alert('Order Placed! (Mock)');
-                                // TODO: Connect to supabase orders table
-                            }}
+                            disabled={items.length === 0 || submitting}
+                            onClick={handlePlaceOrder}
                             className="bg-white hover:bg-white/90 flex h-14 w-full items-center justify-center gap-2 rounded-full text-lg font-bold text-black shadow-lg transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            Place Order
+                            {submitting ? 'Placing Order...' : 'Place Order'}
                         </button>
+
+                        {orderMessage && (
+                            <p className="mt-3 text-center text-sm font-semibold text-green-400">
+                                {orderMessage}
+                            </p>
+                        )}
+                        {orderError && (
+                            <p className="mt-3 text-center text-sm font-semibold text-red-400">
+                                {orderError}
+                            </p>
+                        )}
                     </div>
                 </Drawer.Content>
             </Drawer.Portal>

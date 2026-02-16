@@ -33,14 +33,16 @@ export async function updateSession(request: NextRequest) {
     const {
         data: { user },
     } = await supabase.auth.getUser();
+    const pathname = request.nextUrl.pathname;
+    const protectedPrefixes = ['/app', '/merchant', '/kds', '/staff'];
+    const isProtectedPath = protectedPrefixes.some(prefix => pathname.startsWith(prefix));
 
     if (
         !user &&
-        !request.nextUrl.pathname.startsWith('/auth') &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        request.nextUrl.pathname.startsWith('/app') // Protect /app routes
+        !pathname.startsWith('/auth') &&
+        !pathname.startsWith('/login') &&
+        isProtectedPath
     ) {
-        // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone();
         url.pathname = '/auth/login';
         return NextResponse.redirect(url);

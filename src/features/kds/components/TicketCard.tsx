@@ -15,12 +15,12 @@ interface TicketItem {
 
 interface TicketProps {
     id: string;
-    ticketNumber: number;
+    ticketNumber: number | string;
     tableNumber: string; // e.g., "T-12"
     createdAt: Date;
     items: TicketItem[];
     status: 'new' | 'active' | 'completed';
-    onStatusChange: (status: 'new' | 'active' | 'completed') => void;
+    onStatusChange: (status: 'new' | 'active' | 'completed') => Promise<void> | void;
 }
 
 export const TicketCard: React.FC<TicketProps> = ({
@@ -32,8 +32,9 @@ export const TicketCard: React.FC<TicketProps> = ({
     status,
     onStatusChange,
 }) => {
-    const [elapsedMinutes, setElapsedMinutes] = useState(0);
-    const [isSirenActive, setIsSirenActive] = useState(false);
+    const [elapsedMinutes, setElapsedMinutes] = useState(() =>
+        Math.floor((Date.now() - createdAt.getTime()) / 60000)
+    );
 
     // Calculate urgency level
     const urgency = useMemo<'normal' | 'warning' | 'critical'>(() => {
@@ -50,22 +51,8 @@ export const TicketCard: React.FC<TicketProps> = ({
             setElapsedMinutes(diff);
         }, 10000); // Check every 10s
 
-        // Initial check
-        const now = new Date();
-        setElapsedMinutes(Math.floor((now.getTime() - createdAt.getTime()) / 60000));
-
         return () => clearInterval(interval);
     }, [createdAt]);
-
-    // "Siren" Effect Logic (Visual Flashing)
-    useEffect(() => {
-        if (status === 'new') {
-            setIsSirenActive(true);
-            // In a real app, play audio here: new Audio('/siren.mp3').play();
-            const timer = setTimeout(() => setIsSirenActive(false), 5000); // Stop flashing after 5s or until ack
-            return () => clearTimeout(timer);
-        }
-    }, [status]);
 
     return (
         <Card
@@ -76,7 +63,7 @@ export const TicketCard: React.FC<TicketProps> = ({
                 urgency === 'warning' && 'bg-yellow-950/30 border-yellow-600',
                 urgency === 'critical' && 'bg-red-950/40 border-red-600 animate-pulse-slow',
                 // New Order "Siren" Flash
-                status === 'new' && isSirenActive && 'animate-flash-crimson ring-4 ring-brand-crimson/50'
+                status === 'new' && 'animate-flash-crimson ring-4 ring-brand-crimson/50'
             )}
             padding="none"
         >
@@ -144,12 +131,21 @@ export const TicketCard: React.FC<TicketProps> = ({
 
             {/* Footer Actions */}
             <div className="bg-neutral-800 p-3 border-t border-neutral-700">
-                {status === 'active' || status === 'new' ? (
+                {status === 'new' ? (
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full h-14 text-lg font-bold tracking-wider bg-brand-crimson hover:bg-brand-crimson-hover shadow-lg shadow-brand-crimson/30"
+                        onClick={() => void onStatusChange('active')}
+                    >
+                        ACCEPT
+                    </Button>
+                ) : status === 'active' ? (
                     <Button
                         variant="primary"
                         size="lg"
                         className="w-full h-14 text-lg font-bold tracking-wider bg-green-600 hover:bg-green-500 shadow-lg shadow-green-900/20"
-                        onClick={() => onStatusChange('completed')}
+                        onClick={() => void onStatusChange('completed')}
                     >
                         READY
                     </Button>

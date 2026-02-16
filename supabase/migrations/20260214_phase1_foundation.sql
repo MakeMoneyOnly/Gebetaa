@@ -55,6 +55,58 @@ CREATE TABLE IF NOT EXISTS order_items (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 3b. Orders compatibility shape for API/KDS/runtime
+-- Earlier baseline variants used table_id/total_amount only; runtime expects table_number/items/total_price.
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS table_number TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_price NUMERIC(10, 2) DEFAULT 0;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_number TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS guest_fingerprint TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS kitchen_status TEXT DEFAULT 'pending';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS bar_status TEXT DEFAULT 'pending';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS acknowledged_at TIMESTAMPTZ;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+
+-- Backfill compatibility values where legacy columns/data exist.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'total_amount'
+    ) THEN
+        UPDATE public.orders
+        SET total_price = COALESCE(total_price, total_amount, 0)
+        WHERE total_price IS NULL;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'table_id'
+    ) THEN
+        UPDATE public.orders o
+        SET table_number = t.table_number
+        FROM public.tables t
+        WHERE o.table_id = t.id
+          AND o.table_number IS NULL;
+    END IF;
+END $$;
+
+UPDATE public.orders
+SET table_number = 'unknown'
+WHERE table_number IS NULL;
+
+UPDATE public.orders
+SET items = '[]'::jsonb
+WHERE items IS NULL;
+
+UPDATE public.orders
+SET order_number = concat('ORD-', upper(substring(replace(id::text, '-', '') from 1 for 6)))
+WHERE order_number IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON public.orders(order_number);
+
 -- 4. Indexes for Performance
 -- Optimize KDS and Dashboard queries
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);

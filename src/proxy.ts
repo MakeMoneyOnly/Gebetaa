@@ -19,7 +19,9 @@ const RATE_LIMIT_MAX = 100; // 100 requests per minute per IP
 
 // Request size limits by route
 const REQUEST_SIZE_LIMITS: Record<string, number> = {
-    '/api/order': 1024 * 1024, // 1MB for order submissions
+    '/api/order': 1024 * 1024, // legacy path
+    '/api/orders': 1024 * 1024, // 1MB for order submissions
+    '/api/service-requests': 256 * 1024, // 256KB for service requests
     '/api/menu/update-price': 512 * 1024, // 512KB
     '/api/menu/update-availability': 512 * 1024, // 512KB
     default: 100 * 1024, // 100KB default

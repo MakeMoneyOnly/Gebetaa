@@ -1,71 +1,119 @@
 import { createClient } from '@/lib/supabase';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { UserRole } from '@/types/models';
 import { useRouter } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
+
+interface StaffRoleRPCRow {
+    role: string;
+    restaurant_id: string;
+}
 
 export function useRole(restaurantId: string | null) {
     const [role, setRole] = useState<UserRole | null>(null);
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [resolvedRestaurantId, setResolvedRestaurantId] = useState<string | null>(restaurantId);
     const router = useRouter();
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     useEffect(() => {
-        // DEV BYPASS: Allow testing without backend auth
-        if (typeof window !== 'undefined' && localStorage.getItem('dev_bypass_auth') === 'true') {
-            setRole('owner' as UserRole);
-            setLoading(false);
-            return;
-        }
+        let cancelled = false;
 
-        if (!restaurantId) {
-            setLoading(false);
-            return;
-        }
+        async function fetchRole(currentUser?: User | null) {
+            if (!cancelled) {
+                setLoading(true);
+            }
 
-        async function fetchRole() {
             try {
-                // 1. Get User
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                if (userError || !user) {
+                let activeUser = currentUser ?? null;
+                if (!activeUser) {
+                    const {
+                        data: { user: authUser },
+                        error: userError,
+                    } = await supabase.auth.getUser();
+                    if (userError || !authUser) {
+                        if (cancelled) return;
+                        setRole(null);
+                        setUser(null);
+                        setResolvedRestaurantId(null);
+                        setLoading(false);
+                        return;
+                    }
+                    activeUser = authUser;
+                }
+
+                if (!activeUser) {
+                    if (cancelled) return;
                     setRole(null);
                     setUser(null);
+                    setResolvedRestaurantId(null);
                     setLoading(false);
                     return;
                 }
-                setUser(user);
 
-                // 2. Get Role
-                let query = supabase
+                if (cancelled) return;
+                setUser(activeUser);
+
+                // 2. Get Role (treat NULL is_active as active for compatibility with old rows)
+                const baseQuery = supabase
                     .from('restaurant_staff')
-                    .select('role, restaurant_id')
-                    .eq('user_id', user.id);
+                    .select('role, restaurant_id, is_active')
+                    .eq('user_id', activeUser.id);
 
-                if (restaurantId) {
-                    query = query.eq('restaurant_id', restaurantId);
+                const { data: roleFromRpc, error: rpcError } = await supabase
+                    .rpc('get_my_staff_role', {
+                        p_restaurant_id: restaurantId,
+                    })
+                    .returns<StaffRoleRPCRow[]>()
+                    .maybeSingle();
+
+                if (!rpcError && roleFromRpc) {
+                    if (cancelled) return;
+                    setRole(roleFromRpc.role as UserRole);
+                    setResolvedRestaurantId(roleFromRpc.restaurant_id);
+                    return;
                 }
 
-                const { data, error } = await query.maybeSingle();
+                const { data, error } = restaurantId
+                    ? await baseQuery.eq('restaurant_id', restaurantId).maybeSingle()
+                    : await baseQuery.order('created_at', { ascending: true }).limit(1).maybeSingle();
 
                 if (error) {
+                    if (cancelled) return;
                     console.warn('Error fetching role:', error.message);
                     setRole(null);
-                } else if (data) {
+                } else if (data && data.is_active !== false) {
+                    if (cancelled) return;
                     setRole(data.role as UserRole);
-                    // If we didn't have a restaurantId, we could potentially return it here
-                    // specific logic for multi-restaurant users would go here
+                    setResolvedRestaurantId(data.restaurant_id);
                 } else {
+                    if (cancelled) return;
                     setRole(null);
+                    setResolvedRestaurantId(restaurantId);
                 }
             } catch (err) {
+                if (cancelled) return;
                 console.error('Error in useRole:', err);
                 setRole(null);
             } finally {
+                if (cancelled) return;
                 setLoading(false);
             }
         }
 
         fetchRole();
+
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            void fetchRole(session?.user ?? null);
+        });
+
+        return () => {
+            cancelled = true;
+            subscription.unsubscribe();
+        };
     }, [restaurantId, supabase]);
 
     const requireRole = (allowedRoles: UserRole[], redirectUrl = '/login') => {
@@ -75,5 +123,5 @@ export function useRole(restaurantId: string | null) {
         }
     };
 
-    return { role, loading, user, requireRole };
+    return { role, loading, user, restaurantId: resolvedRestaurantId, requireRole };
 }
