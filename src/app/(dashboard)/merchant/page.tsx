@@ -22,6 +22,7 @@ import {
     Tooltip
 } from 'recharts';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 // Active Orders Data
 const activeOrders = [
@@ -82,10 +83,109 @@ const sparkData = [
 export default function MerchantDashboard() {
     // Client-side only mounting for Recharts to avoid hydration mismatch
     const [mounted, setMounted] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterType, setFilterType] = useState('Week');
 
-    useEffect(() => setMounted(true), []);
+    useEffect(() => {
+        setMounted(true);
+        // Simulate data loading
+        setTimeout(() => setLoading(false), 1500);
+    }, []);
+
+    if (loading || !mounted) {
+        return (
+            <div className="space-y-8 pb-10">
+                {/* Header Skeleton */}
+                <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                        <Skeleton className="h-10 w-64 rounded-xl" />
+                        <Skeleton className="h-4 w-48 rounded-lg" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-10 w-32 rounded-xl" />
+                        <Skeleton className="h-10 w-10 rounded-xl" />
+                    </div>
+                </div>
+
+                {/* Stats Grid Skeleton - Asymmetric */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="md:col-span-1 bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm">
+                            <div className="flex justify-between items-start mb-2">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="flex flex-col items-end gap-1">
+                                    <Skeleton className="h-5 w-16 rounded-full" />
+                                    <Skeleton className="h-8 w-16 rounded-lg mt-[20px]" />
+                                </div>
+                            </div>
+                            <div className="absolute bottom-5 left-5 right-5">
+                                <div className="space-y-2 mb-3">
+                                    <Skeleton className="h-5 w-32 rounded-lg" />
+                                    <Skeleton className="h-3 w-24 rounded-lg" />
+                                </div>
+                                <div className="flex justify-between items-center gap-1">
+                                    {Array.from({ length: 12 }).map((_, j) => (
+                                        <Skeleton key={j} className="h-[15px] w-[15px] rounded-full" />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Income Tracker Skeleton */}
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm">
+                    <div className="flex items-start justify-between mb-8">
+                        <div className="space-y-2">
+                            <Skeleton className="h-8 w-48 rounded-lg" />
+                            <Skeleton className="h-4 w-64 rounded-lg" />
+                        </div>
+                        <Skeleton className="h-10 w-24 rounded-full" />
+                    </div>
+                    <div className="flex flex-col xl:flex-row items-center gap-12 h-full">
+                        <div className="w-full xl:w-[20%] pl-[35px] flex flex-col justify-center h-full space-y-4">
+                            <Skeleton className="h-16 w-32 rounded-xl" />
+                            <Skeleton className="h-12 w-48 rounded-xl" />
+                        </div>
+                        <div className="flex-1 w-full h-[350px]">
+                            <Skeleton className="h-full w-full rounded-xl" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Active Orders Skeleton */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="h-8 w-32 rounded-lg" />
+                            <Skeleton className="h-6 w-20 rounded-full" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center justify-between p-4 bg-white rounded-2xl h-24 shadow-sm">
+                                <div className="flex items-center gap-4 flex-1">
+                                    <Skeleton className="h-12 w-12 rounded-xl" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-40 rounded-lg" />
+                                        <div className="flex items-center gap-2">
+                                            <Skeleton className="h-3 w-3 rounded-full" />
+                                            <Skeleton className="h-3 w-20 rounded-lg" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <Skeleton className="h-8 w-24 rounded-lg" />
+                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 pb-10">
@@ -96,7 +196,7 @@ export default function MerchantDashboard() {
                     <p className="text-gray-500 font-medium">Here's your daily performance summary.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-black bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                    <span className="text-sm font-bold text-black bg-gray-50 px-3 py-2 rounded-xl">
                         15 Feb, 2026
                     </span>
                     <button className="h-10 w-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg shadow-black/10">
@@ -109,13 +209,13 @@ export default function MerchantDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
 
                 {/* 1. Total Orders - Compact Dot/Activity Grid (25% Width) */}
-                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] border border-gray-100 flex flex-col justify-between h-[180px] relative overflow-hidden">
+                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all">
                     <div className="flex justify-between items-start">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 border border-gray-100 shadow-sm">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
                             <ShoppingBag className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded-full border border-green-100">
+                            <span className="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded-full">
                                 +5 active
                             </span>
                             <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">42</h3>
@@ -154,13 +254,13 @@ export default function MerchantDashboard() {
                 </div>
 
                 {/* 2. Table Turnover - Reverted to Clean Stat (25% Width) */}
-                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] border border-gray-100 flex flex-col justify-between h-[180px] relative overflow-hidden">
+                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 border border-gray-100 shadow-sm">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
                             <Timer className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full border border-blue-100">
+                            <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">
                                 Fast Service
                             </span>
                             <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">45m</h3>
@@ -199,13 +299,13 @@ export default function MerchantDashboard() {
                 </div>
 
                 {/* 3. Avg Order Value - Adjusted to Standard Layout with Green Dots */}
-                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] border border-gray-100 flex flex-col justify-between h-[180px] relative overflow-hidden">
+                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 border border-gray-100 shadow-sm">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
                             <DollarSign className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1 rounded-full border border-green-100 flex items-center gap-1">
+                            <span className="bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
                                 <TrendingUp className="h-3 w-3" /> +5%
                             </span>
                             <div className="flex items-baseline gap-1 mt-[20px]">
@@ -247,13 +347,13 @@ export default function MerchantDashboard() {
                 </div>
 
                 {/* 4. Total Customers (New Card) */}
-                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] border border-gray-100 flex flex-col justify-between h-[180px] relative overflow-hidden">
+                <div className="md:col-span-1 bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 border border-gray-100 shadow-sm">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
                             <Users className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-purple-50 text-purple-600 text-[10px] font-bold px-2 py-1 rounded-full border border-purple-100">
+                            <span className="bg-purple-50 text-purple-600 text-[10px] font-bold px-2 py-1 rounded-full">
                                 +18% new
                             </span>
                             <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">128</h3>
@@ -306,14 +406,14 @@ export default function MerchantDashboard() {
                     <div className="relative group">
                         <button
                             onClick={() => setFilterOpen(!filterOpen)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-white rounded-full text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors shadow-sm"
                         >
                             {filterType} <ChevronDown className={`h-4 w-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {/* Dropdown Menu */}
                         {filterOpen && (
-                            <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-lg border border-gray-100 p-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-lg p-1 z-50 animate-in fade-in zoom-in-95 duration-200">
                                 {['Week', 'Month', 'Year'].map((option) => (
                                     <button
                                         key={option}
@@ -322,8 +422,8 @@ export default function MerchantDashboard() {
                                             setFilterOpen(false);
                                         }}
                                         className={`w-full text-left px-3 py-2 text-sm font-medium rounded-lg transition-colors ${filterType === option
-                                                ? 'bg-gray-100 text-gray-900'
-                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                            ? 'bg-gray-100 text-gray-900'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                             }`}
                                     >
                                         {option}
@@ -367,7 +467,7 @@ export default function MerchantDashboard() {
 
                 <div className="grid grid-cols-1 gap-4">
                     {activeOrders.map((order) => (
-                        <div key={order.id} className="group flex items-center justify-between p-4 bg-white border border-gray-100 hover:border-gray-200 rounded-2xl transition-all hover:shadow-sm cursor-pointer">
+                        <div key={order.id} className="group flex items-center justify-between p-4 bg-white rounded-2xl transition-all shadow-sm hover:shadow-md cursor-pointer">
                             <div className="flex items-center gap-4 flex-1">
                                 <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${order.iconBg} group-hover:scale-110 transition-transform`}>
                                     <order.icon className="h-6 w-6" />

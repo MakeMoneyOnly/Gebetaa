@@ -1,315 +1,315 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { UserPlus, UserMinus, Shield, Loader2, Link as LinkIcon, Copy, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useRole } from '@/hooks/useRole';
+import React, { useState } from 'react';
+import {
+    Users,
+    UserCheck,
+    Star,
+    Plus,
+    MoreHorizontal,
+    Phone,
+    Mail,
+    Clock,
+    Shield,
+    CheckCircle
+} from 'lucide-react';
+import { cn } from '@/lib/utils'; // Assuming this exists, based on other files
 
-interface StaffMember {
-    id: string;
-    role: 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar';
-    is_active: boolean;
-    user_id: string;
-    email?: string;
-}
-
-interface Invite {
-    id: string;
-    code: string;
-    role: string;
-    status: 'pending' | 'accepted' | 'expired';
-    created_at: string;
-    expires_at: string;
-}
+// Mock Data
+const mockStaff = [
+    {
+        id: 1,
+        name: "Sarah Johnson",
+        role: "Manager",
+        status: "on_shift",
+        email: "sarah@gebeta.app",
+        phone: "+251 911 234 567",
+        rating: 4.9,
+        tables_served: 1240,
+        avatar_color: "bg-blue-100 text-blue-600"
+    },
+    {
+        id: 2,
+        name: "David Chen",
+        role: "Head Chef",
+        status: "on_shift",
+        email: "david@gebeta.app",
+        phone: "+251 922 345 678",
+        rating: 4.8,
+        tables_served: 0,
+        avatar_color: "bg-orange-100 text-orange-600"
+    },
+    {
+        id: 3,
+        name: "Michael Smith",
+        role: "Server",
+        status: "off_shift",
+        email: "michael@gebeta.app",
+        phone: "+251 933 456 789",
+        rating: 4.7,
+        tables_served: 856,
+        avatar_color: "bg-purple-100 text-purple-600"
+    },
+    {
+        id: 4,
+        name: "Jessica Brown",
+        role: "Server",
+        status: "on_shift",
+        email: "jessica@gebeta.app",
+        phone: "+251 944 567 890",
+        rating: 4.9,
+        tables_served: 432,
+        avatar_color: "bg-pink-100 text-pink-600"
+    },
+    {
+        id: 5,
+        name: "Alex Wilson",
+        role: "Bartender",
+        status: "break",
+        email: "alex@gebeta.app",
+        phone: "+251 955 678 901",
+        rating: 4.6,
+        tables_served: 210,
+        avatar_color: "bg-green-100 text-green-600"
+    }
+];
 
 export default function StaffPage() {
-    const [staff, setStaff] = useState<StaffMember[]>([]);
-    const [invites, setInvites] = useState<Invite[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showInviteModal, setShowInviteModal] = useState(false);
-    const [inviteRole, setInviteRole] = useState('waiter');
-    const [generatedLink, setGeneratedLink] = useState('');
-
-    const { user } = useRole(null);
-    const supabase = createClient();
-
-    useEffect(() => {
-        if (user) {
-            fetchStaff();
-            fetchInvites();
-        }
-    }, [user]);
-
-    const fetchStaff = async () => {
-        try {
-            const { data: currentStaff } = await supabase
-                .from('restaurant_staff')
-                .select('restaurant_id')
-                .eq('user_id', user?.id || '')
-                .single();
-
-            if (!currentStaff) return;
-
-            const { data } = await supabase
-                .from('restaurant_staff')
-                .select('*')
-                .eq('restaurant_id', currentStaff.restaurant_id)
-                .order('role');
-
-            if (data) setStaff(data as any);
-        } catch (error) {
-            console.error('Error fetching staff:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchInvites = async () => {
-        try {
-            const { data: currentStaff } = await supabase
-                .from('restaurant_staff')
-                .select('restaurant_id')
-                .eq('user_id', user?.id || '')
-                .single();
-
-            if (!currentStaff) return;
-
-            const { data } = await supabase
-                .from('staff_invites')
-                .select('*')
-                .eq('restaurant_id', currentStaff.restaurant_id)
-                .eq('status', 'pending')
-                .gt('expires_at', new Date().toISOString())
-                .order('created_at', { ascending: false });
-
-            if (data) setInvites(data as any);
-        } catch (error) {
-            console.error('Error fetching invites:', error);
-        }
-    };
-
-    const handleCreateInvite = async () => {
-        try {
-            const { data: currentStaff } = await supabase
-                .from('restaurant_staff')
-                .select('restaurant_id')
-                .eq('user_id', user?.id || '')
-                .single();
-
-            if (!currentStaff) return;
-
-            const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-
-            const { data, error } = await supabase
-                .from('staff_invites')
-                .insert([{
-                    restaurant_id: currentStaff.restaurant_id,
-                    role: inviteRole,
-                    code: code,
-                    created_by: user?.id
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            // In a real app, this link would go to a specialized join page
-            const link = `${window.location.origin}/join?code=${code}`;
-            setGeneratedLink(link);
-            fetchInvites();
-        } catch (err: any) {
-            alert('Error creating invite: ' + (err.message || 'Unknown error'));
-        }
-    };
-
-    const handleRemoveStaff = async (id: string) => {
-        if (!confirm('Are you sure you want to remove this staff member?')) return;
-        try {
-            const { error } = await supabase.from('restaurant_staff').delete().eq('id', id);
-            if (error) throw error;
-            fetchStaff();
-        } catch (err: any) {
-            alert('Error removing staff: ' + (err.message || 'Unknown error'));
-        }
-    };
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        alert('Link copied to clipboard!');
-    };
-
-    if (loading) {
-        return (
-            <div className="flex h-96 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-brand-crimson" />
-            </div>
-        );
-    }
+    const totalStaff = mockStaff.length;
+    const onShift = mockStaff.filter(s => s.status === 'on_shift').length;
+    const avgRating = 4.8;
 
     return (
-        <div className="space-y-8 relative">
-            <div className="flex items-center justify-between">
+        <div className="space-y-8 pb-20 min-h-screen">
+            {/* Header */}
+            <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-text-primary">Staff Management</h1>
-                    <p className="text-text-secondary">Manage team members and their roles</p>
+                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Staff Management</h1>
+                    <p className="text-gray-500 font-medium">Manage your team and permissions.</p>
                 </div>
-                <Button
-                    onClick={() => { setShowInviteModal(true); setGeneratedLink(''); }}
-                    className="bg-brand-crimson hover:bg-brand-crimson-hover text-white"
-                >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Invite Staff
-                </Button>
+                <button className="h-12 px-5 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-black/10 font-bold text-sm">
+                    <Plus className="h-4 w-4" />
+                    Add Member
+                </button>
             </div>
 
-            {/* Active Staf List */}
-            <div className="grid gap-4">
-                <h3 className="font-bold text-lg text-text-primary mt-4">Active Staff</h3>
-                {staff.map((member) => (
-                    <Card key={member.id} className="flex items-center justify-between p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-full bg-surface-200 flex items-center justify-center">
-                                <span className="font-bold text-text-secondary">
-                                    {member.role.charAt(0).toUpperCase()}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                {/* Total Staff */}
+                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
+                            <Users className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                                Total
+                            </span>
+                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{totalStaff}</h3>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-5 left-5 right-5">
+                        <div className="mb-3">
+                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Total Staff</h3>
+                            <p className="text-gray-400 text-xs font-medium">Active Employees</p>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                            <span>Target: 10</span>
+                            <span>Current: {totalStaff}</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-1">
+                            {Array.from({ length: 20 }).map((_, i) => {
+                                const activeCount = 10;
+                                const isActive = i < activeCount;
+                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-gray-800' : 'bg-gray-100'}`} />
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* On Shift */}
+                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm">
+                            <UserCheck className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                                Active Now
+                            </span>
+                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{onShift}</h3>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-5 left-5 right-5">
+                        <div className="mb-3">
+                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">On Shift</h3>
+                            <p className="text-gray-400 text-xs font-medium">Currently Working</p>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                            <span>Clocked in: {onShift}</span>
+                            <span>Total: {totalStaff}</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-1">
+                            {Array.from({ length: 20 }).map((_, i) => {
+                                const activeCount = Math.round((onShift / totalStaff) * 20);
+                                const isActive = i < activeCount;
+                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-100'}`} />
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Avg Rating */}
+                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-yellow-600 shadow-sm">
+                            <Star className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="bg-yellow-50 text-yellow-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                                Top Tier
+                            </span>
+                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{avgRating}</h3>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-5 left-5 right-5">
+                        <div className="mb-3">
+                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Performance</h3>
+                            <p className="text-gray-400 text-xs font-medium">Average Staff Rating</p>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                            <span>Avg: {avgRating}</span>
+                            <span>Target: 5.0</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-1">
+                            {Array.from({ length: 20 }).map((_, i) => {
+                                const activeCount = 18;
+                                const isActive = i < activeCount;
+                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-yellow-500' : 'bg-gray-100'}`} />
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Attendance - New Card */}
+                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm">
+                            <CheckCircle className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                                Excellent
+                            </span>
+                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">98%</h3>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-5 left-5 right-5">
+                        <div className="mb-3">
+                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Attendance</h3>
+                            <p className="text-gray-400 text-xs font-medium">On-Time Performance</p>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                            <span>Today: 98%</span>
+                            <span>Target: 95%</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-1">
+                            {Array.from({ length: 20 }).map((_, i) => {
+                                const activeCount = 19;
+                                const isActive = i < activeCount;
+                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-blue-500' : 'bg-gray-100'}`} />
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Staff List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {mockStaff.map((staff) => (
+                    <div key={staff.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col gap-6 relative overflow-hidden">
+
+                        {/* Header */}
+                        <div className="flex items-start justify-between relative z-10">
+                            <div className={`h-16 w-16 rounded-[1.5rem] flex items-center justify-center text-xl font-bold shadow-sm ${staff.avatar_color}`}>
+                                {staff.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 hover:text-black transition-colors">
+                                <MoreHorizontal className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        {/* Info */}
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-lg text-gray-900">{staff.name}</h3>
+                                {staff.status === 'on_shift' && (
+                                    <span className="h-2 w-2 rounded-full bg-green-500 ring-2 ring-white" />
+                                )}
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-4">
+                                <span className={cn(
+                                    "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
+                                    staff.role === 'Manager' ? "bg-purple-50 text-purple-600" :
+                                        staff.role === 'Head Chef' ? "bg-orange-50 text-orange-600" :
+                                            "bg-blue-50 text-blue-600"
+                                )}>
+                                    {staff.role}
+                                </span>
+                                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-700 text-[10px] font-bold">
+                                    <Star className="h-3 w-3 fill-yellow-700" />
+                                    {staff.rating}
                                 </span>
                             </div>
-                            <div>
-                                <h3 className="font-medium text-text-primary">
-                                    {member.user_id === user?.id ? "You" : `User ${member.user_id.slice(0, 8)}...`}
-                                </h3>
-                                <p className="text-sm text-text-tertiary flex items-center gap-1">
-                                    <Shield className="h-3 w-3" />
-                                    {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                                </p>
+
+                            {/* Contact Info (Hidden by default, shown on hover maybe? or just always shown) */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3 text-sm text-gray-500">
+                                    <Mail className="h-4 w-4" />
+                                    <span className="truncate">{staff.email}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-500">
+                                    <Phone className="h-4 w-4" />
+                                    <span>{staff.phone}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <div className={cn(
-                                "px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wide mr-4",
-                                member.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                            )}>
-                                {member.is_active ? 'Active' : 'Inactive'}
+                        {/* Footer / Stats */}
+                        <div className="mt-auto pt-4 border-t border-dashed border-gray-100 relative z-10 flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tables</span>
+                                <span className="text-xl font-bold text-gray-900">{staff.tables_served}</span>
                             </div>
-
-                            {member.user_id !== user?.id && (
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-red-500 hover:bg-red-50"
-                                    onClick={() => handleRemoveStaff(member.id)}
-                                >
-                                    <UserMinus className="h-4 w-4" />
-                                </Button>
-                            )}
+                            <div className="flex flex-col items-end">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</span>
+                                <span className={cn(
+                                    "text-xs font-bold capitalize",
+                                    staff.status === 'on_shift' ? "text-green-600" :
+                                        staff.status === 'break' ? "text-orange-500" : "text-gray-400"
+                                )}>
+                                    {staff.status.replace('_', ' ')}
+                                </span>
+                            </div>
                         </div>
-                    </Card>
+                    </div>
                 ))}
 
-                {staff.length === 0 && !loading && (
-                    <div className="text-center py-10 text-text-tertiary">
-                        No staff found.
+                {/* Add New Staff Card */}
+                <button className="group min-h-[300px] rounded-[2.5rem] border-2 border-dashed border-gray-200 hover:border-black/20 bg-gray-50/50 flex flex-col items-center justify-center gap-4 hover:bg-gray-100 transition-all">
+                    <div className="h-20 w-20 rounded-[2rem] bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <Plus className="h-8 w-8 text-gray-400 group-hover:text-black" />
                     </div>
-                )}
+                    <div className="text-center">
+                        <h4 className="font-bold text-gray-900 mb-1">Add New Staff</h4>
+                        <p className="text-xs font-medium text-gray-400">Invite by email</p>
+                    </div>
+                </button>
             </div>
-
-            {/* Pending Invites List */}
-            {invites.length > 0 && (
-                <div className="grid gap-4 mt-8">
-                    <h3 className="font-bold text-lg text-text-primary">Pending Invites</h3>
-                    {invites.map((invite) => (
-                        <Card key={invite.id} className="flex items-center justify-between p-4 border-dashed bg-surface-50">
-                            <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-full bg-surface-100 flex items-center justify-center">
-                                    <LinkIcon className="h-5 w-5 text-text-tertiary" />
-                                </div>
-                                <div>
-                                    <h3 className="font-medium text-text-primary">
-                                        Invite for {invite.role}
-                                    </h3>
-                                    <p className="text-sm text-text-tertiary font-mono">
-                                        Code: {invite.code}
-                                    </p>
-                                </div>
-                            </div>
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => copyToClipboard(`${window.location.origin}/join?code=${invite.code}`)}
-                            >
-                                <Copy className="mr-2 h-3 w-3" />
-                                Copy Link
-                            </Button>
-                        </Card>
-                    ))}
-                </div>
-            )}
-
-            {/* Invite Modal */}
-            {showInviteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <Card className="w-full max-w-md p-6 relative animate-in fade-in zoom-in duration-200">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-4 top-4 h-8 w-8 p-0"
-                            onClick={() => setShowInviteModal(false)}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-
-                        <div className="space-y-6">
-                            <div>
-                                <h3 className="text-xl font-bold text-text-primary">Invite New Staff</h3>
-                                <p className="text-text-secondary text-sm">Generate a unique link for them to join.</p>
-                            </div>
-
-                            {!generatedLink ? (
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-text-secondary">Role</label>
-                                        <select
-                                            className="w-full px-3 py-2 rounded-lg border border-surface-200 bg-surface-50 focus:border-brand-crimson focus:outline-none"
-                                            value={inviteRole}
-                                            onChange={(e) => setInviteRole(e.target.value)}
-                                        >
-                                            <option value="manager">Manager</option>
-                                            <option value="kitchen">Kitchen Staff</option>
-                                            <option value="waiter">Waiter</option>
-                                            <option value="bar">Bar Staff</option>
-                                        </select>
-                                    </div>
-                                    <Button
-                                        className="w-full bg-brand-crimson text-white hover:bg-brand-crimson-hover"
-                                        onClick={handleCreateInvite}
-                                    >
-                                        Generate Invite Link
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="p-3 bg-surface-50 border border-surface-200 rounded-lg break-all text-sm font-mono text-brand-crimson">
-                                        {generatedLink}
-                                    </div>
-                                    <Button
-                                        className="w-full bg-brand-crimson text-white hover:bg-brand-crimson-hover"
-                                        onClick={() => copyToClipboard(generatedLink)}
-                                    >
-                                        <Copy className="mr-2 h-4 w-4" />
-                                        Copy Link
-                                    </Button>
-                                    <p className="text-xs text-center text-text-tertiary">
-                                        Share this link with your staff member. It expires in 7 days.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                </div>
-            )}
         </div>
     );
 }
