@@ -1,159 +1,264 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { MiniNavbar } from '@/components/ui/MiniNavbar';
-import { CanvasRevealEffect } from '@/components/ui/CanvasRevealEffect';
-import { useState } from 'react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { createClient } from '@/lib/supabase';
+
+function getAuthErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'object' && error && 'message' in error) {
+        const message = (error as { message?: unknown }).message;
+        if (typeof message === 'string' && message.length > 0) return message;
+    }
+    return 'Unable to sign in. Please try again.';
+}
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [oauthMessage, setOauthMessage] = useState<string | null>(null);
+    const router = useRouter();
+    const supabase = useMemo(() => createClient(), []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle login logic here
+        setLoading(true);
+        setError(null);
+        setOauthMessage(null);
+
+        try {
+            const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password,
+            });
+
+            if (signInError) throw signInError;
+            if (!data.user) throw new Error('No authenticated user returned.');
+
+            // Non-blocking role check: login success should not fail because of staff query parsing issues.
+            const { data: staff } = await supabase
+                .from('restaurant_staff')
+                .select('role')
+                .eq('user_id', data.user.id)
+                .eq('is_active', true)
+                .order('created_at', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+
+            if (staff?.role === 'kitchen') {
+                router.push('/auth/post-login');
+            } else {
+                router.push('/auth/post-login');
+            }
+            router.refresh();
+        } catch (submitError) {
+            const message = getAuthErrorMessage(submitError);
+            if (/email.*confirm/i.test(message)) {
+                setError('Please confirm your email first, then sign in.');
+            } else if (/invalid login credentials/i.test(message)) {
+                setError('Incorrect email or password.');
+            } else {
+                setError(message);
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[var(--background)] transition-colors duration-300">
-            {/* Animated Background */}
-            <div className="absolute inset-0 z-0">
-                <CanvasRevealEffect
-                    animationSpeed={3}
-                    containerClassName="bg-transparent"
-                    colors={[
-                        [168, 24, 24], // Gebeta crimson
-                        [168, 24, 24],
-                    ]}
-                    dotSize={6}
-                    reverse={false}
-                />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--background)_0%,transparent_100%)] opacity-80 dark:opacity-100" />
-                <div className="absolute top-0 right-0 left-0 h-1/3 bg-gradient-to-b from-background to-transparent" />
-            </div>
+        <main className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
+            {/* Left Section: Form */}
+            <section className="relative flex flex-col items-center justify-center bg-white px-6 py-12 lg:px-12">
+                {/* Logo - Pinned Top Left */}
+                <div className="absolute top-8 left-8 flex items-center gap-3 lg:top-12 lg:left-12">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-crimson text-white shadow-lg shadow-brand-crimson/30">
+                        <span className="font-bold text-lg">G</span>
+                    </div>
+                    <span className="font-manrope text-xl font-bold text-black tracking-tight">
+                        Gebeta
+                    </span>
+                </div>
 
-            {/* Content */}
-            <div className="relative z-10 flex flex-1 flex-col">
-                <MiniNavbar />
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="w-full max-w-[440px]"
+                >
+                    <h1 className="font-manrope text-4xl font-bold text-black tracking-tight lg:text-4xl text-center lg:text-left">
+                        Welcome Back!
+                    </h1>
+                    <p className="mt-3 font-manrope text-base font-medium text-black/60 leading-relaxed text-center lg:text-left">
+                        Sign in to access your dashboard and continue managing your restaurant.
+                    </p>
 
-                <div className="flex flex-1 items-center justify-center px-6 py-12">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="w-full max-w-md space-y-8"
-                    >
-                        {/* Header */}
-                        <div className="space-y-2 text-center">
-                            <h1 className="font-display text-4xl font-black tracking-tight text-foreground">
-                                Welcome back
-                            </h1>
-                            <p className="font-body font-medium text-foreground opacity-60">
-                                Or{' '}
-                                <Link
-                                    href="/auth/signup"
-                                    className="text-brand-crimson hover:text-brand-crimson/80 font-bold transition-colors"
-                                >
-                                    create a new account
-                                </Link>
-                            </p>
+                    <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+                        {error && (
+                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                                {error}
+                            </div>
+                        )}
+                        {oauthMessage && (
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+                                {oauthMessage}
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-black/80">Email</label>
+                            <div className="relative group">
+                                <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/40 transition-colors group-focus-within:text-brand-crimson" />
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    className="w-full rounded-xl border border-black/15 bg-white px-12 py-3.5 font-manrope text-base font-medium text-black outline-none transition-all placeholder:text-black/30 focus:border-brand-crimson focus:ring-4 focus:ring-brand-crimson/5 focus:shadow-lg focus:shadow-brand-crimson/10"
+                                    required
+                                />
+                            </div>
                         </div>
 
-                        {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-6 font-body">
-                            <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-black/80">Password</label>
+                            <div className="relative group">
+                                <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/40 transition-colors group-focus-within:text-brand-crimson" />
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    placeholder="Enter your password"
+                                    className="w-full rounded-xl border border-black/15 bg-white px-12 py-3.5 pr-14 font-manrope text-base font-medium text-black outline-none transition-all placeholder:text-black/30 focus:border-brand-crimson focus:ring-4 focus:ring-brand-crimson/5 focus:shadow-lg focus:shadow-brand-crimson/10"
+                                    required
+                                />
                                 <button
                                     type="button"
-                                    className="flex w-full items-center justify-center gap-2 rounded-full bg-white dark:bg-white/5 px-4 py-3 text-black dark:text-white backdrop-blur-[2px] transition-all hover:bg-black/5 dark:hover:bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                                    onClick={() => setShowPassword(prev => !prev)}
+                                    className="absolute top-1/2 right-4 -translate-y-1/2 text-black/40 transition hover:text-black/70"
+                                    aria-label="Toggle password visibility"
                                 >
-                                    <span className="text-lg">G</span>
-                                    <span className="font-bold">Sign in with Google</span>
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
-
-                                <div className="flex items-center gap-4">
-                                    <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-                                    <span className="text-sm text-foreground/40 dark:text-white/40 font-medium">or</span>
-                                    <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-                                </div>
-
-                                <div className="space-y-4">
-                                    <input
-                                        type="email"
-                                        placeholder="Email address"
-                                        value={email}
-                                        onChange={e => setEmail(e.target.value)}
-                                        className="w-full rounded-full bg-white dark:bg-white/10 px-6 py-4 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none font-bold shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] focus:shadow-[0_8px_30px_rgb(168,24,24,0.15)]"
-                                        required
-                                    />
-                                    <input
-                                        type="password"
-                                        placeholder="Password"
-                                        value={password}
-                                        onChange={e => setPassword(e.target.value)}
-                                        className="w-full rounded-full bg-white dark:bg-white/10 px-6 py-4 text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-white/40 focus:outline-none font-bold shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] focus:shadow-[0_8px_30px_rgb(168,24,24,0.15)]"
-                                        required
-                                    />
-                                </div>
                             </div>
+                        </div>
 
-                            <div className="flex items-center justify-between text-sm">
-                                <label className="flex cursor-pointer items-center gap-2 text-foreground/60 dark:text-white/60 font-bold">
-                                    <input
-                                        type="checkbox"
-                                        className="rounded border-black/20 dark:border-white/20 bg-white/50 dark:bg-white/5"
-                                    />
-                                    <span>Remember me</span>
-                                </label>
-                                <Link
-                                    href="#"
-                                    className="text-brand-crimson hover:text-brand-crimson/80 font-medium transition-colors"
-                                >
-                                    Forgot password?
-                                </Link>
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full rounded-full bg-black dark:bg-white py-4 font-bold text-white dark:text-black transition-all hover:opacity-90 active:scale-95 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] dark:shadow-[0_10px_40px_-10px_rgba(255,255,255,0.5)]"
-                            >
-                                Sign in
-                            </button>
-
-                            {/* Dev Helper */}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    localStorage.setItem('dev_bypass_auth', 'true');
-                                    window.location.href = '/merchant';
-                                }}
-                                className="w-full rounded-full border border-dashed border-brand-crimson/30 bg-brand-crimson/5 py-3 font-medium text-brand-crimson transition-all hover:bg-brand-crimson/10"
-                            >
-                                🧪 Test Mode: Login as Guest Merchant
-                            </button>
-                        </form>
-
-                        <p className="pt-4 text-center text-xs text-foreground/40 dark:text-white/40 font-medium">
-                            By signing in, you agree to the{' '}
-                            By signing in, you agree to the{' '}
-                            <Link
-                                href="#"
-                                className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
-                            >
-                                Terms of Service
-                            </Link>{' '}
-                            and{' '}
-                            <Link
-                                href="#"
-                                className="text-foreground/40 dark:text-white/40 underline transition-colors hover:text-foreground/60 dark:hover:text-white/60"
-                            >
-                                Privacy Policy
+                        <div className="flex justify-end">
+                            <Link href="#" className="text-sm font-bold text-brand-crimson hover:text-brand-crimson-hover">
+                                Forgot Password?
                             </Link>
-                            .
+                        </div>
+
+                        <motion.button
+                            whileTap={{ scale: 0.98 }}
+                            whileHover={{ scale: 1.01 }}
+                            disabled={loading}
+                            type="submit"
+                            className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#0D3B40] px-6 py-3.5 font-manrope text-lg font-bold text-white transition-all hover:bg-[#08282C] focus:ring-4 focus:ring-[#0D3B40]/20 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                            {loading ? 'Signing In...' : 'Sign In'}
+                        </motion.button>
+                    </form>
+
+                    <div className="relative my-8">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-gray-200" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-3 font-bold text-gray-400 tracking-wider">OR</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <button className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-3.5 font-manrope text-sm font-bold text-black transition-all hover:bg-gray-50 focus:ring-4 focus:ring-gray-100">
+                            <svg className="h-5 w-5" viewBox="0 0 24 24">
+                                <path
+                                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                    fill="#4285F4"
+                                />
+                                <path
+                                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                    fill="#34A853"
+                                />
+                                <path
+                                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z"
+                                    fill="#FBBC05"
+                                />
+                                <path
+                                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                    fill="#EA4335"
+                                />
+                            </svg>
+                            Continue with Google
+                        </button>
+                        <button className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-3.5 font-manrope text-sm font-bold text-black transition-all hover:bg-gray-50 focus:ring-4 focus:ring-gray-100">
+                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.45-1.62 4.75-1.42 1.05.06 2.07.51 2.76 1.15-2.51 1.55-2.06 5.51.5 6.64-.53 1.56-1.52 3.14-3.09 5.86zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                            </svg>
+                            Continue with Apple
+                        </button>
+                    </div>
+
+                    <p className="mt-8 text-center text-sm font-bold text-black/60">
+                        Don&apos;t have an Account?{' '}
+                        <Link href="/auth/signup" className="text-brand-crimson hover:text-brand-crimson-hover hover:underline">
+                            Sign Up
+                        </Link>
+                    </p>
+                </motion.div>
+            </section>
+
+            {/* Right Section: Brand Panel */}
+            <section className="relative hidden w-full flex-col justify-between overflow-hidden bg-[radial-gradient(circle_at_top_right,#2A0A0F_0%,#130607_45%,#090909_100%)] p-12 text-white lg:flex xl:p-24">
+                <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-brand-crimson/10 blur-[120px]" />
+                <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-white/5 blur-[120px]" />
+
+                {/* Spacer for layout balance */}
+                <div className="relative z-10" />
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="relative z-10 my-auto"
+                >
+                    <h2 className="font-manrope text-5xl font-bold leading-[1.1] tracking-tight text-white xl:text-5xl">
+                        Revolutionize your Restaurant with Smarter Automation
+                    </h2>
+                    <div className="mt-8 border-l-2 border-brand-crimson pl-6">
+                        <p className="text-xl font-medium leading-relaxed text-white/90 italic">
+                            &ldquo;Gebeta has completely transformed our service process. It&apos;s reliable, efficient, and ensures our tables are always turning fast.&rdquo;
                         </p>
-                    </motion.div>
-                </div>
-            </div>
-        </div>
+                        <div className="mt-6 flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-full bg-white/10" />
+                            <div>
+                                <p className="text-base font-bold text-white">Michael Carter</p>
+                                <p className="text-sm font-medium text-white/50">General Manager at DevCore</p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                    className="relative z-10 mt-12 border-t border-white/10 pt-8"
+                >
+                    <div className="grid grid-cols-4 gap-8 opacity-50 grayscale transition-all hover:grayscale-0 hover:opacity-100">
+                        {/* Mock Logos */}
+                        <div className="flex items-center gap-2 font-bold text-lg"><div className="h-6 w-6 rounded bg-white/20" /> Discord</div>
+                        <div className="flex items-center gap-2 font-bold text-lg"><div className="h-6 w-6 rounded bg-white/20" /> Mailchimp</div>
+                        <div className="flex items-center gap-2 font-bold text-lg"><div className="h-6 w-6 rounded bg-white/20" /> Grammarly</div>
+                        <div className="flex items-center gap-2 font-bold text-lg"><div className="h-6 w-6 rounded bg-white/20" /> Dropbox</div>
+                    </div>
+                </motion.div>
+            </section>
+        </main>
     );
 }

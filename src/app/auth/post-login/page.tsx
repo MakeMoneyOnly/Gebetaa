@@ -1,0 +1,64 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase';
+
+import { Skeleton } from '@/components/ui/Skeleton';
+
+export default function PostLoginPage() {
+    const router = useRouter();
+    const supabase = useMemo(() => createClient(), []);
+    const [message, setMessage] = useState('Finalizing your session...');
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function finalize() {
+            try {
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser();
+
+                if (cancelled) return;
+
+                if (!user) {
+                    setMessage('Session not found. Redirecting to login...');
+                    router.replace('/auth/login');
+                    return;
+                }
+
+                const { data: staff } = await supabase
+                    .rpc('get_my_staff_role', { p_restaurant_id: null })
+                    .returns<{ role: string; restaurant_id: string }[]>()
+                    .maybeSingle();
+
+                if (cancelled) return;
+
+                if (staff?.role === 'kitchen') {
+                    router.replace('/kds');
+                } else {
+                    router.replace('/merchant');
+                }
+            } catch {
+                if (cancelled) return;
+                router.replace('/auth/login');
+            }
+        }
+
+        void finalize();
+        return () => {
+            cancelled = true;
+        };
+    }, [router, supabase]);
+
+    return (
+        <main className="flex min-h-screen items-center justify-center bg-white">
+            <div className="flex flex-col items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-xl" />
+                <Skeleton className="h-4 w-48 rounded-lg" />
+                <p className="font-manrope text-xs font-semibold text-gray-400 mt-2">{message}</p>
+            </div>
+        </main>
+    );
+}
