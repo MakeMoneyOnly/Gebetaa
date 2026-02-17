@@ -1,4 +1,4 @@
-﻿# Gebetaa CTO Audit and Production Readiness Roadmap
+# Gebetaa CTO Audit and Production Readiness Roadmap
 
 Date: 2026-02-15
 Owner: CTO Office (Architecture + Product + Design)
