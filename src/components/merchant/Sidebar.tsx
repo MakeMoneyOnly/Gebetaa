@@ -69,16 +69,16 @@ export function Sidebar() {
                                         className={cn(
                                             "flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 ease-out group-hover:scale-[1.02]",
                                             isActive
-                                                ? "bg-gradient-to-br from-blue-50 to-indigo-50/50 text-black shadow-sm border border-blue-100/50"
+                                                ? "bg-gradient-to-br from-blue-50 to-indigo-50/50 shadow-sm border border-blue-100/50 text-black"
                                                 : "text-gray-500 hover:bg-gray-50 hover:text-black"
                                         )}
                                     >
                                         <div className="flex items-center gap-3.5">
                                             <Icon
                                                 className={cn("h-5 w-5 transition-transform duration-300", isActive ? "text-black" : "text-gray-400 group-hover:text-black group-hover:scale-110")}
-                                                strokeWidth={isActive ? 2.5 : 2}
+                                                strokeWidth={2}
                                             />
-                                            <span className={cn("text-[13px] tracking-wide transition-all", isActive ? "font-bold" : "font-medium")}>
+                                            <span className={cn("text-[13px] tracking-wide transition-all", isActive ? "font-medium" : "font-medium")}>
                                                 {item.label}
                                             </span>
                                         </div>
@@ -128,7 +128,7 @@ export function Sidebar() {
                                 pathname === link.href ? "text-black bg-gray-50" : "text-gray-400"
                             )}>
                                 <link.icon className={cn("h-4 w-4 transition-colors", pathname === link.href ? "text-black" : "text-gray-400 group-hover:text-black")} />
-                                <span className={cn("transition-colors", pathname === link.href ? "font-bold text-black" : "font-medium group-hover:text-black", "text-[13px]")}>
+                                <span className={cn("transition-colors", pathname === link.href ? "font-medium text-black" : "font-medium group-hover:text-black", "text-[13px]")}>
                                     {link.label}
                                 </span>
                             </div>
