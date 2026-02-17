@@ -1,0 +1,203 @@
+/**
+ * Environment Configuration Validation
+ *
+ * Addresses COMPREHENSIVE_CODEBASE_AUDIT_REPORT Section 3.3
+ * Validates required environment variables at startup
+ */
+
+import { z } from 'zod';
+
+/**
+ * Environment variable schema
+ */
+const envSchema = z.object({
+    // Node environment
+    NODE_ENV: z.enum(['development', 'test', 'staging', 'production']).default('development'),
+
+    // Application
+    NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+    NEXT_PUBLIC_APP_NAME: z.string().default('Gebeta'),
+
+    // Supabase - Required
+    NEXT_PUBLIC_SUPABASE_URL: z.string().url({
+        message: 'NEXT_PUBLIC_SUPABASE_URL must be a valid URL',
+    }),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: z.string().min(1, {
+        message: 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY is required',
+    }),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+
+    // Database
+    DATABASE_URL: z.string().url().optional(),
+
+    // Security
+    JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters').optional(),
+    HMAC_SECRET: z.string().min(32, 'HMAC_SECRET must be at least 32 characters').optional(),
+
+    // Session configuration
+    SESSION_TIMEOUT_MINUTES: z.coerce.number().min(5).max(480).default(30),
+    SESSION_MAX_LIFETIME_HOURS: z.coerce.number().min(1).max(24).default(8),
+
+    // Feature flags
+    ENABLE_OFFLINE_MODE: z.coerce.boolean().default(true),
+    ENABLE_AR_MENU: z.coerce.boolean().default(false),
+    ENABLE_ANALYTICS: z.coerce.boolean().default(true),
+    RATE_LIMIT_ENABLED: z.coerce.boolean().default(true),
+
+    // External services (optional)
+    TELEGRAM_BOT_TOKEN: z.string().optional(),
+    TELEGRAM_CHAT_ID: z.string().optional(),
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+    SENDGRID_API_KEY: z.string().optional(),
+    SENDGRID_FROM_EMAIL: z.string().email().optional(),
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    SENTRY_AUTH_TOKEN: z.string().optional(),
+
+    // Analytics
+    NEXT_PUBLIC_GA_ID: z.string().optional(),
+    LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+
+    // Redis
+    REDIS_URL: z.string().optional(),
+});
+
+/**
+ * Server-only environment schema (additional validation for server-side)
+ */
+const serverEnvSchema = z.object({
+    // These should never be exposed to client
+    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+    DATABASE_URL: z.string().optional(),
+    JWT_SECRET: z.string().optional(),
+    HMAC_SECRET: z.string().optional(),
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    SENDGRID_API_KEY: z.string().optional(),
+    SENTRY_AUTH_TOKEN: z.string().optional(),
+    REDIS_URL: z.string().optional(),
+});
+
+/**
+ * Parsed and validated environment configuration
+ */
+export type Env = z.infer<typeof envSchema>;
+
+/**
+ * Parse and validate environment variables
+ * Throws descriptive errors if validation fails
+ */
+function parseEnv(): Env {
+    // In Next.js, we need to handle both build time and runtime
+    const isServer = typeof window === 'undefined';
+    const env = isServer ? process.env : (process.env as Record<string, string | undefined>);
+
+    try {
+        return envSchema.parse(env);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            const missingVars = error.issues.map((issue) => {
+                const path = issue.path.join('.');
+                return `  - ${path}: ${issue.message}`;
+            }).join('\n');
+
+            // In development, log warning but continue
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(
+                    '\n⚠️  Environment validation failed:\n' + missingVars + '\n\n' +
+                    'Some features may not work correctly.\n'
+                );
+                // Return with defaults
+                return envSchema.parse({
+                    ...env,
+                    NODE_ENV: 'development',
+                });
+            }
+
+            // In production, throw error
+            throw new Error(
+                '\n❌ Environment validation failed:\n' + missingVars + '\n\n' +
+                'Please check your .env.local file and ensure all required variables are set.\n'
+            );
+        }
+        throw error;
+    }
+}
+
+/**
+ * Validate server-only environment variables
+ * Should be called in server-side code only
+ */
+export function validateServerEnv(): void {
+    if (typeof window !== 'undefined') {
+        throw new Error('validateServerEnv() should only be called on the server');
+    }
+
+    try {
+        serverEnvSchema.parse(process.env);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            console.warn(
+                'Server environment validation warnings:\n' +
+                error.issues.map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`).join('\n')
+            );
+        }
+    }
+}
+
+// Cache parsed env to avoid re-parsing
+let cachedEnv: Env | null = null;
+
+/**
+ * Get validated environment configuration
+ * Memoized to avoid repeated parsing
+ */
+export function getEnv(): Env {
+    if (!cachedEnv) {
+        cachedEnv = parseEnv();
+    }
+    return cachedEnv;
+}
+
+/**
+ * Check if a feature is enabled
+ */
+export function isFeatureEnabled(feature: keyof Pick<Env, 
+    'ENABLE_OFFLINE_MODE' | 'ENABLE_AR_MENU' | 'ENABLE_ANALYTICS' | 'RATE_LIMIT_ENABLED'
+>): boolean {
+    return getEnv()[feature] ?? false;
+}
+
+/**
+ * Check if running in production
+ */
+export function isProduction(): boolean {
+    return getEnv().NODE_ENV === 'production';
+}
+
+/**
+ * Check if running in development
+ */
+export function isDevelopment(): boolean {
+    return getEnv().NODE_ENV === 'development';
+}
+
+/**
+ * Check if Redis is configured
+ */
+export function hasRedis(): boolean {
+    return !!getEnv().REDIS_URL;
+}
+
+/**
+ * Get the app URL with fallback
+ */
+export function getAppUrl(): string {
+    return getEnv().NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+}
+
+// Export singleton instance
+export const env = getEnv();
+
+export default env;
