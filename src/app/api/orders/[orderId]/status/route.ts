@@ -20,9 +20,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 };
 
 function canTransition(current: string | null, next: string) {
-    if (!current) {
-        return false;
-    }
+    if (!current) return false;
     return (ALLOWED_TRANSITIONS[current] || []).includes(next);
 }
 
@@ -33,7 +31,6 @@ export async function PATCH(
     const startedAt = Date.now();
     let responseStatus = 500;
     let restaurantIdForMetrics: string | null = null;
-    let supabaseForMetrics: Awaited<ReturnType<typeof createClient>> | null = null;
 
     try {
         const { orderId } = await context.params;
@@ -46,32 +43,31 @@ export async function PATCH(
         }
 
         const supabase = await createClient();
-        supabaseForMetrics = supabase;
-        const {
-            data: { user },
-            error: userError,
-        } = await supabase.auth.getUser();
+
+        // Parallelize: auth check + order fetch at the same time
+        const [{ data: { user }, error: userError }, { data: order, error: orderError }] = await Promise.all([
+            supabase.auth.getUser(),
+            supabase
+                .from('orders')
+                .select('id, restaurant_id, status')
+                .eq('id', orderId)
+                .maybeSingle(),
+        ]);
 
         if (userError || !user) {
             responseStatus = 401;
             return apiError('Unauthorized', 401, 'UNAUTHORIZED');
         }
 
-        const { data: order, error: orderError } = await supabase
-            .from('orders')
-            .select('id, restaurant_id, status')
-            .eq('id', orderId)
-            .maybeSingle();
-
         if (orderError) {
             responseStatus = 500;
             return apiError('Failed to load order', 500, 'ORDER_FETCH_FAILED', orderError.message);
         }
-
         if (!order) {
             responseStatus = 404;
             return apiError('Order not found', 404, 'ORDER_NOT_FOUND');
         }
+
         restaurantIdForMetrics = order.restaurant_id;
 
         const pilotGateResponse = enforcePilotAccess(order.restaurant_id, request.method);
@@ -80,6 +76,7 @@ export async function PATCH(
             return pilotGateResponse;
         }
 
+        // Staff auth check — must be sequential (needs restaurant_id from order)
         const { data: staff, error: staffError } = await supabase
             .from('restaurant_staff')
             .select('id')
@@ -92,7 +89,6 @@ export async function PATCH(
             responseStatus = 500;
             return apiError('Failed to verify staff access', 500, 'STAFF_ACCESS_CHECK_FAILED', staffError.message);
         }
-
         if (!staff) {
             responseStatus = 403;
             return apiError('Forbidden', 403, 'FORBIDDEN');
@@ -112,13 +108,8 @@ export async function PATCH(
             status: parsed.data.status,
             updated_at: now,
         };
-
-        if (parsed.data.status === 'acknowledged') {
-            updatePayload.acknowledged_at = now;
-        }
-        if (parsed.data.status === 'ready' || parsed.data.status === 'completed') {
-            updatePayload.completed_at = now;
-        }
+        if (parsed.data.status === 'acknowledged') updatePayload.acknowledged_at = now;
+        if (parsed.data.status === 'ready' || parsed.data.status === 'completed') updatePayload.completed_at = now;
         if (['acknowledged', 'preparing', 'ready'].includes(parsed.data.status)) {
             updatePayload.kitchen_status = parsed.data.status;
         }
@@ -135,35 +126,44 @@ export async function PATCH(
             return apiError('Failed to update order status', 500, 'ORDER_UPDATE_FAILED', updateError?.message);
         }
 
-        const { error: auditError } = await supabase.from('audit_logs').insert({
-            restaurant_id: order.restaurant_id,
-            user_id: user.id,
-            action: 'order_status_updated',
-            entity_type: 'order',
-            entity_id: order.id,
-            old_value: { status: order.status },
-            new_value: { status: parsed.data.status },
-            metadata: { source: 'merchant_dashboard' },
-        });
-        if (auditError) {
-            console.warn('[PATCH /api/orders/:id/status] audit insert failed:', auditError.message);
-        }
-
-        const { error: eventError } = await (supabase as any).from('order_events').insert({
-            restaurant_id: order.restaurant_id,
-            order_id: order.id,
-            event_type: 'status_changed',
-            from_status: order.status,
-            to_status: parsed.data.status,
-            actor_user_id: user.id,
-            metadata: { source: 'merchant_dashboard' },
-        });
-        if (eventError) {
-            console.warn('[PATCH /api/orders/:id/status] order_events insert failed:', eventError.message);
-        }
-
+        // ✅ Respond immediately — fire-and-forget audit + event + metrics writes
         responseStatus = 200;
-        return apiSuccess(updatedOrder);
+        const response = apiSuccess(updatedOrder);
+
+        // These do NOT block the response
+        const durationMs = Date.now() - startedAt;
+        Promise.all([
+            supabase.from('audit_logs').insert({
+                restaurant_id: order.restaurant_id,
+                user_id: user.id,
+                action: 'order_status_updated',
+                entity_type: 'order',
+                entity_id: order.id,
+                old_value: { status: order.status },
+                new_value: { status: parsed.data.status },
+                metadata: { source: 'merchant_dashboard' },
+            }),
+            (supabase as any).from('order_events').insert({
+                restaurant_id: order.restaurant_id,
+                order_id: order.id,
+                event_type: 'status_changed',
+                from_status: order.status,
+                to_status: parsed.data.status,
+                actor_user_id: user.id,
+                metadata: { source: 'merchant_dashboard' },
+            }),
+            trackApiMetric(supabase, {
+                restaurantId: restaurantIdForMetrics,
+                endpoint: '/api/orders/:id/status',
+                method: 'PATCH',
+                statusCode: responseStatus,
+                durationMs,
+            }),
+        ]).catch((err) => {
+            console.warn('[PATCH /api/orders/:id/status] background write failed:', err);
+        });
+
+        return response;
     } catch (error) {
         responseStatus = 500;
         return apiError(
@@ -172,16 +172,5 @@ export async function PATCH(
             'INTERNAL_ERROR',
             error instanceof Error ? error.message : 'Unknown error'
         );
-    } finally {
-        if (supabaseForMetrics) {
-            const durationMs = Date.now() - startedAt;
-            await trackApiMetric(supabaseForMetrics, {
-                restaurantId: restaurantIdForMetrics,
-                endpoint: '/api/orders/:id/status',
-                method: 'PATCH',
-                statusCode: responseStatus,
-                durationMs,
-            });
-        }
     }
 }
