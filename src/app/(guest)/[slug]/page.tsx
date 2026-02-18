@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -13,6 +13,7 @@ import { ServiceRequestButton } from '@/features/menu/components/ServiceRequestB
 import { CartProvider, useCart } from '@/context/CartContext';
 import { FOOD_ITEMS } from '@/lib/constants';
 import type { DishItem } from '@/features/menu/components/DishDetailDrawer';
+import { isAbortError } from '@/hooks/useSafeFetch';
 
 const DishDetailDrawer = dynamic(
     () => import('@/features/menu/components/DishDetailDrawer').then(mod => mod.DishDetailDrawer),
@@ -70,8 +71,13 @@ function MenuContent() {
     const expiresAt = searchParams.get('exp');
     const slug = params.slug;
     const { addToCart, count } = useCart();
+    
+    // Ref to track if component is mounted
+    const isMountedRef = useRef(true);
 
     useEffect(() => {
+        isMountedRef.current = true;
+        
         async function validateContext() {
             if (!slug || !tableNumber || !signature || !expiresAt) {
                 setGuestContext(null);
@@ -93,6 +99,8 @@ function MenuContent() {
                 const response = await fetch(url.toString(), { method: 'GET' });
                 const payload = await response.json();
 
+                if (!isMountedRef.current) return;
+
                 if (!response.ok) {
                     setGuestContext(null);
                     setContextError(payload?.error ?? 'Invalid or expired QR code.');
@@ -101,15 +109,26 @@ function MenuContent() {
 
                 setGuestContext(payload.data as GuestContextPayload);
             } catch (error) {
+                if (!isMountedRef.current) return;
+                // Silently ignore abort errors
+                if (isAbortError(error)) {
+                    return;
+                }
                 console.error('Failed to validate guest context:', error);
                 setGuestContext(null);
                 setContextError('Unable to validate table context. Please try again.');
             } finally {
-                setContextLoading(false);
+                if (isMountedRef.current) {
+                    setContextLoading(false);
+                }
             }
         }
 
         validateContext();
+        
+        return () => {
+            isMountedRef.current = false;
+        };
     }, [expiresAt, signature, slug, tableNumber]);
 
     useEffect(() => {

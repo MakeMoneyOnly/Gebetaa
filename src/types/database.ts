@@ -222,6 +222,56 @@ export type Database = {
                     },
                 ]
             }
+            delivery_partners: {
+                Row: {
+                    created_at: string
+                    created_by: string | null
+                    credentials_ref: string | null
+                    display_name: string | null
+                    id: string
+                    last_sync_at: string | null
+                    provider: string
+                    restaurant_id: string
+                    settings_json: Json
+                    status: string
+                    updated_at: string
+                }
+                Insert: {
+                    created_at?: string
+                    created_by?: string | null
+                    credentials_ref?: string | null
+                    display_name?: string | null
+                    id?: string
+                    last_sync_at?: string | null
+                    provider: string
+                    restaurant_id: string
+                    settings_json?: Json
+                    status?: string
+                    updated_at?: string
+                }
+                Update: {
+                    created_at?: string
+                    created_by?: string | null
+                    credentials_ref?: string | null
+                    display_name?: string | null
+                    id?: string
+                    last_sync_at?: string | null
+                    provider?: string
+                    restaurant_id?: string
+                    settings_json?: Json
+                    status?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "delivery_partners_restaurant_id_fkey"
+                        columns: ["restaurant_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurants"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
             global_orders: {
                 Row: {
                     created_at: string | null
@@ -265,6 +315,145 @@ export type Database = {
                         columns: ["tenant_id"]
                         isOneToOne: false
                         referencedRelation: "tenants"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            guests: {
+                Row: {
+                    created_at: string
+                    email_hash: string | null
+                    fingerprint_hash: string | null
+                    first_seen_at: string
+                    id: string
+                    identity_key: string
+                    is_vip: boolean
+                    language: string
+                    last_seen_at: string
+                    lifetime_value: number
+                    metadata: Json
+                    name: string | null
+                    notes: string | null
+                    phone_hash: string | null
+                    restaurant_id: string
+                    tags: string[]
+                    updated_at: string
+                    visit_count: number
+                }
+                Insert: {
+                    created_at?: string
+                    email_hash?: string | null
+                    fingerprint_hash?: string | null
+                    first_seen_at?: string
+                    id?: string
+                    identity_key: string
+                    is_vip?: boolean
+                    language?: string
+                    last_seen_at?: string
+                    lifetime_value?: number
+                    metadata?: Json
+                    name?: string | null
+                    notes?: string | null
+                    phone_hash?: string | null
+                    restaurant_id: string
+                    tags?: string[]
+                    updated_at?: string
+                    visit_count?: number
+                }
+                Update: {
+                    created_at?: string
+                    email_hash?: string | null
+                    fingerprint_hash?: string | null
+                    first_seen_at?: string
+                    id?: string
+                    identity_key?: string
+                    is_vip?: boolean
+                    language?: string
+                    last_seen_at?: string
+                    lifetime_value?: number
+                    metadata?: Json
+                    name?: string | null
+                    notes?: string | null
+                    phone_hash?: string | null
+                    restaurant_id?: string
+                    tags?: string[]
+                    updated_at?: string
+                    visit_count?: number
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "guests_restaurant_id_fkey"
+                        columns: ["restaurant_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurants"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            guest_visits: {
+                Row: {
+                    channel: string
+                    created_at: string
+                    guest_id: string
+                    id: string
+                    metadata: Json
+                    order_id: string | null
+                    restaurant_id: string
+                    spend: number
+                    table_id: string | null
+                    visited_at: string
+                }
+                Insert: {
+                    channel?: string
+                    created_at?: string
+                    guest_id: string
+                    id?: string
+                    metadata?: Json
+                    order_id?: string | null
+                    restaurant_id: string
+                    spend?: number
+                    table_id?: string | null
+                    visited_at?: string
+                }
+                Update: {
+                    channel?: string
+                    created_at?: string
+                    guest_id?: string
+                    id?: string
+                    metadata?: Json
+                    order_id?: string | null
+                    restaurant_id?: string
+                    spend?: number
+                    table_id?: string | null
+                    visited_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "guest_visits_guest_id_fkey"
+                        columns: ["guest_id"]
+                        isOneToOne: false
+                        referencedRelation: "guests"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "guest_visits_order_id_fkey"
+                        columns: ["order_id"]
+                        isOneToOne: false
+                        referencedRelation: "orders"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "guest_visits_restaurant_id_fkey"
+                        columns: ["restaurant_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurants"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "guest_visits_table_id_fkey"
+                        columns: ["table_id"]
+                        isOneToOne: false
+                        referencedRelation: "tables"
                         referencedColumns: ["id"]
                     },
                 ]
@@ -563,6 +752,72 @@ export type Database = {
                 Relationships: [
                     {
                         foreignKeyName: "orders_restaurant_id_fkey"
+                        columns: ["restaurant_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurants"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            external_orders: {
+                Row: {
+                    acked_at: string | null
+                    acked_by: string | null
+                    created_at: string
+                    currency: string
+                    delivery_partner_id: string | null
+                    id: string
+                    normalized_status: string
+                    payload_json: Json
+                    provider: string
+                    provider_order_id: string
+                    restaurant_id: string
+                    source_channel: string
+                    total_amount: number
+                    updated_at: string
+                }
+                Insert: {
+                    acked_at?: string | null
+                    acked_by?: string | null
+                    created_at?: string
+                    currency?: string
+                    delivery_partner_id?: string | null
+                    id?: string
+                    normalized_status?: string
+                    payload_json?: Json
+                    provider: string
+                    provider_order_id: string
+                    restaurant_id: string
+                    source_channel?: string
+                    total_amount?: number
+                    updated_at?: string
+                }
+                Update: {
+                    acked_at?: string | null
+                    acked_by?: string | null
+                    created_at?: string
+                    currency?: string
+                    delivery_partner_id?: string | null
+                    id?: string
+                    normalized_status?: string
+                    payload_json?: Json
+                    provider?: string
+                    provider_order_id?: string
+                    restaurant_id?: string
+                    source_channel?: string
+                    total_amount?: number
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "external_orders_delivery_partner_id_fkey"
+                        columns: ["delivery_partner_id"]
+                        isOneToOne: false
+                        referencedRelation: "delivery_partners"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "external_orders_restaurant_id_fkey"
                         columns: ["restaurant_id"]
                         isOneToOne: false
                         referencedRelation: "restaurants"
@@ -1358,6 +1613,10 @@ export type OrderEvent = Tables<'order_events'>;
 export type AlertRule = Tables<'alert_rules'>;
 export type AlertEvent = Tables<'alert_events'>;
 export type SupportTicket = Tables<'support_tickets'>;
+export type Guest = Tables<'guests'>;
+export type GuestVisit = Tables<'guest_visits'>;
+export type DeliveryPartner = Tables<'delivery_partners'>;
+export type ExternalOrder = Tables<'external_orders'>;
 
 // Extended types with relations
 export interface RestaurantWithMenu extends Restaurant {

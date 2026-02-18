@@ -6,6 +6,7 @@ import { LenisRoot } from '@/components/providers/LenisRoot';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 import { Toaster } from 'react-hot-toast';
+import { ServiceWorkerCleanup } from '@/components/providers/ServiceWorkerCleanup';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en" suppressHydrationWarning>
             <body className={`${inter.variable} ${manrope.variable} overscroll-none antialiased`}>
+                <ServiceWorkerCleanup />
                 <LenisRoot>
                     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
                         <div className="fixed top-6 right-6 z-[100] hidden md:flex">

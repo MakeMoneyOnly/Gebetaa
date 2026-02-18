@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const withPWA = require('next-pwa')({
+    enable: process.env.NODE_ENV === 'production',
     dest: 'public',
     register: true,
     skipWaiting: true,
@@ -73,6 +74,20 @@ const withPWA = require('next-pwa')({
 const nextConfig: NextConfig = {
     reactStrictMode: true,
     turbopack: {},
+    
+    // Performance: Enable experimental features for better optimization
+    experimental: {
+        // Optimize package imports to reduce bundle size
+        optimizePackageImports: [
+            'lucide-react',
+            'recharts',
+            'framer-motion',
+            '@react-three/drei',
+            '@react-three/fiber',
+            'three',
+        ],
+    },
+    
     images: {
         formats: ['image/avif', 'image/webp'],
         deviceSizes: [320, 420, 768, 1024, 1200],
@@ -105,6 +120,17 @@ const nextConfig: NextConfig = {
             {
                 source: '/:path*',
                 headers: [
+                    // Performance: Preconnect to critical external domains
+                    {
+                        key: 'Link',
+                        value: [
+                            '<https://fonts.googleapis.com>; rel=preconnect',
+                            '<https://fonts.gstatic.com>; rel=preconnect; crossorigin',
+                            '<https://images.unsplash.com>; rel=preconnect',
+                            '<https://axuegixbqsvztdraenkz.supabase.co>; rel=preconnect',
+                            '<https://api.dicebear.com>; rel=preconnect',
+                        ].join(', '),
+                    },
                     {
                         key: 'X-DNS-Prefetch-Control',
                         value: 'on',

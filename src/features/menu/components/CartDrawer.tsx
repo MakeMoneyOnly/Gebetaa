@@ -7,6 +7,7 @@ import { useHaptic } from '@/hooks/useHaptic';
 import Image from 'next/image';
 import { isRemoteOrDataImageSrc } from '@/lib/utils';
 import { useState } from 'react';
+import { isAbortError } from '@/hooks/useSafeFetch';
 
 interface CartDrawerProps {
     open: boolean;
@@ -71,6 +72,10 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
             clearCart();
             setOrderMessage('Order received. Kitchen has been notified.');
         } catch (error) {
+            // Silently ignore abort errors
+            if (isAbortError(error)) {
+                return;
+            }
             console.error('Order submission failed:', error);
             setOrderError('Network error while placing order. Please retry.');
         } finally {
