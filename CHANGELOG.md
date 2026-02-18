@@ -9,6 +9,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-02-18
+
+#### P1 Channels (Online Ordering + Delivery V1)
+- Added migrations:
+  - `supabase/migrations/20260218_p1_delivery_partners.sql`
+  - `supabase/migrations/20260218_p1_external_orders.sql`
+- Added Channels APIs:
+  - `GET /api/channels/summary` in `src/app/api/channels/summary/route.ts`
+  - `GET /api/channels/online-ordering/settings` in `src/app/api/channels/online-ordering/settings/route.ts`
+  - `PATCH /api/channels/online-ordering/settings` in `src/app/api/channels/online-ordering/settings/route.ts`
+  - `POST /api/channels/delivery/connect` in `src/app/api/channels/delivery/connect/route.ts`
+  - `GET /api/channels/delivery/orders` in `src/app/api/channels/delivery/orders/route.ts`
+  - `POST /api/channels/delivery/orders/:id/ack` in `src/app/api/channels/delivery/orders/[externalOrderId]/ack/route.ts`
+- Added Channels UI:
+  - New page `src/app/(dashboard)/merchant/channels/page.tsx`
+  - New `ChannelHealthBoard` component in `src/components/merchant/ChannelHealthBoard.tsx`
+  - New `OnlineOrderingSettingsPanel` component in `src/components/merchant/OnlineOrderingSettingsPanel.tsx`
+  - New `DeliveryPartnerHub` component in `src/components/merchant/DeliveryPartnerHub.tsx`
+- Added Channels navigation wiring:
+  - `src/components/merchant/Sidebar.tsx`
+  - `src/components/merchant/MobileBottomNav.tsx`
+  - `src/components/merchant/CommandBarShell.tsx`
+- Added channels API unit tests:
+  - `src/app/api/__tests__/channels-api-routes.test.ts`
+- Updated route-level API rate limit policy map:
+  - `src/lib/api/rateLimitPolicies.ts`
+- Updated local DB typings for channels entities:
+  - `src/types/database.ts`
+
+#### P1 Growth Operations Kickoff (Guests CRM Starter)
+- Added migrations:
+  - `supabase/migrations/20260218_p1_guests.sql`
+  - `supabase/migrations/20260218_p1_guest_visits.sql`
+- Added historical backfill job from `orders` to CRM guest entities:
+  - `scripts/backfill_p1_guests_from_orders.sql`
+- Added new guest APIs:
+  - `GET /api/guests` in `src/app/api/guests/route.ts`
+  - `GET /api/guests/:id` in `src/app/api/guests/[guestId]/route.ts`
+  - `PATCH /api/guests/:id` in `src/app/api/guests/[guestId]/route.ts`
+  - `GET /api/guests/:id/visits` in `src/app/api/guests/[guestId]/visits/route.ts`
+- Added API unit tests for guest routes:
+  - `src/app/api/__tests__/guests-api-routes.test.ts`
+- Updated local DB typings for new guest entities:
+  - `src/types/database.ts`
+- Added Guests tab UI implementation:
+  - `GuestDirectory` component with search, segment filters, and tag filter chips
+  - `GuestProfileDrawer` component with profile editing and visit timeline
+  - New page `src/app/(dashboard)/merchant/guests/page.tsx` wired to guest APIs
+  - Added Guests navigation link in desktop/mobile merchant navigation
+  - `src/components/merchant/GuestDirectory.tsx`
+  - `src/components/merchant/GuestProfileDrawer.tsx`
+  - `src/components/merchant/Sidebar.tsx`
+  - `src/components/merchant/MobileBottomNav.tsx`
+
 ### Added - 2026-02-17
 
 #### P0 Implementation Kickoff (Task-driven)

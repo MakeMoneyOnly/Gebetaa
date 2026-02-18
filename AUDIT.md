@@ -532,7 +532,7 @@ Use this section to execute feature-by-feature.
 ## 6.10 Channels (New Tab)
 
 ### MVP
-- [ ] Add online ordering settings and channel health
+- [x] Add online ordering settings and channel health
 - [ ] Add order-source attribution in real time
 - DB entities: `orders`, `external_orders`
 - APIs: `GET /api/channels/summary`, `GET|PATCH /api/channels/online-ordering/settings`
@@ -541,7 +541,7 @@ Use this section to execute feature-by-feature.
   - `OnlineOrderingSettingsPanel`
 
 ### V2
-- [ ] Add delivery partner integrations with status sync
+- [x] Add delivery partner integrations with status sync
 - [ ] Add menu mapping and outage controls per provider
 - DB entities: `delivery_partners`, `external_orders`, `channel_menus`
 - APIs: `POST /api/channels/delivery/connect`, `GET /api/channels/delivery/orders`, `PATCH /api/channels/delivery/provider-status`
@@ -752,4 +752,3 @@ Use this section to execute feature-by-feature.
 - https://www.ethiotelecom.et/telebirr/%E1%88%88%E1%8B%95%E1%89%83%E1%8B%8O%E1%89%BD-%E1%8A%A5%E1%8A%93-%E1%8A%A0%E1%8C%88%E1%88%8D%E1%8C%8D%E1%88%8E%E1%89%B6%E1%89%BD-%E1%8B%AD%E1%8A%AD%E1%8D%88%E1%88%89/
 - https://developer.chapa.co/api-reference/overview
 - https://api.webirr.com/
-

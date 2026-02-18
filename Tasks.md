@@ -159,30 +159,30 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 5.1 Guests (CRM Starter)
 
-- [ ] `P1-001` Add migrations for `guests`.
-- [ ] `P1-002` Add migrations for `guest_visits`.
-- [ ] `P1-003` Build backfill job from historical orders to guests.
-- [ ] `P1-004` Implement `GET /api/guests`.
-- [ ] `P1-005` Implement `GET /api/guests/:id`.
-- [ ] `P1-006` Implement `GET /api/guests/:id/visits`.
-- [ ] `P1-007` Implement `PATCH /api/guests/:id`.
-- [ ] `P1-008` Build `GuestDirectory`.
-- [ ] `P1-009` Build `GuestProfileDrawer`.
-- [ ] `P1-010` Add guest segmentation starter and tags.
+- [x] `P1-001` Add migrations for `guests`.
+- [x] `P1-002` Add migrations for `guest_visits`.
+- [x] `P1-003` Build backfill job from historical orders to guests.
+- [x] `P1-004` Implement `GET /api/guests`.
+- [x] `P1-005` Implement `GET /api/guests/:id`.
+- [x] `P1-006` Implement `GET /api/guests/:id/visits`.
+- [x] `P1-007` Implement `PATCH /api/guests/:id`.
+- [x] `P1-008` Build `GuestDirectory`.
+- [x] `P1-009` Build `GuestProfileDrawer`.
+- [x] `P1-010` Add guest segmentation starter and tags.
 
 ## 5.2 Channels (Online Ordering + Delivery V1)
 
-- [ ] `P1-011` Add migrations for `delivery_partners`.
-- [ ] `P1-012` Add migrations for `external_orders`.
-- [ ] `P1-013` Implement `GET /api/channels/summary`.
-- [ ] `P1-014` Implement `GET /api/channels/online-ordering/settings`.
-- [ ] `P1-015` Implement `PATCH /api/channels/online-ordering/settings`.
-- [ ] `P1-016` Implement `POST /api/channels/delivery/connect`.
-- [ ] `P1-017` Implement `GET /api/channels/delivery/orders`.
-- [ ] `P1-018` Implement `POST /api/channels/delivery/orders/:id/ack`.
-- [ ] `P1-019` Build `ChannelHealthBoard`.
-- [ ] `P1-020` Build `OnlineOrderingSettingsPanel`.
-- [ ] `P1-021` Build `DeliveryPartnerHub`.
+- [x] `P1-011` Add migrations for `delivery_partners`.
+- [x] `P1-012` Add migrations for `external_orders`.
+- [x] `P1-013` Implement `GET /api/channels/summary`.
+- [x] `P1-014` Implement `GET /api/channels/online-ordering/settings`.
+- [x] `P1-015` Implement `PATCH /api/channels/online-ordering/settings`.
+- [x] `P1-016` Implement `POST /api/channels/delivery/connect`.
+- [x] `P1-017` Implement `GET /api/channels/delivery/orders`.
+- [x] `P1-018` Implement `POST /api/channels/delivery/orders/:id/ack`.
+- [x] `P1-019` Build `ChannelHealthBoard`.
+- [x] `P1-020` Build `OnlineOrderingSettingsPanel`.
+- [x] `P1-021` Build `DeliveryPartnerHub`.
 
 ## 5.3 Team Operations and Alerting
 
@@ -259,7 +259,6 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `P2-040` Build payment adapter abstraction layer.
 - [ ] `P2-041` Implement telebirr adapter contract.
 - [ ] `P2-042` Implement Chapa adapter contract.
-- [ ] `P2-043` Implement WeBirr adapter contract.
 - [ ] `P2-044` Add provider health checks and fallback policy.
 - [ ] `P2-045` Add EN/AM localization coverage for P2 tabs.
 - [ ] `P2-046` Add ETB formatting and reporting consistency checks.
