@@ -8,7 +8,9 @@ import {
     ShoppingBag,
     UtensilsCrossed,
     QrCode,
+    User,
     Users,
+    RadioTower,
     Settings,
     LogOut,
     HelpCircle,
@@ -24,6 +26,8 @@ const MENU_ITEMS = [
     { label: 'Orders', href: '/merchant/orders', icon: ShoppingBag },
     { label: 'Menu', href: '/merchant/menu', icon: UtensilsCrossed },
     { label: 'Tables & QR', href: '/merchant/tables', icon: QrCode },
+    { label: 'Guests', href: '/merchant/guests', icon: User },
+    { label: 'Channels', href: '/merchant/channels', icon: RadioTower },
     { label: 'Staff', href: '/merchant/staff', icon: Users },
     { label: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
 ];
@@ -37,19 +41,19 @@ export function Sidebar() {
             <div className="space-y-8">
                 {/* Logo */}
                 <div className="flex items-center gap-3 px-2 pt-4 pb-2">
-                    <div className="h-10 w-10 bg-black rounded-[0.85rem] flex items-center justify-center shadow-lg shadow-black/20 ring-4 ring-gray-50/50">
-                        <div className="h-4 w-4 bg-white rounded-full opacity-90 shadow-inner" />
+                    <div className="h-11 w-11 bg-black rounded-[1.1rem] flex items-center justify-center shadow-lg shadow-black/20 ring-4 ring-gray-50/50 transition-transform duration-500 hover:rotate-6">
+                        <div className="h-5 w-5 bg-white rounded-full opacity-90 shadow-inner" />
                     </div>
-                    <span className="block text-xl font-bold tracking-tight text-black leading-none">Gebeta</span>
+                    <span className="block text-2xl font-extrabold tracking-tighter text-black leading-none">Gebeta</span>
                 </div>
 
                 {/* Search Placeholder */}
                 <div className="px-2 relative group">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-black transition-colors" />
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-black transition-colors" />
                     <input
                         type="text"
                         placeholder="Search..."
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-11 pr-4 text-sm font-medium focus:outline-none focus:border-gray-200 focus:bg-white transition-all placeholder:text-gray-400"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-[15px] font-medium focus:outline-none focus:border-gray-200 focus:bg-white transition-all placeholder:text-gray-400"
                     />
                 </div>
 
@@ -73,10 +77,10 @@ export function Sidebar() {
                                     >
                                         <div className="flex items-center gap-3.5">
                                             <Icon
-                                                className={cn("h-5 w-5 transition-transform duration-300", isActive ? "text-black" : "text-gray-400 group-hover:text-black group-hover:scale-110")}
+                                                className={cn("h-[22px] w-[22px] transition-transform duration-300", isActive ? "text-black" : "text-gray-400 group-hover:text-black group-hover:scale-110")}
                                                 strokeWidth={2}
                                             />
-                                            <span className={cn("text-[13px] tracking-wide transition-all", isActive ? "font-medium" : "font-medium")}>
+                                            <span className={cn("text-[15px] transition-all tracking-tight truncate", isActive ? "font-semibold text-black" : "font-semibold text-gray-500 group-hover:text-black")}>
                                                 {item.label}
                                             </span>
                                         </div>
@@ -101,13 +105,13 @@ export function Sidebar() {
                         </span>
                     </div>
                     <div className="relative z-10">
-                        <h4 className="font-bold text-gray-900 text-sm tracking-tight mb-1">Upgrade Plan</h4>
-                        <p className="text-[11px] text-gray-500 font-medium leading-relaxed mb-4">
+                        <h4 className="font-bold text-gray-900 text-[15px] tracking-tight mb-1">Upgrade Plan</h4>
+                        <p className="text-[12px] text-gray-500 font-medium leading-relaxed mb-4">
                             Get advanced analytics & unlimited staff.
                         </p>
-                        <button className="w-full py-2.5 bg-black text-white font-bold text-xs rounded-xl hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+                        <button className="w-full py-3 bg-black text-white font-bold text-sm rounded-xl hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
                             Upgrade Now
-                            <ChevronRight className="h-3 w-3 opacity-50" />
+                            <ChevronRight className="h-4 w-4 opacity-50" />
                         </button>
                     </div>
                     {/* Decorative Background */}
@@ -122,20 +126,20 @@ export function Sidebar() {
                     ].map((link) => (
                         <Link key={link.href} href={link.href} className="block w-full">
                             <div className={cn(
-                                "group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-200 hover:bg-gray-50",
+                                "group flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all duration-200 hover:bg-gray-50",
                                 pathname === link.href ? "text-black bg-gray-50" : "text-gray-400"
                             )}>
-                                <link.icon className={cn("h-4 w-4 transition-colors", pathname === link.href ? "text-black" : "text-gray-400 group-hover:text-black")} />
-                                <span className={cn("transition-colors", pathname === link.href ? "font-medium text-black" : "font-medium group-hover:text-black", "text-[13px]")}>
+                                <link.icon className={cn("h-5 w-5 transition-colors", pathname === link.href ? "text-black" : "text-gray-400 group-hover:text-black")} />
+                                <span className={cn("transition-colors", pathname === link.href ? "font-semibold text-black" : "font-semibold group-hover:text-black", "text-[14px] tracking-tight")}>
                                     {link.label}
                                 </span>
                             </div>
                         </Link>
                     ))}
 
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-red-500 transition-colors rounded-2xl hover:bg-red-50 group mt-1">
-                        <LogOut className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                        <span className="font-medium text-xs">Log out</span>
+                    <button className="w-full flex items-center gap-3.5 px-4 py-3 text-gray-400 hover:text-red-600 transition-colors rounded-2xl hover:bg-red-50 group mt-1">
+                        <LogOut className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
+                        <span className="font-semibold text-[14px] tracking-tight">Log out</span>
                     </button>
                 </div>
             </div>

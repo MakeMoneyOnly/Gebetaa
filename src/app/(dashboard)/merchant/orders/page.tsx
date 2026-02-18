@@ -10,6 +10,7 @@ import { Order, ServiceRequest } from '@/types/database';
 import { OrdersQueueTable } from '@/components/merchant/OrdersQueueTable';
 import { OrdersKanbanBoard } from '@/components/merchant/OrdersKanbanBoard';
 import { BulkActionBar } from '@/components/merchant/BulkActionBar';
+import { isAbortError } from '@/hooks/useSafeFetch';
 
 type OrderEvent = {
     id: string;
@@ -80,9 +81,28 @@ const filterTabs = [
 ];
 
 export default function OrdersPage() {
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Seed from sessionStorage cache so the table renders instantly on tab-switch
+    // (stale-while-revalidate pattern — fresh data replaces it silently in background)
+    const [orders, setOrders] = useState<Order[]>(() => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const cached = sessionStorage.getItem('orders.cache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
+    const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>(() => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const cached = sessionStorage.getItem('orders.srCache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
+    // Only show skeleton on very first ever load — persisted in sessionStorage so
+    // tab switches / minimize-restore never re-trigger it
+    const [loading, setLoading] = useState(() => {
+        if (typeof window === 'undefined') return true;
+        return sessionStorage.getItem('orders.initialLoadDone') !== '1';
+    });
     const [activeFilter, setActiveFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -90,6 +110,7 @@ export default function OrdersPage() {
     const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetailsPayload | null>(null);
     const [selectedServiceRequest, setSelectedServiceRequest] = useState<ServiceRequest | null>(null);
     const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null);
+    const [loadingEvents, setLoadingEvents] = useState(false);
     const [detailsError, setDetailsError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [actionInfo, setActionInfo] = useState<string | null>(null);
@@ -101,7 +122,7 @@ export default function OrdersPage() {
     const [bulkStaffId, setBulkStaffId] = useState('');
     const [staff, setStaff] = useState<StaffMember[]>([]);
     const [bulkLoading, setBulkLoading] = useState(false);
-    const { user } = useRole(null);
+    const { user, loading: roleLoading } = useRole(null);
     const supabase = createClient();
 
     const getNextStatus = (status: string | null) => {
@@ -220,8 +241,19 @@ export default function OrdersPage() {
             return;
         }
 
-        try {
+        // Open modal immediately with cached order data — no waiting
+        const cachedOrder = orders.find((o) => o.id === orderId) ?? null;
+        if (cachedOrder) {
+            setDetailsError(null);
+            setSelectedServiceRequest(null);
+            setSelectedOrderDetails({ order: cachedOrder, events: [] });
+        } else {
             setLoadingOrderId(orderId);
+        }
+
+        // Fetch full details (with events) in the background
+        try {
+            setLoadingEvents(true);
             setDetailsError(null);
             setSelectedServiceRequest(null);
             const response = await fetch(`/api/orders/${orderId}`, {
@@ -236,14 +268,14 @@ export default function OrdersPage() {
         } catch (error) {
             console.error('Failed to fetch order details:', error);
             setDetailsError('Unable to load order details.');
-            setSelectedOrderDetails(null);
+            if (!cachedOrder) setSelectedOrderDetails(null);
         } finally {
             setLoadingOrderId(null);
+            setLoadingEvents(false);
         }
     };
 
     const fetchOrders = useCallback(async (status: string, search: string) => {
-        setLoading(true);
         if (!user) {
             setOrders([]);
             setLoading(false);
@@ -270,12 +302,14 @@ export default function OrdersPage() {
             }
 
             const payload = await response.json();
-            setOrders(payload?.data?.orders ?? []);
+            // Only replace state when real data arrives — never flash empty
+            const fresh = payload?.data?.orders ?? [];
+            setOrders(fresh);
+            // Write-through cache so next mount is instant
+            try { sessionStorage.setItem('orders.cache', JSON.stringify(fresh)); } catch {}
         } catch (error) {
             console.error('Error fetching orders from API:', error);
-            setOrders([]);
-        } finally {
-            setLoading(false);
+            // Do NOT clear orders on error — keep showing stale data
         }
     }, [user]);
 
@@ -302,10 +336,14 @@ export default function OrdersPage() {
                 throw new Error(`Failed to fetch service requests (${response.status})`);
             }
             const payload = await response.json();
-            setServiceRequests(payload?.data?.requests ?? []);
+            // Only replace state when real data arrives — never flash empty
+            const fresh = payload?.data?.requests ?? [];
+            setServiceRequests(fresh);
+            // Write-through cache so next mount is instant
+            try { sessionStorage.setItem('orders.srCache', JSON.stringify(fresh)); } catch {}
         } catch (error) {
             console.error('Error fetching service requests from API:', error);
-            setServiceRequests([]);
+            // Do NOT clear on error — keep showing stale data
         }
     }, [user]);
 
@@ -395,14 +433,37 @@ export default function OrdersPage() {
     }, [searchTerm]);
 
     useEffect(() => {
+        if (roleLoading) return;
+
         if (user) {
-            fetchOrders(activeFilter, debouncedSearchTerm);
-            fetchServiceRequests(activeFilter, debouncedSearchTerm);
+            const alreadyLoaded = sessionStorage.getItem('orders.initialLoadDone') === '1';
+            if (!alreadyLoaded) {
+                setLoading(true);
+            }
+            Promise.all([
+                fetchOrders(activeFilter, debouncedSearchTerm),
+                fetchServiceRequests(activeFilter, debouncedSearchTerm),
+            ]).finally(() => {
+                sessionStorage.setItem('orders.initialLoadDone', '1');
+                setLoading(false);
+            });
             fetchStaff();
         } else {
             setLoading(false);
         }
-    }, [activeFilter, debouncedSearchTerm, fetchOrders, fetchServiceRequests, fetchStaff, user]);
+    }, [activeFilter, debouncedSearchTerm, fetchOrders, fetchServiceRequests, fetchStaff, user, roleLoading]);
+
+    // Silently refresh when the tab becomes visible again (no skeleton — enterprise pattern)
+    useEffect(() => {
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && user && !roleLoading) {
+                fetchOrders(activeFilter, debouncedSearchTerm);
+                fetchServiceRequests(activeFilter, debouncedSearchTerm);
+            }
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    }, [activeFilter, debouncedSearchTerm, fetchOrders, fetchServiceRequests, user, roleLoading]);
 
     // Realtime subscription
     useEffect(() => {
@@ -583,38 +644,58 @@ export default function OrdersPage() {
 
     if (loading) {
         return (
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
+            <div className="space-y-8 pb-20 min-h-screen">
+                {/* Header — mirrors the real header */}
+                <div className="flex items-start justify-between">
                     <div className="space-y-2">
-                        <Skeleton className="h-10 w-48 rounded-xl" />
+                        <Skeleton className="h-10 w-36 rounded-xl" />
                         <Skeleton className="h-4 w-64 rounded-lg" />
                     </div>
-                    {/* Header Actions Skeleton */}
                     <div className="flex gap-3">
                         <Skeleton className="h-12 w-64 rounded-xl" />
                         <Skeleton className="h-12 w-24 rounded-xl" />
+                        <Skeleton className="h-12 w-40 rounded-xl" />
                     </div>
                 </div>
-                {/* Filter Pills Skeleton */}
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    {[1, 2, 3, 4].map((i) => (
-                        <Skeleton key={i} className="h-10 w-28 rounded-xl flex-shrink-0" />
+
+                {/* Filter pills — mirrors the real tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {[120, 90, 110, 100].map((w, i) => (
+                        <Skeleton key={i} className="h-10 rounded-xl flex-shrink-0" style={{ width: w }} />
                     ))}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="p-6 rounded-[2rem] space-y-4 bg-white shadow-sm flex flex-col justify-between h-[280px]">
-                            <div className="flex justify-between items-start">
-                                <Skeleton className="h-8 w-24 rounded-lg" />
-                                <Skeleton className="h-6 w-20 rounded-full" />
-                            </div>
-                            <div className="space-y-3">
-                                <Skeleton className="h-4 w-full rounded-lg" />
-                                <Skeleton className="h-4 w-2/3 rounded-lg" />
-                            </div>
-                            <div className="pt-4 mt-auto flex gap-3">
-                                <Skeleton className="h-12 w-full rounded-xl" />
-                                <Skeleton className="h-12 w-full rounded-xl" />
+
+                {/* Queue table skeleton — mirrors the real table exactly */}
+                <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-gray-100">
+                    {/* Table header */}
+                    <div className="flex items-center gap-4 px-5 py-4 border-b border-gray-100">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <Skeleton className="h-3 w-12 rounded" />
+                        <Skeleton className="h-3 w-16 rounded ml-8" />
+                        <Skeleton className="h-3 w-12 rounded ml-8" />
+                        <Skeleton className="h-3 w-12 rounded ml-8" />
+                        <Skeleton className="h-3 w-16 rounded ml-auto" />
+                    </div>
+                    {/* Table rows */}
+                    {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                        <div
+                            key={i}
+                            className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0"
+                        >
+                            {/* Checkbox */}
+                            <Skeleton className="h-4 w-4 rounded flex-shrink-0" />
+                            {/* Table number */}
+                            <Skeleton className="h-8 w-8 rounded-xl flex-shrink-0" />
+                            {/* Status pill */}
+                            <Skeleton className="h-6 w-24 rounded-full flex-shrink-0 ml-4" />
+                            {/* Time */}
+                            <Skeleton className="h-4 w-20 rounded flex-shrink-0 ml-4" />
+                            {/* Total */}
+                            <Skeleton className="h-4 w-16 rounded flex-shrink-0 ml-4" />
+                            {/* Actions */}
+                            <div className="ml-auto flex gap-2">
+                                <Skeleton className="h-9 w-20 rounded-xl" />
+                                <Skeleton className="h-9 w-24 rounded-xl" />
                             </div>
                         </div>
                     ))}
@@ -624,35 +705,37 @@ export default function OrdersPage() {
     }
 
     return (
-        <div className="space-y-8 pb-20 min-h-screen bg-white">
+        <div className="space-y-8 pb-20 min-h-screen">
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Orders</h1>
+                    <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Orders</h1>
                     <p className="text-gray-500 font-medium">Manage and track your restaurant orders.</p>
                 </div>
                 <div className="flex gap-3">
                     <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-black transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
                         <input
                             id="orders-search-input"
                             type="text"
                             placeholder="Search orders..."
                             value={searchTerm}
                             onChange={(event) => setSearchTerm(event.target.value)}
-                            className="pl-11 pr-4 h-12 w-64 rounded-xl border border-gray-100 bg-gray-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 transition-all outline-none"
+                            className="pl-11 pr-4 h-12 w-64 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all outline-none"
                         />
                     </div>
-                    <button className="h-12 px-5 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-black/10 font-bold text-sm">
+                    <button className="h-12 px-5 border border-gray-300 bg-white text-gray-800 rounded-xl flex items-center gap-2 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-bold text-sm">
                         <Filter className="h-4 w-4" />
                         Filter
                     </button>
-                    <div className="flex rounded-xl border border-gray-100 bg-white p-1 shadow-sm">
+                    <div className="flex rounded-xl border border-gray-200 bg-gray-50 p-1">
                         <button
                             onClick={() => setViewMode('table')}
                             className={cn(
-                                "h-10 px-3 rounded-lg text-xs font-bold transition-colors",
-                                viewMode === 'table' ? "bg-black text-white" : "text-gray-500 hover:text-black"
+                                "h-9 px-4 rounded-lg text-xs font-bold transition-all duration-200",
+                                viewMode === 'table'
+                                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80"
+                                    : "text-gray-500 hover:text-gray-700"
                             )}
                         >
                             Queue
@@ -660,8 +743,10 @@ export default function OrdersPage() {
                         <button
                             onClick={() => setViewMode('kanban')}
                             className={cn(
-                                "h-10 px-3 rounded-lg text-xs font-bold transition-colors",
-                                viewMode === 'kanban' ? "bg-black text-white" : "text-gray-500 hover:text-black"
+                                "h-9 px-4 rounded-lg text-xs font-bold transition-all duration-200",
+                                viewMode === 'kanban'
+                                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80"
+                                    : "text-gray-500 hover:text-gray-700"
                             )}
                         >
                             Kanban
@@ -669,8 +754,10 @@ export default function OrdersPage() {
                         <button
                             onClick={() => setViewMode('cards')}
                             className={cn(
-                                "h-10 px-3 rounded-lg text-xs font-bold transition-colors",
-                                viewMode === 'cards' ? "bg-black text-white" : "text-gray-500 hover:text-black"
+                                "h-9 px-4 rounded-lg text-xs font-bold transition-all duration-200",
+                                viewMode === 'cards'
+                                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80"
+                                    : "text-gray-500 hover:text-gray-700"
                             )}
                         >
                             Cards
@@ -680,16 +767,16 @@ export default function OrdersPage() {
             </div>
 
             {/* Status Filters (Matches Skeleton) */}
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {filterTabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveFilter(tab.id)}
                         className={cn(
-                            "h-10 px-6 rounded-xl text-sm font-bold whitespace-nowrap transition-all",
+                            "h-10 px-5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200",
                             activeFilter === tab.id
-                                ? "bg-black text-white shadow-lg shadow-black/10"
-                                : "bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-black"
+                                ? "bg-black text-white shadow-sm"
+                                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800"
                         )}
                     >
                         {tab.label}
@@ -745,126 +832,115 @@ export default function OrdersPage() {
                 ) : (
                     queueOrders.map((order) => {
                         const isServiceRequest = order.id.startsWith(SERVICE_REQUEST_ROW_PREFIX);
-                        let statusColor = "bg-blue-50 text-blue-600";
-                        if (order.status === 'completed' || order.status === 'service_completed') statusColor = "bg-green-50 text-green-600";
-                        else if (order.status === 'pending' || order.status === 'service_pending') statusColor = "bg-yellow-50 text-yellow-600";
-                        else if (order.status === 'cancelled') statusColor = "bg-red-50 text-red-600";
-                        else if (order.status === 'ready') statusColor = "bg-green-50 text-green-600";
-                        else if (order.status === 'preparing' || order.status === 'acknowledged' || order.status === 'service_in_progress') statusColor = "bg-orange-50 text-orange-600";
+                        let statusColor = "bg-blue-50 text-blue-700 ring-blue-200/60";
+                        if (order.status === 'completed' || order.status === 'service_completed') statusColor = "bg-emerald-50 text-emerald-700 ring-emerald-200/60";
+                        else if (order.status === 'pending' || order.status === 'service_pending') statusColor = "bg-amber-50 text-amber-700 ring-amber-200/60";
+                        else if (order.status === 'cancelled') statusColor = "bg-red-50 text-red-700 ring-red-200/60";
+                        else if (order.status === 'ready') statusColor = "bg-green-50 text-green-700 ring-green-200/60";
+                        else if (order.status === 'preparing' || order.status === 'acknowledged' || order.status === 'service_in_progress') statusColor = "bg-orange-50 text-orange-700 ring-orange-200/60";
 
                         const nextStatus = getNextStatus(order.status);
                         const isUpdating = updatingOrderId === order.id;
                         const isSelected = !isServiceRequest && selectedOrderIds.includes(order.id);
 
                         return (
-                            <div key={order.id} className={cn(
-                                "group p-6 rounded-[2.5rem] bg-white shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[320px] relative overflow-hidden",
-                                isSelected ? "ring-2 ring-black/10 border border-black/20" : ""
-                            )}>
-                                {isServiceRequest ? (
-                                    <div className="mb-2">
-                                        <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700">
-                                            Service Request
+                            <div
+                                key={order.id}
+                                className={cn(
+                                    "group relative bg-white rounded-[2rem] p-4 flex flex-col gap-4 min-h-72 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden",
+                                    isSelected ? "ring-2 ring-black/10" : "ring-1 ring-gray-100"
+                                )}
+                            >
+                                {/* Top image-like area — status badge overlay, like Menu cards */}
+                                <div className="relative w-full h-36 rounded-[1.5rem] overflow-hidden bg-gray-50 flex-shrink-0 flex items-center justify-center">
+                                    {/* Decorative background */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100" />
+                                    {/* Big table number centered */}
+                                    <span className="relative text-6xl font-black text-gray-200 select-none tracking-tighter">
+                                        {order.table_number || '?'}
+                                    </span>
+                                    {/* Status badge top-left like Menu's In Stock badge */}
+                                    <div className="absolute top-3 left-3">
+                                        <span className={cn(
+                                            "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide backdrop-blur-md ring-1",
+                                            statusColor
+                                        )}>
+                                            {(order.status || '').replace('service_', '')}
                                         </span>
                                     </div>
-                                ) : (
-                                    <div className="mb-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={() => toggleOrderSelection(order.id)}
-                                            className="h-4 w-4 rounded border-gray-300"
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Header */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="relative z-10">
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-1">Table</span>
-                                        <h4 className="text-4xl font-extrabold text-gray-900 tracking-tighter">
-                                            {order.table_number || 'N/A'}
-                                        </h4>
-                                        {isServiceRequest ? (
-                                            <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-blue-700">
-                                                {serviceRequests.find((request) => `${SERVICE_REQUEST_ROW_PREFIX}${request.id}` === order.id)?.request_type || 'service'}
-                                            </p>
-                                        ) : null}
-                                    </div>
-                                    <span className={cn(
-                                        "px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest shadow-sm",
-                                        statusColor
-                                    )}>
-                                        {(order.status || '').replace('service_', '')}
-                                    </span>
+                                    {/* Service request badge top-right */}
+                                    {isServiceRequest ? (
+                                        <div className="absolute top-3 right-3">
+                                            <span className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-200/60">
+                                                SR
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="absolute top-3 right-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleOrderSelection(order.id)}
+                                                className="h-4 w-4 rounded border-gray-300 accent-gray-800"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Order Info */}
-                                <div className="space-y-4 mb-8 relative z-10">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
-                                            <Clock className="h-4 w-4" />
-                                        </div>
+                                {/* Info — like Menu card name/price row */}
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-start gap-2">
                                         <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time</p>
-                                            <p className={cn(
-                                                "text-sm font-bold",
-                                                (() => {
-                                                    const ageMinutes = order.created_at
-                                                        ? Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000))
-                                                        : 0;
-                                                    if (ageMinutes >= 30) return "text-red-600";
-                                                    if (ageMinutes >= 15) return "text-orange-600";
-                                                    return "text-green-600";
-                                                })()
-                                            )}>
-                                                {new Date(order.created_at || '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Table</p>
+                                            <h4 className="font-bold text-gray-900 text-xl leading-tight">{order.table_number || 'N/A'}</h4>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
-                                            <DollarSign className="h-4 w-4" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
-                                            <p className="text-sm font-bold text-gray-900">
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
+                                            <p className="font-bold text-gray-900 whitespace-nowrap">
                                                 {isServiceRequest
-                                                    ? (serviceRequests.find((request) => `${SERVICE_REQUEST_ROW_PREFIX}${request.id}` === order.id)?.notes || 'No notes')
+                                                    ? (serviceRequests.find((r) => `${SERVICE_REQUEST_ROW_PREFIX}${r.id}` === order.id)?.notes || 'Request')
                                                     : `${order.total_price} ETB`}
                                             </p>
                                         </div>
                                     </div>
+                                    <p className={cn(
+                                        "text-xs font-semibold",
+                                        (() => {
+                                            const age = order.created_at ? Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000)) : 0;
+                                            if (age >= 30) return "text-red-500";
+                                            if (age >= 15) return "text-orange-500";
+                                            return "text-gray-400";
+                                        })()
+                                    )}>
+                                        {order.created_at ? new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                    </p>
                                 </div>
 
-                                {/* Buttons - Overlay Style */}
-                                <div className="grid grid-cols-2 gap-3 mt-auto relative z-10">
+                                {/* Action Buttons — like Menu card Inline Edit / Advanced */}
+                                <div className="mt-auto flex items-center gap-2">
                                     <button
                                         onClick={() => handleOpenDetails(order.id)}
-                                        className="h-12 rounded-2xl bg-black text-white text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10 hover:scale-[1.02]"
+                                        className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-all duration-200 inline-flex items-center gap-1"
                                     >
-                                        {loadingOrderId === order.id ? 'Loading...' : 'Details'}
+                                        {loadingOrderId === order.id ? 'Loading…' : 'Details'}
                                     </button>
                                     <button
                                         disabled={!nextStatus || isUpdating}
                                         onClick={() => handleStatusUpdate(order.id, order.status)}
                                         className={cn(
-                                            "h-12 rounded-2xl text-xs font-bold transition-all flex items-center justify-center",
+                                            "h-9 px-3 rounded-xl text-xs font-semibold transition-all duration-200",
                                             !nextStatus
-                                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                                : "bg-gray-100 text-gray-900 hover:bg-gray-200 hover:scale-[1.02]"
+                                                ? "bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-100"
+                                                : "border border-gray-200 text-gray-700 hover:bg-gray-50"
                                         )}
                                     >
                                         {isUpdating
-                                            ? 'Updating...'
+                                            ? 'Updating…'
                                             : nextStatus
-                                                ? `Mark ${nextStatus.replace('service_', '')}`
-                                                : 'No Action'}
+                                                ? nextStatus.replace('service_', '').replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+                                                : 'Done'}
                                     </button>
                                 </div>
-
-                                {/* Decorative Gradient on Hover */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-gray-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             </div>
                         );
                     })
@@ -885,59 +961,70 @@ export default function OrdersPage() {
                 loading={bulkLoading}
             />
 
+
             {selectedOrderDetails?.order && (
-                <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6">
-                        <div className="flex items-start justify-between mb-4">
+                <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl ring-1 ring-gray-100 p-6">
+                        <div className="flex items-start justify-between mb-5">
                             <div>
-                                <h3 className="text-2xl font-bold text-black">
+                                <h3 className="text-xl font-bold text-gray-900">
                                     Order #{selectedOrderDetails.order.order_number || selectedOrderDetails.order.id.slice(0, 8)}
                                 </h3>
-                                <p className="text-sm text-gray-500">Table {selectedOrderDetails.order.table_number || 'N/A'}</p>
+                                <p className="text-sm text-gray-500 mt-0.5">Table {selectedOrderDetails.order.table_number || 'N/A'}</p>
                             </div>
                             <button
                                 onClick={() => setSelectedOrderDetails(null)}
-                                className="h-9 w-9 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center"
+                                className="h-9 w-9 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 flex items-center justify-center transition-colors"
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
                         <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Status</span>
-                                <span className="font-semibold text-black">{selectedOrderDetails.order.status || 'N/A'}</span>
+                            <div className="flex justify-between py-2 border-b border-gray-50">
+                                <span className="text-gray-500 font-medium">Status</span>
+                                <span className="font-bold text-gray-900">{selectedOrderDetails.order.status || 'N/A'}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Total</span>
-                                <span className="font-semibold text-black">{selectedOrderDetails.order.total_price} ETB</span>
+                            <div className="flex justify-between py-2 border-b border-gray-50">
+                                <span className="text-gray-500 font-medium">Total</span>
+                                <span className="font-bold text-gray-900">{selectedOrderDetails.order.total_price} ETB</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Created</span>
-                                <span className="font-semibold text-black">
+                            <div className="flex justify-between py-2 border-b border-gray-50">
+                                <span className="text-gray-500 font-medium">Created</span>
+                                <span className="font-bold text-gray-900">
                                     {selectedOrderDetails.order.created_at
                                         ? new Date(selectedOrderDetails.order.created_at).toLocaleString()
                                         : 'N/A'}
                                 </span>
                             </div>
-                            <div>
-                                <p className="text-gray-500 mb-1">Notes</p>
-                                <p className="font-medium text-black bg-gray-50 rounded-xl p-3">
+                            <div className="py-2">
+                                <p className="text-gray-500 font-medium mb-2">Notes</p>
+                                <p className="font-medium text-gray-800 bg-gray-50 rounded-xl p-3 text-sm">
                                     {selectedOrderDetails.order.notes || 'No notes'}
                                 </p>
                             </div>
-                            <div>
-                                <p className="text-gray-500 mb-2">Timeline</p>
+                            <div className="py-2">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-gray-500 font-medium">Timeline</p>
+                                    {loadingEvents && (
+                                        <span className="text-[10px] text-gray-400 animate-pulse">Loading…</span>
+                                    )}
+                                </div>
                                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                                    {(selectedOrderDetails.events ?? []).length === 0 ? (
+                                    {loadingEvents && (selectedOrderDetails.events ?? []).length === 0 ? (
+                                        <div className="space-y-2">
+                                            <div className="h-10 rounded-xl bg-gray-100 animate-pulse" />
+                                            <div className="h-10 rounded-xl bg-gray-100 animate-pulse" />
+                                        </div>
+                                    ) : (selectedOrderDetails.events ?? []).length === 0 ? (
                                         <p className="text-xs text-gray-400">No timeline events yet.</p>
                                     ) : (
                                         selectedOrderDetails.events.map((event) => (
-                                            <div key={event.id} className="rounded-lg border border-gray-100 px-3 py-2">
-                                                <p className="text-xs font-semibold text-gray-700">
-                                                    {event.from_status ? `${event.from_status} -> ` : ''}{event.to_status ?? event.event_type}
+                                            <div key={event.id} className="rounded-xl bg-gray-50 px-3 py-2.5">
+                                                <p className="text-xs font-bold text-gray-700">
+                                                    {event.from_status ? `${event.from_status} → ` : ''}{event.to_status ?? event.event_type}
                                                 </p>
-                                                <p className="text-[11px] text-gray-400">
+                                                <p className="text-[11px] text-gray-400 mt-0.5">
                                                     {new Date(event.created_at).toLocaleString()}
                                                 </p>
                                             </div>
@@ -951,43 +1038,43 @@ export default function OrdersPage() {
             )}
 
             {selectedServiceRequest && (
-                <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6">
-                        <div className="flex items-start justify-between mb-4">
+                <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl ring-1 ring-gray-100 p-6">
+                        <div className="flex items-start justify-between mb-5">
                             <div>
-                                <h3 className="text-2xl font-bold text-black">
+                                <h3 className="text-xl font-bold text-gray-900">
                                     Service Request #{selectedServiceRequest.id.slice(0, 8)}
                                 </h3>
-                                <p className="text-sm text-gray-500">Table {selectedServiceRequest.table_number || 'N/A'}</p>
+                                <p className="text-sm text-gray-500 mt-0.5">Table {selectedServiceRequest.table_number || 'N/A'}</p>
                             </div>
                             <button
                                 onClick={() => setSelectedServiceRequest(null)}
-                                className="h-9 w-9 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center"
+                                className="h-9 w-9 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 flex items-center justify-center transition-colors"
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
                         <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Request Type</span>
-                                <span className="font-semibold text-black">{selectedServiceRequest.request_type}</span>
+                            <div className="flex justify-between py-2 border-b border-gray-50">
+                                <span className="text-gray-500 font-medium">Request Type</span>
+                                <span className="font-bold text-gray-900 capitalize">{selectedServiceRequest.request_type}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Status</span>
-                                <span className="font-semibold text-black">{selectedServiceRequest.status || 'N/A'}</span>
+                            <div className="flex justify-between py-2 border-b border-gray-50">
+                                <span className="text-gray-500 font-medium">Status</span>
+                                <span className="font-bold text-gray-900">{selectedServiceRequest.status || 'N/A'}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Created</span>
-                                <span className="font-semibold text-black">
+                            <div className="flex justify-between py-2 border-b border-gray-50">
+                                <span className="text-gray-500 font-medium">Created</span>
+                                <span className="font-bold text-gray-900">
                                     {selectedServiceRequest.created_at
                                         ? new Date(selectedServiceRequest.created_at).toLocaleString()
                                         : 'N/A'}
                                 </span>
                             </div>
-                            <div>
-                                <p className="text-gray-500 mb-1">Notes</p>
-                                <p className="font-medium text-black bg-gray-50 rounded-xl p-3">
+                            <div className="py-2">
+                                <p className="text-gray-500 font-medium mb-2">Notes</p>
+                                <p className="font-medium text-gray-800 bg-gray-50 rounded-xl p-3 text-sm">
                                     {selectedServiceRequest.notes || 'No notes'}
                                 </p>
                             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentType, useCallback, useEffect, useMemo, useState } from 'react';
+import { type ComponentType, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     CalendarCheck,
@@ -24,6 +24,7 @@ import {
     CommandCenterMetrics,
 } from '@/components/merchant/command-center/types';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { isAbortError } from '@/hooks/useSafeFetch';
 
 const STALE_AFTER_MS = 90_000;
 
@@ -65,9 +66,12 @@ export default function MerchantDashboard() {
     const [error, setError] = useState<string | null>(null);
     const [timeTick, setTimeTick] = useState(Date.now());
     const [filterOpen, setFilterOpen] = useState(false);
+    
+    // Ref for abort controller
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const fetchCommandCenter = useCallback(
-        async (isManualRefresh = false) => {
+        async (isManualRefresh = false, signal?: AbortSignal) => {
             if (isManualRefresh) {
                 setRefreshing(true);
             } else {
@@ -78,6 +82,7 @@ export default function MerchantDashboard() {
                 const response = await fetch(`/api/merchant/command-center?range=${range}`, {
                     method: 'GET',
                     cache: 'no-store',
+                    signal,
                 });
                 if (!response.ok) {
                     throw new Error(`Command center request failed (${response.status})`);
@@ -87,6 +92,10 @@ export default function MerchantDashboard() {
                 setCommandCenter(payload?.data ?? null);
                 setError(null);
             } catch (fetchError) {
+                // Silently ignore abort errors
+                if (isAbortError(fetchError)) {
+                    return;
+                }
                 setError(fetchError instanceof Error ? fetchError.message : 'Unknown error');
             } finally {
                 setLoading(false);
@@ -97,7 +106,20 @@ export default function MerchantDashboard() {
     );
 
     useEffect(() => {
-        fetchCommandCenter(false);
+        // Abort any pending requests
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        
+        // Create new AbortController
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
+        
+        fetchCommandCenter(false, signal);
+        
+        return () => {
+            abortControllerRef.current?.abort();
+        };
     }, [fetchCommandCenter]);
 
     useEffect(() => {
@@ -156,6 +178,10 @@ export default function MerchantDashboard() {
                 }
                 fetchCommandCenter(true);
             } catch (advanceError) {
+                // Silently ignore abort errors
+                if (isAbortError(advanceError)) {
+                    return;
+                }
                 setError(advanceError instanceof Error ? advanceError.message : 'Failed to advance order status');
             }
         },

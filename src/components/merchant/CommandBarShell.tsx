@@ -21,6 +21,7 @@ export function CommandBarShell() {
             { id: 'orders', label: 'Go to Orders', run: () => router.push('/merchant/orders') },
             { id: 'tables', label: 'Go to Tables', run: () => router.push('/merchant/tables') },
             { id: 'menu', label: 'Go to Menu', run: () => router.push('/merchant/menu') },
+            { id: 'channels', label: 'Go to Channels', run: () => router.push('/merchant/channels') },
             { id: 'staff', label: 'Go to Staff', run: () => router.push('/merchant/staff') },
             { id: 'settings', label: 'Go to Settings', run: () => router.push('/merchant/settings') },
             {

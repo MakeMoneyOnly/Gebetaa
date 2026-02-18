@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase';
 import {
     Plus,
@@ -20,6 +20,7 @@ import { TableGrid, TableGridRow } from '@/components/merchant/TableGrid';
 import { TableSessionDrawer } from '@/components/merchant/TableSessionDrawer';
 import { OccupancyTimelineBucket, TableOccupancyTimeline } from '@/components/merchant/TableOccupancyTimeline';
 import { toast } from 'react-hot-toast';
+import { isAbortError } from '@/hooks/useSafeFetch';
 
 // Mock Data (matches dashboard styling/logic)
 const mockTables: any[] = [
@@ -69,6 +70,10 @@ export default function TablesPage() {
     } | null>(null);
     const [timelineBuckets, setTimelineBuckets] = useState<OccupancyTimelineBucket[]>([]);
     const [isQrLoading, setIsQrLoading] = useState(false);
+    
+    // Ref for abort controller
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const isMountedRef = useRef(true);
 
     const { user } = useRole(null);
     const supabase = createClient();
@@ -80,6 +85,8 @@ export default function TablesPage() {
     const utilizationRate = totalTables > 0 ? Math.round((activeTables / totalTables) * 100) : 0;
 
     useEffect(() => {
+        isMountedRef.current = true;
+        
         if (!user) {
             setLoading(false);
             setTables(mockTables as TableGridRow[]);
@@ -87,8 +94,17 @@ export default function TablesPage() {
             return;
         }
 
-        fetchTables();
-        void fetchOccupancyTimeline();
+        // Create abort controller for this effect
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
+        
+        fetchTables(signal);
+        void fetchOccupancyTimeline(signal);
+        
+        return () => {
+            isMountedRef.current = false;
+            abortControllerRef.current?.abort();
+        };
     }, [user, supabase]);
 
     useEffect(() => {
@@ -108,11 +124,11 @@ export default function TablesPage() {
         };
     }, [supabase, user]);
 
-    const fetchTables = async () => {
+    const fetchTables = async (signal?: AbortSignal) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await fetch('/api/tables', { method: 'GET' });
+            const response = await fetch('/api/tables', { method: 'GET', signal });
             const payload = await response.json();
             if (!response.ok) {
                 throw new Error(payload?.error ?? 'Failed to load tables.');
@@ -124,19 +140,27 @@ export default function TablesPage() {
                 qr_code_url: table.qr_code_url ?? null,
                 active_order_id: table.active_order_id ?? null,
             }));
-            setTables(liveTables);
+            if (isMountedRef.current) {
+                setTables(liveTables);
+            }
         } catch (error) {
+            // Silently ignore abort errors
+            if (isAbortError(error)) {
+                return;
+            }
             console.error('Error fetching tables:', error);
             setError(error instanceof Error ? error.message : 'Failed to fetch tables.');
-            if (!tables.length) {
+            if (!tables.length && isMountedRef.current) {
                 setTables(mockTables as TableGridRow[]);
             }
         } finally {
-            setLoading(false);
+            if (isMountedRef.current) {
+                setLoading(false);
+            }
         }
     };
 
-    const fetchOccupancyTimeline = async () => {
+    const fetchOccupancyTimeline = async (signal?: AbortSignal) => {
         try {
             const since = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
             const { data, error } = await supabase
@@ -176,16 +200,24 @@ export default function TablesPage() {
                 }
             }
 
-            setTimelineBuckets(
-                Array.from(bucketsMap.entries()).map(([label, value]) => ({
-                    label,
-                    opens: value.opens,
-                    closes: value.closes,
-                }))
-            );
+            if (isMountedRef.current) {
+                setTimelineBuckets(
+                    Array.from(bucketsMap.entries()).map(([label, value]) => ({
+                        label,
+                        opens: value.opens,
+                        closes: value.closes,
+                    }))
+                );
+            }
         } catch (error) {
+            // Silently ignore abort errors
+            if (isAbortError(error)) {
+                return;
+            }
             console.error(error);
-            setTimelineBuckets([]);
+            if (isMountedRef.current) {
+                setTimelineBuckets([]);
+            }
         }
     };
 
