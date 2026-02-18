@@ -83,17 +83,20 @@ const filterTabs = [
 export default function OrdersPage() {
     // Seed from sessionStorage cache so the table renders instantly on tab-switch
     // (stale-while-revalidate pattern — fresh data replaces it silently in background)
+    // Read the saved filter from localStorage so we seed the RIGHT cache key on mount
     const [orders, setOrders] = useState<Order[]>(() => {
         if (typeof window === 'undefined') return [];
         try {
-            const cached = sessionStorage.getItem('orders.cache');
+            const savedFilter = localStorage.getItem('orders.activeFilter') ?? 'all';
+            const cached = sessionStorage.getItem(`orders.cache.${savedFilter}.`);
             return cached ? JSON.parse(cached) : [];
         } catch { return []; }
     });
     const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>(() => {
         if (typeof window === 'undefined') return [];
         try {
-            const cached = sessionStorage.getItem('orders.srCache');
+            const savedFilter = localStorage.getItem('orders.activeFilter') ?? 'all';
+            const cached = sessionStorage.getItem(`orders.srCache.${savedFilter}.`);
             return cached ? JSON.parse(cached) : [];
         } catch { return []; }
     });
@@ -103,7 +106,17 @@ export default function OrdersPage() {
         if (typeof window === 'undefined') return true;
         return sessionStorage.getItem('orders.initialLoadDone') !== '1';
     });
-    const [activeFilter, setActiveFilter] = useState('all');
+    // Ref to abort stale in-flight requests when filter/search changes
+    const ordersAbortRef = React.useRef<AbortController | null>(null);
+    const srAbortRef = React.useRef<AbortController | null>(null);
+    // Initialize activeFilter directly from localStorage (not in a useEffect) so it's
+    // correct on the very first render and matches the cache seed above
+    const [activeFilter, setActiveFilter] = useState(() => {
+        if (typeof window === 'undefined') return 'all';
+        const saved = localStorage.getItem('orders.activeFilter') ?? 'all';
+        const validFilters = ['all', 'pending', 'completed', 'cancelled'];
+        return validFilters.includes(saved) ? saved : 'all';
+    });
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
@@ -282,6 +295,18 @@ export default function OrdersPage() {
             return;
         }
 
+        // Abort any previous in-flight request for orders (race condition fix)
+        ordersAbortRef.current?.abort();
+        const controller = new AbortController();
+        ordersAbortRef.current = controller;
+
+        // Seed UI instantly from per-filter cache — no empty flash
+        const cacheKey = `orders.cache.${status}.${search.trim()}`;
+        try {
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) setOrders(JSON.parse(cached));
+        } catch {}
+
         try {
             const params = new URLSearchParams();
             if (status !== 'all') {
@@ -295,6 +320,7 @@ export default function OrdersPage() {
             const response = await fetch(`/api/orders?${params.toString()}`, {
                 method: 'GET',
                 cache: 'no-store',
+                signal: controller.signal,
             });
 
             if (!response.ok) {
@@ -305,9 +331,10 @@ export default function OrdersPage() {
             // Only replace state when real data arrives — never flash empty
             const fresh = payload?.data?.orders ?? [];
             setOrders(fresh);
-            // Write-through cache so next mount is instant
-            try { sessionStorage.setItem('orders.cache', JSON.stringify(fresh)); } catch {}
+            // Write-through cache keyed by filter+search
+            try { sessionStorage.setItem(cacheKey, JSON.stringify(fresh)); } catch {}
         } catch (error) {
+            if ((error as Error).name === 'AbortError') return; // stale request — ignore
             console.error('Error fetching orders from API:', error);
             // Do NOT clear orders on error — keep showing stale data
         }
@@ -318,6 +345,19 @@ export default function OrdersPage() {
             setServiceRequests([]);
             return;
         }
+
+        // Abort any previous in-flight SR request (race condition fix)
+        srAbortRef.current?.abort();
+        const controller = new AbortController();
+        srAbortRef.current = controller;
+
+        // Seed UI instantly from per-filter cache
+        const cacheKey = `orders.srCache.${status}.${search.trim()}`;
+        try {
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) setServiceRequests(JSON.parse(cached));
+        } catch {}
+
         try {
             const params = new URLSearchParams();
             if (status !== 'all') {
@@ -331,6 +371,7 @@ export default function OrdersPage() {
             const response = await fetch(`/api/service-requests?${params.toString()}`, {
                 method: 'GET',
                 cache: 'no-store',
+                signal: controller.signal,
             });
             if (!response.ok) {
                 throw new Error(`Failed to fetch service requests (${response.status})`);
@@ -339,13 +380,15 @@ export default function OrdersPage() {
             // Only replace state when real data arrives — never flash empty
             const fresh = payload?.data?.requests ?? [];
             setServiceRequests(fresh);
-            // Write-through cache so next mount is instant
-            try { sessionStorage.setItem('orders.srCache', JSON.stringify(fresh)); } catch {}
+            // Write-through cache keyed by filter+search
+            try { sessionStorage.setItem(cacheKey, JSON.stringify(fresh)); } catch {}
         } catch (error) {
+            if ((error as Error).name === 'AbortError') return; // stale request — ignore
             console.error('Error fetching service requests from API:', error);
             // Do NOT clear on error — keep showing stale data
         }
     }, [user]);
+
 
     const fetchStaff = useCallback(async () => {
         if (!user) return;
@@ -363,14 +406,10 @@ export default function OrdersPage() {
     }, [user]);
 
     useEffect(() => {
-        const storedFilter = window.localStorage.getItem('orders.activeFilter');
         const storedSearch = window.localStorage.getItem('orders.searchTerm');
         const storedView = window.localStorage.getItem('orders.viewMode');
         const storedSortKey = window.localStorage.getItem('orders.sortKey');
         const storedSortDirection = window.localStorage.getItem('orders.sortDirection');
-        if (storedFilter && filterTabs.some(tab => tab.id === storedFilter)) {
-            setActiveFilter(storedFilter);
-        }
         if (storedSearch) {
             setSearchTerm(storedSearch);
             setDebouncedSearchTerm(storedSearch);
@@ -385,6 +424,7 @@ export default function OrdersPage() {
             setSortDirection(storedSortDirection);
         }
     }, []);
+
 
     useEffect(() => {
         window.localStorage.setItem('orders.activeFilter', activeFilter);
@@ -453,17 +493,48 @@ export default function OrdersPage() {
         }
     }, [activeFilter, debouncedSearchTerm, fetchOrders, fetchServiceRequests, fetchStaff, user, roleLoading]);
 
-    // Silently refresh when the tab becomes visible again (no skeleton — enterprise pattern)
+    // Silently refresh when the tab becomes visible again — enterprise pattern.
+    // Uses its own fetch path so it NEVER aborts the main useEffect fetch.
     useEffect(() => {
-        const onVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && user && !roleLoading) {
-                fetchOrders(activeFilter, debouncedSearchTerm);
-                fetchServiceRequests(activeFilter, debouncedSearchTerm);
+        const onVisibilityChange = async () => {
+            if (document.visibilityState !== 'visible' || !user || roleLoading) return;
+
+            // Seed from cache first so existing data stays visible while we refresh
+            const ordersCacheKey = `orders.cache.${activeFilter}.${debouncedSearchTerm.trim()}`;
+            const srCacheKey = `orders.srCache.${activeFilter}.${debouncedSearchTerm.trim()}`;
+
+            try {
+                const params = new URLSearchParams();
+                if (activeFilter !== 'all') params.set('status', activeFilter);
+                if (debouncedSearchTerm.trim()) params.set('search', debouncedSearchTerm.trim());
+                params.set('limit', '100');
+
+                const [ordersRes, srRes] = await Promise.all([
+                    fetch(`/api/orders?${params.toString()}`, { method: 'GET', cache: 'no-store' }),
+                    fetch(`/api/service-requests?${params.toString()}`, { method: 'GET', cache: 'no-store' }),
+                ]);
+
+                if (ordersRes.ok) {
+                    const payload = await ordersRes.json();
+                    const fresh = payload?.data?.orders ?? [];
+                    setOrders(fresh);
+                    try { sessionStorage.setItem(ordersCacheKey, JSON.stringify(fresh)); } catch {}
+                }
+                if (srRes.ok) {
+                    const payload = await srRes.json();
+                    const fresh = payload?.data?.requests ?? [];
+                    setServiceRequests(fresh);
+                    try { sessionStorage.setItem(srCacheKey, JSON.stringify(fresh)); } catch {}
+                }
+            } catch {
+                // Network error — keep showing stale data, don't clear anything
             }
         };
+
         document.addEventListener('visibilitychange', onVisibilityChange);
         return () => document.removeEventListener('visibilitychange', onVisibilityChange);
-    }, [activeFilter, debouncedSearchTerm, fetchOrders, fetchServiceRequests, user, roleLoading]);
+    }, [activeFilter, debouncedSearchTerm, user, roleLoading]);
+
 
     // Realtime subscription
     useEffect(() => {
