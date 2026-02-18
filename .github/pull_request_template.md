@@ -1,31 +1,62 @@
-## Description
+## Summary
 
-[What does this PR do?]
+Describe the change and why it is needed.
 
-## Type of Change
+## Task Mapping
 
+- Tasks.md IDs:
+- AUDIT.md section(s):
+
+## Change Type
+
+- [ ] Feature
 - [ ] Bug fix
-- [ ] New feature
+- [ ] Refactor
+- [ ] Docs
 - [ ] Breaking change
-- [ ] Documentation update
 
-## Related Issues
+## Scope
 
-Closes #[issue number]
+- Affected areas:
+- Out of scope:
 
-## Testing
+## Data and API Impact
 
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
+- [ ] No schema changes
+- [ ] Schema migration included
+- [ ] API contract added/changed
+- [ ] Backward compatibility considered
 
-## Screenshots
+If changed, list impacted endpoints/tables:
 
-[If UI changes]
+## Security Checklist
 
-## Checklist
+- [ ] Authn/authz verified on all new/changed protected endpoints
+- [ ] Input validation added/updated
+- [ ] Idempotency handled for write endpoints
+- [ ] Audit logging added for sensitive mutations
+- [ ] No secrets or tokens in code/logs
 
-- [ ] Code follows style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] No console.log or debug code
+## Test Evidence
+
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] E2E/manual test notes
+
+Commands run:
+
+## UX and Accessibility
+
+- [ ] Loading, empty, and error states covered
+- [ ] Responsive behavior checked (desktop/mobile)
+- [ ] Accessibility impact considered
+
+## Release and Rollback
+
+- [ ] Feature flag strategy documented (if applicable)
+- [ ] Rollback plan documented
+- [ ] Monitoring/alerts identified
+
+## Reviewer Focus Areas
+
+List specific files/risks reviewers should focus on.

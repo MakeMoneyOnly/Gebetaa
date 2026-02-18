@@ -43,6 +43,9 @@ const envSchema = z.object({
     ENABLE_AR_MENU: z.coerce.boolean().default(false),
     ENABLE_ANALYTICS: z.coerce.boolean().default(true),
     RATE_LIMIT_ENABLED: z.coerce.boolean().default(true),
+    ENABLE_P0_PILOT_ROLLOUT: z.coerce.boolean().default(false),
+    PILOT_RESTAURANT_IDS: z.string().default(''),
+    PILOT_BLOCK_MUTATIONS: z.coerce.boolean().default(false),
 
     // External services (optional)
     TELEGRAM_BOT_TOKEN: z.string().optional(),
@@ -164,7 +167,11 @@ export function getEnv(): Env {
  * Check if a feature is enabled
  */
 export function isFeatureEnabled(feature: keyof Pick<Env, 
-    'ENABLE_OFFLINE_MODE' | 'ENABLE_AR_MENU' | 'ENABLE_ANALYTICS' | 'RATE_LIMIT_ENABLED'
+    | 'ENABLE_OFFLINE_MODE'
+    | 'ENABLE_AR_MENU'
+    | 'ENABLE_ANALYTICS'
+    | 'RATE_LIMIT_ENABLED'
+    | 'ENABLE_P0_PILOT_ROLLOUT'
 >): boolean {
     return getEnv()[feature] ?? false;
 }
