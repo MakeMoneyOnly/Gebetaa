@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { insertServiceRequest } from '@/lib/supabase/queries';
 import { resolveGuestContext } from '@/lib/security/guestContext';
+import { apiError, apiSuccess } from '@/lib/api/response';
+import { getAuthorizedRestaurantContext, getAuthenticatedUser } from '@/lib/api/authz';
+import { parseQuery } from '@/lib/api/validation';
 
 const CreateServiceRequestSchema = z.object({
     guest_context: z.object({
@@ -14,6 +17,66 @@ const CreateServiceRequestSchema = z.object({
     request_type: z.enum(['waiter', 'bill', 'cutlery', 'other']),
     notes: z.string().max(500, 'Notes too long').optional(),
 });
+
+const ListServiceRequestsQuerySchema = z.object({
+    status: z.string().optional(),
+    search: z.string().optional(),
+    limit: z.coerce.number().int().positive().max(200).optional().default(100),
+});
+
+export async function GET(request: NextRequest) {
+    const auth = await getAuthenticatedUser();
+    if (!auth.ok) {
+        return auth.response;
+    }
+
+    const context = await getAuthorizedRestaurantContext(auth.user.id);
+    if (!context.ok) {
+        return context.response;
+    }
+
+    const parsed = parseQuery(
+        {
+            status: request.nextUrl.searchParams.get('status') ?? undefined,
+            search: request.nextUrl.searchParams.get('search') ?? undefined,
+            limit: request.nextUrl.searchParams.get('limit') ?? undefined,
+        },
+        ListServiceRequestsQuerySchema
+    );
+    if (!parsed.success) {
+        return parsed.response;
+    }
+
+    let query = context.supabase
+        .from('service_requests')
+        .select('*')
+        .eq('restaurant_id', context.restaurantId)
+        .order('created_at', { ascending: false })
+        .limit(parsed.data.limit);
+
+    if (parsed.data.status && parsed.data.status !== 'all') {
+        query = query.eq('status', parsed.data.status);
+    }
+
+    if (parsed.data.search) {
+        const search = parsed.data.search.trim();
+        if (search.length > 0) {
+            query = query.or(
+                `table_number.ilike.%${search}%,request_type.ilike.%${search}%,notes.ilike.%${search}%`
+            );
+        }
+    }
+
+    const { data, error } = await query;
+    if (error) {
+        return apiError('Failed to load service requests', 500, 'SERVICE_REQUESTS_FETCH_FAILED', error.message);
+    }
+
+    return apiSuccess({
+        requests: data ?? [],
+        total: data?.length ?? 0,
+    });
+}
 
 export async function POST(request: NextRequest) {
     try {

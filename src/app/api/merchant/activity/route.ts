@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { enforcePilotAccess } from '@/lib/api/pilotGate';
 
 export async function GET(request: Request) {
     try {
@@ -59,6 +60,11 @@ export async function GET(request: Request) {
         if (!restaurantId) {
             console.log('[API] No restaurant found for user');
             return NextResponse.json({ error: 'No restaurant found for user' }, { status: 404 });
+        }
+
+        const pilotGateResponse = enforcePilotAccess(restaurantId, request.method);
+        if (pilotGateResponse) {
+            return pilotGateResponse;
         }
 
         // Fetch orders

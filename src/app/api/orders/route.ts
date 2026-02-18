@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { CreateOrderSchema } from '@/lib/validators/order';
+import { apiError, apiSuccess } from '@/lib/api/response';
 import {
     checkRateLimit,
     createOrder,
@@ -9,6 +10,14 @@ import {
     generateIdempotencyKey,
 } from '@/lib/services/orderService';
 import { resolveGuestContext } from '@/lib/security/guestContext';
+import { trackApiMetric } from '@/lib/api/metrics';
+import { enforcePilotAccess } from '@/lib/api/pilotGate';
+
+const OrdersQuerySchema = z.object({
+    status: z.string().optional(),
+    search: z.string().optional(),
+    limit: z.coerce.number().int().positive().max(200).optional().default(50),
+});
 
 const CreateOrderRequestSchema = CreateOrderSchema.omit({
     idempotency_key: true,
@@ -23,6 +32,137 @@ const CreateOrderRequestSchema = CreateOrderSchema.omit({
     }),
     idempotency_key: z.string().uuid().optional(),
 });
+
+async function resolveRestaurantIdForUser(userId: string) {
+    const supabase = await createClient();
+    const { data: staffEntry, error: staffError } = await supabase
+        .from('restaurant_staff')
+        .select('restaurant_id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+    if (staffError) {
+        return { error: staffError.message };
+    }
+
+    if (staffEntry?.restaurant_id) {
+        return { restaurantId: staffEntry.restaurant_id };
+    }
+
+    const { data: agencyUser, error: agencyError } = await supabase
+        .from('agency_users')
+        .select('restaurant_ids')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (agencyError) {
+        return { error: agencyError.message };
+    }
+
+    return { restaurantId: agencyUser?.restaurant_ids?.[0] ?? null };
+}
+
+export async function GET(request: NextRequest) {
+    const startedAt = Date.now();
+    let responseStatus = 500;
+    let restaurantIdForMetrics: string | null = null;
+    let supabaseForMetrics: Awaited<ReturnType<typeof createClient>> | null = null;
+
+    try {
+        const supabase = await createClient();
+        supabaseForMetrics = supabase;
+        const {
+            data: { user },
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            responseStatus = 401;
+            return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+        }
+
+        const { restaurantId, error: restaurantError } = await resolveRestaurantIdForUser(user.id);
+        if (restaurantError) {
+            responseStatus = 500;
+            return apiError('Failed to resolve restaurant context', 500, 'RESTAURANT_RESOLVE_FAILED', restaurantError);
+        }
+        if (!restaurantId) {
+            responseStatus = 404;
+            return apiError('No restaurant found for user', 404, 'RESTAURANT_NOT_FOUND');
+        }
+        restaurantIdForMetrics = restaurantId;
+
+        const pilotGateResponse = enforcePilotAccess(restaurantId, request.method);
+        if (pilotGateResponse) {
+            responseStatus = pilotGateResponse.status;
+            return pilotGateResponse;
+        }
+
+        const parsed = OrdersQuerySchema.safeParse({
+            status: request.nextUrl.searchParams.get('status') ?? undefined,
+            search: request.nextUrl.searchParams.get('search') ?? undefined,
+            limit: request.nextUrl.searchParams.get('limit') ?? undefined,
+        });
+        if (!parsed.success) {
+            responseStatus = 400;
+            return apiError('Invalid query params', 400, 'INVALID_QUERY', parsed.error.flatten());
+        }
+
+        let query = supabase
+            .from('orders')
+            .select('*')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(parsed.data.limit);
+
+        if (parsed.data.status && parsed.data.status !== 'all') {
+            query = query.eq('status', parsed.data.status);
+        }
+
+        if (parsed.data.search) {
+            const search = parsed.data.search.trim();
+            if (search.length > 0) {
+                query = query.or(
+                    `table_number.ilike.%${search}%,order_number.ilike.%${search}%,customer_name.ilike.%${search}%`
+                );
+            }
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            responseStatus = 500;
+            return apiError('Failed to load orders', 500, 'ORDERS_FETCH_FAILED', error.message);
+        }
+
+        responseStatus = 200;
+        return apiSuccess({
+            orders: data ?? [],
+            total: data?.length ?? 0,
+        });
+    } catch (error) {
+        responseStatus = 500;
+        return apiError(
+            'Internal server error',
+            500,
+            'INTERNAL_ERROR',
+            error instanceof Error ? error.message : 'Unknown error'
+        );
+    } finally {
+        if (supabaseForMetrics) {
+            const durationMs = Date.now() - startedAt;
+            await trackApiMetric(supabaseForMetrics, {
+                restaurantId: restaurantIdForMetrics,
+                endpoint: '/api/orders',
+                method: 'GET',
+                statusCode: responseStatus,
+                durationMs,
+            });
+        }
+    }
+}
 
 export async function POST(request: NextRequest) {
     try {
