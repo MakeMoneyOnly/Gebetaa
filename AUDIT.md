@@ -259,8 +259,8 @@ Use this section to execute feature-by-feature.
   - `SyncHealthBadge`
 
 ### V2
-- [ ] Add role-based dashboard presets (owner, manager, kitchen lead)
-- [ ] Add configurable alert rules and escalation policy
+- [x] Add role-based dashboard presets (owner, manager, kitchen lead)
+- [x] Add configurable alert rules and escalation policy
 - DB entities: `alert_rules`, `alert_events`, `restaurant_staff`
 - APIs: `GET|PATCH /api/alerts/rules`, `GET /api/alerts/events`
 - UI components:
@@ -391,7 +391,7 @@ Use this section to execute feature-by-feature.
   - `RolePermissionDrawer`
 
 ### V2
-- [ ] Add scheduling and clock-in/out
+- [x] Add scheduling and clock-in/out
 - [ ] Add shift-level performance and labor cost view
 - DB entities: `shifts` (new), `time_entries` (new), `restaurant_staff`, `orders`
 - APIs: `GET /api/staff/schedule`, `POST /api/staff/schedule`, `POST /api/staff/time-entries/clock`

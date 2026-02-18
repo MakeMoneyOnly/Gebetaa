@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { ChannelHealthBoard } from '@/components/merchant/ChannelHealthBoard';
 import { DeliveryPartnerHub } from '@/components/merchant/DeliveryPartnerHub';
 import { OnlineOrderingSettingsPanel, type OnlineOrderingSettings } from '@/components/merchant/OnlineOrderingSettingsPanel';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type ChannelSummary = {
     totals: {
@@ -52,7 +53,7 @@ const defaultSettings: OnlineOrderingSettings = {
 };
 
 export default function ChannelsPage() {
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('channels');
     const [error, setError] = useState<string | null>(null);
 
     const [summary, setSummary] = useState<ChannelSummary | null>(null);
@@ -66,7 +67,6 @@ export default function ChannelsPage() {
 
     const loadAll = useCallback(async () => {
         try {
-            setLoading(true);
             setError(null);
             setSettingsError(null);
 
@@ -101,9 +101,9 @@ export default function ChannelsPage() {
             setSummary(null);
             setOrders([]);
         } finally {
-            setLoading(false);
+            markLoaded();
         }
-    }, []);
+    }, [markLoaded]);
 
     useEffect(() => {
         void loadAll();

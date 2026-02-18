@@ -6,6 +6,9 @@ import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { InviteStaffModal } from '@/components/merchant/InviteStaffModal';
 import { RolePermissionDrawer } from '@/components/merchant/RolePermissionDrawer';
+import { ScheduleCalendar } from '@/components/merchant/ScheduleCalendar';
+import { TimeClockPanel } from '@/components/merchant/TimeClockPanel';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type StaffMember = {
     id: string;
@@ -28,7 +31,7 @@ type StaffRole = 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar';
 
 export default function StaffPage() {
     const [staff, setStaff] = useState<StaffMember[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('staff');
     const [error, setError] = useState<string | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteLoading, setInviteLoading] = useState(false);
@@ -40,7 +43,6 @@ export default function StaffPage() {
 
     const fetchStaff = useCallback(async () => {
         try {
-            setLoading(true);
             setError(null);
             const response = await fetch('/api/staff', { method: 'GET' });
             const payload = await response.json();
@@ -52,9 +54,9 @@ export default function StaffPage() {
             console.error(fetchError);
             setError(fetchError instanceof Error ? fetchError.message : 'Failed to fetch staff.');
         } finally {
-            setLoading(false);
+            markLoaded();
         }
-    }, []);
+    }, [markLoaded]);
 
     useEffect(() => {
         void fetchStaff();
@@ -195,6 +197,11 @@ export default function StaffPage() {
                     <p className="mt-6 text-sm font-semibold text-gray-900">Activation Rate</p>
                     <p className="text-xs text-gray-500">Enabled accounts ratio</p>
                 </div>
+            </div>
+
+            <div className="space-y-6">
+                <ScheduleCalendar staff={staff} />
+                <TimeClockPanel staff={staff} />
             </div>
 
             {loading && (

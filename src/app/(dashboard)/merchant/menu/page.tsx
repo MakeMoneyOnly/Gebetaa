@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Plus, Edit2, Trash2, Loader2, UtensilsCrossed, ArrowUp, ArrowDown } from 'lucide-react';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CategoryWithItems, MenuItem } from '@/types/database';
 import { MenuItemModal } from '@/features/merchant/components/MenuItemModal';
@@ -138,7 +139,7 @@ const computeMenuDiff = (baseline: ComparableCategory[], current: ComparableCate
 
 export default function MenuPage() {
     const [categories, setCategories] = useState<CategoryWithItems[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('menu');
     const [isMockData, setIsMockData] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<CategoryWithItems | null>(null);
@@ -168,15 +169,14 @@ export default function MenuPage() {
 
     useEffect(() => {
         fetchMenu();
-        // Safety timeout
+        // Safety timeout — ensures loading clears even if fetch silently fails
         const timer = setTimeout(() => {
-            setLoading(false);
+            markLoaded();
         }, 3000);
         return () => clearTimeout(timer);
     }, []);
 
     const fetchMenu = async () => {
-        setLoading(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
@@ -236,7 +236,7 @@ export default function MenuPage() {
             setIsMockData(true);
             toast.error('Could not load live menu data. Showing demo menu.');
         } finally {
-            setLoading(false);
+            markLoaded();
         }
     };
 
@@ -802,7 +802,7 @@ export default function MenuPage() {
                             <div className="flex items-center justify-end gap-3 pt-2">
                                 <button
                                     type="button"
-                                    onClick={closeCategoryModal}
+                                    onClick={() => closeCategoryModal()}
                                     disabled={categorySubmitting}
                                     className="h-10 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                                 >

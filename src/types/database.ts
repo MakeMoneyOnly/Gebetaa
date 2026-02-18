@@ -1068,6 +1068,69 @@ export type Database = {
                     },
                 ]
             }
+            shifts: {
+                Row: {
+                    created_at: string
+                    created_by: string | null
+                    end_time: string
+                    id: string
+                    notes: string | null
+                    restaurant_id: string
+                    role: string
+                    shift_date: string
+                    staff_id: string
+                    start_time: string
+                    station: string | null
+                    status: string
+                    updated_at: string
+                }
+                Insert: {
+                    created_at?: string
+                    created_by?: string | null
+                    end_time: string
+                    id?: string
+                    notes?: string | null
+                    restaurant_id: string
+                    role: string
+                    shift_date: string
+                    staff_id: string
+                    start_time: string
+                    station?: string | null
+                    status?: string
+                    updated_at?: string
+                }
+                Update: {
+                    created_at?: string
+                    created_by?: string | null
+                    end_time?: string
+                    id?: string
+                    notes?: string | null
+                    restaurant_id?: string
+                    role?: string
+                    shift_date?: string
+                    staff_id?: string
+                    start_time?: string
+                    station?: string | null
+                    status?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "shifts_restaurant_id_fkey"
+                        columns: ["restaurant_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurants"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "shifts_staff_id_fkey"
+                        columns: ["staff_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurant_staff"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
             staff_invites: {
                 Row: {
                     code: string
@@ -1389,6 +1452,73 @@ export type Database = {
                     },
                 ]
             }
+            time_entries: {
+                Row: {
+                    clock_in_at: string
+                    clock_out_at: string | null
+                    created_at: string
+                    created_by: string | null
+                    id: string
+                    metadata: Json
+                    restaurant_id: string
+                    shift_id: string | null
+                    source: string
+                    staff_id: string
+                    status: string
+                    updated_at: string
+                }
+                Insert: {
+                    clock_in_at: string
+                    clock_out_at?: string | null
+                    created_at?: string
+                    created_by?: string | null
+                    id?: string
+                    metadata?: Json
+                    restaurant_id: string
+                    shift_id?: string | null
+                    source?: string
+                    staff_id: string
+                    status?: string
+                    updated_at?: string
+                }
+                Update: {
+                    clock_in_at?: string
+                    clock_out_at?: string | null
+                    created_at?: string
+                    created_by?: string | null
+                    id?: string
+                    metadata?: Json
+                    restaurant_id?: string
+                    shift_id?: string | null
+                    source?: string
+                    staff_id?: string
+                    status?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "time_entries_restaurant_id_fkey"
+                        columns: ["restaurant_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurants"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "time_entries_shift_id_fkey"
+                        columns: ["shift_id"]
+                        isOneToOne: false
+                        referencedRelation: "shifts"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "time_entries_staff_id_fkey"
+                        columns: ["staff_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurant_staff"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
             tenants: {
                 Row: {
                     api_key: string | null
@@ -1617,6 +1747,8 @@ export type Guest = Tables<'guests'>;
 export type GuestVisit = Tables<'guest_visits'>;
 export type DeliveryPartner = Tables<'delivery_partners'>;
 export type ExternalOrder = Tables<'external_orders'>;
+export type Shift = Tables<'shifts'>;
+export type TimeEntry = Tables<'time_entries'>;
 
 // Extended types with relations
 export interface RestaurantWithMenu extends Restaurant {

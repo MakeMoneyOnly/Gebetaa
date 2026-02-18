@@ -186,15 +186,15 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 5.3 Team Operations and Alerting
 
-- [ ] `P1-022` Add migrations for `shifts`.
-- [ ] `P1-023` Add migrations for `time_entries`.
-- [ ] `P1-024` Implement `GET /api/staff/schedule`.
-- [ ] `P1-025` Implement `POST /api/staff/schedule`.
-- [ ] `P1-026` Implement `POST /api/staff/time-entries/clock`.
-- [ ] `P1-027` Build `ScheduleCalendar`.
-- [ ] `P1-028` Build `TimeClockPanel`.
-- [ ] `P1-029` Implement alert rules APIs and UI builder.
-- [ ] `P1-030` Add role-based dashboard presets.
+- [x] `P1-022` Add migrations for `shifts`.
+- [x] `P1-023` Add migrations for `time_entries`.
+- [x] `P1-024` Implement `GET /api/staff/schedule`.
+- [x] `P1-025` Implement `POST /api/staff/schedule`.
+- [x] `P1-026` Implement `POST /api/staff/time-entries/clock`.
+- [x] `P1-027` Build `ScheduleCalendar`.
+- [x] `P1-028` Build `TimeClockPanel`.
+- [x] `P1-029` Implement alert rules APIs and UI builder.
+- [x] `P1-030` Add role-based dashboard presets.
 
 ## 5.4 P1 Quality and Release
 

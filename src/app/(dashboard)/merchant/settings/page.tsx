@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, Loader2, Lock, Save, Shield } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type SecuritySettings = {
     require_mfa: boolean;
@@ -36,7 +37,7 @@ const defaultNotifications: NotificationSettings = {
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<'security' | 'notifications'>('security');
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('settings');
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [security, setSecurity] = useState<SecuritySettings>(defaultSecurity);
@@ -45,7 +46,6 @@ export default function SettingsPage() {
 
     const loadSettings = async () => {
         try {
-            setLoading(true);
             setError(null);
             const [securityRes, notificationsRes] = await Promise.all([
                 fetch('/api/settings/security', { method: 'GET' }),
@@ -77,7 +77,7 @@ export default function SettingsPage() {
             console.error(loadError);
             setError(loadError instanceof Error ? loadError.message : 'Failed to load settings.');
         } finally {
-            setLoading(false);
+            markLoaded();
         }
     };
 

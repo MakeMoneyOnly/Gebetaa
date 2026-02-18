@@ -5,6 +5,7 @@ import { Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { GuestDirectory, type GuestDirectoryRow } from '@/components/merchant/GuestDirectory';
 import { GuestProfileDrawer } from '@/components/merchant/GuestProfileDrawer';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type Segment = 'all' | 'vip' | 'returning' | 'new';
 
@@ -32,7 +33,7 @@ type GuestVisit = {
 
 export default function GuestsPage() {
     const [guests, setGuests] = useState<GuestDirectoryRow[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('guests');
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState('');
     const [segment, setSegment] = useState<Segment>('all');
@@ -46,7 +47,6 @@ export default function GuestsPage() {
 
     const fetchGuests = useCallback(async () => {
         try {
-            setLoading(true);
             setError(null);
             const params = new URLSearchParams();
             if (query.trim().length > 0) params.set('query', query.trim());
@@ -65,9 +65,9 @@ export default function GuestsPage() {
             setGuests([]);
             setError(fetchError instanceof Error ? fetchError.message : 'Failed to load guests.');
         } finally {
-            setLoading(false);
+            markLoaded();
         }
-    }, [query, segment, tagFilter]);
+    }, [query, segment, tagFilter, markLoaded]);
 
     const fetchGuestDrawerData = useCallback(async (guestId: string) => {
         try {

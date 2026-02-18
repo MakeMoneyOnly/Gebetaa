@@ -11,6 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added - 2026-02-18
 
+#### P1 Team Operations and Alerting
+- Added migrations:
+  - `supabase/migrations/20260218_p1_shifts.sql`
+  - `supabase/migrations/20260218_p1_time_entries.sql`
+- Added Team Operations APIs:
+  - `GET /api/staff/schedule` and `POST /api/staff/schedule` in `src/app/api/staff/schedule/route.ts`
+  - `POST /api/staff/time-entries/clock` in `src/app/api/staff/time-entries/clock/route.ts`
+- Added Alerting and presets APIs:
+  - `GET /api/alerts/rules` and `POST /api/alerts/rules` in `src/app/api/alerts/rules/route.ts`
+  - `PATCH /api/alerts/rules/:id` in `src/app/api/alerts/rules/[ruleId]/route.ts`
+  - `GET /api/merchant/dashboard-presets` and `PATCH /api/merchant/dashboard-presets` in `src/app/api/merchant/dashboard-presets/route.ts`
+- Added Team Operations UI:
+  - `ScheduleCalendar` in `src/components/merchant/ScheduleCalendar.tsx`
+  - `TimeClockPanel` in `src/components/merchant/TimeClockPanel.tsx`
+  - Staff page wiring in `src/app/(dashboard)/merchant/staff/page.tsx`
+- Added Alerting and preset UI:
+  - `DashboardPresetSwitcher` in `src/components/merchant/command-center/DashboardPresetSwitcher.tsx`
+  - `AlertRuleBuilderDrawer` in `src/components/merchant/command-center/AlertRuleBuilderDrawer.tsx`
+  - Dashboard integration in `src/app/(dashboard)/merchant/page.tsx`
+- Added API route unit tests for Phase 5.3:
+  - `src/app/api/__tests__/team-ops-alerting-api-routes.test.ts`
+- Updated API rate-limit policy map:
+  - `src/lib/api/rateLimitPolicies.ts`
+- Updated local DB typings:
+  - `src/types/database.ts`
+
 #### P1 Channels (Online Ordering + Delivery V1)
 - Added migrations:
   - `supabase/migrations/20260218_p1_delivery_partners.sql`

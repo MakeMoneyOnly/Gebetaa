@@ -23,7 +23,13 @@ export function CommandBarShell() {
             { id: 'menu', label: 'Go to Menu', run: () => router.push('/merchant/menu') },
             { id: 'channels', label: 'Go to Channels', run: () => router.push('/merchant/channels') },
             { id: 'staff', label: 'Go to Staff', run: () => router.push('/merchant/staff') },
+            { id: 'team-schedule', label: 'Open Team Schedule', run: () => router.push('/merchant/staff') },
             { id: 'settings', label: 'Go to Settings', run: () => router.push('/merchant/settings') },
+            {
+                id: 'open-alert-rules',
+                label: 'Open Alert Rules Builder',
+                run: () => window.dispatchEvent(new CustomEvent('merchant:open-alert-rules')),
+            },
             {
                 id: 'refresh-command-center',
                 label: 'Refresh Command Center',

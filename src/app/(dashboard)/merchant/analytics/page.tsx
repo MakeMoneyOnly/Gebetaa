@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Calendar, Download, Loader2 } from 'lucide-react';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { toast } from 'react-hot-toast';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type AnalyticsMetrics = {
     total_revenue: number;
@@ -60,7 +61,7 @@ const RANGE_OPTIONS = [
 
 export default function AnalyticsPage() {
     const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]['value']>('week');
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('analytics');
     const [error, setError] = useState<string | null>(null);
     const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
     const [drilldownRows, setDrilldownRows] = useState<OrderDrilldownRow[]>([]);
@@ -69,7 +70,6 @@ export default function AnalyticsPage() {
 
     const fetchAnalytics = async () => {
         try {
-            setLoading(true);
             setError(null);
 
             const [overviewRes, ordersRes, apiMetricsRes] = await Promise.all([
@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
             console.error(fetchError);
             setError(fetchError instanceof Error ? fetchError.message : 'Failed to load analytics.');
         } finally {
-            setLoading(false);
+            markLoaded();
         }
     };
 

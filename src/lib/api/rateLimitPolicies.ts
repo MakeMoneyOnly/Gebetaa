@@ -14,6 +14,11 @@ export const API_RATE_LIMIT_POLICIES: Record<string, RouteRateLimitPolicy> = {
     '/api/channels/delivery/connect': { windowMs: 60_000, maxRequests: 30 },
     '/api/channels/delivery/orders': { windowMs: 60_000, maxRequests: 80 },
     '/api/channels/delivery/orders/': { windowMs: 60_000, maxRequests: 60 }, // nested ack endpoint
+    '/api/staff/schedule': { windowMs: 60_000, maxRequests: 80 },
+    '/api/staff/time-entries/clock': { windowMs: 60_000, maxRequests: 80 },
+    '/api/alerts/rules': { windowMs: 60_000, maxRequests: 60 },
+    '/api/alerts/rules/': { windowMs: 60_000, maxRequests: 60 }, // nested alert rule update endpoint
+    '/api/merchant/dashboard-presets': { windowMs: 60_000, maxRequests: 60 },
 };
 
 export const DEFAULT_API_RATE_LIMIT_POLICY: RouteRateLimitPolicy = {

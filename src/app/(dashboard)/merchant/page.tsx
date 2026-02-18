@@ -17,6 +17,11 @@ import {
 } from 'lucide-react';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { AttentionQueuePanel } from '@/components/merchant/command-center/AttentionQueuePanel';
+import { AlertRuleBuilderDrawer } from '@/components/merchant/command-center/AlertRuleBuilderDrawer';
+import {
+    DashboardPreset,
+    DashboardPresetSwitcher,
+} from '@/components/merchant/command-center/DashboardPresetSwitcher';
 import {
     AttentionItem,
     CommandCenterData,
@@ -25,6 +30,7 @@ import {
 } from '@/components/merchant/command-center/types';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { isAbortError } from '@/hooks/useSafeFetch';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 const STALE_AFTER_MS = 90_000;
 
@@ -61,11 +67,13 @@ export default function MerchantDashboard() {
     const router = useRouter();
     const [range, setRange] = useState<CommandCenterRange>('today');
     const [commandCenter, setCommandCenter] = useState<CommandCenterData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('dashboard');
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [timeTick, setTimeTick] = useState(Date.now());
     const [filterOpen, setFilterOpen] = useState(false);
+    const [activePreset, setActivePreset] = useState<DashboardPreset>('owner');
+    const [alertRuleDrawerOpen, setAlertRuleDrawerOpen] = useState(false);
     
     // Ref for abort controller
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -74,8 +82,6 @@ export default function MerchantDashboard() {
         async (isManualRefresh = false, signal?: AbortSignal) => {
             if (isManualRefresh) {
                 setRefreshing(true);
-            } else {
-                setLoading(true);
             }
 
             try {
@@ -98,11 +104,11 @@ export default function MerchantDashboard() {
                 }
                 setError(fetchError instanceof Error ? fetchError.message : 'Unknown error');
             } finally {
-                setLoading(false);
+                markLoaded();
                 setRefreshing(false);
             }
         },
-        [range]
+        [range, markLoaded]
     );
 
     useEffect(() => {
@@ -131,19 +137,36 @@ export default function MerchantDashboard() {
         const onRefresh = () => {
             fetchCommandCenter(true);
         };
+        const onOpenAlertRules = () => {
+            setAlertRuleDrawerOpen(true);
+        };
         window.addEventListener('merchant:command-center-refresh', onRefresh);
-        return () => window.removeEventListener('merchant:command-center-refresh', onRefresh);
+        window.addEventListener('merchant:open-alert-rules', onOpenAlertRules);
+        return () => {
+            window.removeEventListener('merchant:command-center-refresh', onRefresh);
+            window.removeEventListener('merchant:open-alert-rules', onOpenAlertRules);
+        };
     }, [fetchCommandCenter]);
 
     const metrics = commandCenter?.metrics ?? EMPTY_METRICS;
-    const queue = commandCenter?.attention_queue ?? [];
+    const queue = useMemo(() => commandCenter?.attention_queue ?? [], [commandCenter]);
     const generatedAt = commandCenter?.sync_status.generated_at;
     const isStale = useMemo(() => {
         if (!generatedAt) return true;
         return timeTick - new Date(generatedAt).getTime() > STALE_AFTER_MS;
     }, [generatedAt, timeTick]);
 
-    const activeOrders = queue.filter((item) => item.type === 'order').slice(0, 4).map((item) => {
+    const queueForPreset = useMemo(() => {
+        if (activePreset === 'kitchen_lead') {
+            return queue.filter((item) => item.type !== 'alert');
+        }
+        if (activePreset === 'manager') {
+            return queue.filter((item) => !(item.type === 'alert' && item.severity === 'low'));
+        }
+        return queue;
+    }, [activePreset, queue]);
+
+    const activeOrders = queueForPreset.filter((item) => item.type === 'order').slice(0, 4).map((item) => {
         const statusLower = item.status.toLowerCase();
         const isReady = ['ready', 'served', 'completed'].includes(statusLower);
         const isHold = statusLower === 'acknowledged';
@@ -240,6 +263,13 @@ export default function MerchantDashboard() {
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
+                    <DashboardPresetSwitcher onPresetResolved={setActivePreset} />
+                    <button
+                        onClick={() => setAlertRuleDrawerOpen(true)}
+                        className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
+                    >
+                        Alert Rules
+                    </button>
                     <div className="relative">
                         <button
                             onClick={() => setFilterOpen((value) => !value)}
@@ -378,7 +408,7 @@ export default function MerchantDashboard() {
             </div>
 
             <AttentionQueuePanel
-                items={queue}
+                items={queueForPreset}
                 loading={false}
                 error={error}
                 onRetry={() => fetchCommandCenter(true)}
@@ -386,6 +416,11 @@ export default function MerchantDashboard() {
                 onOpenOrders={() => router.push('/merchant/orders')}
                 onOpenTables={() => router.push('/merchant/tables')}
                 onOpenSettings={() => router.push('/merchant/settings')}
+            />
+
+            <AlertRuleBuilderDrawer
+                open={alertRuleDrawerOpen}
+                onClose={() => setAlertRuleDrawerOpen(false)}
             />
         </div>
     );

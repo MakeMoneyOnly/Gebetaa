@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, Loader2, Search, Send } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type SupportArticle = {
     id: string;
@@ -23,9 +24,9 @@ type SupportTicket = {
 
 export default function HelpPage() {
     const [query, setQuery] = useState('');
-    const [articlesLoading, setArticlesLoading] = useState(true);
+    const { loading: articlesLoading, markLoaded: markArticlesLoaded, setLoading: setArticlesLoading } = usePageLoadGuard('help.articles');
     const [articles, setArticles] = useState<SupportArticle[]>([]);
-    const [ticketsLoading, setTicketsLoading] = useState(true);
+    const { loading: ticketsLoading, markLoaded: markTicketsLoaded, setLoading: setTicketsLoading } = usePageLoadGuard('help.tickets');
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [ticketSubmitting, setTicketSubmitting] = useState(false);
     const [subject, setSubject] = useState('');
@@ -45,7 +46,7 @@ export default function HelpPage() {
             console.error(error);
             toast.error(error instanceof Error ? error.message : 'Failed to load articles.');
         } finally {
-            setArticlesLoading(false);
+            markArticlesLoaded();
         }
     };
 
@@ -62,7 +63,7 @@ export default function HelpPage() {
             console.error(error);
             toast.error(error instanceof Error ? error.message : 'Failed to load tickets.');
         } finally {
-            setTicketsLoading(false);
+            markTicketsLoaded();
         }
     };
 

@@ -21,6 +21,7 @@ import { TableSessionDrawer } from '@/components/merchant/TableSessionDrawer';
 import { OccupancyTimelineBucket, TableOccupancyTimeline } from '@/components/merchant/TableOccupancyTimeline';
 import { toast } from 'react-hot-toast';
 import { isAbortError } from '@/hooks/useSafeFetch';
+import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 // Mock Data (matches dashboard styling/logic)
 const mockTables: any[] = [
@@ -37,7 +38,7 @@ export default function TablesPage() {
     const [tables, setTables] = useState<TableGridRow[]>([]);
     const [selectedTableQR, setSelectedTableQR] = useState<TableGridRow | null>(null);
     const [selectedTableQrUrl, setSelectedTableQrUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { loading, markLoaded } = usePageLoadGuard('tables');
     const [error, setError] = useState<string | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -88,7 +89,7 @@ export default function TablesPage() {
         isMountedRef.current = true;
         
         if (!user) {
-            setLoading(false);
+            markLoaded();
             setTables(mockTables as TableGridRow[]);
             setError('Sign in to manage live tables. Showing sample data.');
             return;
@@ -126,7 +127,6 @@ export default function TablesPage() {
 
     const fetchTables = async (signal?: AbortSignal) => {
         try {
-            setLoading(true);
             setError(null);
             const response = await fetch('/api/tables', { method: 'GET', signal });
             const payload = await response.json();
@@ -155,7 +155,7 @@ export default function TablesPage() {
             }
         } finally {
             if (isMountedRef.current) {
-                setLoading(false);
+                markLoaded();
             }
         }
     };
