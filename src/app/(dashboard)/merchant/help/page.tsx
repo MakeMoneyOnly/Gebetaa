@@ -1,67 +1,237 @@
 'use client';
 
-import React from 'react';
-import { HelpCircle, MessageSquare, BookOpen, ExternalLink } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BookOpen, Loader2, Search, Send } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+type SupportArticle = {
+    id: string;
+    title: string;
+    category: string;
+};
+
+type SupportTicket = {
+    id: string;
+    subject: string;
+    description: string;
+    priority: string;
+    status: string;
+    source: string;
+    created_at: string;
+    updated_at: string;
+};
 
 export default function HelpPage() {
+    const [query, setQuery] = useState('');
+    const [articlesLoading, setArticlesLoading] = useState(true);
+    const [articles, setArticles] = useState<SupportArticle[]>([]);
+    const [ticketsLoading, setTicketsLoading] = useState(true);
+    const [tickets, setTickets] = useState<SupportTicket[]>([]);
+    const [ticketSubmitting, setTicketSubmitting] = useState(false);
+    const [subject, setSubject] = useState('');
+    const [description, setDescription] = useState('');
+    const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
+
+    const loadArticles = async (searchQuery: string) => {
+        try {
+            setArticlesLoading(true);
+            const response = await fetch(`/api/support/articles?query=${encodeURIComponent(searchQuery)}`, { method: 'GET' });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to load articles.');
+            }
+            setArticles((payload?.data?.articles ?? []) as SupportArticle[]);
+        } catch (error) {
+            console.error(error);
+            toast.error(error instanceof Error ? error.message : 'Failed to load articles.');
+        } finally {
+            setArticlesLoading(false);
+        }
+    };
+
+    const loadTickets = async () => {
+        try {
+            setTicketsLoading(true);
+            const response = await fetch('/api/support/tickets?limit=20', { method: 'GET' });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to load support tickets.');
+            }
+            setTickets((payload?.data?.tickets ?? []) as SupportTicket[]);
+        } catch (error) {
+            console.error(error);
+            toast.error(error instanceof Error ? error.message : 'Failed to load tickets.');
+        } finally {
+            setTicketsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        void loadArticles('');
+        void loadTickets();
+    }, []);
+
+    const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        await loadArticles(query);
+    };
+
+    const handleTicketSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const trimmedSubject = subject.trim();
+        const trimmedDescription = description.trim();
+        if (trimmedSubject.length < 3) {
+            toast.error('Subject must be at least 3 characters.');
+            return;
+        }
+        if (trimmedDescription.length < 5) {
+            toast.error('Description must be at least 5 characters.');
+            return;
+        }
+
+        try {
+            setTicketSubmitting(true);
+            const response = await fetch('/api/support/tickets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject: trimmedSubject,
+                    description: trimmedDescription,
+                    priority,
+                    diagnostics_json: { source_page: 'merchant_help' },
+                }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to create ticket.');
+            }
+
+            setSubject('');
+            setDescription('');
+            setPriority('medium');
+            toast.success('Support ticket created.');
+            await loadTickets();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to create ticket.');
+        } finally {
+            setTicketSubmitting(false);
+        }
+    };
+
     return (
-        <div className="space-y-10 pb-20 min-h-screen bg-white">
-            {/* Header */}
+        <div className="space-y-8 pb-20 min-h-screen bg-white">
             <div>
-                <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Help & Information</h1>
-                <p className="text-gray-500 font-medium">Get support and learn how to use Gebeta.</p>
+                <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Help & Support</h1>
+                <p className="text-gray-500 font-medium">Knowledge base, ticketing, and support history.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* FAQs / Knowledge Base Card */}
-                <div className="group bg-gray-50 rounded-[2.5rem] p-8 border border-gray-100/50 hover:bg-white hover:shadow-lg transition-all duration-300">
-                    <div className="h-16 w-16 rounded-[1.5rem] bg-orange-100 flex items-center justify-center text-orange-600 mb-6 group-hover:scale-110 transition-transform shadow-sm">
-                        <BookOpen className="h-8 w-8" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                        <BookOpen className="h-5 w-5 text-orange-600" />
+                        <h2 className="text-xl font-bold text-gray-900">Knowledge Base</h2>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">Knowledge Base</h2>
-                    <p className="text-gray-500 font-medium text-sm leading-relaxed mb-8">
-                        Browse our comprehensive guides and tutorials to master the Gebeta platform.
-                        Learn about menu management, order processing, and more.
-                    </p>
-                    <button className="h-12 px-6 bg-white border-2 border-gray-100 text-gray-900 rounded-xl font-bold text-sm hover:border-black hover:bg-black hover:text-white transition-all flex items-center gap-2">
-                        View Documentation
-                        <ExternalLink className="h-4 w-4" />
-                    </button>
-                </div>
-
-                {/* Contact Support Card */}
-                <div className="group bg-blue-50/50 rounded-[2.5rem] p-8 border border-blue-100 hover:bg-white hover:shadow-lg transition-all duration-300">
-                    <div className="h-16 w-16 rounded-[1.5rem] bg-blue-100 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform shadow-sm">
-                        <MessageSquare className="h-8 w-8" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">Contact Support</h2>
-                    <p className="text-blue-900/60 font-medium text-sm leading-relaxed mb-8">
-                        Need help with something specific? Our support team is available 24/7 to assist you with any issues.
-                    </p>
-                    <button className="h-12 px-6 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
-                        Chat with Us
-                    </button>
-                </div>
-            </div>
-
-            {/* Quick Links / FAQs List */}
-            <div className="space-y-6 pt-6">
-                <h3 className="text-xl font-bold text-gray-900 tracking-tight">Frequently Asked Questions</h3>
-                <div className="grid gap-4">
-                    {[
-                        "How do I update my menu inventory?",
-                        "Can I add multiple staff accounts?",
-                        "How are payouts processed?",
-                        "What if a customer cancels an order?"
-                    ].map((question, i) => (
-                        <div key={i} className="group p-6 bg-white border border-gray-100 rounded-[2rem] hover:border-gray-300 transition-all cursor-pointer flex justify-between items-center">
-                            <span className="font-bold text-gray-700 group-hover:text-black">{question}</span>
-                            <div className="h-8 w-8 rounded-full bg-gray-50 flex items-center justify-center text-black group-hover:bg-black group-hover:text-white transition-colors">
-                                <ExternalLink className="h-4 w-4" />
-                            </div>
+                    <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+                        <div className="relative flex-1">
+                            <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                                value={query}
+                                onChange={(event) => setQuery(event.target.value)}
+                                placeholder="Search articles..."
+                                className="w-full h-11 rounded-xl border border-gray-200 pl-9 pr-3 text-sm outline-none focus:border-gray-400"
+                            />
                         </div>
-                    ))}
+                        <button className="h-11 px-4 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800">
+                            Search
+                        </button>
+                    </form>
+
+                    {articlesLoading && (
+                        <div className="text-sm text-gray-500 inline-flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading articles...
+                        </div>
+                    )}
+
+                    {!articlesLoading && (
+                        <div className="space-y-2">
+                            {articles.length === 0 && <p className="text-sm text-gray-500">No articles found.</p>}
+                            {articles.map((article) => (
+                                <div key={article.id} className="rounded-xl border border-gray-100 p-3">
+                                    <p className="text-sm font-semibold text-gray-900">{article.title}</p>
+                                    <p className="text-xs text-gray-500 mt-1">{article.category}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
+
+                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Create Support Ticket</h2>
+                    <form onSubmit={handleTicketSubmit} className="space-y-3">
+                        <input
+                            value={subject}
+                            onChange={(event) => setSubject(event.target.value)}
+                            placeholder="Subject"
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        />
+                        <textarea
+                            value={description}
+                            onChange={(event) => setDescription(event.target.value)}
+                            placeholder="Describe your issue..."
+                            className="w-full min-h-[120px] rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        />
+                        <select
+                            value={priority}
+                            onChange={(event) => setPriority(event.target.value as 'low' | 'medium' | 'high' | 'critical')}
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                        <button
+                            type="submit"
+                            disabled={ticketSubmitting}
+                            className="h-11 px-4 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
+                        >
+                            {ticketSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            Submit Ticket
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Ticket History Timeline</h2>
+                {ticketsLoading && (
+                    <div className="text-sm text-gray-500 inline-flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading ticket history...
+                    </div>
+                )}
+                {!ticketsLoading && (
+                    <div className="space-y-3">
+                        {tickets.length === 0 && <p className="text-sm text-gray-500">No support tickets yet.</p>}
+                        {tickets.map((ticket) => (
+                            <div key={ticket.id} className="rounded-xl border border-gray-100 p-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <p className="text-sm font-semibold text-gray-900">{ticket.subject}</p>
+                                    <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                                        {ticket.status}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-600 mt-2 line-clamp-2">{ticket.description}</p>
+                                <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-500">
+                                    <span>Priority: {ticket.priority}</span>
+                                    <span>Created: {new Date(ticket.created_at).toLocaleString()}</span>
+                                    <span>Updated: {new Date(ticket.updated_at).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

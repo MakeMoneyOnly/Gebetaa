@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -14,8 +14,6 @@ import {
     HelpCircle,
     CreditCard,
     BarChart3,
-    Plus,
-    Minus,
     ChevronRight,
     Search
 } from 'lucide-react';
@@ -34,7 +32,7 @@ export function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="fixed left-0 top-0 z-50 h-screen w-[280px] bg-white border-r border-[#F1F1F1] flex flex-col justify-between py-6 px-4 overflow-y-auto no-scrollbar shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)]">
+        <aside className="hidden md:flex fixed left-0 top-0 z-50 h-screen w-[280px] bg-white border-r border-[#F1F1F1] flex-col justify-between py-6 px-4 overflow-y-auto no-scrollbar shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)]">
             {/* Top Section */}
             <div className="space-y-8">
                 {/* Logo */}

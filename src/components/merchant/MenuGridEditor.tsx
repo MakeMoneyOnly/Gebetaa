@@ -1,0 +1,529 @@
+'use client';
+
+import React, { useEffect, useMemo, useState } from 'react';
+import { Edit2, Image as ImageIcon, Loader2, Plus, Save, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { CategoryWithItems, MenuItem } from '@/types/database';
+
+export interface InlineMenuItemPatch {
+    name: string;
+    price: number;
+    description: string | null;
+    is_available: boolean;
+}
+
+export interface BulkPriceUpdate {
+    itemId: string;
+    price: number;
+}
+
+interface MenuGridEditorProps {
+    category: CategoryWithItems;
+    readOnly?: boolean;
+    onAddItem: (category: CategoryWithItems) => void;
+    onOpenAdvancedEdit: (category: CategoryWithItems, item: MenuItem) => void;
+    onSaveInline: (item: MenuItem, patch: InlineMenuItemPatch) => Promise<void>;
+    onBulkAvailabilityUpdate: (itemIds: string[], isAvailable: boolean) => Promise<void>;
+    onBulkPriceUpdate: (updates: BulkPriceUpdate[]) => Promise<void>;
+}
+
+interface FormState {
+    name: string;
+    price: string;
+    description: string;
+    is_available: boolean;
+}
+
+export function MenuGridEditor({
+    category,
+    readOnly = false,
+    onAddItem,
+    onOpenAdvancedEdit,
+    onSaveInline,
+    onBulkAvailabilityUpdate,
+    onBulkPriceUpdate,
+}: MenuGridEditorProps) {
+    const [editingItemId, setEditingItemId] = useState<string | null>(null);
+    const [formState, setFormState] = useState<FormState | null>(null);
+    const [fieldError, setFieldError] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isBulkSaving, setIsBulkSaving] = useState(false);
+    const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState(false);
+    const [bulkPriceMode, setBulkPriceMode] = useState<'set' | 'increase_percent'>('set');
+    const [bulkPriceValue, setBulkPriceValue] = useState('');
+    const [bulkPriceError, setBulkPriceError] = useState<string | null>(null);
+
+    const editingItem = useMemo(
+        () => category.items.find((item) => item.id === editingItemId) ?? null,
+        [category.items, editingItemId]
+    );
+    const selectedCount = selectedIds.length;
+    const selectedItems = useMemo(
+        () => category.items.filter((item) => selectedIds.includes(item.id)),
+        [category.items, selectedIds]
+    );
+
+    useEffect(() => {
+        setIsSelectionMode(false);
+        setSelectedIds([]);
+    }, [category.id]);
+
+    const startInlineEdit = (item: MenuItem) => {
+        if (readOnly) return;
+        setEditingItemId(item.id);
+        setFieldError(null);
+        setFormState({
+            name: item.name,
+            price: item.price.toString(),
+            description: item.description ?? '',
+            is_available: item.is_available ?? true,
+        });
+    };
+
+    const cancelInlineEdit = () => {
+        if (isSaving) return;
+        setEditingItemId(null);
+        setFormState(null);
+        setFieldError(null);
+    };
+
+    const validateInlineForm = (): InlineMenuItemPatch | null => {
+        if (!formState) return null;
+
+        const trimmedName = formState.name.trim();
+        if (!trimmedName) {
+            setFieldError('Name is required.');
+            return null;
+        }
+        if (trimmedName.length > 200) {
+            setFieldError('Name is too long (max 200).');
+            return null;
+        }
+
+        const parsedPrice = Number.parseFloat(formState.price);
+        if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+            setFieldError('Price must be greater than 0.');
+            return null;
+        }
+        if (parsedPrice > 999999.99) {
+            setFieldError('Price is too high.');
+            return null;
+        }
+
+        const normalizedDescription = formState.description.trim();
+        if (normalizedDescription.length > 1000) {
+            setFieldError('Description is too long (max 1000).');
+            return null;
+        }
+
+        return {
+            name: trimmedName,
+            price: parsedPrice,
+            description: normalizedDescription.length > 0 ? normalizedDescription : null,
+            is_available: formState.is_available,
+        };
+    };
+
+    const saveInlineEdit = async () => {
+        if (!editingItem || !formState) return;
+
+        const payload = validateInlineForm();
+        if (!payload) return;
+
+        try {
+            setIsSaving(true);
+            setFieldError(null);
+            await onSaveInline(editingItem, payload);
+            setEditingItemId(null);
+            setFormState(null);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to save menu item.';
+            setFieldError(message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const toggleSelection = (itemId: string) => {
+        setSelectedIds((previous) =>
+            previous.includes(itemId)
+                ? previous.filter((id) => id !== itemId)
+                : [...previous, itemId]
+        );
+    };
+
+    const runBulkAvailabilityUpdate = async (isAvailable: boolean) => {
+        if (selectedIds.length === 0) return;
+        try {
+            setIsBulkSaving(true);
+            await onBulkAvailabilityUpdate(selectedIds, isAvailable);
+            setSelectedIds([]);
+            setIsSelectionMode(false);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Bulk update failed.';
+            setFieldError(message);
+        } finally {
+            setIsBulkSaving(false);
+        }
+    };
+
+    const computeBulkPriceUpdates = (): { updates: BulkPriceUpdate[] | null; error: string | null } => {
+        const parsedValue = Number.parseFloat(bulkPriceValue);
+        if (!Number.isFinite(parsedValue)) {
+            return { updates: null, error: 'Enter a valid number.' };
+        }
+
+        if (bulkPriceMode === 'set' && parsedValue <= 0) {
+            return { updates: null, error: 'Set price must be greater than 0.' };
+        }
+
+        if (bulkPriceMode === 'increase_percent' && parsedValue < -90) {
+            return { updates: null, error: 'Percent decrease cannot be less than -90%.' };
+        }
+
+        const updates = selectedItems.map((item) => {
+            const nextPrice =
+                bulkPriceMode === 'set'
+                    ? parsedValue
+                    : item.price * (1 + parsedValue / 100);
+
+            return {
+                itemId: item.id,
+                price: Number(nextPrice.toFixed(2)),
+            };
+        });
+
+        if (updates.some((update) => update.price <= 0)) {
+            return { updates: null, error: 'Calculated price must remain above 0.' };
+        }
+
+        return { updates, error: null };
+    };
+
+    const previewResult = useMemo(() => computeBulkPriceUpdates(), [bulkPriceMode, bulkPriceValue, selectedItems]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const applyBulkPriceUpdates = async () => {
+        const result = computeBulkPriceUpdates();
+        if (result.error) {
+            setBulkPriceError(result.error);
+            return;
+        }
+        if (!result.updates || result.updates.length === 0) return;
+
+        try {
+            setIsBulkSaving(true);
+            setBulkPriceError(null);
+            await onBulkPriceUpdate(result.updates);
+            setIsBulkPriceModalOpen(false);
+            setIsSelectionMode(false);
+            setSelectedIds([]);
+            setBulkPriceValue('');
+            setBulkPriceMode('set');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Bulk price update failed.';
+            setBulkPriceError(message);
+        } finally {
+            setIsBulkSaving(false);
+        }
+    };
+
+    return (
+        <div className="space-y-3">
+            {!readOnly && (
+                <div className="flex items-center justify-between">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsSelectionMode((value) => !value);
+                            setSelectedIds([]);
+                            setFieldError(null);
+                        }}
+                        className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                        {isSelectionMode ? 'Cancel Selection' : 'Select Multiple'}
+                    </button>
+                    {isSelectionMode && selectedCount > 0 && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-500">{selectedCount} selected</span>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setBulkPriceError(null);
+                                    setIsBulkPriceModalOpen(true);
+                                }}
+                                disabled={isBulkSaving}
+                                className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                Bulk Price
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => runBulkAvailabilityUpdate(true)}
+                                disabled={isBulkSaving}
+                                className="h-9 px-3 rounded-xl bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                                {isBulkSaving ? 'Updating...' : 'Mark In Stock'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => runBulkAvailabilityUpdate(false)}
+                                disabled={isBulkSaving}
+                                className="h-9 px-3 rounded-xl bg-zinc-900 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
+                            >
+                                {isBulkSaving ? 'Updating...' : 'Mark Sold Out'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <button
+                onClick={() => onAddItem(category)}
+                className="group h-[280px] w-full rounded-[2rem] flex flex-col items-center justify-center gap-4 bg-gray-50 hover:bg-gray-100 transition-all shadow-sm"
+            >
+                <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <Plus className="h-5 w-5 text-gray-400 group-hover:text-black" />
+                </div>
+                <span className="font-bold text-gray-400 group-hover:text-black">Add New Item</span>
+            </button>
+
+            {category.items.map((item) => {
+                const isEditing = item.id === editingItemId;
+                return (
+                    <div
+                        key={item.id}
+                        className="group relative bg-white rounded-[2rem] p-4 flex flex-col gap-4 min-h-72 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                    >
+                        {isSelectionMode && (
+                            <label className="absolute top-3 right-3 z-10 rounded-lg bg-white/90 px-2 py-1 text-xs font-semibold text-gray-700 shadow-sm cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedIds.includes(item.id)}
+                                    onChange={() => toggleSelection(item.id)}
+                                    disabled={isBulkSaving}
+                                    className="mr-1"
+                                />
+                                Pick
+                            </label>
+                        )}
+
+                        <div className="relative w-full h-40 rounded-[1.5rem] overflow-hidden bg-gray-50 flex-shrink-0">
+                            {item.image_url ? (
+                                <img
+                                    src={item.image_url}
+                                    alt={item.name}
+                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center text-gray-300">
+                                    <ImageIcon className="h-8 w-8" />
+                                </div>
+                            )}
+                            <div className="absolute top-3 left-3">
+                                <span
+                                    className={cn(
+                                        'px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide backdrop-blur-md',
+                                        (item.is_available ?? true) ? 'bg-white/90 text-green-700' : 'bg-black/80 text-white'
+                                    )}
+                                >
+                                    {(item.is_available ?? true) ? 'In Stock' : 'Sold Out'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {!isEditing && (
+                            <>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-start gap-2">
+                                        <h3 className="font-bold text-gray-900 leading-tight line-clamp-1">{item.name}</h3>
+                                        <span className="font-bold text-black whitespace-nowrap">{item.price}</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 font-medium line-clamp-2 leading-relaxed">
+                                        {item.description || 'No description provided.'}
+                                    </p>
+                                </div>
+                                <div className="mt-auto flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => startInlineEdit(item)}
+                                        disabled={readOnly || isSelectionMode}
+                                        className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 inline-flex items-center gap-1"
+                                    >
+                                        <Edit2 className="h-3.5 w-3.5" />
+                                        Inline Edit
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onOpenAdvancedEdit(category, item)}
+                                        disabled={isSelectionMode}
+                                        className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Advanced
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {isEditing && formState && (
+                            <div className="space-y-2">
+                                <input
+                                    value={formState.name}
+                                    onChange={(event) => setFormState((prev) => prev ? { ...prev, name: event.target.value } : prev)}
+                                    placeholder="Item name"
+                                    maxLength={200}
+                                    disabled={isSaving}
+                                    className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-gray-400"
+                                />
+                                <input
+                                    type="number"
+                                    value={formState.price}
+                                    onChange={(event) => setFormState((prev) => prev ? { ...prev, price: event.target.value } : prev)}
+                                    placeholder="Price"
+                                    min="0.01"
+                                    step="0.01"
+                                    disabled={isSaving}
+                                    className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-gray-400"
+                                />
+                                <textarea
+                                    value={formState.description}
+                                    onChange={(event) => setFormState((prev) => prev ? { ...prev, description: event.target.value } : prev)}
+                                    placeholder="Description"
+                                    maxLength={1000}
+                                    disabled={isSaving}
+                                    className="w-full min-h-16 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs outline-none focus:border-gray-400"
+                                />
+                                <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+                                    <input
+                                        type="checkbox"
+                                        checked={formState.is_available}
+                                        onChange={(event) => setFormState((prev) => prev ? { ...prev, is_available: event.target.checked } : prev)}
+                                        disabled={isSaving}
+                                    />
+                                    Available
+                                </label>
+
+                                {fieldError && (
+                                    <p className="text-xs text-red-600">{fieldError}</p>
+                                )}
+
+                                <div className="flex items-center gap-2 pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={cancelInlineEdit}
+                                        disabled={isSaving}
+                                        className="h-8 px-2.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 inline-flex items-center gap-1"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={saveInlineEdit}
+                                        disabled={isSaving}
+                                        className="h-8 px-2.5 rounded-lg bg-black text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50 inline-flex items-center gap-1"
+                                    >
+                                        {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+
+            </div>
+
+            {isBulkPriceModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-xl space-y-4">
+                        <h3 className="text-lg font-bold text-gray-900">Bulk price update</h3>
+                        <p className="text-sm text-gray-600">
+                            Review price changes for {selectedCount} selected item(s) before applying.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label className="space-y-1">
+                                <span className="text-xs font-semibold text-gray-600">Update mode</span>
+                                <select
+                                    value={bulkPriceMode}
+                                    onChange={(event) => {
+                                        setBulkPriceMode(event.target.value as 'set' | 'increase_percent');
+                                        setBulkPriceError(null);
+                                    }}
+                                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                                >
+                                    <option value="set">Set absolute price</option>
+                                    <option value="increase_percent">Adjust by percent (%)</option>
+                                </select>
+                            </label>
+                            <label className="space-y-1">
+                                <span className="text-xs font-semibold text-gray-600">
+                                    {bulkPriceMode === 'set' ? 'New price' : 'Percent adjustment'}
+                                </span>
+                                <input
+                                    type="number"
+                                    value={bulkPriceValue}
+                                    onChange={(event) => {
+                                        setBulkPriceValue(event.target.value);
+                                        setBulkPriceError(null);
+                                    }}
+                                    step="0.01"
+                                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                                />
+                            </label>
+                        </div>
+
+                        <div className="rounded-2xl border border-gray-200 p-3">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Preview</div>
+                            <div className="space-y-1 max-h-44 overflow-y-auto">
+                                {(previewResult.updates ?? []).slice(0, 8).map((update) => {
+                                    const original = selectedItems.find((item) => item.id === update.itemId);
+                                    if (!original) return null;
+                                    return (
+                                        <div key={update.itemId} className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-700 line-clamp-1 pr-2">{original.name}</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {original.price}{' -> '}{update.price}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                                {selectedCount > 8 && (
+                                    <p className="text-xs text-gray-500 pt-1">+ {selectedCount - 8} more item(s)</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {(bulkPriceError || previewResult.error) && (
+                            <p className="text-sm text-red-600">{bulkPriceError || previewResult.error}</p>
+                        )}
+
+                        <div className="flex items-center justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsBulkPriceModalOpen(false)}
+                                disabled={isBulkSaving}
+                                className="h-10 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={applyBulkPriceUpdates}
+                                disabled={isBulkSaving}
+                                className="h-10 px-4 rounded-xl bg-black text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 inline-flex items-center gap-2"
+                            >
+                                {isBulkSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                                Apply Prices
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

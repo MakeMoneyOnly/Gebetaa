@@ -1,237 +1,301 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase';
-import { Loader2, Shield, User, Store, Bell, Lock, ChevronRight, Save } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { useRole } from '@/hooks/useRole';
+import React, { useEffect, useState } from 'react';
+import { Bell, Loader2, Lock, Save, Shield } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+type SecuritySettings = {
+    require_mfa: boolean;
+    session_timeout_minutes: number;
+    allowed_ip_ranges: string[];
+    alert_on_suspicious_login: boolean;
+};
+
+type NotificationSettings = {
+    email_enabled: boolean;
+    sms_enabled: boolean;
+    in_app_enabled: boolean;
+    escalation_enabled: boolean;
+    escalation_minutes: number;
+};
+
+const defaultSecurity: SecuritySettings = {
+    require_mfa: false,
+    session_timeout_minutes: 120,
+    allowed_ip_ranges: [],
+    alert_on_suspicious_login: true,
+};
+
+const defaultNotifications: NotificationSettings = {
+    email_enabled: true,
+    sms_enabled: false,
+    in_app_enabled: true,
+    escalation_enabled: true,
+    escalation_minutes: 15,
+};
 
 export default function SettingsPage() {
-    const { user } = useRole(null);
-    const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'security' | 'notifications'>('security');
+    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [restaurantName, setRestaurantName] = useState('');
-    const [activeTab, setActiveTab] = useState('profile');
+    const [error, setError] = useState<string | null>(null);
+    const [security, setSecurity] = useState<SecuritySettings>(defaultSecurity);
+    const [notifications, setNotifications] = useState<NotificationSettings>(defaultNotifications);
+    const [ipRangesText, setIpRangesText] = useState('');
 
-    useEffect(() => {
-        setLoading(true);
-        // Mock fetch restaurant details
-        // In a real app, fetch from Supabase
-        if (user) {
-            setTimeout(() => {
-                setRestaurantName("Saba Grill");
-                setLoading(false);
-            }, 1000);
-        } else {
+    const loadSettings = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const [securityRes, notificationsRes] = await Promise.all([
+                fetch('/api/settings/security', { method: 'GET' }),
+                fetch('/api/settings/notifications', { method: 'GET' }),
+            ]);
+            const securityPayload = await securityRes.json();
+            const notificationsPayload = await notificationsRes.json();
+
+            if (!securityRes.ok) {
+                throw new Error(securityPayload?.error ?? 'Failed to load security settings.');
+            }
+            if (!notificationsRes.ok) {
+                throw new Error(notificationsPayload?.error ?? 'Failed to load notification settings.');
+            }
+
+            const resolvedSecurity = {
+                ...defaultSecurity,
+                ...(securityPayload?.data ?? {}),
+            } as SecuritySettings;
+            const resolvedNotifications = {
+                ...defaultNotifications,
+                ...(notificationsPayload?.data ?? {}),
+            } as NotificationSettings;
+
+            setSecurity(resolvedSecurity);
+            setNotifications(resolvedNotifications);
+            setIpRangesText((resolvedSecurity.allowed_ip_ranges ?? []).join('\n'));
+        } catch (loadError) {
+            console.error(loadError);
+            setError(loadError instanceof Error ? loadError.message : 'Failed to load settings.');
+        } finally {
             setLoading(false);
         }
-    }, [user]);
-
-    const handleSave = async () => {
-        setSaving(true);
-        // Simulate save
-        setTimeout(() => setSaving(false), 1000);
     };
 
-    const tabs = [
-        { id: 'profile', label: 'Restaurant Profile', icon: Store },
-        { id: 'account', label: 'Account', icon: User },
-        { id: 'notifications', label: 'Notifications', icon: Bell },
-        { id: 'security', label: 'Security', icon: Lock },
-    ];
+    useEffect(() => {
+        void loadSettings();
+    }, []);
 
-    if (loading) {
-        return (
-            <div className="space-y-10 pb-20 min-h-screen bg-white">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <Skeleton className="h-10 w-32 rounded-xl mb-2" />
-                        <Skeleton className="h-4 w-48 rounded-lg" />
-                    </div>
-                </div>
-                <div className="flex flex-col lg:flex-row gap-10">
-                    <div className="w-full lg:w-64 flex-shrink-0 space-y-2">
-                        {[1, 2, 3, 4].map((i) => (
-                            <Skeleton key={i} className="h-12 w-full rounded-2xl" />
-                        ))}
-                    </div>
-                    <div className="flex-1 rounded-[2.5rem] border border-gray-100 p-8 h-[500px]">
-                        <div className="space-y-8">
-                            <div>
-                                <Skeleton className="h-8 w-48 rounded-lg mb-2" />
-                                <Skeleton className="h-4 w-64 rounded-lg" />
-                            </div>
-                            <div className="flex items-center gap-6">
-                                <Skeleton className="h-24 w-24 rounded-[2rem]" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-10 w-32 rounded-xl" />
-                                    <Skeleton className="h-4 w-40 rounded-lg" />
-                                </div>
-                            </div>
-                            <div className="space-y-4 max-w-2xl">
-                                <Skeleton className="h-20 w-full rounded-2xl" />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Skeleton className="h-16 w-full rounded-2xl" />
-                                    <Skeleton className="h-16 w-full rounded-2xl" />
-                                </div>
-                                <Skeleton className="h-32 w-full rounded-2xl" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const saveSecurity = async () => {
+        try {
+            setSaving(true);
+            const payload = {
+                ...security,
+                allowed_ip_ranges: ipRangesText
+                    .split('\n')
+                    .map((line) => line.trim())
+                    .filter((line) => line.length > 0),
+            };
+            const response = await fetch('/api/settings/security', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body?.error ?? 'Failed to save security settings.');
+            }
+            setSecurity(body?.data ?? payload);
+            toast.success('Security settings saved.');
+        } catch (saveError) {
+            toast.error(saveError instanceof Error ? saveError.message : 'Failed to save security settings.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const saveNotifications = async () => {
+        try {
+            setSaving(true);
+            const response = await fetch('/api/settings/notifications', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(notifications),
+            });
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body?.error ?? 'Failed to save notifications.');
+            }
+            setNotifications(body?.data ?? notifications);
+            toast.success('Notification settings saved.');
+        } catch (saveError) {
+            toast.error(saveError instanceof Error ? saveError.message : 'Failed to save notifications.');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
-        <div className="space-y-10 pb-20 min-h-screen bg-white">
-            {/* Header */}
+        <div className="space-y-8 pb-20 min-h-screen bg-white">
             <div>
                 <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Settings</h1>
-                <p className="text-gray-500 font-medium">Manage your restaurant preferences and account.</p>
+                <p className="text-gray-500 font-medium">Security and routing preferences.</p>
+                {error && <p className="text-xs mt-2 text-amber-700 font-semibold">{error}</p>}
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-10">
-                {/* Sidebar Navigation */}
-                <div className="w-full lg:w-64 flex-shrink-0 space-y-2">
-                    {tabs.map((tab) => (
+            <div className="flex gap-2">
+                <button
+                    onClick={() => setActiveTab('security')}
+                    className={`h-11 px-4 rounded-xl text-sm font-semibold inline-flex items-center gap-2 ${activeTab === 'security' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                    <Shield className="h-4 w-4" />
+                    Security
+                </button>
+                <button
+                    onClick={() => setActiveTab('notifications')}
+                    className={`h-11 px-4 rounded-xl text-sm font-semibold inline-flex items-center gap-2 ${activeTab === 'notifications' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                    <Bell className="h-4 w-4" />
+                    Notifications
+                </button>
+            </div>
+
+            {loading && (
+                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm flex items-center gap-2 text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading settings...
+                </div>
+            )}
+
+            {!loading && activeTab === 'security' && (
+                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm space-y-4 max-w-3xl">
+                    <h2 className="text-xl font-bold text-gray-900">Security Controls</h2>
+                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+                        <span className="text-sm font-medium text-gray-700">Require MFA</span>
+                        <input
+                            type="checkbox"
+                            checked={security.require_mfa}
+                            onChange={(event) => setSecurity((prev) => ({ ...prev, require_mfa: event.target.checked }))}
+                        />
+                    </label>
+                    <label className="space-y-1 block">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Session Timeout (minutes)</span>
+                        <input
+                            type="number"
+                            min={5}
+                            max={1440}
+                            value={security.session_timeout_minutes}
+                            onChange={(event) =>
+                                setSecurity((prev) => ({
+                                    ...prev,
+                                    session_timeout_minutes: Number.parseInt(event.target.value, 10) || 120,
+                                }))
+                            }
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        />
+                    </label>
+                    <label className="space-y-1 block">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Allowed IP Ranges (one per line)</span>
+                        <textarea
+                            value={ipRangesText}
+                            onChange={(event) => setIpRangesText(event.target.value)}
+                            className="w-full min-h-[120px] rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                            placeholder="10.0.0.0/24"
+                        />
+                    </label>
+                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+                        <span className="text-sm font-medium text-gray-700">Alert on Suspicious Login</span>
+                        <input
+                            type="checkbox"
+                            checked={security.alert_on_suspicious_login}
+                            onChange={(event) =>
+                                setSecurity((prev) => ({ ...prev, alert_on_suspicious_login: event.target.checked }))
+                            }
+                        />
+                    </label>
+                    <div className="pt-2 flex justify-end">
                         <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 font-bold text-sm ${activeTab === tab.id
-                                ? 'bg-black text-white shadow-lg shadow-black/10'
-                                : 'text-gray-500 hover:bg-gray-50 hover:text-black'
-                                }`}
+                            onClick={() => void saveSecurity()}
+                            disabled={saving}
+                            className="h-11 px-4 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 inline-flex items-center gap-2"
                         >
-                            <tab.icon className="h-4 w-4" />
-                            {tab.label}
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                            Save Security
                         </button>
-                    ))}
+                    </div>
                 </div>
+            )}
 
-                {/* Content Area */}
-                <div className="flex-1 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm min-h-[500px]">
-                    {activeTab === 'profile' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">Restaurant Profile</h2>
-                                <p className="text-gray-500 font-medium text-sm">Update your public restaurant information.</p>
-                            </div>
-
-                            <div className="space-y-6 max-w-2xl">
-                                {/* Logo Upload */}
-                                <div className="flex items-center gap-6">
-                                    <div className="h-24 w-24 rounded-[2rem] bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
-                                        <Store className="h-8 w-8 text-gray-300" />
-                                    </div>
-                                    <div>
-                                        <button className="px-5 py-2 bg-white border border-gray-200 text-gray-900 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors">
-                                            Change Logo
-                                        </button>
-                                        <p className="text-xs text-gray-400 mt-2 font-medium">
-                                            Recommended size: 512x512px. <br /> JPG, PNG or GIF.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-gray-900 uppercase tracking-wider ml-1">Restaurant Name</label>
-                                        <input
-                                            type="text"
-                                            value={restaurantName}
-                                            onChange={(e) => setRestaurantName(e.target.value)}
-                                            className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 text-gray-900 font-bold focus:border-black focus:outline-none focus:bg-white transition-all"
-                                            placeholder="e.g. Saba Grill"
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-gray-900 uppercase tracking-wider ml-1">Cuisine Type</label>
-                                            <select className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 text-gray-900 font-bold focus:border-black focus:outline-none focus:bg-white transition-all appearance-none cursor-pointer">
-                                                <option>Ethiopian</option>
-                                                <option>Italian</option>
-                                                <option>Burgers</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-bold text-gray-900 uppercase tracking-wider ml-1">Price Range</label>
-                                            <select className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 text-gray-900 font-bold focus:border-black focus:outline-none focus:bg-white transition-all appearance-none cursor-pointer">
-                                                <option>$$$</option>
-                                                <option>$$</option>
-                                                <option>$</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-gray-900 uppercase tracking-wider ml-1">Description</label>
-                                        <textarea
-                                            className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50/50 text-gray-900 font-medium focus:border-black focus:outline-none focus:bg-white transition-all min-h-[120px] resize-none"
-                                            placeholder="Tell customers about your restaurant..."
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-gray-50 flex justify-end">
-                                    <button
-                                        onClick={handleSave}
-                                        disabled={saving}
-                                        className="h-12 px-8 bg-black text-white rounded-xl font-bold shadow-lg shadow-black/10 hover:bg-gray-800 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                    >
-                                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                        Save Changes
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'account' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">Account & Billing</h2>
-                                <p className="text-gray-500 font-medium text-sm">Manage your subscription and billing details.</p>
-                            </div>
-
-                            <div className="p-6 bg-gray-900 rounded-[2rem] text-white relative overflow-hidden">
-                                <div className="relative z-10 flex justify-between items-start">
-                                    <div>
-                                        <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-lg text-xs font-bold uppercase tracking-wider mb-4">
-                                            Pro Plan
-                                        </span>
-                                        <h3 className="text-3xl font-bold tracking-tight mb-1">2,500 ETB</h3>
-                                        <p className="text-gray-400 font-medium text-sm">per month</p>
-                                    </div>
-                                    <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
-                                        <Shield className="h-6 w-6" />
-                                    </div>
-                                </div>
-                                <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
-                                    <div className="text-sm font-medium text-gray-400">
-                                        Next billing date: <span className="text-white font-bold">March 15, 2026</span>
-                                    </div>
-                                    <button className="text-sm font-bold hover:text-gray-300 transition-colors">
-                                        Manage Subscription
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Placeholders for other tabs */}
-                    {(activeTab === 'notifications' || activeTab === 'security') && (
-                        <div className="h-full flex flex-col items-center justify-center text-center py-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="h-16 w-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
-                                <Lock className="h-6 w-6 text-gray-300" />
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900">Coming Soon</h3>
-                            <p className="text-gray-500 font-medium mt-1">This section is under development.</p>
-                        </div>
-                    )}
+            {!loading && activeTab === 'notifications' && (
+                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm space-y-4 max-w-3xl">
+                    <h2 className="text-xl font-bold text-gray-900">Notification Routing</h2>
+                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+                        <span className="text-sm font-medium text-gray-700">Email Notifications</span>
+                        <input
+                            type="checkbox"
+                            checked={notifications.email_enabled}
+                            onChange={(event) =>
+                                setNotifications((prev) => ({ ...prev, email_enabled: event.target.checked }))
+                            }
+                        />
+                    </label>
+                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+                        <span className="text-sm font-medium text-gray-700">SMS Notifications</span>
+                        <input
+                            type="checkbox"
+                            checked={notifications.sms_enabled}
+                            onChange={(event) =>
+                                setNotifications((prev) => ({ ...prev, sms_enabled: event.target.checked }))
+                            }
+                        />
+                    </label>
+                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+                        <span className="text-sm font-medium text-gray-700">In-app Notifications</span>
+                        <input
+                            type="checkbox"
+                            checked={notifications.in_app_enabled}
+                            onChange={(event) =>
+                                setNotifications((prev) => ({ ...prev, in_app_enabled: event.target.checked }))
+                            }
+                        />
+                    </label>
+                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+                        <span className="text-sm font-medium text-gray-700">Escalation Enabled</span>
+                        <input
+                            type="checkbox"
+                            checked={notifications.escalation_enabled}
+                            onChange={(event) =>
+                                setNotifications((prev) => ({ ...prev, escalation_enabled: event.target.checked }))
+                            }
+                        />
+                    </label>
+                    <label className="space-y-1 block">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Escalation Time (minutes)</span>
+                        <input
+                            type="number"
+                            min={1}
+                            max={240}
+                            value={notifications.escalation_minutes}
+                            onChange={(event) =>
+                                setNotifications((prev) => ({
+                                    ...prev,
+                                    escalation_minutes: Number.parseInt(event.target.value, 10) || 15,
+                                }))
+                            }
+                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        />
+                    </label>
+                    <div className="pt-2 flex justify-end">
+                        <button
+                            onClick={() => void saveNotifications()}
+                            disabled={saving}
+                            className="h-11 px-4 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 inline-flex items-center gap-2"
+                        >
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            Save Routing
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

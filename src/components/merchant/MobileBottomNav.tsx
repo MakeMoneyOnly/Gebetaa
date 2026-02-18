@@ -1,0 +1,51 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { BarChart3, HelpCircle, LayoutGrid, QrCode, Settings, ShoppingBag, Users, UtensilsCrossed } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const MOBILE_MENU_ITEMS = [
+    { label: 'Dashboard', href: '/merchant', icon: LayoutGrid },
+    { label: 'Orders', href: '/merchant/orders', icon: ShoppingBag },
+    { label: 'Menu', href: '/merchant/menu', icon: UtensilsCrossed },
+    { label: 'Tables', href: '/merchant/tables', icon: QrCode },
+    { label: 'Staff', href: '/merchant/staff', icon: Users },
+    { label: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
+    { label: 'Settings', href: '/merchant/settings', icon: Settings },
+    { label: 'Help', href: '/merchant/help', icon: HelpCircle },
+];
+
+export function MobileBottomNav() {
+    const pathname = usePathname();
+
+    return (
+        <nav
+            aria-label="Mobile merchant navigation"
+            className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85"
+            data-testid="mobile-bottom-nav"
+        >
+            <div className="grid grid-cols-4">
+                {MOBILE_MENU_ITEMS.map((item) => {
+                    const isActive = pathname === item.href;
+                    const Icon = item.icon;
+
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                'h-16 px-1 flex flex-col items-center justify-center gap-1 text-[10px] font-semibold transition-colors',
+                                isActive ? 'text-black bg-gray-50' : 'text-gray-500'
+                            )}
+                            data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+                        >
+                            <Icon className="h-4 w-4" />
+                            <span className="truncate max-w-full">{item.label}</span>
+                        </Link>
+                    );
+                })}
+            </div>
+        </nav>
+    );
+}

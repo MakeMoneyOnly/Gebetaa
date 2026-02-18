@@ -2,6 +2,8 @@ import React from 'react';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { Sidebar } from '@/components/merchant/Sidebar';
 import { RightPanel } from '@/components/merchant/RightPanel';
+import { CommandBarShell } from '@/components/merchant/CommandBarShell';
+import { MobileBottomNav } from '@/components/merchant/MobileBottomNav';
 
 export default function DashboardLayout({
     children,
@@ -23,7 +25,7 @@ export default function DashboardLayout({
                     - h-screen ensures it takes full viewport height
                 */}
                 <main className="flex-1 md:ml-[280px] xl:mr-[380px] h-screen overflow-y-auto transition-all duration-300 bg-white">
-                    <div className="mx-auto max-w-7xl p-8 lg:p-12">
+                    <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-12 pb-24 md:pb-8">
                         {children}
                     </div>
                 </main>
@@ -31,6 +33,8 @@ export default function DashboardLayout({
                 {/* 3. Right Panel (Fixed Right - Hidden on smaller screens) */}
                 {/* The RightPanel component already has its own overflow-y-auto */}
                 <RightPanel />
+                <MobileBottomNav />
+                <CommandBarShell />
             </div>
         </RoleGuard>
     );

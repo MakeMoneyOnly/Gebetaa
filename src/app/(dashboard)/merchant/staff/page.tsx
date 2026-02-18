@@ -1,315 +1,332 @@
 'use client';
 
-import React, { useState } from 'react';
-import {
-    Users,
-    UserCheck,
-    Star,
-    Plus,
-    MoreHorizontal,
-    Phone,
-    Mail,
-    Clock,
-    Shield,
-    CheckCircle
-} from 'lucide-react';
-import { cn } from '@/lib/utils'; // Assuming this exists, based on other files
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CheckCircle, MoreHorizontal, Plus, Shield, UserCheck, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { toast } from 'react-hot-toast';
+import { InviteStaffModal } from '@/components/merchant/InviteStaffModal';
+import { RolePermissionDrawer } from '@/components/merchant/RolePermissionDrawer';
 
-// Mock Data
-const mockStaff = [
-    {
-        id: 1,
-        name: "Sarah Johnson",
-        role: "Manager",
-        status: "on_shift",
-        email: "sarah@gebeta.app",
-        phone: "+251 911 234 567",
-        rating: 4.9,
-        tables_served: 1240,
-        avatar_color: "bg-blue-100 text-blue-600"
-    },
-    {
-        id: 2,
-        name: "David Chen",
-        role: "Head Chef",
-        status: "on_shift",
-        email: "david@gebeta.app",
-        phone: "+251 922 345 678",
-        rating: 4.8,
-        tables_served: 0,
-        avatar_color: "bg-orange-100 text-orange-600"
-    },
-    {
-        id: 3,
-        name: "Michael Smith",
-        role: "Server",
-        status: "off_shift",
-        email: "michael@gebeta.app",
-        phone: "+251 933 456 789",
-        rating: 4.7,
-        tables_served: 856,
-        avatar_color: "bg-purple-100 text-purple-600"
-    },
-    {
-        id: 4,
-        name: "Jessica Brown",
-        role: "Server",
-        status: "on_shift",
-        email: "jessica@gebeta.app",
-        phone: "+251 944 567 890",
-        rating: 4.9,
-        tables_served: 432,
-        avatar_color: "bg-pink-100 text-pink-600"
-    },
-    {
-        id: 5,
-        name: "Alex Wilson",
-        role: "Bartender",
-        status: "break",
-        email: "alex@gebeta.app",
-        phone: "+251 955 678 901",
-        rating: 4.6,
-        tables_served: 210,
-        avatar_color: "bg-green-100 text-green-600"
-    }
-];
+type StaffMember = {
+    id: string;
+    user_id: string;
+    role: string;
+    is_active: boolean | null;
+    created_at: string | null;
+};
+
+const ROLE_BADGE: Record<string, string> = {
+    owner: 'bg-purple-50 text-purple-600',
+    admin: 'bg-indigo-50 text-indigo-600',
+    manager: 'bg-blue-50 text-blue-600',
+    kitchen: 'bg-orange-50 text-orange-600',
+    waiter: 'bg-green-50 text-green-600',
+    bar: 'bg-pink-50 text-pink-600',
+};
+
+type StaffRole = 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar';
 
 export default function StaffPage() {
-    const totalStaff = mockStaff.length;
-    const onShift = mockStaff.filter(s => s.status === 'on_shift').length;
-    const avgRating = 4.8;
+    const [staff, setStaff] = useState<StaffMember[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [inviteOpen, setInviteOpen] = useState(false);
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+    const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+    const [roleDrawerOpen, setRoleDrawerOpen] = useState(false);
+    const [roleSaving, setRoleSaving] = useState(false);
+    const [activeUpdatingId, setActiveUpdatingId] = useState<string | null>(null);
+
+    const fetchStaff = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await fetch('/api/staff', { method: 'GET' });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to fetch staff.');
+            }
+            setStaff((payload?.data?.staff ?? []) as StaffMember[]);
+        } catch (fetchError) {
+            console.error(fetchError);
+            setError(fetchError instanceof Error ? fetchError.message : 'Failed to fetch staff.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        void fetchStaff();
+    }, [fetchStaff]);
+
+    const totalStaff = staff.length;
+    const activeStaff = useMemo(
+        () => staff.filter((member) => member.is_active !== false).length,
+        [staff]
+    );
+    const inactiveStaff = totalStaff - activeStaff;
+    const activeRate = totalStaff > 0 ? Math.round((activeStaff / totalStaff) * 100) : 0;
+
+    const handleInvite = async (payload: { email: string | null; role: StaffRole }) => {
+        try {
+            setInviteLoading(true);
+            const response = await fetch('/api/staff/invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to create invite.');
+            }
+            setInviteUrl(result?.data?.invite_url ?? null);
+            toast.success('Staff invite created.');
+        } catch (inviteError) {
+            toast.error(inviteError instanceof Error ? inviteError.message : 'Failed to create invite.');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const handleRoleUpdate = async (staffId: string, role: StaffRole) => {
+        try {
+            setRoleSaving(true);
+            const response = await fetch(`/api/staff/${staffId}/role`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to update role.');
+            }
+
+            setStaff((previous) =>
+                previous.map((member) => (member.id === staffId ? { ...member, role } : member))
+            );
+            setRoleDrawerOpen(false);
+            setSelectedStaff(null);
+            toast.success('Role updated.');
+        } catch (roleError) {
+            toast.error(roleError instanceof Error ? roleError.message : 'Failed to update role.');
+        } finally {
+            setRoleSaving(false);
+        }
+    };
+
+    const handleActiveToggle = async (member: StaffMember) => {
+        try {
+            const nextValue = member.is_active === false;
+            setActiveUpdatingId(member.id);
+            const response = await fetch(`/api/staff/${member.id}/active`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: nextValue }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to update active status.');
+            }
+
+            setStaff((previous) =>
+                previous.map((staffMember) =>
+                    staffMember.id === member.id ? { ...staffMember, is_active: nextValue } : staffMember
+                )
+            );
+            toast.success(nextValue ? 'Staff activated.' : 'Staff deactivated.');
+        } catch (activeError) {
+            toast.error(activeError instanceof Error ? activeError.message : 'Failed to update active status.');
+        } finally {
+            setActiveUpdatingId(null);
+        }
+    };
 
     return (
         <div className="space-y-8 pb-20 min-h-screen">
-            {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
                     <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Staff Management</h1>
                     <p className="text-gray-500 font-medium">Manage your team and permissions.</p>
+                    {error && <p className="text-xs mt-2 text-amber-700 font-semibold">{error}</p>}
                 </div>
-                <button className="h-12 px-5 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-black/10 font-bold text-sm">
+                <button
+                    onClick={() => {
+                        setInviteUrl(null);
+                        setInviteOpen(true);
+                    }}
+                    className="h-12 px-5 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-black/10 font-bold text-sm"
+                >
                     <Plus className="h-4 w-4" />
                     Add Member
                 </button>
             </div>
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                {/* Total Staff */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
-                            <Users className="h-4 w-4" />
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                            <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                                Total
-                            </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{totalStaff}</h3>
-                        </div>
+                <div className="bg-white p-5 rounded-[2rem] h-[180px] shadow-sm">
+                    <div className="flex justify-between items-start">
+                        <Users className="h-4 w-4 text-gray-700" />
+                        <h3 className="text-4xl font-bold text-gray-900">{totalStaff}</h3>
                     </div>
-                    <div className="absolute bottom-5 left-5 right-5">
-                        <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Total Staff</h3>
-                            <p className="text-gray-400 text-xs font-medium">Active Employees</p>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
-                            <span>Target: 10</span>
-                            <span>Current: {totalStaff}</span>
-                        </div>
-                        <div className="flex justify-between items-center gap-1">
-                            {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = 10;
-                                const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
-                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-gray-800' : 'bg-gray-100'}`} />
-                            })}
-                        </div>
-                    </div>
+                    <p className="mt-6 text-sm font-semibold text-gray-900">Total Staff</p>
+                    <p className="text-xs text-gray-500">Live staff directory count</p>
                 </div>
-
-                {/* On Shift */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm">
-                            <UserCheck className="h-4 w-4" />
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                            <span className="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                                Active Now
-                            </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{onShift}</h3>
-                        </div>
+                <div className="bg-white p-5 rounded-[2rem] h-[180px] shadow-sm">
+                    <div className="flex justify-between items-start">
+                        <UserCheck className="h-4 w-4 text-green-700" />
+                        <h3 className="text-4xl font-bold text-gray-900">{activeStaff}</h3>
                     </div>
-                    <div className="absolute bottom-5 left-5 right-5">
-                        <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">On Shift</h3>
-                            <p className="text-gray-400 text-xs font-medium">Currently Working</p>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
-                            <span>Clocked in: {onShift}</span>
-                            <span>Total: {totalStaff}</span>
-                        </div>
-                        <div className="flex justify-between items-center gap-1">
-                            {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = Math.round((onShift / totalStaff) * 20);
-                                const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
-                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-100'}`} />
-                            })}
-                        </div>
-                    </div>
+                    <p className="mt-6 text-sm font-semibold text-gray-900">Active</p>
+                    <p className="text-xs text-gray-500">Staff currently enabled</p>
                 </div>
-
-                {/* Avg Rating */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-yellow-600 shadow-sm">
-                            <Star className="h-4 w-4" />
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                            <span className="bg-yellow-50 text-yellow-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                                Top Tier
-                            </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{avgRating}</h3>
-                        </div>
+                <div className="bg-white p-5 rounded-[2rem] h-[180px] shadow-sm">
+                    <div className="flex justify-between items-start">
+                        <Shield className="h-4 w-4 text-blue-700" />
+                        <h3 className="text-4xl font-bold text-gray-900">{inactiveStaff}</h3>
                     </div>
-                    <div className="absolute bottom-5 left-5 right-5">
-                        <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Performance</h3>
-                            <p className="text-gray-400 text-xs font-medium">Average Staff Rating</p>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
-                            <span>Avg: {avgRating}</span>
-                            <span>Target: 5.0</span>
-                        </div>
-                        <div className="flex justify-between items-center gap-1">
-                            {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = 18;
-                                const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
-                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-yellow-500' : 'bg-gray-100'}`} />
-                            })}
-                        </div>
-                    </div>
+                    <p className="mt-6 text-sm font-semibold text-gray-900">Inactive</p>
+                    <p className="text-xs text-gray-500">Staff currently disabled</p>
                 </div>
-
-                {/* Attendance - New Card */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm">
-                            <CheckCircle className="h-4 w-4" />
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                            <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
-                                Excellent
-                            </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">98%</h3>
-                        </div>
+                <div className="bg-white p-5 rounded-[2rem] h-[180px] shadow-sm">
+                    <div className="flex justify-between items-start">
+                        <CheckCircle className="h-4 w-4 text-emerald-700" />
+                        <h3 className="text-4xl font-bold text-gray-900">{activeRate}%</h3>
                     </div>
-                    <div className="absolute bottom-5 left-5 right-5">
-                        <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Attendance</h3>
-                            <p className="text-gray-400 text-xs font-medium">On-Time Performance</p>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
-                            <span>Today: 98%</span>
-                            <span>Target: 95%</span>
-                        </div>
-                        <div className="flex justify-between items-center gap-1">
-                            {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = 19;
-                                const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
-                                return <div key={i} style={{ opacity: isActive ? opacity : 1 }} className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-blue-500' : 'bg-gray-100'}`} />
-                            })}
-                        </div>
-                    </div>
+                    <p className="mt-6 text-sm font-semibold text-gray-900">Activation Rate</p>
+                    <p className="text-xs text-gray-500">Enabled accounts ratio</p>
                 </div>
             </div>
 
-            {/* Staff List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {mockStaff.map((staff) => (
-                    <div key={staff.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col gap-6 relative overflow-hidden">
-
-                        {/* Header */}
-                        <div className="flex items-start justify-between relative z-10">
-                            <div className={`h-16 w-16 rounded-[1.5rem] flex items-center justify-center text-xl font-bold shadow-sm ${staff.avatar_color}`}>
-                                {staff.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 hover:text-black transition-colors">
-                                <MoreHorizontal className="h-5 w-5" />
-                            </button>
+            {loading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {Array.from({ length: 8 }).map((_, index) => (
+                        <div key={index} className="bg-white p-6 rounded-[2.5rem] shadow-sm min-h-[260px] animate-pulse">
+                            <div className="h-14 w-14 rounded-2xl bg-gray-100" />
+                            <div className="mt-5 h-4 w-28 rounded bg-gray-100" />
+                            <div className="mt-2 h-3 w-20 rounded bg-gray-100" />
+                            <div className="mt-8 h-9 w-full rounded-xl bg-gray-100" />
                         </div>
+                    ))}
+                </div>
+            )}
 
-                        {/* Info */}
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-bold text-lg text-gray-900">{staff.name}</h3>
-                                {staff.status === 'on_shift' && (
-                                    <span className="h-2 w-2 rounded-full bg-green-500 ring-2 ring-white" />
-                                )}
-                            </div>
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                <span className={cn(
-                                    "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
-                                    staff.role === 'Manager' ? "bg-purple-50 text-purple-600" :
-                                        staff.role === 'Head Chef' ? "bg-orange-50 text-orange-600" :
-                                            "bg-blue-50 text-blue-600"
-                                )}>
-                                    {staff.role}
-                                </span>
-                                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-700 text-[10px] font-bold">
-                                    <Star className="h-3 w-3 fill-yellow-700" />
-                                    {staff.rating}
-                                </span>
-                            </div>
+            {!loading && staff.length === 0 && (
+                <div className="rounded-[2.5rem] border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
+                    <p className="text-base font-semibold text-gray-700">No staff records found.</p>
+                    <p className="text-sm mt-1 text-gray-500">Invite your first team member to start operations.</p>
+                    <button
+                        onClick={() => {
+                            setInviteUrl(null);
+                            setInviteOpen(true);
+                        }}
+                        className="mt-4 h-11 px-5 rounded-xl bg-black text-white text-sm font-bold hover:bg-gray-800 transition-colors"
+                    >
+                        Invite Staff
+                    </button>
+                </div>
+            )}
 
-                            {/* Contact Info (Hidden by default, shown on hover maybe? or just always shown) */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3 text-sm text-gray-500">
-                                    <Mail className="h-4 w-4" />
-                                    <span className="truncate">{staff.email}</span>
+            {!loading && staff.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {staff.map((member) => (
+                        <div
+                            key={member.id}
+                            className="bg-white p-6 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col gap-6 relative overflow-hidden"
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="h-16 w-16 rounded-[1.5rem] flex items-center justify-center text-xl font-bold shadow-sm bg-gray-100 text-gray-700">
+                                    {member.user_id.slice(0, 2).toUpperCase()}
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-gray-500">
-                                    <Phone className="h-4 w-4" />
-                                    <span>{staff.phone}</span>
+                                <button
+                                    onClick={() => {
+                                        setSelectedStaff(member);
+                                        setRoleDrawerOpen(true);
+                                    }}
+                                    className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 hover:text-black transition-colors"
+                                >
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-900">Staff {member.user_id.slice(0, 8)}</h3>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span
+                                        className={cn(
+                                            'px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider',
+                                            ROLE_BADGE[member.role] ?? 'bg-gray-100 text-gray-600'
+                                        )}
+                                    >
+                                        {member.role}
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider',
+                                            member.is_active === false ? 'bg-gray-100 text-gray-600' : 'bg-emerald-50 text-emerald-700'
+                                        )}
+                                    >
+                                        {member.is_active === false ? 'inactive' : 'active'}
+                                    </span>
                                 </div>
+                                <p className="text-xs text-gray-500 mt-3">
+                                    Joined {member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}
+                                </p>
+                            </div>
+
+                            <div className="mt-auto pt-4 border-t border-dashed border-gray-100 flex items-center justify-between gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedStaff(member);
+                                        setRoleDrawerOpen(true);
+                                    }}
+                                    className="h-10 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                                >
+                                    Edit Role
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={activeUpdatingId === member.id}
+                                    onClick={() => {
+                                        void handleActiveToggle(member);
+                                    }}
+                                    className={cn(
+                                        'h-10 px-3 rounded-xl text-xs font-semibold disabled:opacity-50',
+                                        member.is_active === false
+                                            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    )}
+                                >
+                                    {activeUpdatingId === member.id
+                                        ? 'Updating...'
+                                        : member.is_active === false
+                                        ? 'Activate'
+                                        : 'Deactivate'}
+                                </button>
                             </div>
                         </div>
+                    ))}
+                </div>
+            )}
 
-                        {/* Footer / Stats */}
-                        <div className="mt-auto pt-4 border-t border-dashed border-gray-100 relative z-10 flex items-center justify-between">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tables</span>
-                                <span className="text-xl font-bold text-gray-900">{staff.tables_served}</span>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</span>
-                                <span className={cn(
-                                    "text-xs font-bold capitalize",
-                                    staff.status === 'on_shift' ? "text-green-600" :
-                                        staff.status === 'break' ? "text-orange-500" : "text-gray-400"
-                                )}>
-                                    {staff.status.replace('_', ' ')}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+            <InviteStaffModal
+                open={inviteOpen}
+                loading={inviteLoading}
+                inviteUrl={inviteUrl}
+                onClose={() => setInviteOpen(false)}
+                onInvite={handleInvite}
+            />
 
-                {/* Add New Staff Card */}
-                <button className="group min-h-[300px] rounded-[2.5rem] border-2 border-dashed border-gray-200 hover:border-black/20 bg-gray-50/50 flex flex-col items-center justify-center gap-4 hover:bg-gray-100 transition-all">
-                    <div className="h-20 w-20 rounded-[2rem] bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <Plus className="h-8 w-8 text-gray-400 group-hover:text-black" />
-                    </div>
-                    <div className="text-center">
-                        <h4 className="font-bold text-gray-900 mb-1">Add New Staff</h4>
-                        <p className="text-xs font-medium text-gray-400">Invite by email</p>
-                    </div>
-                </button>
-            </div>
+            <RolePermissionDrawer
+                open={roleDrawerOpen}
+                loading={roleSaving}
+                staff={selectedStaff}
+                onClose={() => {
+                    setRoleDrawerOpen(false);
+                    setSelectedStaff(null);
+                }}
+                onSave={handleRoleUpdate}
+            />
         </div>
     );
 }

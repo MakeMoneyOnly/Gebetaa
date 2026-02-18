@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Loader2, X, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { CategoryWithItems, MenuItem } from '@/types/database';
+import { toast } from 'react-hot-toast';
 
 interface MenuItemModalProps {
     isOpen: boolean;
@@ -18,6 +19,7 @@ interface MenuItemModalProps {
 export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess }: MenuItemModalProps) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
 
     // Form State
     const [name, setName] = useState('');
@@ -44,6 +46,7 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                 setDescription('');
                 setImageUrl('');
             }
+            setFormError(null);
         }
     }, [isOpen, itemToEdit]);
 
@@ -76,7 +79,7 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
 
             setImageUrl(data.publicUrl);
         } catch (error: any) {
-            alert('Error uploading image: ' + error.message);
+            toast.error(error?.message || 'Failed to upload image.');
         } finally {
             setUploading(false);
         }
@@ -84,10 +87,20 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!category && !itemToEdit) return; // Should have one or the other
+        if (!category && !itemToEdit) {
+            setFormError('Missing category context for this item.');
+            return;
+        }
+
+        const parsedPrice = Number.parseFloat(price);
+        if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+            setFormError('Price must be greater than 0.');
+            return;
+        }
 
         try {
             setLoading(true);
+            setFormError(null);
 
             const itemData = {
                 category_id: category?.id || itemToEdit?.category_id,
@@ -98,7 +111,7 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                 name,
                 name_am: nameAm || null,
                 description: description || null,
-                price: parseFloat(price),
+                price: parsedPrice,
                 image_url: imageUrl || null
             };
 
@@ -117,8 +130,9 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
 
             onSuccess();
             onClose();
+            toast.success(itemToEdit ? 'Menu item updated.' : 'Menu item created.');
         } catch (error: any) {
-            alert('Error saving item: ' + error.message);
+            toast.error(error?.message || 'Failed to save menu item.');
         } finally {
             setLoading(false);
         }
@@ -225,6 +239,12 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                             placeholder="Describe the dish..."
                         />
                     </div>
+
+                    {formError && (
+                        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                            {formError}
+                        </div>
+                    )}
 
                     <div className="pt-4 flex gap-3">
                         <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>
