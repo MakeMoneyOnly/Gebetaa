@@ -5,8 +5,23 @@ function parseCsv(value: string): string[] {
         .filter(Boolean);
 }
 
-export function isPilotRolloutEnabled(): boolean {
-    return String(process.env.ENABLE_P0_PILOT_ROLLOUT ?? 'false').toLowerCase() === 'true';
+type PilotPhase = 'p0' | 'p1' | 'p2';
+
+function parseBooleanFlag(value: string | undefined): boolean {
+    return String(value ?? 'false').toLowerCase() === 'true';
+}
+
+export function isPilotRolloutEnabled(phase: PilotPhase = 'p0'): boolean {
+    if (phase === 'p2') {
+        return parseBooleanFlag(process.env.ENABLE_P2_PILOT_ROLLOUT)
+            || parseBooleanFlag(process.env.ENABLE_P1_PILOT_ROLLOUT)
+            || parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT);
+    }
+    if (phase === 'p1') {
+        return parseBooleanFlag(process.env.ENABLE_P1_PILOT_ROLLOUT)
+            || parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT);
+    }
+    return parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT);
 }
 
 export function isPilotMutationBlockEnabled(): boolean {

@@ -4,6 +4,8 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import { resend, EMAIL_FROM } from '@/lib/email/client';
+import { StaffInviteEmail } from '@/lib/email/templates/staff-invite';
 
 const InviteStaffSchema = z.object({
     email: z.string().email().optional().nullable(),
@@ -47,6 +49,35 @@ export async function POST(request: Request) {
         return apiError('Failed to create staff invite', 500, 'STAFF_INVITE_CREATE_FAILED', error.message);
     }
 
+    // Fetch restaurant name for the email
+    const { data: restaurant } = await context.supabase
+        .from('restaurants')
+        .select('name')
+        .eq('id', context.restaurantId)
+        .single();
+
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/invite?code=${code}`;
+    let emailSent = false;
+
+    if (parsed.data.email && resend) {
+        try {
+            await resend.emails.send({
+                from: EMAIL_FROM,
+                to: parsed.data.email,
+                subject: `You've been invited to join ${restaurant?.name ?? 'Gebeta'}`,
+                html: StaffInviteEmail({
+                    inviteUrl,
+                    restaurantName: restaurant?.name ?? 'Gebeta',
+                    role: parsed.data.role,
+                }),
+            });
+            emailSent = true;
+        } catch (emailError) {
+            console.error('Failed to send invite email:', emailError);
+            // We don't fail the request if email fails, but we'll flag it in the response
+        }
+    }
+
     await writeAuditLog(context.supabase, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
@@ -56,6 +87,7 @@ export async function POST(request: Request) {
         metadata: {
             role: parsed.data.role,
             has_email: Boolean(parsed.data.email),
+            email_sent: emailSent,
         },
         new_value: {
             status: data.status,
@@ -65,6 +97,7 @@ export async function POST(request: Request) {
 
     return apiSuccess({
         invite: data,
-        invite_url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/invite?code=${code}`,
+        invite_url: inviteUrl,
+        email_sent: emailSent,
     }, 201);
 }

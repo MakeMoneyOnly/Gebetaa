@@ -3,47 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Plus, Edit2, Trash2, Loader2, UtensilsCrossed, ArrowUp, ArrowDown } from 'lucide-react';
-import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CategoryWithItems, MenuItem } from '@/types/database';
 import { MenuItemModal } from '@/features/merchant/components/MenuItemModal';
 import { toast } from 'react-hot-toast';
 import { BulkPriceUpdate, InlineMenuItemPatch, MenuGridEditor } from '@/components/merchant/MenuGridEditor';
 
-// Mock Data
-const mockCategories: any[] = [
-    {
-        id: 'mock-cat-1',
-        name: 'Starters',
-        name_am: null,
-        restaurant_id: 'mock-rest-1',
-        items: [
-            { id: 'm1', name: 'Sambusa', price: 50, description: 'Crispy pastry filled with lentils', is_available: true, image_url: null },
-            { id: 'm2', name: 'Tomato Salad', price: 120, description: 'Fresh tomatoes with onions and peppers', is_available: true, image_url: null }
-        ]
-    },
-    {
-        id: 'mock-cat-2',
-        name: 'Main Course',
-        name_am: null,
-        restaurant_id: 'mock-rest-1',
-        items: [
-            { id: 'm3', name: 'Doro Wat', price: 450, description: 'Spicy chicken stew', is_available: true, image_url: null },
-            { id: 'm4', name: 'Kitfo', price: 550, description: 'Minced raw beef marinated in mitmita', is_available: true, image_url: null },
-            { id: 'm5', name: 'Tibbs', price: 400, description: 'Sautéed beef with vegetables', is_available: true, image_url: null }
-        ]
-    },
-    {
-        id: 'mock-cat-3',
-        name: 'Drinks',
-        name_am: null,
-        restaurant_id: 'mock-rest-1',
-        items: [
-            { id: 'm6', name: 'Coffee', price: 40, description: 'Traditional Ethiopian coffee', is_available: true, image_url: null },
-            { id: 'm7', name: 'Tea', price: 30, description: 'Spiced tea', is_available: true, image_url: null }
-        ]
-    }
-];
+
 
 type MenuDiffEntry = {
     label: string;
@@ -138,9 +104,21 @@ const computeMenuDiff = (baseline: ComparableCategory[], current: ComparableCate
 };
 
 export default function MenuPage() {
-    const [categories, setCategories] = useState<CategoryWithItems[]>([]);
-    const { loading, markLoaded } = usePageLoadGuard('menu');
-    const [isMockData, setIsMockData] = useState(false);
+    const [categories, setCategories] = useState<CategoryWithItems[]>(() => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const cached = sessionStorage.getItem('menu.cache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
+    const [loading, setLoading] = useState(() => {
+        if (typeof window === 'undefined') return true;
+        // If we have data in cache, don't show skeleton
+        const cached = sessionStorage.getItem('menu.cache');
+        if (cached) return false;
+        return sessionStorage.getItem('menu.initialLoadDone') !== '1';
+    });
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<CategoryWithItems | null>(null);
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -168,24 +146,22 @@ export default function MenuPage() {
     const diffEntries = computeMenuDiff(baselineCategoriesForDiff, currentComparableSnapshot);
 
     useEffect(() => {
+        if (!loading) {
+            try {
+                sessionStorage.setItem('menu.cache', JSON.stringify(categories));
+            } catch {}
+        }
+    }, [categories, loading]);
+
+    useEffect(() => {
         fetchMenu();
-        // Safety timeout — ensures loading clears even if fetch silently fails
-        const timer = setTimeout(() => {
-            markLoaded();
-        }, 3000);
-        return () => clearTimeout(timer);
     }, []);
 
     const fetchMenu = async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                const fallback = mockCategories as CategoryWithItems[];
-                setCategories(fallback);
-                if (!publishedSnapshot) {
-                    setPublishedSnapshot(toSnapshotString(fallback));
-                }
-                setIsMockData(true);
+                setCategories([]);
                 return;
             }
 
@@ -196,12 +172,7 @@ export default function MenuPage() {
                 .single();
 
             if (!staff) {
-                const fallback = mockCategories as CategoryWithItems[];
-                setCategories(fallback);
-                if (!publishedSnapshot) {
-                    setPublishedSnapshot(toSnapshotString(fallback));
-                }
-                setIsMockData(true);
+                setCategories([]);
                 return;
             }
 
@@ -217,34 +188,20 @@ export default function MenuPage() {
                 if (!publishedSnapshot) {
                     setPublishedSnapshot(toSnapshotString(liveCategories));
                 }
-                setIsMockData(false);
             } else {
-                const fallback = mockCategories as CategoryWithItems[];
-                setCategories(fallback);
-                if (!publishedSnapshot) {
-                    setPublishedSnapshot(toSnapshotString(fallback));
-                }
-                setIsMockData(true);
+                setCategories([]);
             }
         } catch (error) {
             console.error('Error fetching menu:', error);
-            const fallback = mockCategories as CategoryWithItems[];
-            setCategories(fallback);
-            if (!publishedSnapshot) {
-                setPublishedSnapshot(toSnapshotString(fallback));
-            }
-            setIsMockData(true);
-            toast.error('Could not load live menu data. Showing demo menu.');
+            toast.error('Could not load live menu data.');
+            setCategories([]);
         } finally {
-            markLoaded();
+            setLoading(false);
+            sessionStorage.setItem('menu.initialLoadDone', '1');
         }
     };
 
     const openCreateCategoryModal = () => {
-        if (isMockData) {
-            toast.error('Sign in as restaurant staff to edit live menu data.');
-            return;
-        }
         setCategoryMode('create');
         setCategoryToEdit(null);
         setCategoryName('');
@@ -253,10 +210,6 @@ export default function MenuPage() {
     };
 
     const openEditCategoryModal = (category: CategoryWithItems) => {
-        if (isMockData) {
-            toast.error('Sign in as restaurant staff to edit live menu data.');
-            return;
-        }
         setCategoryMode('edit');
         setCategoryToEdit(category);
         setCategoryName(category.name);
@@ -281,10 +234,7 @@ export default function MenuPage() {
             return;
         }
 
-        if (isMockData) {
-            toast.error('Sign in as restaurant staff to edit live menu data.');
-            return;
-        }
+
 
         try {
             setCategorySubmitting(true);
@@ -337,10 +287,6 @@ export default function MenuPage() {
 
     const handleDeleteCategory = async () => {
         if (!categoryToDelete) return;
-        if (isMockData) {
-            toast.error('Sign in as restaurant staff to edit live menu data.');
-            return;
-        }
 
         try {
             setDeleteSubmitting(true);
@@ -357,9 +303,6 @@ export default function MenuPage() {
     };
 
     const handleInlineItemSave = async (item: MenuItem, patch: InlineMenuItemPatch) => {
-        if (isMockData) {
-            throw new Error('Sign in as restaurant staff to edit live menu data.');
-        }
 
         const updatePayload: Partial<MenuItem> = {
             name: patch.name,
@@ -395,9 +338,6 @@ export default function MenuPage() {
     };
 
     const handleBulkAvailabilityUpdate = async (itemIds: string[], isAvailable: boolean) => {
-        if (isMockData) {
-            throw new Error('Sign in as restaurant staff to edit live menu data.');
-        }
 
         const { error } = await supabase
             .from('menu_items')
@@ -430,9 +370,6 @@ export default function MenuPage() {
     };
 
     const handleBulkPriceUpdate = async (updates: BulkPriceUpdate[]) => {
-        if (isMockData) {
-            throw new Error('Sign in as restaurant staff to edit live menu data.');
-        }
 
         await Promise.all(
             updates.map(async (update) => {
@@ -466,10 +403,6 @@ export default function MenuPage() {
     };
 
     const handleMoveCategory = async (categoryId: string, direction: 'up' | 'down') => {
-        if (isMockData) {
-            toast.error('Sign in as restaurant staff to edit live menu data.');
-            return;
-        }
 
         const currentIndex = categories.findIndex((category) => category.id === categoryId);
         if (currentIndex === -1) return;
@@ -504,10 +437,6 @@ export default function MenuPage() {
     };
 
     const handlePublishMenu = async () => {
-        if (isMockData) {
-            toast.error('Sign in as restaurant staff to publish menu changes.');
-            return;
-        }
 
         if (!hasUnsavedChanges) {
             toast('No draft changes to publish.');
@@ -528,10 +457,6 @@ export default function MenuPage() {
     const handleRollbackLatestPublish = async () => {
         if (!previousPublishedSnapshot) {
             toast.error('No previous published version available for rollback.');
-            return;
-        }
-        if (isMockData) {
-            toast.error('Sign in as restaurant staff to rollback menu changes.');
             return;
         }
 
@@ -650,14 +575,14 @@ export default function MenuPage() {
                     </button>
                     <button
                         onClick={() => setIsPublishModalOpen(true)}
-                        disabled={!hasUnsavedChanges || isMockData || isPublishing}
+                        disabled={!hasUnsavedChanges || isPublishing}
                         className="h-12 px-5 bg-emerald-600 text-white rounded-xl flex items-center gap-2 hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-900/10 font-bold text-sm disabled:opacity-50"
                     >
                         {isPublishing ? 'Publishing...' : 'Publish'}
                     </button>
                     <button
                         onClick={handleRollbackLatestPublish}
-                        disabled={!previousPublishedSnapshot || isRollbacking || isMockData}
+                        disabled={!previousPublishedSnapshot || isRollbacking}
                         className="h-12 px-5 bg-white text-black border border-gray-200 rounded-xl flex items-center gap-2 hover:bg-gray-50 transition-colors font-bold text-sm disabled:opacity-50"
                     >
                         {isRollbacking ? 'Rolling back...' : 'Rollback'}
@@ -687,7 +612,7 @@ export default function MenuPage() {
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => handleMoveCategory(category.id, 'up')}
-                                    disabled={isMockData || categories[0]?.id === category.id}
+                                    disabled={categories[0]?.id === category.id}
                                     className="h-9 w-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-all disabled:opacity-40"
                                     aria-label={`Move ${category.name} up`}
                                 >
@@ -695,7 +620,7 @@ export default function MenuPage() {
                                 </button>
                                 <button
                                     onClick={() => handleMoveCategory(category.id, 'down')}
-                                    disabled={isMockData || categories[categories.length - 1]?.id === category.id}
+                                    disabled={categories[categories.length - 1]?.id === category.id}
                                     className="h-9 w-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-all disabled:opacity-40"
                                     aria-label={`Move ${category.name} down`}
                                 >
@@ -721,7 +646,7 @@ export default function MenuPage() {
                         {/* Items Grid */}
                         <MenuGridEditor
                             category={category}
-                            readOnly={isMockData}
+                            readOnly={false}
                             onAddItem={(selected) => {
                                 setSelectedCategory(selected);
                                 setEditingItem(null);

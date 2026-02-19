@@ -25,7 +25,7 @@ export async function GET(
         return auth.response;
     }
 
-    const context = await getAuthorizedRestaurantContext(auth.user.id);
+    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
     if (!context.ok) {
         return context.response;
     }
@@ -62,7 +62,7 @@ export async function PATCH(
         return auth.response;
     }
 
-    const context = await getAuthorizedRestaurantContext(auth.user.id);
+    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
     if (!context.ok) {
         return context.response;
     }

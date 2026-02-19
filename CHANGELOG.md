@@ -11,6 +11,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added - 2026-02-18
 
+#### P2 Revenue and Cost Kickoff (Loyalty, Gift Cards, Campaigns)
+- Added migrations:
+  - `supabase/migrations/20260218_p2_loyalty_programs.sql`
+  - `supabase/migrations/20260218_p2_loyalty_accounts.sql`
+  - `supabase/migrations/20260218_p2_loyalty_transactions.sql`
+  - `supabase/migrations/20260218_p2_gift_cards.sql`
+  - `supabase/migrations/20260218_p2_gift_card_transactions.sql`
+  - `supabase/migrations/20260218_p2_campaigns.sql`
+  - `supabase/migrations/20260218_p2_campaign_deliveries.sql`
+  - `supabase/migrations/20260218_p2_segments.sql`
+- Added P2 revenue APIs:
+  - `GET /api/loyalty/programs` and `POST /api/loyalty/programs` in `src/app/api/loyalty/programs/route.ts`
+  - `POST /api/loyalty/accounts/:id/adjust` in `src/app/api/loyalty/accounts/[accountId]/adjust/route.ts`
+  - `GET /api/gift-cards` and `POST /api/gift-cards` in `src/app/api/gift-cards/route.ts`
+  - `POST /api/gift-cards/:id/redeem` in `src/app/api/gift-cards/[giftCardId]/redeem/route.ts`
+  - `GET /api/campaigns` and `POST /api/campaigns` in `src/app/api/campaigns/route.ts`
+  - `POST /api/campaigns/:id/launch` in `src/app/api/campaigns/[campaignId]/launch/route.ts`
+- Added P2 Guests UI growth components and page integration:
+  - `LoyaltyProgramBuilder` in `src/components/merchant/LoyaltyProgramBuilder.tsx`
+  - `GiftCardManager` in `src/components/merchant/GiftCardManager.tsx`
+  - `CampaignBuilder` in `src/components/merchant/CampaignBuilder.tsx`
+  - Guests page integration in `src/app/(dashboard)/merchant/guests/page.tsx`
+- Added campaign-to-order conversion attribution (`P2-015`):
+  - Guest menu flow now forwards optional campaign attribution (`cdid`/`cid`) from URL query params to order submit payload:
+    - `src/app/(guest)/[slug]/page.tsx`
+    - `src/features/menu/components/CartDrawer.tsx`
+  - `POST /api/orders` now accepts optional `campaign_attribution`, validates campaign ownership, and marks matching `campaign_deliveries` rows as converted (`status='converted'`, `conversion_order_id`):
+    - `src/app/api/orders/route.ts`
+  - Campaign tracking now counts conversions by either converted status or populated `conversion_order_id`:
+    - `src/app/api/campaigns/route.ts`
+  - Order lifecycle integration coverage extended for conversion attribution:
+    - `src/app/api/__tests__/order-lifecycle.integration.test.ts`
+- Added P2 API route unit tests:
+  - `src/app/api/__tests__/p2-revenue-api-routes.test.ts`
+- Extended rollout + rate-limit config for P2:
+  - Added `ENABLE_P2_PILOT_ROLLOUT` in `.env.example` and `src/lib/config/env.ts`
+  - Added P2 phase support in `src/lib/config/pilotRollout.ts`, `src/lib/api/pilotGate.ts`, and `src/lib/api/authz.ts`
+  - Updated `src/lib/api/rateLimitPolicies.ts`
+  - Extended pilot gate tests in `src/lib/api/__tests__/pilotGate.test.ts`
+
 #### P1 Team Operations and Alerting
 - Added migrations:
   - `supabase/migrations/20260218_p1_shifts.sql`
@@ -88,6 +128,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `src/components/merchant/GuestProfileDrawer.tsx`
   - `src/components/merchant/Sidebar.tsx`
   - `src/components/merchant/MobileBottomNav.tsx`
+
+#### P1 Quality and Release
+- Added Phase 5.4 E2E coverage:
+  - Guest directory + profile edit flow in `e2e/guests-directory-profile.spec.ts`
+  - Channels health + delivery acknowledge flow in `e2e/channels-health-delivery-ack.spec.ts`
+- Added localization/accessibility regression E2E for P1 surfaces:
+  - `e2e/p1-localization-accessibility.spec.ts`
+- Improved P1 Guests and Channels UI accessibility:
+  - Added dialog semantics, label associations, aria-labels, and alert roles
+  - Added table caption/column scope semantics for external orders table
+  - Files:
+    - `src/components/merchant/GuestDirectory.tsx`
+    - `src/components/merchant/GuestProfileDrawer.tsx`
+    - `src/components/merchant/ChannelHealthBoard.tsx`
+    - `src/components/merchant/OnlineOrderingSettingsPanel.tsx`
+    - `src/components/merchant/DeliveryPartnerHub.tsx`
+- Applied P1 locale formatting regression fixes on key date/currency displays:
+  - `src/app/(dashboard)/merchant/guests/page.tsx`
+  - `src/components/merchant/GuestDirectory.tsx`
+  - `src/components/merchant/GuestProfileDrawer.tsx`
+  - `src/components/merchant/DeliveryPartnerHub.tsx`
+- Added P1 cohort rollout controls and docs:
+  - New flag `ENABLE_P1_PILOT_ROLLOUT` in `.env.example` and `src/lib/config/env.ts`
+  - Phase-aware pilot gating updates:
+    - `src/lib/config/pilotRollout.ts`
+    - `src/lib/api/pilotGate.ts`
+    - `src/lib/api/authz.ts`
+  - Applied P1 phase gating on Guests, Channels, Team Ops, and Alerting APIs
+  - Added rollout runbook: `docs/implementation/p1-controlled-rollout-by-cohort.md`
+  - Added pilot gate phase unit tests: `src/lib/api/__tests__/pilotGate.test.ts`
 
 ### Added - 2026-02-17
 

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-
 import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function PostLoginPage() {
@@ -28,6 +27,9 @@ export default function PostLoginPage() {
                     return;
                 }
 
+                setMessage('Setting up your workspace...');
+
+                // Get the user's staff record and the associated restaurant's onboarding status
                 const { data: staff } = await supabase
                     .rpc('get_my_staff_role', { p_restaurant_id: null })
                     .returns<{ role: string; restaurant_id: string }[]>()
@@ -35,7 +37,29 @@ export default function PostLoginPage() {
 
                 if (cancelled) return;
 
-                if (staff?.role === 'kitchen') {
+                if (!staff?.restaurant_id) {
+                    // No restaurant at all — shouldn't happen due to DB trigger, but handle it
+                    router.replace('/merchant/onboarding');
+                    return;
+                }
+
+                // Check if the restaurant has completed the onboarding wizard
+                const { data: restaurant } = await supabase
+                    .from('restaurants')
+                    .select('onboarding_completed')
+                    .eq('id', staff.restaurant_id)
+                    .maybeSingle();
+
+                if (cancelled) return;
+
+                if (!restaurant?.onboarding_completed) {
+                    // Auto-bootstrapped but wizard not completed → send to onboarding
+                    router.replace('/merchant/onboarding');
+                    return;
+                }
+
+                // Fully onboarded — route by role
+                if (staff.role === 'kitchen') {
                     router.replace('/kds');
                 } else {
                     router.replace('/merchant');

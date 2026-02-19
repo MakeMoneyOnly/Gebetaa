@@ -54,6 +54,11 @@ interface GuestContextPayload {
     exp: number;
 }
 
+interface CampaignAttributionPayload {
+    campaign_delivery_id: string;
+    campaign_id?: string;
+}
+
 function MenuContent() {
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
     const [cartOpen, setCartOpen] = useState(false);
@@ -69,6 +74,8 @@ function MenuContent() {
     const tableNumber = searchParams.get('table');
     const signature = searchParams.get('sig');
     const expiresAt = searchParams.get('exp');
+    const campaignDeliveryId = searchParams.get('cdid') ?? searchParams.get('campaign_delivery_id');
+    const campaignId = searchParams.get('cid') ?? searchParams.get('campaign_id');
     const slug = params.slug;
     const { addToCart, count } = useCart();
     
@@ -375,6 +382,14 @@ function MenuContent() {
                     table: guestContext.table_number,
                     sig: guestContext.sig,
                     exp: guestContext.exp,
+                    ...(campaignDeliveryId
+                        ? {
+                            campaign_attribution: {
+                                campaign_delivery_id: campaignDeliveryId,
+                                ...(campaignId ? { campaign_id: campaignId } : {}),
+                            } as CampaignAttributionPayload,
+                        }
+                        : {}),
                 }}
                 tableNumber={guestContext.table_number}
             />

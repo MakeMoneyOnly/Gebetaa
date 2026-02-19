@@ -31,6 +31,7 @@ import {
 import { Skeleton } from '@/components/ui/Skeleton';
 import { isAbortError } from '@/hooks/useSafeFetch';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { useMerchantActivity } from '@/hooks/useMerchantActivity';
 
 const STALE_AFTER_MS = 90_000;
 
@@ -68,6 +69,7 @@ export default function MerchantDashboard() {
     const [range, setRange] = useState<CommandCenterRange>('today');
     const [commandCenter, setCommandCenter] = useState<CommandCenterData | null>(null);
     const { loading, markLoaded } = usePageLoadGuard('dashboard');
+    const { restaurantName } = useMerchantActivity();
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [timeTick, setTimeTick] = useState(Date.now());
@@ -235,7 +237,9 @@ export default function MerchantDashboard() {
         <div className="space-y-8 pb-10">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Hello, Saba Grill</h1>
+                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">
+                        Hello, {restaurantName}
+                    </h1>
                     <p className="text-gray-500 font-medium">Here&apos;s your daily performance summary.</p>
                 </div>
 

@@ -42,6 +42,7 @@ const PROVIDERS: Array<'beu' | 'deliver_addis' | 'zmall' | 'esoora' | 'custom_lo
     'esoora',
     'custom_local',
 ];
+const DASHBOARD_LOCALE = 'en-ET';
 
 function toLabel(value: string) {
     return value.replace(/_/g, ' ').replace(/\b\w/g, (match) => match.toUpperCase());
@@ -56,6 +57,9 @@ export function DeliveryPartnerHub({
     onConnect,
     onAcknowledge,
 }: DeliveryPartnerHubProps) {
+    const providerToConnectId = 'delivery-provider-connect';
+    const displayNameId = 'delivery-provider-display-name';
+    const providerFilterId = 'delivery-provider-filter';
     const [providerToConnect, setProviderToConnect] = useState<'beu' | 'deliver_addis' | 'zmall' | 'esoora' | 'custom_local'>('beu');
     const [displayName, setDisplayName] = useState('');
     const [providerFilter, setProviderFilter] = useState<string>('all');
@@ -76,9 +80,10 @@ export function DeliveryPartnerHub({
 
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
                 <div className="rounded-xl border border-gray-200 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Connect Provider</p>
+                    <label htmlFor={providerToConnectId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Connect Provider</label>
                     <div className="mt-2 flex items-center gap-2">
                         <select
+                            id={providerToConnectId}
                             value={providerToConnect}
                             onChange={(event) => setProviderToConnect(event.target.value as typeof providerToConnect)}
                             className="h-10 flex-1 rounded-lg border border-gray-200 px-2 text-sm outline-none focus:border-gray-400"
@@ -90,13 +95,18 @@ export function DeliveryPartnerHub({
                             ))}
                         </select>
                     </div>
+                    <label htmlFor={displayNameId} className="sr-only">
+                        Provider display name
+                    </label>
                     <input
+                        id={displayNameId}
                         value={displayName}
                         onChange={(event) => setDisplayName(event.target.value)}
                         placeholder="Display name (optional)"
                         className="mt-2 h-10 w-full rounded-lg border border-gray-200 px-2 text-sm outline-none focus:border-gray-400"
                     />
                     <button
+                        type="button"
                         onClick={() => void onConnect(providerToConnect, displayName.trim() || undefined)}
                         disabled={connecting}
                         className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-black text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
@@ -115,7 +125,7 @@ export function DeliveryPartnerHub({
                                 <div>
                                     <p className="text-sm font-semibold text-gray-900">{toLabel(partner.provider)}</p>
                                     <p className="text-xs text-gray-500">
-                                        Updated {new Date(partner.updated_at).toLocaleString()}
+                                        Updated {new Date(partner.updated_at).toLocaleString(DASHBOARD_LOCALE)}
                                     </p>
                                 </div>
                                 <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
@@ -135,8 +145,9 @@ export function DeliveryPartnerHub({
 
             <div className="rounded-xl border border-gray-200 p-3">
                 <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">External Orders</p>
+                    <label htmlFor={providerFilterId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">External Orders</label>
                     <select
+                        id={providerFilterId}
                         value={providerFilter}
                         onChange={(event) => setProviderFilter(event.target.value)}
                         className="h-9 rounded-lg border border-gray-200 px-2 text-xs font-semibold text-gray-700 outline-none focus:border-gray-400"
@@ -157,14 +168,15 @@ export function DeliveryPartnerHub({
                 ) : (
                     <div className="mt-2 overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
+                            <caption className="sr-only">External delivery orders by provider with acknowledgment actions.</caption>
                             <thead className="text-xs uppercase tracking-wide text-gray-500">
                                 <tr>
-                                    <th className="py-2">Provider</th>
-                                    <th className="py-2">Order Ref</th>
-                                    <th className="py-2">Status</th>
-                                    <th className="py-2">Amount</th>
-                                    <th className="py-2">Created</th>
-                                    <th className="py-2">Action</th>
+                                    <th scope="col" className="py-2">Provider</th>
+                                    <th scope="col" className="py-2">Order Ref</th>
+                                    <th scope="col" className="py-2">Status</th>
+                                    <th scope="col" className="py-2">Amount</th>
+                                    <th scope="col" className="py-2">Created</th>
+                                    <th scope="col" className="py-2">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,9 +186,14 @@ export function DeliveryPartnerHub({
                                         <td className="py-2 font-mono text-xs text-gray-700">{order.provider_order_id}</td>
                                         <td className="py-2 text-gray-700">{toLabel(order.normalized_status)}</td>
                                         <td className="py-2 text-gray-700">
-                                            {Number(order.total_amount).toFixed(2)} {order.currency}
+                                            {new Intl.NumberFormat(DASHBOARD_LOCALE, {
+                                                style: 'currency',
+                                                currency: order.currency || 'ETB',
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                            }).format(Number(order.total_amount ?? 0))}
                                         </td>
-                                        <td className="py-2 text-gray-500">{new Date(order.created_at).toLocaleString()}</td>
+                                        <td className="py-2 text-gray-500">{new Date(order.created_at).toLocaleString(DASHBOARD_LOCALE)}</td>
                                         <td className="py-2">
                                             {order.acked_at ? (
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-bold text-emerald-700">
@@ -185,8 +202,10 @@ export function DeliveryPartnerHub({
                                                 </span>
                                             ) : (
                                                 <button
+                                                    type="button"
                                                     onClick={() => void onAcknowledge(order.id)}
                                                     disabled={acknowledgingId === order.id}
+                                                    aria-label={`Acknowledge external order ${order.provider_order_id}`}
                                                     className="inline-flex h-8 items-center gap-1 rounded-lg bg-black px-2 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                                                 >
                                                     {acknowledgingId === order.id ? (

@@ -23,22 +23,22 @@ import { toast } from 'react-hot-toast';
 import { isAbortError } from '@/hooks/useSafeFetch';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
-// Mock Data (matches dashboard styling/logic)
-const mockTables: any[] = [
-    { id: 't1', table_number: 'A1', status: 'available', qr_code_url: '', active_order_id: null },
-    { id: 't2', table_number: 'A2', status: 'occupied', qr_code_url: '', active_order_id: 'ord-1' },
-    { id: 't3', table_number: 'B1', status: 'reserved', qr_code_url: '', active_order_id: null },
-    { id: 't4', table_number: 'B2', status: 'bill_requested', qr_code_url: '', active_order_id: 'ord-2' },
-    { id: 't5', table_number: 'C1', status: 'available', qr_code_url: '', active_order_id: null },
-    { id: 't6', table_number: 'C2', status: 'available', qr_code_url: '', active_order_id: null },
-    { id: 't7', table_number: 'D1', status: 'occupied', qr_code_url: '', active_order_id: 'ord-3' },
-];
+
 
 export default function TablesPage() {
-    const [tables, setTables] = useState<TableGridRow[]>([]);
+    const [tables, setTables] = useState<TableGridRow[]>(() => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const cached = sessionStorage.getItem('tables.cache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
     const [selectedTableQR, setSelectedTableQR] = useState<TableGridRow | null>(null);
     const [selectedTableQrUrl, setSelectedTableQrUrl] = useState<string | null>(null);
-    const { loading, markLoaded } = usePageLoadGuard('tables');
+    // If we have cached tables, we can consider the page loaded enough to show content
+    // while we fetch updates in background.
+    const { loading: guardLoading, markLoaded } = usePageLoadGuard('tables');
+    const loading = guardLoading && tables.length === 0;
     const [error, setError] = useState<string | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -69,29 +69,37 @@ export default function TablesPage() {
         assigned_staff_id: string | null;
         notes: string | null;
     } | null>(null);
-    const [timelineBuckets, setTimelineBuckets] = useState<OccupancyTimelineBucket[]>([]);
+    const [timelineBuckets, setTimelineBuckets] = useState<OccupancyTimelineBucket[]>(() => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const cached = sessionStorage.getItem('tables.timeline.cache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
     const [isQrLoading, setIsQrLoading] = useState(false);
     
     // Ref for abort controller
     const abortControllerRef = useRef<AbortController | null>(null);
     const isMountedRef = useRef(true);
 
-    const { user } = useRole(null);
+    const { user, loading: roleLoading } = useRole(null);
     const supabase = createClient();
 
     // Stats calculations
     const totalTables = tables.length;
     const activeTables = tables.filter(t => t.status !== 'available').length;
     const availableTables = tables.filter(t => t.status === 'available').length;
+    const reservedTables = tables.filter(t => t.status === 'reserved').length;
     const utilizationRate = totalTables > 0 ? Math.round((activeTables / totalTables) * 100) : 0;
 
     useEffect(() => {
         isMountedRef.current = true;
         
+        if (roleLoading) return;
+
         if (!user) {
             markLoaded();
-            setTables(mockTables as TableGridRow[]);
-            setError('Sign in to manage live tables. Showing sample data.');
+            setTables([]);
             return;
         }
 
@@ -106,7 +114,7 @@ export default function TablesPage() {
             isMountedRef.current = false;
             abortControllerRef.current?.abort();
         };
-    }, [user, supabase]);
+    }, [user, roleLoading, supabase]);
 
     useEffect(() => {
         const channel = supabase
@@ -142,6 +150,9 @@ export default function TablesPage() {
             }));
             if (isMountedRef.current) {
                 setTables(liveTables);
+                try {
+                    sessionStorage.setItem('tables.cache', JSON.stringify(liveTables));
+                } catch {}
             }
         } catch (error) {
             // Silently ignore abort errors
@@ -151,7 +162,7 @@ export default function TablesPage() {
             console.error('Error fetching tables:', error);
             setError(error instanceof Error ? error.message : 'Failed to fetch tables.');
             if (!tables.length && isMountedRef.current) {
-                setTables(mockTables as TableGridRow[]);
+                setTables([]);
             }
         } finally {
             if (isMountedRef.current) {
@@ -208,6 +219,14 @@ export default function TablesPage() {
                         closes: value.closes,
                     }))
                 );
+                try {
+                     const buckets = Array.from(bucketsMap.entries()).map(([label, value]) => ({
+                        label,
+                        opens: value.opens,
+                        closes: value.closes,
+                    }));
+                    sessionStorage.setItem('tables.timeline.cache', JSON.stringify(buckets));
+                } catch {}
             }
         } catch (error) {
             // Silently ignore abort errors
@@ -217,6 +236,7 @@ export default function TablesPage() {
             console.error(error);
             if (isMountedRef.current) {
                 setTimelineBuckets([]);
+                try { sessionStorage.removeItem('tables.timeline.cache'); } catch {}
             }
         }
     };
@@ -629,7 +649,7 @@ export default function TablesPage() {
                         </div>
                         <div className="flex justify-between items-center gap-1">
                             {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = Math.round((totalTables / 30) * 20) || 10; // Mock calculation
+                                const activeCount = Math.round((totalTables / (totalTables || 1)) * 20);
                                 const isActive = i < activeCount;
                                 const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
                                 return (
@@ -695,7 +715,7 @@ export default function TablesPage() {
                             <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
                                 Upcoming
                             </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">2</h3>
+                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{reservedTables}</h3>
                         </div>
                     </div>
 
@@ -706,12 +726,12 @@ export default function TablesPage() {
                         </div>
 
                         <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
-                            <span>Reserved: 2</span>
+                            <span>Reserved: {reservedTables}</span>
                             <span>Total: {totalTables}</span>
                         </div>
                         <div className="flex justify-between items-center gap-1">
                             {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = 4; // Mock
+                                const activeCount = Math.round((reservedTables / (totalTables || 1)) * 20);
                                 const isActive = i < activeCount;
                                 const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
                                 return (

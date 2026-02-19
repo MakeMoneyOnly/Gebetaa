@@ -5,12 +5,27 @@ import { createHmac, timingSafeEqual } from 'crypto';
  *
  * Addresses PLATFORM_AUDIT_REPORT finding SEC-H6: HMAC-signed QR codes
  * Ensures QR codes are authentic and haven't been tampered with
+ *
+ * SECURITY: QR_HMAC_SECRET is required for production use.
+ * Generate a secure key: openssl rand -hex 32
  */
 
-const HMAC_SECRET =
-    process.env.QR_HMAC_SECRET ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
-    'default-secret-change-in-production';
+function getHmacSecret(): string {
+    const secret = process.env.QR_HMAC_SECRET;
+    if (!secret) {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('QR_HMAC_SECRET is missing. Using fallback secret for development.');
+            return 'dev_fallback_secret_do_not_use_in_production';
+        }
+        throw new Error(
+            'QR_HMAC_SECRET environment variable is required. ' +
+                'Generate a secure key: openssl rand -hex 32'
+        );
+    }
+    return secret;
+}
+
+const HMAC_SECRET: string = getHmacSecret();
 
 /**
  * Generate HMAC signature for QR code data

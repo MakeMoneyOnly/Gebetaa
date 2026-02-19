@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Loader2, Save, Star, X } from 'lucide-react';
 
 type GuestDetail = {
@@ -43,6 +43,7 @@ interface GuestProfileDrawerProps {
 }
 
 const QUICK_TAGS = ['vip', 'frequent', 'weekday-lunch', 'family', 'delivery-fan'];
+const DASHBOARD_LOCALE = 'en-ET';
 
 function parseTags(value: string) {
     return value
@@ -61,6 +62,11 @@ export function GuestProfileDrawer({
     onClose,
     onSave,
 }: GuestProfileDrawerProps) {
+    const drawerHeadingId = useId();
+    const nameInputId = useId();
+    const languageInputId = useId();
+    const tagsInputId = useId();
+    const notesInputId = useId();
     const [name, setName] = useState('');
     const [language, setLanguage] = useState<'en' | 'am'>('en');
     const [tagsInput, setTagsInput] = useState('');
@@ -94,16 +100,23 @@ export function GuestProfileDrawer({
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
-            <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-6 shadow-2xl">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={drawerHeadingId}
+                className="h-full w-full max-w-xl overflow-y-auto bg-white p-6 shadow-2xl"
+            >
                 <div className="flex items-start justify-between">
                     <div>
-                        <h3 className="text-xl font-bold text-gray-900">Guest Profile</h3>
+                        <h3 id={drawerHeadingId} className="text-xl font-bold text-gray-900">Guest Profile</h3>
                         <p className="mt-1 text-sm text-gray-500">
                             {guest?.name?.trim() || (guest ? `Guest ${guest.id.slice(0, 8)}` : 'Loading...')}
                         </p>
                     </div>
                     <button
+                        type="button"
                         onClick={onClose}
+                        aria-label="Close guest profile drawer"
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
                     >
                         <X className="h-5 w-5" />
@@ -111,7 +124,7 @@ export function GuestProfileDrawer({
                 </div>
 
                 {loading || !guest ? (
-                    <div className="mt-6 inline-flex items-center gap-2 text-sm text-gray-500">
+                    <div role="status" aria-live="polite" className="mt-6 inline-flex items-center gap-2 text-sm text-gray-500">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading guest profile...
                     </div>
@@ -124,21 +137,33 @@ export function GuestProfileDrawer({
                             </div>
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Lifetime Value</p>
-                                <p className="mt-1 text-lg font-bold text-gray-900">{guest.lifetime_value.toFixed(2)} ETB</p>
+                                <p className="mt-1 text-lg font-bold text-gray-900">
+                                    {new Intl.NumberFormat(DASHBOARD_LOCALE, {
+                                        style: 'currency',
+                                        currency: 'ETB',
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    }).format(Number(guest.lifetime_value ?? 0))}
+                                </p>
                             </div>
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">First Seen</p>
-                                <p className="mt-1 text-sm font-semibold text-gray-800">{new Date(guest.first_seen_at).toLocaleDateString()}</p>
+                                <p className="mt-1 text-sm font-semibold text-gray-800">
+                                    {new Date(guest.first_seen_at).toLocaleDateString(DASHBOARD_LOCALE)}
+                                </p>
                             </div>
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Last Seen</p>
-                                <p className="mt-1 text-sm font-semibold text-gray-800">{new Date(guest.last_seen_at).toLocaleDateString()}</p>
+                                <p className="mt-1 text-sm font-semibold text-gray-800">
+                                    {new Date(guest.last_seen_at).toLocaleDateString(DASHBOARD_LOCALE)}
+                                </p>
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Name</label>
+                            <label htmlFor={nameInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Name</label>
                             <input
+                                id={nameInputId}
                                 value={name}
                                 onChange={(event) => setName(event.target.value)}
                                 placeholder="Guest name"
@@ -147,8 +172,9 @@ export function GuestProfileDrawer({
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Language</label>
+                            <label htmlFor={languageInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Language</label>
                             <select
+                                id={languageInputId}
                                 value={language}
                                 onChange={(event) => setLanguage(event.target.value as 'en' | 'am')}
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
@@ -159,8 +185,9 @@ export function GuestProfileDrawer({
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Segmentation Tags</label>
+                            <label htmlFor={tagsInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Segmentation Tags</label>
                             <input
+                                id={tagsInputId}
                                 value={tagsInput}
                                 onChange={(event) => setTagsInput(event.target.value)}
                                 placeholder="vip, frequent, family"
@@ -185,8 +212,9 @@ export function GuestProfileDrawer({
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Notes</label>
+                            <label htmlFor={notesInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Notes</label>
                             <textarea
+                                id={notesInputId}
                                 value={notes}
                                 onChange={(event) => setNotes(event.target.value)}
                                 placeholder="Preferences, allergies, seating notes..."
@@ -197,6 +225,7 @@ export function GuestProfileDrawer({
                         <button
                             type="button"
                             onClick={() => setIsVip((value) => !value)}
+                            aria-pressed={isVip}
                             className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${
                                 isVip ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'
                             }`}
@@ -218,11 +247,16 @@ export function GuestProfileDrawer({
                                                     {visit.channel}
                                                 </span>
                                                 <span className="text-xs font-semibold text-gray-800">
-                                                    {visit.spend.toFixed(2)} ETB
+                                                    {new Intl.NumberFormat(DASHBOARD_LOCALE, {
+                                                        style: 'currency',
+                                                        currency: 'ETB',
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                    }).format(Number(visit.spend ?? 0))}
                                                 </span>
                                             </div>
                                             <p className="mt-1 text-xs text-gray-500">
-                                                {new Date(visit.visited_at).toLocaleString()}
+                                                {new Date(visit.visited_at).toLocaleString(DASHBOARD_LOCALE)}
                                             </p>
                                         </div>
                                     ))

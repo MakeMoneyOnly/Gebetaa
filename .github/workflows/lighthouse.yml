@@ -1,0 +1,56 @@
+name: Lighthouse CI
+
+on:
+    pull_request:
+        branches: [main, develop]
+    push:
+        branches: [main]
+
+env:
+    NODE_VERSION: '20'
+    PNPM_VERSION: '9'
+
+jobs:
+    lighthouse:
+        name: Lighthouse Audit
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build application
+              run: pnpm build
+              env:
+                  # Provide dummy env vars for build
+                  NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: dummy-key
+                  SUPABASE_SERVICE_ROLE_KEY: dummy-service-key
+                  QR_HMAC_SECRET: dummy-hmac-secret-for-ci-min-32-chars
+                  DATABASE_URL: postgresql://dummy
+
+            - name: Run Lighthouse CI
+              uses: treosh/lighthouse-ci-action@v11
+              with:
+                  configPath: ./lighthouserc.json
+                  budgetPath: ./lighthouse-budget.json
+                  uploadArtifacts: true
+                  temporaryPublicStorage: true
+
+            - name: Upload Lighthouse results
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: lighthouse-results
+                  path: .lighthouseci/
+                  retention-days: 7

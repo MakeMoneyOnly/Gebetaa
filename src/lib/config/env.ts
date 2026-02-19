@@ -44,6 +44,8 @@ const envSchema = z.object({
     ENABLE_ANALYTICS: z.coerce.boolean().default(true),
     RATE_LIMIT_ENABLED: z.coerce.boolean().default(true),
     ENABLE_P0_PILOT_ROLLOUT: z.coerce.boolean().default(false),
+    ENABLE_P1_PILOT_ROLLOUT: z.coerce.boolean().default(false),
+    ENABLE_P2_PILOT_ROLLOUT: z.coerce.boolean().default(false),
     PILOT_RESTAURANT_IDS: z.string().default(''),
     PILOT_BLOCK_MUTATIONS: z.coerce.boolean().default(false),
 
@@ -172,6 +174,8 @@ export function isFeatureEnabled(feature: keyof Pick<Env,
     | 'ENABLE_ANALYTICS'
     | 'RATE_LIMIT_ENABLED'
     | 'ENABLE_P0_PILOT_ROLLOUT'
+    | 'ENABLE_P1_PILOT_ROLLOUT'
+    | 'ENABLE_P2_PILOT_ROLLOUT'
 >): boolean {
     return getEnv()[feature] ?? false;
 }

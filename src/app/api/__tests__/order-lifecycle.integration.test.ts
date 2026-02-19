@@ -185,6 +185,8 @@ function createHarness() {
     const store: TableStore = {
         orders: [],
         order_events: [],
+        campaigns: [],
+        campaign_deliveries: [],
         restaurant_staff: [
             { id: '11111111-1111-4111-8111-111111111111', user_id: 'staff-user-1', restaurant_id: 'rest-1', is_active: true, role: 'manager' },
             { id: '22222222-2222-4222-8222-222222222222', user_id: 'staff-user-2', restaurant_id: 'rest-1', is_active: true, role: 'waiter' },
@@ -250,10 +252,27 @@ describe('Order lifecycle integration', () => {
             return { success: true, order: row } as any;
         });
 
+        harness.store.campaigns.push({
+            id: 'f1b8b787-11a5-4e78-8f50-91dcae7e96dd',
+            restaurant_id: 'rest-1',
+            status: 'running',
+        });
+        harness.store.campaign_deliveries.push({
+            id: '0f7f4423-f383-4f0f-9238-2c80112de20d',
+            campaign_id: 'f1b8b787-11a5-4e78-8f50-91dcae7e96dd',
+            guest_id: 'guest-1',
+            status: 'sent',
+            conversion_order_id: null,
+        });
+
         const createResponse = await postOrder(new NextRequest('http://localhost/api/orders', {
             method: 'POST',
             body: JSON.stringify({
                 guest_context: { slug: 'demo', table: 'T1', sig: 'abc', exp: 9999999999 },
+                campaign_attribution: {
+                    campaign_delivery_id: '0f7f4423-f383-4f0f-9238-2c80112de20d',
+                    campaign_id: 'f1b8b787-11a5-4e78-8f50-91dcae7e96dd',
+                },
                 items: [{ id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', name: 'Burger', quantity: 1, price: 100 }],
                 total_price: 100,
             }),
@@ -266,6 +285,9 @@ describe('Order lifecycle integration', () => {
         expect(createResponse.status).toBe(201);
         const created = await createResponse.json();
         expect(created.data.id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+        expect(created.data.campaign_attribution_applied).toBe(true);
+        expect(harness.store.campaign_deliveries[0].status).toBe('converted');
+        expect(harness.store.campaign_deliveries[0].conversion_order_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
 
         const queueResponse = await getOrders(new NextRequest('http://localhost/api/orders?limit=20'));
         expect(queueResponse.status).toBe(200);

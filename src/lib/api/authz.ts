@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { apiError } from '@/lib/api/response';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 
+type PilotPhase = 'p0' | 'p1' | 'p2';
+
 export async function getAuthenticatedUser() {
     const supabase = await createClient();
     const {
@@ -16,7 +18,8 @@ export async function getAuthenticatedUser() {
     return { ok: true as const, user, supabase };
 }
 
-export async function getAuthorizedRestaurantContext(userId: string) {
+export async function getAuthorizedRestaurantContext(userId: string, options?: { phase?: PilotPhase }) {
+    const phase = options?.phase ?? 'p0';
     const supabase = await createClient();
 
     const { data: staffEntry, error: staffError } = await supabase
@@ -35,7 +38,7 @@ export async function getAuthorizedRestaurantContext(userId: string) {
     }
 
     if (staffEntry?.restaurant_id) {
-        const pilotGateResponse = enforcePilotAccess(staffEntry.restaurant_id);
+        const pilotGateResponse = enforcePilotAccess(staffEntry.restaurant_id, undefined, { phase });
         if (pilotGateResponse) {
             return { ok: false as const, response: pilotGateResponse };
         }
@@ -64,7 +67,7 @@ export async function getAuthorizedRestaurantContext(userId: string) {
         };
     }
 
-    const pilotGateResponse = enforcePilotAccess(restaurantId);
+    const pilotGateResponse = enforcePilotAccess(restaurantId, undefined, { phase });
     if (pilotGateResponse) {
         return { ok: false as const, response: pilotGateResponse };
     }

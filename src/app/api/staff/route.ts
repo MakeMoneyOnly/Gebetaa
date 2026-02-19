@@ -1,5 +1,6 @@
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 export async function GET() {
     const auth = await getAuthenticatedUser();
@@ -12,9 +13,19 @@ export async function GET() {
         return context.response;
     }
 
-    const { data, error } = await context.supabase
-        .from('restaurant_staff')
-        .select('id, user_id, role, is_active, created_at')
+    // Query the enriched view that joins restaurant_staff with auth.users
+    // This gives us real email/name which requires service role access to auth.users
+    let adminClient;
+    try {
+        adminClient = createServiceRoleClient();
+    } catch (e) {
+        console.error('Service Role Client Creation Failed:', e);
+        return apiError('Server configuration error', 500, 'CONFIG_ERROR');
+    }
+    
+    const { data, error } = await adminClient
+        .from('restaurant_staff_with_users')
+        .select('id, user_id, role, is_active, created_at, email, full_name, name, first_name, last_name')
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: true });
 

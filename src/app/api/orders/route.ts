@@ -1,3 +1,103 @@
+/**
+ * @openapi
+ * /api/orders:
+ *   get:
+ *     summary: List orders
+ *     description: Retrieve a paginated list of orders for the authenticated user's restaurant
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by order status
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by table number, order number, or customer name
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *           maximum: 200
+ *         description: Maximum number of orders to return
+ *     responses:
+ *       200:
+ *         description: List of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     orders:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Order'
+ *                     total:
+ *                       type: integer
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: No restaurant found for user
+ *   post:
+ *     summary: Create a new order
+ *     description: Create a new order from guest context with HMAC-validated QR code
+ *     tags:
+ *       - Orders
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - guest_context
+ *               - items
+ *               - total_price
+ *             properties:
+ *               guest_context:
+ *                 type: object
+ *                 required:
+ *                   - slug
+ *                   - table
+ *                   - sig
+ *                   - exp
+ *                 properties:
+ *                   slug:
+ *                     type: string
+ *                   table:
+ *                     type: string
+ *                   sig:
+ *                     type: string
+ *                   exp:
+ *                     type: string
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/OrderItem'
+ *               total_price:
+ *                 type: number
+ *               notes:
+ *                 type: string
+ *               idempotency_key:
+ *                 type: string
+ *                 format: uuid
+ *     responses:
+ *       201:
+ *         description: Order created successfully
+ *       400:
+ *         description: Invalid request
+ *       429:
+ *         description: Rate limit exceeded
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
@@ -31,6 +131,12 @@ const CreateOrderRequestSchema = CreateOrderSchema.omit({
         exp: z.union([z.string(), z.number()]),
     }),
     idempotency_key: z.string().uuid().optional(),
+    campaign_attribution: z
+        .object({
+            campaign_delivery_id: z.string().uuid(),
+            campaign_id: z.string().uuid().optional(),
+        })
+        .optional(),
 });
 
 async function resolveRestaurantIdForUser(userId: string) {
@@ -211,6 +317,49 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: result.error }, { status: 400 });
         }
 
+        let campaignAttributionApplied = false;
+        if (parsed.data.campaign_attribution) {
+            const attribution = parsed.data.campaign_attribution;
+            const { data: delivery, error: deliveryError } = await (supabase as any)
+                .from('campaign_deliveries' as any)
+                .select('id, campaign_id, conversion_order_id')
+                .eq('id', attribution.campaign_delivery_id)
+                .maybeSingle();
+
+            if (deliveryError) {
+                console.warn('[POST /api/orders] campaign delivery lookup failed:', deliveryError.message);
+            } else if (delivery) {
+                const campaignMatches = !attribution.campaign_id || attribution.campaign_id === delivery.campaign_id;
+                if (campaignMatches) {
+                    const { data: campaign, error: campaignError } = await (supabase as any)
+                        .from('campaigns' as any)
+                        .select('id')
+                        .eq('id', delivery.campaign_id)
+                        .eq('restaurant_id', guestContext.data.restaurantId)
+                        .maybeSingle();
+
+                    if (campaignError) {
+                        console.warn('[POST /api/orders] campaign validation failed:', campaignError.message);
+                    } else if (campaign && !delivery.conversion_order_id) {
+                        const { error: updateDeliveryError } = await (supabase as any)
+                            .from('campaign_deliveries' as any)
+                            .update({
+                                status: 'converted',
+                                conversion_order_id: result.order.id,
+                                clicked_at: new Date().toISOString(),
+                            })
+                            .eq('id', delivery.id);
+
+                        if (updateDeliveryError) {
+                            console.warn('[POST /api/orders] campaign conversion update failed:', updateDeliveryError.message);
+                        } else {
+                            campaignAttributionApplied = true;
+                        }
+                    }
+                }
+            }
+        }
+
         const { error: auditError } = await supabase.from('audit_logs').insert({
             restaurant_id: guestContext.data.restaurantId,
             action: 'order_created_guest',
@@ -221,6 +370,8 @@ export async function POST(request: NextRequest) {
                 item_count: parsed.data.items.length,
                 source: 'guest_web',
                 slug: guestContext.data.slug,
+                campaign_attribution: parsed.data.campaign_attribution ?? null,
+                campaign_attribution_applied: campaignAttributionApplied,
             },
             new_value: {
                 status: result.order.status,
@@ -238,6 +389,7 @@ export async function POST(request: NextRequest) {
                     order_number: result.order.order_number,
                     status: result.order.status,
                     idempotency_key: idempotencyKey,
+                    campaign_attribution_applied: campaignAttributionApplied,
                 },
             },
             { status: 201 }

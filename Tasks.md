@@ -198,31 +198,31 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 5.4 P1 Quality and Release
 
-- [ ] `P1-031` Add E2E for guest directory and profile flows.
-- [ ] `P1-032` Add E2E for channel health and delivery ack.
-- [ ] `P1-033` Add localization regression pass for P1 screens.
-- [ ] `P1-034` Run accessibility pass.
-- [ ] `P1-035` Controlled rollout by merchant cohort.
+- [x] `P1-031` Add E2E for guest directory and profile flows.
+- [x] `P1-032` Add E2E for channel health and delivery ack.
+- [x] `P1-033` Add localization regression pass for P1 screens.
+- [x] `P1-034` Run accessibility pass.
+- [x] `P1-035` Controlled rollout by merchant cohort.
 
 ## 6) Phase P2 (Weeks 11-18) - Revenue and Cost
 
 ## 6.1 Loyalty, Gift Cards, Campaigns
 
-- [ ] `P2-001` Add migrations for `loyalty_programs`.
-- [ ] `P2-002` Add migrations for `loyalty_accounts`.
-- [ ] `P2-003` Add migrations for `loyalty_transactions`.
-- [ ] `P2-004` Add migrations for `gift_cards`.
-- [ ] `P2-005` Add migrations for `gift_card_transactions`.
-- [ ] `P2-006` Add migrations for `campaigns`.
-- [ ] `P2-007` Add migrations for `campaign_deliveries`.
-- [ ] `P2-008` Add migrations for `segments`.
-- [ ] `P2-009` Implement loyalty APIs (`programs`, `adjustments`).
-- [ ] `P2-010` Implement gift card APIs (`create`, `redeem`, `list`).
-- [ ] `P2-011` Implement campaign APIs (`create`, `launch`, `tracking`).
-- [ ] `P2-012` Build `LoyaltyProgramBuilder`.
-- [ ] `P2-013` Build `GiftCardManager`.
-- [ ] `P2-014` Build `CampaignBuilder`.
-- [ ] `P2-015` Add conversion attribution from campaigns to orders.
+- [x] `P2-001` Add migrations for `loyalty_programs`.
+- [x] `P2-002` Add migrations for `loyalty_accounts`.
+- [x] `P2-003` Add migrations for `loyalty_transactions`.
+- [x] `P2-004` Add migrations for `gift_cards`.
+- [x] `P2-005` Add migrations for `gift_card_transactions`.
+- [x] `P2-006` Add migrations for `campaigns`.
+- [x] `P2-007` Add migrations for `campaign_deliveries`.
+- [x] `P2-008` Add migrations for `segments`.
+- [x] `P2-009` Implement loyalty APIs (`programs`, `adjustments`).
+- [x] `P2-010` Implement gift card APIs (`create`, `redeem`, `list`).
+- [x] `P2-011` Implement campaign APIs (`create`, `launch`, `tracking`).
+- [x] `P2-012` Build `LoyaltyProgramBuilder`.
+- [x] `P2-013` Build `GiftCardManager`.
+- [x] `P2-014` Build `CampaignBuilder`.
+- [x] `P2-015` Add conversion attribution from campaigns to orders.
 
 ## 6.2 Inventory and Cost
 
@@ -320,9 +320,43 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `P3-034` Enterprise UAT and signoff.
 - [ ] `P3-035` General availability release.
 
-## 8) Cross-Cutting Tracks (Parallel Through All Phases)
+## 8) Dedicated KDS Toast-Parity Track (P1-P3)
 
-## 8.1 Security
+## 8.1 P1 KDS Hardening and Operational Readiness
+
+- [ ] `KDS-001` Add dedicated `GET /api/kds/queue` with station/sla filters and cursor pagination.
+- [ ] `KDS-002` Add migrations for item-level production state (`kds_order_items` and `kds_item_events`).
+- [ ] `KDS-003` Implement item-level KDS actions (`start`, `hold`, `ready`, `recall`) with audit logging.
+- [ ] `KDS-004` Build station-specific KDS board views (kitchen/bar/dessert/coffee) with role-based defaults.
+- [ ] `KDS-005` Build expeditor view for cross-station consolidation and final handoff.
+- [ ] `KDS-006` Add bump-bar hotkeys and touch-optimized controls for high-volume service windows.
+- [ ] `KDS-007` Add audio/visual alert policy controls (new ticket, SLA breach, recall) with quiet-hours support.
+- [ ] `KDS-008` Add KDS E2E coverage for queue ingest -> station prep -> expeditor handoff -> served.
+- [ ] `KDS-009` Add KDS reliability telemetry (queue lag, websocket health, ticket SLA breaches) and dashboard panels.
+
+## 8.2 P2 KDS Throughput, Routing, and Hardware
+
+- [ ] `KDS-010` Implement coursing and fire-time orchestration (fire now, fire on ready, hold/release).
+- [ ] `KDS-011` Implement cross-station transfer and re-route workflows with reason capture.
+- [ ] `KDS-012` Integrate smart queue prioritization (`src/lib/kds/smartQueue.ts`) into live KDS sorting.
+- [ ] `KDS-013` Add prep-time prediction and dynamic station load balancing.
+- [ ] `KDS-014` Add kitchen chit/label printer adapter abstraction and fallback print queue.
+- [ ] `KDS-015` Add void/comp/86 propagation from merchant ops to KDS tickets in real time.
+- [ ] `KDS-016` Build KDS performance analytics (ticket cycle time, station bottlenecks, staff throughput).
+- [ ] `KDS-017` Add offline-safe action queue + replay for KDS mutations with idempotent recovery.
+
+## 8.3 P3 Enterprise KDS Control Plane
+
+- [ ] `KDS-018` Add multi-location KDS template management (station map, SLA policy, alert policy).
+- [ ] `KDS-019` Add enterprise expeditor console with cross-store escalation and incident routing.
+- [ ] `KDS-020` Add predictive prep and labor recommendations using historical ticket/event data.
+- [ ] `KDS-021` Add kitchen device fleet controls (screen heartbeat, remote restart, policy sync).
+- [ ] `KDS-022` Add immutable KDS event replay and compliance exports for dispute investigation.
+- [ ] `KDS-023` Run large-scale KDS load/chaos tests and validate rollback playbooks.
+
+## 9) Cross-Cutting Tracks (Parallel Through All Phases)
+
+## 9.1 Security
 
 - [ ] `SEC-001` Remove insecure secret fallbacks in signing paths.
 - [ ] `SEC-002` Enforce strict tenant scoping on all protected queries.
@@ -330,7 +364,7 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `SEC-004` Add session/device management and revocation.
 - [ ] `SEC-005` Add security event detection alerts.
 
-## 8.2 Reliability and Observability
+## 9.2 Reliability and Observability
 
 - [ ] `REL-001` Define retries/backoff by endpoint class.
 - [ ] `REL-002` Add dead-letter handling for async failures.
@@ -339,7 +373,7 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `OBS-002` Add P95 latency and error dashboards.
 - [ ] `OBS-003` Add queue staleness alerts.
 
-## 8.3 Performance and UX Consistency
+## 9.3 Performance and UX Consistency
 
 - [ ] `PERF-001` Add endpoint query-performance audits.
 - [ ] `PERF-002` Add virtualization for heavy tables.
@@ -348,15 +382,40 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `UX-002` Standardize right-side detail drawers.
 - [ ] `UX-003` Standardize bulk action confirmation patterns.
 
-## 9) Immediate Start - Next 10 Tasks
+## 10) Digital-First Operations (Replaces Proprietary POS)
 
-- [x] `NOW-01` Complete `GOV-001`.
-- [x] `NOW-02` Complete `GOV-002`.
-- [x] `NOW-03` Complete `P0-001`.
-- [x] `NOW-04` Complete `P0-002`.
-- [x] `NOW-05` Complete `P0-003`.
-- [x] `NOW-06` Complete `P0-015`.
-- [x] `NOW-07` Complete `P0-021`.
-- [x] `NOW-08` Complete `P0-022`.
-- [x] `NOW-09` Complete `P0-043`.
-- [x] `NOW-10` Complete `P0-050`.
+## 10.1 Digital Payment & Mobile Checkout
+- [ ] `DIG-001` Implement "Tap to Pay" on mobile (NFC reading via generic Android/iOS devices).
+- [ ] `DIG-002` Integrate Chapa and Telebirr natively into the Menu/Order flow.
+- [ ] `DIG-003` Build QR-based "Table Ordering" that bypasses server terminals completely.
+- [ ] `DIG-004` Build "Direct Online Ordering" web module (Owner.com style) for pickup/delivery.
+- [ ] `DIG-005` Implement "Split Check" logic on customer mobile devices.
+
+## 10.2 Hardware-Agnostic KDS
+- [ ] `KDS-001` Verify KDS performance on generic iPads, Android tablets, and Smart TVs.
+- [ ] `KDS-002` Implement browser-based "Kitchen Display" that requires no install.
+- [ ] `KDS-003` Add offline-mode support for KDS (Local-First Architecture).
+
+## 10.3 Offline-First & Resiliency
+- [ ] `OFF-001` Implement Service Workers for full offline app caching.
+- [ ] `OFF-002` Build "Local Sync Engine" (CRDTs or similar) for conflict resolution when internet returns.
+- [ ] `OFF-003` Ensure order taking persists locally in IndexDB before syncing.
+
+## 10.4 Staff & AI Operations
+- [ ] `OPS-001` Integrate Resend for transactional email onboarding.
+    - [ ] Configure `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
+    - [ ] Verify domain in Resend for production email sending.
+- [ ] `OPS-002` Build "Loman AI" style phone order taker integration.
+- [ ] `OPS-003` Add "Digital Tips" and shift management for mobile staff.
+
+## 10.5 Ethiopia Compliance and Fiscal Operations
+- [ ] `TPG-036` Implement VAT/tax profile engine with branch-level overrides.
+- [ ] `TPG-037` Add fiscal receipt/invoice compliance output and immutable receipt archive.
+- [ ] `TPG-038` Add compliance export bundles for tax filing and audit requests.
+- [ ] `TPG-039` Add localized receipt templates (EN/AM) with legal field validation.
+- [ ] `TPG-040` Add compliance monitoring alerts for out-of-policy transactions.
+
+## 10.6 Quality & Rollout
+- [ ] `REL-004` Load test "Tablet Web KDS" with 500+ active tickers.
+- [ ] `REL-005` Verify "Offline Mode" recovery in poor network conditions.
+

@@ -1589,7 +1589,30 @@ export type Database = {
             }
         }
         Views: {
-            [_ in never]: never
+            restaurant_staff_with_users: {
+                Row: {
+                    created_at: string | null
+                    email: string | null
+                    first_name: string | null
+                    full_name: string | null
+                    id: string | null
+                    is_active: boolean | null
+                    last_name: string | null
+                    name: string | null
+                    restaurant_id: string | null
+                    role: string | null
+                    user_id: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "restaurant_staff_restaurant_id_fkey"
+                        columns: ["restaurant_id"]
+                        isOneToOne: false
+                        referencedRelation: "restaurants"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
         }
         Functions: {
             increment_likes: {

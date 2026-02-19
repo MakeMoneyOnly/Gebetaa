@@ -701,10 +701,10 @@ Use this section to execute feature-by-feature.
 - [ ] Ship order assignment + bulk transitions + SLA timers
 
 ## Phase P1 (Weeks 5-10) - Growth Operations
-- [ ] Ship Team workflows (invite, role, activation)
-- [ ] Ship Guests tab (profiles + segmentation starter)
-- [ ] Ship Channels tab (online ordering settings + delivery adapter v1)
-- [ ] Ship Settings security controls and support ticketing
+- [x] Ship Team workflows (invite, role, activation)
+- [x] Ship Guests tab (profiles + segmentation starter)
+- [x] Ship Channels tab (online ordering settings + delivery adapter v1)
+- [x] Ship Settings security controls and support ticketing
 
 ## Phase P2 (Weeks 11-18) - Revenue and Cost Stack
 - [ ] Ship Loyalty + Gift Cards + Campaigns

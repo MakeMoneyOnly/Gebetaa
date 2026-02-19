@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Users } from 'lucide-react';
+import { Users, Crown, Repeat, Wallet } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { CampaignBuilder, type CampaignRow, type SegmentOption } from '@/components/merchant/CampaignBuilder';
+import { GiftCardManager, type GiftCardRow } from '@/components/merchant/GiftCardManager';
 import { GuestDirectory, type GuestDirectoryRow } from '@/components/merchant/GuestDirectory';
 import { GuestProfileDrawer } from '@/components/merchant/GuestProfileDrawer';
+import { LoyaltyProgramBuilder, type LoyaltyProgramRow } from '@/components/merchant/LoyaltyProgramBuilder';
+import { MetricCard } from '@/components/merchant/MetricCard';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type Segment = 'all' | 'vip' | 'returning' | 'new';
@@ -32,6 +36,7 @@ type GuestVisit = {
 };
 
 export default function GuestsPage() {
+    const locale = 'en-ET';
     const [guests, setGuests] = useState<GuestDirectoryRow[]>([]);
     const { loading, markLoaded } = usePageLoadGuard('guests');
     const [error, setError] = useState<string | null>(null);
@@ -44,6 +49,18 @@ export default function GuestsPage() {
     const [drawerLoading, setDrawerLoading] = useState(false);
     const [drawerSaving, setDrawerSaving] = useState(false);
     const [refreshToken, setRefreshToken] = useState(0);
+
+    const [growthLoading, setGrowthLoading] = useState(true);
+    const [growthError, setGrowthError] = useState<string | null>(null);
+    const [loyaltyPrograms, setLoyaltyPrograms] = useState<LoyaltyProgramRow[]>([]);
+    const [giftCards, setGiftCards] = useState<GiftCardRow[]>([]);
+    const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
+    const [segments, setSegments] = useState<SegmentOption[]>([]);
+    const [creatingLoyalty, setCreatingLoyalty] = useState(false);
+    const [creatingGiftCard, setCreatingGiftCard] = useState(false);
+    const [redeemingGiftCardId, setRedeemingGiftCardId] = useState<string | null>(null);
+    const [creatingCampaign, setCreatingCampaign] = useState(false);
+    const [launchingCampaignId, setLaunchingCampaignId] = useState<string | null>(null);
 
     const fetchGuests = useCallback(async () => {
         try {
@@ -68,6 +85,48 @@ export default function GuestsPage() {
             markLoaded();
         }
     }, [query, segment, tagFilter, markLoaded]);
+
+    const fetchGrowthData = useCallback(async () => {
+        try {
+            setGrowthLoading(true);
+            setGrowthError(null);
+
+            const [programsRes, cardsRes, campaignsRes] = await Promise.all([
+                fetch('/api/loyalty/programs', { method: 'GET', cache: 'no-store' }),
+                fetch('/api/gift-cards?limit=100', { method: 'GET', cache: 'no-store' }),
+                fetch('/api/campaigns?limit=100', { method: 'GET', cache: 'no-store' }),
+            ]);
+
+            const [programsPayload, cardsPayload, campaignsPayload] = await Promise.all([
+                programsRes.json(),
+                cardsRes.json(),
+                campaignsRes.json(),
+            ]);
+
+            if (!programsRes.ok) {
+                throw new Error(programsPayload?.error ?? 'Failed to load loyalty programs.');
+            }
+            if (!cardsRes.ok) {
+                throw new Error(cardsPayload?.error ?? 'Failed to load gift cards.');
+            }
+            if (!campaignsRes.ok) {
+                throw new Error(campaignsPayload?.error ?? 'Failed to load campaigns.');
+            }
+
+            setLoyaltyPrograms((programsPayload?.data?.programs ?? []) as LoyaltyProgramRow[]);
+            setGiftCards((cardsPayload?.data?.gift_cards ?? []) as GiftCardRow[]);
+            setCampaigns((campaignsPayload?.data?.campaigns ?? []) as CampaignRow[]);
+            setSegments(((campaignsPayload?.data?.segments ?? []) as SegmentOption[]).map(item => ({
+                id: item.id,
+                name: item.name,
+            })));
+        } catch (growthFetchError) {
+            console.error(growthFetchError);
+            setGrowthError(growthFetchError instanceof Error ? growthFetchError.message : 'Failed to load growth operations data.');
+        } finally {
+            setGrowthLoading(false);
+        }
+    }, []);
 
     const fetchGuestDrawerData = useCallback(async (guestId: string) => {
         try {
@@ -104,6 +163,10 @@ export default function GuestsPage() {
         }, 250);
         return () => window.clearTimeout(timer);
     }, [fetchGuests, refreshToken]);
+
+    useEffect(() => {
+        void fetchGrowthData();
+    }, [fetchGrowthData, refreshToken]);
 
     useEffect(() => {
         if (!selectedGuestId) return;
@@ -156,6 +219,116 @@ export default function GuestsPage() {
         }
     };
 
+    const handleCreateLoyaltyProgram = async (payload: { name: string; status: LoyaltyProgramRow['status'] }) => {
+        try {
+            setCreatingLoyalty(true);
+            const response = await fetch('/api/loyalty/programs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to create loyalty program.');
+            }
+            toast.success('Loyalty program created.');
+            setRefreshToken((value) => value + 1);
+        } catch (createError) {
+            toast.error(createError instanceof Error ? createError.message : 'Failed to create loyalty program.');
+        } finally {
+            setCreatingLoyalty(false);
+        }
+    };
+
+    const handleCreateGiftCard = async (payload: { initial_balance: number; currency: string; expires_at?: string }) => {
+        try {
+            setCreatingGiftCard(true);
+            const response = await fetch('/api/gift-cards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to issue gift card.');
+            }
+            toast.success('Gift card issued.');
+            setRefreshToken((value) => value + 1);
+        } catch (createError) {
+            toast.error(createError instanceof Error ? createError.message : 'Failed to issue gift card.');
+        } finally {
+            setCreatingGiftCard(false);
+        }
+    };
+
+    const handleRedeemGiftCard = async (giftCardId: string, amount: number) => {
+        try {
+            setRedeemingGiftCardId(giftCardId);
+            const response = await fetch(`/api/gift-cards/${giftCardId}/redeem`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount }),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to redeem gift card.');
+            }
+            toast.success('Gift card redeemed.');
+            setRefreshToken((value) => value + 1);
+        } catch (redeemError) {
+            toast.error(redeemError instanceof Error ? redeemError.message : 'Failed to redeem gift card.');
+        } finally {
+            setRedeemingGiftCardId(null);
+        }
+    };
+
+    const handleCreateCampaign = async (payload: {
+        name: string;
+        channel: CampaignRow['channel'];
+        segment_id?: string;
+        scheduled_at?: string;
+    }) => {
+        try {
+            setCreatingCampaign(true);
+            const response = await fetch('/api/campaigns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to create campaign.');
+            }
+            toast.success('Campaign created.');
+            setRefreshToken((value) => value + 1);
+        } catch (createError) {
+            toast.error(createError instanceof Error ? createError.message : 'Failed to create campaign.');
+        } finally {
+            setCreatingCampaign(false);
+        }
+    };
+
+    const handleLaunchCampaign = async (campaignId: string) => {
+        try {
+            setLaunchingCampaignId(campaignId);
+            const response = await fetch(`/api/campaigns/${campaignId}/launch`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to launch campaign.');
+            }
+            toast.success('Campaign launched.');
+            setRefreshToken((value) => value + 1);
+        } catch (launchError) {
+            toast.error(launchError instanceof Error ? launchError.message : 'Failed to launch campaign.');
+        } finally {
+            setLaunchingCampaignId(null);
+        }
+    };
+
     const stats = useMemo(() => {
         const totalGuests = guests.length;
         const vipCount = guests.filter((guest) => guest.is_vip).length;
@@ -174,25 +347,55 @@ export default function GuestsPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-                <div className="h-[160px] rounded-[2rem] bg-white p-5 shadow-sm">
-                    <div className="flex items-start justify-between">
-                        <Users className="h-4 w-4 text-gray-700" />
-                        <h3 className="text-4xl font-bold text-gray-900">{stats.totalGuests}</h3>
-                    </div>
-                    <p className="mt-6 text-sm font-semibold text-gray-900">Guests in Segment</p>
-                </div>
-                <div className="h-[160px] rounded-[2rem] bg-white p-5 shadow-sm">
-                    <h3 className="text-4xl font-bold text-gray-900">{stats.vipCount}</h3>
-                    <p className="mt-6 text-sm font-semibold text-gray-900">VIP Guests</p>
-                </div>
-                <div className="h-[160px] rounded-[2rem] bg-white p-5 shadow-sm">
-                    <h3 className="text-4xl font-bold text-gray-900">{stats.returningCount}</h3>
-                    <p className="mt-6 text-sm font-semibold text-gray-900">Returning Guests</p>
-                </div>
-                <div className="h-[160px] rounded-[2rem] bg-white p-5 shadow-sm">
-                    <h3 className="text-4xl font-bold text-gray-900">{stats.ltvTotal.toFixed(2)}</h3>
-                    <p className="mt-6 text-sm font-semibold text-gray-900">Visible LTV (ETB)</p>
-                </div>
+                <MetricCard
+                    icon={Users}
+                    chip="TOTAL"
+                    value={stats.totalGuests}
+                    label="Guests In Segment"
+                    subLabel="Total customer profiles"
+                    tone="blue"
+                    progress={Math.min(20, Math.max(1, Math.round((stats.totalGuests / 100) * 20)))}
+                    targetLabel="Target: 100"
+                    currentLabel={`Current: ${stats.totalGuests}`}
+                />
+                <MetricCard
+                    icon={Crown}
+                    chip="VIP"
+                    value={stats.vipCount}
+                    label="VIP Guests"
+                    subLabel="High value customers"
+                    tone="purple"
+                    progress={Math.min(20, Math.max(1, Math.round((stats.vipCount / (stats.totalGuests || 1)) * 20)))}
+                    targetLabel={`Target: ${Math.round(stats.totalGuests * 0.2)}`}
+                    currentLabel={`Current: ${stats.vipCount}`}
+                />
+                <MetricCard
+                    icon={Repeat}
+                    chip="RETURNING"
+                    value={stats.returningCount}
+                    label="Repeat Guests"
+                    subLabel="Loyal Customers"
+                    tone="rose"
+                    progress={Math.min(20, Math.max(1, Math.round((stats.returningCount / (stats.totalGuests || 1)) * 20)))}
+                    targetLabel={`Target: ${Math.round(stats.totalGuests * 0.4)}`}
+                    currentLabel={`Current: ${stats.returningCount}`}
+                />
+                <MetricCard
+                    icon={Wallet}
+                    chip="LTV"
+                    value={new Intl.NumberFormat(locale, {
+                        style: 'currency',
+                        currency: 'ETB',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                    }).format(stats.ltvTotal)}
+                    label="Lifetime Value"
+                    subLabel="Total Spend"
+                    tone="green"
+                    progress={20}
+                    targetLabel="Target: -"
+                    currentLabel="Lifetime"
+                />
             </div>
 
             <GuestDirectory
@@ -207,6 +410,41 @@ export default function GuestsPage() {
                 onTagFilterChange={setTagFilter}
                 onOpenGuest={openGuest}
             />
+
+            <section className="space-y-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-black">Revenue Growth Stack (P2)</h2>
+                    <p className="text-sm text-gray-500">Loyalty, gift cards, and campaign operations linked to guests.</p>
+                </div>
+
+                {growthError ? <p role="alert" className="text-sm font-semibold text-amber-700">{growthError}</p> : null}
+
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+                    <LoyaltyProgramBuilder
+                        programs={loyaltyPrograms}
+                        loading={growthLoading}
+                        creating={creatingLoyalty}
+                        onCreate={handleCreateLoyaltyProgram}
+                    />
+                    <GiftCardManager
+                        cards={giftCards}
+                        loading={growthLoading}
+                        creating={creatingGiftCard}
+                        redeemingId={redeemingGiftCardId}
+                        onCreate={handleCreateGiftCard}
+                        onRedeem={handleRedeemGiftCard}
+                    />
+                    <CampaignBuilder
+                        campaigns={campaigns}
+                        segments={segments}
+                        loading={growthLoading}
+                        creating={creatingCampaign}
+                        launchingId={launchingCampaignId}
+                        onCreate={handleCreateCampaign}
+                        onLaunch={handleLaunchCampaign}
+                    />
+                </div>
+            </section>
 
             <GuestProfileDrawer
                 open={selectedGuestId !== null}

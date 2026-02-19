@@ -18,6 +18,10 @@ interface CartDrawerProps {
               table: string;
               sig: string;
               exp: number;
+              campaign_attribution?: {
+                  campaign_delivery_id: string;
+                  campaign_id?: string;
+              };
           }
         | null;
     tableNumber: string | null;
@@ -59,6 +63,9 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
                     })),
                     total_price: total,
                     notes: undefined,
+                    ...(guestContext.campaign_attribution
+                        ? { campaign_attribution: guestContext.campaign_attribution }
+                        : {}),
                 }),
             });
 

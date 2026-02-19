@@ -23,8 +23,21 @@ export interface ActivityItem {
 export function useMerchantActivity() {
     const [activities, setActivities] = useState<ActivityItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [restaurantName, setRestaurantName] = useState<string>('Restaurant');
-    const [restaurantHandle, setRestaurantHandle] = useState<string>('@restaurant_admin');
+
+    // Initialize from sessionStorage instantly to prevent "Hello, Restaurant" flash
+    const [restaurantName, setRestaurantName] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            return sessionStorage.getItem('gebeta_restaurant_name') ?? 'Restaurant';
+        }
+        return 'Restaurant';
+    });
+    const [restaurantHandle, setRestaurantHandle] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            return sessionStorage.getItem('gebeta_restaurant_handle') ?? '@restaurant_admin';
+        }
+        return '@restaurant_admin';
+    });
+
 
     useEffect(() => {
         let mounted = true;
@@ -56,8 +69,13 @@ export function useMerchantActivity() {
 
                 // Set restaurant info
                 if (data.restaurant) {
-                    setRestaurantName(data.restaurant.name);
-                    setRestaurantHandle(`@${data.restaurant.slug}_admin`);
+                    const name = data.restaurant.name as string;
+                    const handle = `@${data.restaurant.slug as string}_admin`;
+                    setRestaurantName(name);
+                    setRestaurantHandle(handle);
+                    // Persist so minimize/restore doesn't flash "Restaurant"
+                    sessionStorage.setItem('gebeta_restaurant_name', name);
+                    sessionStorage.setItem('gebeta_restaurant_handle', handle);
                 }
 
                 // Transform orders to activities

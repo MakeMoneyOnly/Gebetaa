@@ -41,6 +41,7 @@ export function OnlineOrderingSettingsPanel({
                     <p className="text-sm text-gray-500">Control online storefront availability and order intake rules.</p>
                 </div>
                 <button
+                    type="button"
                     onClick={() => void onSave()}
                     disabled={saving || loading}
                     className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
@@ -51,7 +52,7 @@ export function OnlineOrderingSettingsPanel({
             </div>
 
             {error && (
-                <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+                <p role="alert" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
                     {error}
                 </p>
             )}

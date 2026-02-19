@@ -4,6 +4,14 @@ import {
     getPendingOrders,
     removeQueuedOrder,
     clearAllPendingOrders,
+    updateQueuedOrder,
+    getOrdersToSync,
+    getConflictedOrders,
+    markOrderSyncing,
+    resolveConflict,
+    getSyncStatus,
+    getConflictLogs,
+    clearConflictLogs,
 } from './offlineQueue';
 
 /**
@@ -239,6 +247,197 @@ describe('OrderDatabase', () => {
             const pending = await getPendingOrders();
 
             expect(pending[0].notes).toBe(order.notes);
+        });
+    });
+});
+
+describe('Sync Conflict Resolution', () => {
+    beforeEach(async () => {
+        await clearAllPendingOrders();
+        await clearConflictLogs();
+    });
+
+    describe('updateQueuedOrder', () => {
+        it('should update order and increment version', async () => {
+            const order = {
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: '',
+                idempotency_key: 'key-1',
+            };
+
+            const id = await queueOrder(order);
+            await updateQueuedOrder(id as number, { notes: 'Updated notes' });
+
+            const pending = await getPendingOrders();
+            expect(pending[0].notes).toBe('Updated notes');
+            expect(pending[0].version).toBe(2);
+        });
+
+        it('should update last_modified timestamp', async () => {
+            const order = {
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: '',
+                idempotency_key: 'key-1',
+            };
+
+            const id = await queueOrder(order);
+            const original = (await getPendingOrders())[0];
+            
+            // Small delay to ensure different timestamp
+            await new Promise(resolve => setTimeout(resolve, 10));
+            
+            await updateQueuedOrder(id as number, { notes: 'Updated' });
+            const updated = (await getPendingOrders())[0];
+            
+            expect(updated.last_modified).not.toBe(original.last_modified);
+        });
+    });
+
+    describe('getOrdersToSync', () => {
+        it('should return only pending orders', async () => {
+            const order = {
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: '',
+                idempotency_key: 'key-1',
+            };
+
+            await queueOrder(order);
+            const toSync = await getOrdersToSync();
+            expect(toSync).toHaveLength(1);
+        });
+    });
+
+    describe('markOrderSyncing', () => {
+        it('should change status to syncing', async () => {
+            const order = {
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: '',
+                idempotency_key: 'key-1',
+            };
+
+            const id = await queueOrder(order);
+            await markOrderSyncing(id as number);
+
+            const pending = await getPendingOrders();
+            expect(pending[0].status).toBe('syncing');
+        });
+    });
+
+    describe('resolveConflict', () => {
+        it('should resolve with client_wins when client is newer', async () => {
+            const order = {
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: 'Client version',
+                idempotency_key: 'key-1',
+            };
+
+            const id = await queueOrder(order);
+            
+            // Server version is older
+            const serverOrder = {
+                version: 1,
+                last_modified: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+            };
+
+            const result = await resolveConflict(id as number, serverOrder);
+            
+            expect(result.resolved).toBe(true);
+            expect(result.strategy).toBe('client_wins');
+        });
+
+        it('should resolve with server_wins when server is newer', async () => {
+            const order = {
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: 'Client version',
+                idempotency_key: 'key-1',
+            };
+
+            const id = await queueOrder(order);
+            
+            // Server version is newer
+            const serverOrder = {
+                version: 2,
+                last_modified: new Date(Date.now() + 3600000).toISOString(), // 1 hour in future
+            };
+
+            const result = await resolveConflict(id as number, serverOrder);
+            
+            expect(result.resolved).toBe(true);
+            expect(result.strategy).toBe('server_wins');
+        });
+
+        it('should log conflict to audit trail', async () => {
+            const order = {
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: '',
+                idempotency_key: 'key-conflict-1',
+            };
+
+            const id = await queueOrder(order);
+            
+            const serverOrder = {
+                version: 2,
+                last_modified: new Date().toISOString(),
+            };
+
+            await resolveConflict(id as number, serverOrder);
+            
+            const logs = await getConflictLogs();
+            expect(logs).toHaveLength(1);
+            expect(logs[0].idempotency_key).toBe('key-conflict-1');
+        });
+    });
+
+    describe('getSyncStatus', () => {
+        it('should return sync status summary', async () => {
+            const status = await getSyncStatus();
+            
+            expect(status).toHaveProperty('last_sync_at');
+            expect(status).toHaveProperty('pending_count');
+            expect(status).toHaveProperty('conflict_count');
+            expect(status).toHaveProperty('is_online');
+        });
+
+        it('should count pending orders correctly', async () => {
+            await queueOrder({
+                restaurant_id: 'rest-1',
+                table_number: 1,
+                items: [{ id: 'item-1', name: 'Item', quantity: 1, price: 10 }],
+                total_price: 10,
+                notes: '',
+                idempotency_key: 'key-1',
+            });
+
+            const status = await getSyncStatus();
+            expect(status.pending_count).toBe(1);
+        });
+    });
+
+    describe('getConflictedOrders', () => {
+        it('should return empty array when no conflicts', async () => {
+            const conflicts = await getConflictedOrders();
+            expect(conflicts).toEqual([]);
         });
     });
 });

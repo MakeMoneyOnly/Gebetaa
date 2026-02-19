@@ -1,6 +1,7 @@
 'use client';
 
 import { Activity, AlertTriangle, CheckCircle2, Truck } from 'lucide-react';
+import { MetricCard } from '@/components/merchant/MetricCard';
 
 type ChannelSummary = {
     totals: {
@@ -36,7 +37,7 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
         return (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="h-[140px] animate-pulse rounded-[1.5rem] bg-white shadow-sm" />
+                    <div key={index} className="h-[180px] animate-pulse rounded-[2rem] bg-white shadow-sm" />
                 ))}
             </div>
         );
@@ -44,7 +45,7 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
 
     if (error) {
         return (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
                 {error}
             </div>
         );
@@ -55,34 +56,50 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
     return (
         <div className="space-y-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <Truck className="h-4 w-4 text-gray-500" />
-                        <p className="text-3xl font-bold text-black">{totals?.delivery_partners ?? 0}</p>
-                    </div>
-                    <p className="mt-5 text-sm font-semibold text-gray-700">Connected Channels</p>
-                </div>
-                <div className="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        <p className="text-3xl font-bold text-black">{totals?.connected_partners ?? 0}</p>
-                    </div>
-                    <p className="mt-5 text-sm font-semibold text-gray-700">Healthy Partners</p>
-                </div>
-                <div className="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <Activity className="h-4 w-4 text-blue-600" />
-                        <p className="text-3xl font-bold text-black">{totals?.external_orders_24h ?? 0}</p>
-                    </div>
-                    <p className="mt-5 text-sm font-semibold text-gray-700">External Orders (24h)</p>
-                </div>
-                <div className="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <AlertTriangle className="h-4 w-4 text-amber-600" />
-                        <p className="text-3xl font-bold text-black">{totals?.unacked_orders ?? 0}</p>
-                    </div>
-                    <p className="mt-5 text-sm font-semibold text-gray-700">Unacknowledged Orders</p>
-                </div>
+                <MetricCard
+                    icon={Truck}
+                    chip="CHANNELS"
+                    value={totals?.delivery_partners ?? 0}
+                    label="Connected Channels"
+                    subLabel="Active Integrations"
+                    tone="blue"
+                    progress={20}
+                    targetLabel="Target: -"
+                    currentLabel="Full Setup"
+                />
+                <MetricCard
+                    icon={CheckCircle2}
+                    chip="HEALTHY"
+                    value={totals?.connected_partners ?? 0}
+                    label="Healthy Partners"
+                    subLabel="Operational Status"
+                    tone="green"
+                    progress={Math.min(20, Math.max(0, Math.round(((totals?.connected_partners ?? 0) / (totals?.delivery_partners || 1)) * 20)))}
+                    targetLabel={`Total: ${totals?.delivery_partners ?? 0}`}
+                    currentLabel={`Online: ${totals?.connected_partners ?? 0}`}
+                />
+                <MetricCard
+                    icon={Activity}
+                    chip="24H ORDERS"
+                    value={totals?.external_orders_24h ?? 0}
+                    label="External Orders"
+                    subLabel="Last 24 Hours"
+                    tone="purple"
+                    progress={Math.min(20, Math.max(1, Math.round(((totals?.external_orders_24h ?? 0) / 100) * 20)))}
+                    targetLabel="Target: 100+"
+                    currentLabel="Today"
+                />
+                <MetricCard
+                    icon={AlertTriangle}
+                    chip="ACTION"
+                    value={totals?.unacked_orders ?? 0}
+                    label="Unacknowledged"
+                    subLabel="Requires Acknowledge"
+                    tone="amber"
+                    progress={(totals?.unacked_orders ?? 0) > 0 ? 20 : 0}
+                    targetLabel="Target: 0"
+                    currentLabel="Pending"
+                />
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">

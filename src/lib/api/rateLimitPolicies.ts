@@ -19,6 +19,12 @@ export const API_RATE_LIMIT_POLICIES: Record<string, RouteRateLimitPolicy> = {
     '/api/alerts/rules': { windowMs: 60_000, maxRequests: 60 },
     '/api/alerts/rules/': { windowMs: 60_000, maxRequests: 60 }, // nested alert rule update endpoint
     '/api/merchant/dashboard-presets': { windowMs: 60_000, maxRequests: 60 },
+    '/api/loyalty/programs': { windowMs: 60_000, maxRequests: 60 },
+    '/api/loyalty/accounts/': { windowMs: 60_000, maxRequests: 60 }, // nested account adjustment endpoint
+    '/api/gift-cards': { windowMs: 60_000, maxRequests: 60 },
+    '/api/gift-cards/': { windowMs: 60_000, maxRequests: 60 }, // nested redeem endpoint
+    '/api/campaigns': { windowMs: 60_000, maxRequests: 60 },
+    '/api/campaigns/': { windowMs: 60_000, maxRequests: 60 }, // nested launch endpoint
 };
 
 export const DEFAULT_API_RATE_LIMIT_POLICY: RouteRateLimitPolicy = {
