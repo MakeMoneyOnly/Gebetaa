@@ -47,10 +47,10 @@ interface RawMenuItem {
 // Demo context for bypassing QR validation
 const DEMO_CONTEXT = {
     restaurant_id: 'demo-restaurant',
-    table_number: '1',
+    table: '1',
     slug: 'demo-table',
-    sig: 'demo-sig',
-    exp: Math.floor(Date.now() / 1000) + 86400, // 24 hours from now
+    sig: '0'.repeat(64),
+    exp: Date.now() + 86400000, // 24 hours from now (in milliseconds)
 };
 
 function DemoMenuContent() {
@@ -68,24 +68,67 @@ function DemoMenuContent() {
             const supabase = createClient();
 
             try {
-                // Try to fetch from the first restaurant in the database
-                const { data: restaurants } = await supabase
-                    .from('restaurants')
-                    .select('id')
+                // Find the restaurant that has the most recently added menu item
+                // This ensures we connect to the active restaurant the user is working on
+                const { data: lastItem } = await supabase
+                    .from('menu_items')
+                    .select('restaurant_id')
+                    .order('created_at', { ascending: false })
                     .limit(1)
                     .maybeSingle();
 
-                const restaurantId = restaurants?.id;
+                let restaurantId = lastItem?.restaurant_id;
 
-                if (!restaurantId) {
+                let restaurants: { id: string; slug: string } | null = null;
+                
+                if (restaurantId) {
+                    const { data } = await supabase
+                        .from('restaurants')
+                        .select('id, slug')
+                        .eq('id', restaurantId)
+                        .maybeSingle();
+                    restaurants = data;
+                } else {
+                     // Fallback to latest restaurant if no items exist
+                     const { data } = await supabase
+                        .from('restaurants')
+                        .select('id, slug')
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+                     restaurants = data;
+                     restaurantId = restaurants?.id;
+                }
+
+                if (!restaurantId || !restaurants) {
                     // No restaurant found, use fallback items
                     setRealItems([]);
                     setLoading(false);
                     return;
                 }
 
-                // Update demo context with real restaurant ID
+                // Update demo context with real restaurant ID and Slug
                 DEMO_CONTEXT.restaurant_id = restaurantId;
+                if (restaurants.slug) {
+                    DEMO_CONTEXT.slug = restaurants.slug;
+                }
+
+                // Try to find a valid table for this restaurant
+                const { data: tableData } = await supabase
+                    .from('tables')
+                    .select('table_number')
+                    .eq('restaurant_id', restaurantId)
+                    .eq('is_active', true)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (tableData) {
+                    DEMO_CONTEXT.table = tableData.table_number;
+                } else {
+                    // Fallback to table '1' if no tables exist (though purchase might fail if not created)
+                    console.warn('No active tables found for demo restaurant. Defaulting to table 1.');
+                    DEMO_CONTEXT.table = '1'; 
+                }
 
                 const { data: categories, error: categoryError } = await supabase
                     .from('categories')
@@ -317,22 +360,22 @@ function DemoMenuContent() {
                 onOpenChange={setCartOpen}
                 guestContext={{
                     slug: DEMO_CONTEXT.slug,
-                    table: DEMO_CONTEXT.table_number,
+                    table: DEMO_CONTEXT.table,
                     sig: DEMO_CONTEXT.sig,
                     exp: DEMO_CONTEXT.exp,
                 }}
-                tableNumber={DEMO_CONTEXT.table_number}
+                tableNumber={DEMO_CONTEXT.table}
             />
 
             <FloatingCart count={count} onClick={() => setCartOpen(true)} />
             <ServiceRequestButton
                 guestContext={{
                     slug: DEMO_CONTEXT.slug,
-                    table: DEMO_CONTEXT.table_number,
+                    table: DEMO_CONTEXT.table,
                     sig: DEMO_CONTEXT.sig,
                     exp: DEMO_CONTEXT.exp,
                 }}
-                tableNumber={DEMO_CONTEXT.table_number}
+                tableNumber={DEMO_CONTEXT.table}
             />
         </main>
     );

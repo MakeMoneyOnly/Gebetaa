@@ -155,6 +155,7 @@ export default function MenuPage() {
 
     useEffect(() => {
         fetchMenu();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchMenu = async () => {
@@ -169,7 +170,8 @@ export default function MenuPage() {
                 .from('restaurant_staff')
                 .select('restaurant_id')
                 .eq('user_id', user.id)
-                .single();
+                .limit(1)
+                .maybeSingle();
 
             if (!staff) {
                 setCategories([]);
@@ -248,7 +250,8 @@ export default function MenuPage() {
                 .from('restaurant_staff')
                 .select('restaurant_id')
                 .eq('user_id', user.id)
-                .single();
+                .limit(1)
+                .maybeSingle();
 
             if (!staff) {
                 toast.error('No restaurant staff profile found for this account.');

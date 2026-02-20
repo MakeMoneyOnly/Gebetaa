@@ -8,9 +8,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MemorySessionStore, type SessionData } from './sessionStore';
 
 // Mock Redis for testing - using a simple object with data property
+// Note: Redis tests can be added when RedisSessionStore needs to be tested
 const mockRedisData = new Map<string, string>();
 
-const createMockRedis = () => ({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _createMockRedis = () => ({
     data: mockRedisData,
     get: vi.fn(async (key: string) => {
         const value = mockRedisData.get(key);

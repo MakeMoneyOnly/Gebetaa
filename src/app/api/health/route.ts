@@ -155,7 +155,7 @@ async function checkRedis(): Promise<{
         // For now, we just check if the URL is set
         // This can be enhanced with actual Redis ping
         return { status: 'up' };
-    } catch (error) {
+    } catch {
         return {
             status: 'down',
         };
@@ -166,7 +166,8 @@ async function checkRedis(): Promise<{
  * GET /api/health
  * Returns comprehensive health status
  */
-export async function GET(request: NextRequest): Promise<NextResponse<HealthStatus>> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest): Promise<NextResponse<HealthStatus>> {
     // Run checks in parallel for efficiency
     const [databaseCheck, redisCheck] = await Promise.all([
         checkDatabase(),

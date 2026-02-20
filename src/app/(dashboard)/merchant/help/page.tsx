@@ -70,6 +70,7 @@ export default function HelpPage() {
     useEffect(() => {
         void loadArticles('');
         void loadTickets();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {

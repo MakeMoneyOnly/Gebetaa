@@ -25,6 +25,12 @@ export const API_RATE_LIMIT_POLICIES: Record<string, RouteRateLimitPolicy> = {
     '/api/gift-cards/': { windowMs: 60_000, maxRequests: 60 }, // nested redeem endpoint
     '/api/campaigns': { windowMs: 60_000, maxRequests: 60 },
     '/api/campaigns/': { windowMs: 60_000, maxRequests: 60 }, // nested launch endpoint
+    '/api/inventory/items': { windowMs: 60_000, maxRequests: 80 },
+    '/api/inventory/movements': { windowMs: 60_000, maxRequests: 80 },
+    '/api/inventory/variance': { windowMs: 60_000, maxRequests: 80 },
+    '/api/inventory/purchase-orders': { windowMs: 60_000, maxRequests: 60 },
+    '/api/inventory/invoices': { windowMs: 60_000, maxRequests: 60 },
+    '/api/inventory/recipes': { windowMs: 60_000, maxRequests: 60 },
 };
 
 export const DEFAULT_API_RATE_LIMIT_POLICY: RouteRateLimitPolicy = {

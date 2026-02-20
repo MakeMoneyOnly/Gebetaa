@@ -3,12 +3,6 @@ import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
-interface StatStep {
-    value: string;
-    label: string;
-    trend?: 'up' | 'down' | 'neutral';
-}
-
 interface StatsCardProps {
     title: string;
     icon?: LucideIcon;

@@ -4,6 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody, parseQuery } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 const ScheduleQuerySchema = z.object({
     start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -42,61 +43,115 @@ function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string) {
 }
 
 export async function GET(request: Request) {
-    const auth = await getAuthenticatedUser();
-    if (!auth.ok) {
-        return auth.response;
-    }
+    try {
+        const auth = await getAuthenticatedUser();
+        if (!auth.ok) {
+            return auth.response;
+        }
 
-    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
-    if (!context.ok) {
-        return context.response;
-    }
+        const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
+        if (!context.ok) {
+            return context.response;
+        }
 
-    const query = parseQuery(
-        Object.fromEntries(new URL(request.url).searchParams.entries()),
-        ScheduleQuerySchema
-    );
-    if (!query.success) {
-        return query.response;
-    }
+        const query = parseQuery(
+            Object.fromEntries(new URL(request.url).searchParams.entries()),
+            ScheduleQuerySchema
+        );
+        if (!query.success) {
+            return query.response;
+        }
 
-    const { startIso, endIso, daySpan } = normalizeWindow(query.data);
-    if (daySpan < 0 || daySpan > 31) {
-        return apiError('Invalid schedule window. Maximum span is 31 days.', 400, 'INVALID_SCHEDULE_WINDOW');
-    }
+        const { startIso, endIso, daySpan } = normalizeWindow(query.data);
+        if (daySpan < 0 || daySpan > 31) {
+            return apiError('Invalid schedule window. Maximum span is 31 days.', 400, 'INVALID_SCHEDULE_WINDOW');
+        }
 
-    const [shiftsRes, staffRes] = await Promise.all([
-        context.supabase
-            .from('shifts')
-            .select('id, staff_id, role, shift_date, start_time, end_time, station, status, notes, created_at, updated_at')
-            .eq('restaurant_id', context.restaurantId)
-            .gte('shift_date', startIso)
-            .lte('shift_date', endIso)
-            .order('shift_date', { ascending: true })
-            .order('start_time', { ascending: true }),
-        context.supabase
-            .from('restaurant_staff')
-            .select('id, user_id, role, is_active')
-            .eq('restaurant_id', context.restaurantId)
-            .eq('is_active', true)
-            .order('created_at', { ascending: true }),
-    ]);
+        console.log(`[Schedule API] Fetching for restaurant ${context.restaurantId} from ${startIso} to ${endIso}`);
 
-    if (shiftsRes.error) {
-        return apiError('Failed to fetch schedule', 500, 'SCHEDULE_FETCH_FAILED', shiftsRes.error.message);
-    }
-    if (staffRes.error) {
-        return apiError('Failed to fetch staff', 500, 'STAFF_FETCH_FAILED', staffRes.error.message);
-    }
+        const adminClient = createServiceRoleClient();
+        
+        // Use Promise.allSettled to debug which query fails if any
+        const results = await Promise.allSettled([
+            adminClient
+                .from('shifts')
+                .select('id, staff_id, role, shift_date, start_time, end_time, station, status, notes, created_at, updated_at')
+                .eq('restaurant_id', context.restaurantId)
+                .gte('shift_date', startIso)
+                .lte('shift_date', endIso)
+                .order('shift_date', { ascending: true })
+                .order('start_time', { ascending: true }),
+            adminClient
+                .from('restaurant_staff_with_users')
+                .select('id, user_id, role, is_active, name, full_name, first_name, last_name, email')
+                .eq('restaurant_id', context.restaurantId)
+                .eq('is_active', true)
+                .order('created_at', { ascending: true }),
+        ]);
 
-    return apiSuccess({
-        window: {
-            start_date: startIso,
-            end_date: endIso,
-        },
-        shifts: shiftsRes.data ?? [],
-        staff: staffRes.data ?? [],
-    });
+        const shiftsRes = results[0];
+        const staffRes = results[1];
+
+        if (shiftsRes.status === 'rejected') {
+            console.error('[Schedule API] Shifts query failed:', shiftsRes.reason);
+            throw new Error('Shifts query failed');
+        }
+        if (staffRes.status === 'rejected') {
+            console.error('[Schedule API] Staff query failed:', staffRes.reason);
+            throw new Error('Staff query failed');
+        }
+
+        if (shiftsRes.value.error) {
+            console.error('[Schedule API] Shifts DB error:', shiftsRes.value.error);
+            return apiError('Failed to fetch schedule', 500, 'SCHEDULE_FETCH_FAILED', shiftsRes.value.error.message);
+        }
+        if (staffRes.value.error) {
+            console.error('[Schedule API] Staff DB error:', staffRes.value.error);
+            // Fallback: If view query fails, try basic staff table?
+            // For now, return error to see what's wrong.
+            return apiError('Failed to fetch staff', 500, 'STAFF_FETCH_FAILED', staffRes.value.error.message);
+        }
+
+        const staffData = staffRes.value.data ?? [];
+        
+        // Fix names: specific logic for "Owner" name replacement
+        // If the name is "Owner" but the role is NOT owner, try to use email part or "Staff Member"
+        const processedStaff = staffData.map(s => {
+            let displayName = s.full_name || s.name || s.first_name || s.last_name;
+            
+            // If name is effectively "Owner" but they are not the actual owner role, 
+            // OR even if they are owner but we want a better name (user requested removing "Owner" as name).
+            // Let's rely on email if name is generic "Owner".
+            if (!displayName || displayName === 'Owner') {
+                if (s.email) {
+                    displayName = s.email.split('@')[0]; // Use 'makeemoneyonly' from 'makeemoneyonly@gmail.com'
+                } else {
+                    displayName = 'User';
+                }
+            }
+            return {
+                ...s,
+                // We overwrite the raw fields or just ensure the UI uses a computed one?
+                // The UI might use `name` or `first_name`. Let's populate specific fields.
+                name: displayName, 
+                first_name: displayName.split(' ')[0], 
+                last_name: displayName.split(' ').slice(1).join(' ') || ''
+            };
+        });
+
+        return apiSuccess({
+            window: {
+                start_date: startIso,
+                end_date: endIso,
+            },
+            shifts: shiftsRes.value.data ?? [],
+            staff: processedStaff,
+        });
+
+    } catch (e: any) {
+        console.error('[Schedule API] Unexpected error:', e);
+        return apiError('Internal Server Error', 500, 'INTERNAL_ERROR', e.message);
+    }
 }
 
 export async function POST(request: Request) {

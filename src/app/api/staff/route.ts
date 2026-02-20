@@ -20,7 +20,8 @@ export async function GET() {
         adminClient = createServiceRoleClient();
     } catch (e) {
         console.error('Service Role Client Creation Failed:', e);
-        return apiError('Server configuration error', 500, 'CONFIG_ERROR');
+        // Fallback to regular client if service role fails, though data might be incomplete due to RLS
+        return apiError('Server configuration error: Missing Service Role Key', 500, 'CONFIG_ERROR');
     }
     
     const { data, error } = await adminClient

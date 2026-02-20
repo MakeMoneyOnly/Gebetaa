@@ -5,8 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Eye, EyeOff, Lock, Mail, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 
 export const LoginForm = () => {

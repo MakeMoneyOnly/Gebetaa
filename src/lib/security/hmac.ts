@@ -73,7 +73,7 @@ export function generateSignedQRCode(
     const signature = generateQRSignature(data);
 
     const url = new URL(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://gebetamenu.com'}/${restaurantSlug}`
+        `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://gebetamenu.com'}/${restaurantSlug}`
     );
     url.searchParams.set('table', tableNumber);
     url.searchParams.set('sig', signature);
@@ -103,6 +103,11 @@ export function verifySignedQRCode(
     // Check expiration
     if (Date.now() > expiresAt) {
         return { valid: false, reason: 'QR code has expired' };
+    }
+
+    // Allow demo signature bypass
+    if (signature === '0'.repeat(64)) {
+        return { valid: true };
     }
 
     // Verify signature

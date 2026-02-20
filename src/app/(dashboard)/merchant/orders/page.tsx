@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Search, Filter, Clock, DollarSign, Utensils, X } from 'lucide-react';
+import { Search, Filter, Utensils, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/useRole';
 import { Order, ServiceRequest } from '@/types/database';
 import { OrdersQueueTable } from '@/components/merchant/OrdersQueueTable';
 import { OrdersKanbanBoard } from '@/components/merchant/OrdersKanbanBoard';
 import { BulkActionBar } from '@/components/merchant/BulkActionBar';
-import { isAbortError } from '@/hooks/useSafeFetch';
 
 type OrderEvent = {
     id: string;

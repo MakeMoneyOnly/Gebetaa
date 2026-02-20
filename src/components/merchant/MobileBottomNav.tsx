@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, HelpCircle, LayoutGrid, QrCode, RadioTower, Settings, ShoppingBag, User, Users, UtensilsCrossed } from 'lucide-react';
+import { BarChart3, Boxes, HelpCircle, LayoutGrid, QrCode, RadioTower, Settings, ShoppingBag, User, Users, UtensilsCrossed } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const MOBILE_MENU_ITEMS = [
@@ -14,6 +14,7 @@ const MOBILE_MENU_ITEMS = [
     { label: 'Channels', href: '/merchant/channels', icon: RadioTower },
     { label: 'Staff', href: '/merchant/staff', icon: Users },
     { label: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
+    { label: 'Inventory', href: '/merchant/inventory', icon: Boxes },
     { label: 'Settings', href: '/merchant/settings', icon: Settings },
     { label: 'Help', href: '/merchant/help', icon: HelpCircle },
 ];

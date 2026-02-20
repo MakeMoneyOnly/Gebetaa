@@ -250,7 +250,7 @@ export function useSessionRefresh(config: SessionRefreshConfig = {}) {
  * ```
  */
 export function useSessionState(options: { redirectTo?: string } = {}) {
-    const { redirectTo } = options;
+    void options; // Options reserved for future use (e.g., redirect behavior)
     const supabase = getSupabaseClient();
 
     const checkSession = useCallback(async () => {

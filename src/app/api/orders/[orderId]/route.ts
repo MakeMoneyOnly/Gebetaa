@@ -36,13 +36,8 @@ export async function GET(
         const { orderId } = await context.params;
         const supabase = await createClient();
 
-        // Parallelize: auth + restaurant resolution at the same time
-        const [{ data: { user }, error: userError }, restaurantResult] = await Promise.all([
-            supabase.auth.getUser(),
-            // We need the user id for resolveRestaurantIdForUser, so we do a two-step below
-            // but we can at least start the supabase client early
-            Promise.resolve({ restaurantId: null as string | null, error: null as string | null }),
-        ]);
+        // Get authenticated user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
 
         if (userError || !user) {
             return apiError('Unauthorized', 401, 'UNAUTHORIZED');

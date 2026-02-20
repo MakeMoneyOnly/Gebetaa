@@ -12,7 +12,6 @@ interface DishCartFooterProps {
 
 export function DishCartFooter({
     quantity,
-    price,
     onIncrement,
     onDecrement,
     onAddToCart,

@@ -87,12 +87,20 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
             const start = toDateInput(windowStart);
             const end = toDateInput(plusDays(windowStart, 6));
             const response = await fetch(`/api/staff/schedule?start_date=${start}&end_date=${end}`, { cache: 'no-store' });
-            const payload = await response.json();
-
+            
             if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to load schedule.');
+                let errorMessage = 'Failed to load schedule.';
+                try {
+                    const payload = await response.json();
+                    errorMessage = payload?.error ?? errorMessage;
+                } catch {
+                     // non-json error (e.g. 500 html page)
+                     errorMessage = `Error ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
             }
 
+            const payload = await response.json();
             setSchedule(payload.data as ScheduleResponse);
         } catch (fetchError) {
             setError(fetchError instanceof Error ? fetchError.message : 'Failed to load schedule.');

@@ -16,10 +16,12 @@ import {
     HelpCircle,
     CreditCard,
     BarChart3,
+    Boxes,
     ChevronRight,
     Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRole } from '@/hooks/useRole';
 
 const MENU_ITEMS = [
     { label: 'Dashboard', href: '/merchant', icon: LayoutGrid },
@@ -30,10 +32,31 @@ const MENU_ITEMS = [
     { label: 'Channels', href: '/merchant/channels', icon: RadioTower },
     { label: 'Staff', href: '/merchant/staff', icon: Users },
     { label: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
+    { label: 'Inventory', href: '/merchant/inventory', icon: Boxes },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { role } = useRole(null);
+
+    // Dynamic role-based filtering
+    const filteredItems = React.useMemo(() => {
+        if (!role) return []; // Or show minimal/skeleton?
+        // Define access rules
+        const rules: Record<string, string[]> = {
+            owner: ['Dashboard', 'Orders', 'Menu', 'Tables & QR', 'Guests', 'Channels', 'Staff', 'Analytics', 'Inventory'],
+            admin: ['Dashboard', 'Orders', 'Menu', 'Tables & QR', 'Guests', 'Channels', 'Staff', 'Analytics', 'Inventory'],
+            manager: ['Dashboard', 'Orders', 'Menu', 'Tables & QR', 'Guests', 'Staff', 'Inventory'],
+            kitchen: ['Orders', 'Menu', 'Inventory'],
+            waiter: ['Orders', 'Tables & QR', 'Menu'],
+            bar: ['Orders', 'Menu', 'Inventory'],
+        };
+
+        const allowed = rules[role] || [];
+        // Always allow 'Help & Support' and 'Settings' (handled separately in footer)
+        // This filters the main nav items
+        return MENU_ITEMS.filter(item => allowed.includes(item.label));
+    }, [role]);
 
     return (
         <aside className="hidden md:flex fixed left-0 top-0 z-50 h-screen w-[280px] bg-white border-r border-[#F1F1F1] flex-col justify-between py-6 px-4 overflow-y-auto no-scrollbar shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)]">
@@ -59,8 +82,8 @@ export function Sidebar() {
 
                 {/* Navigation */}
                 <nav className="space-y-1.5 px-1">
-                    {MENU_ITEMS.map((item) => {
-                        const isActive = pathname === item.href;
+                    {filteredItems.map((item) => {
+                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                         const Icon = item.icon;
 
                         return (
@@ -94,29 +117,31 @@ export function Sidebar() {
 
             {/* Bottom Section */}
             <div className="space-y-4 pt-6 border-t border-dashed border-gray-100">
-                {/* Upgrade Card */}
-                <div className="mx-1 p-5 rounded-[2rem] bg-gradient-to-br from-blue-50 to-indigo-50/50 relative overflow-hidden group border border-blue-100/50 hover:shadow-lg hover:shadow-blue-100/50 transition-all duration-300">
-                    <div className="flex items-start justify-between mb-3 relative z-10">
-                        <div className="h-10 w-10 bg-white rounded-[1rem] flex items-center justify-center text-blue-600 shadow-sm border border-blue-50">
-                            <CreditCard className="h-5 w-5" />
+                {/* Upgrade Card - Only for Owner/Admin */}
+                {(role === 'owner' || role === 'admin') && (
+                    <div className="mx-1 p-5 rounded-[2rem] bg-gradient-to-br from-blue-50 to-indigo-50/50 relative overflow-hidden group border border-blue-100/50 hover:shadow-lg hover:shadow-blue-100/50 transition-all duration-300">
+                        <div className="flex items-start justify-between mb-3 relative z-10">
+                            <div className="h-10 w-10 bg-white rounded-[1rem] flex items-center justify-center text-blue-600 shadow-sm border border-blue-50">
+                                <CreditCard className="h-5 w-5" />
+                            </div>
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                Pro
+                            </span>
                         </div>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold uppercase tracking-wider">
-                            Pro
-                        </span>
+                        <div className="relative z-10">
+                            <h4 className="font-bold text-gray-900 text-[15px] tracking-tight mb-1">Upgrade Plan</h4>
+                            <p className="text-[12px] text-gray-500 font-medium leading-relaxed mb-4">
+                                Get advanced analytics & unlimited staff.
+                            </p>
+                            <button className="w-full py-3 bg-black text-white font-bold text-sm rounded-xl hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+                                Upgrade Now
+                                <ChevronRight className="h-4 w-4 opacity-50" />
+                            </button>
+                        </div>
+                        {/* Decorative Background */}
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-100/50 rounded-full blur-3xl group-hover:bg-blue-200/50 transition-colors" />
                     </div>
-                    <div className="relative z-10">
-                        <h4 className="font-bold text-gray-900 text-[15px] tracking-tight mb-1">Upgrade Plan</h4>
-                        <p className="text-[12px] text-gray-500 font-medium leading-relaxed mb-4">
-                            Get advanced analytics & unlimited staff.
-                        </p>
-                        <button className="w-full py-3 bg-black text-white font-bold text-sm rounded-xl hover:bg-gray-800 transition-all shadow-lg shadow-black/10 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
-                            Upgrade Now
-                            <ChevronRight className="h-4 w-4 opacity-50" />
-                        </button>
-                    </div>
-                    {/* Decorative Background */}
-                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-100/50 rounded-full blur-3xl group-hover:bg-blue-200/50 transition-colors" />
-                </div>
+                )}
 
                 {/* Footer Links */}
                 <div className="space-y-1">

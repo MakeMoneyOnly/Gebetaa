@@ -21,6 +21,31 @@ Each migration should include:
 - Never use `USING (true)` style permissive policies for protected data.
 - Ensure every write path has corresponding rollback guidance.
 - Prefer additive schema changes before destructive changes.
+- **Always include `ON DELETE CASCADE` or `ON DELETE SET NULL` for foreign keys referencing `auth.users`**. Failing to do so will cause "Database error deleting user" when trying to delete users from the Supabase Dashboard. See [Supabase Troubleshooting Guide](https://supabase.com/docs/guides/troubleshooting/dashboard-errors-when-managing-users-N1ls4A).
+
+## Auth.Users Foreign Key Guidelines
+
+When creating foreign keys to `auth.users`, choose the appropriate `ON DELETE` action:
+
+| Action | Use Case | Example |
+|--------|----------|---------|
+| `ON DELETE CASCADE` | Child records should be deleted with the user | `restaurant_staff` (user's staff membership) |
+| `ON DELETE SET NULL` | Preserve audit trail, allow NULL when user deleted | `staff_invites.created_by`, `order_events.actor_user_id` |
+| `ON DELETE SET DEFAULT` | Set to default value when user deleted | Rarely needed |
+
+**Example:**
+```sql
+-- Correct: Allows user deletion while preserving audit trail
+created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+
+-- Incorrect: Will block user deletion with FK constraint error
+created_by UUID REFERENCES auth.users(id)
+```
+
+To verify all auth.users FKs have proper cascade rules:
+```sql
+SELECT * FROM public.check_auth_users_fk_cascade();
+```
 
 ## Verification Checklist
 

@@ -307,7 +307,7 @@ if (typeof setInterval !== 'undefined') {
     }, ACTIVITY_THRESHOLD_MS);
 }
 
-export default {
+const sessionExports = {
     createSession,
     validateSession,
     getSession,
@@ -324,3 +324,5 @@ export default {
     isUsingRedis,
     closeSessionStore,
 };
+
+export default sessionExports;

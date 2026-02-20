@@ -561,8 +561,8 @@ Use this section to execute feature-by-feature.
 ## 6.11 Inventory and Cost (New Tab)
 
 ### MVP
-- [ ] Add stock counts and low-stock alerts for critical ingredients
-- [ ] Add menu-item to ingredient mapping starter
+- [x] Add stock counts and low-stock alerts for critical ingredients
+- [x] Add menu-item to ingredient mapping starter
 - DB entities: `inventory_items`, `recipes`, `recipe_ingredients`, `stock_movements`
 - APIs: `GET|POST /api/inventory/items`, `POST /api/inventory/movements`
 - UI components:
@@ -571,8 +571,8 @@ Use this section to execute feature-by-feature.
   - `LowStockAlertPanel`
 
 ### V2
-- [ ] Add purchase orders and invoice capture
-- [ ] Add variance and waste tracking
+- [x] Add purchase orders and invoice capture
+- [x] Add variance and waste tracking
 - DB entities: `purchase_orders`, `supplier_invoices`, `stock_movements`
 - APIs: `GET|POST /api/inventory/purchase-orders`, `POST /api/inventory/invoices`, `GET /api/inventory/variance`
 - UI components:
@@ -708,7 +708,7 @@ Use this section to execute feature-by-feature.
 
 ## Phase P2 (Weeks 11-18) - Revenue and Cost Stack
 - [ ] Ship Loyalty + Gift Cards + Campaigns
-- [ ] Ship Inventory and Cost (stock + purchase + variance)
+- [x] Ship Inventory and Cost (stock + purchase + variance)
 - [ ] Ship Finance and Reconciliation core
 
 ## Phase P3 (Weeks 19-28) - Enterprise Scale

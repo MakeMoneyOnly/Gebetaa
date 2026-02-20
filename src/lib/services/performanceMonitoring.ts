@@ -60,25 +60,6 @@ const THRESHOLDS: Record<string, { good: number; poor: number }> = {
 };
 
 /**
- * Get rating for a metric based on thresholds
- */
-function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
-    const threshold = THRESHOLDS[name];
-    if (!threshold) return 'good';
-    
-    if (value <= threshold.good) return 'good';
-    if (value <= threshold.poor) return 'needs-improvement';
-    return 'poor';
-}
-
-/**
- * Generate a unique ID for metrics
- */
-function generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
  * Performance Monitor Service
  */
 class PerformanceMonitorService {

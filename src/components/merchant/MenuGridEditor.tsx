@@ -312,6 +312,7 @@ export function MenuGridEditor({
 
                         <div className="relative w-full h-40 rounded-[1.5rem] overflow-hidden bg-gray-50 flex-shrink-0">
                             {item.image_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={item.image_url}
                                     alt={item.name}

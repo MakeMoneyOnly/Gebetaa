@@ -4,7 +4,6 @@ import { Inter, Manrope } from 'next/font/google';
 import './globals.css';
 import { LenisRoot } from '@/components/providers/LenisRoot';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
-import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 import { Toaster } from 'react-hot-toast';
 import { ServiceWorkerCleanup } from '@/components/providers/ServiceWorkerCleanup';
 

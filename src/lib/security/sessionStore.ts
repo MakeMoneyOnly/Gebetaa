@@ -177,7 +177,6 @@ export class RedisSessionStore implements SessionStore {
     }
 
     async updateActivity(sessionId: string): Promise<boolean> {
-        const key = this.getKey(sessionId);
         const data = await this.get(sessionId);
 
         if (!data) return false;
@@ -342,7 +341,7 @@ export async function closeSessionStore(): Promise<void> {
     initializationPromise = null;
 }
 
-export default {
+const sessionStoreExports = {
     initializeSessionStore,
     getSessionStore,
     getMemoryStore,
@@ -351,3 +350,5 @@ export default {
     MemorySessionStore,
     RedisSessionStore,
 };
+
+export default sessionStoreExports;

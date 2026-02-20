@@ -1,161 +1,158 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import React from 'react';
+import { Clock, CheckCircle, ChevronRight, AlertCircle } from 'lucide-react';
+import { differenceInMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { MonitorCheck, AlertCircle, Clock } from 'lucide-react';
 
-interface TicketItem {
+type TicketItem = {
     id: string;
     quantity: number;
     name: string;
-    modifiers?: string[];
+    modifiers?: any[];
     notes?: string;
     status: 'pending' | 'cooking' | 'ready';
-}
+    category?: string;
+};
 
-interface TicketProps {
+type TicketCardProps = {
     id: string;
-    ticketNumber: number | string;
-    tableNumber: string; // e.g., "T-12"
+    ticketNumber: string;
+    tableNumber: string;
     createdAt: Date;
-    items: TicketItem[];
     status: 'new' | 'active' | 'completed';
-    onStatusChange: (status: 'new' | 'active' | 'completed') => Promise<void> | void;
-}
+    items: TicketItem[];
+    onStatusChange: (status: 'new' | 'active' | 'completed') => void;
+    variant?: 'light' | 'dark'; // Added for future flexibility if needed
+};
 
-export const TicketCard: React.FC<TicketProps> = ({
-    id,
+export const TicketCard = ({
     ticketNumber,
     tableNumber,
     createdAt,
-    items,
     status,
+    items,
     onStatusChange,
-}) => {
-    const [elapsedMinutes, setElapsedMinutes] = useState(() =>
-        Math.floor((Date.now() - createdAt.getTime()) / 60000)
-    );
+}: TicketCardProps) => {
+    const elapsedMinutes = differenceInMinutes(new Date(), createdAt);
+    
+    // Urgency Logic
+    let urgencyColor = 'bg-blue-500';
+    let urgencyBg = 'bg-blue-50';
+    let urgencyText = 'text-blue-600';
+    let borderColor = 'border-gray-200';
 
-    // Calculate urgency level
-    const urgency = useMemo<'normal' | 'warning' | 'critical'>(() => {
-        if (elapsedMinutes >= 15) return 'critical';
-        if (elapsedMinutes >= 10) return 'warning';
-        return 'normal';
-    }, [elapsedMinutes]);
+    if (elapsedMinutes > 15) {
+        urgencyColor = 'bg-orange-500';
+        urgencyBg = 'bg-orange-50';
+        urgencyText = 'text-orange-600';
+        borderColor = 'border-orange-200';
+    }
+    if (elapsedMinutes > 30) {
+        urgencyColor = 'bg-red-500';
+        urgencyBg = 'bg-red-50';
+        urgencyText = 'text-red-600';
+        borderColor = 'border-red-200';
+    }
 
-    // Timer Logic
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const now = new Date();
-            const diff = Math.floor((now.getTime() - createdAt.getTime()) / 60000);
-            setElapsedMinutes(diff);
-        }, 10000); // Check every 10s
-
-        return () => clearInterval(interval);
-    }, [createdAt]);
+    if (status === 'completed') {
+        urgencyColor = 'bg-green-500';
+        urgencyBg = 'bg-green-50';
+        urgencyText = 'text-green-600';
+        borderColor = 'border-green-200';
+    }
 
     return (
-        <Card
-            className={cn(
-                'flex h-full flex-col border-2 transition-all duration-300',
-                // Urgency Styles - Dark Mode Optimized
-                urgency === 'normal' && 'bg-neutral-900 border-neutral-700',
-                urgency === 'warning' && 'bg-yellow-950/30 border-yellow-600',
-                urgency === 'critical' && 'bg-red-950/40 border-red-600 animate-pulse-slow',
-                // New Order "Siren" Flash
-                status === 'new' && 'animate-flash-crimson ring-4 ring-brand-crimson/50'
-            )}
-            padding="none"
-        >
+        <div className={cn(
+            "flex flex-col h-full rounded-2xl border shadow-sm transition-all duration-300 overflow-hidden bg-white hover:shadow-md",
+            status === 'active' ? `border-l-4 ${borderColor} border-l-${urgencyColor} ring-1 ring-black/5` : "border-gray-200"
+        )}>
             {/* Header */}
-            <div
-                className={cn(
-                    'flex items-center justify-between px-4 py-3 border-b',
-                    urgency === 'normal' && 'bg-neutral-800 border-neutral-700',
-                    urgency === 'warning' && 'bg-yellow-900/50 border-yellow-600 text-yellow-100',
-                    urgency === 'critical' && 'bg-red-900/50 border-red-600 text-red-100'
-                )}
-            >
-                <div className="flex items-center gap-3">
-                    <span className="text-xl font-black text-white">#{ticketNumber}</span>
-                    <span className="rounded-md bg-white/10 px-2 py-0.5 text-sm font-bold text-white backdrop-blur-sm">
-                        {tableNumber}
-                    </span>
+            <div className={cn(
+                "p-4 flex flex-col gap-2 border-b",
+                status === 'new' ? 'bg-gray-50/50' : 'bg-white',
+                borderColor
+            )}>
+                <div className="flex justify-between items-start">
+                     <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Table</span>
+                        <span className="text-2xl font-black text-gray-900 leading-none">{tableNumber.replace('T-', '')}</span>
+                     </div>
+                     <div className="flex flex-col items-end">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ticket</span>
+                        <span className="text-xl font-bold text-gray-900 tabular-nums">#{ticketNumber.slice(-4)}</span>
+                     </div>
                 </div>
-                <div className="flex items-center gap-1 font-mono text-lg font-bold">
-                    <Clock className="h-4 w-4" />
-                    <span>{elapsedMinutes}m</span>
+
+                <div className="flex items-center justify-between mt-2">
+                    <div className={cn("px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5", urgencyBg, urgencyText)}>
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{elapsedMinutes}m ago</span>
+                    </div>
+                    {status === 'new' && (
+                        <div className="px-2 py-1 bg-brand-crimson/10 text-brand-crimson text-xs font-bold rounded-lg uppercase tracking-wide animate-pulse">
+                            New
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {items.map((item, idx) => (
-                    <div key={`${id}-${item.id}-${idx}`} className="group">
-                        <div className="flex justify-between items-start">
-                            <div className="flex items-baseline gap-2">
-                                <span className={cn(
-                                    "text-lg font-bold",
-                                    item.quantity > 1 ? "text-brand-yellow" : "text-white"
-                                )}>
-                                    {item.quantity}x
-                                </span>
-                                <span className="text-lg font-bold text-neutral-100">{item.name}</span>
+            {/* Items List */}
+            <div className="flex-1 overflow-y-auto p-2 bg-gray-50/30">
+                <div className="space-y-1">
+                    {items.map((item, idx) => (
+                        <div 
+                            key={`${item.id}-${idx}`}
+                            className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex gap-3 group"
+                        >
+                            <div className="h-6 w-6 rounded-md bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-900 border border-gray-200">
+                                {item.quantity}x
                             </div>
-                        </div>
-
-                        {/* Modifiers */}
-                        {(item.modifiers?.length || item.notes) && (
-                            <div className="mt-1 ml-7 space-y-1">
-                                {item.modifiers?.map((mod, i) => (
-                                    <div key={i} className="text-sm text-neutral-400 font-medium">
-                                        + {mod}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-gray-900 leading-tight group-hover:text-brand-crimson transition-colors">
+                                    {item.name}
+                                </p>
+                                {(item.modifiers && item.modifiers.length > 0) && (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {item.modifiers.map((mod: any, i: number) => (
+                                            <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">
+                                                {mod.name || mod}
+                                            </span>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
                                 {item.notes && (
-                                    <div className="mt-1 flex items-start gap-1 text-sm font-bold text-brand-yellow bg-brand-yellow/10 p-1.5 rounded border border-brand-yellow/20">
-                                        <AlertCircle className="h-4 w-4 shrink-0" />
-                                        <span className="uppercase tracking-wide">Note: {item.notes}</span>
+                                    <div className="mt-1.5 flex items-start gap-1.5 text-amber-600 text-[11px] font-medium bg-amber-50 p-1.5 rounded-lg border border-amber-100">
+                                        <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                                        <span>{item.notes}</span>
                                     </div>
                                 )}
                             </div>
-                        )}
-
-                        {/* Separator if not last */}
-                        {idx < items.length - 1 && (
-                            <div className="my-3 border-t border-dashed border-neutral-700 w-full" />
-                        )}
-                    </div>
-                ))}
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Footer Actions */}
-            <div className="bg-neutral-800 p-3 border-t border-neutral-700">
-                {status === 'new' ? (
-                    <Button
-                        variant="primary"
-                        size="lg"
-                        className="w-full h-14 text-lg font-bold tracking-wider bg-brand-crimson hover:bg-brand-crimson-hover shadow-lg shadow-brand-crimson/30"
-                        onClick={() => void onStatusChange('active')}
+            <div className="p-3 bg-white border-t border-gray-100">
+                {status === 'new' && (
+                     <button
+                        onClick={() => onStatusChange('active')}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-900/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
-                        ACCEPT
-                    </Button>
-                ) : status === 'active' ? (
-                    <Button
-                        variant="primary"
-                        size="lg"
-                        className="w-full h-14 text-lg font-bold tracking-wider bg-green-600 hover:bg-green-500 shadow-lg shadow-green-900/20"
-                        onClick={() => void onStatusChange('completed')}
+                        <span>Start Preparing</span>
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                )}
+
+                {status === 'active' && (
+                    <button
+                        onClick={() => onStatusChange('completed')}
+                        className="w-full py-3 bg-white border-2 border-green-500 text-green-600 hover:bg-green-50 rounded-xl font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
-                        READY
-                    </Button>
-                ) : (
-                    <div className="flex items-center justify-center h-14 text-green-500 font-bold gap-2">
-                        <MonitorCheck className="h-6 w-6" />
-                        <span>COMPLETED</span>
-                    </div>
+                        <CheckCircle className="w-5 h-5" />
+                        <span>Mark Ready</span>
+                    </button>
                 )}
             </div>
-        </Card>
+        </div>
     );
 };

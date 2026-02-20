@@ -104,10 +104,8 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
 
             const itemData = {
                 category_id: category?.id || itemToEdit?.category_id,
-                // We fallback to checking itemToEdit, but TypeScript might not know it has restaurant_id if the type is strict.
-                // However, we can fetch it or trust the input. 
-                // Let's assume the user is authorized via RLS anyway.
-                restaurant_id: category?.restaurant_id || (itemToEdit as any)?.restaurant_id,
+
+
                 name,
                 name_am: nameAm || null,
                 description: description || null,
@@ -161,6 +159,7 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                     <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed border-surface-200 rounded-xl bg-surface-50">
                         {imageUrl ? (
                             <div className="relative h-32 w-full">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={imageUrl} alt="Preview" className="h-full w-full object-contain rounded-lg" />
                                 <button
                                     type="button"

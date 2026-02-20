@@ -56,12 +56,13 @@ export async function POST(request: Request) {
         .eq('id', context.restaurantId)
         .single();
 
-    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/invite?code=${code}`;
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/join?code=${code}`;
     let emailSent = false;
 
     if (parsed.data.email && resend) {
+        console.log('Attempting to send email to:', parsed.data.email);
         try {
-            await resend.emails.send({
+            const { data: emailData, error: emailError } = await resend.emails.send({
                 from: EMAIL_FROM,
                 to: parsed.data.email,
                 subject: `You've been invited to join ${restaurant?.name ?? 'Gebeta'}`,
@@ -71,11 +72,19 @@ export async function POST(request: Request) {
                     role: parsed.data.role,
                 }),
             });
-            emailSent = true;
+            
+            if (emailError) {
+                console.error('Resend API returned error:', emailError);
+            } else {
+                console.log('Email sent successfully:', emailData);
+                emailSent = true;
+            }
         } catch (emailError) {
             console.error('Failed to send invite email:', emailError);
             // We don't fail the request if email fails, but we'll flag it in the response
         }
+    } else {
+        console.log('Skipping email: Email provided?', Boolean(parsed.data.email), 'Resend client ready?', Boolean(resend));
     }
 
     await writeAuditLog(context.supabase, {

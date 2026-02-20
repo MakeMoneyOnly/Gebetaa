@@ -117,7 +117,6 @@ export async function GET(request: Request) {
     // Calculate Top Selling Items
     const itemSales: Record<string, { count: number; revenue: number }> = {};
     orders.forEach(order => {
-        // @ts-ignore - Supabase types inference can be tricky with nested relations
         const items = order.order_items || [];
         items.forEach((item: any) => {
             const name = item.name || 'Unknown Item';

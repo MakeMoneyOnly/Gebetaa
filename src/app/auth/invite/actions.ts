@@ -1,8 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 export async function acceptInvite(code: string) {
     const supabase = await createClient();
@@ -49,7 +49,8 @@ export async function acceptInvite(code: string) {
          return { error: 'You are already a staff member of this restaurant.' };
     }
    
-    const { error: insertError } = await supabase
+    const adminClient = createServiceRoleClient();
+    const { error: insertError } = await adminClient
         .from('restaurant_staff')
         .insert({
             restaurant_id: invite.restaurant_id,
@@ -70,7 +71,7 @@ export async function acceptInvite(code: string) {
         .update({ status: 'accepted' }) // or 'used'
         .eq('id', invite.id);
 
-    // 4. Redirect to dashboard
+    // 4. Return success (client handles navigation)
     revalidatePath('/', 'layout');
-    redirect('/merchant/dashboard');
+    return { success: true };
 }

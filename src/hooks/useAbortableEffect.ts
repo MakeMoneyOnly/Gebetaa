@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 /**
  * A hook that provides an abortable effect with automatic cleanup.
@@ -84,18 +84,18 @@ export function useAbortController() {
         };
     }, []);
 
-    const getSignal = () => {
+    const getSignal = useCallback(() => {
         // Create new controller if none exists or previous was aborted
         if (!abortControllerRef.current || abortControllerRef.current.signal.aborted) {
             abortControllerRef.current = new AbortController();
         }
         return abortControllerRef.current.signal;
-    };
+    }, []);
 
-    const abort = () => {
+    const abort = useCallback(() => {
         abortControllerRef.current?.abort();
         abortControllerRef.current = null;
-    };
+    }, []);
 
-    return { getSignal, abort, signal: abortControllerRef.current?.signal };
+    return { getSignal, abort };
 }

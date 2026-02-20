@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Calendar, Download, Loader2, Wallet, ShoppingBag, TrendingUp, Percent, Clock, Bell, LayoutGrid, CheckCircle2, Star, Smile, Meh, Frown, Users, Trophy, Utensils, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, Loader2, Wallet, ShoppingBag, TrendingUp, Percent, Star, Smile, Meh, Frown, Users, ChevronDown } from 'lucide-react';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { toast } from 'react-hot-toast';
 import { MetricCard } from '@/components/merchant/MetricCard';
@@ -113,7 +113,7 @@ export default function AnalyticsPage() {
                 if (cached) {
                     try {
                         setOrderStats(JSON.parse(cached));
-                    } catch (e) {
+                    } catch {
                         // ignore parse error
                     }
                 }

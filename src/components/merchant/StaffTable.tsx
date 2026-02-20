@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { MoreHorizontal, User, Shield, CheckCircle2, XCircle } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { StaffMember, ROLE_BADGE } from '@/hooks/useStaff';
+import { ROLE_BADGE } from '@/hooks/useStaff';
 import { ViewProps } from './StaffGrid'; // Shared type
 
 export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: ViewProps) {

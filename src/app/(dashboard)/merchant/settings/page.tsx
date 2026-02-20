@@ -83,6 +83,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
         void loadSettings();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const saveSecurity = async () => {

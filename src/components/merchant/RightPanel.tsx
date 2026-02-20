@@ -61,6 +61,7 @@ export function RightPanel() {
                 {/* Avatar */}
                 <div className="relative inline-block mb-4">
                     <div className="h-24 w-24 rounded-full p-1 bg-white mx-auto shadow-sm ring-4 ring-white">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${restaurantName}`}
                             alt="Profile"

@@ -37,7 +37,7 @@ export function MiniNavbar() {
         }
 
         if (isOpen) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+             
             setHeaderShapeClass('rounded-xl');
         } else {
             shapeTimeoutRef.current = setTimeout(() => {

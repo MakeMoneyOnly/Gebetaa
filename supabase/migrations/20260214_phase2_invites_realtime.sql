@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS staff_invites (
     restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
     code TEXT NOT NULL UNIQUE, -- Secure token for the invite link
     role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'manager', 'kitchen', 'waiter', 'bar')),
-    created_by UUID REFERENCES auth.users(id),
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     email TEXT, -- Optional, to restricting invite to specific email
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired')),
     expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '7 days'),

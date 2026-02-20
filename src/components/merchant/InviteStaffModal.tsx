@@ -13,7 +13,7 @@ interface InviteStaffModalProps {
     onInvite: (payload: { email: string | null; role: StaffRole }) => Promise<void>;
 }
 
-const ROLE_OPTIONS: StaffRole[] = ['owner', 'admin', 'manager', 'kitchen', 'waiter', 'bar'];
+const ROLE_OPTIONS: StaffRole[] = ['admin', 'manager', 'kitchen', 'waiter', 'bar'];
 
 export function InviteStaffModal({
     open,

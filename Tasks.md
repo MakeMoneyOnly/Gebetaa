@@ -226,19 +226,19 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 6.2 Inventory and Cost
 
-- [ ] `P2-016` Add migrations for `inventory_items`.
-- [ ] `P2-017` Add migrations for `recipes`.
-- [ ] `P2-018` Add migrations for `recipe_ingredients`.
-- [ ] `P2-019` Add migrations for `stock_movements`.
-- [ ] `P2-020` Add migrations for `purchase_orders`.
-- [ ] `P2-021` Add migrations for `supplier_invoices`.
-- [ ] `P2-022` Implement inventory APIs (`items`, `movements`, `variance`).
-- [ ] `P2-023` Implement procurement APIs (`purchase-orders`, `invoices`).
-- [ ] `P2-024` Build `InventoryTable`.
-- [ ] `P2-025` Build `RecipeMapper`.
-- [ ] `P2-026` Build `PurchaseOrderBoard`.
-- [ ] `P2-027` Build `InvoiceReviewQueue`.
-- [ ] `P2-028` Build `VarianceDashboard`.
+- [x] `P2-016` Add migrations for `inventory_items`.
+- [x] `P2-017` Add migrations for `recipes`.
+- [x] `P2-018` Add migrations for `recipe_ingredients`.
+- [x] `P2-019` Add migrations for `stock_movements`.
+- [x] `P2-020` Add migrations for `purchase_orders`.
+- [x] `P2-021` Add migrations for `supplier_invoices`.
+- [x] `P2-022` Implement inventory APIs (`items`, `movements`, `variance`).
+- [x] `P2-023` Implement procurement APIs (`purchase-orders`, `invoices`).
+- [x] `P2-024` Build `InventoryTable`.
+- [x] `P2-025` Build `RecipeMapper`.
+- [x] `P2-026` Build `PurchaseOrderBoard`.
+- [x] `P2-027` Build `InvoiceReviewQueue`.
+- [x] `P2-028` Build `VarianceDashboard`.
 
 ## 6.3 Finance and Reconciliation
 
@@ -386,7 +386,11 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 10.1 Digital Payment & Mobile Checkout
 - [ ] `DIG-001` Implement "Tap to Pay" on mobile (NFC reading via generic Android/iOS devices).
-- [ ] `DIG-002` Integrate Chapa and Telebirr natively into the Menu/Order flow.
+- [x] `DIG-002` Integrate Chapa and Telebirr natively into the Menu/Order flow.
+    - [x] Create payment provider abstraction (`src/lib/payments/types.ts`).
+    - [x] Implement Chapa provider (`src/lib/payments/chapa.ts`).
+    - [ ] Implement Telebirr provider.
+    - [ ] Connect payment flow to order checkout.
 - [ ] `DIG-003` Build QR-based "Table Ordering" that bypasses server terminals completely.
 - [ ] `DIG-004` Build "Direct Online Ordering" web module (Owner.com style) for pickup/delivery.
 - [ ] `DIG-005` Implement "Split Check" logic on customer mobile devices.
@@ -402,9 +406,9 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `OFF-003` Ensure order taking persists locally in IndexDB before syncing.
 
 ## 10.4 Staff & AI Operations
-- [ ] `OPS-001` Integrate Resend for transactional email onboarding.
-    - [ ] Configure `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
-    - [ ] Verify domain in Resend for production email sending.
+- [x] `OPS-001` Integrate Resend for transactional email onboarding.
+    - [x] Configure `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
+    - [x] Verify domain in Resend for production email sending.
 - [ ] `OPS-002` Build "Loman AI" style phone order taker integration.
 - [ ] `OPS-003` Add "Digital Tips" and shift management for mobile staff.
 
@@ -418,4 +422,3 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 ## 10.6 Quality & Rollout
 - [ ] `REL-004` Load test "Tablet Web KDS" with 500+ active tickers.
 - [ ] `REL-005` Verify "Offline Mode" recovery in poor network conditions.
-

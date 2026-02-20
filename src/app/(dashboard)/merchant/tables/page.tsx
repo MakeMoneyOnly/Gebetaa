@@ -114,6 +114,7 @@ export default function TablesPage() {
             isMountedRef.current = false;
             abortControllerRef.current?.abort();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, roleLoading, supabase]);
 
     useEffect(() => {
@@ -123,7 +124,7 @@ export default function TablesPage() {
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'tables' },
                 () => {
-                    if (user) fetchTables();
+                    if (user) void fetchTables();
                 }
             )
             .subscribe();
@@ -131,6 +132,7 @@ export default function TablesPage() {
         return () => {
             supabase.removeChannel(channel);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase, user]);
 
     const fetchTables = async (signal?: AbortSignal) => {
@@ -171,7 +173,8 @@ export default function TablesPage() {
         }
     };
 
-    const fetchOccupancyTimeline = async (signal?: AbortSignal) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const fetchOccupancyTimeline = async (_signal?: AbortSignal) => {
         try {
             const since = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
             const { data, error } = await supabase

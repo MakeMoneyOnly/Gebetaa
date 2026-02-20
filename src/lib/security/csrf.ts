@@ -235,7 +235,7 @@ export async function clearCsrfToken(): Promise<void> {
     cookieStore.delete(CSRF_TOKEN_NAME);
 }
 
-export default {
+const csrfExports = {
     generateCsrfToken,
     setCsrfToken,
     validateCsrfToken,
@@ -244,3 +244,5 @@ export default {
     regenerateCsrfToken,
     clearCsrfToken,
 };
+
+export default csrfExports;

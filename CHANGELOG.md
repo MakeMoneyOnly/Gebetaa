@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-02-19
+
+#### P2 Inventory and Cost (Phase 6.2)
+- Added migrations:
+  - `supabase/migrations/20260219_p2_inventory_items.sql`
+  - `supabase/migrations/20260219_p2_recipes.sql`
+  - `supabase/migrations/20260219_p2_recipe_ingredients.sql`
+  - `supabase/migrations/20260219_p2_stock_movements.sql`
+  - `supabase/migrations/20260219_p2_purchase_orders.sql`
+  - `supabase/migrations/20260219_p2_supplier_invoices.sql`
+- Added Inventory and Cost APIs:
+  - `GET /api/inventory/items` and `POST /api/inventory/items` in `src/app/api/inventory/items/route.ts`
+  - `POST /api/inventory/movements` in `src/app/api/inventory/movements/route.ts`
+  - `GET /api/inventory/variance` in `src/app/api/inventory/variance/route.ts`
+  - `GET /api/inventory/purchase-orders` and `POST /api/inventory/purchase-orders` in `src/app/api/inventory/purchase-orders/route.ts`
+  - `GET /api/inventory/invoices` and `POST /api/inventory/invoices` in `src/app/api/inventory/invoices/route.ts`
+  - `GET /api/inventory/recipes` and `POST /api/inventory/recipes` in `src/app/api/inventory/recipes/route.ts`
+- Added Inventory and Cost UI components:
+  - `InventoryTable` in `src/components/merchant/InventoryTable.tsx`
+  - `RecipeMapper` in `src/components/merchant/RecipeMapper.tsx`
+  - `PurchaseOrderBoard` in `src/components/merchant/PurchaseOrderBoard.tsx`
+  - `InvoiceReviewQueue` in `src/components/merchant/InvoiceReviewQueue.tsx`
+  - `VarianceDashboard` in `src/components/merchant/VarianceDashboard.tsx`
+  - `LowStockAlertPanel` in `src/components/merchant/LowStockAlertPanel.tsx`
+- Added merchant inventory page and navigation wiring:
+  - New page `src/app/(dashboard)/merchant/inventory/page.tsx`
+  - Navigation updates:
+    - `src/components/merchant/Sidebar.tsx`
+    - `src/components/merchant/MobileBottomNav.tsx`
+    - `src/components/merchant/CommandBarShell.tsx`
+- Added API route unit tests for Phase 6.2:
+  - `src/app/api/__tests__/p2-inventory-api-routes.test.ts`
+- Updated route-level API rate limit policy map:
+  - `src/lib/api/rateLimitPolicies.ts`
+
 ### Added - 2026-02-18
 
 #### P2 Revenue and Cost Kickoff (Loyalty, Gift Cards, Campaigns)

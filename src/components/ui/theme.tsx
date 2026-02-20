@@ -15,7 +15,6 @@ interface ThemeProps {
 
 export function Theme({
     size = 'md',
-    variant = 'dropdown',
     themes = ['light', 'dark', 'system'],
     showLabel = false,
     className,

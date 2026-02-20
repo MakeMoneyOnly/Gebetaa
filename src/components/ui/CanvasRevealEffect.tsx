@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useTheme } from 'next-themes';
 
 interface CanvasRevealEffectProps {
     animationSpeed?: number;
@@ -16,9 +15,7 @@ interface CanvasRevealEffectProps {
 
 export const CanvasRevealEffect = ({
     containerClassName,
-    showGradient = true,
 }: CanvasRevealEffectProps) => {
-    const { resolvedTheme } = useTheme();
     return (
         <div className={cn('relative h-full w-full bg-transparent', containerClassName)}>
             {/* Simplified animated background using CSS */}

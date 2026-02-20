@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { RevenueChart } from './RevenueChart';
 
@@ -24,7 +24,6 @@ describe('RevenueChart', () => {
     it('renders chart skeleton on initial mount', () => {
         const { container } = render(<RevenueChart />);
         // Component shows skeleton initially (before useEffect runs)
-        const skeleton = container.querySelector('.animate-pulse');
         // After mounting, either skeleton or chart wrapper should exist
         expect(container.firstChild).toBeTruthy();
     });

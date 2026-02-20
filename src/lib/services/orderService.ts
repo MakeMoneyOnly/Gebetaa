@@ -189,7 +189,9 @@ export async function createOrder(
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
     // 4. Insert order - use type assertion to handle DB schema differences
+    const orderId = crypto.randomUUID();
     const orderInsert = {
+        id: orderId,
         restaurant_id: orderData.restaurant_id,
         table_number: orderData.table_number, // Keep as string
         items: validation.enrichedItems as unknown as OrderInsert['items'],
@@ -204,7 +206,7 @@ export async function createOrder(
 
     if (error || !order) {
         console.error('[OrderService] Failed to create order:', error);
-        return { success: false, error: 'Failed to create order' };
+        return { success: false, error: error?.message || 'Failed to create order' };
     }
 
     return { success: true, order };

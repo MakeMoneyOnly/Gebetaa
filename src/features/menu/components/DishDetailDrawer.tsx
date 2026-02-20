@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useHaptic } from '@/hooks/useHaptic';
 import { isRemoteOrDataImageSrc } from '@/lib/utils';
 import { createClient } from '@/lib/supabase';
-import { DishItem, DishDetailDrawerProps } from './DishDetailDrawer.types';
+import { DishDetailDrawerProps } from './DishDetailDrawer.types';
 import { DishHeroSection } from './DishHeroSection';
 import { DishStatsRow } from './DishStatsRow';
 import { DishNutritionSection } from './DishNutritionSection';

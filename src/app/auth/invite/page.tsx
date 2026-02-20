@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { acceptInvite } from './actions';
+import { InviteAcceptButton } from './InviteAcceptButton';
 
 export default async function InvitePage(props: {
     searchParams: Promise<{ code: string }>;
@@ -70,11 +70,6 @@ export default async function InvitePage(props: {
         );
     }
 
-    async function handleAccept() {
-        'use server';
-        await acceptInvite(code);
-    }
-
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 dark:bg-zinc-900">
             <div className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
@@ -97,14 +92,7 @@ export default async function InvitePage(props: {
                                 Logged in as <span className="font-medium text-gray-900 dark:text-white">{user.email}</span>
                             </p>
                             
-                            <form action={handleAccept}>
-                                <button
-                                    type="submit"
-                                    className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98]"
-                                >
-                                    Accept Invitation
-                                </button>
-                            </form>
+                            <InviteAcceptButton code={code} />
                             
                             <form action={async () => {
                                 'use server';
