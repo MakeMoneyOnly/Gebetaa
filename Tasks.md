@@ -255,20 +255,20 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 6.4 Addis Localization and Payment Rail Adapters
 
-- [ ] `P2-040` Build payment adapter abstraction layer.
-- [ ] `P2-041` Implement telebirr adapter contract.
-- [ ] `P2-042` Implement Chapa adapter contract.
-- [ ] `P2-044` Add provider health checks and fallback policy.
-- [ ] `P2-045` Add EN/AM localization coverage for P2 tabs.
-- [ ] `P2-046` Add ETB formatting and reporting consistency checks.
+- [x] `P2-040` Build payment adapter abstraction layer.
+- [x] `P2-041` Implement telebirr adapter contract.
+- [x] `P2-042` Implement Chapa adapter contract.
+- [x] `P2-044` Add provider health checks and fallback policy.
+- [x] `P2-045` Add EN/AM localization coverage for P2 tabs.
+- [x] `P2-046` Add ETB formatting and reporting consistency checks.
 
 ## 6.5 P2 Quality and Release
 
-- [ ] `P2-047` Add E2E for loyalty and gift-card redemption.
-- [ ] `P2-048` Add E2E for inventory variance.
-- [ ] `P2-049` Add E2E for finance reconciliation.
-- [ ] `P2-050` Execute load tests for peak flows.
-- [ ] `P2-051` Progressive rollout with rollback safeguards.
+- [x] `P2-047` Add E2E for loyalty and gift-card redemption.
+- [x] `P2-048` Add E2E for inventory variance.
+- [x] `P2-049` Add E2E for finance reconciliation.
+- [x] `P2-050` Execute load tests for peak flows.
+- [x] `P2-051` Progressive rollout with rollback safeguards.
 
 ## 7) Phase P3 (Weeks 19-28) - Enterprise Scale
 
