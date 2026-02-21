@@ -169,7 +169,7 @@ export function DishDetailDrawer({
                                     {ingredients.map((ing, i) => (
                                         <div
                                             key={i}
-                                            className="flex items-center gap-1.5 rounded-xl border border-black/5 bg-black/5 px-3 py-2 text-sm font-bold text-black/70 dark:border-white/5 dark:bg-white/5 dark:text-white/70"
+                                            className="bg-brand-crimson/5 flex items-center gap-1.5 rounded-xl border border-black/5 px-3 py-2 text-sm font-bold text-black/70 dark:border-white/5 dark:bg-white/5 dark:text-white/70"
                                         >
                                             <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
                                             {ing}

@@ -165,7 +165,7 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
                                                                 updateQuantity(item.uniqueId, -1)
                                                             }
                                                             disabled={item.quantity <= 1}
-                                                            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/10 text-black transition-transform hover:opacity-80 active:scale-90 disabled:opacity-50 disabled:active:scale-100 dark:bg-white/10 dark:text-white"
+                                                            className="bg-brand-crimson/10 flex h-8 w-8 items-center justify-center rounded-full text-black transition-transform hover:opacity-80 active:scale-90 disabled:opacity-50 disabled:active:scale-100 dark:bg-white/10 dark:text-white"
                                                         >
                                                             <Minus size={14} />
                                                         </button>
@@ -210,7 +210,7 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
                                                         e.target.value
                                                     )
                                                 }
-                                                className="focus:ring-brand-crimson/40 w-full rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm text-black transition-all placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
+                                                className="focus:ring-brand-crimson/40 bg-brand-crimson/5 w-full rounded-xl border border-black/10 px-4 py-3 text-sm text-black transition-all placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
                                             />
                                         </div>
                                     </div>
