@@ -656,7 +656,7 @@ export async function installMerchantDashboardMocks(page: Page) {
                 reorder_level: Number(payload.reorder_level ?? 0),
                 cost_per_unit: Number(payload.cost_per_unit ?? 0),
                 is_active: true,
-            });
+            } as any);
             await respondJson(route, { data: { created: true } });
             return;
         }
@@ -686,7 +686,7 @@ export async function installMerchantDashboardMocks(page: Page) {
                 output_qty: Number(payload.output_qty ?? 1),
                 output_uom: String(payload.output_uom ?? 'unit'),
                 ingredients: (payload.ingredients as unknown[]) ?? [],
-            });
+            } as any);
             await respondJson(route, { data: { created: true } });
             return;
         }
@@ -709,7 +709,7 @@ export async function installMerchantDashboardMocks(page: Page) {
                 tax_amount: Number(payload.tax_amount ?? 0),
                 expected_at: String(payload.expected_at ?? nowIso),
                 notes: (payload.notes as string | null) ?? null,
-            });
+            } as any);
             await respondJson(route, { data: { created: true } });
             return;
         }
@@ -732,7 +732,7 @@ export async function installMerchantDashboardMocks(page: Page) {
                 tax_amount: Number(payload.tax_amount ?? 0),
                 due_at: String(payload.due_at ?? nowIso),
                 notes: (payload.notes as string | null) ?? null,
-            });
+            } as any);
             await respondJson(route, { data: { created: true } });
             return;
         }

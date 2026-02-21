@@ -73,7 +73,9 @@ export class OrdersPage {
     async processOrderLifecycleStep() {
         const emptyState = this.page.getByRole('heading', { name: /No orders found/i });
         if (await emptyState.isVisible()) {
-            await expect(this.page.getByText('Try changing the filter or search term.')).toBeVisible();
+            await expect(
+                this.page.getByText('Try changing the filter or search term.')
+            ).toBeVisible();
             return;
         }
 
@@ -117,7 +119,9 @@ export class MenuPage {
 
             await this.page.getByPlaceholder('e.g. Burger').fill('QA Espresso');
             await this.page.getByPlaceholder('0.00').fill('95');
-            await this.page.getByPlaceholder('Describe the dish...').fill('Automation-created drink');
+            await this.page
+                .getByPlaceholder('Describe the dish...')
+                .fill('Automation-created drink');
             await this.page.getByRole('button', { name: 'Create Item' }).click();
 
             await expect(this.page.getByText('Menu item created.')).toBeVisible();
@@ -203,7 +207,9 @@ export class SettingsPage {
 
     async assertLoaded() {
         await expect(this.page.getByRole('heading', { name: /^Settings$/i })).toBeVisible();
-        await expect(this.page.getByRole('button', { name: 'Security', exact: true })).toBeVisible();
+        await expect(
+            this.page.getByRole('button', { name: 'Security', exact: true })
+        ).toBeVisible();
     }
 
     async saveSecuritySettings() {

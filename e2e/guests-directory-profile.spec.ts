@@ -194,7 +194,7 @@ test.describe('Guests directory and profile flows', () => {
             language: 'am',
             notes: 'Prefers quiet corner table',
         });
-        const tags = (capturedPatchPayload?.tags ?? []) as string[];
+        const tags = ((capturedPatchPayload as any)?.tags ?? []) as string[];
         expect(tags).toContain('family');
     });
 });
