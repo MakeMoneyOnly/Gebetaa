@@ -26,12 +26,12 @@ Describe business intent and primary use cases.
 ### Query Params
 
 | Name | Type | Required | Description |
-|---|---|---|---|
+| ---- | ---- | -------- | ----------- |
 
 ### Path Params
 
 | Name | Type | Required | Description |
-|---|---|---|---|
+| ---- | ---- | -------- | ----------- |
 
 ### Request Body Schema
 
@@ -41,7 +41,7 @@ Describe business intent and primary use cases.
 
 ### Validation Rules
 
-- 
+-
 
 ## 5) Response Contract
 
@@ -51,20 +51,20 @@ Status code:
 
 ```json
 {
-  "data": {}
+    "data": {}
 }
 ```
 
 ### Error Responses
 
 | Status | Code | Meaning |
-|---|---|---|
+| ------ | ---- | ------- |
 
 ```json
 {
-  "error": "message",
-  "code": "ERROR_CODE",
-  "details": {}
+    "error": "message",
+    "code": "ERROR_CODE",
+    "details": {}
 }
 ```
 

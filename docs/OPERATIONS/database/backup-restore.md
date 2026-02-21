@@ -15,10 +15,10 @@ Gebeta Restaurant OS uses Supabase (PostgreSQL) as its primary database. Supabas
 Supabase provides automatic daily backups for all projects:
 
 | Plan | Backup Retention | Point-in-Time Recovery (PITR) |
-|------|-----------------|-------------------------------|
-| Free | 7 days | No |
-| Pro | 30 days | Yes |
-| Team | 30 days | Yes |
+| ---- | ---------------- | ----------------------------- |
+| Free | 7 days           | No                            |
+| Pro  | 30 days          | Yes                           |
+| Team | 30 days          | Yes                           |
 
 ### Backup Schedule
 
@@ -146,31 +146,32 @@ supabase db restore --timestamp "2026-02-18 10:30:00"
 ### Disaster Recovery Steps
 
 1. **Assess the situation**
-   - Determine the scope of data loss
-   - Identify the cause
-   - Notify stakeholders
+    - Determine the scope of data loss
+    - Identify the cause
+    - Notify stakeholders
 
 2. **Contact Supabase Support**
-   - Open a support ticket
-   - Provide details of the incident
-   - Request assistance if needed
+    - Open a support ticket
+    - Provide details of the incident
+    - Request assistance if needed
 
 3. **Restore from backup**
-   ```bash
-   # Stop application to prevent conflicts
-   # Then restore from most recent valid backup
-   psql $DATABASE_URL < backup_latest.sql
-   ```
+
+    ```bash
+    # Stop application to prevent conflicts
+    # Then restore from most recent valid backup
+    psql $DATABASE_URL < backup_latest.sql
+    ```
 
 4. **Verify restoration**
-   - Check critical tables
-   - Verify data integrity
-   - Test application functionality
+    - Check critical tables
+    - Verify data integrity
+    - Test application functionality
 
 5. **Resume operations**
-   - Restart application
-   - Monitor for issues
-   - Document incident
+    - Restart application
+    - Monitor for issues
+    - Document incident
 
 ---
 
@@ -204,20 +205,20 @@ Add to CI/CD pipeline:
 name: Verify Backup
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'  # Weekly
+    schedule:
+        - cron: '0 0 * * 0' # Weekly
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download latest backup
-        run: |
-          # Download backup from storage
+    verify:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download latest backup
+              run: |
+                  # Download backup from storage
 
-      - name: Verify backup integrity
-        run: |
-          pg_restore --list backup.sql | head -n 20
+            - name: Verify backup integrity
+              run: |
+                  pg_restore --list backup.sql | head -n 20
 ```
 
 ---
@@ -242,10 +243,10 @@ jobs:
 
 ## Revision History
 
-| Date | Author | Changes |
-|------|--------|---------|
+| Date       | Author           | Changes               |
+| ---------- | ---------------- | --------------------- |
 | 2026-02-18 | Engineering Team | Initial documentation |
 
 ---
 
-*This document is maintained by the Engineering Team and reviewed quarterly.*
+_This document is maintained by the Engineering Team and reviewed quarterly._

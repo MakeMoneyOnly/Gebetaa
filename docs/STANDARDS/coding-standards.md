@@ -8,12 +8,14 @@
 ## 1. General Principles
 
 ### 1.1 Core Values
+
 - **Readability** - Code is read more than written
 - **Consistency** - Follow established patterns
 - **Simplicity** - Avoid unnecessary complexity
 - **Testability** - Write testable code
 
 ### 1.2 SOLID Principles
+
 - **S**ingle Responsibility - One purpose per module
 - **O**pen/Closed - Open for extension, closed for modification
 - **L**iskov Substitution - Subtypes must be substitutable
@@ -25,44 +27,48 @@
 ## 2. TypeScript Standards
 
 ### 2.1 Type Safety
+
 ```typescript
 // ❌ NEVER use any
-const data: any = fetchData()
+const data: any = fetchData();
 
 // ✅ Use unknown with type guards
-const data: unknown = fetchData()
+const data: unknown = fetchData();
 if (is_valid_data(data)) {
-  // data is now typed
+    // data is now typed
 }
 ```
 
 ### 2.2 Type Definitions
+
 ```typescript
 // ✅ Use interface for object types
 interface User {
-  id: string
-  name: string
-  email: string
+    id: string;
+    name: string;
+    email: string;
 }
 
 // ✅ Use type for unions and intersections
-type Status = 'pending' | 'active' | 'completed'
-type UserWithRole = User & { role: Role }
+type Status = 'pending' | 'active' | 'completed';
+type UserWithRole = User & { role: Role };
 ```
 
 ### 2.3 Return Types
+
 ```typescript
 // ✅ Always define return types
 function calculateTotal(items: OrderItem[]): number {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 ```
 
 ### 2.4 Const Assertions
+
 ```typescript
 // ✅ Use const assertions for literal types
-const ORDER_STATUSES = ['pending', 'preparing', 'ready', 'served'] as const
-type OrderStatus = typeof ORDER_STATUSES[number]
+const ORDER_STATUSES = ['pending', 'preparing', 'ready', 'served'] as const;
+type OrderStatus = (typeof ORDER_STATUSES)[number];
 ```
 
 ---
@@ -70,6 +76,7 @@ type OrderStatus = typeof ORDER_STATUSES[number]
 ## 3. React Standards
 
 ### 3.1 Component Structure
+
 ```typescript
 // ✅ Function components only
 interface OrderCardProps {
@@ -80,21 +87,21 @@ interface OrderCardProps {
 export function OrderCard({ order, onStatusChange }: OrderCardProps) {
   // Hooks at the top
   const [isExpanded, setIsExpanded] = useState(false)
-  
+
   // Memoized values
   const formattedTotal = useMemo(
     () => formatCurrency(order.total),
     [order.total]
   )
-  
+
   // Event handlers with useCallback
   const handleStatusChange = useCallback(() => {
     onStatusChange(order.id, 'preparing')
   }, [order.id, onStatusChange])
-  
+
   // Early returns for loading/error
   if (!order) return <OrderCardSkeleton />
-  
+
   // Render
   return (
     <div className="p-4 border rounded-lg">
@@ -105,12 +112,14 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
 ```
 
 ### 3.2 Hooks Rules
+
 - Always call hooks at the top level
 - Only call hooks from React functions
 - Use `useCallback` for handlers passed to children
 - Use `useMemo` for expensive computations
 
 ### 3.3 Component Organization
+
 ```
 OrderCard/
 ├── OrderCard.tsx       # Main component
@@ -125,6 +134,7 @@ OrderCard/
 ## 4. Next.js Standards
 
 ### 4.1 Server vs Client Components
+
 ```typescript
 // ✅ Server Component (default)
 // src/app/(dashboard)/orders/page.tsx
@@ -148,83 +158,88 @@ export function OrdersList({ orders }: OrdersListProps) {
 ```
 
 ### 4.2 Server Actions
+
 ```typescript
 // ✅ Server Actions for mutations
-'use server'
+'use server';
 
-import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
-import { auth } from '@/lib/auth'
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { auth } from '@/lib/auth';
 
 const CreateOrderSchema = z.object({
-  restaurantId: z.string().uuid(),
-  items: z.array(z.object({
-    menuItemId: z.string().uuid(),
-    quantity: z.number().int().positive()
-  }))
-})
+    restaurantId: z.string().uuid(),
+    items: z.array(
+        z.object({
+            menuItemId: z.string().uuid(),
+            quantity: z.number().int().positive(),
+        })
+    ),
+});
 
 export async function createOrder(input: unknown) {
-  const session = await auth()
-  if (!session) {
-    return { error: 'UNAUTHORIZED' }
-  }
-  
-  const validated = CreateOrderSchema.safeParse(input)
-  if (!validated.success) {
-    return { error: 'VALIDATION_ERROR', details: validated.error.flatten() }
-  }
-  
-  // Create order logic
-  const order = await createOrderInDB(validated.data)
-  
-  revalidatePath('/orders')
-  return { data: order }
+    const session = await auth();
+    if (!session) {
+        return { error: 'UNAUTHORIZED' };
+    }
+
+    const validated = CreateOrderSchema.safeParse(input);
+    if (!validated.success) {
+        return { error: 'VALIDATION_ERROR', details: validated.error.flatten() };
+    }
+
+    // Create order logic
+    const order = await createOrderInDB(validated.data);
+
+    revalidatePath('/orders');
+    return { data: order };
 }
 ```
 
 ### 4.3 API Routes
+
 ```typescript
 // src/app/api/orders/route.ts
-import { NextResponse } from 'next/server'
-import { z } from 'zod'
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 // Input validation
 const CreateOrderSchema = z.object({
-  restaurantId: z.string().uuid(),
-  items: z.array(z.object({
-    menuItemId: z.string().uuid(),
-    quantity: z.number().int().positive()
-  }))
-})
+    restaurantId: z.string().uuid(),
+    items: z.array(
+        z.object({
+            menuItemId: z.string().uuid(),
+            quantity: z.number().int().positive(),
+        })
+    ),
+});
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json()
-    
-    // Validate input
-    const validated = CreateOrderSchema.parse(body)
-    
-    // Process
-    const order = await createOrder(validated)
-    
-    // Return success
-    return NextResponse.json({ data: order }, { status: 201 })
-    
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', details: error.flatten() } },
-        { status: 400 }
-      )
+    try {
+        const body = await request.json();
+
+        // Validate input
+        const validated = CreateOrderSchema.parse(body);
+
+        // Process
+        const order = await createOrder(validated);
+
+        // Return success
+        return NextResponse.json({ data: order }, { status: 201 });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { error: { code: 'VALIDATION_ERROR', details: error.flatten() } },
+                { status: 400 }
+            );
+        }
+
+        console.error('Create order error:', error);
+        return NextResponse.json(
+            { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
+            { status: 500 }
+        );
     }
-    
-    console.error('Create order error:', error)
-    return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
-      { status: 500 }
-    )
-  }
 }
 ```
 
@@ -233,40 +248,42 @@ export async function POST(request: Request) {
 ## 5. Error Handling
 
 ### 5.1 Error Types
+
 ```typescript
 // src/lib/errors.ts
 export class AppError extends Error {
-  constructor(
-    public code: ErrorCode,
-    message: string,
-    public statusCode: number = 500,
-    public details?: unknown
-  ) {
-    super(message)
-    this.name = 'AppError'
-  }
+    constructor(
+        public code: ErrorCode,
+        message: string,
+        public statusCode: number = 500,
+        public details?: unknown
+    ) {
+        super(message);
+        this.name = 'AppError';
+    }
 }
 
 export class ValidationError extends AppError {
-  constructor(details: unknown) {
-    super('VALIDATION_ERROR', 'Invalid input data', 400, details)
-  }
+    constructor(details: unknown) {
+        super('VALIDATION_ERROR', 'Invalid input data', 400, details);
+    }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor() {
-    super('UNAUTHORIZED', 'Authentication required', 401)
-  }
+    constructor() {
+        super('UNAUTHORIZED', 'Authentication required', 401);
+    }
 }
 
 export class ForbiddenError extends AppError {
-  constructor() {
-    super('FORBIDDEN', 'Access denied', 403)
-  }
+    constructor() {
+        super('FORBIDDEN', 'Access denied', 403);
+    }
 }
 ```
 
 ### 5.2 Error Responses
+
 ```typescript
 // ✅ Structured error response
 {
@@ -283,15 +300,16 @@ export class ForbiddenError extends AppError {
 ```
 
 ### 5.3 User-Facing Errors
+
 ```typescript
 // ✅ User-friendly messages
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
-  VALIDATION_ERROR: 'Please check your input and try again.',
-  UNAUTHORIZED: 'Please log in to continue.',
-  FORBIDDEN: 'You do not have permission to perform this action.',
-  NOT_FOUND: 'The requested item was not found.',
-  INTERNAL_ERROR: 'Something went wrong. Please try again later.'
-}
+    VALIDATION_ERROR: 'Please check your input and try again.',
+    UNAUTHORIZED: 'Please log in to continue.',
+    FORBIDDEN: 'You do not have permission to perform this action.',
+    NOT_FOUND: 'The requested item was not found.',
+    INTERNAL_ERROR: 'Something went wrong. Please try again later.',
+};
 ```
 
 ---
@@ -299,39 +317,43 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
 ## 6. Naming Conventions
 
 ### 6.1 Files
-| Type | Convention | Example |
-|------|------------|---------|
-| Component | PascalCase.tsx | `OrderCard.tsx` |
-| Utility | camelCase.ts | `formatCurrency.ts` |
-| Hook | useFeature.ts | `useCart.ts` |
-| Type | camelCase.ts | `models.ts` |
-| API Route | route.ts | `route.ts` |
-| Test | *.test.ts(x) | `OrderCard.test.tsx` |
+
+| Type      | Convention     | Example              |
+| --------- | -------------- | -------------------- |
+| Component | PascalCase.tsx | `OrderCard.tsx`      |
+| Utility   | camelCase.ts   | `formatCurrency.ts`  |
+| Hook      | useFeature.ts  | `useCart.ts`         |
+| Type      | camelCase.ts   | `models.ts`          |
+| API Route | route.ts       | `route.ts`           |
+| Test      | \*.test.ts(x)  | `OrderCard.test.tsx` |
 
 ### 6.2 Code
-| Type | Convention | Example |
-|------|------------|---------|
-| Component | PascalCase | `OrderCard` |
-| Function | camelCase | `calculateTotal` |
-| Variable | camelCase | `orderCount` |
-| Constant | SCREAMING_SNAKE_CASE | `MAX_ORDERS_PER_MINUTE` |
-| Interface | PascalCase | `Order`, `User` |
-| Type | PascalCase | `OrderStatus` |
-| Enum | PascalCase | `OrderStatus` |
+
+| Type      | Convention           | Example                 |
+| --------- | -------------------- | ----------------------- |
+| Component | PascalCase           | `OrderCard`             |
+| Function  | camelCase            | `calculateTotal`        |
+| Variable  | camelCase            | `orderCount`            |
+| Constant  | SCREAMING_SNAKE_CASE | `MAX_ORDERS_PER_MINUTE` |
+| Interface | PascalCase           | `Order`, `User`         |
+| Type      | PascalCase           | `OrderStatus`           |
+| Enum      | PascalCase           | `OrderStatus`           |
 
 ### 6.3 Database
-| Type | Convention | Example |
-|------|------------|---------|
-| Table | snake_case, plural | `orders`, `menu_items` |
-| Column | snake_case | `restaurant_id`, `created_at` |
-| Index | `idx_{table}_{columns}` | `idx_orders_restaurant_status` |
-| Function | snake_case | `resolve_user_role()` |
+
+| Type     | Convention              | Example                        |
+| -------- | ----------------------- | ------------------------------ |
+| Table    | snake_case, plural      | `orders`, `menu_items`         |
+| Column   | snake_case              | `restaurant_id`, `created_at`  |
+| Index    | `idx_{table}_{columns}` | `idx_orders_restaurant_status` |
+| Function | snake_case              | `resolve_user_role()`          |
 
 ---
 
 ## 7. Git Standards
 
 ### 7.1 Commit Messages
+
 ```
 type(scope): description
 
@@ -359,6 +381,7 @@ Examples:
 ```
 
 ### 7.2 Branch Names
+
 - Feature: `feat/description`
 - Fix: `fix/description`
 - Release: `release/v1.0.0`
@@ -369,6 +392,7 @@ Examples:
 ## 8. Testing Standards
 
 ### 8.1 Unit Tests
+
 ```typescript
 // OrderCard.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -385,7 +409,7 @@ describe('OrderCard', () => {
 
   it('renders order details correctly', () => {
     render(<OrderCard order={mockOrder} onStatusChange={vi.fn()} />)
-    
+
     expect(screen.getByText('Order #1')).toBeInTheDocument()
     expect(screen.getByText('100 ETB')).toBeInTheDocument()
   })
@@ -393,21 +417,22 @@ describe('OrderCard', () => {
   it('calls onStatusChange when button clicked', () => {
     const onStatusChange = vi.fn()
     render(<OrderCard order={mockOrder} onStatusChange={onStatusChange} />)
-    
+
     fireEvent.click(screen.getByText('Start Preparing'))
-    
+
     expect(onStatusChange).toHaveBeenCalledWith('1', 'preparing')
   })
 })
 ```
 
 ### 8.2 Coverage Requirements
-| Metric | Target |
-|--------|--------|
-| Lines | 80% |
-| Functions | 80% |
-| Statements | 80% |
-| Branches | 70% |
+
+| Metric     | Target |
+| ---------- | ------ |
+| Lines      | 80%    |
+| Functions  | 80%    |
+| Statements | 80%    |
+| Branches   | 70%    |
 
 ---
 

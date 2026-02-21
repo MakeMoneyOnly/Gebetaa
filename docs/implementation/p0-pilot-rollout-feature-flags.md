@@ -6,12 +6,12 @@ Task: `P0-094`
 ## Flags
 
 - `ENABLE_P0_PILOT_ROLLOUT`
-  - `false`: no cohort gating applied.
-  - `true`: only allowlisted restaurants access P0 merchant rollout surfaces.
+    - `false`: no cohort gating applied.
+    - `true`: only allowlisted restaurants access P0 merchant rollout surfaces.
 - `PILOT_RESTAURANT_IDS`
-  - Comma-separated `restaurant_id` allowlist.
+    - Comma-separated `restaurant_id` allowlist.
 - `PILOT_BLOCK_MUTATIONS`
-  - Emergency brake for write operations (`POST|PUT|PATCH|DELETE`) in pilot.
+    - Emergency brake for write operations (`POST|PUT|PATCH|DELETE`) in pilot.
 
 ## Enforcement
 

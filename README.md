@@ -120,34 +120,37 @@ Gebetaa/
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
-| **Backend** | Next.js API Routes, Supabase Edge Functions |
-| **Database** | Supabase (PostgreSQL 15), Redis |
-| **Auth** | Supabase Auth with Row-Level Security |
-| **State** | Zustand, TanStack Query, Dexie.js (offline) |
-| **Real-time** | Supabase Realtime (WebSocket) |
-| **Payments** | Telebirr, Chapa |
-| **Testing** | Vitest, Playwright |
-| **CI/CD** | GitHub Actions, Vercel |
+| Layer         | Technology                                         |
+| ------------- | -------------------------------------------------- |
+| **Frontend**  | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
+| **Backend**   | Next.js API Routes, Supabase Edge Functions        |
+| **Database**  | Supabase (PostgreSQL 15), Redis                    |
+| **Auth**      | Supabase Auth with Row-Level Security              |
+| **State**     | Zustand, TanStack Query, Dexie.js (offline)        |
+| **Real-time** | Supabase Realtime (WebSocket)                      |
+| **Payments**  | Telebirr, Chapa                                    |
+| **Testing**   | Vitest, Playwright                                 |
+| **CI/CD**     | GitHub Actions, Vercel                             |
 
 ---
 
 ## 📚 Documentation
 
 ### For Developers
+
 - [Getting Started](docs/DEVELOPMENT/getting-started.md)
 - [Tech Stack](docs/TECHNICAL/tech-stack.md)
 - [API Reference](docs/TECHNICAL/api/)
 - [Coding Standards](docs/STANDARDS/)
 
 ### For Product
+
 - [Product Requirements](docs/PRODUCT/product-requirements-document.md)
 - [Roadmap](Tasks.md)
 - [AUDIT.md](AUDIT.md) - North Star document
 
 ### For Operations
+
 - [Runbooks](docs/OPERATIONS/runbooks/)
 - [Deployment Guide](docs/OPERATIONS/deployment/)
 
@@ -170,6 +173,7 @@ pnpm validate
 ```
 
 ### Coverage Targets
+
 - Lines: 80%
 - Functions: 80%
 - Statements: 80%
@@ -195,16 +199,19 @@ See [Security Standards](docs/STANDARDS/security-standards.md) for details.
 ## 🇪🇹 Ethiopia-Specific Features
 
 ### Payment Integration
+
 - **Telebirr** - QR-based mobile money payments
 - **Chapa** - Card and bank transfer payments
 - **Cash** - Always supported as fallback
 
 ### Connectivity Resilience
+
 - Offline-first architecture with local queuing
 - Automatic sync when connectivity returns
 - Visual sync status indicators
 
 ### Localization
+
 - Full Amharic support (coming soon)
 - ETB (Ethiopian Birr) currency formatting
 - DD/MM/YYYY date format
@@ -249,6 +256,7 @@ We welcome contributions! Please see our contributing guidelines:
 4. Submit a pull request
 
 ### Commit Convention
+
 ```
 type(scope): description
 
@@ -277,6 +285,7 @@ This project is proprietary software. All rights reserved.
 See [Tasks.md](Tasks.md) for the complete execution roadmap and [AUDIT.md](AUDIT.md) for the North Star document.
 
 ### Current Phase: P1 - Enterprise Readiness
+
 - ✅ P0: Security hardening completed
 - ✅ P0: CI/CD pipeline implemented
 - ✅ P0: Real-time KDS with Supabase

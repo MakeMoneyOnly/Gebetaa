@@ -1,5 +1,4 @@
-﻿
-# Gebeta Merchant Platform - Execution Grade Master Tasks
+﻿# Gebeta Merchant Platform - Execution Grade Master Tasks
 
 Last updated: 2026-02-17
 North star reference: `AUDIT.md`
@@ -242,17 +241,17 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 6.3 Finance and Reconciliation
 
-- [ ] `P2-029` Add migrations for `payments`.
-- [ ] `P2-030` Add migrations for `refunds`.
-- [ ] `P2-031` Add migrations for `payouts`.
-- [ ] `P2-032` Add migrations for `reconciliation_entries`.
-- [ ] `P2-033` Implement finance APIs (`payments`, `refunds`, `exceptions`).
-- [ ] `P2-034` Implement reconciliation APIs (`payouts`, `reconciliation`, `exports`).
-- [ ] `P2-035` Build `SettlementSummaryCard`.
-- [ ] `P2-036` Build `PaymentMethodBreakdown`.
-- [ ] `P2-037` Build `RefundQueue`.
-- [ ] `P2-038` Build `PayoutReconciliationTable`.
-- [ ] `P2-039` Build `AccountingExportPanel`.
+- [x] `P2-029` Add migrations for `payments`.
+- [x] `P2-030` Add migrations for `refunds`.
+- [x] `P2-031` Add migrations for `payouts`.
+- [x] `P2-032` Add migrations for `reconciliation_entries`.
+- [x] `P2-033` Implement finance APIs (`payments`, `refunds`, `exceptions`).
+- [x] `P2-034` Implement reconciliation APIs (`payouts`, `reconciliation`, `exports`).
+- [x] `P2-035` Build `SettlementSummaryCard`.
+- [x] `P2-036` Build `PaymentMethodBreakdown`.
+- [x] `P2-037` Build `RefundQueue`.
+- [x] `P2-038` Build `PayoutReconciliationTable`.
+- [x] `P2-039` Build `AccountingExportPanel`.
 
 ## 6.4 Addis Localization and Payment Rail Adapters
 
@@ -385,6 +384,7 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 ## 10) Digital-First Operations (Replaces Proprietary POS)
 
 ## 10.1 Digital Payment & Mobile Checkout
+
 - [ ] `DIG-001` Implement "Tap to Pay" on mobile (NFC reading via generic Android/iOS devices).
 - [x] `DIG-002` Integrate Chapa and Telebirr natively into the Menu/Order flow.
     - [x] Create payment provider abstraction (`src/lib/payments/types.ts`).
@@ -396,16 +396,19 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `DIG-005` Implement "Split Check" logic on customer mobile devices.
 
 ## 10.2 Hardware-Agnostic KDS
+
 - [ ] `KDS-001` Verify KDS performance on generic iPads, Android tablets, and Smart TVs.
 - [ ] `KDS-002` Implement browser-based "Kitchen Display" that requires no install.
 - [ ] `KDS-003` Add offline-mode support for KDS (Local-First Architecture).
 
 ## 10.3 Offline-First & Resiliency
+
 - [ ] `OFF-001` Implement Service Workers for full offline app caching.
 - [ ] `OFF-002` Build "Local Sync Engine" (CRDTs or similar) for conflict resolution when internet returns.
 - [ ] `OFF-003` Ensure order taking persists locally in IndexDB before syncing.
 
 ## 10.4 Staff & AI Operations
+
 - [x] `OPS-001` Integrate Resend for transactional email onboarding.
     - [x] Configure `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
     - [x] Verify domain in Resend for production email sending.
@@ -413,6 +416,7 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `OPS-003` Add "Digital Tips" and shift management for mobile staff.
 
 ## 10.5 Ethiopia Compliance and Fiscal Operations
+
 - [ ] `TPG-036` Implement VAT/tax profile engine with branch-level overrides.
 - [ ] `TPG-037` Add fiscal receipt/invoice compliance output and immutable receipt archive.
 - [ ] `TPG-038` Add compliance export bundles for tax filing and audit requests.
@@ -420,5 +424,6 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `TPG-040` Add compliance monitoring alerts for out-of-policy transactions.
 
 ## 10.6 Quality & Rollout
+
 - [ ] `REL-004` Load test "Tablet Web KDS" with 500+ active tickers.
 - [ ] `REL-005` Verify "Offline Mode" recovery in poor network conditions.

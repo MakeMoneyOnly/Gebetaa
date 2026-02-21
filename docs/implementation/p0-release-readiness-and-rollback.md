@@ -11,9 +11,9 @@ Scope: `P0-001` through `P0-095`
 - Unit, integration, and E2E suites for P0 critical paths pass on release candidate.
 - No open `Sev1` or `Sev2` incidents tied to merchant P0 scope.
 - API SLO dashboards are healthy for:
-  - `GET /api/merchant/command-center`
-  - `GET /api/orders`
-  - `PATCH /api/orders/:id/status`
+    - `GET /api/merchant/command-center`
+    - `GET /api/orders`
+    - `PATCH /api/orders/:id/status`
 - Pilot feature-flag rollout config is reviewed and approved.
 - Rollback owner and communication owner are assigned before launch.
 
@@ -38,13 +38,13 @@ Scope: `P0-001` through `P0-095`
 ### Rollback Levers
 
 1. Pilot cohort hard-stop:
-   - Set `ENABLE_P0_PILOT_ROLLOUT=false`.
+    - Set `ENABLE_P0_PILOT_ROLLOUT=false`.
 2. Write protection:
-   - Set `PILOT_BLOCK_MUTATIONS=true` while keeping read-only visibility.
+    - Set `PILOT_BLOCK_MUTATIONS=true` while keeping read-only visibility.
 3. Allowlist isolation:
-   - Narrow `PILOT_RESTAURANT_IDS` to a minimal safe subset.
+    - Narrow `PILOT_RESTAURANT_IDS` to a minimal safe subset.
 4. Deploy rollback:
-   - Re-deploy prior stable release candidate.
+    - Re-deploy prior stable release candidate.
 
 ### Rollback Verification
 

@@ -29,10 +29,10 @@ graph TB
     Staff -->|Manage Orders, KDS| WebApp
     Manager -->|Dashboard, Analytics| WebApp
     Admin -->|Multi-tenant Management| WebApp
-    
+
     WebApp -->|API Calls| API
     API -->|CRUD Operations| Database
-    
+
     API -->|Process Payments| Telebirr
     API -->|Process Payments| Chapa
 
@@ -89,20 +89,20 @@ graph TB
     Browser -->|HTTPS| SSR
     Browser -->|HTTPS| CSR
     Mobile -->|HTTPS PWA| PWA
-    
+
     SSR -->|Server-side Fetch| APIRoutes
     CSR -->|Client-side Fetch| APIRoutes
     CSR -->|Offline Queue| IndexedDB
     PWA -->|Cache| IndexedDB
-    
+
     APIRoutes --> Middleware
     Middleware --> SupabaseAuth
     APIRoutes --> PostgreSQL
     APIRoutes --> Redis
     APIRoutes --> Storage
-    
+
     ServerActions --> PostgreSQL
-    
+
     APIRoutes -->|Payment| TelebirrAPI
     APIRoutes -->|Payment| ChapaAPI
     APIRoutes -->|Error Tracking| Sentry
@@ -115,17 +115,17 @@ graph TB
 
 ### Container Descriptions
 
-| Container | Technology | Description |
-|-----------|------------|-------------|
-| **Web Browser** | React 19, Next.js 16 | Desktop web application |
-| **Mobile Browser PWA** | PWA, Service Worker | Progressive web app for mobile |
-| **Server Components** | Next.js RSC | Server-rendered React components |
-| **Client Components** | React, Zustand | Interactive client-side components |
-| **API Routes** | Next.js API Routes | RESTful API endpoints |
-| **Server Actions** | Next.js Server Actions | Form submissions and mutations |
-| **PostgreSQL** | Supabase | Primary database with RLS |
-| **Redis** | ioredis | Rate limiting and caching |
-| **IndexedDB** | Dexie.js | Offline-first data storage |
+| Container              | Technology             | Description                        |
+| ---------------------- | ---------------------- | ---------------------------------- |
+| **Web Browser**        | React 19, Next.js 16   | Desktop web application            |
+| **Mobile Browser PWA** | PWA, Service Worker    | Progressive web app for mobile     |
+| **Server Components**  | Next.js RSC            | Server-rendered React components   |
+| **Client Components**  | React, Zustand         | Interactive client-side components |
+| **API Routes**         | Next.js API Routes     | RESTful API endpoints              |
+| **Server Actions**     | Next.js Server Actions | Form submissions and mutations     |
+| **PostgreSQL**         | Supabase               | Primary database with RLS          |
+| **Redis**              | ioredis                | Rate limiting and caching          |
+| **IndexedDB**          | Dexie.js               | Offline-first data storage         |
 
 ---
 
@@ -136,7 +136,7 @@ graph TB
     subgraph Dashboard[Merchant Dashboard]
         AuthGuard[Auth Guard]
         Layout[Dashboard Layout]
-        
+
         subgraph Pages
             OrdersPage[Orders Page]
             MenuPage[Menu Page]
@@ -144,7 +144,7 @@ graph TB
             StaffPage[Staff Page]
             SettingsPage[Settings Page]
         end
-        
+
         subgraph Components
             OrderBoard[Orders Kanban Board]
             MenuEditor[Menu Editor]
@@ -168,7 +168,7 @@ graph TB
     AuthGuard --> Layout
     Layout --> Pages
     Pages --> Components
-    
+
     Components --> State
     State --> Services
     Services -->|HTTP| Backend[(Backend API)]
@@ -186,16 +186,16 @@ graph TB
 graph TB
     subgraph Guest[Guest Ordering Flow]
         QRScanner[QR Code Scanner]
-        
+
         subgraph ContextValidation[Context Validation]
             HMAC[HMAC Verification]
             Session[Session Creation]
         end
-        
+
         Menu[Menu Browser]
         Cart[Shopping Cart]
         Checkout[Checkout Flow]
-        
+
         subgraph Payment[Payment Processing]
             TelebirrCheckout[Telebirr Checkout]
             ChapaCheckout[Chapa Checkout]
@@ -214,7 +214,7 @@ graph TB
     Menu --> Cart
     Cart --> Checkout
     Checkout --> Payment
-    
+
     Cart -->|Offline| Queue
     Queue -->|Online| Sync
     Sync --> ConflictResolver
@@ -231,18 +231,18 @@ graph TB
 graph TB
     subgraph KDS[Kitchen Display System]
         AuthGuard[Auth Guard]
-        
+
         subgraph Views
             OrderQueue[Order Queue View]
             OrderDetail[Order Detail View]
             StatusUpdate[Status Update]
         end
-        
+
         subgraph Realtime[Realtime Updates]
             Subscription[Supabase Realtime]
             Notifications[Push Notifications]
         end
-        
+
         subgraph Audio[Audio Alerts]
             NewOrder[New Order Sound]
             Urgent[Expedite Alert]
@@ -276,20 +276,20 @@ erDiagram
     RESTAURANTS ||--o{ ORDERS : receives
     RESTAURANTS ||--o{ TABLES : has
     RESTAURANTS ||--o{ SERVICE_REQUESTS : handles
-    
+
     STAFF ||--o{ ORDERS : creates
     STAFF ||--o{ SHIFTS : works
-    
+
     TABLES ||--o{ TABLE_SESSIONS : hosts
     TABLE_SESSIONS ||--o{ ORDERS : contains
-    
+
     ORDERS ||--|{ ORDER_ITEMS : includes
     ORDERS ||--o| PAYMENTS : has
     ORDERS ||--o{ ORDER_EVENTS : generates
-    
+
     MENU_ITEMS ||--o{ ORDER_ITEMS : ordered_in
     MENU_CATEGORIES ||--o{ MENU_ITEMS : contains
-    
+
     GUESTS ||--o{ ORDERS : places
     GUESTS ||--o{ GUEST_VISITS : has
 
@@ -300,7 +300,7 @@ erDiagram
         jsonb settings
         timestamp created_at
     }
-    
+
     ORDERS {
         uuid id PK
         uuid restaurant_id FK
@@ -310,7 +310,7 @@ erDiagram
         string idempotency_key
         timestamp created_at
     }
-    
+
     MENU_ITEMS {
         uuid id PK
         uuid restaurant_id FK
@@ -355,16 +355,16 @@ graph TB
 
     Browser -->|Request| Middleware
     MobilePWA -->|Request| Middleware
-    
+
     Middleware --> RateLimiter
     Middleware --> SupabaseAuth
-    
+
     SupabaseAuth --> SessionCookies
     SessionCookies --> RoleGuard
-    
+
     HMAC -->|Guest Context| TenantCheck
     RoleGuard --> TenantCheck
-    
+
     TenantCheck --> RLS
     RLS --> Database
 
@@ -399,14 +399,14 @@ graph TB
     UI -->|Actions| StateManagers
     StateManagers -->|Online| API
     StateManagers -->|Offline| IndexedDB
-    
+
     API -->|Response| StateManagers
     IndexedDB -->|Sync| SyncEngine
     SyncEngine -->|Retry| API
-    
+
     Queue -->|Process| SyncEngine
     SyncEngine -->|Conflicts| ConflictLog
-    
+
     API -->|Persist| Database
 
     style Online fill:#4ECDC4,color:#000
@@ -433,14 +433,14 @@ graph TB
             SSR[SSR Servers]
             Static[Static Assets CDN]
         end
-        
+
         subgraph Supabase[Supabase Cloud]
             DB[(PostgreSQL)]
             Auth[Auth Service]
             Realtime[Realtime Server]
             Storage[Object Storage]
         end
-        
+
         subgraph External[External Services]
             Redis[(Redis Cloud)]
             Sentry[Sentry.io]
@@ -495,11 +495,11 @@ graph TB
     AgencyAdmin -->|Manage All| AgencyUsers
     AgencyUsers -->|Access| Restaurant1
     AgencyUsers -->|Access| Restaurant2
-    
+
     Restaurant1 -->|restaurant_id| RLS
     Restaurant2 -->|restaurant_id| RLS
     Restaurant3 -->|restaurant_id| RLS
-    
+
     RLS --> StaffMembership
     StaffMembership -->|Filter| OrdersTable
     StaffMembership -->|Filter| MenuTable
@@ -514,19 +514,19 @@ graph TB
 
 ## Tech Stack Summary
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | Next.js 16, React 19 | SSR, RSC, App Router |
-| **Styling** | Tailwind CSS 4 | Utility-first CSS |
-| **State** | Zustand, TanStack Query | Client/Server state |
-| **Backend** | Next.js API Routes | RESTful endpoints |
-| **Database** | PostgreSQL (Supabase) | Primary datastore |
-| **Auth** | Supabase Auth | Authentication, RLS |
-| **Offline** | Dexie.js, Service Worker | PWA, offline-first |
-| **Cache** | Redis | Rate limiting, sessions |
-| **Monitoring** | Sentry | Error tracking |
-| **Payments** | Telebirr, Chapa | Ethiopian payment gateways |
+| Layer          | Technology               | Purpose                    |
+| -------------- | ------------------------ | -------------------------- |
+| **Frontend**   | Next.js 16, React 19     | SSR, RSC, App Router       |
+| **Styling**    | Tailwind CSS 4           | Utility-first CSS          |
+| **State**      | Zustand, TanStack Query  | Client/Server state        |
+| **Backend**    | Next.js API Routes       | RESTful endpoints          |
+| **Database**   | PostgreSQL (Supabase)    | Primary datastore          |
+| **Auth**       | Supabase Auth            | Authentication, RLS        |
+| **Offline**    | Dexie.js, Service Worker | PWA, offline-first         |
+| **Cache**      | Redis                    | Rate limiting, sessions    |
+| **Monitoring** | Sentry                   | Error tracking             |
+| **Payments**   | Telebirr, Chapa          | Ethiopian payment gateways |
 
 ---
 
-*Generated for Gebeta Restaurant OS - February 2026*
+_Generated for Gebeta Restaurant OS - February 2026_

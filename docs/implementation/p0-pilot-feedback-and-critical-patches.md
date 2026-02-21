@@ -12,17 +12,17 @@ Task: `P0-095`
 ## Feedback Classification
 
 - `Critical`
-  - Blocks order flow, table flow, or core staff operations.
-  - Requires same-day patch or rollback action.
+    - Blocks order flow, table flow, or core staff operations.
+    - Requires same-day patch or rollback action.
 - `High`
-  - Major slowdown or frequent errors with workaround.
-  - Patch in current release window.
+    - Major slowdown or frequent errors with workaround.
+    - Patch in current release window.
 - `Medium`
-  - Functional gap with acceptable workaround.
-  - Schedule into next sprint.
+    - Functional gap with acceptable workaround.
+    - Schedule into next sprint.
 - `Low`
-  - UX polish or non-blocking enhancement.
-  - Add to backlog.
+    - UX polish or non-blocking enhancement.
+    - Add to backlog.
 
 ## Critical Patch Loop
 
@@ -35,9 +35,9 @@ Task: `P0-095`
 
 ## Tracking Template
 
-| ID | Merchant | Surface | Severity | Status | Owner | Patch PR | Validation |
-|---|---|---|---|---|---|---|---|
-| PF-001 | | | | Open | | | |
+| ID     | Merchant | Surface | Severity | Status | Owner | Patch PR | Validation |
+| ------ | -------- | ------- | -------- | ------ | ----- | -------- | ---------- |
+| PF-001 |          |         |          | Open   |       |          |            |
 
 ## Current Pilot Critical Issues
 

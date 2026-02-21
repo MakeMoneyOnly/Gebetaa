@@ -5,14 +5,14 @@ Last updated: 2026-02-17
 ## User-Facing SLO Targets
 
 - Command center API (`GET /api/merchant/command-center`)
-  - P95 latency <= 500ms
-  - Error rate < 1%
+    - P95 latency <= 500ms
+    - Error rate < 1%
 - Orders list API (`GET /api/orders`)
-  - P95 latency <= 400ms
-  - Error rate < 1%
+    - P95 latency <= 400ms
+    - Error rate < 1%
 - Order status update (`PATCH /api/orders/:id/status`)
-  - P95 latency <= 300ms
-  - Error rate < 0.5%
+    - P95 latency <= 300ms
+    - Error rate < 0.5%
 
 ## Realtime Freshness Targets
 
