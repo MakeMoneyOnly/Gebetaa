@@ -70,7 +70,9 @@ test.describe('Mobile merchant tab regression', () => {
         await mockDashboardAuth(page);
     });
 
-    test('renders mobile nav and supports tab traversal without layout overflow', async ({ page }) => {
+    test('renders mobile nav and supports tab traversal without layout overflow', async ({
+        page,
+    }) => {
         await page.goto('/merchant');
         await expect(page.getByTestId('mobile-bottom-nav')).toBeVisible();
 
@@ -87,7 +89,9 @@ test.describe('Mobile merchant tab regression', () => {
 
         for (const tab of tabExpectations) {
             await page.goto(tab.href);
-            await expect(page).toHaveURL(new RegExp(`${tab.href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+            await expect(page).toHaveURL(
+                new RegExp(`${tab.href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
+            );
             await expect(page.getByRole('heading', { name: tab.heading })).toBeVisible();
 
             const hasHorizontalOverflow = await page.evaluate(() => {

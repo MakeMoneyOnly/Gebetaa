@@ -73,27 +73,30 @@ test.describe('Guests directory and profile flows', () => {
     test('loads guest directory, opens profile drawer, and saves updates', async ({ page }) => {
         let capturedPatchPayload: Record<string, unknown> | null = null;
 
-        await page.route('**/api/guests/11111111-1111-4111-8111-111111111111/visits**', async route => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    data: {
-                        visits: [
-                            {
-                                id: 'visit-1',
-                                channel: 'delivery',
-                                visited_at: '2026-02-17T10:20:00.000Z',
-                                spend: 420.5,
-                                order_id: 'ord-101',
-                                metadata: {},
-                            },
-                        ],
-                        total: 1,
-                    },
-                }),
-            });
-        });
+        await page.route(
+            '**/api/guests/11111111-1111-4111-8111-111111111111/visits**',
+            async route => {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        data: {
+                            visits: [
+                                {
+                                    id: 'visit-1',
+                                    channel: 'delivery',
+                                    visited_at: '2026-02-17T10:20:00.000Z',
+                                    spend: 420.5,
+                                    order_id: 'ord-101',
+                                    metadata: {},
+                                },
+                            ],
+                            total: 1,
+                        },
+                    }),
+                });
+            }
+        );
 
         await page.route('**/api/guests/11111111-1111-4111-8111-111111111111', async route => {
             if (route.request().method() === 'PATCH') {
@@ -169,7 +172,9 @@ test.describe('Guests directory and profile flows', () => {
         await page.goto('/merchant/guests');
 
         await expect(page.getByRole('heading', { name: 'Guests' })).toBeVisible();
-        await expect(page.getByRole('button', { name: /Open guest profile for Selam Guest/i })).toBeVisible();
+        await expect(
+            page.getByRole('button', { name: /Open guest profile for Selam Guest/i })
+        ).toBeVisible();
         await expect(page.getByText(/ETB/i).first()).toBeVisible();
 
         await page.getByRole('button', { name: /Open guest profile for Selam Guest/i }).click();

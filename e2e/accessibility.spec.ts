@@ -22,7 +22,7 @@ test.describe('Accessibility Tests', () => {
 
             // Filter to only critical and serious violations
             const criticalViolations = accessibilityScanResults.violations.filter(
-                (v) => v.impact === 'critical' || v.impact === 'serious'
+                v => v.impact === 'critical' || v.impact === 'serious'
             );
 
             expect(criticalViolations).toEqual([]);
@@ -38,7 +38,7 @@ test.describe('Accessibility Tests', () => {
                 .analyze();
 
             const criticalViolations = accessibilityScanResults.violations.filter(
-                (v) => v.impact === 'critical' || v.impact === 'serious'
+                v => v.impact === 'critical' || v.impact === 'serious'
             );
 
             expect(criticalViolations).toEqual([]);
@@ -46,7 +46,9 @@ test.describe('Accessibility Tests', () => {
     });
 
     test.describe('Merchant Dashboard', () => {
-        test.skip('merchant dashboard should have no accessibility violations', async ({ page }) => {
+        test.skip('merchant dashboard should have no accessibility violations', async ({
+            page,
+        }) => {
             // This test requires authentication
             // Skip in CI until we have test authentication setup
             await page.goto('/merchant');
@@ -57,7 +59,7 @@ test.describe('Accessibility Tests', () => {
                 .analyze();
 
             const criticalViolations = accessibilityScanResults.violations.filter(
-                (v) => v.impact === 'critical' || v.impact === 'serious'
+                v => v.impact === 'critical' || v.impact === 'serious'
             );
 
             expect(criticalViolations).toEqual([]);
@@ -75,7 +77,7 @@ test.describe('Accessibility Tests', () => {
                 .analyze();
 
             const criticalViolations = accessibilityScanResults.violations.filter(
-                (v) => v.impact === 'critical' || v.impact === 'serious'
+                v => v.impact === 'critical' || v.impact === 'serious'
             );
 
             expect(criticalViolations).toEqual([]);
@@ -90,7 +92,7 @@ test.describe('Accessibility Tests', () => {
             const buttons = await page.locator('button').all();
 
             for (const button of buttons) {
-                const accessibleName = await button.evaluate((el) => {
+                const accessibleName = await button.evaluate(el => {
                     return (
                         el.getAttribute('aria-label') ||
                         el.getAttribute('aria-labelledby') ||
@@ -124,7 +126,9 @@ test.describe('Accessibility Tests', () => {
             await page.goto('/');
             await page.waitForLoadState('networkidle');
 
-            const inputs = await page.locator('input:not([type="hidden"]):not([type="submit"]):not([type="button"])').all();
+            const inputs = await page
+                .locator('input:not([type="hidden"]):not([type="submit"]):not([type="button"])')
+                .all();
 
             for (const input of inputs) {
                 const ariaLabel = await input.getAttribute('aria-label');
@@ -156,14 +160,14 @@ test.describe('Accessibility Tests', () => {
                 .analyze();
 
             const contrastViolations = accessibilityScanResults.violations.filter(
-                (v) => v.id === 'color-contrast'
+                v => v.id === 'color-contrast'
             );
 
             // Warn but don't fail on color contrast issues
             if (contrastViolations.length > 0) {
                 console.warn(
                     'Color contrast violations found:',
-                    contrastViolations.map((v) => v.description)
+                    contrastViolations.map(v => v.description)
                 );
             }
         });
@@ -175,7 +179,11 @@ test.describe('Accessibility Tests', () => {
             await page.waitForLoadState('networkidle');
 
             // Tab through focusable elements
-            const focusableElements = await page.locator('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])').all();
+            const focusableElements = await page
+                .locator(
+                    'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                )
+                .all();
 
             if (focusableElements.length > 0) {
                 // Focus the first element

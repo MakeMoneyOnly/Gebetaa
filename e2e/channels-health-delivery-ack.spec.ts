@@ -187,7 +187,9 @@ test.describe('Channels health and delivery acknowledge flow', () => {
         await expect(page.getByRole('heading', { name: 'Channels' })).toBeVisible();
         await expect(page.getByText('Connected Channels')).toBeVisible();
         await expect(page.getByText('BEU-1001')).toBeVisible();
-        await expect(page.getByRole('button', { name: /Acknowledge external order BEU-1001/i })).toBeVisible();
+        await expect(
+            page.getByRole('button', { name: /Acknowledge external order BEU-1001/i })
+        ).toBeVisible();
 
         await page.getByRole('button', { name: /Acknowledge external order BEU-1001/i }).click();
         await expect(page.getByText('Acked')).toBeVisible();

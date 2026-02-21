@@ -66,7 +66,10 @@ async function mockDashboardAuth(page: import('@playwright/test').Page) {
 
 test.describe('P1 localization and accessibility regression', () => {
     test.beforeEach(async ({ page, isMobile }) => {
-        test.skip(isMobile, 'Localization/a11y regression assertions are desktop-scoped in this spec.');
+        test.skip(
+            isMobile,
+            'Localization/a11y regression assertions are desktop-scoped in this spec.'
+        );
         await mockDashboardAuth(page);
     });
 
@@ -118,17 +121,20 @@ test.describe('P1 localization and accessibility regression', () => {
             });
         });
 
-        await page.route('**/api/guests/11111111-1111-4111-8111-111111111111/visits**', async route => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    data: {
-                        visits: [],
-                    },
-                }),
-            });
-        });
+        await page.route(
+            '**/api/guests/11111111-1111-4111-8111-111111111111/visits**',
+            async route => {
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        data: {
+                            visits: [],
+                        },
+                    }),
+                });
+            }
+        );
 
         await page.goto('/merchant/guests');
 

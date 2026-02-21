@@ -107,7 +107,10 @@ function buildCommandCenterPayload(orderStatus: string) {
                 },
             ],
             alert_summary: { open_alerts: 1 },
-            filters: { range: 'today', since: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() },
+            filters: {
+                range: 'today',
+                since: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+            },
             sync_status: { generated_at: new Date().toISOString(), source: 'postgres' },
         },
     };
@@ -163,7 +166,9 @@ test.describe('Dashboard attention queue workflow', () => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
-                body: JSON.stringify(buildCommandCenterPayload(callCount === 1 ? 'pending' : 'ready')),
+                body: JSON.stringify(
+                    buildCommandCenterPayload(callCount === 1 ? 'pending' : 'ready')
+                ),
             });
         });
 

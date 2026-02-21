@@ -36,9 +36,7 @@ test.describe('Signed QR to guest order flow', () => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
-                body: JSON.stringify([
-                    { id: 'cat-1', name: 'Burgers', section: 'food' },
-                ]),
+                body: JSON.stringify([{ id: 'cat-1', name: 'Burgers', section: 'food' }]),
             });
         });
 
@@ -111,4 +109,3 @@ test.describe('Signed QR to guest order flow', () => {
         });
     });
 });
-

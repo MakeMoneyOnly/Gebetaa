@@ -12,7 +12,9 @@ test.describe('Core web journeys', () => {
         await expect(page.getByRole('heading', { name: 'Welcome Back!' })).toBeVisible();
     });
 
-    test('login page supports password visibility toggle and sign-up navigation', async ({ page }) => {
+    test('login page supports password visibility toggle and sign-up navigation', async ({
+        page,
+    }) => {
         await page.goto('/auth/login');
 
         const passwordInput = page.locator('input[placeholder="Enter your password"]');

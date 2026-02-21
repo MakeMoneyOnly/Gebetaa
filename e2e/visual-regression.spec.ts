@@ -15,10 +15,10 @@ test.describe('Visual Regression Tests', () => {
         test('landing page visual snapshot', async ({ page }) => {
             await page.goto('/');
             await page.waitForLoadState('networkidle');
-            
+
             // Wait for any animations to settle
             await page.waitForTimeout(500);
-            
+
             // Take full page screenshot
             await expect(page).toHaveScreenshot('landing-page.png', {
                 fullPage: true,
@@ -31,10 +31,10 @@ test.describe('Visual Regression Tests', () => {
             // Navigate to demo restaurant
             await page.goto('/m/demo');
             await page.waitForLoadState('networkidle');
-            
+
             // Wait for menu items to load
             await page.waitForTimeout(1000);
-            
+
             // Take screenshot of the menu area
             const menuContainer = page.locator('[data-testid="menu-container"]').first();
             if (await menuContainer.isVisible()) {
@@ -56,13 +56,13 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/m/demo');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             // Try to find and click a menu item to add to cart
             const firstMenuItem = page.locator('[data-testid="menu-card"]').first();
             if (await firstMenuItem.isVisible()) {
                 await firstMenuItem.click();
                 await page.waitForTimeout(300);
-                
+
                 // Look for add to cart button
                 const addButton = page.locator('button:has-text("Add")').first();
                 if (await addButton.isVisible()) {
@@ -70,7 +70,7 @@ test.describe('Visual Regression Tests', () => {
                     await page.waitForTimeout(300);
                 }
             }
-            
+
             // Take screenshot of the page state
             await expect(page).toHaveScreenshot('cart-interaction.png', {
                 maxDiffPixels: 1500,
@@ -86,7 +86,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/merchant');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             await expect(page).toHaveScreenshot('merchant-dashboard.png', {
                 fullPage: true,
                 maxDiffPixels: 2000,
@@ -99,7 +99,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/merchant/orders');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             const kanbanBoard = page.locator('[data-testid="orders-kanban"]').first();
             if (await kanbanBoard.isVisible()) {
                 await expect(kanbanBoard).toHaveScreenshot('orders-kanban.png', {
@@ -114,7 +114,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/merchant/tables');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             const tableGrid = page.locator('[data-testid="table-grid"]').first();
             if (await tableGrid.isVisible()) {
                 await expect(tableGrid).toHaveScreenshot('table-grid.png', {
@@ -131,7 +131,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/kds');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             const kdsContainer = page.locator('[data-testid="kds-container"]').first();
             if (await kdsContainer.isVisible()) {
                 await expect(kdsContainer).toHaveScreenshot('kds-tickets.png', {
@@ -147,11 +147,11 @@ test.describe('Visual Regression Tests', () => {
             // Create a simple test page to verify button states
             await page.goto('/');
             await page.waitForLoadState('networkidle');
-            
+
             // Find buttons on the page
             const buttons = page.locator('button');
             const buttonCount = await buttons.count();
-            
+
             if (buttonCount > 0) {
                 // Take screenshot of the first visible button
                 const firstButton = buttons.first();
@@ -168,7 +168,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             // Look for card components
             const cards = page.locator('[class*="rounded"]').first();
             if (await cards.isVisible()) {
@@ -187,7 +187,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             await expect(page).toHaveScreenshot('mobile-landing.png', {
                 fullPage: true,
                 maxDiffPixels: 1500,
@@ -201,7 +201,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             await expect(page).toHaveScreenshot('tablet-landing.png', {
                 fullPage: true,
                 maxDiffPixels: 1500,
@@ -215,7 +215,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             await expect(page).toHaveScreenshot('desktop-landing.png', {
                 fullPage: true,
                 maxDiffPixels: 1500,
@@ -231,7 +231,7 @@ test.describe('Visual Regression Tests', () => {
             await page.goto('/');
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(500);
-            
+
             await expect(page).toHaveScreenshot('dark-mode-landing.png', {
                 fullPage: true,
                 maxDiffPixels: 2000,
