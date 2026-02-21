@@ -14,6 +14,8 @@ export type StaffMember = {
     first_name?: string | null;
     last_name?: string | null;
     email?: string | null;
+    pin_code?: string | null;
+    assigned_zones?: string[];
 };
 
 export const ROLE_BADGE: Record<string, string> = {
@@ -155,6 +157,35 @@ export function useStaff() {
         }
     };
 
+    const handleAddPinStaff = async (payload: {
+        name: string;
+        role: StaffRole;
+        pin_code: string;
+        assigned_zones?: string[];
+    }) => {
+        try {
+            setLoading(true);
+            const response = await fetch('/api/staff/add-pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to add staff member.');
+            }
+            
+            setStaff(prev => [...prev, result.data.staff]);
+            toast.success('Staff member added.');
+            return true;
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to add staff member.');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         staff,
         loading,
@@ -167,5 +198,6 @@ export function useStaff() {
         handleInvite,
         handleRoleUpdate,
         handleActiveToggle,
+        handleAddPinStaff,
     };
 }
