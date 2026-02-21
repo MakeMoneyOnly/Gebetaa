@@ -16,20 +16,22 @@ const RefundsQuerySchema = z.object({
     limit: z.coerce.number().int().min(1).max(300).optional().default(100),
 });
 
-const CreateRefundSchema = z.object({
-    payment_id: z.string().uuid().optional(),
-    payment_reference: z.string().trim().min(2).max(120).optional(),
-    order_id: z.string().uuid().optional(),
-    amount: z.coerce.number().min(0.01).max(100000000),
-    reason: z.string().trim().min(3).max(280),
-    status: RefundStatusSchema.optional().default('pending'),
-    provider_reference: z.string().trim().min(2).max(120).optional(),
-    processed_at: z.string().datetime().optional(),
-    metadata: z.record(z.string(), z.unknown()).optional(),
-}).refine(data => Boolean(data.payment_id || data.payment_reference), {
-    message: 'Either payment_id or payment_reference is required',
-    path: ['payment_reference'],
-});
+const CreateRefundSchema = z
+    .object({
+        payment_id: z.string().uuid().optional(),
+        payment_reference: z.string().trim().min(2).max(120).optional(),
+        order_id: z.string().uuid().optional(),
+        amount: z.coerce.number().min(0.01).max(100000000),
+        reason: z.string().trim().min(3).max(280),
+        status: RefundStatusSchema.optional().default('pending'),
+        provider_reference: z.string().trim().min(2).max(120).optional(),
+        processed_at: z.string().datetime().optional(),
+        metadata: z.record(z.string(), z.unknown()).optional(),
+    })
+    .refine(data => Boolean(data.payment_id || data.payment_reference), {
+        message: 'Either payment_id or payment_reference is required',
+        path: ['payment_reference'],
+    });
 
 function generateRefundReference() {
     return `RF-${randomBytes(3).toString('hex').toUpperCase()}`;

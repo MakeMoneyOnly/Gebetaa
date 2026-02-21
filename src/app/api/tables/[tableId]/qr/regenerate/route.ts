@@ -31,7 +31,7 @@ export async function POST(_request: Request, context: { params: Promise<{ table
     const { data: restaurant, error: restaurantError } = await restaurantContext.supabase
         .from('restaurants')
         .select('slug')
-        .eq('id', table.restaurant_id)
+        .eq('id', table.restaurant_id as string)
         .maybeSingle();
 
     if (restaurantError) {

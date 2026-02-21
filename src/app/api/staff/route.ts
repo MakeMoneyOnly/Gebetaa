@@ -30,9 +30,7 @@ export async function GET() {
 
     const { data, error } = await adminClient
         .from('restaurant_staff_with_users')
-        .select(
-            'id, user_id, role, is_active, created_at, email, name, pin_code, assigned_zones'
-        )
+        .select('id, user_id, role, is_active, created_at, email, name, pin_code, assigned_zones')
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: true });
 

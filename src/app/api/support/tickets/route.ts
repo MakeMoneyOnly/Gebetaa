@@ -70,7 +70,7 @@ export async function POST(request: Request) {
             description: parsed.data.description,
             priority: parsed.data.priority,
             status: 'open',
-            diagnostics_json: parsed.data.diagnostics_json ?? {},
+            diagnostics_json: (parsed.data.diagnostics_json ?? {}) as any,
             created_by: auth.user.id,
         })
         .select('*')

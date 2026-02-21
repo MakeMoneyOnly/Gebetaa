@@ -49,12 +49,7 @@ export async function POST(request: Request) {
         if (/idx_restaurant_staff_pin_unique/i.test(error.message)) {
             return apiError('PIN already in use. Please choose another.', 400, 'DUPLICATE_PIN');
         }
-        return apiError(
-            'Failed to create staff member',
-            500,
-            'STAFF_CREATE_FAILED',
-            error.message
-        );
+        return apiError('Failed to create staff member', 500, 'STAFF_CREATE_FAILED', error.message);
     }
 
     await writeAuditLog(context.supabase, {

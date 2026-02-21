@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     if (!context.ok) {
         return context.response;
     }
-    
+
     // We also make sure the device is verifying a PIN for its own restaurant
     if (context.restaurantId !== parsed.data.restaurantId) {
         return apiError('Unauthorized', 403, 'RESTAURANT_MISMATCH');
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         .eq('pin_code', parsed.data.pin)
         .eq('is_active', true)
         .single();
-        
+
     if (error || !staff) {
         // Fallback: If `restaurant_staff_with_users` doesn't expose pin_code (since it's a view),
         // we hit `restaurant_staff` directly if the first query fails.
@@ -50,11 +50,11 @@ export async function POST(request: Request) {
             .eq('pin_code', parsed.data.pin)
             .eq('is_active', true)
             .single();
-            
+
         if (rawError || !rawStaff) {
-             return apiError('Invalid PIN', 400, 'INVALID_PIN');
+            return apiError('Invalid PIN', 400, 'INVALID_PIN');
         }
-        
+
         return apiSuccess(
             {
                 staff: {

@@ -61,7 +61,21 @@ export async function POST(req: NextRequest) {
         .eq('role', 'owner')
         .maybeSingle();
 
-    const slug = `${slugify(restaurant_name)}-${Date.now().toString(36)}`;
+    let baseSlug = slugify(restaurant_name);
+    if (!baseSlug) baseSlug = 'restaurant';
+
+    // Check if base slug exists
+    const { data: existingSlugs } = await supabase
+        .from('restaurants')
+        .select('slug')
+        .like('slug', `${baseSlug}%`);
+
+    let slug = baseSlug;
+    if (existingSlugs && existingSlugs.length > 0) {
+        // If it exists, append a short random string
+        const code = Math.random().toString(36).substring(2, 6);
+        slug = `${baseSlug}-${code}`;
+    }
 
     let restaurantId: string;
 
