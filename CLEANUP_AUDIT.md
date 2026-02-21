@@ -199,8 +199,9 @@ rm -f public/vercel.svg public/next.svg public/globe.svg public/window.svg publi
 - [x] Update .gitignore with additional patterns
 - [ ] Review and delete outdated planning documents
 - [ ] Evaluate SKILLS directory necessity
-- [ ] **ROTATE SUPABASE SERVICE ROLE KEY** (KEY WAS COMMITTED TO GIT!)
-- [ ] Commit cleanup changes
+- [x] **ROTATE SUPABASE SERVICE ROLE KEY** (KEY WAS COMMITTED TO GIT!)
+- [x] Use BFG or git-filter-repo to remove from history
+- [x] Commit cleanup changes
 
 ---
 
@@ -242,6 +243,8 @@ The following files were successfully deleted:
 - `public/file.svg`
 
 The `.gitignore` was updated with additional patterns.
+- Git history was cleaned using `git-filter-repo` to remove sensitive files.
+- Remote repository history has been force-pushed with the cleaned state.
 
 ---
 
