@@ -1,0 +1,87 @@
+import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+
+export type HardwareDevice = {
+    id: string;
+    restaurant_id: string;
+    name: string;
+    device_type: 'pos' | 'kds' | 'kiosk' | 'digital_menu';
+    status: 'active' | 'inactive' | 'maintenance';
+    pairing_code: string | null;
+    device_token: string | null;
+    paired_at: string | null;
+    last_active_at: string | null;
+    assigned_zones: string[];
+    created_at: string;
+};
+
+export function useDevices() {
+    const [devices, setDevices] = useState<HardwareDevice[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchDevices = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await fetch('/api/devices', { method: 'GET' });
+
+            if (!response.ok) {
+                let errorMessage = 'Failed to fetch devices.';
+                try {
+                    const errorPayload = await response.json();
+                    errorMessage = errorPayload?.error ?? errorMessage;
+                } catch {
+                    errorMessage = `Error ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const payload = await response.json();
+            setDevices((payload?.data?.devices ?? []) as HardwareDevice[]);
+        } catch (fetchError) {
+            console.error(fetchError);
+            setError(fetchError instanceof Error ? fetchError.message : 'Failed to fetch devices.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        void fetchDevices();
+    }, [fetchDevices]);
+
+    const handleProvisionDevice = async (payload: {
+        name: string;
+        device_type: string;
+        assigned_zones?: string[];
+    }) => {
+        try {
+            const response = await fetch('/api/devices/provision', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to provision device.');
+            }
+            
+            // Re-fetch or locally append
+            setDevices(prev => [...prev, result.data.device]);
+            toast.success('Device provisioned successfully.');
+            return result.data.device as HardwareDevice;
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to provision device.');
+            return null;
+        }
+    };
+
+    return {
+        devices,
+        loading,
+        error,
+        fetchDevices,
+        handleProvisionDevice,
+    };
+}
