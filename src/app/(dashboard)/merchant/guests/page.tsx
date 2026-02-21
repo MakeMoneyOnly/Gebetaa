@@ -16,6 +16,9 @@ import {
     type LoyaltyProgramRow,
 } from '@/components/merchant/LoyaltyProgramBuilder';
 import { MetricCard } from '@/components/merchant/MetricCard';
+import { useAppLocale } from '@/hooks/useAppLocale';
+import { formatETBCurrency } from '@/lib/format/et';
+import { getP2Copy } from '@/lib/i18n/p2';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type Segment = 'all' | 'vip' | 'returning' | 'new';
@@ -43,7 +46,8 @@ type GuestVisit = {
 };
 
 export default function GuestsPage() {
-    const locale = 'en-ET';
+    const locale = useAppLocale();
+    const copy = getP2Copy(locale);
     const [guests, setGuests] = useState<GuestDirectoryRow[]>([]);
     const { loading, markLoaded } = usePageLoadGuard('guests');
     const [error, setError] = useState<string | null>(null);
@@ -386,10 +390,10 @@ export default function GuestsPage() {
         <div className="min-h-screen space-y-8 pb-20">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">Guests</h1>
-                    <p className="font-medium text-gray-500">
-                        CRM starter with profiles, tags, and visit history.
-                    </p>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                        {copy.guests.title}
+                    </h1>
+                    <p className="font-medium text-gray-500">{copy.guests.subtitle}</p>
                 </div>
             </div>
 
@@ -439,12 +443,11 @@ export default function GuestsPage() {
                 <MetricCard
                     icon={Wallet}
                     chip="LTV"
-                    value={new Intl.NumberFormat(locale, {
-                        style: 'currency',
-                        currency: 'ETB',
+                    value={formatETBCurrency(stats.ltvTotal, {
+                        locale,
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 0,
-                    }).format(stats.ltvTotal)}
+                    })}
                     label="Lifetime Value"
                     subLabel="Total Spend"
                     tone="green"
@@ -469,10 +472,8 @@ export default function GuestsPage() {
 
             <section className="space-y-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-black">Revenue Growth Stack (P2)</h2>
-                    <p className="text-sm text-gray-500">
-                        Loyalty, gift cards, and campaign operations linked to guests.
-                    </p>
+                    <h2 className="text-2xl font-bold text-black">{copy.guests.growthTitle}</h2>
+                    <p className="text-sm text-gray-500">{copy.guests.growthSubtitle}</p>
                 </div>
 
                 {growthError ? (
@@ -487,6 +488,7 @@ export default function GuestsPage() {
                         loading={growthLoading}
                         creating={creatingLoyalty}
                         onCreate={handleCreateLoyaltyProgram}
+                        locale={locale}
                     />
                     <GiftCardManager
                         cards={giftCards}
@@ -495,6 +497,7 @@ export default function GuestsPage() {
                         redeemingId={redeemingGiftCardId}
                         onCreate={handleCreateGiftCard}
                         onRedeem={handleRedeemGiftCard}
+                        locale={locale}
                     />
                     <CampaignBuilder
                         campaigns={campaigns}

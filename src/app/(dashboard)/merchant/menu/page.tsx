@@ -618,7 +618,7 @@ export default function MenuPage() {
                     </button>
                     <button
                         onClick={openCreateCategoryModal}
-                        className="flex h-12 items-center gap-2 rounded-xl bg-black px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800"
+                        className="bg-brand-crimson flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
                     >
                         <Plus className="h-4 w-4" />
                         Add Category
@@ -706,7 +706,7 @@ export default function MenuPage() {
                         </p>
                         <button
                             onClick={openCreateCategoryModal}
-                            className="h-12 rounded-xl bg-black px-8 font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800"
+                            className="bg-brand-crimson h-12 rounded-xl px-8 font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
                         >
                             Create Category
                         </button>
@@ -779,7 +779,7 @@ export default function MenuPage() {
                                 <button
                                     type="submit"
                                     disabled={categorySubmitting}
-                                    className="inline-flex h-10 min-w-28 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                    className="bg-brand-crimson inline-flex h-10 min-w-28 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                                 >
                                     {categorySubmitting && (
                                         <Loader2 className="h-4 w-4 animate-spin" />

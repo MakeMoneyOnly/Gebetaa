@@ -20,9 +20,13 @@ import {
     type VarianceRow,
     type VarianceTotals,
 } from '@/components/merchant/VarianceDashboard';
+import { useAppLocale } from '@/hooks/useAppLocale';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { getP2Copy } from '@/lib/i18n/p2';
 
 export default function InventoryPage() {
+    const locale = useAppLocale();
+    const copy = getP2Copy(locale);
     const { loading, markLoaded } = usePageLoadGuard('inventory');
     const [error, setError] = useState<string | null>(null);
 
@@ -285,17 +289,15 @@ export default function InventoryPage() {
         <div className="min-h-screen space-y-6 pb-20">
             <div>
                 <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
-                    Inventory & Cost
+                    {copy.inventory.title}
                 </h1>
-                <p className="font-medium text-gray-500">
-                    Ingredient stock, procurement operations, and variance controls.
-                </p>
+                <p className="font-medium text-gray-500">{copy.inventory.subtitle}</p>
             </div>
 
             <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Boxes className="h-4 w-4 text-blue-600" />
-                    Inventory Operations Center
+                    {copy.inventory.operationsCenter}
                 </div>
             </div>
 
@@ -329,6 +331,7 @@ export default function InventoryPage() {
                 loading={loading}
                 creating={creatingPurchaseOrder}
                 onCreatePurchaseOrder={handleCreatePurchaseOrder}
+                locale={locale}
             />
 
             <InvoiceReviewQueue
@@ -336,9 +339,15 @@ export default function InventoryPage() {
                 loading={loading}
                 creating={creatingInvoice}
                 onCreateInvoice={handleCreateInvoice}
+                locale={locale}
             />
 
-            <VarianceDashboard loading={loading} rows={varianceRows} totals={varianceTotals} />
+            <VarianceDashboard
+                loading={loading}
+                rows={varianceRows}
+                totals={varianceTotals}
+                locale={locale}
+            />
         </div>
     );
 }

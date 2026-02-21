@@ -556,125 +556,125 @@ export default function AnalyticsPage() {
                         {/* 1. Customer Feedback/Satisfaction - 50% width */}
                         {ratingCardVisible && (
                             <div className="flex min-h-[500px] flex-col justify-between rounded-[2.5rem] bg-white p-8 shadow-sm">
-                            <div>
-                                <div className="mb-2 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-2 w-2 animate-pulse rounded-full bg-gray-300" />
-                                        <div className="h-2 w-2 animate-pulse rounded-full bg-gray-300 delay-75" />
-                                        <div className="h-2 w-2 animate-pulse rounded-full bg-gray-900 delay-150" />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setRatingCardVisible(false);
-                                            sessionStorage.setItem(
-                                                'analytics.ratingCardDismissed',
-                                                'true'
-                                            );
-                                        }}
-                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200"
-                                    >
-                                        <span className="sr-only">Close</span>
-                                        <svg
-                                            width="10"
-                                            height="10"
-                                            viewBox="0 0 12 12"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                d="M9 3L3 9M3 3L9 9"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <p className="mb-6 text-xs font-bold tracking-wider text-gray-400 uppercase">
-                                    Review Rating
-                                </p>
-
-                                <h3 className="mb-8 text-3xl leading-tight font-bold tracking-tight text-gray-900">
-                                    How is your business management going?
-                                </h3>
-
-                                <div className="mt-auto flex items-center justify-between gap-2 px-2">
-                                    {[
-                                        { icon: '😖', label: 'Terrible' },
-                                        { icon: 'bad', label: 'Bad' },
-                                        { icon: 'meh', label: 'Okay' },
-                                        { icon: 'good', label: 'Good' },
-                                        { icon: 'love', label: 'Great' },
-                                    ].map((mood, i) => (
+                                <div>
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2 w-2 animate-pulse rounded-full bg-gray-300" />
+                                            <div className="h-2 w-2 animate-pulse rounded-full bg-gray-300 delay-75" />
+                                            <div className="h-2 w-2 animate-pulse rounded-full bg-gray-900 delay-150" />
+                                        </div>
                                         <button
-                                            key={i}
-                                            onClick={() => handleMoodUpdate(mood.label, i + 1)}
-                                            disabled={hasRated}
-                                            className={`group flex flex-col items-center gap-2 transition-all focus:outline-none ${
-                                                hasRated
-                                                    ? 'cursor-not-allowed opacity-50 grayscale'
-                                                    : 'hover:scale-110'
-                                            }`}
+                                            type="button"
+                                            onClick={() => {
+                                                setRatingCardVisible(false);
+                                                sessionStorage.setItem(
+                                                    'analytics.ratingCardDismissed',
+                                                    'true'
+                                                );
+                                            }}
+                                            className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200"
                                         >
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-gray-100 bg-gray-50 text-2xl shadow-sm transition-all group-hover:bg-white group-hover:shadow-md">
-                                                {i === 0 && (
-                                                    <span className="opacity-50 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0">
-                                                        😡
-                                                    </span>
-                                                )}
-                                                {i === 1 && (
-                                                    <Frown className="h-6 w-6 text-gray-400 transition-colors group-hover:text-red-500" />
-                                                )}
-                                                {i === 2 && (
-                                                    <Meh className="h-6 w-6 text-gray-400 transition-colors group-hover:text-yellow-500" />
-                                                )}
-                                                {i === 3 && (
-                                                    <Smile className="h-6 w-6 text-gray-400 transition-colors group-hover:text-blue-500" />
-                                                )}
-                                                {i === 4 && (
-                                                    <span className="opacity-50 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0">
-                                                        😍
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <span className="sr-only">Close</span>
+                                            <svg
+                                                width="10"
+                                                height="10"
+                                                viewBox="0 0 12 12"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path
+                                                    d="M9 3L3 9M3 3L9 9"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                            </svg>
                                         </button>
-                                    ))}
-                                </div>
-                            </div>
+                                    </div>
 
-                            <div className="mt-auto rounded-2xl bg-gray-50 p-6">
-                                <div className="mb-2 flex items-center justify-between">
-                                    <span className="text-sm font-bold text-gray-900">
-                                        Total Reviews
-                                    </span>
-                                    <span className="rounded-lg bg-green-100 px-2 py-1 text-xs font-bold text-green-600">
-                                        +{metrics?.reviews_this_week ?? 0} this week
-                                    </span>
-                                </div>
-                                <div className="flex items-baseline gap-1">
-                                    <h4 className="text-4xl font-black text-gray-900">
-                                        {metrics?.avg_rating?.toFixed(1) ?? '0.0'}
-                                    </h4>
-                                    <div className="flex text-yellow-400">
-                                        {[1, 2, 3, 4, 5].map(star => (
-                                            <Star
-                                                key={star}
-                                                className={`h-4 w-4 ${
-                                                    star <= Math.round(metrics?.avg_rating ?? 0)
-                                                        ? 'fill-current'
-                                                        : 'fill-none text-gray-300'
+                                    <p className="mb-6 text-xs font-bold tracking-wider text-gray-400 uppercase">
+                                        Review Rating
+                                    </p>
+
+                                    <h3 className="mb-8 text-3xl leading-tight font-bold tracking-tight text-gray-900">
+                                        How is your business management going?
+                                    </h3>
+
+                                    <div className="mt-auto flex items-center justify-between gap-2 px-2">
+                                        {[
+                                            { icon: '😖', label: 'Terrible' },
+                                            { icon: 'bad', label: 'Bad' },
+                                            { icon: 'meh', label: 'Okay' },
+                                            { icon: 'good', label: 'Good' },
+                                            { icon: 'love', label: 'Great' },
+                                        ].map((mood, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => handleMoodUpdate(mood.label, i + 1)}
+                                                disabled={hasRated}
+                                                className={`group flex flex-col items-center gap-2 transition-all focus:outline-none ${
+                                                    hasRated
+                                                        ? 'cursor-not-allowed opacity-50 grayscale'
+                                                        : 'hover:scale-110'
                                                 }`}
-                                            />
+                                            >
+                                                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-gray-100 bg-gray-50 text-2xl shadow-sm transition-all group-hover:bg-white group-hover:shadow-md">
+                                                    {i === 0 && (
+                                                        <span className="opacity-50 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0">
+                                                            😡
+                                                        </span>
+                                                    )}
+                                                    {i === 1 && (
+                                                        <Frown className="h-6 w-6 text-gray-400 transition-colors group-hover:text-red-500" />
+                                                    )}
+                                                    {i === 2 && (
+                                                        <Meh className="h-6 w-6 text-gray-400 transition-colors group-hover:text-yellow-500" />
+                                                    )}
+                                                    {i === 3 && (
+                                                        <Smile className="h-6 w-6 text-gray-400 transition-colors group-hover:text-blue-500" />
+                                                    )}
+                                                    {i === 4 && (
+                                                        <span className="opacity-50 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0">
+                                                            😍
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
-                                <p className="mt-2 text-xs font-medium text-gray-400">
-                                    Based on {metrics?.total_reviews ?? 0} customer ratings
-                                </p>
-                            </div>
+
+                                <div className="mt-auto rounded-2xl bg-gray-50 p-6">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <span className="text-sm font-bold text-gray-900">
+                                            Total Reviews
+                                        </span>
+                                        <span className="rounded-lg bg-green-100 px-2 py-1 text-xs font-bold text-green-600">
+                                            +{metrics?.reviews_this_week ?? 0} this week
+                                        </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <h4 className="text-4xl font-black text-gray-900">
+                                            {metrics?.avg_rating?.toFixed(1) ?? '0.0'}
+                                        </h4>
+                                        <div className="flex text-yellow-400">
+                                            {[1, 2, 3, 4, 5].map(star => (
+                                                <Star
+                                                    key={star}
+                                                    className={`h-4 w-4 ${
+                                                        star <= Math.round(metrics?.avg_rating ?? 0)
+                                                            ? 'fill-current'
+                                                            : 'fill-none text-gray-300'
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <p className="mt-2 text-xs font-medium text-gray-400">
+                                        Based on {metrics?.total_reviews ?? 0} customer ratings
+                                    </p>
+                                </div>
                             </div>
                         )}
 

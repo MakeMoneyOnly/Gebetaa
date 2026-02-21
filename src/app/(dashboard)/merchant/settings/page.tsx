@@ -238,7 +238,7 @@ export default function SettingsPage() {
                         <button
                             onClick={() => void saveSecurity()}
                             disabled={saving}
-                            className="inline-flex h-11 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                            className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                         >
                             {saving ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                         <button
                             onClick={() => void saveNotifications()}
                             disabled={saving}
-                            className="inline-flex h-11 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                            className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                         >
                             {saving ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />

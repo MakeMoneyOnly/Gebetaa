@@ -25,6 +25,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { isAbortError } from '@/hooks/useSafeFetch';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { cn } from '@/lib/utils';
 
 export default function TablesPage() {
     const [tables, setTables] = useState<TableGridRow[]>(() => {
@@ -62,6 +63,9 @@ export default function TablesPage() {
     const [batchQrEntries, setBatchQrEntries] = useState<
         Array<{ id: string; table_number: string; url: string }>
     >([]);
+    const [availableZones, setAvailableZones] = useState<string[]>([]);
+    const [isZoneModalOpen, setIsZoneModalOpen] = useState(false);
+    const [newZoneName, setNewZoneName] = useState('');
     const [isSessionDrawerOpen, setIsSessionDrawerOpen] = useState(false);
     const [sessionDrawerTableNumber, setSessionDrawerTableNumber] = useState<string | null>(null);
     const [sessionDrawerLoading, setSessionDrawerLoading] = useState(false);
@@ -138,6 +142,21 @@ export default function TablesPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase, user]);
 
+    useEffect(() => {
+        const fetchZones = async () => {
+            try {
+                const response = await fetch('/api/restaurants/zones');
+                const result = await response.json();
+                if (result.success) {
+                    setAvailableZones(result.data.zones || []);
+                }
+            } catch (err) {
+                console.error('Failed to fetch zones', err);
+            }
+        };
+        fetchZones();
+    }, []);
+
     const fetchTables = async (signal?: AbortSignal) => {
         try {
             setError(null);
@@ -153,6 +172,8 @@ export default function TablesPage() {
                     status: (table.status as TableGridRow['status']) ?? 'available',
                     qr_code_url: table.qr_code_url ?? null,
                     active_order_id: table.active_order_id ?? null,
+                    zone: table.zone ?? null,
+                    capacity: table.capacity ?? 4,
                 })
             );
             if (isMountedRef.current) {
@@ -312,11 +333,11 @@ export default function TablesPage() {
         }
     };
 
-    const openEditTableModal = (table: TableGridRow) => {
+    const openEditTableModal = (table: any) => {
         setTableToEdit(table);
         setTableNumberInput(table.table_number);
-        setCapacityInput('4');
-        setZoneInput('');
+        setCapacityInput(String(table.capacity || 4));
+        setZoneInput(table.zone || '');
         setStatusInput(table.status);
         setGuestCountInput('1');
         setTransferTargetTableId('');
@@ -631,11 +652,18 @@ export default function TablesPage() {
                         {isBatchQrLoading ? 'Generating...' : 'Batch QR'}
                     </button>
                     <button
+                        onClick={() => setIsZoneModalOpen(true)}
+                        className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                        Zones
+                    </button>
+                    <button
                         onClick={() => {
                             resetForm();
                             setIsCreateModalOpen(true);
                         }}
-                        className="flex h-12 items-center gap-2 rounded-xl bg-black px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800"
+                        className="bg-brand-crimson flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
                     >
                         <Plus className="h-4 w-4" />
                         Add Table
@@ -860,7 +888,7 @@ export default function TablesPage() {
                 <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6 backdrop-blur-md duration-300">
                     <div className="animate-in zoom-in-95 relative flex w-full max-w-sm flex-col items-center rounded-[3rem] bg-white p-8 shadow-2xl duration-300">
                         <button
-                            className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
+                            className="hover:bg-brand-crimson absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
                             onClick={() => {
                                 setSelectedTableQR(null);
                                 setSelectedTableQrUrl(null);
@@ -869,7 +897,7 @@ export default function TablesPage() {
                             <X className="h-5 w-5" />
                         </button>
 
-                        <div className="mt-4 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-black text-white shadow-xl shadow-black/20">
+                        <div className="bg-brand-crimson mt-4 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-xl shadow-black/20">
                             <Scan className="h-8 w-8" />
                         </div>
 
@@ -895,7 +923,7 @@ export default function TablesPage() {
                         </div>
 
                         <button
-                            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-black text-base font-bold text-white shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:bg-gray-800"
+                            className="bg-brand-crimson flex h-14 w-full items-center justify-center gap-3 rounded-2xl text-base font-bold text-white shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:bg-[#a0151e]"
                             onClick={() => {
                                 const svg = document.getElementById('qr-code-svg');
                                 if (svg) {
@@ -935,7 +963,7 @@ export default function TablesPage() {
                                 </p>
                             </div>
                             <button
-                                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
+                                className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
                                 onClick={() => setIsBatchQrModalOpen(false)}
                             >
                                 <X className="h-5 w-5" />
@@ -977,7 +1005,7 @@ export default function TablesPage() {
                             <button
                                 type="button"
                                 onClick={handleBatchQrDownload}
-                                className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800"
+                                className="bg-brand-crimson inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e]"
                             >
                                 <Download className="h-4 w-4" />
                                 Download All PNG
@@ -1010,12 +1038,33 @@ export default function TablesPage() {
                                 placeholder="Capacity"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
-                            <input
-                                value={zoneInput}
-                                onChange={e => setZoneInput(e.target.value)}
-                                placeholder="Zone (optional)"
-                                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                            />
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                                    Assign Zone
+                                </label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {availableZones.map(z => (
+                                        <button
+                                            key={z}
+                                            type="button"
+                                            onClick={() => setZoneInput(zoneInput === z ? '' : z)}
+                                            className={cn(
+                                                'rounded-lg border px-2.5 py-1 text-xs font-bold transition-all',
+                                                zoneInput === z
+                                                    ? 'border-black bg-black text-white'
+                                                    : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+                                            )}
+                                        >
+                                            {z}
+                                        </button>
+                                    ))}
+                                    {availableZones.length === 0 && (
+                                        <p className="text-[10px] text-gray-400 italic">
+                                            No zones defined. Add them using the "Zones" button.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                             {formError && <p className="text-xs text-red-600">{formError}</p>}
                             <div className="flex justify-end gap-2 pt-2">
                                 <button
@@ -1028,7 +1077,7 @@ export default function TablesPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                    className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                                 >
                                     {isSubmitting ? 'Creating...' : 'Create'}
                                 </button>
@@ -1061,12 +1110,33 @@ export default function TablesPage() {
                                 placeholder="Capacity"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
-                            <input
-                                value={zoneInput}
-                                onChange={e => setZoneInput(e.target.value)}
-                                placeholder="Zone (optional)"
-                                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                            />
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                                    Assign Zone
+                                </label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {availableZones.map(z => (
+                                        <button
+                                            key={z}
+                                            type="button"
+                                            onClick={() => setZoneInput(zoneInput === z ? '' : z)}
+                                            className={cn(
+                                                'rounded-lg border px-2.5 py-1 text-xs font-bold transition-all',
+                                                zoneInput === z
+                                                    ? 'border-black bg-black text-white'
+                                                    : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+                                            )}
+                                        >
+                                            {z}
+                                        </button>
+                                    ))}
+                                    {availableZones.length === 0 && (
+                                        <p className="text-[10px] text-gray-400 italic">
+                                            No zones defined. Add them using the "Zones" button.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                             <select
                                 value={statusInput}
                                 onChange={e =>
@@ -1129,7 +1199,7 @@ export default function TablesPage() {
                                         type="button"
                                         onClick={handleTransferTableSession}
                                         disabled={isSessionActionLoading}
-                                        className="h-9 rounded-lg bg-black px-3 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                        className="bg-brand-crimson h-9 rounded-lg px-3 text-xs font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                                     >
                                         Transfer
                                     </button>
@@ -1147,7 +1217,7 @@ export default function TablesPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                    className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                                 >
                                     {isSubmitting ? 'Saving...' : 'Save'}
                                 </button>
@@ -1197,6 +1267,101 @@ export default function TablesPage() {
                 session={sessionDrawerData}
                 onClose={() => setIsSessionDrawerOpen(false)}
             />
+
+            {/* Zone Management Modal */}
+            {isZoneModalOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/20 p-4 backdrop-blur">
+                    <div className="w-full max-w-md rounded-3xl border border-white/40 bg-white/95 p-6 shadow-2xl backdrop-blur-xl">
+                        <div className="mb-6 flex items-center justify-between xl:-mr-1">
+                            <div>
+                                <h3 className="text-xl font-black tracking-tight text-gray-900">
+                                    Manage Zones
+                                </h3>
+                                <p className="mt-0.5 text-xs font-semibold text-gray-500">
+                                    Organize your restaurant by seating areas.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setIsZoneModalOpen(false)}
+                                className="flex shrink-0 items-center justify-center rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-black"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <div className="mb-8 flex min-h-[40px] flex-wrap items-center gap-2">
+                            {availableZones.length > 0 ? (
+                                availableZones.map(zone => (
+                                    <div
+                                        key={zone}
+                                        className="group flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300"
+                                    >
+                                        {zone}
+                                        <button
+                                            onClick={async () => {
+                                                const next = availableZones.filter(z => z !== zone);
+                                                setAvailableZones(next);
+                                                await fetch('/api/restaurants/zones', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ zones: next }),
+                                                });
+                                            }}
+                                            className="ml-1 rounded-full p-0.5 text-gray-400 opacity-50 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 hover:opacity-100"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-xs font-semibold text-gray-400 italic">
+                                    No zones created yet.
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="relative flex gap-2">
+                            <input
+                                value={newZoneName}
+                                onChange={e => setNewZoneName(e.target.value)}
+                                placeholder="e.g. Patio, Main Dining, Bar"
+                                className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-black focus:bg-white focus:ring-4 focus:ring-black/5"
+                                onKeyDown={async e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        if (!newZoneName.trim()) return;
+                                        const next = [...availableZones, newZoneName.trim()];
+                                        setAvailableZones(next);
+                                        setNewZoneName('');
+                                        await fetch('/api/restaurants/zones', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ zones: next }),
+                                        });
+                                    }
+                                }}
+                            />
+                            <button
+                                onClick={async () => {
+                                    if (!newZoneName.trim()) return;
+                                    const next = [...availableZones, newZoneName.trim()];
+                                    setAvailableZones(next);
+                                    setNewZoneName('');
+                                    await fetch('/api/restaurants/zones', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ zones: next }),
+                                    });
+                                }}
+                                disabled={!newZoneName.trim()}
+                                className="bg-brand-crimson shrink-0 rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-all hover:bg-[#a0151e] disabled:opacity-50 disabled:shadow-none"
+                            >
+                                Add Zone
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

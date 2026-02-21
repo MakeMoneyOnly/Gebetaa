@@ -268,7 +268,7 @@ export default function MerchantDashboard() {
                             year: 'numeric',
                         })}
                     </span>
-                    <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800">
+                    <button className="bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]">
                         <CalendarCheck className="h-5 w-5" />
                     </button>
                 </div>
@@ -330,7 +330,7 @@ export default function MerchantDashboard() {
                     </div>
                     <button
                         onClick={() => fetchCommandCenter(true)}
-                        className="h-10 rounded-xl bg-black px-4 text-sm font-bold text-white hover:bg-gray-800"
+                        className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-bold text-white hover:bg-[#a0151e]"
                         disabled={refreshing}
                     >
                         {refreshing ? 'Refreshing...' : 'Refresh'}
@@ -421,7 +421,7 @@ export default function MerchantDashboard() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <h2 className="text-xl font-bold text-black">Active Orders</h2>
-                        <span className="rounded-full bg-black px-3 py-1 text-xs font-bold text-white">
+                        <span className="bg-brand-crimson rounded-full px-3 py-1 text-xs font-bold text-white">
                             {metrics.orders_in_flight} Pending
                         </span>
                     </div>

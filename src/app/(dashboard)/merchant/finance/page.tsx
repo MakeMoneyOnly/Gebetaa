@@ -18,11 +18,15 @@ import {
     SettlementSummaryCard,
     type SettlementSummaryTotals,
 } from '@/components/merchant/SettlementSummaryCard';
+import { useAppLocale } from '@/hooks/useAppLocale';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { getP2Copy } from '@/lib/i18n/p2';
 
 type DatasetKey = 'payments' | 'refunds' | 'payouts' | 'reconciliation';
 
 export default function FinancePage() {
+    const locale = useAppLocale();
+    const copy = getP2Copy(locale);
     const { loading, markLoaded } = usePageLoadGuard('finance');
     const [error, setError] = useState<string | null>(null);
     const [payments, setPayments] = useState<PaymentRow[]>([]);
@@ -206,18 +210,15 @@ export default function FinancePage() {
         <div className="min-h-screen space-y-6 pb-20">
             <div>
                 <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
-                    Finance & Reconciliation
+                    {copy.finance.title}
                 </h1>
-                <p className="font-medium text-gray-500">
-                    Settlement visibility, refund operations, payout matching, and accounting
-                    export.
-                </p>
+                <p className="font-medium text-gray-500">{copy.finance.subtitle}</p>
             </div>
 
             <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Landmark className="h-4 w-4 text-blue-600" />
-                    Finance Operations Center
+                    {copy.finance.operationsCenter}
                 </div>
             </div>
 
@@ -227,16 +228,17 @@ export default function FinancePage() {
                 </div>
             ) : null}
 
-            <SettlementSummaryCard loading={loading} totals={settlementTotals} />
+            <SettlementSummaryCard loading={loading} totals={settlementTotals} locale={locale} />
 
             <div className="grid gap-6 xl:grid-cols-2">
-                <PaymentMethodBreakdown loading={loading} payments={payments} />
+                <PaymentMethodBreakdown loading={loading} payments={payments} locale={locale} />
                 <RefundQueue
                     loading={loading}
                     creating={creatingRefund}
                     refunds={refunds}
                     payments={payments}
                     onCreateRefund={handleCreateRefund}
+                    locale={locale}
                 />
             </div>
 
@@ -244,6 +246,7 @@ export default function FinancePage() {
                 loading={loading}
                 payouts={payouts}
                 reconciliationEntries={reconciliationEntries}
+                locale={locale}
             />
 
             <AccountingExportPanel exporting={exporting} onExport={handleExport} />

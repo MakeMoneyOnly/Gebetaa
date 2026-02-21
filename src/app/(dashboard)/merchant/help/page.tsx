@@ -158,7 +158,7 @@ export default function HelpPage() {
                                 className="h-11 w-full rounded-xl border border-gray-200 pr-3 pl-9 text-sm outline-none focus:border-gray-400"
                             />
                         </div>
-                        <button className="h-11 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800">
+                        <button className="bg-brand-crimson h-11 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e]">
                             Search
                         </button>
                     </form>
