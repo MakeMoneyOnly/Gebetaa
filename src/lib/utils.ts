@@ -1,11 +1,20 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatETBCurrency } from '@/lib/format/et';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
 export function formatCurrency(amount: number, currency = 'ETB') {
+    if (currency.toUpperCase() === 'ETB') {
+        return formatETBCurrency(amount, {
+            locale: 'en',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        });
+    }
+
     return new Intl.NumberFormat('en-ET', {
         style: 'currency',
         currency: currency,

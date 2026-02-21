@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { apiError } from '@/lib/api/response';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 
@@ -89,4 +90,29 @@ export async function getAuthorizedRestaurantContext(
     }
 
     return { ok: true as const, restaurantId, supabase };
+}
+
+/**
+ * Authenticate a request from a paired hardware device (POS/KDS).
+ * Devices have no Supabase auth session — they use a long-lived device_token
+ * stored in localStorage after pairing and sent via the X-Device-Token header.
+ */
+export async function getDeviceContext(request: Request) {
+    const token = request.headers.get('x-device-token');
+    if (!token) {
+        return { ok: false as const, response: apiError('Missing device token', 401, 'DEVICE_UNAUTHORIZED') };
+    }
+
+    const admin = createServiceRoleClient();
+    const { data: device, error } = await admin
+        .from('hardware_devices')
+        .select('id, restaurant_id, device_type, name, assigned_zones, status')
+        .eq('device_token', token)
+        .single();
+
+    if (error || !device) {
+        return { ok: false as const, response: apiError('Invalid device token', 401, 'DEVICE_UNAUTHORIZED') };
+    }
+
+    return { ok: true as const, device, restaurantId: device.restaurant_id as string, admin };
 }

@@ -37,6 +37,9 @@ export const API_RATE_LIMIT_POLICIES: Record<string, RouteRateLimitPolicy> = {
     '/api/finance/payouts': { windowMs: 60_000, maxRequests: 60 },
     '/api/finance/reconciliation': { windowMs: 60_000, maxRequests: 80 },
     '/api/finance/export': { windowMs: 60_000, maxRequests: 20 },
+    '/api/payments/initiate': { windowMs: 60_000, maxRequests: 40 },
+    '/api/payments/verify': { windowMs: 60_000, maxRequests: 60 },
+    '/api/payments/providers/health': { windowMs: 60_000, maxRequests: 40 },
 };
 
 export const DEFAULT_API_RATE_LIMIT_POLICY: RouteRateLimitPolicy = {
