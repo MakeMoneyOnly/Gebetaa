@@ -1,6 +1,6 @@
 /**
  * Storybook Preview Configuration
- * 
+ *
  * Configures the global decorators, theme, and styling for Storybook.
  */
 
@@ -37,7 +37,7 @@ const preview: Preview = {
         },
     },
     decorators: [
-        (Story) => (
+        Story => (
             <div className="p-4">
                 <Story />
             </div>

@@ -1,467 +1,467 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main]
 
 env:
-  NODE_VERSION: '20'
-  PNPM_VERSION: '9'
+    NODE_VERSION: '20'
+    PNPM_VERSION: '9'
 
 jobs:
-  # ============================================
-  # LINT & TYPE CHECK
-  # ============================================
-  lint:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    # ============================================
+    # LINT & TYPE CHECK
+    # ============================================
+    lint:
+        name: Lint & Type Check
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Run ESLint
-        run: pnpm lint
+            - name: Run ESLint
+              run: pnpm lint
 
-      - name: Run TypeScript type check
-        run: pnpm type-check
+            - name: Run TypeScript type check
+              run: pnpm type-check
 
-      - name: Check formatting
-        run: pnpm format:check
+            - name: Check formatting
+              run: pnpm format:check
 
-  # ============================================
-  # UNIT TESTS
-  # ============================================
-  test-unit:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    # ============================================
+    # UNIT TESTS
+    # ============================================
+    test-unit:
+        name: Unit Tests
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Run unit tests with coverage
-        run: pnpm test:coverage
+            - name: Run unit tests with coverage
+              run: pnpm test:coverage
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage/
-          retention-days: 7
+            - name: Upload coverage report
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-report
+                  path: coverage/
+                  retention-days: 7
 
-  # ============================================
-  # SECURITY SCAN
-  # ============================================
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    # ============================================
+    # SECURITY SCAN
+    # ============================================
+    security-scan:
+        name: Security Scan
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-          ignore-unfixed: true
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@master
+              with:
+                  scan-type: 'fs'
+                  scan-ref: '.'
+                  severity: 'CRITICAL,HIGH'
+                  exit-code: '1'
+                  ignore-unfixed: true
 
-      - name: Run npm audit
-        run: pnpm audit --audit-level=high
-        continue-on-error: true
+            - name: Run npm audit
+              run: pnpm audit --audit-level=high
+              continue-on-error: true
 
-  # ============================================
-  # BUILD
-  # ============================================
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [lint, test-unit, security-scan]
-    steps:
-      - uses: actions/checkout@v4
+    # ============================================
+    # BUILD
+    # ============================================
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        needs: [lint, test-unit, security-scan]
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Build application
-        run: pnpm build
+            - name: Build application
+              run: pnpm build
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: .next/
-          retention-days: 7
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build
+                  path: .next/
+                  retention-days: 7
 
-  # ============================================
-  # E2E TESTS
-  # ============================================
-  test-e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
+    # ============================================
+    # E2E TESTS
+    # ============================================
+    test-e2e:
+        name: E2E Tests
+        runs-on: ubuntu-latest
+        needs: build
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+            - name: Install Playwright browsers
+              run: npx playwright install --with-deps chromium
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build
-          path: .next/
+            - name: Download build artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: build
+                  path: .next/
 
-      - name: Run E2E tests
-        run: pnpm test:e2e
-        env:
-          CI: true
+            - name: Run E2E tests
+              run: pnpm test:e2e
+              env:
+                  CI: true
 
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+            - name: Upload Playwright report
+              uses: actions/upload-artifact@v4
+              if: failure()
+              with:
+                  name: playwright-report
+                  path: playwright-report/
+                  retention-days: 7
 
-  # ============================================
-  # DEPLOY TO STAGING
-  # ============================================
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: [build, test-e2e]
-    if: github.ref == 'refs/heads/develop'
-    environment:
-      name: staging
-      url: https://staging.gebeta.app
-    steps:
-      - uses: actions/checkout@v4
+    # ============================================
+    # DEPLOY TO STAGING
+    # ============================================
+    deploy-staging:
+        name: Deploy to Staging
+        runs-on: ubuntu-latest
+        needs: [build, test-e2e]
+        if: github.ref == 'refs/heads/develop'
+        environment:
+            name: staging
+            url: https://staging.gebeta.app
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Deploy to Vercel (Staging)
-        id: deploy-staging
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          scope: ${{ secrets.VERCEL_ORG_ID }}
+            - name: Deploy to Vercel (Staging)
+              id: deploy-staging
+              uses: amondnet/vercel-action@v25
+              with:
+                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
+                  vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+                  vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+                  scope: ${{ secrets.VERCEL_ORG_ID }}
 
-      - name: Health Check
-        id: health-check
-        run: |
-          echo "Waiting for deployment to be ready..."
-          sleep 30
-          curl -sSf https://staging.gebeta.app/api/health || exit 1
-          echo "Health check passed!"
+            - name: Health Check
+              id: health-check
+              run: |
+                  echo "Waiting for deployment to be ready..."
+                  sleep 30
+                  curl -sSf https://staging.gebeta.app/api/health || exit 1
+                  echo "Health check passed!"
 
-      - name: Notify Deployment Success (Slack)
-        if: success()
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: |
-            {
-              "text": "🚀 Staging Deployment Successful",
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "🚀 Staging Deployment Successful"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment:*\nStaging"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Branch:*\n${{ github.ref_name }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Commit:*\n${{ github.sha }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Actor:*\n${{ github.actor }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View Deployment"
-                      },
-                      "url": "https://staging.gebeta.app"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+            - name: Notify Deployment Success (Slack)
+              if: success()
+              uses: slackapi/slack-github-action@v1.26.0
+              with:
+                  payload: |
+                      {
+                        "text": "🚀 Staging Deployment Successful",
+                        "blocks": [
+                          {
+                            "type": "header",
+                            "text": {
+                              "type": "plain_text",
+                              "text": "🚀 Staging Deployment Successful"
+                            }
+                          },
+                          {
+                            "type": "section",
+                            "fields": [
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Environment:*\nStaging"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Branch:*\n${{ github.ref_name }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Commit:*\n${{ github.sha }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Actor:*\n${{ github.actor }}"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "actions",
+                            "elements": [
+                              {
+                                "type": "button",
+                                "text": {
+                                  "type": "plain_text",
+                                  "text": "View Deployment"
+                                },
+                                "url": "https://staging.gebeta.app"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+                  SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
-      - name: Notify Deployment Failure (Slack)
-        if: failure()
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: |
-            {
-              "text": "❌ Staging Deployment Failed",
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "❌ Staging Deployment Failed"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment:*\nStaging"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Branch:*\n${{ github.ref_name }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Commit:*\n${{ github.sha }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Actor:*\n${{ github.actor }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Action Required:* Please check the workflow logs and fix the issue."
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+            - name: Notify Deployment Failure (Slack)
+              if: failure()
+              uses: slackapi/slack-github-action@v1.26.0
+              with:
+                  payload: |
+                      {
+                        "text": "❌ Staging Deployment Failed",
+                        "blocks": [
+                          {
+                            "type": "header",
+                            "text": {
+                              "type": "plain_text",
+                              "text": "❌ Staging Deployment Failed"
+                            }
+                          },
+                          {
+                            "type": "section",
+                            "fields": [
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Environment:*\nStaging"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Branch:*\n${{ github.ref_name }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Commit:*\n${{ github.sha }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Actor:*\n${{ github.actor }}"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "*Action Required:* Please check the workflow logs and fix the issue."
+                            }
+                          }
+                        ]
+                      }
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+                  SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
-  # ============================================
-  # DEPLOY TO PRODUCTION
-  # ============================================
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [build, test-e2e]
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: https://gebeta.app
-    steps:
-      - uses: actions/checkout@v4
+    # ============================================
+    # DEPLOY TO PRODUCTION
+    # ============================================
+    deploy-production:
+        name: Deploy to Production
+        runs-on: ubuntu-latest
+        needs: [build, test-e2e]
+        if: github.ref == 'refs/heads/main'
+        environment:
+            name: production
+            url: https://gebeta.app
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Deploy to Vercel (Production)
-        id: deploy-production
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          scope: ${{ secrets.VERCEL_ORG_ID }}
+            - name: Deploy to Vercel (Production)
+              id: deploy-production
+              uses: amondnet/vercel-action@v25
+              with:
+                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
+                  vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+                  vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+                  vercel-args: '--prod'
+                  scope: ${{ secrets.VERCEL_ORG_ID }}
 
-      - name: Health Check
-        id: health-check
-        run: |
-          echo "Waiting for deployment to be ready..."
-          sleep 30
-          curl -sSf https://gebeta.app/api/health || exit 1
-          echo "Health check passed!"
+            - name: Health Check
+              id: health-check
+              run: |
+                  echo "Waiting for deployment to be ready..."
+                  sleep 30
+                  curl -sSf https://gebeta.app/api/health || exit 1
+                  echo "Health check passed!"
 
-      - name: Rollback on Health Check Failure
-        if: failure()
-        run: |
-          echo "Health check failed, initiating rollback..."
-          # Vercel automatically keeps previous deployments
-          # Use Vercel CLI to rollback to previous production deployment
-          npx vercel rollback --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} || true
-          echo "Rollback initiated. Previous deployment should be restored."
+            - name: Rollback on Health Check Failure
+              if: failure()
+              run: |
+                  echo "Health check failed, initiating rollback..."
+                  # Vercel automatically keeps previous deployments
+                  # Use Vercel CLI to rollback to previous production deployment
+                  npx vercel rollback --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} || true
+                  echo "Rollback initiated. Previous deployment should be restored."
 
-      - name: Notify Deployment Success (Slack)
-        if: success()
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: |
-            {
-              "text": "🎉 Production Deployment Successful",
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "🎉 Production Deployment Successful"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment:*\nProduction"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Branch:*\n${{ github.ref_name }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Commit:*\n${{ github.sha }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Actor:*\n${{ github.actor }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View Live Site"
-                      },
-                      "url": "https://gebeta.app"
-                    },
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View Vercel Dashboard"
-                      },
-                      "url": "https://vercel.com/${{ secrets.VERCEL_ORG_ID }}/gebeta"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+            - name: Notify Deployment Success (Slack)
+              if: success()
+              uses: slackapi/slack-github-action@v1.26.0
+              with:
+                  payload: |
+                      {
+                        "text": "🎉 Production Deployment Successful",
+                        "blocks": [
+                          {
+                            "type": "header",
+                            "text": {
+                              "type": "plain_text",
+                              "text": "🎉 Production Deployment Successful"
+                            }
+                          },
+                          {
+                            "type": "section",
+                            "fields": [
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Environment:*\nProduction"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Branch:*\n${{ github.ref_name }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Commit:*\n${{ github.sha }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Actor:*\n${{ github.actor }}"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "actions",
+                            "elements": [
+                              {
+                                "type": "button",
+                                "text": {
+                                  "type": "plain_text",
+                                  "text": "View Live Site"
+                                },
+                                "url": "https://gebeta.app"
+                              },
+                              {
+                                "type": "button",
+                                "text": {
+                                  "type": "plain_text",
+                                  "text": "View Vercel Dashboard"
+                                },
+                                "url": "https://vercel.com/${{ secrets.VERCEL_ORG_ID }}/gebeta"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+                  SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
-      - name: Notify Deployment Failure (Slack)
-        if: failure()
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: |
-            {
-              "text": "🚨 Production Deployment Failed",
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "🚨 Production Deployment Failed"
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment:*\nProduction"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Branch:*\n${{ github.ref_name }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Commit:*\n${{ github.sha }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Actor:*\n${{ github.actor }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "⚠️ *Immediate Action Required!* Check workflow logs and verify rollback status."
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+            - name: Notify Deployment Failure (Slack)
+              if: failure()
+              uses: slackapi/slack-github-action@v1.26.0
+              with:
+                  payload: |
+                      {
+                        "text": "🚨 Production Deployment Failed",
+                        "blocks": [
+                          {
+                            "type": "header",
+                            "text": {
+                              "type": "plain_text",
+                              "text": "🚨 Production Deployment Failed"
+                            }
+                          },
+                          {
+                            "type": "section",
+                            "fields": [
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Environment:*\nProduction"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Branch:*\n${{ github.ref_name }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Commit:*\n${{ github.sha }}"
+                              },
+                              {
+                                "type": "mrkdwn",
+                                "text": "*Actor:*\n${{ github.actor }}"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "⚠️ *Immediate Action Required!* Check workflow logs and verify rollback status."
+                            }
+                          }
+                        ]
+                      }
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+                  SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
-      - name: Create GitHub Release
-        if: startsWith(github.event.head_commit.message, 'release:')
-        uses: softprops/action-gh-release@v1
-        with:
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Create GitHub Release
+              if: startsWith(github.event.head_commit.message, 'release:')
+              uses: softprops/action-gh-release@v1
+              with:
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
