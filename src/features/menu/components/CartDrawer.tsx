@@ -17,6 +17,9 @@ interface CartDrawerProps {
         table: string;
         sig: string;
         exp: number;
+        guest_session_id?: string;
+        auth_state?: 'guest' | 'authenticated';
+        login_url?: string;
         campaign_attribution?: {
             campaign_delivery_id: string;
             campaign_id?: string;
@@ -63,6 +66,9 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
                     notes: undefined,
                     ...(guestContext.campaign_attribution
                         ? { campaign_attribution: guestContext.campaign_attribution }
+                        : {}),
+                    ...(guestContext.guest_session_id
+                        ? { guest_session_id: guestContext.guest_session_id }
                         : {}),
                 }),
             });
@@ -253,6 +259,14 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
                                 {orderError}
                             </p>
                         )}
+                        {guestContext?.auth_state !== 'authenticated' && guestContext?.login_url ? (
+                            <p className="mt-3 text-center text-xs font-semibold text-black/60 dark:text-white/70">
+                                <a href={guestContext.login_url} className="underline">
+                                    Log in now
+                                </a>{' '}
+                                to earn loyalty points on this order.
+                            </p>
+                        ) : null}
                     </div>
                 </Drawer.Content>
             </Drawer.Portal>

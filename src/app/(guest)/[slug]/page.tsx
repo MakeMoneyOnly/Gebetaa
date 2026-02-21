@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import { useParams, useSearchParams } from 'next/navigation';
 import { GuestHero } from '@/features/menu/components/GuestHero';
@@ -48,10 +49,13 @@ interface RawMenuItem {
 
 interface GuestContextPayload {
     restaurant_id: string;
+    table_id: string;
     table_number: string;
     slug: string;
     sig: string;
     exp: number;
+    restaurant_name: string;
+    restaurant_logo_url: string | null;
 }
 
 interface CampaignAttributionPayload {
@@ -69,6 +73,10 @@ function MenuContent() {
     const [activeCategoryId, setActiveCategoryId] = useState('all');
     const [realItems, setRealItems] = useState<MenuItem[]>([]);
     const [guestContext, setGuestContext] = useState<GuestContextPayload | null>(null);
+    const [guestSessionId, setGuestSessionId] = useState<string | null>(null);
+    const [authState, setAuthState] = useState<'guest' | 'authenticated'>('guest');
+    const [showPreMenuSplash, setShowPreMenuSplash] = useState(true);
+    const [sessionSyncing, setSessionSyncing] = useState(false);
     const params = useParams<{ slug: string }>();
     const searchParams = useSearchParams();
     const tableNumber = searchParams.get('table');
@@ -76,10 +84,11 @@ function MenuContent() {
     const expiresAt = searchParams.get('exp');
     const campaignDeliveryId = searchParams.get('cdid') ?? searchParams.get('campaign_delivery_id');
     const campaignId = searchParams.get('cid') ?? searchParams.get('campaign_id');
+    const forceMenuEntry = searchParams.get('entry') === 'menu';
     const slug = params.slug;
+    const supabase = useMemo(() => createClient(), []);
     const { addToCart, count } = useCart();
 
-    // Ref to track if component is mounted
     const isMountedRef = useRef(true);
 
     useEffect(() => {
@@ -117,10 +126,7 @@ function MenuContent() {
                 setGuestContext(payload.data as GuestContextPayload);
             } catch (error) {
                 if (!isMountedRef.current) return;
-                // Silently ignore abort errors
-                if (isAbortError(error)) {
-                    return;
-                }
+                if (isAbortError(error)) return;
                 console.error('Failed to validate guest context:', error);
                 setGuestContext(null);
                 setContextError('Unable to validate table context. Please try again.');
@@ -131,12 +137,68 @@ function MenuContent() {
             }
         }
 
-        validateContext();
+        void validateContext();
 
         return () => {
             isMountedRef.current = false;
         };
     }, [expiresAt, signature, slug, tableNumber]);
+
+    useEffect(() => {
+        async function upsertGuestSession() {
+            if (!guestContext) return;
+
+            setSessionSyncing(true);
+            try {
+                const response = await fetch('/api/guest/session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: guestSessionId ?? undefined,
+                        source: campaignDeliveryId ? 'campaign_qr' : 'qr',
+                        guest_context: {
+                            slug: guestContext.slug,
+                            table: guestContext.table_number,
+                            sig: guestContext.sig,
+                            exp: guestContext.exp,
+                        },
+                    }),
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    console.warn('Failed to upsert guest session:', payload?.error);
+                    return;
+                }
+
+                const resolvedSessionId = payload?.data?.session_id as string | undefined;
+                const resolvedAuthState = payload?.data?.auth_state as
+                    | 'guest'
+                    | 'authenticated'
+                    | undefined;
+
+                if (resolvedSessionId) {
+                    setGuestSessionId(resolvedSessionId);
+                }
+                if (resolvedAuthState) {
+                    setAuthState(resolvedAuthState);
+                    if (resolvedAuthState === 'authenticated' || forceMenuEntry) {
+                        setShowPreMenuSplash(false);
+                    }
+                } else if (forceMenuEntry) {
+                    setShowPreMenuSplash(false);
+                }
+            } catch (error) {
+                if (!isAbortError(error)) {
+                    console.error('Failed to sync guest session:', error);
+                }
+            } finally {
+                setSessionSyncing(false);
+            }
+        }
+
+        void upsertGuestSession();
+    }, [campaignDeliveryId, forceMenuEntry, guestContext, guestSessionId]);
 
     useEffect(() => {
         async function fetchMenu() {
@@ -146,8 +208,6 @@ function MenuContent() {
             }
 
             setLoading(true);
-            const supabase = createClient();
-
             try {
                 const { data: categories, error: categoryError } = await supabase
                     .from('categories')
@@ -162,9 +222,7 @@ function MenuContent() {
 
                 const typedCategories = (categories as RawCategory[]) ?? [];
                 const categoryIds = typedCategories.map(category => category.id);
-                const categoryById = new Map(
-                    typedCategories.map(category => [category.id, category])
-                );
+                const categoryById = new Map(typedCategories.map(category => [category.id, category]));
 
                 if (categoryIds.length === 0) {
                     setRealItems([]);
@@ -228,13 +286,10 @@ function MenuContent() {
                         if (!category) return null;
 
                         const constantItem = FOOD_ITEMS.find(
-                            food =>
-                                food.title.toLowerCase().trim() === item.name.toLowerCase().trim()
+                            food => food.title.toLowerCase().trim() === item.name.toLowerCase().trim()
                         );
 
-                        let imageUrl = constantItem
-                            ? constantItem.imageUrl
-                            : getSmartImageUrl(item.image_url);
+                        let imageUrl = constantItem ? constantItem.imageUrl : getSmartImageUrl(item.image_url);
 
                         if (imageUrl.includes('unsplash.com')) {
                             imageUrl =
@@ -271,8 +326,8 @@ function MenuContent() {
             }
         }
 
-        fetchMenu();
-    }, [guestContext?.restaurant_id]);
+        void fetchMenu();
+    }, [guestContext?.restaurant_id, supabase]);
 
     const filteredItems = realItems.filter(item => {
         const matchesSection = item.categories?.section === activeTab;
@@ -290,6 +345,40 @@ function MenuContent() {
             image: item.imageUrl,
             quantity,
         });
+    };
+
+    const buildAuthHref = (path: '/auth/login' | '/auth/signup') => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('entry', 'menu');
+        const nextUrl = `/${slug}?${params.toString()}`;
+        return `${path}?next=${encodeURIComponent(nextUrl)}`;
+    };
+
+    const handleSkipToMenu = async () => {
+        setShowPreMenuSplash(false);
+        if (!guestContext) return;
+
+        try {
+            await fetch('/api/guest/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: guestSessionId ?? undefined,
+                    skip_selected: true,
+                    source: campaignDeliveryId ? 'campaign_qr' : 'qr',
+                    guest_context: {
+                        slug: guestContext.slug,
+                        table: guestContext.table_number,
+                        sig: guestContext.sig,
+                        exp: guestContext.exp,
+                    },
+                }),
+            });
+        } catch (error) {
+            if (!isAbortError(error)) {
+                console.warn('Skip analytics update failed:', error);
+            }
+        }
     };
 
     if (contextLoading || loading) {
@@ -314,9 +403,60 @@ function MenuContent() {
                         Invalid Table QR
                     </h1>
                     <p className="mt-3 text-sm font-medium text-black/60 dark:text-white/70">
-                        {contextError ??
-                            'This table QR is invalid or expired. Please rescan the table QR code.'}
+                        {contextError ?? 'This table QR is invalid or expired. Please rescan the table QR code.'}
                     </p>
+                </div>
+            </main>
+        );
+    }
+
+    if (showPreMenuSplash) {
+        return (
+            <main className="app-container relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#10252a_0%,#081114_45%,#040607_100%)] px-6 py-10 text-white">
+                <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute top-[-140px] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#cb3944]/25 blur-[120px]" />
+                    <div className="absolute right-[-120px] bottom-[-120px] h-80 w-80 rounded-full bg-[#f3f6f7]/10 blur-[120px]" />
+                </div>
+
+                <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur-xl">
+                    <p className="text-xs font-bold tracking-[0.26em] text-white/60 uppercase">
+                        Gebeta | Table {guestContext.table_number}
+                    </p>
+                    <h1 className="mt-3 font-manrope text-3xl leading-tight font-black tracking-tight text-white">
+                        Welcome to {guestContext.restaurant_name}
+                    </h1>
+                    <p className="mt-3 text-sm font-semibold text-white/75">
+                        Order in seconds. Log in to earn loyalty points, redeem gift cards, and unlock member campaigns.
+                    </p>
+
+                    <div className="mt-5 space-y-2 text-xs font-semibold text-white/70">
+                        <p>Earn points on eligible orders.</p>
+                        <p>Use your gift card balance instantly at checkout.</p>
+                        <p>Access members-only campaigns for this restaurant.</p>
+                    </div>
+
+                    <div className="mt-7 space-y-3">
+                        <Link
+                            href={buildAuthHref('/auth/login')}
+                            className="flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-black text-[#0b1a1e] transition hover:bg-white/90"
+                        >
+                            Log In
+                        </Link>
+                        <Link
+                            href={buildAuthHref('/auth/signup')}
+                            className="flex h-12 w-full items-center justify-center rounded-full border border-white/30 text-sm font-black text-white transition hover:bg-white/10"
+                        >
+                            Sign Up
+                        </Link>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => void handleSkipToMenu()}
+                        className="mt-6 w-full text-center text-sm font-bold text-white/80 underline-offset-4 transition hover:text-white hover:underline"
+                    >
+                        {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
+                    </button>
                 </div>
             </main>
         );
@@ -334,9 +474,16 @@ function MenuContent() {
 
                 <div className="px-4 pb-20">
                     <div className="mb-4 flex items-center justify-between px-2">
-                        <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
-                            Main Menu
-                        </h2>
+                        <div>
+                            <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
+                                Main Menu
+                            </h2>
+                            {authState === 'authenticated' ? (
+                                <p className="mt-1 text-xs font-bold tracking-wide text-emerald-600 dark:text-emerald-400">
+                                    You are signed in. Eligible orders earn loyalty points.
+                                </p>
+                            ) : null}
+                        </div>
                         <button className="font-manrope hover:text-brand-crimson text-sm font-bold text-black/60 transition-colors dark:text-white/60">
                             View All
                         </button>
@@ -386,6 +533,9 @@ function MenuContent() {
                     table: guestContext.table_number,
                     sig: guestContext.sig,
                     exp: guestContext.exp,
+                    guest_session_id: guestSessionId ?? undefined,
+                    auth_state: authState,
+                    login_url: buildAuthHref('/auth/login'),
                     ...(campaignDeliveryId
                         ? {
                               campaign_attribution: {
