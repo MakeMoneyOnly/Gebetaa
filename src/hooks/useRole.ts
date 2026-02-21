@@ -68,7 +68,11 @@ export function useRole(restaurantId: string | null) {
                     }
                 );
 
-                if (!rpcError && roleFromRpc && (Array.isArray(roleFromRpc) ? roleFromRpc.length > 0 : roleFromRpc)) {
+                if (
+                    !rpcError &&
+                    roleFromRpc &&
+                    (Array.isArray(roleFromRpc) ? roleFromRpc.length > 0 : roleFromRpc)
+                ) {
                     const match = Array.isArray(roleFromRpc) ? roleFromRpc[0] : roleFromRpc;
                     if (cancelled) return;
                     setRole(match.role as UserRole);

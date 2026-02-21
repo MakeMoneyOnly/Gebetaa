@@ -66,7 +66,7 @@ export function useDevices() {
             if (!response.ok) {
                 throw new Error(result?.error ?? 'Failed to provision device.');
             }
-            
+
             // Re-fetch or locally append
             setDevices(prev => [...prev, result.data.device]);
             toast.success('Device provisioned successfully.');
@@ -77,11 +77,31 @@ export function useDevices() {
         }
     };
 
+    const handleDeleteDevice = async (deviceId: string): Promise<boolean> => {
+        // Optimistic remove
+        setDevices(prev => prev.filter(d => d.id !== deviceId));
+        try {
+            const response = await fetch(`/api/devices/${deviceId}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to delete device.');
+            }
+            toast.success('Device removed.');
+            return true;
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to delete device.');
+            // Re-fetch to restore correct state
+            void fetchDevices();
+            return false;
+        }
+    };
+
     return {
         devices,
         loading,
         error,
         fetchDevices,
         handleProvisionDevice,
+        handleDeleteDevice,
     };
 }

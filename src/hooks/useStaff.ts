@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
-export type StaffRole = 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar';
+export type StaffRole = 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar' | 'runner';
 
 export type StaffMember = {
     id: string;
@@ -174,7 +174,7 @@ export function useStaff() {
             if (!response.ok) {
                 throw new Error(result?.error ?? 'Failed to add staff member.');
             }
-            
+
             setStaff(prev => [...prev, result.data.staff]);
             toast.success('Staff member added.');
             return true;
@@ -183,6 +183,24 @@ export function useStaff() {
             return false;
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteStaff = async (staffId: string): Promise<boolean> => {
+        // Optimistic remove
+        setStaff(prev => prev.filter(s => s.id !== staffId));
+        try {
+            const response = await fetch(`/api/staff/${staffId}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to remove staff member.');
+            }
+            toast.success('Staff member removed.');
+            return true;
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to remove staff member.');
+            void fetchStaff();
+            return false;
         }
     };
 
@@ -199,5 +217,6 @@ export function useStaff() {
         handleRoleUpdate,
         handleActiveToggle,
         handleAddPinStaff,
+        handleDeleteStaff,
     };
 }
