@@ -4,9 +4,18 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    User, Building2, MapPin, Phone, Palette, Check,
-    ChevronRight, ChevronLeft, Zap, UtensilsCrossed,
-    ArrowRight, Sparkles,
+    User,
+    Building2,
+    MapPin,
+    Phone,
+    Palette,
+    Check,
+    ChevronRight,
+    ChevronLeft,
+    Zap,
+    UtensilsCrossed,
+    ArrowRight,
+    Sparkles,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 
@@ -25,9 +34,19 @@ interface OnboardingData {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CUISINE_TYPES = [
-    'Ethiopian', 'Italian', 'Japanese', 'Chinese', 'Indian',
-    'Mexican', 'American', 'Mediterranean', 'Thai', 'French',
-    'Middle Eastern', 'Korean', 'Other',
+    'Ethiopian',
+    'Italian',
+    'Japanese',
+    'Chinese',
+    'Indian',
+    'Mexican',
+    'American',
+    'Mediterranean',
+    'Thai',
+    'French',
+    'Middle Eastern',
+    'Korean',
+    'Other',
 ];
 
 const BRAND_COLORS = [
@@ -59,7 +78,10 @@ const slideVariants = {
 // ─── Step Components ──────────────────────────────────────────────────────────
 
 function InputField({
-    label, icon: Icon, required, ...props
+    label,
+    icon: Icon,
+    required,
+    ...props
 }: {
     label: string;
     icon: React.ElementType;
@@ -68,13 +90,14 @@ function InputField({
     return (
         <div className="space-y-1.5">
             <label className="text-sm font-bold text-gray-700">
-                {label}{required && <span className="text-brand-crimson ml-0.5">*</span>}
+                {label}
+                {required && <span className="text-brand-crimson ml-0.5">*</span>}
             </label>
-            <div className="relative group">
+            <div className="group relative">
                 <Icon className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#0D3B40]" />
                 <input
                     {...props}
-                    className="w-full rounded-xl border border-gray-200 bg-white pl-11 pr-4 py-3.5 text-sm font-medium text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[#0D3B40] focus:ring-4 focus:ring-[#0D3B40]/8 shadow-sm"
+                    className="w-full rounded-xl border border-gray-200 bg-white py-3.5 pr-4 pl-11 text-sm font-medium text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:border-[#0D3B40] focus:ring-4 focus:ring-[#0D3B40]/8"
                 />
             </div>
         </div>
@@ -82,14 +105,20 @@ function InputField({
 }
 
 // Step 1: Owner Profile
-function StepOwnerProfile({ data, onChange }: { data: OnboardingData; onChange: (d: Partial<OnboardingData>) => void }) {
+function StepOwnerProfile({
+    data,
+    onChange,
+}: {
+    data: OnboardingData;
+    onChange: (d: Partial<OnboardingData>) => void;
+}) {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="font-manrope text-3xl font-bold text-gray-900 tracking-tight">
+                <h2 className="font-manrope text-3xl font-bold tracking-tight text-gray-900">
                     Welcome! Let&apos;s start with you.
                 </h2>
-                <p className="mt-2 text-gray-500 font-medium">
+                <p className="mt-2 font-medium text-gray-500">
                     This is how your staff will know who manages the restaurant.
                 </p>
             </div>
@@ -114,7 +143,7 @@ function StepOwnerProfile({ data, onChange }: { data: OnboardingData; onChange: 
                 placeholder="e.g. +251 91 234 5678"
             />
 
-            <p className="text-xs text-gray-400 font-medium">
+            <p className="text-xs font-medium text-gray-400">
                 📍 Used for urgent alerts and staff communication only. Never shared publicly.
             </p>
         </div>
@@ -122,14 +151,20 @@ function StepOwnerProfile({ data, onChange }: { data: OnboardingData; onChange: 
 }
 
 // Step 2: Restaurant Details
-function StepRestaurantDetails({ data, onChange }: { data: OnboardingData; onChange: (d: Partial<OnboardingData>) => void }) {
+function StepRestaurantDetails({
+    data,
+    onChange,
+}: {
+    data: OnboardingData;
+    onChange: (d: Partial<OnboardingData>) => void;
+}) {
     return (
         <div className="space-y-5">
             <div>
-                <h2 className="font-manrope text-3xl font-bold text-gray-900 tracking-tight">
+                <h2 className="font-manrope text-3xl font-bold tracking-tight text-gray-900">
                     Tell us about your restaurant.
                 </h2>
-                <p className="mt-2 text-gray-500 font-medium">
+                <p className="mt-2 font-medium text-gray-500">
                     This sets up your menu URL and kitchen display.
                 </p>
             </div>
@@ -156,18 +191,20 @@ function StepRestaurantDetails({ data, onChange }: { data: OnboardingData; onCha
 
             <div className="space-y-1.5">
                 <label className="text-sm font-bold text-gray-700">
-                    Cuisine Type <span className="text-gray-400 font-medium">(optional)</span>
+                    Cuisine Type <span className="font-medium text-gray-400">(optional)</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
                     {CUISINE_TYPES.map(c => (
                         <button
                             key={c}
                             type="button"
-                            onClick={() => onChange({ cuisine_type: c === data.cuisine_type ? '' : c })}
-                            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                            onClick={() =>
+                                onChange({ cuisine_type: c === data.cuisine_type ? '' : c })
+                            }
+                            className={`rounded-xl border px-3.5 py-2 text-xs font-bold transition-all ${
                                 data.cuisine_type === c
-                                    ? 'bg-[#0D3B40] text-white border-[#0D3B40] shadow-lg shadow-[#0D3B40]/20'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-[#0D3B40]/40'
+                                    ? 'border-[#0D3B40] bg-[#0D3B40] text-white shadow-lg shadow-[#0D3B40]/20'
+                                    : 'border-gray-200 bg-white text-gray-600 hover:border-[#0D3B40]/40'
                             }`}
                         >
                             {c}
@@ -180,14 +217,20 @@ function StepRestaurantDetails({ data, onChange }: { data: OnboardingData; onCha
 }
 
 // Step 3: Brand
-function StepBrand({ data, onChange }: { data: OnboardingData; onChange: (d: Partial<OnboardingData>) => void }) {
+function StepBrand({
+    data,
+    onChange,
+}: {
+    data: OnboardingData;
+    onChange: (d: Partial<OnboardingData>) => void;
+}) {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="font-manrope text-3xl font-bold text-gray-900 tracking-tight">
+                <h2 className="font-manrope text-3xl font-bold tracking-tight text-gray-900">
                     Make it yours.
                 </h2>
-                <p className="mt-2 text-gray-500 font-medium">
+                <p className="mt-2 font-medium text-gray-500">
                     Choose a brand color for your digital menu and QR codes.
                 </p>
             </div>
@@ -206,31 +249,43 @@ function StepBrand({ data, onChange }: { data: OnboardingData; onChange: (d: Par
                         >
                             {data.brand_color === value && (
                                 <span className="absolute inset-0 flex items-center justify-center">
-                                    <Check className="h-5 w-5 text-white drop-shadow-md" strokeWidth={3} />
+                                    <Check
+                                        className="h-5 w-5 text-white drop-shadow-md"
+                                        strokeWidth={3}
+                                    />
                                 </span>
                             )}
                             {data.brand_color === value && (
-                                <span className="absolute inset-0 rounded-2xl ring-2 ring-white ring-offset-2" style={{ boxShadow: `0 0 0 3px ${value}` }} />
+                                <span
+                                    className="absolute inset-0 rounded-2xl ring-2 ring-white ring-offset-2"
+                                    style={{ boxShadow: `0 0 0 3px ${value}` }}
+                                />
                             )}
                         </button>
                     ))}
                 </div>
-                <p className="text-xs text-gray-400">You can always update this from Settings later.</p>
+                <p className="text-xs text-gray-400">
+                    You can always update this from Settings later.
+                </p>
             </div>
 
             {/* Preview */}
-            <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
                 <div className="h-12 w-full" style={{ backgroundColor: data.brand_color }} />
-                <div className="p-4 bg-white flex items-center gap-3">
+                <div className="flex items-center gap-3 bg-white p-4">
                     <div
-                        className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold text-white shadow-md"
                         style={{ backgroundColor: data.brand_color }}
                     >
                         {(data.restaurant_name || 'R').charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <p className="font-bold text-gray-900 text-sm">{data.restaurant_name || 'Your Restaurant'}</p>
-                        <p className="text-xs text-gray-400">{data.cuisine_type || 'Restaurant'} · {data.location || 'Your Location'}</p>
+                        <p className="text-sm font-bold text-gray-900">
+                            {data.restaurant_name || 'Your Restaurant'}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                            {data.cuisine_type || 'Restaurant'} · {data.location || 'Your Location'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -251,14 +306,16 @@ function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean 
     return (
         <div className="space-y-6">
             <div className="text-center">
-                <div className="mx-auto mb-4 h-20 w-20 rounded-3xl flex items-center justify-center shadow-xl"
-                    style={{ backgroundColor: data.brand_color }}>
+                <div
+                    className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl shadow-xl"
+                    style={{ backgroundColor: data.brand_color }}
+                >
                     <Sparkles className="h-10 w-10 text-white" />
                 </div>
-                <h2 className="font-manrope text-3xl font-bold text-gray-900 tracking-tight">
+                <h2 className="font-manrope text-3xl font-bold tracking-tight text-gray-900">
                     Ready to go live, {data.full_name.split(' ')[0]}!
                 </h2>
-                <p className="mt-2 text-gray-500 font-medium">
+                <p className="mt-2 font-medium text-gray-500">
                     Here&apos;s everything we&apos;ve set up for{' '}
                     <span className="font-bold text-gray-800">{data.restaurant_name}</span>:
                 </p>
@@ -267,7 +324,7 @@ function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean 
             <div className="space-y-2.5 rounded-2xl border border-gray-100 bg-gray-50/50 p-4">
                 {checks.map(({ label }) => (
                     <div key={label} className="flex items-center gap-3">
-                        <div className="h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500">
                             <Check className="h-3 w-3 text-white" strokeWidth={3} />
                         </div>
                         <span className="text-sm font-medium text-gray-700">{label}</span>
@@ -276,7 +333,9 @@ function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean 
             </div>
 
             <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                <p className="text-sm font-bold text-amber-800">⚡ Your 30-minute checklist after launch:</p>
+                <p className="text-sm font-bold text-amber-800">
+                    ⚡ Your 30-minute checklist after launch:
+                </p>
                 <ol className="mt-2 space-y-1.5 text-sm text-amber-700">
                     <li>1. Add your first menu categories &amp; items</li>
                     <li>2. Set up table numbers &amp; print QR codes</li>
@@ -286,15 +345,14 @@ function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean 
             </div>
 
             {loading && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                    <div className="h-4 w-4 rounded-full border-2 border-[#0D3B40] border-t-transparent animate-spin" />
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0D3B40] border-t-transparent" />
                     Creating your restaurant workspace...
                 </div>
             )}
         </div>
     );
 }
-
 
 // ─── Main Wizard ──────────────────────────────────────────────────────────────
 
@@ -317,13 +375,13 @@ export default function OnboardingPage() {
         brand_color: '#0D3B40',
     });
 
-    const merge = (patch: Partial<OnboardingData>) =>
-        setData(prev => ({ ...prev, ...patch }));
+    const merge = (patch: Partial<OnboardingData>) => setData(prev => ({ ...prev, ...patch }));
 
     // Validation per step
     const canProceed = useMemo(() => {
         if (step === 1) return data.full_name.trim().length > 1;
-        if (step === 2) return data.restaurant_name.trim().length > 1 && data.location.trim().length > 1;
+        if (step === 2)
+            return data.restaurant_name.trim().length > 1 && data.location.trim().length > 1;
         if (step === 3) return true;
         return false;
     }, [step, data]);
@@ -352,7 +410,7 @@ export default function OnboardingPage() {
                 }),
             });
 
-            const json = await res.json() as { data?: unknown; error?: string };
+            const json = (await res.json()) as { data?: unknown; error?: string };
 
             if (!res.ok || json.error) {
                 throw new Error(json.error ?? 'Something went wrong. Please try again.');
@@ -361,7 +419,10 @@ export default function OnboardingPage() {
             // ✅ Prime the sessionStorage cache BEFORE navigation
             // so the dashboard shows the real name instantly
             sessionStorage.setItem('gebeta_restaurant_name', data.restaurant_name.trim());
-            sessionStorage.setItem('gebeta_restaurant_handle', `@${data.restaurant_name.toLowerCase().replace(/\s+/g, '')}_admin`);
+            sessionStorage.setItem(
+                'gebeta_restaurant_handle',
+                `@${data.restaurant_name.toLowerCase().replace(/\s+/g, '')}_admin`
+            );
 
             // Success — refresh session then go to merchant dashboard
             await supabase.auth.refreshSession();
@@ -376,46 +437,61 @@ export default function OnboardingPage() {
     const progress = ((step - 1) / (totalSteps - 1)) * 100;
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4">
+        <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-100 p-4">
             <div className="w-full max-w-lg">
                 {/* Header */}
                 <div className="mb-8 text-center">
-                    <div className="inline-flex items-center gap-2 mb-6">
-                        <div className="h-9 w-9 rounded-xl bg-[#0D3B40] flex items-center justify-center text-white font-bold shadow-lg">
+                    <div className="mb-6 inline-flex items-center gap-2">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0D3B40] font-bold text-white shadow-lg">
                             G
                         </div>
-                        <span className="font-manrope text-lg font-bold text-gray-900">Gebeta OS</span>
+                        <span className="font-manrope text-lg font-bold text-gray-900">
+                            Gebeta OS
+                        </span>
                     </div>
 
                     {/* Step dots */}
-                    <div className="flex items-center justify-center gap-2 mb-3">
+                    <div className="mb-3 flex items-center justify-center gap-2">
                         {STEPS.map(s => {
                             const Icon = s.icon;
                             const isActive = s.id === step;
                             const isDone = s.id < step;
                             return (
-                                <div key={s.id} className={`flex items-center gap-1 transition-all ${isActive ? 'opacity-100' : isDone ? 'opacity-60' : 'opacity-30'}`}>
-                                    <div className={`h-7 w-7 rounded-full flex items-center justify-center transition-all ${
-                                        isDone ? 'bg-emerald-500 text-white' :
-                                        isActive ? 'bg-[#0D3B40] text-white ring-4 ring-[#0D3B40]/15' :
-                                        'bg-gray-200 text-gray-400'
-                                    }`}>
-                                        {isDone ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Icon className="h-3.5 w-3.5" />}
+                                <div
+                                    key={s.id}
+                                    className={`flex items-center gap-1 transition-all ${isActive ? 'opacity-100' : isDone ? 'opacity-60' : 'opacity-30'}`}
+                                >
+                                    <div
+                                        className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                                            isDone
+                                                ? 'bg-emerald-500 text-white'
+                                                : isActive
+                                                  ? 'bg-[#0D3B40] text-white ring-4 ring-[#0D3B40]/15'
+                                                  : 'bg-gray-200 text-gray-400'
+                                        }`}
+                                    >
+                                        {isDone ? (
+                                            <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                                        ) : (
+                                            <Icon className="h-3.5 w-3.5" />
+                                        )}
                                     </div>
                                     {s.id < STEPS.length && (
-                                        <div className={`h-0.5 w-8 rounded-full transition-all ${s.id < step ? 'bg-emerald-400' : 'bg-gray-200'}`} />
+                                        <div
+                                            className={`h-0.5 w-8 rounded-full transition-all ${s.id < step ? 'bg-emerald-400' : 'bg-gray-200'}`}
+                                        />
                                     )}
                                 </div>
                             );
                         })}
                     </div>
-                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                    <p className="text-xs font-semibold tracking-wider text-gray-400 uppercase">
                         Step {step} of {totalSteps}
                     </p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 overflow-hidden">
+                <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl shadow-gray-200/60">
                     {/* Progress bar */}
                     <div className="h-1 bg-gray-100">
                         <motion.div
@@ -439,7 +515,9 @@ export default function OnboardingPage() {
                                 transition={{ duration: 0.28, ease: 'easeInOut' }}
                             >
                                 {step === 1 && <StepOwnerProfile data={data} onChange={merge} />}
-                                {step === 2 && <StepRestaurantDetails data={data} onChange={merge} />}
+                                {step === 2 && (
+                                    <StepRestaurantDetails data={data} onChange={merge} />
+                                )}
                                 {step === 3 && <StepBrand data={data} onChange={merge} />}
                                 {step === 4 && <StepGoLive data={data} loading={loading} />}
                             </motion.div>
@@ -457,12 +535,12 @@ export default function OnboardingPage() {
                         )}
 
                         {/* Navigation */}
-                        <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+                        <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-6">
                             {step > 1 ? (
                                 <button
                                     onClick={() => go(step - 1)}
                                     disabled={loading}
-                                    className="flex items-center gap-1.5 text-sm font-bold text-gray-400 hover:text-gray-700 transition-colors disabled:opacity-40"
+                                    className="flex items-center gap-1.5 text-sm font-bold text-gray-400 transition-colors hover:text-gray-700 disabled:opacity-40"
                                 >
                                     <ChevronLeft className="h-4 w-4" /> Back
                                 </button>
@@ -475,7 +553,7 @@ export default function OnboardingPage() {
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => go(step + 1)}
                                     disabled={!canProceed}
-                                    className="flex items-center gap-2 rounded-2xl bg-[#0D3B40] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/25 transition-all hover:bg-[#08282C] disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-2 rounded-2xl bg-[#0D3B40] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/25 transition-all hover:bg-[#08282C] disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                     Continue <ChevronRight className="h-4 w-4" />
                                 </motion.button>
@@ -496,16 +574,17 @@ export default function OnboardingPage() {
                                     whileTap={{ scale: 0.97 }}
                                     onClick={handleSubmit}
                                     disabled={loading}
-                                    className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    {loading ? 'Launching...' : 'Go Live'} <ArrowRight className="h-4 w-4" />
+                                    {loading ? 'Launching...' : 'Go Live'}{' '}
+                                    <ArrowRight className="h-4 w-4" />
                                 </motion.button>
                             )}
                         </div>
                     </div>
                 </div>
 
-                <p className="text-center text-xs text-gray-400 mt-6 font-medium">
+                <p className="mt-6 text-center text-xs font-medium text-gray-400">
                     © 2026 Gebeta Inc. · Enterprise Restaurant OS
                 </p>
             </div>

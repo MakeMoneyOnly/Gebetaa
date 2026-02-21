@@ -78,13 +78,13 @@ function MenuContent() {
     const campaignId = searchParams.get('cid') ?? searchParams.get('campaign_id');
     const slug = params.slug;
     const { addToCart, count } = useCart();
-    
+
     // Ref to track if component is mounted
     const isMountedRef = useRef(true);
 
     useEffect(() => {
         isMountedRef.current = true;
-        
+
         async function validateContext() {
             if (!slug || !tableNumber || !signature || !expiresAt) {
                 setGuestContext(null);
@@ -132,7 +132,7 @@ function MenuContent() {
         }
 
         validateContext();
-        
+
         return () => {
             isMountedRef.current = false;
         };
@@ -162,7 +162,9 @@ function MenuContent() {
 
                 const typedCategories = (categories as RawCategory[]) ?? [];
                 const categoryIds = typedCategories.map(category => category.id);
-                const categoryById = new Map(typedCategories.map(category => [category.id, category]));
+                const categoryById = new Map(
+                    typedCategories.map(category => [category.id, category])
+                );
 
                 if (categoryIds.length === 0) {
                     setRealItems([]);
@@ -226,7 +228,8 @@ function MenuContent() {
                         if (!category) return null;
 
                         const constantItem = FOOD_ITEMS.find(
-                            food => food.title.toLowerCase().trim() === item.name.toLowerCase().trim()
+                            food =>
+                                food.title.toLowerCase().trim() === item.name.toLowerCase().trim()
                         );
 
                         let imageUrl = constantItem
@@ -291,7 +294,7 @@ function MenuContent() {
 
     if (contextLoading || loading) {
         return (
-            <main className="app-container bg-[var(--background)] pb-safe transition-colors duration-300">
+            <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
                     activeTab={activeTab}
@@ -311,7 +314,8 @@ function MenuContent() {
                         Invalid Table QR
                     </h1>
                     <p className="mt-3 text-sm font-medium text-black/60 dark:text-white/70">
-                        {contextError ?? 'This table QR is invalid or expired. Please rescan the table QR code.'}
+                        {contextError ??
+                            'This table QR is invalid or expired. Please rescan the table QR code.'}
                     </p>
                 </div>
             </main>
@@ -319,7 +323,7 @@ function MenuContent() {
     }
 
     return (
-        <main className="app-container bg-[var(--background)] pb-safe transition-colors duration-300">
+        <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
             <div className="relative w-full">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
@@ -333,7 +337,7 @@ function MenuContent() {
                         <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
                             Main Menu
                         </h2>
-                        <button className="text-black/60 dark:text-white/60 font-manrope text-sm font-bold hover:text-brand-crimson transition-colors">
+                        <button className="font-manrope hover:text-brand-crimson text-sm font-bold text-black/60 transition-colors dark:text-white/60">
                             View All
                         </button>
                     </div>
@@ -384,11 +388,11 @@ function MenuContent() {
                     exp: guestContext.exp,
                     ...(campaignDeliveryId
                         ? {
-                            campaign_attribution: {
-                                campaign_delivery_id: campaignDeliveryId,
-                                ...(campaignId ? { campaign_id: campaignId } : {}),
-                            } as CampaignAttributionPayload,
-                        }
+                              campaign_attribution: {
+                                  campaign_delivery_id: campaignDeliveryId,
+                                  ...(campaignId ? { campaign_id: campaignId } : {}),
+                              } as CampaignAttributionPayload,
+                          }
                         : {}),
                 }}
                 tableNumber={guestContext.table_number}

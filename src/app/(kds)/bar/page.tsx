@@ -4,10 +4,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRole } from '@/hooks/useRole';
 import { createClient } from '@/lib/supabase';
 import { format } from 'date-fns';
-import { 
-    Martini, 
-    Maximize2
-} from 'lucide-react';
+import { Martini, Maximize2 } from 'lucide-react';
 import { TicketCard } from '@/features/kds/components/TicketCard';
 import { Order } from '@/types/database';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -43,7 +40,19 @@ type Ticket = {
 };
 
 // --- Helpers ---
-const DRINK_KEYWORDS = ['drink', 'beverage', 'beer', 'wine', 'cocktail', 'water', 'soda', 'juice', 'coffee', 'tea', 'bottle'];
+const DRINK_KEYWORDS = [
+    'drink',
+    'beverage',
+    'beer',
+    'wine',
+    'cocktail',
+    'water',
+    'soda',
+    'juice',
+    'coffee',
+    'tea',
+    'bottle',
+];
 
 function isDrinkItem(item: OrderItemPayload): boolean {
     const nameLower = item.name.toLowerCase();
@@ -52,14 +61,18 @@ function isDrinkItem(item: OrderItemPayload): boolean {
 
 function mapOrderToBarTicket(order: Order): Ticket | null {
     const parsedItems = Array.isArray(order.items) ? (order.items as OrderItemPayload[]) : [];
-    
+
     // Filter only drinks
     const drinkItems = parsedItems.filter(isDrinkItem);
 
     if (drinkItems.length === 0) return null;
 
     const itemStatus: 'pending' | 'cooking' | 'ready' =
-        order.bar_status === 'ready' ? 'ready' : order.bar_status === 'preparing' ? 'cooking' : 'pending';
+        order.bar_status === 'ready'
+            ? 'ready'
+            : order.bar_status === 'preparing'
+              ? 'cooking'
+              : 'pending';
 
     const normalizedItems = drinkItems.map((item, index) => ({
         id: item.id ?? `${order.id}-${index}`,
@@ -118,7 +131,7 @@ export default function BarPage() {
                 .from('orders')
                 .select('*')
                 .eq('restaurant_id', restaurantId)
-                .neq('status', 'completed') 
+                .neq('status', 'completed')
                 .order('created_at', { ascending: true });
 
             if (error) {
@@ -194,7 +207,7 @@ export default function BarPage() {
                 if (nextStatus === 'completed') {
                     return prev.filter(t => t.id !== ticket.id);
                 }
-                const updated = prev.map(t => 
+                const updated = prev.map(t =>
                     t.id === ticket.id ? { ...t, status: nextStatus } : t
                 );
                 return updated;
@@ -216,7 +229,7 @@ export default function BarPage() {
 
     if (loading || roleLoading) {
         return (
-            <div className="space-y-8 p-10 h-screen bg-gray-50 overflow-hidden">
+            <div className="h-screen space-y-8 overflow-hidden bg-gray-50 p-10">
                 <div className="flex items-start justify-between">
                     <div className="space-y-3">
                         <SkeletonComponent className="h-12 w-64 rounded-2xl" />
@@ -224,9 +237,12 @@ export default function BarPage() {
                     </div>
                     <SkeletonComponent className="h-12 w-44 rounded-2xl" />
                 </div>
-                <div className="grid grid-flow-col auto-cols-[340px] gap-6 overflow-hidden h-full pb-10">
+                <div className="grid h-full auto-cols-[340px] grid-flow-col gap-6 overflow-hidden pb-10">
                     {Array.from({ length: 4 }).map((_, i) => (
-                        <SkeletonComponent key={i} className="h-full max-h-[600px] w-[340px] rounded-[2.5rem]" />
+                        <SkeletonComponent
+                            key={i}
+                            className="h-full max-h-[600px] w-[340px] rounded-[2.5rem]"
+                        />
                     ))}
                 </div>
             </div>
@@ -234,17 +250,21 @@ export default function BarPage() {
     }
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50 text-gray-900 overflow-hidden font-manrope selection:bg-blue-100 selection:text-blue-900">
+        <div className="font-manrope flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900 selection:bg-blue-100 selection:text-blue-900">
             {/* Dashboard-style Title Block */}
-            <div className="flex-none px-10 py-8 w-full flex items-start justify-between z-10 bg-gray-50/90 backdrop-blur-sm">
+            <div className="z-10 flex w-full flex-none items-start justify-between bg-gray-50/90 px-10 py-8 backdrop-blur-sm">
                 <div>
-                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
                         Bar Display
                     </h1>
                     <div className="flex items-center gap-3 text-sm font-medium text-gray-500">
-                        <span className={`flex items-center gap-2 px-3 py-1 rounded-full ${connected ? 'bg-blue-50 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-                            <span className={`w-2 h-2 rounded-full ${connected ? 'bg-blue-500' : 'bg-amber-500'}`} />
-                            {connected ? "System Live" : "Connecting..."}
+                        <span
+                            className={`flex items-center gap-2 rounded-full px-3 py-1 ${connected ? 'bg-blue-50 text-blue-700' : 'bg-amber-100 text-amber-700'}`}
+                        >
+                            <span
+                                className={`h-2 w-2 rounded-full ${connected ? 'bg-blue-500' : 'bg-amber-500'}`}
+                            />
+                            {connected ? 'System Live' : 'Connecting...'}
                         </span>
                         <span className="text-gray-300">|</span>
                         <span>{tickets.length} Active Orders</span>
@@ -252,18 +272,18 @@ export default function BarPage() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end mr-2">
-                        <span className="text-2xl font-bold text-black tabular-nums leading-none tracking-tight">
+                    <div className="mr-2 flex flex-col items-end">
+                        <span className="text-2xl leading-none font-bold tracking-tight text-black tabular-nums">
                             {format(currentTime, 'HH:mm')}
                         </span>
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">
                             {format(currentTime, 'EEE, MMM d')}
                         </span>
                     </div>
 
                     <button
                         onClick={toggleFullScreen}
-                        className="h-12 w-12 bg-black text-white rounded-2xl flex items-center justify-center hover:bg-gray-800 transition-all shadow-xl shadow-black/10"
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-xl shadow-black/10 transition-all hover:bg-gray-800"
                     >
                         <Maximize2 className="h-5 w-5" />
                     </button>
@@ -272,7 +292,7 @@ export default function BarPage() {
 
             {/* Main Grid Area */}
             <main className="flex-1 overflow-x-auto overflow-y-hidden px-10 pb-10">
-                <div className="grid grid-flow-col auto-cols-[340px] gap-6 h-full pb-4">
+                <div className="grid h-full auto-cols-[340px] grid-flow-col gap-6 pb-4">
                     <AnimatePresence mode="popLayout">
                         {tickets.map(ticket => (
                             <motion.div
@@ -281,12 +301,14 @@ export default function BarPage() {
                                 initial={{ opacity: 0, scale: 0.9, x: 50 }}
                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                                 layout
                             >
                                 <TicketCard
                                     {...ticket}
-                                    onStatusChange={status => handleTicketStatusChange(ticket, status)}
+                                    onStatusChange={status =>
+                                        handleTicketStatusChange(ticket, status)
+                                    }
                                     variant="light"
                                 />
                             </motion.div>
@@ -294,12 +316,14 @@ export default function BarPage() {
                     </AnimatePresence>
 
                     {tickets.length === 0 && (
-                        <div className="col-span-full w-[calc(100vw-80px)] h-full flex flex-col items-center justify-center text-center opacity-40">
-                            <div className="h-32 w-32 rounded-[2.5rem] bg-white flex items-center justify-center mb-8 shadow-sm border border-gray-100">
+                        <div className="col-span-full flex h-full w-[calc(100vw-80px)] flex-col items-center justify-center text-center opacity-40">
+                            <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-[2.5rem] border border-gray-100 bg-white shadow-sm">
                                 <Martini className="h-14 w-14 text-gray-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-gray-300 tracking-tight">No Drinks Pending</h2>
-                            <p className="text-gray-400 font-medium mt-2">
+                            <h2 className="text-3xl font-bold tracking-tight text-gray-300">
+                                No Drinks Pending
+                            </h2>
+                            <p className="mt-2 font-medium text-gray-400">
                                 Time to clean some glasses.
                             </p>
                         </div>

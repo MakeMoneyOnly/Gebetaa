@@ -76,7 +76,7 @@ export default function MerchantDashboard() {
     const [filterOpen, setFilterOpen] = useState(false);
     const [activePreset, setActivePreset] = useState<DashboardPreset>('owner');
     const [alertRuleDrawerOpen, setAlertRuleDrawerOpen] = useState(false);
-    
+
     // Ref for abort controller
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -118,13 +118,13 @@ export default function MerchantDashboard() {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
-        
+
         // Create new AbortController
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
-        
+
         fetchCommandCenter(false, signal);
-        
+
         return () => {
             abortControllerRef.current?.abort();
         };
@@ -160,31 +160,42 @@ export default function MerchantDashboard() {
 
     const queueForPreset = useMemo(() => {
         if (activePreset === 'kitchen_lead') {
-            return queue.filter((item) => item.type !== 'alert');
+            return queue.filter(item => item.type !== 'alert');
         }
         if (activePreset === 'manager') {
-            return queue.filter((item) => !(item.type === 'alert' && item.severity === 'low'));
+            return queue.filter(item => !(item.type === 'alert' && item.severity === 'low'));
         }
         return queue;
     }, [activePreset, queue]);
 
-    const activeOrders = queueForPreset.filter((item) => item.type === 'order').slice(0, 4).map((item) => {
-        const statusLower = item.status.toLowerCase();
-        const isReady = ['ready', 'served', 'completed'].includes(statusLower);
-        const isHold = statusLower === 'acknowledged';
+    const activeOrders = queueForPreset
+        .filter(item => item.type === 'order')
+        .slice(0, 4)
+        .map(item => {
+            const statusLower = item.status.toLowerCase();
+            const isReady = ['ready', 'served', 'completed'].includes(statusLower);
+            const isHold = statusLower === 'acknowledged';
 
-        return {
-            id: item.id,
-            title: `${item.label}${item.table_number ? ` (Table ${item.table_number})` : ''}`,
-            status: item.status,
-            statusColor: isReady ? 'text-green-500' : isHold ? 'text-blue-500' : 'text-orange-500',
-            time: item.created_at
-                ? `${Math.max(0, Math.round((Date.now() - new Date(item.created_at).getTime()) / 60000))}m`
-                : '0m',
-            icon: isReady ? CheckCircle : isHold ? PauseCircle : PlayCircle,
-            iconBg: isReady ? 'bg-green-50 text-green-500' : isHold ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500',
-        };
-    });
+            return {
+                id: item.id,
+                title: `${item.label}${item.table_number ? ` (Table ${item.table_number})` : ''}`,
+                status: item.status,
+                statusColor: isReady
+                    ? 'text-green-500'
+                    : isHold
+                      ? 'text-blue-500'
+                      : 'text-orange-500',
+                time: item.created_at
+                    ? `${Math.max(0, Math.round((Date.now() - new Date(item.created_at).getTime()) / 60000))}m`
+                    : '0m',
+                icon: isReady ? CheckCircle : isHold ? PauseCircle : PlayCircle,
+                iconBg: isReady
+                    ? 'bg-green-50 text-green-500'
+                    : isHold
+                      ? 'bg-orange-50 text-orange-500'
+                      : 'bg-blue-50 text-blue-500',
+            };
+        });
 
     const handleAdvanceOrder = useCallback(
         async (item: AttentionItem) => {
@@ -207,7 +218,11 @@ export default function MerchantDashboard() {
                 if (isAbortError(advanceError)) {
                     return;
                 }
-                setError(advanceError instanceof Error ? advanceError.message : 'Failed to advance order status');
+                setError(
+                    advanceError instanceof Error
+                        ? advanceError.message
+                        : 'Failed to advance order status'
+                );
             }
         },
         [fetchCommandCenter]
@@ -223,7 +238,7 @@ export default function MerchantDashboard() {
                     </div>
                     <Skeleton className="h-10 w-44 rounded-xl" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <Skeleton key={i} className="h-[180px] rounded-[2rem]" />
                     ))}
@@ -237,21 +252,23 @@ export default function MerchantDashboard() {
         <div className="space-y-8 pb-10">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
                         Hello, {restaurantName}
                     </h1>
-                    <p className="text-gray-500 font-medium">Here&apos;s your daily performance summary.</p>
+                    <p className="font-medium text-gray-500">
+                        Here&apos;s your daily performance summary.
+                    </p>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-black bg-gray-50 px-3 py-2 rounded-xl">
+                    <span className="rounded-xl bg-gray-50 px-3 py-2 text-sm font-bold text-black">
                         {new Date().toLocaleDateString('en-US', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric',
                         })}
                     </span>
-                    <button className="h-10 w-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg shadow-black/10">
+                    <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800">
                         <CalendarCheck className="h-5 w-5" />
                     </button>
                 </div>
@@ -259,49 +276,61 @@ export default function MerchantDashboard() {
 
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${error ? 'bg-rose-100 text-rose-700' : isStale ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${error ? 'bg-rose-100 text-rose-700' : isStale ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}
+                    >
                         {error ? 'SYNC FAILED' : isStale ? 'STALE DATA' : 'IN SYNC'}
                     </span>
                     <span className="text-xs font-semibold text-gray-500">
-                        Last sync: {generatedAt ? new Date(generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'never'}
+                        Last sync:{' '}
+                        {generatedAt
+                            ? new Date(generatedAt).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                              })
+                            : 'never'}
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
                     <DashboardPresetSwitcher onPresetResolved={setActivePreset} />
                     <button
                         onClick={() => setAlertRuleDrawerOpen(true)}
-                        className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
+                        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700"
                     >
                         Alert Rules
                     </button>
                     <div className="relative">
                         <button
-                            onClick={() => setFilterOpen((value) => !value)}
-                            className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 inline-flex items-center gap-2 capitalize"
+                            onClick={() => setFilterOpen(value => !value)}
+                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 capitalize"
                         >
                             {range}
-                            <ChevronDown className={`h-4 w-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown
+                                className={`h-4 w-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
                         {filterOpen && (
-                            <div className="absolute right-0 mt-2 w-28 rounded-xl bg-white shadow-lg p-1 z-20">
-                                {(['today', 'week', 'month'] as CommandCenterRange[]).map((option) => (
-                                    <button
-                                        key={option}
-                                        onClick={() => {
-                                            setRange(option);
-                                            setFilterOpen(false);
-                                        }}
-                                        className={`w-full text-left px-2.5 py-2 text-sm rounded-lg capitalize ${range === option ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}`}
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
+                            <div className="absolute right-0 z-20 mt-2 w-28 rounded-xl bg-white p-1 shadow-lg">
+                                {(['today', 'week', 'month'] as CommandCenterRange[]).map(
+                                    option => (
+                                        <button
+                                            key={option}
+                                            onClick={() => {
+                                                setRange(option);
+                                                setFilterOpen(false);
+                                            }}
+                                            className={`w-full rounded-lg px-2.5 py-2 text-left text-sm capitalize ${range === option ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}`}
+                                        >
+                                            {option}
+                                        </button>
+                                    )
+                                )}
                             </div>
                         )}
                     </div>
                     <button
                         onClick={() => fetchCommandCenter(true)}
-                        className="h-10 px-4 rounded-xl bg-black text-white font-bold text-sm hover:bg-gray-800"
+                        className="h-10 rounded-xl bg-black px-4 text-sm font-bold text-white hover:bg-gray-800"
                         disabled={refreshing}
                     >
                         {refreshing ? 'Refreshing...' : 'Refresh'}
@@ -309,7 +338,7 @@ export default function MerchantDashboard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
                 <MetricCard
                     icon={ListOrdered}
                     chip="Live"
@@ -328,7 +357,10 @@ export default function MerchantDashboard() {
                     label="Avg Ticket Time"
                     subLabel="Open to served/completed"
                     tone="rose"
-                    progress={Math.min(20, Math.max(1, Math.round(20 - metrics.avg_ticket_time_minutes / 3)))}
+                    progress={Math.min(
+                        20,
+                        Math.max(1, Math.round(20 - metrics.avg_ticket_time_minutes / 3))
+                    )}
                     targetLabel="Target: 40m"
                     currentLabel={`Current: ${metrics.avg_ticket_time_minutes}m`}
                 />
@@ -356,20 +388,30 @@ export default function MerchantDashboard() {
                 />
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm">
-                <div className="flex items-start justify-between mb-8">
+            <div className="rounded-[2.5rem] bg-white p-8 shadow-sm">
+                <div className="mb-8 flex items-start justify-between">
                     <div className="max-w-xl">
-                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Income Tracker</h2>
-                        <p className="text-gray-500 font-medium text-sm">Real-time analysis of your daily revenue streams.</p>
+                        <h2 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+                            Income Tracker
+                        </h2>
+                        <p className="text-sm font-medium text-gray-500">
+                            Real-time analysis of your daily revenue streams.
+                        </p>
                     </div>
-                    <span className="text-sm font-semibold text-gray-500">Gross ETB {metrics.gross_sales_today}</span>
+                    <span className="text-sm font-semibold text-gray-500">
+                        Gross ETB {metrics.gross_sales_today}
+                    </span>
                 </div>
-                <div className="flex flex-col xl:flex-row items-center gap-12 h-full">
-                    <div className="w-full xl:w-[20%] pl-[35px] flex flex-col justify-center h-full">
-                        <span className="text-[3.5rem] leading-none font-bold text-slate-900 tracking-tighter block">{metrics.payment_success_rate}%</span>
-                        <p className="text-slate-500 font-medium text-lg leading-relaxed text-wrap">Payment success in current range</p>
+                <div className="flex h-full flex-col items-center gap-12 xl:flex-row">
+                    <div className="flex h-full w-full flex-col justify-center pl-[35px] xl:w-[20%]">
+                        <span className="block text-[3.5rem] leading-none font-bold tracking-tighter text-slate-900">
+                            {metrics.payment_success_rate}%
+                        </span>
+                        <p className="text-lg leading-relaxed font-medium text-wrap text-slate-500">
+                            Payment success in current range
+                        </p>
                     </div>
-                    <div className="flex-1 w-full overflow-hidden h-full min-h-[350px]">
+                    <div className="h-full min-h-[350px] w-full flex-1 overflow-hidden">
                         <RevenueChart />
                     </div>
                 </div>
@@ -379,30 +421,45 @@ export default function MerchantDashboard() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <h2 className="text-xl font-bold text-black">Active Orders</h2>
-                        <span className="px-3 py-1 rounded-full bg-black text-white text-xs font-bold">{metrics.orders_in_flight} Pending</span>
+                        <span className="rounded-full bg-black px-3 py-1 text-xs font-bold text-white">
+                            {metrics.orders_in_flight} Pending
+                        </span>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
-                    {activeOrders.map((order) => (
-                        <div key={order.id} className="group flex items-center justify-between p-4 bg-white rounded-2xl transition-all shadow-sm hover:shadow-md cursor-pointer">
-                            <div className="flex items-center gap-4 flex-1">
-                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${order.iconBg}`}>
+                    {activeOrders.map(order => (
+                        <div
+                            key={order.id}
+                            className="group flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 shadow-sm transition-all hover:shadow-md"
+                        >
+                            <div className="flex flex-1 items-center gap-4">
+                                <div
+                                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${order.iconBg}`}
+                                >
                                     <order.icon className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-sm text-gray-900 mb-1">{order.title}</h4>
+                                    <h4 className="mb-1 text-sm font-bold text-gray-900">
+                                        {order.title}
+                                    </h4>
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-3 w-3 text-gray-400" />
-                                        <span className="text-xs font-medium text-gray-500">{order.time} ago</span>
+                                        <span className="text-xs font-medium text-gray-500">
+                                            {order.time} ago
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-gray-50">
-                                    <div className={`h-2 w-2 rounded-full ${order.statusColor.replace('text-', 'bg-')}`} />
-                                    <span className={`text-xs font-bold ${order.statusColor}`}>{order.status}</span>
+                                <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1">
+                                    <div
+                                        className={`h-2 w-2 rounded-full ${order.statusColor.replace('text-', 'bg-')}`}
+                                    />
+                                    <span className={`text-xs font-bold ${order.statusColor}`}>
+                                        {order.status}
+                                    </span>
                                 </div>
-                                <button className="h-8 w-8 flex items-center justify-center text-gray-400 hover:text-black">
+                                <button className="flex h-8 w-8 items-center justify-center text-gray-400 hover:text-black">
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
                             </div>
@@ -459,25 +516,29 @@ function MetricCard({
     };
 
     return (
-        <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-            <div className="flex justify-between items-start mb-2">
-                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
+        <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mb-2 flex items-start justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm">
                     <Icon className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                    <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">{chip}</span>
-                    <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{value}</h3>
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-600 uppercase">
+                        {chip}
+                    </span>
+                    <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                        {value}
+                    </h3>
                 </div>
             </div>
-            <div className="absolute bottom-5 left-5 right-5">
+            <div className="absolute right-5 bottom-5 left-5">
                 <div className="mb-3">
-                    <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">{label}</h3>
-                    <p className="text-gray-400 text-xs font-medium">{subLabel}</p>
+                    <h3 className="mb-1 text-lg leading-none font-bold text-gray-900">{label}</h3>
+                    <p className="text-xs font-medium text-gray-400">{subLabel}</p>
                 </div>
-                <div className="flex justify-between items-center gap-1">
+                <div className="flex items-center justify-between gap-1">
                     {Array.from({ length: 20 }).map((_, i) => {
                         const isActive = i < progress;
-                        const opacity = isActive ? 0.3 + (0.7 * (i / Math.max(progress, 1))) : 1;
+                        const opacity = isActive ? 0.3 + 0.7 * (i / Math.max(progress, 1)) : 1;
                         return (
                             <div
                                 key={i}

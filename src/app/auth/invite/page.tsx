@@ -3,9 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { InviteAcceptButton } from './InviteAcceptButton';
 
-export default async function InvitePage(props: {
-    searchParams: Promise<{ code: string }>;
-}) {
+export default async function InvitePage(props: { searchParams: Promise<{ code: string }> }) {
     const searchParams = await props.searchParams;
     const { code } = searchParams;
 
@@ -14,23 +12,27 @@ export default async function InvitePage(props: {
     }
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
 
     // Fetch Invite Details
     const { data: invite, error } = await supabase
         .from('staff_invites')
-        .select(`
+        .select(
+            `
             *,
             restaurant:restaurants (
                 name
             )
-        `)
+        `
+        )
         .eq('code', code)
         .single();
 
     if (error || !invite) {
         return (
-             <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 text-center dark:bg-zinc-900">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 text-center dark:bg-zinc-900">
                 <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
                     <h1 className="mb-2 text-2xl font-bold text-red-600">Invalid Invite</h1>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -52,11 +54,11 @@ export default async function InvitePage(props: {
     const isUsed = invite.status !== 'pending';
 
     if (isExpired || isUsed) {
-         return (
-             <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 text-center dark:bg-zinc-900">
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 text-center dark:bg-zinc-900">
                 <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
                     <h1 className="mb-2 text-2xl font-bold text-red-600">Invite No Longer Valid</h1>
-                     <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-gray-600 dark:text-gray-400">
                         {isUsed ? 'This invite has already been used.' : 'This invite has expired.'}
                     </p>
                     <Link
@@ -77,29 +79,42 @@ export default async function InvitePage(props: {
                     <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-3xl dark:bg-blue-900/20">
                         👋
                     </div>
-                    
+
                     <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
                         You&apos;ve been invited!
                     </h1>
-                    
+
                     <p className="mb-6 text-gray-600 dark:text-gray-400">
-                        Join <span className="font-semibold text-gray-900 dark:text-white">{restaurantName}</span> as a <span className="font-medium capitalize text-blue-600 dark:text-blue-400">{invite.role}</span>.
+                        Join{' '}
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                            {restaurantName}
+                        </span>{' '}
+                        as a{' '}
+                        <span className="font-medium text-blue-600 capitalize dark:text-blue-400">
+                            {invite.role}
+                        </span>
+                        .
                     </p>
 
                     {user ? (
                         <div className="space-y-4">
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Logged in as <span className="font-medium text-gray-900 dark:text-white">{user.email}</span>
+                                Logged in as{' '}
+                                <span className="font-medium text-gray-900 dark:text-white">
+                                    {user.email}
+                                </span>
                             </p>
-                            
+
                             <InviteAcceptButton code={code} />
-                            
-                            <form action={async () => {
-                                'use server';
-                                const supabase = await createClient();
-                                await supabase.auth.signOut();
-                                redirect(`/auth/login?next=/auth/invite?code=${code}`);
-                            }}>
+
+                            <form
+                                action={async () => {
+                                    'use server';
+                                    const supabase = await createClient();
+                                    await supabase.auth.signOut();
+                                    redirect(`/auth/login?next=/auth/invite?code=${code}`);
+                                }}
+                            >
                                 <button className="text-sm text-gray-500 hover:text-gray-900 hover:underline dark:text-gray-400 dark:hover:text-white">
                                     Not you? Switch account
                                 </button>

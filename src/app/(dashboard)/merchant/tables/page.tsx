@@ -11,19 +11,20 @@ import {
     LayoutGrid,
     CheckCircle,
     UserX,
-    Clock
+    Clock,
 } from 'lucide-react';
 import { useRole } from '@/hooks/useRole';
 import { QRCodeSVG } from 'qrcode.react';
 import { TableOccupancyGraph } from '@/components/merchant/TableOccupancyGraph';
 import { TableGrid, TableGridRow } from '@/components/merchant/TableGrid';
 import { TableSessionDrawer } from '@/components/merchant/TableSessionDrawer';
-import { OccupancyTimelineBucket, TableOccupancyTimeline } from '@/components/merchant/TableOccupancyTimeline';
+import {
+    OccupancyTimelineBucket,
+    TableOccupancyTimeline,
+} from '@/components/merchant/TableOccupancyTimeline';
 import { toast } from 'react-hot-toast';
 import { isAbortError } from '@/hooks/useSafeFetch';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
-
-
 
 export default function TablesPage() {
     const [tables, setTables] = useState<TableGridRow[]>(() => {
@@ -31,7 +32,9 @@ export default function TablesPage() {
         try {
             const cached = sessionStorage.getItem('tables.cache');
             return cached ? JSON.parse(cached) : [];
-        } catch { return []; }
+        } catch {
+            return [];
+        }
     });
     const [selectedTableQR, setSelectedTableQR] = useState<TableGridRow | null>(null);
     const [selectedTableQrUrl, setSelectedTableQrUrl] = useState<string | null>(null);
@@ -56,7 +59,9 @@ export default function TablesPage() {
     const [isSessionActionLoading, setIsSessionActionLoading] = useState(false);
     const [isBatchQrModalOpen, setIsBatchQrModalOpen] = useState(false);
     const [isBatchQrLoading, setIsBatchQrLoading] = useState(false);
-    const [batchQrEntries, setBatchQrEntries] = useState<Array<{ id: string; table_number: string; url: string }>>([]);
+    const [batchQrEntries, setBatchQrEntries] = useState<
+        Array<{ id: string; table_number: string; url: string }>
+    >([]);
     const [isSessionDrawerOpen, setIsSessionDrawerOpen] = useState(false);
     const [sessionDrawerTableNumber, setSessionDrawerTableNumber] = useState<string | null>(null);
     const [sessionDrawerLoading, setSessionDrawerLoading] = useState(false);
@@ -74,10 +79,12 @@ export default function TablesPage() {
         try {
             const cached = sessionStorage.getItem('tables.timeline.cache');
             return cached ? JSON.parse(cached) : [];
-        } catch { return []; }
+        } catch {
+            return [];
+        }
     });
     const [isQrLoading, setIsQrLoading] = useState(false);
-    
+
     // Ref for abort controller
     const abortControllerRef = useRef<AbortController | null>(null);
     const isMountedRef = useRef(true);
@@ -94,7 +101,7 @@ export default function TablesPage() {
 
     useEffect(() => {
         isMountedRef.current = true;
-        
+
         if (roleLoading) return;
 
         if (!user) {
@@ -106,10 +113,10 @@ export default function TablesPage() {
         // Create abort controller for this effect
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
-        
+
         fetchTables(signal);
         void fetchOccupancyTimeline(signal);
-        
+
         return () => {
             isMountedRef.current = false;
             abortControllerRef.current?.abort();
@@ -120,13 +127,9 @@ export default function TablesPage() {
     useEffect(() => {
         const channel = supabase
             .channel('tables-realtime')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'tables' },
-                () => {
-                    if (user) void fetchTables();
-                }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => {
+                if (user) void fetchTables();
+            })
             .subscribe();
 
         return () => {
@@ -143,13 +146,15 @@ export default function TablesPage() {
             if (!response.ok) {
                 throw new Error(payload?.error ?? 'Failed to load tables.');
             }
-            const liveTables = ((payload?.data?.tables ?? []) as Partial<TableGridRow>[]).map((table) => ({
-                id: table.id ?? '',
-                table_number: table.table_number ?? 'N/A',
-                status: (table.status as TableGridRow['status']) ?? 'available',
-                qr_code_url: table.qr_code_url ?? null,
-                active_order_id: table.active_order_id ?? null,
-            }));
+            const liveTables = ((payload?.data?.tables ?? []) as Partial<TableGridRow>[]).map(
+                table => ({
+                    id: table.id ?? '',
+                    table_number: table.table_number ?? 'N/A',
+                    status: (table.status as TableGridRow['status']) ?? 'available',
+                    qr_code_url: table.qr_code_url ?? null,
+                    active_order_id: table.active_order_id ?? null,
+                })
+            );
             if (isMountedRef.current) {
                 setTables(liveTables);
                 try {
@@ -223,7 +228,7 @@ export default function TablesPage() {
                     }))
                 );
                 try {
-                     const buckets = Array.from(bucketsMap.entries()).map(([label, value]) => ({
+                    const buckets = Array.from(bucketsMap.entries()).map(([label, value]) => ({
                         label,
                         opens: value.opens,
                         closes: value.closes,
@@ -239,7 +244,9 @@ export default function TablesPage() {
             console.error(error);
             if (isMountedRef.current) {
                 setTimelineBuckets([]);
-                try { sessionStorage.removeItem('tables.timeline.cache'); } catch {}
+                try {
+                    sessionStorage.removeItem('tables.timeline.cache');
+                } catch {}
             }
         }
     };
@@ -359,7 +366,7 @@ export default function TablesPage() {
             if (!response.ok) {
                 throw new Error(payload?.error ?? 'Failed to delete table.');
             }
-            setTables((prev) => prev.filter((table) => table.id !== tableToDelete.id));
+            setTables(prev => prev.filter(table => table.id !== tableToDelete.id));
             setTableToDelete(null);
             toast.success('Table deleted.');
             void fetchOccupancyTimeline();
@@ -478,7 +485,9 @@ export default function TablesPage() {
     const handleOpenQrModal = async (table: TableGridRow) => {
         try {
             setIsQrLoading(true);
-            const response = await fetch(`/api/tables/${table.id}/qr/regenerate`, { method: 'POST' });
+            const response = await fetch(`/api/tables/${table.id}/qr/regenerate`, {
+                method: 'POST',
+            });
             const payload = await response.json();
             if (!response.ok) {
                 throw new Error(payload?.error ?? 'Failed to generate signed QR.');
@@ -500,8 +509,10 @@ export default function TablesPage() {
         try {
             setIsBatchQrLoading(true);
             const results = await Promise.all(
-                tables.map(async (table) => {
-                    const response = await fetch(`/api/tables/${table.id}/qr/regenerate`, { method: 'POST' });
+                tables.map(async table => {
+                    const response = await fetch(`/api/tables/${table.id}/qr/regenerate`, {
+                        method: 'POST',
+                    });
                     const payload = await response.json();
                     if (!response.ok) {
                         throw new Error(payload?.error ?? `Failed for table ${table.table_number}`);
@@ -514,7 +525,7 @@ export default function TablesPage() {
                 })
             );
 
-            setBatchQrEntries(results.filter((entry) => Boolean(entry.url)));
+            setBatchQrEntries(results.filter(entry => Boolean(entry.url)));
             setIsBatchQrModalOpen(true);
         } catch (error: any) {
             toast.error(error?.message ?? 'Failed to generate batch QR sheet.');
@@ -591,14 +602,22 @@ export default function TablesPage() {
     };
 
     return (
-        <div className="space-y-8 pb-20 min-h-screen">
+        <div className="min-h-screen space-y-8 pb-20">
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Tables & QR</h1>
-                    <p className="text-gray-500 font-medium">Manage tables and generate QR codes.</p>
-                    {error && <p className="text-xs mt-2 text-amber-700 font-semibold">{error}</p>}
-                    {isQrLoading && <p className="text-xs mt-2 text-gray-500 font-semibold">Generating signed QR...</p>}
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                        Tables & QR
+                    </h1>
+                    <p className="font-medium text-gray-500">
+                        Manage tables and generate QR codes.
+                    </p>
+                    {error && <p className="mt-2 text-xs font-semibold text-amber-700">{error}</p>}
+                    {isQrLoading && (
+                        <p className="mt-2 text-xs font-semibold text-gray-500">
+                            Generating signed QR...
+                        </p>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     <button
@@ -606,7 +625,7 @@ export default function TablesPage() {
                             void handleOpenBatchQrModal();
                         }}
                         disabled={isBatchQrLoading || tables.length === 0}
-                        className="h-12 px-5 bg-white text-black border border-gray-200 rounded-xl flex items-center gap-2 hover:bg-gray-50 transition-colors font-bold text-sm disabled:opacity-50"
+                        className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 text-sm font-bold text-black transition-colors hover:bg-gray-50 disabled:opacity-50"
                     >
                         <Download className="h-4 w-4" />
                         {isBatchQrLoading ? 'Generating...' : 'Batch QR'}
@@ -616,7 +635,7 @@ export default function TablesPage() {
                             resetForm();
                             setIsCreateModalOpen(true);
                         }}
-                        className="h-12 px-5 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-black/10 font-bold text-sm"
+                        className="flex h-12 items-center gap-2 rounded-xl bg-black px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800"
                     >
                         <Plus className="h-4 w-4" />
                         Add Table
@@ -625,166 +644,188 @@ export default function TablesPage() {
             </div>
 
             {/* Stats Row - Inspired by Dashboard Asymmetric Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {/* Total Tables Card */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className="mb-2 flex items-start justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm">
                             <LayoutGrid className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                            <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-600 uppercase">
                                 Capacity
                             </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{totalTables}</h3>
+                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                                {totalTables}
+                            </h3>
                         </div>
                     </div>
 
-                    <div className="absolute bottom-5 left-5 right-5">
+                    <div className="absolute right-5 bottom-5 left-5">
                         <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Total Tables</h3>
-                            <p className="text-gray-400 text-xs font-medium">Restaurant Capacity</p>
+                            <h3 className="mb-1 text-lg leading-none font-bold text-gray-900">
+                                Total Tables
+                            </h3>
+                            <p className="text-xs font-medium text-gray-400">Restaurant Capacity</p>
                         </div>
 
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                        <div className="mb-2 flex justify-between text-[10px] font-medium text-gray-400">
                             <span>Used: {activeTables}</span>
                             <span>Total: {totalTables}</span>
                         </div>
-                        <div className="flex justify-between items-center gap-1">
+                        <div className="flex items-center justify-between gap-1">
                             {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = Math.round((totalTables / (totalTables || 1)) * 20);
+                                const activeCount = Math.round(
+                                    (totalTables / (totalTables || 1)) * 20
+                                );
                                 const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                const opacity = isActive ? 0.3 + 0.7 * (i / activeCount) : 1;
                                 return (
                                     <div
                                         key={i}
                                         style={{ opacity: isActive ? opacity : 1 }}
                                         className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-gray-800' : 'bg-gray-100'}`}
                                     />
-                                )
+                                );
                             })}
                         </div>
                     </div>
                 </div>
 
                 {/* Occupied/Active Card */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-orange-600 shadow-sm">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className="mb-2 flex items-start justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-orange-600 shadow-sm">
                             <UserX className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-orange-50 text-orange-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                            <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-bold tracking-wider text-orange-600 uppercase">
                                 {utilizationRate}% Full
                             </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{activeTables}</h3>
+                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                                {activeTables}
+                            </h3>
                         </div>
                     </div>
 
-                    <div className="absolute bottom-5 left-5 right-5">
+                    <div className="absolute right-5 bottom-5 left-5">
                         <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Occupied</h3>
-                            <p className="text-gray-400 text-xs font-medium">Currently Seated</p>
+                            <h3 className="mb-1 text-lg leading-none font-bold text-gray-900">
+                                Occupied
+                            </h3>
+                            <p className="text-xs font-medium text-gray-400">Currently Seated</p>
                         </div>
 
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                        <div className="mb-2 flex justify-between text-[10px] font-medium text-gray-400">
                             <span>Current: {activeTables}</span>
                             <span>Goal: {totalTables}</span>
                         </div>
-                        <div className="flex justify-between items-center gap-1">
+                        <div className="flex items-center justify-between gap-1">
                             {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = Math.round((activeTables / totalTables) * 20) || 0;
+                                const activeCount =
+                                    Math.round((activeTables / totalTables) * 20) || 0;
                                 const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                const opacity = isActive ? 0.3 + 0.7 * (i / activeCount) : 1;
                                 return (
                                     <div
                                         key={i}
                                         style={{ opacity: isActive ? opacity : 1 }}
                                         className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-orange-500' : 'bg-gray-100'}`}
                                     />
-                                )
+                                );
                             })}
                         </div>
                     </div>
                 </div>
 
                 {/* Reserved - New Card */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className="mb-2 flex items-start justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-blue-600 shadow-sm">
                             <Clock className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                            <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold tracking-wider text-blue-600 uppercase">
                                 Upcoming
                             </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{reservedTables}</h3>
+                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                                {reservedTables}
+                            </h3>
                         </div>
                     </div>
 
-                    <div className="absolute bottom-5 left-5 right-5">
+                    <div className="absolute right-5 bottom-5 left-5">
                         <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Reserved</h3>
-                            <p className="text-gray-400 text-xs font-medium">Coming Soon</p>
+                            <h3 className="mb-1 text-lg leading-none font-bold text-gray-900">
+                                Reserved
+                            </h3>
+                            <p className="text-xs font-medium text-gray-400">Coming Soon</p>
                         </div>
 
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                        <div className="mb-2 flex justify-between text-[10px] font-medium text-gray-400">
                             <span>Reserved: {reservedTables}</span>
                             <span>Total: {totalTables}</span>
                         </div>
-                        <div className="flex justify-between items-center gap-1">
+                        <div className="flex items-center justify-between gap-1">
                             {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = Math.round((reservedTables / (totalTables || 1)) * 20);
+                                const activeCount = Math.round(
+                                    (reservedTables / (totalTables || 1)) * 20
+                                );
                                 const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                const opacity = isActive ? 0.3 + 0.7 * (i / activeCount) : 1;
                                 return (
                                     <div
                                         key={i}
                                         style={{ opacity: isActive ? opacity : 1 }}
                                         className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-blue-500' : 'bg-gray-100'}`}
                                     />
-                                )
+                                );
                             })}
                         </div>
                     </div>
                 </div>
 
                 {/* Available Card */}
-                <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-green-600 shadow-sm">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className="mb-2 flex items-start justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-green-600 shadow-sm">
                             <CheckCircle className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                            <span className="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                            <span className="rounded-full bg-green-50 px-2 py-1 text-[10px] font-bold tracking-wider text-green-600 uppercase">
                                 Ready
                             </span>
-                            <h3 className="text-4xl font-bold text-gray-900 tracking-tight mt-[20px]">{availableTables}</h3>
+                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                                {availableTables}
+                            </h3>
                         </div>
                     </div>
 
-                    <div className="absolute bottom-5 left-5 right-5">
+                    <div className="absolute right-5 bottom-5 left-5">
                         <div className="mb-3">
-                            <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">Available</h3>
-                            <p className="text-gray-400 text-xs font-medium">Ready for Guests</p>
+                            <h3 className="mb-1 text-lg leading-none font-bold text-gray-900">
+                                Available
+                            </h3>
+                            <p className="text-xs font-medium text-gray-400">Ready for Guests</p>
                         </div>
 
-                        <div className="flex justify-between text-[10px] font-medium text-gray-400 mb-2">
+                        <div className="mb-2 flex justify-between text-[10px] font-medium text-gray-400">
                             <span>Free: {availableTables}</span>
                             <span>Total: {totalTables}</span>
                         </div>
-                        <div className="flex justify-between items-center gap-1">
+                        <div className="flex items-center justify-between gap-1">
                             {Array.from({ length: 20 }).map((_, i) => {
-                                const activeCount = Math.round((availableTables / totalTables) * 20) || 0;
+                                const activeCount =
+                                    Math.round((availableTables / totalTables) * 20) || 0;
                                 const isActive = i < activeCount;
-                                const opacity = isActive ? 0.3 + (0.7 * (i / activeCount)) : 1;
+                                const opacity = isActive ? 0.3 + 0.7 * (i / activeCount) : 1;
                                 return (
                                     <div
                                         key={i}
                                         style={{ opacity: isActive ? opacity : 1 }}
                                         className={`h-[15px] w-[15px] rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-100'}`}
                                     />
-                                )
+                                );
                             })}
                         </div>
                     </div>
@@ -792,7 +833,7 @@ export default function TablesPage() {
             </div>
 
             {/* Tables Grid */}
-            <h2 className="text-xl font-bold text-black mt-8 mb-4">All Tables</h2>
+            <h2 className="mt-8 mb-4 text-xl font-bold text-black">All Tables</h2>
             <TableGrid
                 tables={tables}
                 isLoading={loading}
@@ -801,11 +842,11 @@ export default function TablesPage() {
                     setIsCreateModalOpen(true);
                 }}
                 onEditTable={openEditTableModal}
-                onDeleteTable={(table) => setTableToDelete(table)}
-                onShowQR={(table) => {
+                onDeleteTable={table => setTableToDelete(table)}
+                onShowQR={table => {
                     void handleOpenQrModal(table);
                 }}
-                onRefreshTable={(table) => {
+                onRefreshTable={table => {
                     void handleOpenSessionDrawer(table);
                 }}
             />
@@ -815,94 +856,111 @@ export default function TablesPage() {
             <TableOccupancyTimeline buckets={timelineBuckets} />
 
             {/* QR Code Modal */}
-            {
-                selectedTableQR && selectedTableQrUrl && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-6 animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 relative shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col items-center">
-                            <button
-                                className="absolute right-6 top-6 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition-all"
-                                onClick={() => {
-                                    setSelectedTableQR(null);
-                                    setSelectedTableQrUrl(null);
-                                }}
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
+            {selectedTableQR && selectedTableQrUrl && (
+                <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6 backdrop-blur-md duration-300">
+                    <div className="animate-in zoom-in-95 relative flex w-full max-w-sm flex-col items-center rounded-[3rem] bg-white p-8 shadow-2xl duration-300">
+                        <button
+                            className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
+                            onClick={() => {
+                                setSelectedTableQR(null);
+                                setSelectedTableQrUrl(null);
+                            }}
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
 
-                            <div className="h-16 w-16 rounded-2xl bg-black flex items-center justify-center text-white mb-6 shadow-xl shadow-black/20 mt-4">
-                                <Scan className="h-8 w-8" />
-                            </div>
-
-                            <h3 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Table {selectedTableQR.table_number}</h3>
-                            <p className="text-gray-500 font-medium text-center mb-8 px-4">
-                                Scan this code to view the menu and place orders directly from this table.
-                            </p>
-
-                            <div className="p-8 bg-white rounded-[2.5rem] shadow-lg border border-gray-100 mx-auto w-fit mb-8 relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-gray-50 opacity-50" />
-                                <div className="relative z-10">
-                                    <QRCodeSVG
-                                        id="qr-code-svg"
-                                        value={selectedTableQrUrl}
-                                        size={180}
-                                        level="H"
-                                        includeMargin={true}
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                className="w-full h-14 bg-black text-white rounded-2xl font-bold text-base hover:bg-gray-800 transition-all shadow-xl shadow-black/20 flex items-center justify-center gap-3 hover:scale-[1.02]"
-                                onClick={() => {
-                                    const svg = document.getElementById("qr-code-svg");
-                                    if (svg) {
-                                        const svgData = new XMLSerializer().serializeToString(svg);
-                                        const canvas = document.createElement("canvas");
-                                        const ctx = canvas.getContext("2d");
-                                        const img = new Image();
-                                        img.onload = () => {
-                                            canvas.width = img.width;
-                                            canvas.height = img.height;
-                                            ctx?.drawImage(img, 0, 0);
-                                            const pngFile = canvas.toDataURL("image/png");
-                                            const downloadLink = document.createElement("a");
-                                            downloadLink.download = `Table-${selectedTableQR.table_number}-QR.png`;
-                                            downloadLink.href = pngFile;
-                                            downloadLink.click();
-                                        };
-                                        img.src = "data:image/svg+xml;base64," + btoa(svgData);
-                                    }
-                                }}
-                            >
-                                <Download className="h-5 w-5" />
-                                Download QR Code
-                            </button>
+                        <div className="mt-4 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-black text-white shadow-xl shadow-black/20">
+                            <Scan className="h-8 w-8" />
                         </div>
+
+                        <h3 className="mb-2 text-3xl font-bold tracking-tight text-gray-900">
+                            Table {selectedTableQR.table_number}
+                        </h3>
+                        <p className="mb-8 px-4 text-center font-medium text-gray-500">
+                            Scan this code to view the menu and place orders directly from this
+                            table.
+                        </p>
+
+                        <div className="group relative mx-auto mb-8 w-fit overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-lg">
+                            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-gray-50 opacity-50" />
+                            <div className="relative z-10">
+                                <QRCodeSVG
+                                    id="qr-code-svg"
+                                    value={selectedTableQrUrl}
+                                    size={180}
+                                    level="H"
+                                    includeMargin={true}
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-black text-base font-bold text-white shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:bg-gray-800"
+                            onClick={() => {
+                                const svg = document.getElementById('qr-code-svg');
+                                if (svg) {
+                                    const svgData = new XMLSerializer().serializeToString(svg);
+                                    const canvas = document.createElement('canvas');
+                                    const ctx = canvas.getContext('2d');
+                                    const img = new Image();
+                                    img.onload = () => {
+                                        canvas.width = img.width;
+                                        canvas.height = img.height;
+                                        ctx?.drawImage(img, 0, 0);
+                                        const pngFile = canvas.toDataURL('image/png');
+                                        const downloadLink = document.createElement('a');
+                                        downloadLink.download = `Table-${selectedTableQR.table_number}-QR.png`;
+                                        downloadLink.href = pngFile;
+                                        downloadLink.click();
+                                    };
+                                    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+                                }
+                            }}
+                        >
+                            <Download className="h-5 w-5" />
+                            Download QR Code
+                        </button>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {isBatchQrModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                     <div className="w-full max-w-4xl rounded-3xl bg-white p-6 shadow-xl">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900">Batch QR Export</h3>
-                                <p className="text-sm text-gray-500">{batchQrEntries.length} table QR codes ready.</p>
+                                <p className="text-sm text-gray-500">
+                                    {batchQrEntries.length} table QR codes ready.
+                                </p>
                             </div>
                             <button
-                                className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition-all"
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
                                 onClick={() => setIsBatchQrModalOpen(false)}
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div id="batch-qr-print-sheet" className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto">
-                            {batchQrEntries.map((entry) => (
-                                <div key={entry.id} className="rounded-2xl border border-gray-200 p-4 text-center">
-                                    <p className="text-xs font-bold text-gray-500 mb-2">Table {entry.table_number}</p>
-                                    <QRCodeSVG id={`batch-qr-${entry.id}`} value={entry.url} size={120} level="H" includeMargin />
+                        <div
+                            id="batch-qr-print-sheet"
+                            className="mt-5 grid max-h-[60vh] grid-cols-2 gap-4 overflow-y-auto md:grid-cols-4"
+                        >
+                            {batchQrEntries.map(entry => (
+                                <div
+                                    key={entry.id}
+                                    className="rounded-2xl border border-gray-200 p-4 text-center"
+                                >
+                                    <p className="mb-2 text-xs font-bold text-gray-500">
+                                        Table {entry.table_number}
+                                    </p>
+                                    <QRCodeSVG
+                                        id={`batch-qr-${entry.id}`}
+                                        value={entry.url}
+                                        size={120}
+                                        level="H"
+                                        includeMargin
+                                    />
                                 </div>
                             ))}
                         </div>
@@ -911,7 +969,7 @@ export default function TablesPage() {
                             <button
                                 type="button"
                                 onClick={handleBatchQrPrint}
-                                className="h-10 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
+                                className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                             >
                                 <Printer className="h-4 w-4" />
                                 Print Sheet
@@ -919,7 +977,7 @@ export default function TablesPage() {
                             <button
                                 type="button"
                                 onClick={handleBatchQrDownload}
-                                className="h-10 px-4 rounded-xl bg-black text-sm font-semibold text-white hover:bg-gray-800 inline-flex items-center gap-2"
+                                className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800"
                             >
                                 <Download className="h-4 w-4" />
                                 Download All PNG
@@ -930,14 +988,16 @@ export default function TablesPage() {
             )}
 
             {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Create table</h3>
-                        <p className="mt-1 text-sm text-gray-500">Add a new table to your floor plan.</p>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Add a new table to your floor plan.
+                        </p>
                         <form onSubmit={handleCreateTable} className="mt-5 space-y-3">
                             <input
                                 value={tableNumberInput}
-                                onChange={(e) => setTableNumberInput(e.target.value)}
+                                onChange={e => setTableNumberInput(e.target.value)}
                                 placeholder="Table number (e.g. A1)"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
@@ -946,22 +1006,30 @@ export default function TablesPage() {
                                 min={1}
                                 max={50}
                                 value={capacityInput}
-                                onChange={(e) => setCapacityInput(e.target.value)}
+                                onChange={e => setCapacityInput(e.target.value)}
                                 placeholder="Capacity"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
                             <input
                                 value={zoneInput}
-                                onChange={(e) => setZoneInput(e.target.value)}
+                                onChange={e => setZoneInput(e.target.value)}
                                 placeholder="Zone (optional)"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
                             {formError && <p className="text-xs text-red-600">{formError}</p>}
                             <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="h-10 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCreateModalOpen(false)}
+                                    className="h-10 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                                >
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={isSubmitting} className="h-10 px-4 rounded-xl bg-black text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                >
                                     {isSubmitting ? 'Creating...' : 'Create'}
                                 </button>
                             </div>
@@ -971,14 +1039,16 @@ export default function TablesPage() {
             )}
 
             {isEditModalOpen && tableToEdit && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Edit table</h3>
-                        <p className="mt-1 text-sm text-gray-500">Update table details and status.</p>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Update table details and status.
+                        </p>
                         <form onSubmit={handleEditTable} className="mt-5 space-y-3">
                             <input
                                 value={tableNumberInput}
-                                onChange={(e) => setTableNumberInput(e.target.value)}
+                                onChange={e => setTableNumberInput(e.target.value)}
                                 placeholder="Table number"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
@@ -987,19 +1057,21 @@ export default function TablesPage() {
                                 min={1}
                                 max={50}
                                 value={capacityInput}
-                                onChange={(e) => setCapacityInput(e.target.value)}
+                                onChange={e => setCapacityInput(e.target.value)}
                                 placeholder="Capacity"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
                             <input
                                 value={zoneInput}
-                                onChange={(e) => setZoneInput(e.target.value)}
+                                onChange={e => setZoneInput(e.target.value)}
                                 placeholder="Zone (optional)"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
                             <select
                                 value={statusInput}
-                                onChange={(e) => setStatusInput(e.target.value as TableGridRow['status'])}
+                                onChange={e =>
+                                    setStatusInput(e.target.value as TableGridRow['status'])
+                                }
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             >
                                 <option value="available">Available</option>
@@ -1007,15 +1079,17 @@ export default function TablesPage() {
                                 <option value="reserved">Reserved</option>
                                 <option value="bill_requested">Bill requested</option>
                             </select>
-                            <div className="rounded-xl border border-gray-200 p-3 space-y-2">
-                                <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Table Session Actions</p>
+                            <div className="space-y-2 rounded-xl border border-gray-200 p-3">
+                                <p className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                                    Table Session Actions
+                                </p>
                                 <div className="grid grid-cols-2 gap-2">
                                     <input
                                         type="number"
                                         min={1}
                                         max={50}
                                         value={guestCountInput}
-                                        onChange={(e) => setGuestCountInput(e.target.value)}
+                                        onChange={e => setGuestCountInput(e.target.value)}
                                         placeholder="Guests"
                                         className="w-full rounded-lg border border-gray-200 px-2.5 py-2 text-xs outline-none focus:border-gray-400"
                                     />
@@ -1039,13 +1113,13 @@ export default function TablesPage() {
                                 <div className="grid grid-cols-[1fr_auto] gap-2">
                                     <select
                                         value={transferTargetTableId}
-                                        onChange={(e) => setTransferTargetTableId(e.target.value)}
+                                        onChange={e => setTransferTargetTableId(e.target.value)}
                                         className="h-9 rounded-lg border border-gray-200 px-2 text-xs outline-none focus:border-gray-400"
                                     >
                                         <option value="">Transfer to table...</option>
                                         {tables
-                                            .filter((table) => table.id !== tableToEdit.id)
-                                            .map((table) => (
+                                            .filter(table => table.id !== tableToEdit.id)
+                                            .map(table => (
                                                 <option key={table.id} value={table.id}>
                                                     {table.table_number}
                                                 </option>
@@ -1055,7 +1129,7 @@ export default function TablesPage() {
                                         type="button"
                                         onClick={handleTransferTableSession}
                                         disabled={isSessionActionLoading}
-                                        className="h-9 px-3 rounded-lg bg-black text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                        className="h-9 rounded-lg bg-black px-3 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                                     >
                                         Transfer
                                     </button>
@@ -1063,10 +1137,18 @@ export default function TablesPage() {
                             </div>
                             {formError && <p className="text-xs text-red-600">{formError}</p>}
                             <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="h-10 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="h-10 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                                >
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={isSubmitting} className="h-10 px-4 rounded-xl bg-black text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                >
                                     {isSubmitting ? 'Saving...' : 'Save'}
                                 </button>
                             </div>
@@ -1076,18 +1158,31 @@ export default function TablesPage() {
             )}
 
             {tableToDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Delete table</h3>
                         <p className="mt-2 text-sm text-gray-600">
-                            Delete table <span className="font-semibold text-gray-900">{tableToDelete.table_number}</span>?
+                            Delete table{' '}
+                            <span className="font-semibold text-gray-900">
+                                {tableToDelete.table_number}
+                            </span>
+                            ?
                         </p>
                         <p className="mt-1 text-sm text-red-600">This action cannot be undone.</p>
                         <div className="mt-6 flex justify-end gap-2">
-                            <button type="button" onClick={() => setTableToDelete(null)} className="h-10 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                            <button
+                                type="button"
+                                onClick={() => setTableToDelete(null)}
+                                className="h-10 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                            >
                                 Cancel
                             </button>
-                            <button type="button" onClick={handleDeleteTable} disabled={isDeleting} className="h-10 px-4 rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                            <button
+                                type="button"
+                                onClick={handleDeleteTable}
+                                disabled={isDeleting}
+                                className="h-10 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                            >
                                 {isDeleting ? 'Deleting...' : 'Delete'}
                             </button>
                         </div>
@@ -1102,6 +1197,6 @@ export default function TablesPage() {
                 session={sessionDrawerData}
                 onClose={() => setIsSessionDrawerOpen(false)}
             />
-        </div >
+        </div>
     );
 }

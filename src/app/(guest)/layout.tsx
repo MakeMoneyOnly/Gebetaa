@@ -1,12 +1,8 @@
 import React from 'react';
 
-export default function GuestLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function GuestLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen bg-[var(--background)] flex flex-col">
+        <div className="flex min-h-screen flex-col bg-[var(--background)]">
             {/* Guest Layout - Focused on the dining/ordering experience */}
             {/* Minimal chrome to avoid distractions */}
             {children}

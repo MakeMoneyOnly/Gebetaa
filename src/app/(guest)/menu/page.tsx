@@ -18,13 +18,13 @@ const MOCK_ITEMS: DishItem[] = FOOD_ITEMS.map(item => ({
     shopName: item.shop,
     categories: {
         name: item.category,
-        section: 'food' // default fallback
+        section: 'food', // default fallback
     },
     // Optional fields
-    description: "Delicious food item",
-    description_am: "ጣፋጭ ምግብ",
+    description: 'Delicious food item',
+    description_am: 'ጣፋጭ ምግብ',
     ingredients: [],
-    nutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    nutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 },
 }));
 
 export default function MenuPage() {

@@ -80,7 +80,7 @@ function DemoMenuContent() {
                 let restaurantId = lastItem?.restaurant_id;
 
                 let restaurants: { id: string; slug: string } | null = null;
-                
+
                 if (restaurantId) {
                     const { data } = await supabase
                         .from('restaurants')
@@ -89,15 +89,15 @@ function DemoMenuContent() {
                         .maybeSingle();
                     restaurants = data;
                 } else {
-                     // Fallback to latest restaurant if no items exist
-                     const { data } = await supabase
+                    // Fallback to latest restaurant if no items exist
+                    const { data } = await supabase
                         .from('restaurants')
                         .select('id, slug')
                         .order('created_at', { ascending: false })
                         .limit(1)
                         .maybeSingle();
-                     restaurants = data;
-                     restaurantId = restaurants?.id;
+                    restaurants = data;
+                    restaurantId = restaurants?.id;
                 }
 
                 if (!restaurantId || !restaurants) {
@@ -126,8 +126,10 @@ function DemoMenuContent() {
                     DEMO_CONTEXT.table = tableData.table_number;
                 } else {
                     // Fallback to table '1' if no tables exist (though purchase might fail if not created)
-                    console.warn('No active tables found for demo restaurant. Defaulting to table 1.');
-                    DEMO_CONTEXT.table = '1'; 
+                    console.warn(
+                        'No active tables found for demo restaurant. Defaulting to table 1.'
+                    );
+                    DEMO_CONTEXT.table = '1';
                 }
 
                 const { data: categories, error: categoryError } = await supabase
@@ -143,7 +145,9 @@ function DemoMenuContent() {
 
                 const typedCategories = (categories as RawCategory[]) ?? [];
                 const categoryIds = typedCategories.map(category => category.id);
-                const categoryById = new Map(typedCategories.map(category => [category.id, category]));
+                const categoryById = new Map(
+                    typedCategories.map(category => [category.id, category])
+                );
 
                 if (categoryIds.length === 0) {
                     setRealItems([]);
@@ -207,7 +211,8 @@ function DemoMenuContent() {
                         if (!category) return null;
 
                         const constantItem = FOOD_ITEMS.find(
-                            food => food.title.toLowerCase().trim() === item.name.toLowerCase().trim()
+                            food =>
+                                food.title.toLowerCase().trim() === item.name.toLowerCase().trim()
                         );
 
                         let imageUrl = constantItem
@@ -272,7 +277,7 @@ function DemoMenuContent() {
 
     if (loading) {
         return (
-            <main className="app-container bg-[var(--background)] pb-safe transition-colors duration-300">
+            <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
                     activeTab={activeTab}
@@ -285,10 +290,10 @@ function DemoMenuContent() {
     }
 
     return (
-        <main className="app-container bg-[var(--background)] pb-safe transition-colors duration-300">
+        <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
             {/* Demo Banner */}
-            <div className="bg-brand-crimson/10 border-b border-brand-crimson/20 px-4 py-2 text-center">
-                <p className="text-sm font-medium text-brand-crimson">
+            <div className="bg-brand-crimson/10 border-brand-crimson/20 border-b px-4 py-2 text-center">
+                <p className="text-brand-crimson text-sm font-medium">
                     🎉 Demo Mode - Explore the menu without scanning a QR code
                 </p>
             </div>
@@ -306,14 +311,14 @@ function DemoMenuContent() {
                         <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
                             Main Menu
                         </h2>
-                        <button className="text-black/60 dark:text-white/60 font-manrope text-sm font-bold hover:text-brand-crimson transition-colors">
+                        <button className="font-manrope hover:text-brand-crimson text-sm font-bold text-black/60 transition-colors dark:text-white/60">
                             View All
                         </button>
                     </div>
 
                     {filteredItems.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <p className="text-black/60 dark:text-white/60 font-medium">
+                            <p className="font-medium text-black/60 dark:text-white/60">
                                 No menu items found. Please add items to your restaurant menu.
                             </p>
                         </div>

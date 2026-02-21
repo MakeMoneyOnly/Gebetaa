@@ -3,11 +3,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Users, Crown, Repeat, Wallet } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { CampaignBuilder, type CampaignRow, type SegmentOption } from '@/components/merchant/CampaignBuilder';
+import {
+    CampaignBuilder,
+    type CampaignRow,
+    type SegmentOption,
+} from '@/components/merchant/CampaignBuilder';
 import { GiftCardManager, type GiftCardRow } from '@/components/merchant/GiftCardManager';
 import { GuestDirectory, type GuestDirectoryRow } from '@/components/merchant/GuestDirectory';
 import { GuestProfileDrawer } from '@/components/merchant/GuestProfileDrawer';
-import { LoyaltyProgramBuilder, type LoyaltyProgramRow } from '@/components/merchant/LoyaltyProgramBuilder';
+import {
+    LoyaltyProgramBuilder,
+    type LoyaltyProgramRow,
+} from '@/components/merchant/LoyaltyProgramBuilder';
 import { MetricCard } from '@/components/merchant/MetricCard';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
@@ -71,7 +78,10 @@ export default function GuestsPage() {
             if (tagFilter.trim().length > 0) params.set('tag', tagFilter.trim());
             params.set('limit', '100');
 
-            const response = await fetch(`/api/guests?${params.toString()}`, { method: 'GET', cache: 'no-store' });
+            const response = await fetch(`/api/guests?${params.toString()}`, {
+                method: 'GET',
+                cache: 'no-store',
+            });
             const payload = await response.json();
             if (!response.ok) {
                 throw new Error(payload?.error ?? 'Failed to load guests.');
@@ -116,13 +126,19 @@ export default function GuestsPage() {
             setLoyaltyPrograms((programsPayload?.data?.programs ?? []) as LoyaltyProgramRow[]);
             setGiftCards((cardsPayload?.data?.gift_cards ?? []) as GiftCardRow[]);
             setCampaigns((campaignsPayload?.data?.campaigns ?? []) as CampaignRow[]);
-            setSegments(((campaignsPayload?.data?.segments ?? []) as SegmentOption[]).map(item => ({
-                id: item.id,
-                name: item.name,
-            })));
+            setSegments(
+                ((campaignsPayload?.data?.segments ?? []) as SegmentOption[]).map(item => ({
+                    id: item.id,
+                    name: item.name,
+                }))
+            );
         } catch (growthFetchError) {
             console.error(growthFetchError);
-            setGrowthError(growthFetchError instanceof Error ? growthFetchError.message : 'Failed to load growth operations data.');
+            setGrowthError(
+                growthFetchError instanceof Error
+                    ? growthFetchError.message
+                    : 'Failed to load growth operations data.'
+            );
         } finally {
             setGrowthLoading(false);
         }
@@ -133,10 +149,16 @@ export default function GuestsPage() {
             setDrawerLoading(true);
             const [guestRes, visitsRes] = await Promise.all([
                 fetch(`/api/guests/${guestId}`, { method: 'GET', cache: 'no-store' }),
-                fetch(`/api/guests/${guestId}/visits?limit=20`, { method: 'GET', cache: 'no-store' }),
+                fetch(`/api/guests/${guestId}/visits?limit=20`, {
+                    method: 'GET',
+                    cache: 'no-store',
+                }),
             ]);
 
-            const [guestPayload, visitsPayload] = await Promise.all([guestRes.json(), visitsRes.json()]);
+            const [guestPayload, visitsPayload] = await Promise.all([
+                guestRes.json(),
+                visitsRes.json(),
+            ]);
 
             if (!guestRes.ok) {
                 throw new Error(guestPayload?.error ?? 'Failed to load guest profile.');
@@ -149,7 +171,9 @@ export default function GuestsPage() {
             setGuestVisits((visitsPayload?.data?.visits ?? []) as GuestVisit[]);
         } catch (drawerError) {
             console.error(drawerError);
-            toast.error(drawerError instanceof Error ? drawerError.message : 'Failed to load guest details.');
+            toast.error(
+                drawerError instanceof Error ? drawerError.message : 'Failed to load guest details.'
+            );
             setSelectedGuest(null);
             setGuestVisits([]);
         } finally {
@@ -211,15 +235,20 @@ export default function GuestsPage() {
             }
 
             toast.success('Guest profile updated.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (saveError) {
-            toast.error(saveError instanceof Error ? saveError.message : 'Failed to save guest profile.');
+            toast.error(
+                saveError instanceof Error ? saveError.message : 'Failed to save guest profile.'
+            );
         } finally {
             setDrawerSaving(false);
         }
     };
 
-    const handleCreateLoyaltyProgram = async (payload: { name: string; status: LoyaltyProgramRow['status'] }) => {
+    const handleCreateLoyaltyProgram = async (payload: {
+        name: string;
+        status: LoyaltyProgramRow['status'];
+    }) => {
         try {
             setCreatingLoyalty(true);
             const response = await fetch('/api/loyalty/programs', {
@@ -232,15 +261,23 @@ export default function GuestsPage() {
                 throw new Error(result?.error ?? 'Failed to create loyalty program.');
             }
             toast.success('Loyalty program created.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (createError) {
-            toast.error(createError instanceof Error ? createError.message : 'Failed to create loyalty program.');
+            toast.error(
+                createError instanceof Error
+                    ? createError.message
+                    : 'Failed to create loyalty program.'
+            );
         } finally {
             setCreatingLoyalty(false);
         }
     };
 
-    const handleCreateGiftCard = async (payload: { initial_balance: number; currency: string; expires_at?: string }) => {
+    const handleCreateGiftCard = async (payload: {
+        initial_balance: number;
+        currency: string;
+        expires_at?: string;
+    }) => {
         try {
             setCreatingGiftCard(true);
             const response = await fetch('/api/gift-cards', {
@@ -253,9 +290,11 @@ export default function GuestsPage() {
                 throw new Error(result?.error ?? 'Failed to issue gift card.');
             }
             toast.success('Gift card issued.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (createError) {
-            toast.error(createError instanceof Error ? createError.message : 'Failed to issue gift card.');
+            toast.error(
+                createError instanceof Error ? createError.message : 'Failed to issue gift card.'
+            );
         } finally {
             setCreatingGiftCard(false);
         }
@@ -274,9 +313,11 @@ export default function GuestsPage() {
                 throw new Error(result?.error ?? 'Failed to redeem gift card.');
             }
             toast.success('Gift card redeemed.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (redeemError) {
-            toast.error(redeemError instanceof Error ? redeemError.message : 'Failed to redeem gift card.');
+            toast.error(
+                redeemError instanceof Error ? redeemError.message : 'Failed to redeem gift card.'
+            );
         } finally {
             setRedeemingGiftCardId(null);
         }
@@ -300,9 +341,11 @@ export default function GuestsPage() {
                 throw new Error(result?.error ?? 'Failed to create campaign.');
             }
             toast.success('Campaign created.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (createError) {
-            toast.error(createError instanceof Error ? createError.message : 'Failed to create campaign.');
+            toast.error(
+                createError instanceof Error ? createError.message : 'Failed to create campaign.'
+            );
         } finally {
             setCreatingCampaign(false);
         }
@@ -321,9 +364,11 @@ export default function GuestsPage() {
                 throw new Error(result?.error ?? 'Failed to launch campaign.');
             }
             toast.success('Campaign launched.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (launchError) {
-            toast.error(launchError instanceof Error ? launchError.message : 'Failed to launch campaign.');
+            toast.error(
+                launchError instanceof Error ? launchError.message : 'Failed to launch campaign.'
+            );
         } finally {
             setLaunchingCampaignId(null);
         }
@@ -331,8 +376,8 @@ export default function GuestsPage() {
 
     const stats = useMemo(() => {
         const totalGuests = guests.length;
-        const vipCount = guests.filter((guest) => guest.is_vip).length;
-        const returningCount = guests.filter((guest) => guest.visit_count >= 2).length;
+        const vipCount = guests.filter(guest => guest.is_vip).length;
+        const returningCount = guests.filter(guest => guest.visit_count >= 2).length;
         const ltvTotal = guests.reduce((sum, guest) => sum + Number(guest.lifetime_value ?? 0), 0);
         return { totalGuests, vipCount, returningCount, ltvTotal };
     }, [guests]);
@@ -342,7 +387,9 @@ export default function GuestsPage() {
             <div className="flex items-start justify-between">
                 <div>
                     <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">Guests</h1>
-                    <p className="font-medium text-gray-500">CRM starter with profiles, tags, and visit history.</p>
+                    <p className="font-medium text-gray-500">
+                        CRM starter with profiles, tags, and visit history.
+                    </p>
                 </div>
             </div>
 
@@ -365,7 +412,10 @@ export default function GuestsPage() {
                     label="VIP Guests"
                     subLabel="High value customers"
                     tone="purple"
-                    progress={Math.min(20, Math.max(1, Math.round((stats.vipCount / (stats.totalGuests || 1)) * 20)))}
+                    progress={Math.min(
+                        20,
+                        Math.max(1, Math.round((stats.vipCount / (stats.totalGuests || 1)) * 20))
+                    )}
                     targetLabel={`Target: ${Math.round(stats.totalGuests * 0.2)}`}
                     currentLabel={`Current: ${stats.vipCount}`}
                 />
@@ -376,7 +426,13 @@ export default function GuestsPage() {
                     label="Repeat Guests"
                     subLabel="Loyal Customers"
                     tone="rose"
-                    progress={Math.min(20, Math.max(1, Math.round((stats.returningCount / (stats.totalGuests || 1)) * 20)))}
+                    progress={Math.min(
+                        20,
+                        Math.max(
+                            1,
+                            Math.round((stats.returningCount / (stats.totalGuests || 1)) * 20)
+                        )
+                    )}
                     targetLabel={`Target: ${Math.round(stats.totalGuests * 0.4)}`}
                     currentLabel={`Current: ${stats.returningCount}`}
                 />
@@ -414,10 +470,16 @@ export default function GuestsPage() {
             <section className="space-y-4">
                 <div>
                     <h2 className="text-2xl font-bold text-black">Revenue Growth Stack (P2)</h2>
-                    <p className="text-sm text-gray-500">Loyalty, gift cards, and campaign operations linked to guests.</p>
+                    <p className="text-sm text-gray-500">
+                        Loyalty, gift cards, and campaign operations linked to guests.
+                    </p>
                 </div>
 
-                {growthError ? <p role="alert" className="text-sm font-semibold text-amber-700">{growthError}</p> : null}
+                {growthError ? (
+                    <p role="alert" className="text-sm font-semibold text-amber-700">
+                        {growthError}
+                    </p>
+                ) : null}
 
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                     <LoyaltyProgramBuilder

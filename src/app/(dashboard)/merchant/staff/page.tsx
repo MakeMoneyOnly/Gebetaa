@@ -12,21 +12,21 @@ import { StaffGrid } from '@/components/merchant/StaffGrid';
 import { StaffTable } from '@/components/merchant/StaffTable';
 
 export default function StaffPage() {
-    const { 
-        staff, 
-        loading: dataLoading, 
-        activeUpdatingId, 
-        handleRoleUpdate, 
+    const {
+        staff,
+        loading: dataLoading,
+        activeUpdatingId,
+        handleRoleUpdate,
         handleActiveToggle,
-        inviteLoading, 
-        inviteUrl, 
-        setInviteUrl, 
-        handleInvite 
+        inviteLoading,
+        inviteUrl,
+        setInviteUrl,
+        handleInvite,
     } = useStaff();
-    
+
     // We use the page load guard to ensure skeleton is shown on first meaningful paint
     const { loading: pageLoading, markLoaded } = usePageLoadGuard('staff');
-    
+
     // Sync data loading with page guard
     React.useEffect(() => {
         if (!dataLoading) {
@@ -46,7 +46,7 @@ export default function StaffPage() {
     // Derived State
     const totalStaff = staff.length;
     const activeStaff = useMemo(
-        () => staff.filter((member) => member.is_active !== false).length,
+        () => staff.filter(member => member.is_active !== false).length,
         [staff]
     );
     const inactiveStaff = totalStaff - activeStaff;
@@ -63,9 +63,9 @@ export default function StaffPage() {
     };
 
     return (
-        <div className="space-y-8 pb-20 min-h-screen">
-            <StaffHeader 
-                viewMode={viewMode} 
+        <div className="min-h-screen space-y-8 pb-20">
+            <StaffHeader
+                viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 onInvite={() => {
                     setInviteUrl(null);
@@ -74,26 +74,29 @@ export default function StaffPage() {
             />
 
             {/* Metrics Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     icon={Users}
                     chip="TOTAL"
                     value={totalStaff}
-                    label="Total Staff"
-                    subLabel="Live directory count"
+                    label="Provisioned Profiles"
+                    subLabel="Active access identities"
                     tone="purple"
                     progress={Math.min(20, Math.max(1, totalStaff))}
                     targetLabel="Target: -"
-                    currentLabel={`${totalStaff} Members`}
+                    currentLabel={`${totalStaff} Profiles`}
                 />
                 <MetricCard
                     icon={UserCheck}
                     chip="ACTIVE"
                     value={activeStaff}
-                    label="Active"
-                    subLabel="Staff currently enabled"
+                    label="Enabled"
+                    subLabel="Profiles currently enabled"
                     tone="blue"
-                    progress={Math.min(20, Math.max(1, Math.round((activeStaff / (totalStaff || 1)) * 20)))}
+                    progress={Math.min(
+                        20,
+                        Math.max(1, Math.round((activeStaff / (totalStaff || 1)) * 20))
+                    )}
                     targetLabel={`Total: ${totalStaff}`}
                     currentLabel={`Active: ${activeStaff}`}
                 />
@@ -101,10 +104,13 @@ export default function StaffPage() {
                     icon={Shield}
                     chip="INACTIVE"
                     value={inactiveStaff}
-                    label="Inactive"
-                    subLabel="Staff currently disabled"
+                    label="Disabled"
+                    subLabel="Profiles currently disabled"
                     tone="amber"
-                    progress={Math.min(20, Math.max(0, Math.round((inactiveStaff / (totalStaff || 1)) * 20)))}
+                    progress={Math.min(
+                        20,
+                        Math.max(0, Math.round((inactiveStaff / (totalStaff || 1)) * 20))
+                    )}
                     targetLabel={`Total: ${totalStaff}`}
                     currentLabel={`Inactive: ${inactiveStaff}`}
                 />
@@ -112,8 +118,8 @@ export default function StaffPage() {
                     icon={CheckCircle}
                     chip="RATE"
                     value={`${activeRate}%`}
-                    label="Activation Rate"
-                    subLabel="Enabled accounts ratio"
+                    label="Enablement Rate"
+                    subLabel="Enabled profile ratio"
                     tone="green"
                     progress={Math.min(20, Math.max(1, Math.round((activeRate / 100) * 20)))}
                     targetLabel="Target: 100%"
@@ -123,9 +129,12 @@ export default function StaffPage() {
 
             {/* Content Section */}
             {displayLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {Array.from({ length: 8 }).map((_, index) => (
-                        <div key={index} className="bg-white p-6 rounded-[2.5rem] shadow-sm min-h-[260px] animate-pulse">
+                        <div
+                            key={index}
+                            className="min-h-[260px] animate-pulse rounded-[2.5rem] bg-white p-6 shadow-sm"
+                        >
                             <div className="h-14 w-14 rounded-2xl bg-gray-100" />
                             <div className="mt-5 h-4 w-28 rounded bg-gray-100" />
                             <div className="mt-2 h-3 w-20 rounded bg-gray-100" />
@@ -135,24 +144,28 @@ export default function StaffPage() {
                 </div>
             ) : staff.length === 0 ? (
                 <div className="rounded-[2.5rem] border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
-                    <p className="text-base font-semibold text-gray-700">No staff records found.</p>
-                    <p className="text-sm mt-1 text-gray-500">Invite your first team member to start operations.</p>
+                    <p className="text-base font-semibold text-gray-700">
+                        No access profiles found.
+                    </p>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Create your first provisioning link for Kitchen, Waiter, or Manager access.
+                    </p>
                     <button
                         onClick={() => {
                             setInviteUrl(null);
                             setInviteOpen(true);
                         }}
-                        className="mt-4 h-11 px-5 rounded-xl bg-black text-white text-sm font-bold hover:bg-gray-800 transition-colors"
+                        className="mt-4 h-11 rounded-xl bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-gray-800"
                     >
-                        Invite Staff
+                        Create Provisioning Link
                     </button>
                 </div>
             ) : (
                 <>
                     {viewMode === 'table' ? (
-                        <StaffTable 
-                            staff={staff} 
-                            onEditRole={(member) => {
+                        <StaffTable
+                            staff={staff}
+                            onEditRole={member => {
                                 setSelectedStaff(member);
                                 setRoleDrawerOpen(true);
                             }}
@@ -160,9 +173,9 @@ export default function StaffPage() {
                             updatingId={activeUpdatingId}
                         />
                     ) : (
-                        <StaffGrid 
-                            staff={staff} 
-                            onEditRole={(member) => {
+                        <StaffGrid
+                            staff={staff}
+                            onEditRole={member => {
                                 setSelectedStaff(member);
                                 setRoleDrawerOpen(true);
                             }}
@@ -178,7 +191,7 @@ export default function StaffPage() {
                 loading={inviteLoading}
                 inviteUrl={inviteUrl}
                 onClose={() => setInviteOpen(false)}
-                onInvite={async (payload) => {
+                onInvite={async payload => {
                     await handleInvite(payload);
                 }}
             />

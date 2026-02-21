@@ -5,7 +5,10 @@ import { RadioTower } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { ChannelHealthBoard } from '@/components/merchant/ChannelHealthBoard';
 import { DeliveryPartnerHub } from '@/components/merchant/DeliveryPartnerHub';
-import { OnlineOrderingSettingsPanel, type OnlineOrderingSettings } from '@/components/merchant/OnlineOrderingSettingsPanel';
+import {
+    OnlineOrderingSettingsPanel,
+    type OnlineOrderingSettings,
+} from '@/components/merchant/OnlineOrderingSettingsPanel';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 type ChannelSummary = {
@@ -72,8 +75,14 @@ export default function ChannelsPage() {
 
             const [summaryRes, settingsRes, ordersRes] = await Promise.all([
                 fetch('/api/channels/summary', { method: 'GET', cache: 'no-store' }),
-                fetch('/api/channels/online-ordering/settings', { method: 'GET', cache: 'no-store' }),
-                fetch('/api/channels/delivery/orders?limit=100', { method: 'GET', cache: 'no-store' }),
+                fetch('/api/channels/online-ordering/settings', {
+                    method: 'GET',
+                    cache: 'no-store',
+                }),
+                fetch('/api/channels/delivery/orders?limit=100', {
+                    method: 'GET',
+                    cache: 'no-store',
+                }),
             ]);
 
             const [summaryPayload, settingsPayload, ordersPayload] = await Promise.all([
@@ -86,7 +95,9 @@ export default function ChannelsPage() {
                 throw new Error(summaryPayload?.error ?? 'Failed to load channel summary.');
             }
             if (!settingsRes.ok) {
-                throw new Error(settingsPayload?.error ?? 'Failed to load online ordering settings.');
+                throw new Error(
+                    settingsPayload?.error ?? 'Failed to load online ordering settings.'
+                );
             }
             if (!ordersRes.ok) {
                 throw new Error(ordersPayload?.error ?? 'Failed to load delivery orders.');
@@ -97,7 +108,9 @@ export default function ChannelsPage() {
             setOrders((ordersPayload?.data?.orders ?? []) as ExternalOrder[]);
         } catch (loadError) {
             console.error(loadError);
-            setError(loadError instanceof Error ? loadError.message : 'Failed to load channels data.');
+            setError(
+                loadError instanceof Error ? loadError.message : 'Failed to load channels data.'
+            );
             setSummary(null);
             setOrders([]);
         } finally {
@@ -125,7 +138,10 @@ export default function ChannelsPage() {
             setSettings({ ...defaultSettings, ...(payload?.data ?? {}) });
             toast.success('Online ordering settings updated.');
         } catch (saveError) {
-            const message = saveError instanceof Error ? saveError.message : 'Failed to save online ordering settings.';
+            const message =
+                saveError instanceof Error
+                    ? saveError.message
+                    : 'Failed to save online ordering settings.';
             setSettingsError(message);
             toast.error(message);
         } finally {
@@ -152,9 +168,13 @@ export default function ChannelsPage() {
                 throw new Error(payload?.error ?? 'Failed to connect delivery partner.');
             }
             toast.success('Delivery partner connected.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (connectError) {
-            toast.error(connectError instanceof Error ? connectError.message : 'Failed to connect delivery partner.');
+            toast.error(
+                connectError instanceof Error
+                    ? connectError.message
+                    : 'Failed to connect delivery partner.'
+            );
         } finally {
             setConnecting(false);
         }
@@ -173,9 +193,11 @@ export default function ChannelsPage() {
                 throw new Error(payload?.error ?? 'Failed to acknowledge order.');
             }
             toast.success('External order acknowledged.');
-            setRefreshToken((value) => value + 1);
+            setRefreshToken(value => value + 1);
         } catch (ackError) {
-            toast.error(ackError instanceof Error ? ackError.message : 'Failed to acknowledge order.');
+            toast.error(
+                ackError instanceof Error ? ackError.message : 'Failed to acknowledge order.'
+            );
         } finally {
             setAcknowledgingId(null);
         }
@@ -185,7 +207,9 @@ export default function ChannelsPage() {
         <div className="min-h-screen space-y-6 pb-20">
             <div>
                 <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">Channels</h1>
-                <p className="font-medium text-gray-500">Online ordering settings and delivery integration operations.</p>
+                <p className="font-medium text-gray-500">
+                    Online ordering settings and delivery integration operations.
+                </p>
             </div>
 
             <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
@@ -195,11 +219,7 @@ export default function ChannelsPage() {
                 </div>
             </div>
 
-            <ChannelHealthBoard
-                loading={loading}
-                summary={summary}
-                error={error}
-            />
+            <ChannelHealthBoard loading={loading} summary={summary} error={error} />
 
             <OnlineOrderingSettingsPanel
                 loading={loading}

@@ -13,10 +13,18 @@ function DeviceProvisioningContent() {
     const [loading, setLoading] = useState(false);
 
     const code = searchParams.get('code');
+    const role = (searchParams.get('role') ?? '').toLowerCase();
+    const inviteLabel = searchParams.get('label');
+    const targetModule =
+        role === 'kitchen' || role === 'bar'
+            ? '/kds/display'
+            : role === 'waiter'
+              ? '/pos/mobile'
+              : '/merchant';
 
     // Form State
     const [password, setPassword] = useState('');
-    const [deviceName, setDeviceName] = useState('');
+    const [deviceName, setDeviceName] = useState(inviteLabel ?? '');
 
     useEffect(() => {
         if (!code) {
@@ -32,23 +40,22 @@ function DeviceProvisioningContent() {
         setLoading(true);
 
         try {
-            if (!code) throw new Error("No setup code found");
+            if (!code) throw new Error('No setup code found');
 
             const result = await provisionDevice({
                 code,
                 password,
-                deviceName: deviceName || `Device-${Math.floor(Math.random() * 1000)}`
+                deviceName: deviceName || `Device-${Math.floor(Math.random() * 1000)}`,
             });
 
             if (result.error) {
                 toast.error(result.error);
             } else {
                 toast.success('Device Provisioned Successfully!');
-                // Instant heavy redirect
-                window.location.href = result.redirectTo;
+                window.location.replace(result.redirectTo);
             }
         } catch (err: any) {
-            toast.error(err.message || "Setup failed");
+            toast.error(err.message || 'Setup failed');
         } finally {
             setLoading(false);
         }
@@ -57,7 +64,7 @@ function DeviceProvisioningContent() {
     if (!code) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center p-4">
-                <div className="text-center space-y-4">
+                <div className="space-y-4 text-center">
                     <h1 className="text-2xl font-bold text-red-600">Invalid Link</h1>
                     <p className="text-gray-500">This setup link is missing a code.</p>
                 </div>
@@ -67,32 +74,33 @@ function DeviceProvisioningContent() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-            <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+            <div className="w-full max-w-md space-y-8 rounded-2xl border border-gray-100 bg-white p-8 shadow-xl">
                 {/* Header */}
-                <div className="text-center space-y-2">
-                    <div className="mx-auto h-16 w-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+                <div className="space-y-2 text-center">
+                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
                         <Tablet className="h-8 w-8 text-blue-600" />
                     </div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                        Device Setup
+                        Device Provisioning
                     </h1>
                     <p className="text-sm text-gray-500">
-                        Welcome to the team! Identify this device to get started.
+                        Configure this access key and install the assigned module.
                     </p>
+                    <p className="text-xs font-semibold text-blue-700">Target: {targetModule}</p>
                 </div>
 
                 <form onSubmit={handleSetup} className="space-y-6">
                     <div className="space-y-4">
-                         {/* Device Name Input */}
-                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {/* Device Name Input */}
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-gray-700">
                                 Device Name
                             </label>
                             <Input
                                 type="text"
                                 placeholder="e.g. Kitchen Display 1, Waiter Phone"
                                 value={deviceName}
-                                onChange={(e) => setDeviceName(e.target.value)}
+                                onChange={e => setDeviceName(e.target.value)}
                                 required
                                 className="h-12"
                             />
@@ -100,28 +108,28 @@ function DeviceProvisioningContent() {
 
                         {/* Password / Access Code */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="mb-1 block text-sm font-medium text-gray-700">
                                 Create Access PIN / Password
                             </label>
                             <Input
                                 type="password"
-                                placeholder="••••••••"
+                                placeholder="********"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={e => setPassword(e.target.value)}
                                 required
                                 minLength={6}
                                 className="h-12"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="mt-1 text-xs text-gray-500">
                                 This will be used to unlock this device session.
                             </p>
                         </div>
                     </div>
 
-                    <Button 
-                        type="submit" 
+                    <Button
+                        type="submit"
                         disabled={loading}
-                        className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700"
+                        className="h-12 w-full bg-blue-600 text-base font-semibold hover:bg-blue-700"
                     >
                         {loading ? (
                             <>
@@ -144,12 +152,15 @@ function DeviceProvisioningContent() {
 
 export default function DeviceProvisioningPage() {
     return (
-        <Suspense fallback={
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-        }>
+        <Suspense
+            fallback={
+                <div className="flex h-screen items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+            }
+        >
             <DeviceProvisioningContent />
         </Suspense>
     );
 }
+

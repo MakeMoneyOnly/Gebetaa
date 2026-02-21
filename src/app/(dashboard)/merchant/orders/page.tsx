@@ -33,7 +33,9 @@ type StaffMember = {
 
 const SERVICE_REQUEST_ROW_PREFIX = 'sr_';
 
-function toServiceStatus(queueStatus: string | null): 'pending' | 'in_progress' | 'completed' | null {
+function toServiceStatus(
+    queueStatus: string | null
+): 'pending' | 'in_progress' | 'completed' | null {
     if (queueStatus === 'service_pending') return 'pending';
     if (queueStatus === 'service_in_progress') return 'in_progress';
     if (queueStatus === 'service_completed') return 'completed';
@@ -76,7 +78,7 @@ const filterTabs = [
     { id: 'all', label: 'All Orders' },
     { id: 'pending', label: 'Pending' },
     { id: 'completed', label: 'Completed' },
-    { id: 'cancelled', label: 'Cancelled' }
+    { id: 'cancelled', label: 'Cancelled' },
 ];
 
 export default function OrdersPage() {
@@ -89,7 +91,9 @@ export default function OrdersPage() {
             const savedFilter = localStorage.getItem('orders.activeFilter') ?? 'all';
             const cached = sessionStorage.getItem(`orders.cache.${savedFilter}.`);
             return cached ? JSON.parse(cached) : [];
-        } catch { return []; }
+        } catch {
+            return [];
+        }
     });
     const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>(() => {
         if (typeof window === 'undefined') return [];
@@ -97,7 +101,9 @@ export default function OrdersPage() {
             const savedFilter = localStorage.getItem('orders.activeFilter') ?? 'all';
             const cached = sessionStorage.getItem(`orders.srCache.${savedFilter}.`);
             return cached ? JSON.parse(cached) : [];
-        } catch { return []; }
+        } catch {
+            return [];
+        }
     });
     // Only show skeleton on very first ever load — persisted in sessionStorage so
     // tab switches / minimize-restore never re-trigger it
@@ -119,18 +125,26 @@ export default function OrdersPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
-    const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetailsPayload | null>(null);
-    const [selectedServiceRequest, setSelectedServiceRequest] = useState<ServiceRequest | null>(null);
+    const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetailsPayload | null>(
+        null
+    );
+    const [selectedServiceRequest, setSelectedServiceRequest] = useState<ServiceRequest | null>(
+        null
+    );
     const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null);
     const [loadingEvents, setLoadingEvents] = useState(false);
     const [detailsError, setDetailsError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [actionInfo, setActionInfo] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
-    const [sortKey, setSortKey] = useState<'created_at' | 'table_number' | 'status' | 'total_price'>('created_at');
+    const [sortKey, setSortKey] = useState<
+        'created_at' | 'table_number' | 'status' | 'total_price'
+    >('created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-    const [bulkStatus, setBulkStatus] = useState<'acknowledged' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled'>('acknowledged');
+    const [bulkStatus, setBulkStatus] = useState<
+        'acknowledged' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled'
+    >('acknowledged');
     const [bulkStaffId, setBulkStaffId] = useState('');
     const [staff, setStaff] = useState<StaffMember[]>([]);
     const [bulkLoading, setBulkLoading] = useState(false);
@@ -171,9 +185,11 @@ export default function OrdersPage() {
                 setUpdatingOrderId(orderId);
                 setActionError(null);
                 const previousRequests = serviceRequests;
-                setServiceRequests((prev) =>
-                    prev.map((request) =>
-                        request.id === requestId ? { ...request, status: nextServiceStatus } : request
+                setServiceRequests(prev =>
+                    prev.map(request =>
+                        request.id === requestId
+                            ? { ...request, status: nextServiceStatus }
+                            : request
                     )
                 );
                 const response = await fetch(`/api/service-requests/${requestId}`, {
@@ -185,7 +201,9 @@ export default function OrdersPage() {
                     const payload = await response.json().catch(() => null);
                     setServiceRequests(previousRequests);
                     if (response.status === 409) {
-                        setActionError(payload?.error ?? 'Invalid status transition. Please refresh and retry.');
+                        setActionError(
+                            payload?.error ?? 'Invalid status transition. Please refresh and retry.'
+                        );
                         return;
                     }
                     throw new Error(`Failed to update service request status (${response.status})`);
@@ -194,7 +212,9 @@ export default function OrdersPage() {
             } catch (error) {
                 console.error('Failed to update service request status:', error);
                 setActionError(
-                    error instanceof Error ? error.message : 'Failed to update service request status.'
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to update service request status.'
                 );
                 return;
             } finally {
@@ -212,9 +232,7 @@ export default function OrdersPage() {
             setActionError(null);
             const previousOrders = orders;
             setOrders(prev =>
-                prev.map(order =>
-                    order.id === orderId ? { ...order, status: nextStatus } : order
-                )
+                prev.map(order => (order.id === orderId ? { ...order, status: nextStatus } : order))
             );
             const response = await fetch(`/api/orders/${orderId}/status`, {
                 method: 'PATCH',
@@ -226,14 +244,18 @@ export default function OrdersPage() {
                 const payload = await response.json().catch(() => null);
                 setOrders(previousOrders);
                 if (response.status === 409) {
-                    setActionError(payload?.error ?? 'Invalid status transition. Please refresh and retry.');
+                    setActionError(
+                        payload?.error ?? 'Invalid status transition. Please refresh and retry.'
+                    );
                     return;
                 }
                 throw new Error(`Failed to update order status (${response.status})`);
             }
         } catch (error) {
             console.error('Failed to update order status:', error);
-            setActionError(error instanceof Error ? error.message : 'Failed to update order status.');
+            setActionError(
+                error instanceof Error ? error.message : 'Failed to update order status.'
+            );
         } finally {
             setUpdatingOrderId(null);
         }
@@ -242,7 +264,7 @@ export default function OrdersPage() {
     const handleOpenDetails = async (orderId: string) => {
         if (orderId.startsWith(SERVICE_REQUEST_ROW_PREFIX)) {
             const requestId = orderId.replace(SERVICE_REQUEST_ROW_PREFIX, '');
-            const request = serviceRequests.find((entry) => entry.id === requestId) ?? null;
+            const request = serviceRequests.find(entry => entry.id === requestId) ?? null;
             if (!request) {
                 setDetailsError('Unable to load service request details.');
                 return;
@@ -254,7 +276,7 @@ export default function OrdersPage() {
         }
 
         // Open modal immediately with cached order data — no waiting
-        const cachedOrder = orders.find((o) => o.id === orderId) ?? null;
+        const cachedOrder = orders.find(o => o.id === orderId) ?? null;
         if (cachedOrder) {
             setDetailsError(null);
             setSelectedServiceRequest(null);
@@ -287,107 +309,116 @@ export default function OrdersPage() {
         }
     };
 
-    const fetchOrders = useCallback(async (status: string, search: string) => {
-        if (!user) {
-            setOrders([]);
-            setLoading(false);
-            return;
-        }
-
-        // Abort any previous in-flight request for orders (race condition fix)
-        ordersAbortRef.current?.abort();
-        const controller = new AbortController();
-        ordersAbortRef.current = controller;
-
-        // Seed UI instantly from per-filter cache — no empty flash
-        const cacheKey = `orders.cache.${status}.${search.trim()}`;
-        try {
-            const cached = sessionStorage.getItem(cacheKey);
-            if (cached) setOrders(JSON.parse(cached));
-        } catch {}
-
-        try {
-            const params = new URLSearchParams();
-            if (status !== 'all') {
-                params.set('status', status);
-            }
-            if (search.trim().length > 0) {
-                params.set('search', search.trim());
-            }
-            params.set('limit', '100');
-
-            const response = await fetch(`/api/orders?${params.toString()}`, {
-                method: 'GET',
-                cache: 'no-store',
-                signal: controller.signal,
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch orders (${response.status})`);
+    const fetchOrders = useCallback(
+        async (status: string, search: string) => {
+            if (!user) {
+                setOrders([]);
+                setLoading(false);
+                return;
             }
 
-            const payload = await response.json();
-            // Only replace state when real data arrives — never flash empty
-            const fresh = payload?.data?.orders ?? [];
-            setOrders(fresh);
-            // Write-through cache keyed by filter+search
-            try { sessionStorage.setItem(cacheKey, JSON.stringify(fresh)); } catch {}
-        } catch (error) {
-            if ((error as Error).name === 'AbortError') return; // stale request — ignore
-            console.error('Error fetching orders from API:', error);
-            // Do NOT clear orders on error — keep showing stale data
-        }
-    }, [user]);
+            // Abort any previous in-flight request for orders (race condition fix)
+            ordersAbortRef.current?.abort();
+            const controller = new AbortController();
+            ordersAbortRef.current = controller;
 
-    const fetchServiceRequests = useCallback(async (status: string, search: string) => {
-        if (!user) {
-            setServiceRequests([]);
-            return;
-        }
+            // Seed UI instantly from per-filter cache — no empty flash
+            const cacheKey = `orders.cache.${status}.${search.trim()}`;
+            try {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) setOrders(JSON.parse(cached));
+            } catch {}
 
-        // Abort any previous in-flight SR request (race condition fix)
-        srAbortRef.current?.abort();
-        const controller = new AbortController();
-        srAbortRef.current = controller;
+            try {
+                const params = new URLSearchParams();
+                if (status !== 'all') {
+                    params.set('status', status);
+                }
+                if (search.trim().length > 0) {
+                    params.set('search', search.trim());
+                }
+                params.set('limit', '100');
 
-        // Seed UI instantly from per-filter cache
-        const cacheKey = `orders.srCache.${status}.${search.trim()}`;
-        try {
-            const cached = sessionStorage.getItem(cacheKey);
-            if (cached) setServiceRequests(JSON.parse(cached));
-        } catch {}
+                const response = await fetch(`/api/orders?${params.toString()}`, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    signal: controller.signal,
+                });
 
-        try {
-            const params = new URLSearchParams();
-            if (status !== 'all') {
-                params.set('status', status);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch orders (${response.status})`);
+                }
+
+                const payload = await response.json();
+                // Only replace state when real data arrives — never flash empty
+                const fresh = payload?.data?.orders ?? [];
+                setOrders(fresh);
+                // Write-through cache keyed by filter+search
+                try {
+                    sessionStorage.setItem(cacheKey, JSON.stringify(fresh));
+                } catch {}
+            } catch (error) {
+                if ((error as Error).name === 'AbortError') return; // stale request — ignore
+                console.error('Error fetching orders from API:', error);
+                // Do NOT clear orders on error — keep showing stale data
             }
-            if (search.trim().length > 0) {
-                params.set('search', search.trim());
-            }
-            params.set('limit', '100');
+        },
+        [user]
+    );
 
-            const response = await fetch(`/api/service-requests?${params.toString()}`, {
-                method: 'GET',
-                cache: 'no-store',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to fetch service requests (${response.status})`);
+    const fetchServiceRequests = useCallback(
+        async (status: string, search: string) => {
+            if (!user) {
+                setServiceRequests([]);
+                return;
             }
-            const payload = await response.json();
-            // Only replace state when real data arrives — never flash empty
-            const fresh = payload?.data?.requests ?? [];
-            setServiceRequests(fresh);
-            // Write-through cache keyed by filter+search
-            try { sessionStorage.setItem(cacheKey, JSON.stringify(fresh)); } catch {}
-        } catch (error) {
-            if ((error as Error).name === 'AbortError') return; // stale request — ignore
-            console.error('Error fetching service requests from API:', error);
-            // Do NOT clear on error — keep showing stale data
-        }
-    }, [user]);
 
+            // Abort any previous in-flight SR request (race condition fix)
+            srAbortRef.current?.abort();
+            const controller = new AbortController();
+            srAbortRef.current = controller;
+
+            // Seed UI instantly from per-filter cache
+            const cacheKey = `orders.srCache.${status}.${search.trim()}`;
+            try {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) setServiceRequests(JSON.parse(cached));
+            } catch {}
+
+            try {
+                const params = new URLSearchParams();
+                if (status !== 'all') {
+                    params.set('status', status);
+                }
+                if (search.trim().length > 0) {
+                    params.set('search', search.trim());
+                }
+                params.set('limit', '100');
+
+                const response = await fetch(`/api/service-requests?${params.toString()}`, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    signal: controller.signal,
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch service requests (${response.status})`);
+                }
+                const payload = await response.json();
+                // Only replace state when real data arrives — never flash empty
+                const fresh = payload?.data?.requests ?? [];
+                setServiceRequests(fresh);
+                // Write-through cache keyed by filter+search
+                try {
+                    sessionStorage.setItem(cacheKey, JSON.stringify(fresh));
+                } catch {}
+            } catch (error) {
+                if ((error as Error).name === 'AbortError') return; // stale request — ignore
+                console.error('Error fetching service requests from API:', error);
+                // Do NOT clear on error — keep showing stale data
+            }
+        },
+        [user]
+    );
 
     const fetchStaff = useCallback(async () => {
         if (!user) return;
@@ -398,7 +429,9 @@ export default function OrdersPage() {
             });
             if (!response.ok) return;
             const payload = await response.json();
-            setStaff((payload?.data?.staff ?? []).filter((member: StaffMember) => member.is_active));
+            setStaff(
+                (payload?.data?.staff ?? []).filter((member: StaffMember) => member.is_active)
+            );
         } catch {
             setStaff([]);
         }
@@ -416,14 +449,18 @@ export default function OrdersPage() {
         if (storedView === 'table' || storedView === 'cards' || storedView === 'kanban') {
             setViewMode(storedView);
         }
-        if (storedSortKey === 'created_at' || storedSortKey === 'table_number' || storedSortKey === 'status' || storedSortKey === 'total_price') {
+        if (
+            storedSortKey === 'created_at' ||
+            storedSortKey === 'table_number' ||
+            storedSortKey === 'status' ||
+            storedSortKey === 'total_price'
+        ) {
             setSortKey(storedSortKey);
         }
         if (storedSortDirection === 'asc' || storedSortDirection === 'desc') {
             setSortDirection(storedSortDirection);
         }
     }, []);
-
 
     useEffect(() => {
         window.localStorage.setItem('orders.activeFilter', activeFilter);
@@ -490,7 +527,15 @@ export default function OrdersPage() {
         } else {
             setLoading(false);
         }
-    }, [activeFilter, debouncedSearchTerm, fetchOrders, fetchServiceRequests, fetchStaff, user, roleLoading]);
+    }, [
+        activeFilter,
+        debouncedSearchTerm,
+        fetchOrders,
+        fetchServiceRequests,
+        fetchStaff,
+        user,
+        roleLoading,
+    ]);
 
     // Silently refresh when the tab becomes visible again — enterprise pattern.
     // Uses its own fetch path so it NEVER aborts the main useEffect fetch.
@@ -510,20 +555,27 @@ export default function OrdersPage() {
 
                 const [ordersRes, srRes] = await Promise.all([
                     fetch(`/api/orders?${params.toString()}`, { method: 'GET', cache: 'no-store' }),
-                    fetch(`/api/service-requests?${params.toString()}`, { method: 'GET', cache: 'no-store' }),
+                    fetch(`/api/service-requests?${params.toString()}`, {
+                        method: 'GET',
+                        cache: 'no-store',
+                    }),
                 ]);
 
                 if (ordersRes.ok) {
                     const payload = await ordersRes.json();
                     const fresh = payload?.data?.orders ?? [];
                     setOrders(fresh);
-                    try { sessionStorage.setItem(ordersCacheKey, JSON.stringify(fresh)); } catch {}
+                    try {
+                        sessionStorage.setItem(ordersCacheKey, JSON.stringify(fresh));
+                    } catch {}
                 }
                 if (srRes.ok) {
                     const payload = await srRes.json();
                     const fresh = payload?.data?.requests ?? [];
                     setServiceRequests(fresh);
-                    try { sessionStorage.setItem(srCacheKey, JSON.stringify(fresh)); } catch {}
+                    try {
+                        sessionStorage.setItem(srCacheKey, JSON.stringify(fresh));
+                    } catch {}
                 }
             } catch {
                 // Network error — keep showing stale data, don't clear anything
@@ -534,19 +586,14 @@ export default function OrdersPage() {
         return () => document.removeEventListener('visibilitychange', onVisibilityChange);
     }, [activeFilter, debouncedSearchTerm, user, roleLoading]);
 
-
     // Realtime subscription
     useEffect(() => {
         const channel = supabase
             .channel('orders-realtime')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'orders' },
-                () => {
-                    // Re-fetch to get full sorting/filtering correctly
-                    fetchOrders(activeFilter, debouncedSearchTerm);
-                }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                // Re-fetch to get full sorting/filtering correctly
+                fetchOrders(activeFilter, debouncedSearchTerm);
+            })
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'service_requests' },
@@ -565,7 +612,7 @@ export default function OrdersPage() {
         () => serviceRequests.map(serviceRequestToQueueOrder),
         [serviceRequests]
     );
-    
+
     const queueRows = useMemo(
         () => [...orders, ...serviceRequestRows],
         [orders, serviceRequestRows]
@@ -591,14 +638,14 @@ export default function OrdersPage() {
                 sortKey === 'total_price'
                     ? Number(a.total_price ?? 0)
                     : sortKey === 'created_at'
-                        ? new Date(a.created_at ?? 0).getTime()
-                        : String(a[sortKey] ?? '').toLowerCase();
+                      ? new Date(a.created_at ?? 0).getTime()
+                      : String(a[sortKey] ?? '').toLowerCase();
             const bValue =
                 sortKey === 'total_price'
                     ? Number(b.total_price ?? 0)
                     : sortKey === 'created_at'
-                        ? new Date(b.created_at ?? 0).getTime()
-                        : String(b[sortKey] ?? '').toLowerCase();
+                      ? new Date(b.created_at ?? 0).getTime()
+                      : String(b[sortKey] ?? '').toLowerCase();
 
             if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
             if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
@@ -618,8 +665,8 @@ export default function OrdersPage() {
     useEffect(() => {
         const visibleIds = new Set(
             queueOrders
-                .filter((order) => !order.id.startsWith(SERVICE_REQUEST_ROW_PREFIX))
-                .map((order) => order.id)
+                .filter(order => !order.id.startsWith(SERVICE_REQUEST_ROW_PREFIX))
+                .map(order => order.id)
         );
         setSelectedOrderIds(prev => {
             // Only update if there are selected items that are no longer visible
@@ -632,21 +679,21 @@ export default function OrdersPage() {
     }, [queueOrders]);
 
     const toggleOrderSelection = (orderId: string) => {
-        setSelectedOrderIds((prev) =>
-            prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+        setSelectedOrderIds(prev =>
+            prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
         );
     };
 
     const toggleAllVisibleSelection = () => {
         const visibleIds = queueOrders
-            .filter((order) => !order.id.startsWith(SERVICE_REQUEST_ROW_PREFIX))
-            .map((order) => order.id);
-        const allVisibleSelected = visibleIds.every((id) => selectedOrderIds.includes(id));
+            .filter(order => !order.id.startsWith(SERVICE_REQUEST_ROW_PREFIX))
+            .map(order => order.id);
+        const allVisibleSelected = visibleIds.every(id => selectedOrderIds.includes(id));
         if (allVisibleSelected) {
-            setSelectedOrderIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+            setSelectedOrderIds(prev => prev.filter(id => !visibleIds.includes(id)));
             return;
         }
-        setSelectedOrderIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+        setSelectedOrderIds(prev => Array.from(new Set([...prev, ...visibleIds])));
     };
 
     const applyBulkStatus = async () => {
@@ -668,7 +715,9 @@ export default function OrdersPage() {
                 setActionError(payload?.error ?? `Bulk status failed (${response.status})`);
                 return;
             }
-            setActionInfo(`Updated ${payload?.data?.updated_count ?? selectedOrderIds.length} orders to ${bulkStatus}.`);
+            setActionInfo(
+                `Updated ${payload?.data?.updated_count ?? selectedOrderIds.length} orders to ${bulkStatus}.`
+            );
             setSelectedOrderIds([]);
             fetchOrders(activeFilter, debouncedSearchTerm);
         } catch (error) {
@@ -685,7 +734,7 @@ export default function OrdersPage() {
             setActionError(null);
             setActionInfo(null);
             const results = await Promise.all(
-                selectedOrderIds.map(async (orderId) => {
+                selectedOrderIds.map(async orderId => {
                     const response = await fetch(`/api/orders/${orderId}/assign`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -714,7 +763,7 @@ export default function OrdersPage() {
 
     if (loading) {
         return (
-            <div className="space-y-8 pb-20 min-h-screen">
+            <div className="min-h-screen space-y-8 pb-20">
                 {/* Header — mirrors the real header */}
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
@@ -729,39 +778,43 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Filter pills — mirrors the real tabs */}
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
                     {[120, 90, 110, 100].map((w, i) => (
-                        <Skeleton key={i} className="h-10 rounded-xl flex-shrink-0" style={{ width: w }} />
+                        <Skeleton
+                            key={i}
+                            className="h-10 flex-shrink-0 rounded-xl"
+                            style={{ width: w }}
+                        />
                     ))}
                 </div>
 
                 {/* Queue table skeleton — mirrors the real table exactly */}
                 <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-gray-100">
                     {/* Table header */}
-                    <div className="flex items-center gap-4 px-5 py-4 border-b border-gray-100">
+                    <div className="flex items-center gap-4 border-b border-gray-100 px-5 py-4">
                         <Skeleton className="h-4 w-4 rounded" />
                         <Skeleton className="h-3 w-12 rounded" />
-                        <Skeleton className="h-3 w-16 rounded ml-8" />
-                        <Skeleton className="h-3 w-12 rounded ml-8" />
-                        <Skeleton className="h-3 w-12 rounded ml-8" />
-                        <Skeleton className="h-3 w-16 rounded ml-auto" />
+                        <Skeleton className="ml-8 h-3 w-16 rounded" />
+                        <Skeleton className="ml-8 h-3 w-12 rounded" />
+                        <Skeleton className="ml-8 h-3 w-12 rounded" />
+                        <Skeleton className="ml-auto h-3 w-16 rounded" />
                     </div>
                     {/* Table rows */}
-                    {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                    {[1, 2, 3, 4, 5, 6, 7].map(i => (
                         <div
                             key={i}
-                            className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0"
+                            className="flex items-center gap-4 border-b border-gray-50 px-5 py-4 last:border-0"
                         >
                             {/* Checkbox */}
-                            <Skeleton className="h-4 w-4 rounded flex-shrink-0" />
+                            <Skeleton className="h-4 w-4 flex-shrink-0 rounded" />
                             {/* Table number */}
-                            <Skeleton className="h-8 w-8 rounded-xl flex-shrink-0" />
+                            <Skeleton className="h-8 w-8 flex-shrink-0 rounded-xl" />
                             {/* Status pill */}
-                            <Skeleton className="h-6 w-24 rounded-full flex-shrink-0 ml-4" />
+                            <Skeleton className="ml-4 h-6 w-24 flex-shrink-0 rounded-full" />
                             {/* Time */}
-                            <Skeleton className="h-4 w-20 rounded flex-shrink-0 ml-4" />
+                            <Skeleton className="ml-4 h-4 w-20 flex-shrink-0 rounded" />
                             {/* Total */}
-                            <Skeleton className="h-4 w-16 rounded flex-shrink-0 ml-4" />
+                            <Skeleton className="ml-4 h-4 w-16 flex-shrink-0 rounded" />
                             {/* Actions */}
                             <div className="ml-auto flex gap-2">
                                 <Skeleton className="h-9 w-20 rounded-xl" />
@@ -775,26 +828,28 @@ export default function OrdersPage() {
     }
 
     return (
-        <div className="space-y-8 pb-20 min-h-screen">
+        <div className="min-h-screen space-y-8 pb-20">
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Orders</h1>
-                    <p className="text-gray-500 font-medium">Manage and track your restaurant orders.</p>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Orders</h1>
+                    <p className="font-medium text-gray-500">
+                        Manage and track your restaurant orders.
+                    </p>
                 </div>
                 <div className="flex gap-3">
-                    <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    <div className="group relative">
+                        <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-hover:text-gray-600" />
                         <input
                             id="orders-search-input"
                             type="text"
                             placeholder="Search orders..."
                             value={searchTerm}
-                            onChange={(event) => setSearchTerm(event.target.value)}
-                            className="pl-11 pr-4 h-12 w-64 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all outline-none"
+                            onChange={event => setSearchTerm(event.target.value)}
+                            className="h-12 w-64 rounded-xl border border-gray-200 bg-gray-50 pr-4 pl-11 text-sm font-medium transition-all outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-900/10 focus:outline-none"
                         />
                     </div>
-                    <button className="h-12 px-5 border border-gray-300 bg-white text-gray-800 rounded-xl flex items-center gap-2 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-bold text-sm">
+                    <button className="flex h-12 items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 text-sm font-bold text-gray-800 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50">
                         <Filter className="h-4 w-4" />
                         Filter
                     </button>
@@ -802,10 +857,10 @@ export default function OrdersPage() {
                         <button
                             onClick={() => setViewMode('table')}
                             className={cn(
-                                "h-9 px-4 rounded-lg text-xs font-bold transition-all duration-200",
+                                'h-9 rounded-lg px-4 text-xs font-bold transition-all duration-200',
                                 viewMode === 'table'
-                                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80"
-                                    : "text-gray-500 hover:text-gray-700"
+                                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80'
+                                    : 'text-gray-500 hover:text-gray-700'
                             )}
                         >
                             Queue
@@ -813,10 +868,10 @@ export default function OrdersPage() {
                         <button
                             onClick={() => setViewMode('kanban')}
                             className={cn(
-                                "h-9 px-4 rounded-lg text-xs font-bold transition-all duration-200",
+                                'h-9 rounded-lg px-4 text-xs font-bold transition-all duration-200',
                                 viewMode === 'kanban'
-                                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80"
-                                    : "text-gray-500 hover:text-gray-700"
+                                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80'
+                                    : 'text-gray-500 hover:text-gray-700'
                             )}
                         >
                             Kanban
@@ -824,10 +879,10 @@ export default function OrdersPage() {
                         <button
                             onClick={() => setViewMode('cards')}
                             className={cn(
-                                "h-9 px-4 rounded-lg text-xs font-bold transition-all duration-200",
+                                'h-9 rounded-lg px-4 text-xs font-bold transition-all duration-200',
                                 viewMode === 'cards'
-                                    ? "bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80"
-                                    : "text-gray-500 hover:text-gray-700"
+                                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80'
+                                    : 'text-gray-500 hover:text-gray-700'
                             )}
                         >
                             Cards
@@ -837,16 +892,16 @@ export default function OrdersPage() {
             </div>
 
             {/* Status Filters (Matches Skeleton) */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {filterTabs.map((tab) => (
+            <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
+                {filterTabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveFilter(tab.id)}
                         className={cn(
-                            "h-10 px-5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200",
+                            'h-10 rounded-xl px-5 text-sm font-bold whitespace-nowrap transition-all duration-200',
                             activeFilter === tab.id
-                                ? "bg-black text-white shadow-sm"
-                                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800"
+                                ? 'bg-black text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800'
                         )}
                     >
                         {tab.label}
@@ -856,12 +911,14 @@ export default function OrdersPage() {
 
             {/* Orders List */}
             {queueOrders.length === 0 ? (
-                <div className="col-span-full p-12 text-center bg-white rounded-[2rem] shadow-sm flex flex-col items-center justify-center min-h-[400px]">
-                    <div className="h-20 w-20 bg-gray-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm">
+                <div className="col-span-full flex min-h-[400px] flex-col items-center justify-center rounded-[2rem] bg-white p-12 text-center shadow-sm">
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gray-50 shadow-sm">
                         <Utensils className="h-8 w-8 text-gray-400" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">No orders found</h3>
-                    <p className="text-gray-500 font-medium text-lg">Try changing the filter or search term.</p>
+                    <h3 className="mb-2 text-2xl font-bold text-gray-900">No orders found</h3>
+                    <p className="text-lg font-medium text-gray-500">
+                        Try changing the filter or search term.
+                    </p>
                 </div>
             ) : viewMode === 'table' ? (
                 <OrdersQueueTable
@@ -890,132 +947,189 @@ export default function OrdersPage() {
                     onToggleOrder={toggleOrderSelection}
                 />
             ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {queueOrders.length === 0 ? (
-                    <div className="col-span-full p-12 text-center bg-white rounded-[2rem] shadow-sm flex flex-col items-center justify-center min-h-[400px]">
-                        <div className="h-20 w-20 bg-gray-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm">
-                            <Utensils className="h-8 w-8 text-gray-400" />
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {queueOrders.length === 0 ? (
+                        <div className="col-span-full flex min-h-[400px] flex-col items-center justify-center rounded-[2rem] bg-white p-12 text-center shadow-sm">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gray-50 shadow-sm">
+                                <Utensils className="h-8 w-8 text-gray-400" />
+                            </div>
+                            <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                                No orders found
+                            </h3>
+                            <p className="text-lg font-medium text-gray-500">
+                                Try changing the filter or search term.
+                            </p>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">No orders found</h3>
-                        <p className="text-gray-500 font-medium text-lg">Try changing the filter or search term.</p>
-                    </div>
-                ) : (
-                    queueOrders.map((order) => {
-                        const isServiceRequest = order.id.startsWith(SERVICE_REQUEST_ROW_PREFIX);
-                        let statusColor = "bg-blue-50 text-blue-700 ring-blue-200/60";
-                        if (order.status === 'completed' || order.status === 'service_completed') statusColor = "bg-emerald-50 text-emerald-700 ring-emerald-200/60";
-                        else if (order.status === 'pending' || order.status === 'service_pending') statusColor = "bg-amber-50 text-amber-700 ring-amber-200/60";
-                        else if (order.status === 'cancelled') statusColor = "bg-red-50 text-red-700 ring-red-200/60";
-                        else if (order.status === 'ready') statusColor = "bg-green-50 text-green-700 ring-green-200/60";
-                        else if (order.status === 'preparing' || order.status === 'acknowledged' || order.status === 'service_in_progress') statusColor = "bg-orange-50 text-orange-700 ring-orange-200/60";
+                    ) : (
+                        queueOrders.map(order => {
+                            const isServiceRequest = order.id.startsWith(
+                                SERVICE_REQUEST_ROW_PREFIX
+                            );
+                            let statusColor = 'bg-blue-50 text-blue-700 ring-blue-200/60';
+                            if (
+                                order.status === 'completed' ||
+                                order.status === 'service_completed'
+                            )
+                                statusColor = 'bg-emerald-50 text-emerald-700 ring-emerald-200/60';
+                            else if (
+                                order.status === 'pending' ||
+                                order.status === 'service_pending'
+                            )
+                                statusColor = 'bg-amber-50 text-amber-700 ring-amber-200/60';
+                            else if (order.status === 'cancelled')
+                                statusColor = 'bg-red-50 text-red-700 ring-red-200/60';
+                            else if (order.status === 'ready')
+                                statusColor = 'bg-green-50 text-green-700 ring-green-200/60';
+                            else if (
+                                order.status === 'preparing' ||
+                                order.status === 'acknowledged' ||
+                                order.status === 'service_in_progress'
+                            )
+                                statusColor = 'bg-orange-50 text-orange-700 ring-orange-200/60';
 
-                        const nextStatus = getNextStatus(order.status);
-                        const isUpdating = updatingOrderId === order.id;
-                        const isSelected = !isServiceRequest && selectedOrderIds.includes(order.id);
+                            const nextStatus = getNextStatus(order.status);
+                            const isUpdating = updatingOrderId === order.id;
+                            const isSelected =
+                                !isServiceRequest && selectedOrderIds.includes(order.id);
 
-                        return (
-                            <div
-                                key={order.id}
-                                className={cn(
-                                    "group relative bg-white rounded-[2rem] p-4 flex flex-col gap-4 min-h-72 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden",
-                                    isSelected ? "ring-2 ring-black/10" : "ring-1 ring-gray-100"
-                                )}
-                            >
-                                {/* Top image-like area — status badge overlay, like Menu cards */}
-                                <div className="relative w-full h-36 rounded-[1.5rem] overflow-hidden bg-gray-50 flex-shrink-0 flex items-center justify-center">
-                                    {/* Decorative background */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100" />
-                                    {/* Big table number centered */}
-                                    <span className="relative text-6xl font-black text-gray-200 select-none tracking-tighter">
-                                        {order.table_number || '?'}
-                                    </span>
-                                    {/* Status badge top-left like Menu's In Stock badge */}
-                                    <div className="absolute top-3 left-3">
-                                        <span className={cn(
-                                            "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide backdrop-blur-md ring-1",
-                                            statusColor
-                                        )}>
-                                            {(order.status || '').replace('service_', '')}
+                            return (
+                                <div
+                                    key={order.id}
+                                    className={cn(
+                                        'group relative flex min-h-72 flex-col gap-4 overflow-hidden rounded-[2rem] bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-lg',
+                                        isSelected ? 'ring-2 ring-black/10' : 'ring-1 ring-gray-100'
+                                    )}
+                                >
+                                    {/* Top image-like area — status badge overlay, like Menu cards */}
+                                    <div className="relative flex h-36 w-full flex-shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-gray-50">
+                                        {/* Decorative background */}
+                                        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100" />
+                                        {/* Big table number centered */}
+                                        <span className="relative text-6xl font-black tracking-tighter text-gray-200 select-none">
+                                            {order.table_number || '?'}
                                         </span>
-                                    </div>
-                                    {/* Service request badge top-right */}
-                                    {isServiceRequest ? (
-                                        <div className="absolute top-3 right-3">
-                                            <span className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-200/60">
-                                                SR
+                                        {/* Status badge top-left like Menu's In Stock badge */}
+                                        <div className="absolute top-3 left-3">
+                                            <span
+                                                className={cn(
+                                                    'rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase ring-1 backdrop-blur-md',
+                                                    statusColor
+                                                )}
+                                            >
+                                                {(order.status || '').replace('service_', '')}
                                             </span>
                                         </div>
-                                    ) : (
-                                        <div className="absolute top-3 right-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => toggleOrderSelection(order.id)}
-                                                className="h-4 w-4 rounded border-gray-300 accent-gray-800"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Info — like Menu card name/price row */}
-                                <div className="space-y-1">
-                                    <div className="flex justify-between items-start gap-2">
-                                        <div>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Table</p>
-                                            <h4 className="font-bold text-gray-900 text-xl leading-tight">{order.table_number || 'N/A'}</h4>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
-                                            <p className="font-bold text-gray-900 whitespace-nowrap">
-                                                {isServiceRequest
-                                                    ? (serviceRequests.find((r) => `${SERVICE_REQUEST_ROW_PREFIX}${r.id}` === order.id)?.notes || 'Request')
-                                                    : `${order.total_price} ETB`}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <p className={cn(
-                                        "text-xs font-semibold",
-                                        (() => {
-                                            const age = order.created_at ? Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000)) : 0;
-                                            if (age >= 30) return "text-red-500";
-                                            if (age >= 15) return "text-orange-500";
-                                            return "text-gray-400";
-                                        })()
-                                    )}>
-                                        {order.created_at ? new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
-                                    </p>
-                                </div>
-
-                                {/* Action Buttons — like Menu card Inline Edit / Advanced */}
-                                <div className="mt-auto flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleOpenDetails(order.id)}
-                                        className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-all duration-200 inline-flex items-center gap-1"
-                                    >
-                                        {loadingOrderId === order.id ? 'Loading…' : 'Details'}
-                                    </button>
-                                    <button
-                                        disabled={!nextStatus || isUpdating}
-                                        onClick={() => handleStatusUpdate(order.id, order.status)}
-                                        className={cn(
-                                            "h-9 px-3 rounded-xl text-xs font-semibold transition-all duration-200",
-                                            !nextStatus
-                                                ? "bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-100"
-                                                : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                        {/* Service request badge top-right */}
+                                        {isServiceRequest ? (
+                                            <div className="absolute top-3 right-3">
+                                                <span className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-200/60">
+                                                    SR
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="absolute top-3 right-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => toggleOrderSelection(order.id)}
+                                                    className="h-4 w-4 rounded border-gray-300 accent-gray-800"
+                                                />
+                                            </div>
                                         )}
-                                    >
-                                        {isUpdating
-                                            ? 'Updating…'
-                                            : nextStatus
-                                                ? nextStatus.replace('service_', '').replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-                                                : 'Done'}
-                                    </button>
+                                    </div>
+
+                                    {/* Info — like Menu card name/price row */}
+                                    <div className="space-y-1">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                                <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                                                    Table
+                                                </p>
+                                                <h4 className="text-xl leading-tight font-bold text-gray-900">
+                                                    {order.table_number || 'N/A'}
+                                                </h4>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                                                    Total
+                                                </p>
+                                                <p className="font-bold whitespace-nowrap text-gray-900">
+                                                    {isServiceRequest
+                                                        ? serviceRequests.find(
+                                                              r =>
+                                                                  `${SERVICE_REQUEST_ROW_PREFIX}${r.id}` ===
+                                                                  order.id
+                                                          )?.notes || 'Request'
+                                                        : `${order.total_price} ETB`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p
+                                            className={cn(
+                                                'text-xs font-semibold',
+                                                (() => {
+                                                    const age = order.created_at
+                                                        ? Math.max(
+                                                              0,
+                                                              Math.floor(
+                                                                  (Date.now() -
+                                                                      new Date(
+                                                                          order.created_at
+                                                                      ).getTime()) /
+                                                                      60000
+                                                              )
+                                                          )
+                                                        : 0;
+                                                    if (age >= 30) return 'text-red-500';
+                                                    if (age >= 15) return 'text-orange-500';
+                                                    return 'text-gray-400';
+                                                })()
+                                            )}
+                                        >
+                                            {order.created_at
+                                                ? new Date(order.created_at).toLocaleTimeString(
+                                                      [],
+                                                      { hour: '2-digit', minute: '2-digit' }
+                                                  )
+                                                : 'N/A'}
+                                        </p>
+                                    </div>
+
+                                    {/* Action Buttons — like Menu card Inline Edit / Advanced */}
+                                    <div className="mt-auto flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleOpenDetails(order.id)}
+                                            className="inline-flex h-9 items-center gap-1 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50"
+                                        >
+                                            {loadingOrderId === order.id ? 'Loading…' : 'Details'}
+                                        </button>
+                                        <button
+                                            disabled={!nextStatus || isUpdating}
+                                            onClick={() =>
+                                                handleStatusUpdate(order.id, order.status)
+                                            }
+                                            className={cn(
+                                                'h-9 rounded-xl px-3 text-xs font-semibold transition-all duration-200',
+                                                !nextStatus
+                                                    ? 'cursor-not-allowed border border-gray-100 bg-gray-50 text-gray-400'
+                                                    : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                            )}
+                                        >
+                                            {isUpdating
+                                                ? 'Updating…'
+                                                : nextStatus
+                                                  ? nextStatus
+                                                        .replace('service_', '')
+                                                        .replace('_', ' ')
+                                                        .replace(/\b\w/g, c => c.toUpperCase())
+                                                  : 'Done'}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })
-                )}
-            </div>
+                            );
+                        })
+                    )}
+                </div>
             )}
 
             <BulkActionBar
@@ -1031,70 +1145,90 @@ export default function OrdersPage() {
                 loading={bulkLoading}
             />
 
-
             {selectedOrderDetails?.order && (
-                <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl ring-1 ring-gray-100 p-6">
-                        <div className="flex items-start justify-between mb-5">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-gray-100">
+                        <div className="mb-5 flex items-start justify-between">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900">
-                                    Order #{selectedOrderDetails.order.order_number || selectedOrderDetails.order.id.slice(0, 8)}
+                                    Order #
+                                    {selectedOrderDetails.order.order_number ||
+                                        selectedOrderDetails.order.id.slice(0, 8)}
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-0.5">Table {selectedOrderDetails.order.table_number || 'N/A'}</p>
+                                <p className="mt-0.5 text-sm text-gray-500">
+                                    Table {selectedOrderDetails.order.table_number || 'N/A'}
+                                </p>
                             </div>
                             <button
                                 onClick={() => setSelectedOrderDetails(null)}
-                                className="h-9 w-9 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 flex items-center justify-center transition-colors"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
                         <div className="space-y-3 text-sm">
-                            <div className="flex justify-between py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Status</span>
-                                <span className="font-bold text-gray-900">{selectedOrderDetails.order.status || 'N/A'}</span>
+                            <div className="flex justify-between border-b border-gray-50 py-2">
+                                <span className="font-medium text-gray-500">Status</span>
+                                <span className="font-bold text-gray-900">
+                                    {selectedOrderDetails.order.status || 'N/A'}
+                                </span>
                             </div>
-                            <div className="flex justify-between py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Total</span>
-                                <span className="font-bold text-gray-900">{selectedOrderDetails.order.total_price} ETB</span>
+                            <div className="flex justify-between border-b border-gray-50 py-2">
+                                <span className="font-medium text-gray-500">Total</span>
+                                <span className="font-bold text-gray-900">
+                                    {selectedOrderDetails.order.total_price} ETB
+                                </span>
                             </div>
-                            <div className="flex justify-between py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Created</span>
+                            <div className="flex justify-between border-b border-gray-50 py-2">
+                                <span className="font-medium text-gray-500">Created</span>
                                 <span className="font-bold text-gray-900">
                                     {selectedOrderDetails.order.created_at
-                                        ? new Date(selectedOrderDetails.order.created_at).toLocaleString()
+                                        ? new Date(
+                                              selectedOrderDetails.order.created_at
+                                          ).toLocaleString()
                                         : 'N/A'}
                                 </span>
                             </div>
                             <div className="py-2">
-                                <p className="text-gray-500 font-medium mb-2">Notes</p>
-                                <p className="font-medium text-gray-800 bg-gray-50 rounded-xl p-3 text-sm">
+                                <p className="mb-2 font-medium text-gray-500">Notes</p>
+                                <p className="rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-800">
                                     {selectedOrderDetails.order.notes || 'No notes'}
                                 </p>
                             </div>
                             <div className="py-2">
-                                <div className="flex items-center justify-between mb-2">
-                                    <p className="text-gray-500 font-medium">Timeline</p>
+                                <div className="mb-2 flex items-center justify-between">
+                                    <p className="font-medium text-gray-500">Timeline</p>
                                     {loadingEvents && (
-                                        <span className="text-[10px] text-gray-400 animate-pulse">Loading…</span>
+                                        <span className="animate-pulse text-[10px] text-gray-400">
+                                            Loading…
+                                        </span>
                                     )}
                                 </div>
-                                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                                    {loadingEvents && (selectedOrderDetails.events ?? []).length === 0 ? (
+                                <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                                    {loadingEvents &&
+                                    (selectedOrderDetails.events ?? []).length === 0 ? (
                                         <div className="space-y-2">
-                                            <div className="h-10 rounded-xl bg-gray-100 animate-pulse" />
-                                            <div className="h-10 rounded-xl bg-gray-100 animate-pulse" />
+                                            <div className="h-10 animate-pulse rounded-xl bg-gray-100" />
+                                            <div className="h-10 animate-pulse rounded-xl bg-gray-100" />
                                         </div>
                                     ) : (selectedOrderDetails.events ?? []).length === 0 ? (
-                                        <p className="text-xs text-gray-400">No timeline events yet.</p>
+                                        <p className="text-xs text-gray-400">
+                                            No timeline events yet.
+                                        </p>
                                     ) : (
-                                        selectedOrderDetails.events.map((event) => (
-                                            <div key={event.id} className="rounded-xl bg-gray-50 px-3 py-2.5">
+                                        selectedOrderDetails.events.map(event => (
+                                            <div
+                                                key={event.id}
+                                                className="rounded-xl bg-gray-50 px-3 py-2.5"
+                                            >
                                                 <p className="text-xs font-bold text-gray-700">
-                                                    {event.from_status ? `${event.from_status} → ` : ''}{event.to_status ?? event.event_type}
+                                                    {event.from_status
+                                                        ? `${event.from_status} → `
+                                                        : ''}
+                                                    {event.to_status ?? event.event_type}
                                                 </p>
-                                                <p className="text-[11px] text-gray-400 mt-0.5">
+                                                <p className="mt-0.5 text-[11px] text-gray-400">
                                                     {new Date(event.created_at).toLocaleString()}
                                                 </p>
                                             </div>
@@ -1108,43 +1242,51 @@ export default function OrdersPage() {
             )}
 
             {selectedServiceRequest && (
-                <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl ring-1 ring-gray-100 p-6">
-                        <div className="flex items-start justify-between mb-5">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-gray-100">
+                        <div className="mb-5 flex items-start justify-between">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900">
                                     Service Request #{selectedServiceRequest.id.slice(0, 8)}
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-0.5">Table {selectedServiceRequest.table_number || 'N/A'}</p>
+                                <p className="mt-0.5 text-sm text-gray-500">
+                                    Table {selectedServiceRequest.table_number || 'N/A'}
+                                </p>
                             </div>
                             <button
                                 onClick={() => setSelectedServiceRequest(null)}
-                                className="h-9 w-9 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 flex items-center justify-center transition-colors"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
                         <div className="space-y-3 text-sm">
-                            <div className="flex justify-between py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Request Type</span>
-                                <span className="font-bold text-gray-900 capitalize">{selectedServiceRequest.request_type}</span>
+                            <div className="flex justify-between border-b border-gray-50 py-2">
+                                <span className="font-medium text-gray-500">Request Type</span>
+                                <span className="font-bold text-gray-900 capitalize">
+                                    {selectedServiceRequest.request_type}
+                                </span>
                             </div>
-                            <div className="flex justify-between py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Status</span>
-                                <span className="font-bold text-gray-900">{selectedServiceRequest.status || 'N/A'}</span>
+                            <div className="flex justify-between border-b border-gray-50 py-2">
+                                <span className="font-medium text-gray-500">Status</span>
+                                <span className="font-bold text-gray-900">
+                                    {selectedServiceRequest.status || 'N/A'}
+                                </span>
                             </div>
-                            <div className="flex justify-between py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Created</span>
+                            <div className="flex justify-between border-b border-gray-50 py-2">
+                                <span className="font-medium text-gray-500">Created</span>
                                 <span className="font-bold text-gray-900">
                                     {selectedServiceRequest.created_at
-                                        ? new Date(selectedServiceRequest.created_at).toLocaleString()
+                                        ? new Date(
+                                              selectedServiceRequest.created_at
+                                          ).toLocaleString()
                                         : 'N/A'}
                                 </span>
                             </div>
                             <div className="py-2">
-                                <p className="text-gray-500 font-medium mb-2">Notes</p>
-                                <p className="font-medium text-gray-800 bg-gray-50 rounded-xl p-3 text-sm">
+                                <p className="mb-2 font-medium text-gray-500">Notes</p>
+                                <p className="rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-800">
                                     {selectedServiceRequest.notes || 'No notes'}
                                 </p>
                             </div>
@@ -1154,17 +1296,17 @@ export default function OrdersPage() {
             )}
 
             {detailsError && !selectedOrderDetails && !selectedServiceRequest && (
-                <div className="fixed bottom-6 right-6 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl shadow-lg">
+                <div className="fixed right-6 bottom-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700 shadow-lg">
                     {detailsError}
                 </div>
             )}
             {actionError && (
-                <div className="fixed bottom-6 left-6 bg-amber-50 border border-amber-100 text-amber-700 px-4 py-3 rounded-xl shadow-lg">
+                <div className="fixed bottom-6 left-6 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-amber-700 shadow-lg">
                     {actionError}
                 </div>
             )}
             {actionInfo && (
-                <div className="fixed bottom-6 right-6 bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-xl shadow-lg">
+                <div className="fixed right-6 bottom-6 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-emerald-700 shadow-lg">
                     {actionInfo}
                 </div>
             )}

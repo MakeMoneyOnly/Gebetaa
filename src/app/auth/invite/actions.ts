@@ -6,7 +6,10 @@ import { revalidatePath } from 'next/cache';
 
 export async function acceptInvite(code: string) {
     const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
 
     if (userError || !user) {
         return { error: 'You must be logged in to accept an invite.' };
@@ -41,24 +44,22 @@ export async function acceptInvite(code: string) {
         .single();
 
     if (existingStaff) {
-         // Already a member? Maybe update role?
-         // For now, let's just say "You are already a member".
-         // Or update role if that was the intent.
-         // Let's assume we update role if different?
-         // But usually we just return success or error.
-         return { error: 'You are already a staff member of this restaurant.' };
+        // Already a member? Maybe update role?
+        // For now, let's just say "You are already a member".
+        // Or update role if that was the intent.
+        // Let's assume we update role if different?
+        // But usually we just return success or error.
+        return { error: 'You are already a staff member of this restaurant.' };
     }
-   
+
     const adminClient = createServiceRoleClient();
-    const { error: insertError } = await adminClient
-        .from('restaurant_staff')
-        .insert({
-            restaurant_id: invite.restaurant_id,
-            user_id: user.id,
-            role: invite.role,
-            is_active: true,
-            // invited_by: invite.created_by -- if we had this col
-        });
+    const { error: insertError } = await adminClient.from('restaurant_staff').insert({
+        restaurant_id: invite.restaurant_id,
+        user_id: user.id,
+        role: invite.role,
+        is_active: true,
+        // invited_by: invite.created_by -- if we had this col
+    });
 
     if (insertError) {
         console.error('Failed to add staff member:', insertError);

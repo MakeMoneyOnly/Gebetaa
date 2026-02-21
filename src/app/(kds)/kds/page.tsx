@@ -1,18 +1,15 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useRole } from '@/hooks/useRole';
-import { createClient } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { format } from 'date-fns';
-import { 
-    ChefHat, 
-    Maximize2, 
-    Filter
-} from 'lucide-react';
+import { ChefHat, Maximize2, Filter, RefreshCw } from 'lucide-react';
 import { TicketCard } from '@/features/kds/components/TicketCard';
 import { Order } from '@/types/database';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { toast } from 'react-hot-toast';
 
 // --- Types ---
 type OrderItemPayload = {
@@ -24,7 +21,8 @@ type OrderItemPayload = {
 };
 
 type Ticket = {
-    id: string;
+    id: string; // group id
+    orderIds: string[]; // actual db order ids
     ticketNumber: string;
     tableNumber: string;
     createdAt: Date;
@@ -42,13 +40,17 @@ type Ticket = {
 
 function mapOrderToTicket(order: Order): Ticket {
     const parsedItems = Array.isArray(order.items) ? (order.items as OrderItemPayload[]) : [];
-    
+
     // In a real implementation we would filter for Kitchen items here if needed
     // For now we show all, or assume non-drink items are kitchen
-    
+
     const itemStatus: 'pending' | 'cooking' | 'ready' =
-        order.kitchen_status === 'ready' ? 'ready' : order.kitchen_status === 'preparing' ? 'cooking' : 'pending';
-        
+        order.kitchen_status === 'ready'
+            ? 'ready'
+            : order.kitchen_status === 'preparing'
+              ? 'cooking'
+              : 'pending';
+
     const normalizedItems = parsedItems.map((item, index) => ({
         id: item.id ?? `${order.id}-${index}`,
         quantity: item.quantity ?? 1,
@@ -69,23 +71,28 @@ function mapOrderToTicket(order: Order): Ticket {
               : 'completed';
 
     return {
-        id: order.id,
+        id: order.id, // Will be overridden in grouping
+        orderIds: [order.id],
         ticketNumber: order.order_number,
         tableNumber: `T-${order.table_number}`,
         createdAt: new Date(order.created_at ?? new Date().toISOString()),
         status: normalizedStatus,
-        rawStatus: effectiveStatus,
+        rawStatus: effectiveStatus || 'pending',
         items: normalizedItems,
     };
 }
 
 export default function KDSPage() {
-    const { restaurantId, loading: roleLoading } = useRole(null);
+    const searchParams = useSearchParams();
+    const queryRestaurantId = searchParams.get('restaurantId');
+    const { restaurantId: roleRestaurantId, loading: roleLoading } = useRole(queryRestaurantId);
+    const restaurantId = queryRestaurantId || roleRestaurantId;
+
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
     const [connected, setConnected] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
-    const supabase = useMemo(() => createClient(), []);
+    const supabase = useMemo(() => getSupabaseClient(), []);
 
     // Update clock every minute
     useEffect(() => {
@@ -111,6 +118,7 @@ export default function KDSPage() {
 
             if (error) {
                 console.error('Failed to fetch KDS orders:', error);
+                toast.error('Failed to load orders');
                 return;
             }
 
@@ -118,8 +126,49 @@ export default function KDSPage() {
                 .map(mapOrderToTicket)
                 // Filter out completed kitchen tickets locally
                 .filter(t => t.status !== 'completed');
-                
-            setTickets(mapped);
+
+            // Group by Table
+            const groupedTickets = new Map<string, Ticket>();
+            for (const t of mapped) {
+                const existing = groupedTickets.get(t.tableNumber);
+                if (existing) {
+                    existing.orderIds.push(...t.orderIds);
+                    // Append ticket numbers if not already there to show multiple
+                    const tNum = t.ticketNumber.replace('#', '');
+                    if (!existing.ticketNumber.includes(tNum)) {
+                        existing.ticketNumber += `, #${tNum}`;
+                    }
+                    // Combine items (re-generating IDs to avoid duplicate keys)
+                    const appendItems = t.items.map(item => ({
+                        ...item,
+                        id: `${t.id}-${item.id}`,
+                    }));
+                    existing.items.push(...appendItems);
+
+                    // Keep the oldest createdAt to reflect wait time
+                    if (t.createdAt < existing.createdAt) {
+                        existing.createdAt = t.createdAt;
+                    }
+
+                    // Determine highest priority status (active > new)
+                    // If one part is active and another is new, the whole group is active
+                    if (t.status === 'active') {
+                        existing.status = 'active';
+                        existing.rawStatus = t.rawStatus;
+                    }
+                } else {
+                    groupedTickets.set(t.tableNumber, {
+                        ...t,
+                        id: `group-${t.tableNumber}`,
+                    });
+                }
+            }
+
+            setTickets(
+                Array.from(groupedTickets.values()).sort(
+                    (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+                )
+            );
         } finally {
             setLoading(false);
         }
@@ -132,10 +181,12 @@ export default function KDSPage() {
     }, [fetchOrders, roleLoading]);
 
     useEffect(() => {
-        if (!restaurantId) return;
+        if (roleLoading || !restaurantId) return;
 
+        console.log('KDS: Initializing Realtime for restaurant:', restaurantId);
+        const channelName = `kds-orders-${restaurantId}-${Math.random().toString(36).substring(7)}`;
         const channel = supabase
-            .channel(`kds-orders-${restaurantId}`)
+            .channel(channelName)
             .on(
                 'postgres_changes',
                 {
@@ -144,19 +195,30 @@ export default function KDSPage() {
                     table: 'orders',
                     filter: `restaurant_id=eq.${restaurantId}`,
                 },
-                () => {
+                (payload) => {
+                    console.log('KDS: Received order change:', payload);
                     void fetchOrders();
                 }
             )
-            .subscribe(status => {
-                setConnected(status === 'SUBSCRIBED');
+            .subscribe((status, err) => {
+                console.log('KDS: Realtime status change:', status, err);
+                if (err) {
+                    console.error('KDS Realtime Error:', err);
+                    toast.error(`Realtime Error: ${err.message}`, { id: 'realtime-error' });
+                }
+                if (status === 'SUBSCRIBED') {
+                    setConnected(true);
+                } else {
+                    setConnected(false);
+                }
             });
 
         return () => {
+            console.log('KDS: Cleaning up Realtime channel');
             setConnected(false);
             supabase.removeChannel(channel);
         };
-    }, [fetchOrders, restaurantId, supabase]);
+    }, [fetchOrders, restaurantId, supabase, roleLoading]);
 
     const handleTicketStatusChange = useCallback(
         async (ticket: Ticket, nextStatus: 'new' | 'active' | 'completed') => {
@@ -167,31 +229,46 @@ export default function KDSPage() {
                       ? 'ready'
                       : 'pending';
 
-            // Try to update kitchen_status specifically
-            const response = await fetch(`/api/orders/${ticket.id}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: targetStatus, type: 'kitchen' }), 
-            });
-
-            if (!response.ok) {
-                console.error('Failed to update status');
-            }
-
-            // Optimistic Update
+            // Optimistic Update First Let's go!
             setTickets(prev => {
                 if (nextStatus === 'completed') {
                     // Remove from view immediately
                     return prev.filter(t => t.id !== ticket.id);
                 }
-                const updated = prev.map(t => 
-                    t.id === ticket.id ? { ...t, status: nextStatus } : t
-                );
-                return updated;
+                return prev.map(t => (t.id === ticket.id ? { ...t, status: nextStatus } : t));
             });
-            
-            // Re-fetch to be safe
-            void fetchOrders();
+
+            // Try to update kitchen_status specifically
+            try {
+                // Since this could be a grouped ticket, update all associated orders
+                const promises = ticket.orderIds.map(orderId =>
+                    fetch(`/api/orders/${orderId}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: targetStatus, type: 'kitchen' }),
+                    })
+                );
+
+                const responses = await Promise.all(promises);
+                const failedResponse = responses.find(r => !r.ok);
+
+                if (failedResponse) {
+                    const errorPayload = await failedResponse.json().catch(() => ({}));
+                    console.error('Failed to update status', errorPayload);
+                    toast.error(errorPayload?.error || 'Failed to update ticket status');
+                    // Revert optimism by re-fetching
+                    void fetchOrders();
+                } else {
+                    // Update rawStatus natively after successful hit
+                    setTickets(prev =>
+                        prev.map(t => (t.id === ticket.id ? { ...t, rawStatus: targetStatus } : t))
+                    );
+                }
+            } catch (err) {
+                console.error('Network error during status update:', err);
+                toast.error('Network error. Ticket status might not be saved.');
+                void fetchOrders();
+            }
         },
         [fetchOrders]
     );
@@ -205,38 +282,47 @@ export default function KDSPage() {
             }
         }
     };
-
     if (loading || roleLoading) {
         return (
-            <div className="space-y-8 p-10 h-screen bg-gray-50 overflow-hidden">
-                <div className="flex items-start justify-between">
-                    <div className="space-y-3">
-                        <Skeleton className="h-12 w-64 rounded-2xl" />
-                        <Skeleton className="h-5 w-48 rounded-xl" />
+            <div className="font-manrope flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900">
+                <div className="z-10 flex w-full flex-none items-start justify-between bg-gray-50/90 px-10 py-8 backdrop-blur-sm">
+                    <div>
+                        <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                            Kitchen Display
+                        </h1>
+                        <div className="flex items-center gap-3 text-sm font-medium text-gray-500">
+                            <span className="flex animate-pulse items-center gap-2 rounded-full bg-gray-200 px-3 py-1 text-transparent">
+                                Connecting...
+                            </span>
+                            <span className="animate-pulse rounded bg-gray-200 text-transparent">
+                                |
+                            </span>
+                            <span className="animate-pulse rounded bg-gray-200 text-transparent">
+                                0 Active Tickets
+                            </span>
+                        </div>
                     </div>
-                    <Skeleton className="h-12 w-44 rounded-2xl" />
-                </div>
-                <div className="grid grid-flow-col auto-cols-[340px] gap-6 overflow-hidden h-full pb-10">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-full max-h-[600px] w-[340px] rounded-[2.5rem]" />
-                    ))}
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50 text-gray-900 overflow-hidden font-manrope selection:bg-black selection:text-white">
+        <div className="font-manrope flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900 selection:bg-black selection:text-white">
             {/* Dashboard-style Title Block */}
-            <div className="flex-none px-10 py-8 w-full flex items-start justify-between z-10 bg-gray-50/90 backdrop-blur-sm">
+            <div className="z-10 flex w-full flex-none items-start justify-between bg-gray-50/90 px-10 py-8 backdrop-blur-sm">
                 <div>
-                    <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
                         Kitchen Display
                     </h1>
                     <div className="flex items-center gap-3 text-sm font-medium text-gray-500">
-                        <span className={`flex items-center gap-2 px-3 py-1 rounded-full ${connected ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                            <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                            {connected ? "System Live" : "Connecting..."}
+                        <span
+                            className={`flex items-center gap-2 rounded-full px-3 py-1 ${connected ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
+                        >
+                            <span
+                                className={`h-2 w-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                            />
+                            {connected ? 'System Live' : 'Connecting...'}
                         </span>
                         <span className="text-gray-300">|</span>
                         <span>{tickets.length} Active Tickets</span>
@@ -244,21 +330,28 @@ export default function KDSPage() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end mr-2">
-                        <span className="text-2xl font-bold text-black tabular-nums leading-none tracking-tight">
+                    <div className="mr-2 flex flex-col items-end">
+                        <span className="text-2xl leading-none font-bold tracking-tight text-black tabular-nums">
                             {format(currentTime, 'HH:mm')}
                         </span>
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">
                             {format(currentTime, 'EEE, MMM d')}
                         </span>
                     </div>
 
-                    <button className="h-12 w-12 bg-white border border-gray-200 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm">
+                    <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:bg-gray-50">
                         <Filter className="h-5 w-5" />
                     </button>
                     <button
+                        onClick={() => void fetchOrders()}
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:bg-gray-50"
+                        title="Refresh Orders"
+                    >
+                        <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
+                    <button
                         onClick={toggleFullScreen}
-                        className="h-12 w-12 bg-black text-white rounded-2xl flex items-center justify-center hover:bg-gray-800 transition-all shadow-xl shadow-black/10"
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-xl shadow-black/10 transition-all hover:bg-gray-800"
                     >
                         <Maximize2 className="h-5 w-5" />
                     </button>
@@ -267,21 +360,23 @@ export default function KDSPage() {
 
             {/* Main Grid Area */}
             <main className="flex-1 overflow-x-auto overflow-y-hidden px-10 pb-10">
-                <div className="grid grid-flow-col auto-cols-[340px] gap-6 h-full pb-4">
+                <div className="flex h-full w-max items-start gap-6 pb-4">
                     <AnimatePresence mode="popLayout">
                         {tickets.map(ticket => (
                             <motion.div
                                 key={ticket.id}
-                                className="h-full max-h-[calc(100vh-180px)]"
+                                className="max-h-[calc(100vh-180px)] w-[340px] shrink-0"
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                                 layout
                             >
                                 <TicketCard
                                     {...ticket}
-                                    onStatusChange={status => handleTicketStatusChange(ticket, status)}
+                                    onStatusChange={status =>
+                                        handleTicketStatusChange(ticket, status)
+                                    }
                                     variant="light"
                                 />
                             </motion.div>
@@ -289,12 +384,14 @@ export default function KDSPage() {
                     </AnimatePresence>
 
                     {tickets.length === 0 && (
-                        <div className="col-span-full w-[calc(100vw-80px)] h-full flex flex-col items-center justify-center text-center opacity-40">
-                            <div className="h-32 w-32 rounded-[2.5rem] bg-white flex items-center justify-center mb-8 shadow-sm border border-gray-100">
+                        <div className="col-span-full flex h-full w-[calc(100vw-80px)] flex-col items-center justify-center text-center opacity-40">
+                            <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-[2.5rem] border border-gray-100 bg-white shadow-sm">
                                 <ChefHat className="h-14 w-14 text-gray-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-gray-300 tracking-tight">All caught up!</h2>
-                            <p className="text-gray-400 font-medium mt-2">
+                            <h2 className="text-3xl font-bold tracking-tight text-gray-300">
+                                All caught up!
+                            </h2>
+                            <p className="mt-2 font-medium text-gray-400">
                                 No active tickets in standard queue.
                             </p>
                         </div>

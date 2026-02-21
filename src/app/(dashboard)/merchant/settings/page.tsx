@@ -58,7 +58,9 @@ export default function SettingsPage() {
                 throw new Error(securityPayload?.error ?? 'Failed to load security settings.');
             }
             if (!notificationsRes.ok) {
-                throw new Error(notificationsPayload?.error ?? 'Failed to load notification settings.');
+                throw new Error(
+                    notificationsPayload?.error ?? 'Failed to load notification settings.'
+                );
             }
 
             const resolvedSecurity = {
@@ -93,8 +95,8 @@ export default function SettingsPage() {
                 ...security,
                 allowed_ip_ranges: ipRangesText
                     .split('\n')
-                    .map((line) => line.trim())
-                    .filter((line) => line.length > 0),
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0),
             };
             const response = await fetch('/api/settings/security', {
                 method: 'PATCH',
@@ -108,7 +110,9 @@ export default function SettingsPage() {
             setSecurity(body?.data ?? payload);
             toast.success('Security settings saved.');
         } catch (saveError) {
-            toast.error(saveError instanceof Error ? saveError.message : 'Failed to save security settings.');
+            toast.error(
+                saveError instanceof Error ? saveError.message : 'Failed to save security settings.'
+            );
         } finally {
             setSaving(false);
         }
@@ -129,31 +133,33 @@ export default function SettingsPage() {
             setNotifications(body?.data ?? notifications);
             toast.success('Notification settings saved.');
         } catch (saveError) {
-            toast.error(saveError instanceof Error ? saveError.message : 'Failed to save notifications.');
+            toast.error(
+                saveError instanceof Error ? saveError.message : 'Failed to save notifications.'
+            );
         } finally {
             setSaving(false);
         }
     };
 
     return (
-        <div className="space-y-8 pb-20 min-h-screen bg-white">
+        <div className="min-h-screen space-y-8 bg-white pb-20">
             <div>
-                <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Settings</h1>
-                <p className="text-gray-500 font-medium">Security and routing preferences.</p>
-                {error && <p className="text-xs mt-2 text-amber-700 font-semibold">{error}</p>}
+                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">Settings</h1>
+                <p className="font-medium text-gray-500">Security and routing preferences.</p>
+                {error && <p className="mt-2 text-xs font-semibold text-amber-700">{error}</p>}
             </div>
 
             <div className="flex gap-2">
                 <button
                     onClick={() => setActiveTab('security')}
-                    className={`h-11 px-4 rounded-xl text-sm font-semibold inline-flex items-center gap-2 ${activeTab === 'security' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${activeTab === 'security' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                     <Shield className="h-4 w-4" />
                     Security
                 </button>
                 <button
                     onClick={() => setActiveTab('notifications')}
-                    className={`h-11 px-4 rounded-xl text-sm font-semibold inline-flex items-center gap-2 ${activeTab === 'notifications' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${activeTab === 'notifications' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                     <Bell className="h-4 w-4" />
                     Notifications
@@ -161,65 +167,84 @@ export default function SettingsPage() {
             </div>
 
             {loading && (
-                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm flex items-center gap-2 text-gray-500">
+                <div className="flex items-center gap-2 rounded-[2rem] border border-gray-100 bg-white p-6 text-gray-500 shadow-sm">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Loading settings...
                 </div>
             )}
 
             {!loading && activeTab === 'security' && (
-                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm space-y-4 max-w-3xl">
+                <div className="max-w-3xl space-y-4 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
                     <h2 className="text-xl font-bold text-gray-900">Security Controls</h2>
                     <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
                         <span className="text-sm font-medium text-gray-700">Require MFA</span>
                         <input
                             type="checkbox"
                             checked={security.require_mfa}
-                            onChange={(event) => setSecurity((prev) => ({ ...prev, require_mfa: event.target.checked }))}
+                            onChange={event =>
+                                setSecurity(prev => ({
+                                    ...prev,
+                                    require_mfa: event.target.checked,
+                                }))
+                            }
                         />
                     </label>
-                    <label className="space-y-1 block">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Session Timeout (minutes)</span>
+                    <label className="block space-y-1">
+                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                            Session Timeout (minutes)
+                        </span>
                         <input
                             type="number"
                             min={5}
                             max={1440}
                             value={security.session_timeout_minutes}
-                            onChange={(event) =>
-                                setSecurity((prev) => ({
+                            onChange={event =>
+                                setSecurity(prev => ({
                                     ...prev,
-                                    session_timeout_minutes: Number.parseInt(event.target.value, 10) || 120,
+                                    session_timeout_minutes:
+                                        Number.parseInt(event.target.value, 10) || 120,
                                 }))
                             }
                             className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                         />
                     </label>
-                    <label className="space-y-1 block">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Allowed IP Ranges (one per line)</span>
+                    <label className="block space-y-1">
+                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                            Allowed IP Ranges (one per line)
+                        </span>
                         <textarea
                             value={ipRangesText}
-                            onChange={(event) => setIpRangesText(event.target.value)}
-                            className="w-full min-h-[120px] rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                            onChange={event => setIpRangesText(event.target.value)}
+                            className="min-h-[120px] w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             placeholder="10.0.0.0/24"
                         />
                     </label>
                     <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">Alert on Suspicious Login</span>
+                        <span className="text-sm font-medium text-gray-700">
+                            Alert on Suspicious Login
+                        </span>
                         <input
                             type="checkbox"
                             checked={security.alert_on_suspicious_login}
-                            onChange={(event) =>
-                                setSecurity((prev) => ({ ...prev, alert_on_suspicious_login: event.target.checked }))
+                            onChange={event =>
+                                setSecurity(prev => ({
+                                    ...prev,
+                                    alert_on_suspicious_login: event.target.checked,
+                                }))
                             }
                         />
                     </label>
-                    <div className="pt-2 flex justify-end">
+                    <div className="flex justify-end pt-2">
                         <button
                             onClick={() => void saveSecurity()}
                             disabled={saving}
-                            className="h-11 px-4 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 inline-flex items-center gap-2"
+                            className="inline-flex h-11 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                         >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                            {saving ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Lock className="h-4 w-4" />
+                            )}
                             Save Security
                         </button>
                     </div>
@@ -227,15 +252,20 @@ export default function SettingsPage() {
             )}
 
             {!loading && activeTab === 'notifications' && (
-                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm space-y-4 max-w-3xl">
+                <div className="max-w-3xl space-y-4 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
                     <h2 className="text-xl font-bold text-gray-900">Notification Routing</h2>
                     <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">Email Notifications</span>
+                        <span className="text-sm font-medium text-gray-700">
+                            Email Notifications
+                        </span>
                         <input
                             type="checkbox"
                             checked={notifications.email_enabled}
-                            onChange={(event) =>
-                                setNotifications((prev) => ({ ...prev, email_enabled: event.target.checked }))
+                            onChange={event =>
+                                setNotifications(prev => ({
+                                    ...prev,
+                                    email_enabled: event.target.checked,
+                                }))
                             }
                         />
                     </label>
@@ -244,54 +274,74 @@ export default function SettingsPage() {
                         <input
                             type="checkbox"
                             checked={notifications.sms_enabled}
-                            onChange={(event) =>
-                                setNotifications((prev) => ({ ...prev, sms_enabled: event.target.checked }))
+                            onChange={event =>
+                                setNotifications(prev => ({
+                                    ...prev,
+                                    sms_enabled: event.target.checked,
+                                }))
                             }
                         />
                     </label>
                     <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">In-app Notifications</span>
+                        <span className="text-sm font-medium text-gray-700">
+                            In-app Notifications
+                        </span>
                         <input
                             type="checkbox"
                             checked={notifications.in_app_enabled}
-                            onChange={(event) =>
-                                setNotifications((prev) => ({ ...prev, in_app_enabled: event.target.checked }))
+                            onChange={event =>
+                                setNotifications(prev => ({
+                                    ...prev,
+                                    in_app_enabled: event.target.checked,
+                                }))
                             }
                         />
                     </label>
                     <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">Escalation Enabled</span>
+                        <span className="text-sm font-medium text-gray-700">
+                            Escalation Enabled
+                        </span>
                         <input
                             type="checkbox"
                             checked={notifications.escalation_enabled}
-                            onChange={(event) =>
-                                setNotifications((prev) => ({ ...prev, escalation_enabled: event.target.checked }))
+                            onChange={event =>
+                                setNotifications(prev => ({
+                                    ...prev,
+                                    escalation_enabled: event.target.checked,
+                                }))
                             }
                         />
                     </label>
-                    <label className="space-y-1 block">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Escalation Time (minutes)</span>
+                    <label className="block space-y-1">
+                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                            Escalation Time (minutes)
+                        </span>
                         <input
                             type="number"
                             min={1}
                             max={240}
                             value={notifications.escalation_minutes}
-                            onChange={(event) =>
-                                setNotifications((prev) => ({
+                            onChange={event =>
+                                setNotifications(prev => ({
                                     ...prev,
-                                    escalation_minutes: Number.parseInt(event.target.value, 10) || 15,
+                                    escalation_minutes:
+                                        Number.parseInt(event.target.value, 10) || 15,
                                 }))
                             }
                             className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                         />
                     </label>
-                    <div className="pt-2 flex justify-end">
+                    <div className="flex justify-end pt-2">
                         <button
                             onClick={() => void saveNotifications()}
                             disabled={saving}
-                            className="h-11 px-4 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 inline-flex items-center gap-2"
+                            className="inline-flex h-11 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                         >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            {saving ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Save className="h-4 w-4" />
+                            )}
                             Save Routing
                         </button>
                     </div>

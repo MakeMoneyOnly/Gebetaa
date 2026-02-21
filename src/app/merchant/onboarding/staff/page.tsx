@@ -12,34 +12,36 @@ export default function OnboardingPage() {
 
     useEffect(() => {
         const fetchUser = async () => {
-             setLoading(true);
-             const supabase = createClient();
-             const { data: { user } } = await supabase.auth.getUser();
-             
-             if (!user) {
-                 router.replace('/auth/login');
-                 return;
-             }
+            setLoading(true);
+            const supabase = createClient();
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
 
-             // Check for owner role
-             const { data: staff } = await supabase
+            if (!user) {
+                router.replace('/auth/login');
+                return;
+            }
+
+            // Check for owner role
+            const { data: staff } = await supabase
                 .from('restaurant_staff')
                 .select('role')
                 .eq('user_id', user.id)
                 .maybeSingle();
 
-             if (staff?.role === 'owner') {
-                 // Owners should not see this page, redirect to dashboard
-                 router.replace('/merchant/dashboard');
-                 return;
-             }
+            if (staff?.role === 'owner') {
+                // Owners should not see this page, redirect to dashboard
+                router.replace('/merchant/dashboard');
+                return;
+            }
 
-             const currentName = user.user_metadata?.full_name || user.user_metadata?.name || '';
-             // If name is "Owner", we treat it as not set for invitees
-             if (currentName && currentName !== 'Owner') {
-                 setName(currentName);
-             }
-             setLoading(false);
+            const currentName = user.user_metadata?.full_name || user.user_metadata?.name || '';
+            // If name is "Owner", we treat it as not set for invitees
+            if (currentName && currentName !== 'Owner') {
+                setName(currentName);
+            }
+            setLoading(false);
         };
         fetchUser();
     }, [router]);
@@ -55,8 +57,8 @@ export default function OnboardingPage() {
                     full_name: name,
                     name: name,
                     first_name: name.split(' ')[0],
-                    last_name: name.split(' ').slice(1).join(' ')
-                }
+                    last_name: name.split(' ').slice(1).join(' '),
+                },
             });
 
             if (error) throw error;
@@ -74,7 +76,7 @@ export default function OnboardingPage() {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-zinc-900">
                 <div className="text-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+                    <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                     <p className="text-gray-500">Loading...</p>
                 </div>
             </div>
@@ -91,19 +93,22 @@ export default function OnboardingPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label
+                            htmlFor="name"
+                            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
                             Check Display Name
                         </label>
                         <input
                             id="name"
                             type="text"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={e => setName(e.target.value)}
                             placeholder="e.g. Abebe Kebede"
-                            className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:text-white"
+                            className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-700 dark:text-white"
                             required
                         />
-                         <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500">
                             This name will be visible to other staff members.
                         </p>
                     </div>
@@ -111,7 +116,7 @@ export default function OnboardingPage() {
                     <button
                         type="submit"
                         disabled={loading || !name}
-                        className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         {loading ? 'Saving...' : 'Continue to Dashboard'}
                     </button>

@@ -6,9 +6,20 @@ import { toast } from 'react-hot-toast';
 import { InventoryTable, type InventoryItemRow } from '@/components/merchant/InventoryTable';
 import { InvoiceReviewQueue, type InvoiceRow } from '@/components/merchant/InvoiceReviewQueue';
 import { LowStockAlertPanel } from '@/components/merchant/LowStockAlertPanel';
-import { PurchaseOrderBoard, type PurchaseOrderRow } from '@/components/merchant/PurchaseOrderBoard';
-import { RecipeMapper, type RecipeInventoryOption, type RecipeRow } from '@/components/merchant/RecipeMapper';
-import { VarianceDashboard, type VarianceRow, type VarianceTotals } from '@/components/merchant/VarianceDashboard';
+import {
+    PurchaseOrderBoard,
+    type PurchaseOrderRow,
+} from '@/components/merchant/PurchaseOrderBoard';
+import {
+    RecipeMapper,
+    type RecipeInventoryOption,
+    type RecipeRow,
+} from '@/components/merchant/RecipeMapper';
+import {
+    VarianceDashboard,
+    type VarianceRow,
+    type VarianceTotals,
+} from '@/components/merchant/VarianceDashboard';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 export default function InventoryPage() {
@@ -36,18 +47,22 @@ export default function InventoryPage() {
             const [itemsRes, recipesRes, posRes, invoicesRes, varianceRes] = await Promise.all([
                 fetch('/api/inventory/items?limit=200', { method: 'GET', cache: 'no-store' }),
                 fetch('/api/inventory/recipes', { method: 'GET', cache: 'no-store' }),
-                fetch('/api/inventory/purchase-orders?limit=100', { method: 'GET', cache: 'no-store' }),
+                fetch('/api/inventory/purchase-orders?limit=100', {
+                    method: 'GET',
+                    cache: 'no-store',
+                }),
                 fetch('/api/inventory/invoices?limit=100', { method: 'GET', cache: 'no-store' }),
                 fetch('/api/inventory/variance?limit=200', { method: 'GET', cache: 'no-store' }),
             ]);
 
-            const [itemsPayload, recipesPayload, posPayload, invoicesPayload, variancePayload] = await Promise.all([
-                itemsRes.json(),
-                recipesRes.json(),
-                posRes.json(),
-                invoicesRes.json(),
-                varianceRes.json(),
-            ]);
+            const [itemsPayload, recipesPayload, posPayload, invoicesPayload, variancePayload] =
+                await Promise.all([
+                    itemsRes.json(),
+                    recipesRes.json(),
+                    posRes.json(),
+                    invoicesRes.json(),
+                    varianceRes.json(),
+                ]);
 
             if (!itemsRes.ok) {
                 throw new Error(itemsPayload?.error ?? 'Failed to load inventory items.');
@@ -67,14 +82,19 @@ export default function InventoryPage() {
 
             setItems((itemsPayload?.data?.items ?? []) as InventoryItemRow[]);
             setRecipes((recipesPayload?.data?.recipes ?? []) as RecipeRow[]);
-            setInventoryOptions((recipesPayload?.data?.inventory_items ?? []) as RecipeInventoryOption[]);
+            setInventoryOptions(
+                (recipesPayload?.data?.inventory_items ?? []) as RecipeInventoryOption[]
+            );
             setPurchaseOrders((posPayload?.data?.purchase_orders ?? []) as PurchaseOrderRow[]);
             setInvoices((invoicesPayload?.data?.invoices ?? []) as InvoiceRow[]);
             setVarianceRows((variancePayload?.data?.rows ?? []) as VarianceRow[]);
             setVarianceTotals((variancePayload?.data?.totals ?? null) as VarianceTotals | null);
         } catch (loadError) {
             console.error(loadError);
-            const message = loadError instanceof Error ? loadError.message : 'Failed to load inventory and cost data.';
+            const message =
+                loadError instanceof Error
+                    ? loadError.message
+                    : 'Failed to load inventory and cost data.';
             setError(message);
             setItems([]);
             setRecipes([]);
@@ -92,10 +112,10 @@ export default function InventoryPage() {
         void loadAll();
     }, [loadAll, refreshToken]);
 
-    const refresh = () => setRefreshToken((value) => value + 1);
+    const refresh = () => setRefreshToken(value => value + 1);
 
     const lowStockItems = useMemo(() => {
-        return items.filter((item) => Number(item.current_stock) <= Number(item.reorder_level));
+        return items.filter(item => Number(item.current_stock) <= Number(item.reorder_level));
     }, [items]);
 
     const handleCreateItem = async (payload: {
@@ -120,7 +140,11 @@ export default function InventoryPage() {
             toast.success('Inventory item created.');
             refresh();
         } catch (createError) {
-            toast.error(createError instanceof Error ? createError.message : 'Failed to create inventory item.');
+            toast.error(
+                createError instanceof Error
+                    ? createError.message
+                    : 'Failed to create inventory item.'
+            );
         } finally {
             setCreatingItem(false);
         }
@@ -146,7 +170,11 @@ export default function InventoryPage() {
             toast.success('Stock movement recorded.');
             refresh();
         } catch (movementError) {
-            toast.error(movementError instanceof Error ? movementError.message : 'Failed to record stock movement.');
+            toast.error(
+                movementError instanceof Error
+                    ? movementError.message
+                    : 'Failed to record stock movement.'
+            );
         } finally {
             setMovementSubmittingId(null);
         }
@@ -156,7 +184,12 @@ export default function InventoryPage() {
         name: string;
         output_qty: number;
         output_uom: string;
-        ingredients: Array<{ inventory_item_id: string; qty_per_recipe: number; uom: string; waste_pct: number }>;
+        ingredients: Array<{
+            inventory_item_id: string;
+            qty_per_recipe: number;
+            uom: string;
+            waste_pct: number;
+        }>;
     }) => {
         try {
             setCreatingRecipe(true);
@@ -172,7 +205,11 @@ export default function InventoryPage() {
             toast.success('Recipe mapping created.');
             refresh();
         } catch (createError) {
-            toast.error(createError instanceof Error ? createError.message : 'Failed to create recipe mapping.');
+            toast.error(
+                createError instanceof Error
+                    ? createError.message
+                    : 'Failed to create recipe mapping.'
+            );
         } finally {
             setCreatingRecipe(false);
         }
@@ -201,7 +238,11 @@ export default function InventoryPage() {
             toast.success('Purchase order created.');
             refresh();
         } catch (createError) {
-            toast.error(createError instanceof Error ? createError.message : 'Failed to create purchase order.');
+            toast.error(
+                createError instanceof Error
+                    ? createError.message
+                    : 'Failed to create purchase order.'
+            );
         } finally {
             setCreatingPurchaseOrder(false);
         }
@@ -230,7 +271,11 @@ export default function InventoryPage() {
             toast.success('Supplier invoice created.');
             refresh();
         } catch (createError) {
-            toast.error(createError instanceof Error ? createError.message : 'Failed to create supplier invoice.');
+            toast.error(
+                createError instanceof Error
+                    ? createError.message
+                    : 'Failed to create supplier invoice.'
+            );
         } finally {
             setCreatingInvoice(false);
         }
@@ -239,8 +284,12 @@ export default function InventoryPage() {
     return (
         <div className="min-h-screen space-y-6 pb-20">
             <div>
-                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">Inventory & Cost</h1>
-                <p className="font-medium text-gray-500">Ingredient stock, procurement operations, and variance controls.</p>
+                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                    Inventory & Cost
+                </h1>
+                <p className="font-medium text-gray-500">
+                    Ingredient stock, procurement operations, and variance controls.
+                </p>
             </div>
 
             <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
@@ -251,7 +300,9 @@ export default function InventoryPage() {
             </div>
 
             {error ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                    {error}
+                </div>
             ) : null}
 
             <LowStockAlertPanel loading={loading} items={lowStockItems} />
@@ -287,11 +338,7 @@ export default function InventoryPage() {
                 onCreateInvoice={handleCreateInvoice}
             />
 
-            <VarianceDashboard
-                loading={loading}
-                rows={varianceRows}
-                totals={varianceTotals}
-            />
+            <VarianceDashboard loading={loading} rows={varianceRows} totals={varianceTotals} />
         </div>
     );
 }

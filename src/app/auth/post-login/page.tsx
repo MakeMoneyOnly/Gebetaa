@@ -59,8 +59,10 @@ export default function PostLoginPage() {
                 }
 
                 // Fully onboarded — route by role
-                if (staff.role === 'kitchen') {
-                    router.replace('/kds');
+                if (staff.role === 'kitchen' || staff.role === 'bar') {
+                    router.replace('/kds/display');
+                } else if (staff.role === 'waiter') {
+                    router.replace('/pos/mobile');
                 } else {
                     router.replace('/merchant');
                 }
@@ -81,8 +83,9 @@ export default function PostLoginPage() {
             <div className="flex flex-col items-center gap-4">
                 <Skeleton className="h-12 w-12 rounded-xl" />
                 <Skeleton className="h-4 w-48 rounded-lg" />
-                <p className="font-manrope text-xs font-semibold text-gray-400 mt-2">{message}</p>
+                <p className="font-manrope mt-2 text-xs font-semibold text-gray-400">{message}</p>
             </div>
         </main>
     );
 }
+

@@ -24,9 +24,17 @@ type SupportTicket = {
 
 export default function HelpPage() {
     const [query, setQuery] = useState('');
-    const { loading: articlesLoading, markLoaded: markArticlesLoaded, setLoading: setArticlesLoading } = usePageLoadGuard('help.articles');
+    const {
+        loading: articlesLoading,
+        markLoaded: markArticlesLoaded,
+        setLoading: setArticlesLoading,
+    } = usePageLoadGuard('help.articles');
     const [articles, setArticles] = useState<SupportArticle[]>([]);
-    const { loading: ticketsLoading, markLoaded: markTicketsLoaded, setLoading: setTicketsLoading } = usePageLoadGuard('help.tickets');
+    const {
+        loading: ticketsLoading,
+        markLoaded: markTicketsLoaded,
+        setLoading: setTicketsLoading,
+    } = usePageLoadGuard('help.tickets');
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [ticketSubmitting, setTicketSubmitting] = useState(false);
     const [subject, setSubject] = useState('');
@@ -36,7 +44,10 @@ export default function HelpPage() {
     const loadArticles = async (searchQuery: string) => {
         try {
             setArticlesLoading(true);
-            const response = await fetch(`/api/support/articles?query=${encodeURIComponent(searchQuery)}`, { method: 'GET' });
+            const response = await fetch(
+                `/api/support/articles?query=${encodeURIComponent(searchQuery)}`,
+                { method: 'GET' }
+            );
             const payload = await response.json();
             if (!response.ok) {
                 throw new Error(payload?.error ?? 'Failed to load articles.');
@@ -121,35 +132,39 @@ export default function HelpPage() {
     };
 
     return (
-        <div className="space-y-8 pb-20 min-h-screen bg-white">
+        <div className="min-h-screen space-y-8 bg-white pb-20">
             <div>
-                <h1 className="text-4xl font-bold text-black mb-2 tracking-tight">Help & Support</h1>
-                <p className="text-gray-500 font-medium">Knowledge base, ticketing, and support history.</p>
+                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                    Help & Support
+                </h1>
+                <p className="font-medium text-gray-500">
+                    Knowledge base, ticketing, and support history.
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex items-center gap-2">
                         <BookOpen className="h-5 w-5 text-orange-600" />
                         <h2 className="text-xl font-bold text-gray-900">Knowledge Base</h2>
                     </div>
-                    <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+                    <form onSubmit={handleSearch} className="mb-4 flex gap-2">
                         <div className="relative flex-1">
-                            <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input
                                 value={query}
-                                onChange={(event) => setQuery(event.target.value)}
+                                onChange={event => setQuery(event.target.value)}
                                 placeholder="Search articles..."
-                                className="w-full h-11 rounded-xl border border-gray-200 pl-9 pr-3 text-sm outline-none focus:border-gray-400"
+                                className="h-11 w-full rounded-xl border border-gray-200 pr-3 pl-9 text-sm outline-none focus:border-gray-400"
                             />
                         </div>
-                        <button className="h-11 px-4 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800">
+                        <button className="h-11 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800">
                             Search
                         </button>
                     </form>
 
                     {articlesLoading && (
-                        <div className="text-sm text-gray-500 inline-flex items-center gap-2">
+                        <div className="inline-flex items-center gap-2 text-sm text-gray-500">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Loading articles...
                         </div>
@@ -157,35 +172,46 @@ export default function HelpPage() {
 
                     {!articlesLoading && (
                         <div className="space-y-2">
-                            {articles.length === 0 && <p className="text-sm text-gray-500">No articles found.</p>}
-                            {articles.map((article) => (
-                                <div key={article.id} className="rounded-xl border border-gray-100 p-3">
-                                    <p className="text-sm font-semibold text-gray-900">{article.title}</p>
-                                    <p className="text-xs text-gray-500 mt-1">{article.category}</p>
+                            {articles.length === 0 && (
+                                <p className="text-sm text-gray-500">No articles found.</p>
+                            )}
+                            {articles.map(article => (
+                                <div
+                                    key={article.id}
+                                    className="rounded-xl border border-gray-100 p-3"
+                                >
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {article.title}
+                                    </p>
+                                    <p className="mt-1 text-xs text-gray-500">{article.category}</p>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">Create Support Ticket</h2>
+                <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                    <h2 className="mb-4 text-xl font-bold text-gray-900">Create Support Ticket</h2>
                     <form onSubmit={handleTicketSubmit} className="space-y-3">
                         <input
                             value={subject}
-                            onChange={(event) => setSubject(event.target.value)}
+                            onChange={event => setSubject(event.target.value)}
                             placeholder="Subject"
                             className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                         />
                         <textarea
                             value={description}
-                            onChange={(event) => setDescription(event.target.value)}
+                            onChange={event => setDescription(event.target.value)}
                             placeholder="Describe your issue..."
-                            className="w-full min-h-[120px] rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                            className="min-h-[120px] w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                         />
                         <select
                             value={priority}
-                            onChange={(event) => setPriority(event.target.value as 'low' | 'medium' | 'high' | 'critical')}
+                            onChange={event =>
+                                setPriority(
+                                    event.target.value as 'low' | 'medium' | 'high' | 'critical'
+                                )
+                            }
                             className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                         >
                             <option value="low">Low</option>
@@ -196,39 +222,53 @@ export default function HelpPage() {
                         <button
                             type="submit"
                             disabled={ticketSubmitting}
-                            className="h-11 px-4 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
+                            className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                         >
-                            {ticketSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            {ticketSubmitting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Send className="h-4 w-4" />
+                            )}
                             Submit Ticket
                         </button>
                     </form>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Ticket History Timeline</h2>
+            <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-bold text-gray-900">Ticket History Timeline</h2>
                 {ticketsLoading && (
-                    <div className="text-sm text-gray-500 inline-flex items-center gap-2">
+                    <div className="inline-flex items-center gap-2 text-sm text-gray-500">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading ticket history...
                     </div>
                 )}
                 {!ticketsLoading && (
                     <div className="space-y-3">
-                        {tickets.length === 0 && <p className="text-sm text-gray-500">No support tickets yet.</p>}
-                        {tickets.map((ticket) => (
+                        {tickets.length === 0 && (
+                            <p className="text-sm text-gray-500">No support tickets yet.</p>
+                        )}
+                        {tickets.map(ticket => (
                             <div key={ticket.id} className="rounded-xl border border-gray-100 p-4">
                                 <div className="flex items-center justify-between gap-2">
-                                    <p className="text-sm font-semibold text-gray-900">{ticket.subject}</p>
-                                    <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {ticket.subject}
+                                    </p>
+                                    <span className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
                                         {ticket.status}
                                     </span>
                                 </div>
-                                <p className="text-xs text-gray-600 mt-2 line-clamp-2">{ticket.description}</p>
+                                <p className="mt-2 line-clamp-2 text-xs text-gray-600">
+                                    {ticket.description}
+                                </p>
                                 <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-500">
                                     <span>Priority: {ticket.priority}</span>
-                                    <span>Created: {new Date(ticket.created_at).toLocaleString()}</span>
-                                    <span>Updated: {new Date(ticket.updated_at).toLocaleString()}</span>
+                                    <span>
+                                        Created: {new Date(ticket.created_at).toLocaleString()}
+                                    </span>
+                                    <span>
+                                        Updated: {new Date(ticket.updated_at).toLocaleString()}
+                                    </span>
                                 </div>
                             </div>
                         ))}

@@ -1,15 +1,7 @@
-export default function PosLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function PosLayout({ children }: { children: React.ReactNode }) {
     // This layout bypasses the main dashboard layout
     // No sidebar, no header. Just full screen PWA-style.
-    return (
-        <div className="min-h-screen bg-gray-50 text-gray-900 font-manrope">
-            {children}
-        </div>
-    );
+    return <div className="font-manrope min-h-screen bg-gray-50 text-gray-900">{children}</div>;
 }
 
 export const metadata = {

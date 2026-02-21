@@ -5,15 +5,11 @@ import { RightPanel } from '@/components/merchant/RightPanel';
 import { CommandBarShell } from '@/components/merchant/CommandBarShell';
 import { MobileBottomNav } from '@/components/merchant/MobileBottomNav';
 
-export default function DashboardLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <RoleGuard allowedRoles={['owner', 'admin', 'manager']}>
             {/* data-lenis-prevent tells Lenis to not control scrolling in this container */}
-            <div className="flex bg-white h-screen overflow-hidden font-manrope" data-lenis-prevent>
+            <div className="font-manrope flex h-screen overflow-hidden bg-white" data-lenis-prevent>
                 {/* 1. Sidebar (Fixed Left) */}
                 <Sidebar />
 
@@ -24,8 +20,8 @@ export default function DashboardLayout({
                     - overflow-y-auto makes this section independently scrollable
                     - h-screen ensures it takes full viewport height
                 */}
-                <main className="flex-1 md:ml-[280px] xl:mr-[380px] h-screen overflow-y-auto transition-all duration-300 bg-white">
-                    <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-12 pb-24 md:pb-8">
+                <main className="h-screen flex-1 overflow-y-auto bg-white transition-all duration-300 md:ml-[280px] xl:mr-[380px]">
+                    <div className="mx-auto max-w-7xl p-4 pb-24 sm:p-6 md:pb-8 lg:p-12">
                         {children}
                     </div>
                 </main>

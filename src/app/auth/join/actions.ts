@@ -5,13 +5,13 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 // Role-based redirect map
 const ROLE_REDIRECTS: Record<string, string> = {
-    'kitchen': '/kds',
-    'waiter': '/waiter',
-    'runner': '/waiter',
-    'bar': '/bar',
-    'manager': '/merchant',
-    'admin': '/merchant',
-    'owner': '/merchant'
+    kitchen: '/kds',
+    waiter: '/waiter',
+    runner: '/waiter',
+    bar: '/bar',
+    manager: '/merchant',
+    admin: '/merchant',
+    owner: '/merchant',
 };
 
 interface ProvisionResult {
@@ -42,14 +42,15 @@ export async function provisionDevice(data: {
         }
 
         if (invite.status === 'accepted') {
-             return { error: 'Link already used', redirectTo: '/auth/login' };
+            return { error: 'Link already used', redirectTo: '/auth/login' };
         }
 
         // 2. Check if User Exists (by email in invite)
         // If invite has an email, try to find user. If not, we might create a "Device User"
         // For this MVP, we assume invite has Email.
-        const email = invite.email;
-        if (!email) return { error: 'Invite invalid: No email associated', redirectTo: '/auth/login' };
+        const email =
+            invite.email ??
+            `device-${String(invite.role)}-${String(invite.id).slice(0, 8)}@provisioned.gebeta.local`;
 
         // 3. Create Auth User (or Sign In if we had password, but here we arc Creating)
         // We use Admin API to creating user without email confirmation for device setup speed
@@ -59,64 +60,65 @@ export async function provisionDevice(data: {
             email_confirm: true,
             user_metadata: {
                 full_name: data.deviceName,
-                is_device: true
-            }
+                is_device: true,
+                provisioned_from_invite: true,
+                provisioned_role: invite.role,
+            },
         });
 
         if (createError) {
-            // If user already exists, maybe we just need to link? 
-            // For MVP simplicity: Fail implies "Use Login Page" or "Already Staff".
-            // But for "Device Provisioning", we might want to allow reclaiming?
-            // Let's assume fail = generic error for now.
-             return { error: `Setup Failed: ${createError.message}`, redirectTo: '/auth/login' };
+            if (/already exists/i.test(createError.message ?? '')) {
+                return {
+                    error: 'This access identity already exists. Please use the login screen.',
+                    redirectTo: '/auth/login',
+                };
+            }
+            return { error: `Setup Failed: ${createError.message}`, redirectTo: '/auth/login' };
         }
-        
+
         if (!authUser.user) {
-             return { error: 'Failed to create device identity', redirectTo: '/auth/login' };
+            return { error: 'Failed to create device identity', redirectTo: '/auth/login' };
         }
 
         // 4. Link to Restaurant (Insert into restaurant_staff)
-        const { error: linkError } = await adminClient
-            .from('restaurant_staff')
-            .insert({
-                restaurant_id: invite.restaurant_id,
-                user_id: authUser.user.id,
-                role: invite.role,
-                is_active: true
-            });
+        const { error: linkError } = await adminClient.from('restaurant_staff').insert({
+            restaurant_id: invite.restaurant_id,
+            user_id: authUser.user.id,
+            role: invite.role,
+            is_active: true,
+        });
 
         if (linkError) {
-             // Rollback user creation? For now, just error.
-             return { error: 'Failed to link device to restaurant', redirectTo: '/auth/login' };
+            // Rollback user creation? For now, just error.
+            return { error: 'Failed to link device to restaurant', redirectTo: '/auth/login' };
         }
 
         // 5. Mark Invite Accepted
-        await adminClient
-            .from('staff_invites')
-            .update({ status: 'accepted' })
-            .eq('id', invite.id);
+        await adminClient.from('staff_invites').update({ status: 'accepted' }).eq('id', invite.id);
 
         // 6. Define Redirect
         const target = ROLE_REDIRECTS[invite.role] || '/merchant/onboarding/staff';
 
         // 7. Auto-Login the Session (We can't do this easily from Server Action for a NEW user created via Admin API)
-        // Workaround: We return success, Client side uses `signInWithPassword` immediately? 
+        // Workaround: We return success, Client side uses `signInWithPassword` immediately?
         // OR: We use `signInWithPassword` here to get a session, and set cookies?
-        
+
         // Let's try to sign in to set the cookie on this response
         const { error: signInError } = await supabase.auth.signInWithPassword({
             email: email,
-            password: data.password
+            password: data.password,
         });
 
         if (signInError) {
-             return { error: 'Setup complete, but auto-login failed. Please log in manually.', redirectTo: '/auth/login' };
+            return {
+                error: 'Setup complete, but auto-login failed. Please log in manually.',
+                redirectTo: '/auth/login',
+            };
         }
 
-        return { success: true, redirectTo: target };
-
+        return { success: true, redirectTo: `${target}?restaurantId=${invite.restaurant_id}` };
     } catch (e: any) {
-        console.error("Provisioning Error:", e);
+        console.error('Provisioning Error:', e);
         return { error: e.message || 'Server provisioning failed', redirectTo: '/auth/login' };
     }
 }
