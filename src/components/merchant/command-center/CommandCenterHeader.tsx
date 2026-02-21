@@ -62,7 +62,7 @@ export function CommandCenterHeader({
                         type="button"
                         onClick={onRefresh}
                         disabled={isRefreshing}
-                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-3 text-sm font-bold text-white transition hover:bg-gray-800 disabled:opacity-60"
+                        className="bg-brand-crimson inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-bold text-white transition hover:bg-[#a0151e] disabled:opacity-60"
                     >
                         <RotateCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                         Refresh

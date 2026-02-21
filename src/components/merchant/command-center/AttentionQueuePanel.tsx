@@ -49,7 +49,7 @@ export function AttentionQueuePanel({
                 <div className="flex items-center gap-2">
                     <Siren className="h-4 w-4 text-rose-500" />
                     <h2 className="text-lg font-bold text-gray-900">Attention Queue</h2>
-                    <span className="rounded-full bg-black px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
+                    <span className="bg-brand-crimson rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
                         {items.length}
                     </span>
                 </div>
@@ -134,7 +134,7 @@ export function AttentionQueuePanel({
                                 {item.type === 'order' && (
                                     <button
                                         onClick={() => onAdvanceOrder(item)}
-                                        className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-white transition hover:bg-gray-800"
+                                        className="bg-brand-crimson rounded-xl px-3 py-2 text-xs font-bold text-white transition hover:bg-[#a0151e]"
                                     >
                                         Advance Status
                                     </button>

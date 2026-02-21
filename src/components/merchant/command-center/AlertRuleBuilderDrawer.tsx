@@ -236,7 +236,7 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                         onClick={() => {
                             void saveDraft();
                         }}
-                        className="h-10 w-full rounded-lg bg-black text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+                        className="bg-brand-crimson h-10 w-full rounded-lg text-sm font-bold text-white hover:bg-[#a0151e] disabled:opacity-50"
                     >
                         {saving ? 'Saving...' : draft.id ? 'Update Rule' : 'Create Rule'}
                     </button>
