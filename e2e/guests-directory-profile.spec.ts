@@ -171,7 +171,7 @@ test.describe('Guests directory and profile flows', () => {
 
         await page.goto('/merchant/guests');
 
-        await expect(page.getByRole('heading', { name: 'Guests' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Guests', exact: true })).toBeVisible();
         await expect(
             page.getByRole('button', { name: /Open guest profile for Selam Guest/i })
         ).toBeVisible();
