@@ -274,10 +274,10 @@ export default function SignUpPage() {
                             <div className="h-6 w-6 rounded bg-white/20" /> Square
                         </div>
                         <div className="flex items-center gap-2 text-lg font-bold">
-                            <div className="h-6 w-6 rounded bg-white/20" /> Stripe
+                            <div className="h-6 w-6 rounded bg-white/20" /> Telebirr
                         </div>
                         <div className="flex items-center gap-2 text-lg font-bold">
-                            <div className="h-6 w-6 rounded bg-white/20" /> Clover
+                            <div className="h-6 w-6 rounded bg-white/20" /> Chapa
                         </div>
                         <div className="flex items-center gap-2 text-lg font-bold">
                             <div className="h-6 w-6 rounded bg-white/20" /> Toast

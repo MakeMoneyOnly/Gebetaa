@@ -40,7 +40,7 @@ export default async function InvitePage(props: { searchParams: Promise<{ code: 
                     </p>
                     <Link
                         href="/"
-                        className="mt-6 inline-block rounded-lg bg-black px-6 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                        className="bg-brand-crimson mt-6 inline-block rounded-lg px-6 py-2 text-sm font-medium text-white transition hover:bg-[#a0151e] dark:bg-white dark:text-black dark:hover:bg-gray-200"
                     >
                         Go Home
                     </Link>
@@ -63,7 +63,7 @@ export default async function InvitePage(props: { searchParams: Promise<{ code: 
                     </p>
                     <Link
                         href="/"
-                        className="mt-6 inline-block rounded-lg bg-black px-6 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                        className="bg-brand-crimson mt-6 inline-block rounded-lg px-6 py-2 text-sm font-medium text-white transition hover:bg-[#a0151e] dark:bg-white dark:text-black dark:hover:bg-gray-200"
                     >
                         Go Home
                     </Link>
@@ -124,7 +124,7 @@ export default async function InvitePage(props: { searchParams: Promise<{ code: 
                         <div className="space-y-3">
                             <Link
                                 href={`/auth/login?next=/auth/invite?code=${code}`}
-                                className="block w-full rounded-xl bg-black py-3 text-center text-sm font-semibold text-white shadow-lg transition-all hover:bg-gray-800 hover:shadow-gray-500/20 active:scale-[0.98] dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                                className="bg-brand-crimson block w-full rounded-xl py-3 text-center text-sm font-semibold text-white shadow-lg transition-all hover:bg-[#a0151e] hover:shadow-gray-500/20 active:scale-[0.98] dark:bg-white dark:text-black dark:hover:bg-gray-200"
                             >
                                 Log in to Accept
                             </Link>

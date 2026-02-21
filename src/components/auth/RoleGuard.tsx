@@ -61,7 +61,7 @@ function RoleGuardWithAuth({ children, allowedRoles, restaurantId, fallback }: R
                     <div className="mt-6">
                         <button
                             onClick={() => router.push('/')}
-                            className="rounded-xl bg-black px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-gray-800"
+                            className="bg-brand-crimson rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#a0151e]"
                         >
                             Go Home
                         </button>
