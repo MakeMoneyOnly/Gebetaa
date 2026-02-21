@@ -9,6 +9,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-02-21
+
+#### P2 Addis Localization and Payment Rail Adapters (Phase 6.4)
+
+- Added payment adapter orchestration and fallback abstraction:
+    - `src/lib/payments/adapters.ts`
+    - Extended payment provider contracts in `src/lib/payments/types.ts`
+- Implemented Telebirr adapter contract:
+    - `src/lib/payments/telebirr.ts`
+    - Callback handler `src/app/api/payments/callback/telebirr/route.ts`
+- Hardened Chapa adapter contract to align with provider interface (initiate/verify/health):
+    - `src/lib/payments/chapa.ts`
+- Added payment provider API surfaces for P2 operations:
+    - `POST /api/payments/initiate` in `src/app/api/payments/initiate/route.ts`
+    - `POST /api/payments/verify` in `src/app/api/payments/verify/route.ts`
+    - `GET /api/payments/providers/health` in `src/app/api/payments/providers/health/route.ts`
+- Added provider health checks and fallback policy support:
+    - `src/lib/payments/adapters.ts`
+    - Route-level policy updates in `src/lib/api/rateLimitPolicies.ts`
+    - Added payment rail env config in `.env.example` and `src/lib/config/env.ts`
+- Added EN/AM localization scaffolding for P2 tabs and hooked P2 page copy:
+    - `src/lib/i18n/locale.ts`
+    - `src/lib/i18n/p2.ts`
+    - `src/hooks/useAppLocale.ts`
+    - Updated pages:
+        - `src/app/(dashboard)/merchant/finance/page.tsx`
+        - `src/app/(dashboard)/merchant/inventory/page.tsx`
+        - `src/app/(dashboard)/merchant/guests/page.tsx`
+- Added ETB formatting consistency utilities and integrated into finance/inventory/guests P2 components:
+    - `src/lib/format/et.ts`
+    - `src/lib/utils.ts`
+    - Updated components:
+        - `src/components/merchant/SettlementSummaryCard.tsx`
+        - `src/components/merchant/PaymentMethodBreakdown.tsx`
+        - `src/components/merchant/RefundQueue.tsx`
+        - `src/components/merchant/PayoutReconciliationTable.tsx`
+        - `src/components/merchant/VarianceDashboard.tsx`
+        - `src/components/merchant/InvoiceReviewQueue.tsx`
+        - `src/components/merchant/PurchaseOrderBoard.tsx`
+        - `src/components/merchant/GiftCardManager.tsx`
+        - `src/components/merchant/LoyaltyProgramBuilder.tsx`
+- Added unit and API route tests for phase 6.4:
+    - `src/lib/payments/adapters.test.ts`
+    - `src/lib/format/et.test.ts`
+    - `src/app/api/__tests__/p2-payments-adapters-api-routes.test.ts`
+
+#### P2 Quality and Release (Phase 6.5)
+
+- Added P2 E2E coverage for growth, inventory, and finance release gates:
+    - `e2e/p2-loyalty-gift-card.spec.ts`
+    - `e2e/p2-inventory-variance.spec.ts`
+    - `e2e/p2-finance-reconciliation.spec.ts`
+    - Shared auth fixture: `e2e/fixtures/dashboard-auth.ts`
+- Added peak-flow load test runner for key P2 operational APIs:
+    - `scripts/load-tests/p2-peak-flows.mjs`
+    - npm script: `test:load:p2` in `package.json`
+- Added P2 release runbooks:
+    - `docs/implementation/p2-peak-flow-load-tests.md`
+    - `docs/implementation/p2-progressive-rollout-and-rollback-safeguards.md`
+
 ### Added - 2026-02-20
 
 #### P2 Finance and Reconciliation (Phase 6.3)

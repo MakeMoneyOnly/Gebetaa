@@ -10,6 +10,7 @@
         "test": "vitest",
         "test:coverage": "vitest --coverage",
         "test:e2e": "playwright test",
+        "test:load:p2": "node scripts/load-tests/p2-peak-flows.mjs",
         "test:ci": "pnpm lint && pnpm type-check && pnpm test:coverage && pnpm exec playwright test --project=chromium",
         "type-check": "tsc --noEmit",
         "format": "prettier --write .",
