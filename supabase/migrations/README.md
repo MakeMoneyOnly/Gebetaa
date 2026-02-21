@@ -27,13 +27,14 @@ Each migration should include:
 
 When creating foreign keys to `auth.users`, choose the appropriate `ON DELETE` action:
 
-| Action | Use Case | Example |
-|--------|----------|---------|
-| `ON DELETE CASCADE` | Child records should be deleted with the user | `restaurant_staff` (user's staff membership) |
-| `ON DELETE SET NULL` | Preserve audit trail, allow NULL when user deleted | `staff_invites.created_by`, `order_events.actor_user_id` |
-| `ON DELETE SET DEFAULT` | Set to default value when user deleted | Rarely needed |
+| Action                  | Use Case                                           | Example                                                  |
+| ----------------------- | -------------------------------------------------- | -------------------------------------------------------- |
+| `ON DELETE CASCADE`     | Child records should be deleted with the user      | `restaurant_staff` (user's staff membership)             |
+| `ON DELETE SET NULL`    | Preserve audit trail, allow NULL when user deleted | `staff_invites.created_by`, `order_events.actor_user_id` |
+| `ON DELETE SET DEFAULT` | Set to default value when user deleted             | Rarely needed                                            |
 
 **Example:**
+
 ```sql
 -- Correct: Allows user deletion while preserving audit trail
 created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
@@ -43,6 +44,7 @@ created_by UUID REFERENCES auth.users(id)
 ```
 
 To verify all auth.users FKs have proper cascade rules:
+
 ```sql
 SELECT * FROM public.check_auth_users_fk_cascade();
 ```
