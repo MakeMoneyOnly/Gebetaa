@@ -5,7 +5,7 @@ import { parseJsonBody } from '@/lib/api/validation';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 const PairDeviceSchema = z.object({
-    pairing_code: z.string().length(6),
+    pairing_code: z.string().length(4),
 });
 
 export async function POST(request: Request) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
         .from('hardware_devices')
         .select('*')
         .eq('pairing_code', parsed.data.pairing_code)
-        .eq('status', 'active')
+        .in('status', ['active', 'pending'])
         .single();
 
     if (error || !device) {

@@ -26,10 +26,10 @@ export async function POST(request: Request) {
         return parsed.response;
     }
 
-    // Generate a 6-digit random code
-    const pairing_code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate a 4-digit random code
+    const pairing_code = Math.floor(1000 + Math.random() * 9000).toString();
 
-    const { data, error } = await context.supabase
+    const { data, error } = await (context.supabase as any)
         .from('hardware_devices')
         .insert({
             restaurant_id: context.restaurantId,
@@ -42,7 +42,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to provision device', 500, 'DEVICE_PROVISION_FAILED', error.message);
+        return apiError(
+            'Failed to provision device',
+            500,
+            'DEVICE_PROVISION_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess(

@@ -13,11 +13,11 @@ export async function GET() {
     }
 
     // List all hardware devices for the restaurant
-    const { data, error } = await context.supabase
+    const { data, error } = await (context.supabase as any)
         .from('hardware_devices')
         .select('*')
         .eq('restaurant_id', context.restaurantId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
 
     if (error) {
         return apiError('Failed to fetch devices', 500, 'DEVICES_FETCH_FAILED', error.message);
