@@ -69,12 +69,12 @@ export function getClientIdentifier(request: NextRequest): {
     userAgent: string;
 } {
     // Try to get fingerprint from header (set by client)
-    const fingerprint = request.headers.get('x-fingerprint') ||
-        request.headers.get('x-device-id') ||
-        '';
+    const fingerprint =
+        request.headers.get('x-fingerprint') || request.headers.get('x-device-id') || '';
 
     // Get IP address
-    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    const ipAddress =
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
         request.headers.get('x-real-ip') ||
         'unknown';
 
@@ -150,16 +150,14 @@ export async function logRateLimitedRequest(
 ): Promise<void> {
     const supabase = await createClient();
 
-    const { error } = await supabase
-        .from('rate_limit_logs')
-        .insert({
-            fingerprint,
-            action,
-            ip_address: ipAddress,
-            user_agent: userAgent,
-            restaurant_id: restaurantId,
-            metadata: (metadata || null) as Json,
-        });
+    const { error } = await supabase.from('rate_limit_logs').insert({
+        fingerprint,
+        action,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        restaurant_id: restaurantId,
+        metadata: (metadata || null) as Json,
+    });
 
     if (error) {
         console.error('Failed to log rate limit entry:', error);

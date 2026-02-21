@@ -6,7 +6,10 @@ import { verifySignedQRCode } from '@/lib/security/hmac';
 export const GuestContextSchema = z.object({
     slug: z.string().trim().min(1, 'Restaurant slug is required').max(120),
     table: z.string().trim().min(1, 'Table is required').max(20),
-    sig: z.string().trim().regex(/^[a-f0-9]{64}$/i, 'Invalid QR signature format'),
+    sig: z
+        .string()
+        .trim()
+        .regex(/^[a-f0-9]{64}$/i, 'Invalid QR signature format'),
     exp: z.coerce.number().int().positive('Invalid QR expiration timestamp'),
 });
 

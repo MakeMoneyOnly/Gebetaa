@@ -227,9 +227,7 @@ describe('Session Store Integration', () => {
         );
 
         // Verify all sessions exist
-        const results = await Promise.all(
-            sessionIds.map(id => store.get(id))
-        );
+        const results = await Promise.all(sessionIds.map(id => store.get(id)));
 
         results.forEach((session, index) => {
             expect(session).not.toBeNull();

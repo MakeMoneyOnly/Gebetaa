@@ -27,7 +27,7 @@ const CSRF_COOKIE_OPTIONS = {
 export function generateCsrfToken(): string {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
-    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -39,7 +39,7 @@ async function hashToken(token: string): Promise<string> {
     const data = encoder.encode(token);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -107,9 +107,7 @@ export function extractCsrfToken(request: NextRequest): string | null {
 /**
  * CSRF validation middleware for API routes
  */
-export async function csrfMiddleware(
-    request: NextRequest
-): Promise<NextResponse | null> {
+export async function csrfMiddleware(request: NextRequest): Promise<NextResponse | null> {
     // Skip CSRF for GET, HEAD, OPTIONS
     if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
         return null;
@@ -152,9 +150,7 @@ export function withCsrfProtection<TArgs extends unknown[], TResult>(
     return async (...args: TArgs): Promise<TResult> => {
         // For server actions, we expect the first argument might contain formData
         // or a separate CSRF token argument
-        const formData = args.find(
-            (arg) => arg instanceof FormData
-        ) as FormData | undefined;
+        const formData = args.find(arg => arg instanceof FormData) as FormData | undefined;
 
         let csrfToken: string | null = null;
 
@@ -164,7 +160,7 @@ export function withCsrfProtection<TArgs extends unknown[], TResult>(
 
         // Also check if a token was passed directly
         const tokenArg = args.find(
-            (arg) => typeof arg === 'object' && arg !== null && '_csrf' in arg
+            arg => typeof arg === 'object' && arg !== null && '_csrf' in arg
         ) as { _csrf?: string } | undefined;
 
         if (tokenArg?._csrf) {

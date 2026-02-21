@@ -189,7 +189,7 @@ export class RedisSessionStore implements SessionStore {
     async getAllSessionIds(): Promise<string[]> {
         const pattern = `${this.keyPrefix}*`;
         const keys = await this.client.keys(pattern);
-        return keys.map((key) => key.replace(this.keyPrefix, ''));
+        return keys.map(key => key.replace(this.keyPrefix, ''));
     }
 
     async cleanup(): Promise<number> {
@@ -231,7 +231,7 @@ export interface RedisClient {
  */
 async function createRedisClient(): Promise<RedisClient | null> {
     const redisUrl = env.REDIS_URL;
-    
+
     if (!redisUrl) {
         return null;
     }
