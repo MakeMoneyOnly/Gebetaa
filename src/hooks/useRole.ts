@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { useEffect, useMemo, useState } from 'react';
 import { UserRole } from '@/types/models';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ export function useRole(restaurantId: string | null) {
     const [user, setUser] = useState<User | null>(null);
     const [resolvedRestaurantId, setResolvedRestaurantId] = useState<string | null>(restaurantId);
     const router = useRouter();
-    const supabase = useMemo(() => createClient(), []);
+    const supabase = useMemo(() => getSupabaseClient(), []);
 
     useEffect(() => {
         let cancelled = false;
@@ -61,23 +61,27 @@ export function useRole(restaurantId: string | null) {
                     .select('role, restaurant_id, is_active')
                     .eq('user_id', activeUser.id);
 
-                const { data: roleFromRpc, error: rpcError } = await supabase
-                    .rpc('get_my_staff_role', {
+                const { data: roleFromRpc, error: rpcError } = await (supabase.rpc as any)(
+                    'get_my_staff_role',
+                    {
                         p_restaurant_id: restaurantId,
-                    })
-                    .returns<StaffRoleRPCRow[]>()
-                    .maybeSingle();
+                    }
+                );
 
-                if (!rpcError && roleFromRpc) {
+                if (!rpcError && roleFromRpc && (Array.isArray(roleFromRpc) ? roleFromRpc.length > 0 : roleFromRpc)) {
+                    const match = Array.isArray(roleFromRpc) ? roleFromRpc[0] : roleFromRpc;
                     if (cancelled) return;
-                    setRole(roleFromRpc.role as UserRole);
-                    setResolvedRestaurantId(roleFromRpc.restaurant_id);
+                    setRole(match.role as UserRole);
+                    setResolvedRestaurantId(match.restaurant_id);
                     return;
                 }
 
                 const { data, error } = restaurantId
                     ? await baseQuery.eq('restaurant_id', restaurantId).maybeSingle()
-                    : await baseQuery.order('created_at', { ascending: true }).limit(1).maybeSingle();
+                    : await baseQuery
+                          .order('created_at', { ascending: false })
+                          .limit(1)
+                          .maybeSingle();
 
                 if (error) {
                     if (cancelled) return;

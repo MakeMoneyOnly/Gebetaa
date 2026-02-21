@@ -61,7 +61,9 @@ export const db = new OrderDatabase();
 /**
  * Adds an order to the offline queue with version tracking
  */
-export async function queueOrder(order: Omit<PendingOrder, 'id' | 'created_at' | 'status' | 'version' | 'last_modified'>) {
+export async function queueOrder(
+    order: Omit<PendingOrder, 'id' | 'created_at' | 'status' | 'version' | 'last_modified'>
+) {
     try {
         const now = new Date().toISOString();
         return await db.pending_orders.add({
@@ -80,7 +82,10 @@ export async function queueOrder(order: Omit<PendingOrder, 'id' | 'created_at' |
 /**
  * Updates an order in the queue (increments version)
  */
-export async function updateQueuedOrder(id: number, updates: Partial<Pick<PendingOrder, 'items' | 'total_price' | 'notes'>>) {
+export async function updateQueuedOrder(
+    id: number,
+    updates: Partial<Pick<PendingOrder, 'items' | 'total_price' | 'notes'>>
+) {
     try {
         const existing = await db.pending_orders.get(id);
         if (!existing) {
@@ -110,20 +115,14 @@ export async function getPendingOrders() {
  * Gets orders that are ready to sync (pending status)
  */
 export async function getOrdersToSync() {
-    return await db.pending_orders
-        .where('status')
-        .equals('pending')
-        .toArray();
+    return await db.pending_orders.where('status').equals('pending').toArray();
 }
 
 /**
  * Gets orders with conflicts
  */
 export async function getConflictedOrders() {
-    return await db.pending_orders
-        .where('status')
-        .equals('conflict')
-        .toArray();
+    return await db.pending_orders.where('status').equals('conflict').toArray();
 }
 
 /**
@@ -184,7 +183,7 @@ export async function resolveConflict(
 
     // Apply resolution
     const now = new Date().toISOString();
-    
+
     if (resolution === 'client_wins') {
         // Keep client version, mark as pending to retry sync
         await db.pending_orders.update(id, {
@@ -220,9 +219,7 @@ export async function getSyncStatus(): Promise<SyncStatus> {
         db.pending_orders.where('status').equals('conflict').count(),
     ]);
 
-    const lastSyncLog = await db.sync_conflict_logs
-        .orderBy('resolved_at')
-        .last();
+    const lastSyncLog = await db.sync_conflict_logs.orderBy('resolved_at').last();
 
     return {
         last_sync_at: lastSyncLog?.resolved_at || null,
@@ -236,11 +233,7 @@ export async function getSyncStatus(): Promise<SyncStatus> {
  * Gets conflict audit log
  */
 export async function getConflictLogs(limit: number = 50): Promise<SyncConflictLog[]> {
-    return await db.sync_conflict_logs
-        .orderBy('resolved_at')
-        .reverse()
-        .limit(limit)
-        .toArray();
+    return await db.sync_conflict_logs.orderBy('resolved_at').reverse().limit(limit).toArray();
 }
 
 /**

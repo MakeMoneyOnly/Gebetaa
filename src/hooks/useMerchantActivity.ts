@@ -38,7 +38,6 @@ export function useMerchantActivity() {
         return '@restaurant_admin';
     });
 
-
     useEffect(() => {
         let mounted = true;
 
@@ -53,16 +52,20 @@ export function useMerchantActivity() {
                 console.log('[Hook] Response status:', response.status);
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('[Hook] API error:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    if (response.status === 401 || response.status === 404) {
+                        // Silent fail for unauthorized/guest users so it doesn't pollute console
+                        if (mounted) setLoading(false);
+                        return;
+                    }
+                    console.error('[Hook] API Error. Status:', response.status);
+                    return;
                 }
 
                 const data = await response.json();
                 console.log('[Hook] Received data:', {
                     orderCount: data.orders?.length || 0,
                     requestCount: data.requests?.length || 0,
-                    restaurant: data.restaurant
+                    restaurant: data.restaurant,
                 });
 
                 if (!mounted) return;
@@ -85,11 +88,14 @@ export function useMerchantActivity() {
                     user: `Order ${order.order_number?.startsWith('ORD-') ? order.order_number.split('-').slice(1).join('-') : `#${order.order_number}`}`,
                     action: 'placed for',
                     target: `Table ${order.table_number}`,
-                    time: new Date(order.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+                    time: new Date(order.created_at).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                    }),
                     timestamp: new Date(order.created_at),
                     hasMessage: !!order.notes,
                     message: order.notes ? `Note: '${order.notes}'` : undefined,
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`,
                 }));
 
                 // Transform requests to activities
@@ -98,20 +104,27 @@ export function useMerchantActivity() {
                     type: 'request' as ActivityType,
                     user: `Table ${req.table_number}`,
                     action: 'requested',
-                    target: req.request_type === 'waiter' ? 'Waiter Assistance' :
-                        req.request_type === 'bill' ? 'Bill' : req.request_type,
-                    time: new Date(req.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+                    target:
+                        req.request_type === 'waiter'
+                            ? 'Waiter Assistance'
+                            : req.request_type === 'bill'
+                              ? 'Bill'
+                              : req.request_type,
+                    time: new Date(req.created_at).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                    }),
                     timestamp: new Date(req.created_at),
                     hasMessage: false,
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`,
                 }));
 
                 // Combine and sort
-                const combined = [...orderActivities, ...requestActivities]
-                    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+                const combined = [...orderActivities, ...requestActivities].sort(
+                    (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+                );
 
                 setActivities(combined);
-
             } catch (error) {
                 console.error('Error fetching merchant activity:', error);
             } finally {
@@ -137,7 +150,7 @@ export function useMerchantActivity() {
             timestamp: new Date(),
             hasMessage: true,
             message: message,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${restaurantName}`
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${restaurantName}`,
         };
         setActivities(prev => [newActivity, ...prev]);
         return true;
@@ -147,6 +160,7 @@ export function useMerchantActivity() {
         setLoading(true);
         try {
             const response = await fetch('/api/merchant/activity');
+            if (!response.ok) return;
             const data = await response.json();
 
             // Re-process the data (same logic as above)
@@ -156,11 +170,14 @@ export function useMerchantActivity() {
                 user: `Order ${order.order_number?.startsWith('ORD-') ? order.order_number.split('-').slice(1).join('-') : `#${order.order_number}`}`,
                 action: 'placed for',
                 target: `Table ${order.table_number}`,
-                time: new Date(order.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+                time: new Date(order.created_at).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                }),
                 timestamp: new Date(order.created_at),
                 hasMessage: !!order.notes,
                 message: order.notes ? `Note: '${order.notes}'` : undefined,
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`,
             }));
 
             const requestActivities: ActivityItem[] = (data.requests || []).map((req: any) => ({
@@ -168,16 +185,24 @@ export function useMerchantActivity() {
                 type: 'request' as ActivityType,
                 user: `Table ${req.table_number}`,
                 action: 'requested',
-                target: req.request_type === 'waiter' ? 'Waiter Assistance' :
-                    req.request_type === 'bill' ? 'Bill' : req.request_type,
-                time: new Date(req.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+                target:
+                    req.request_type === 'waiter'
+                        ? 'Waiter Assistance'
+                        : req.request_type === 'bill'
+                          ? 'Bill'
+                          : req.request_type,
+                time: new Date(req.created_at).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                }),
                 timestamp: new Date(req.created_at),
                 hasMessage: false,
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`,
             }));
 
-            const combined = [...orderActivities, ...requestActivities]
-                .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+            const combined = [...orderActivities, ...requestActivities].sort(
+                (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+            );
 
             setActivities(combined);
         } catch (error) {
@@ -193,6 +218,6 @@ export function useMerchantActivity() {
         restaurantName,
         restaurantHandle,
         broadcastMessage,
-        refresh
+        refresh,
     };
 }

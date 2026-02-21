@@ -10,13 +10,18 @@ export class ChapaProvider implements PaymentProvider {
         this.secretKey = secretKey;
     }
 
-    async initiatePayment(amount: number, currency: string, email: string, metadata?: any): Promise<PaymentInitiateResponse> {
+    async initiatePayment(
+        amount: number,
+        currency: string,
+        email: string,
+        metadata?: any
+    ): Promise<PaymentInitiateResponse> {
         const txRef = `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        
+
         const response = await fetch(`${CHAPA_API_URL}/transaction/initialize`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${this.secretKey}`,
+                Authorization: `Bearer ${this.secretKey}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -49,17 +54,20 @@ export class ChapaProvider implements PaymentProvider {
     }
 
     async verifyPayment(transactionReference: string): Promise<PaymentVerifyResponse> {
-        const response = await fetch(`${CHAPA_API_URL}/transaction/verify/${transactionReference}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.secretKey}`,
-            },
-        });
+        const response = await fetch(
+            `${CHAPA_API_URL}/transaction/verify/${transactionReference}`,
+            {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${this.secretKey}`,
+                },
+            }
+        );
 
         const data = await response.json();
 
         if (data.status !== 'success') {
-             return {
+            return {
                 status: 'failed',
                 transactionReference,
                 amount: 0,

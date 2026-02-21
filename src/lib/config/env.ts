@@ -102,16 +102,20 @@ function parseEnv(): Env {
         return envSchema.parse(env);
     } catch (error) {
         if (error instanceof z.ZodError) {
-            const missingVars = error.issues.map((issue) => {
-                const path = issue.path.join('.');
-                return `  - ${path}: ${issue.message}`;
-            }).join('\n');
+            const missingVars = error.issues
+                .map(issue => {
+                    const path = issue.path.join('.');
+                    return `  - ${path}: ${issue.message}`;
+                })
+                .join('\n');
 
             // In development, log warning but continue
             if (process.env.NODE_ENV === 'development') {
                 console.warn(
-                    '\n⚠️  Environment validation failed:\n' + missingVars + '\n\n' +
-                    'Some features may not work correctly.\n'
+                    '\n⚠️  Environment validation failed:\n' +
+                        missingVars +
+                        '\n\n' +
+                        'Some features may not work correctly.\n'
                 );
                 // Return with defaults
                 return envSchema.parse({
@@ -122,8 +126,10 @@ function parseEnv(): Env {
 
             // In production, throw error
             throw new Error(
-                '\n❌ Environment validation failed:\n' + missingVars + '\n\n' +
-                'Please check your .env.local file and ensure all required variables are set.\n'
+                '\n❌ Environment validation failed:\n' +
+                    missingVars +
+                    '\n\n' +
+                    'Please check your .env.local file and ensure all required variables are set.\n'
             );
         }
         throw error;
@@ -145,7 +151,9 @@ export function validateServerEnv(): void {
         if (error instanceof z.ZodError) {
             console.warn(
                 'Server environment validation warnings:\n' +
-                error.issues.map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`).join('\n')
+                    error.issues
+                        .map(issue => `  - ${issue.path.join('.')}: ${issue.message}`)
+                        .join('\n')
             );
         }
     }
@@ -168,15 +176,18 @@ export function getEnv(): Env {
 /**
  * Check if a feature is enabled
  */
-export function isFeatureEnabled(feature: keyof Pick<Env, 
-    | 'ENABLE_OFFLINE_MODE'
-    | 'ENABLE_AR_MENU'
-    | 'ENABLE_ANALYTICS'
-    | 'RATE_LIMIT_ENABLED'
-    | 'ENABLE_P0_PILOT_ROLLOUT'
-    | 'ENABLE_P1_PILOT_ROLLOUT'
-    | 'ENABLE_P2_PILOT_ROLLOUT'
->): boolean {
+export function isFeatureEnabled(
+    feature: keyof Pick<
+        Env,
+        | 'ENABLE_OFFLINE_MODE'
+        | 'ENABLE_AR_MENU'
+        | 'ENABLE_ANALYTICS'
+        | 'RATE_LIMIT_ENABLED'
+        | 'ENABLE_P0_PILOT_ROLLOUT'
+        | 'ENABLE_P1_PILOT_ROLLOUT'
+        | 'ENABLE_P2_PILOT_ROLLOUT'
+    >
+): boolean {
     return getEnv()[feature] ?? false;
 }
 

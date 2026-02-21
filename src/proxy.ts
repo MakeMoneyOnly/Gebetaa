@@ -37,7 +37,11 @@ function checkRateLimit(
     if (!record || now > record.resetTime) {
         // New window
         rateLimitStore.set(ip, { count: 1, resetTime: now + policy.windowMs });
-        return { allowed: true, remaining: policy.maxRequests - 1, resetTime: now + policy.windowMs };
+        return {
+            allowed: true,
+            remaining: policy.maxRequests - 1,
+            resetTime: now + policy.windowMs,
+        };
     }
 
     if (record.count >= policy.maxRequests) {
@@ -45,7 +49,11 @@ function checkRateLimit(
     }
 
     record.count++;
-    return { allowed: true, remaining: policy.maxRequests - record.count, resetTime: record.resetTime };
+    return {
+        allowed: true,
+        remaining: policy.maxRequests - record.count,
+        resetTime: record.resetTime,
+    };
 }
 
 /**
@@ -113,8 +121,8 @@ function checkCSRF(request: NextRequest): { valid: boolean; reason?: string } {
 import { updateSession } from '@/lib/supabase/middleware';
 
 export default async function proxy(request: NextRequest) {
-    const isE2EBypass = process.env.NODE_ENV !== 'production'
-        && request.headers.get('x-e2e-bypass-auth') === '1';
+    const isE2EBypass =
+        process.env.NODE_ENV !== 'production' && request.headers.get('x-e2e-bypass-auth') === '1';
 
     if (isE2EBypass) {
         return NextResponse.next();

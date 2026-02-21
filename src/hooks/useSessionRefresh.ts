@@ -1,9 +1,9 @@
 /**
  * Session Refresh Hook
- * 
+ *
  * Manages client-side session refresh for Supabase authentication.
  * Handles session expiry gracefully and provides automatic refresh logic.
- * 
+ *
  * @module useSessionRefresh
  */
 
@@ -40,16 +40,16 @@ const DEFAULT_REFRESH_THRESHOLD = 300; // 5 minutes before expiry
 
 /**
  * Hook for managing Supabase session refresh logic on the client side.
- * 
+ *
  * This hook:
  * - Periodically checks session expiry status
  * - Automatically refreshes tokens before they expire
  * - Handles session expiry gracefully with callbacks
  * - Provides manual refresh functionality
- * 
+ *
  * @param config - Configuration options for session refresh behavior
  * @returns Object with session info and refresh functions
- * 
+ *
  * @example
  * ```tsx
  * function AuthenticatedComponent() {
@@ -57,11 +57,11 @@ const DEFAULT_REFRESH_THRESHOLD = 300; // 5 minutes before expiry
  *     onExpired: () => router.push('/auth/login'),
  *     onError: (err) => toast.error('Session refresh failed'),
  *   });
- *   
+ *
  *   if (!sessionInfo?.isValid) {
  *     return <SessionExpiredMessage />;
  *   }
- *   
+ *
  *   return <ProtectedContent />;
  * }
  * ```
@@ -84,8 +84,11 @@ export function useSessionRefresh(config: SessionRefreshConfig = {}) {
      */
     const getSessionInfo = useCallback(async (): Promise<SessionInfo | null> => {
         try {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
+            const {
+                data: { session },
+                error,
+            } = await supabase.auth.getSession();
+
             if (error || !session) {
                 return null;
             }
@@ -118,7 +121,10 @@ export function useSessionRefresh(config: SessionRefreshConfig = {}) {
         isRefreshingRef.current = true;
 
         try {
-            const { data: { session }, error } = await supabase.auth.refreshSession();
+            const {
+                data: { session },
+                error,
+            } = await supabase.auth.refreshSession();
 
             if (error) {
                 console.error('[SessionRefresh] Refresh failed:', error);
@@ -178,20 +184,20 @@ export function useSessionRefresh(config: SessionRefreshConfig = {}) {
      * Set up auth state listener for immediate expiry detection
      */
     useEffect(() => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
-                if (event === 'TOKEN_REFRESHED') {
-                    if (session) {
-                        onRefresh?.({
-                            userId: session.user.id,
-                            expiresAt: session.expires_at ?? 0,
-                        });
-                    }
-                } else if (event === 'SIGNED_OUT') {
-                    onExpired?.();
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'TOKEN_REFRESHED') {
+                if (session) {
+                    onRefresh?.({
+                        userId: session.user.id,
+                        expiresAt: session.expires_at ?? 0,
+                    });
                 }
+            } else if (event === 'SIGNED_OUT') {
+                onExpired?.();
             }
-        );
+        });
 
         return () => {
             subscription.unsubscribe();
@@ -231,20 +237,20 @@ export function useSessionRefresh(config: SessionRefreshConfig = {}) {
 
 /**
  * Hook for components that need to protect content based on session state.
- * 
+ *
  * @param options - Configuration options
  * @returns Session state and loading status
- * 
+ *
  * @example
  * ```tsx
  * function ProtectedPage() {
  *   const { isAuthenticated, isLoading, userId } = useSessionState({
  *     redirectTo: '/auth/login',
  *   });
- *   
+ *
  *   if (isLoading) return <LoadingSpinner />;
  *   if (!isAuthenticated) return null; // Will redirect
- *   
+ *
  *   return <Dashboard userId={userId} />;
  * }
  * ```
@@ -254,8 +260,11 @@ export function useSessionState(options: { redirectTo?: string } = {}) {
     const supabase = getSupabaseClient();
 
     const checkSession = useCallback(async () => {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        const {
+            data: { session },
+            error,
+        } = await supabase.auth.getSession();
+
         if (error || !session) {
             return { isAuthenticated: false, userId: null };
         }

@@ -288,13 +288,13 @@ describe('Sync Conflict Resolution', () => {
 
             const id = await queueOrder(order);
             const original = (await getPendingOrders())[0];
-            
+
             // Small delay to ensure different timestamp
             await new Promise(resolve => setTimeout(resolve, 10));
-            
+
             await updateQueuedOrder(id as number, { notes: 'Updated' });
             const updated = (await getPendingOrders())[0];
-            
+
             expect(updated.last_modified).not.toBe(original.last_modified);
         });
     });
@@ -347,7 +347,7 @@ describe('Sync Conflict Resolution', () => {
             };
 
             const id = await queueOrder(order);
-            
+
             // Server version is older
             const serverOrder = {
                 version: 1,
@@ -355,7 +355,7 @@ describe('Sync Conflict Resolution', () => {
             };
 
             const result = await resolveConflict(id as number, serverOrder);
-            
+
             expect(result.resolved).toBe(true);
             expect(result.strategy).toBe('client_wins');
         });
@@ -371,7 +371,7 @@ describe('Sync Conflict Resolution', () => {
             };
 
             const id = await queueOrder(order);
-            
+
             // Server version is newer
             const serverOrder = {
                 version: 2,
@@ -379,7 +379,7 @@ describe('Sync Conflict Resolution', () => {
             };
 
             const result = await resolveConflict(id as number, serverOrder);
-            
+
             expect(result.resolved).toBe(true);
             expect(result.strategy).toBe('server_wins');
         });
@@ -395,14 +395,14 @@ describe('Sync Conflict Resolution', () => {
             };
 
             const id = await queueOrder(order);
-            
+
             const serverOrder = {
                 version: 2,
                 last_modified: new Date().toISOString(),
             };
 
             await resolveConflict(id as number, serverOrder);
-            
+
             const logs = await getConflictLogs();
             expect(logs).toHaveLength(1);
             expect(logs[0].idempotency_key).toBe('key-conflict-1');
@@ -412,7 +412,7 @@ describe('Sync Conflict Resolution', () => {
     describe('getSyncStatus', () => {
         it('should return sync status summary', async () => {
             const status = await getSyncStatus();
-            
+
             expect(status).toHaveProperty('last_sync_at');
             expect(status).toHaveProperty('pending_count');
             expect(status).toHaveProperty('conflict_count');

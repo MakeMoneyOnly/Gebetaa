@@ -13,13 +13,17 @@ function parseBooleanFlag(value: string | undefined): boolean {
 
 export function isPilotRolloutEnabled(phase: PilotPhase = 'p0'): boolean {
     if (phase === 'p2') {
-        return parseBooleanFlag(process.env.ENABLE_P2_PILOT_ROLLOUT)
-            || parseBooleanFlag(process.env.ENABLE_P1_PILOT_ROLLOUT)
-            || parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT);
+        return (
+            parseBooleanFlag(process.env.ENABLE_P2_PILOT_ROLLOUT) ||
+            parseBooleanFlag(process.env.ENABLE_P1_PILOT_ROLLOUT) ||
+            parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT)
+        );
     }
     if (phase === 'p1') {
-        return parseBooleanFlag(process.env.ENABLE_P1_PILOT_ROLLOUT)
-            || parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT);
+        return (
+            parseBooleanFlag(process.env.ENABLE_P1_PILOT_ROLLOUT) ||
+            parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT)
+        );
     }
     return parseBooleanFlag(process.env.ENABLE_P0_PILOT_ROLLOUT);
 }

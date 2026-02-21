@@ -1,8 +1,8 @@
 /**
  * Edge Case and Boundary Value Tests
- * 
+ *
  * Addresses PLATFORM_AUDIT finding TEST-3: Missing edge case tests
- * 
+ *
  * This file contains comprehensive boundary value tests for:
  * - Price boundaries (min, max, decimal precision)
  * - Quantity boundaries
@@ -83,7 +83,7 @@ describe('Edge Cases: Quantity Boundaries', () => {
     const baseItem = {
         id: '550e8400-e29b-41d4-a716-446655440000',
         name: 'Test Item',
-        price: 10.00,
+        price: 10.0,
     };
 
     it('should reject quantity of 0', () => {
@@ -123,7 +123,10 @@ describe('Edge Cases: Quantity Boundaries', () => {
     });
 
     it('should handle very large quantity', () => {
-        const result = OrderItemSchema.safeParse({ ...baseItem, quantity: Number.MAX_SAFE_INTEGER });
+        const result = OrderItemSchema.safeParse({
+            ...baseItem,
+            quantity: Number.MAX_SAFE_INTEGER,
+        });
         expect(result.success).toBe(false);
     });
 });
@@ -132,7 +135,7 @@ describe('Edge Cases: String Length Boundaries', () => {
     const baseItem = {
         id: '550e8400-e29b-41d4-a716-446655440000',
         quantity: 1,
-        price: 10.00,
+        price: 10.0,
     };
 
     it('should accept name at exactly max length (200 chars)', () => {
@@ -201,7 +204,7 @@ describe('Edge Cases: Unicode and Special Characters', () => {
     const baseItem = {
         id: '550e8400-e29b-41d4-a716-446655440000',
         quantity: 1,
-        price: 10.00,
+        price: 10.0,
     };
 
     it('should accept Amharic characters in name', () => {
@@ -276,7 +279,7 @@ describe('Edge Cases: UUID Validation', () => {
     const baseItem = {
         name: 'Test Item',
         quantity: 1,
-        price: 10.00,
+        price: 10.0,
     };
 
     it('should accept valid UUID v4', () => {
@@ -342,7 +345,7 @@ describe('Edge Cases: Array Boundaries', () => {
     const baseOrder = {
         restaurant_id: '550e8400-e29b-41d4-a716-446655440000',
         table_number: '5',
-        total_price: 100.00,
+        total_price: 100.0,
         idempotency_key: '550e8400-e29b-41d4-a716-446655440001',
     };
 
@@ -350,7 +353,7 @@ describe('Edge Cases: Array Boundaries', () => {
         id: '550e8400-e29b-41d4-a716-446655440002',
         name: 'Test Item',
         quantity: 1,
-        price: 10.00,
+        price: 10.0,
     };
 
     it('should reject order with no items', () => {
@@ -370,27 +373,31 @@ describe('Edge Cases: Array Boundaries', () => {
     });
 
     it('should accept order with exactly 50 items (maximum)', () => {
-        const items = Array(50).fill(validItem).map((item, i) => ({
-            ...item,
-            id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
-        }));
+        const items = Array(50)
+            .fill(validItem)
+            .map((item, i) => ({
+                ...item,
+                id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
+            }));
         const result = CreateOrderSchema.safeParse({
             ...baseOrder,
             items,
-            total_price: 500.00,
+            total_price: 500.0,
         });
         expect(result.success).toBe(true);
     });
 
     it('should reject order with 51 items (over maximum)', () => {
-        const items = Array(51).fill(validItem).map((item, i) => ({
-            ...item,
-            id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
-        }));
+        const items = Array(51)
+            .fill(validItem)
+            .map((item, i) => ({
+                ...item,
+                id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
+            }));
         const result = CreateOrderSchema.safeParse({
             ...baseOrder,
             items,
-            total_price: 510.00,
+            total_price: 510.0,
         });
         expect(result.success).toBe(false);
     });
@@ -547,7 +554,7 @@ describe('Edge Cases: Type Coercion and Unexpected Types', () => {
         const result = OrderItemSchema.safeParse({
             ...baseItem,
             quantity: 1,
-            price: 10.00,
+            price: 10.0,
             extraField: 'should be ignored or rejected',
         });
         // Zod with passthrough would accept, strict would reject
@@ -584,14 +591,16 @@ describe('Edge Cases: Concurrency and Race Conditions', () => {
         const baseOrder = {
             restaurant_id: '550e8400-e29b-41d4-a716-446655440000',
             table_number: '5',
-            total_price: 100.00,
+            total_price: 100.0,
             idempotency_key: '550e8400-e29b-41d4-a716-446655440001',
-            items: [{
-                id: '550e8400-e29b-41d4-a716-446655440002',
-                name: 'Test Item',
-                quantity: 1,
-                price: 10.00,
-            }],
+            items: [
+                {
+                    id: '550e8400-e29b-41d4-a716-446655440002',
+                    name: 'Test Item',
+                    quantity: 1,
+                    price: 10.0,
+                },
+            ],
         };
 
         // Schema validation should pass for both
@@ -607,45 +616,47 @@ describe('Edge Cases: Concurrency and Race Conditions', () => {
 describe('Edge Cases: Performance with Large Inputs', () => {
     it('should validate within reasonable time for large notes', () => {
         const start = performance.now();
-        
+
         const result = OrderItemSchema.safeParse({
             id: '550e8400-e29b-41d4-a716-446655440000',
             name: 'Test Item',
             quantity: 1,
-            price: 10.00,
+            price: 10.0,
             notes: 'a'.repeat(500), // Max allowed
         });
-        
+
         const duration = performance.now() - start;
-        
+
         expect(result.success).toBe(true);
         expect(duration).toBeLessThan(100); // Should validate in under 100ms
     });
 
     it('should validate large order within reasonable time', () => {
-        const items = Array(50).fill({
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            name: 'Test Item with a reasonably long name',
-            quantity: 10,
-            price: 99.99,
-            notes: 'Some special instructions for the kitchen staff',
-        }).map((item, i) => ({
-            ...item,
-            id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
-        }));
+        const items = Array(50)
+            .fill({
+                id: '550e8400-e29b-41d4-a716-446655440000',
+                name: 'Test Item with a reasonably long name',
+                quantity: 10,
+                price: 99.99,
+                notes: 'Some special instructions for the kitchen staff',
+            })
+            .map((item, i) => ({
+                ...item,
+                id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
+            }));
 
         const start = performance.now();
-        
+
         const result = CreateOrderSchema.safeParse({
             restaurant_id: '550e8400-e29b-41d4-a716-446655440000',
             table_number: '5',
-            total_price: 49995.00,
+            total_price: 49995.0,
             idempotency_key: '550e8400-e29b-41d4-a716-446655440001',
             items,
         });
-        
+
         const duration = performance.now() - start;
-        
+
         expect(result.success).toBe(true);
         expect(duration).toBeLessThan(500); // Should validate in under 500ms
     });

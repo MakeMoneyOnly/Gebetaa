@@ -41,4 +41,5 @@ export interface OrderItem {
 }
 
 // Augment the existing Database type if needed, or just specific table helpers
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Tables<T extends keyof Database['public']['Tables']> =
+    Database['public']['Tables'][T]['Row'];

@@ -1,8 +1,8 @@
 /**
  * Performance Monitoring Service
- * 
+ *
  * Addresses PLATFORM_AUDIT finding DEVOPS-4: Missing performance monitoring
- * 
+ *
  * This service provides:
  * - Custom performance metrics tracking
  * - Web Vitals reporting
@@ -85,7 +85,9 @@ class PerformanceMonitorService {
             rating: metric.rating as 'good' | 'needs-improvement' | 'poor',
             timestamp: Date.now(),
             id: metric.id,
-            navigationType: (metric as unknown as Record<string, unknown>).navigationType as string | undefined,
+            navigationType: (metric as unknown as Record<string, unknown>).navigationType as
+                | string
+                | undefined,
         };
 
         this.metrics.push(performanceMetric);
@@ -95,10 +97,10 @@ class PerformanceMonitorService {
 
     /**
      * Start a custom performance timer
-     * 
+     *
      * @param name - Name of the operation being timed
      * @returns Function to stop the timer and record the duration
-     * 
+     *
      * @example
      * ```ts
      * const stopTimer = performanceMonitor.startTimer('api_call');
@@ -108,7 +110,7 @@ class PerformanceMonitorService {
      */
     startTimer(name: string): (metadata?: Record<string, unknown>) => number {
         const startTime = performance.now();
-        
+
         return (metadata?: Record<string, unknown>) => {
             const duration = performance.now() - startTime;
             this.recordEvent(name, duration, metadata);
@@ -156,15 +158,15 @@ class PerformanceMonitorService {
             if (!endMark) {
                 performance.mark(end);
             }
-            
+
             performance.measure(name, startMark, end);
             const entries = performance.getEntriesByName(name, 'measure');
             const duration = entries[entries.length - 1]?.duration;
-            
+
             if (duration !== undefined) {
                 this.recordEvent(name, duration);
             }
-            
+
             return duration ?? null;
         } catch (error) {
             console.warn('[Performance] Measure failed:', error);
@@ -193,8 +195,14 @@ class PerformanceMonitorService {
         metrics: Record<string, { count: number; avg: number; min: number; max: number }>;
         events: Record<string, { count: number; avg: number; min: number; max: number }>;
     } {
-        const metricsSummary: Record<string, { count: number; avg: number; min: number; max: number }> = {};
-        const eventsSummary: Record<string, { count: number; avg: number; min: number; max: number }> = {};
+        const metricsSummary: Record<
+            string,
+            { count: number; avg: number; min: number; max: number }
+        > = {};
+        const eventsSummary: Record<
+            string,
+            { count: number; avg: number; min: number; max: number }
+        > = {};
 
         // Aggregate metrics
         for (const metric of this.metrics) {
@@ -251,10 +259,15 @@ class PerformanceMonitorService {
 
         // Use sendBeacon for reliable delivery
         if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-            const blob = new Blob([JSON.stringify({
-                type: 'web-vital',
-                ...metric,
-            })], { type: 'application/json' });
+            const blob = new Blob(
+                [
+                    JSON.stringify({
+                        type: 'web-vital',
+                        ...metric,
+                    }),
+                ],
+                { type: 'application/json' }
+            );
             navigator.sendBeacon(this.reportingEndpoint, blob);
         }
     }
@@ -266,10 +279,15 @@ class PerformanceMonitorService {
         if (!this.reportingEndpoint) return;
 
         if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-            const blob = new Blob([JSON.stringify({
-                type: 'performance-event',
-                ...event,
-            })], { type: 'application/json' });
+            const blob = new Blob(
+                [
+                    JSON.stringify({
+                        type: 'performance-event',
+                        ...event,
+                    }),
+                ],
+                { type: 'application/json' }
+            );
             navigator.sendBeacon(this.reportingEndpoint, blob);
         }
     }
@@ -298,23 +316,20 @@ export function trackWebVital(metric: Metric): void {
 
 /**
  * Time an async operation
- * 
+ *
  * @param name - Name of the operation
  * @param fn - Async function to time
  * @returns The result of the function
- * 
+ *
  * @example
  * ```ts
  * const data = await timeAsync('fetch_orders', () => fetchOrders());
  * ```
  */
-export async function timeAsync<T>(
-    name: string,
-    fn: () => Promise<T>
-): Promise<T> {
+export async function timeAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
     const monitor = getPerformanceMonitor();
     const stopTimer = monitor.startTimer(name);
-    
+
     try {
         const result = await fn();
         stopTimer();
@@ -327,7 +342,7 @@ export async function timeAsync<T>(
 
 /**
  * Time a sync operation
- * 
+ *
  * @param name - Name of the operation
  * @param fn - Function to time
  * @returns The result of the function
@@ -335,7 +350,7 @@ export async function timeAsync<T>(
 export function timeSync<T>(name: string, fn: () => T): T {
     const monitor = getPerformanceMonitor();
     const stopTimer = monitor.startTimer(name);
-    
+
     try {
         const result = fn();
         stopTimer();
@@ -348,13 +363,13 @@ export function timeSync<T>(name: string, fn: () => T): T {
 
 /**
  * Hook to track component render time
- * 
+ *
  * @param componentName - Name of the component
  * @returns Object with start and end functions
  */
 export function usePerformanceTracking(componentName: string) {
     const monitor = getPerformanceMonitor();
-    
+
     const trackRender = () => {
         const stopTimer = monitor.startTimer(`render_${componentName}`);
         return stopTimer;

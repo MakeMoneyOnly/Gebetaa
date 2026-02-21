@@ -31,7 +31,7 @@ export function isRemoteOrDataImageSrc(src: string): boolean {
             'images.unsplash.com',
             'plus.unsplash.com',
             'axuegixbqsvztdraenkz.supabase.co',
-            'i.pravatar.cc'
+            'i.pravatar.cc',
         ];
 
         // If domain is whitelisted, allow optimization (return false)

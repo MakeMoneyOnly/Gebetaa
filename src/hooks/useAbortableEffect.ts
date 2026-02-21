@@ -43,7 +43,7 @@ export function useAbortableEffect(
         return () => {
             // Abort on cleanup
             abortControllerRef.current?.abort();
-            
+
             // Handle any pending promise rejections from aborted requests
             if (effectResult instanceof Promise) {
                 effectResult.catch(() => {
@@ -51,7 +51,7 @@ export function useAbortableEffect(
                 });
             }
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, deps);
 }
 

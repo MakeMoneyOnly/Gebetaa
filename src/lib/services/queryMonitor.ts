@@ -1,8 +1,8 @@
 /**
  * Query Performance Monitoring Service
- * 
+ *
  * Addresses PLATFORM_AUDIT finding DB-2: No query performance monitoring
- * 
+ *
  * This service provides:
  * - Query timing logs for performance tracking
  * - Slow query detection and alerting
@@ -57,7 +57,7 @@ const DEFAULT_CONFIG: QueryMonitorConfig = {
 
 /**
  * Query Monitor Service
- * 
+ *
  * Wraps database queries with performance monitoring and logging.
  */
 class QueryMonitorService {
@@ -78,12 +78,12 @@ class QueryMonitorService {
 
     /**
      * Execute a query with monitoring
-     * 
+     *
      * @param queryName - Human-readable name for the query
      * @param queryFn - Function that executes the query
      * @param metadata - Optional metadata for logging
      * @returns Query result with timing information
-     * 
+     *
      * @example
      * ```ts
      * const result = await monitor.executeMonitored(
@@ -131,7 +131,7 @@ class QueryMonitorService {
         } catch (err) {
             const durationMs = performance.now() - startTime;
             error = err instanceof Error ? err : new Error(String(err));
-            
+
             this.logQuery(queryName, durationMs, metadata, false, error);
             throw error;
         }
@@ -155,9 +155,7 @@ class QueryMonitorService {
      * Get slow queries (queries with avg time above threshold)
      */
     getSlowQueries(): QueryStats[] {
-        return this.getStats().filter(
-            stat => stat.avgTimeMs > this.config.slowQueryThresholdMs
-        );
+        return this.getStats().filter(stat => stat.avgTimeMs > this.config.slowQueryThresholdMs);
     }
 
     /**
@@ -179,7 +177,7 @@ class QueryMonitorService {
      */
     private recordStats(queryName: string, durationMs: number, isSlow: boolean): void {
         const existing = this.stats.get(queryName);
-        
+
         if (existing) {
             existing.totalCalls++;
             existing.totalTimeMs += durationMs;
@@ -231,14 +229,19 @@ class QueryMonitorService {
 
         if (this.isDevelopment) {
             const prefix = isSlow ? '🐢' : error ? '❌' : '✓';
-            console.log(`[QueryMonitor] ${prefix} ${queryName}: ${durationMs.toFixed(2)}ms`, logData);
+            console.log(
+                `[QueryMonitor] ${prefix} ${queryName}: ${durationMs.toFixed(2)}ms`,
+                logData
+            );
         } else {
             // In production, use structured logging
-            console.log(JSON.stringify({
-                level: logLevel,
-                message: `Query executed: ${queryName}`,
-                ...logData,
-            }));
+            console.log(
+                JSON.stringify({
+                    level: logLevel,
+                    message: `Query executed: ${queryName}`,
+                    ...logData,
+                })
+            );
         }
     }
 
@@ -262,7 +265,7 @@ class QueryMonitorService {
         // 1. Send to Sentry
         // 2. Write to audit_logs table
         // 3. Send to monitoring service
-        
+
         // Example: Track in audit_logs (would be called from API route)
         // auditLogger.log({
         //     action: 'slow_query_detected',
@@ -290,12 +293,12 @@ export function getQueryMonitor(config?: Partial<QueryMonitorConfig>): QueryMoni
 
 /**
  * Execute a monitored query (convenience function)
- * 
+ *
  * @param queryName - Human-readable name for the query
  * @param queryFn - Function that executes the query
  * @param metadata - Optional metadata for logging
  * @returns The query result data
- * 
+ *
  * @example
  * ```ts
  * const menuItems = await monitoredQuery(
@@ -317,7 +320,7 @@ export async function monitoredQuery<T>(
 
 /**
  * Time an async operation and return the duration
- * 
+ *
  * @param name - Name for the timer
  * @param fn - Async function to time
  * @returns Object with result and duration

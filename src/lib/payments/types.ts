@@ -1,4 +1,3 @@
-
 export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled';
 
 export interface PaymentInitiateResponse {
@@ -17,6 +16,11 @@ export interface PaymentVerifyResponse {
 
 export interface PaymentProvider {
     name: string;
-    initiatePayment(amount: number, currency: string, email: string, metadata?: any): Promise<PaymentInitiateResponse>;
+    initiatePayment(
+        amount: number,
+        currency: string,
+        email: string,
+        metadata?: any
+    ): Promise<PaymentInitiateResponse>;
     verifyPayment(transactionReference: string): Promise<PaymentVerifyResponse>;
 }

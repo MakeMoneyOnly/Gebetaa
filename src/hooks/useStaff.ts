@@ -38,7 +38,7 @@ export function useStaff() {
             setLoading(true);
             setError(null);
             const response = await fetch('/api/staff', { method: 'GET' });
-            
+
             if (!response.ok) {
                 let errorMessage = 'Failed to fetch staff.';
                 try {
@@ -66,7 +66,11 @@ export function useStaff() {
         void fetchStaff();
     }, [fetchStaff]);
 
-    const handleInvite = async (payload: { email: string | null; role: StaffRole }) => {
+    const handleInvite = async (payload: {
+        email: string | null;
+        role: StaffRole;
+        label?: string | null;
+    }) => {
         try {
             setInviteLoading(true);
             const response = await fetch('/api/staff/invite', {
@@ -79,10 +83,14 @@ export function useStaff() {
                 throw new Error(result?.error ?? 'Failed to create invite.');
             }
             setInviteUrl(result?.data?.invite_url ?? null);
-            toast.success('Staff invite created.');
+            toast.success('Provisioning link created.');
             return true;
         } catch (inviteError) {
-            toast.error(inviteError instanceof Error ? inviteError.message : 'Failed to create invite.');
+            toast.error(
+                inviteError instanceof Error
+                    ? inviteError.message
+                    : 'Failed to create provisioning link.'
+            );
             return false;
         } finally {
             setInviteLoading(false);
@@ -101,8 +109,8 @@ export function useStaff() {
                 throw new Error(payload?.error ?? 'Failed to update role.');
             }
 
-            setStaff((previous) =>
-                previous.map((member) => (member.id === staffId ? { ...member, role } : member))
+            setStaff(previous =>
+                previous.map(member => (member.id === staffId ? { ...member, role } : member))
             );
             toast.success('Role updated.');
             return true;
@@ -126,15 +134,21 @@ export function useStaff() {
                 throw new Error(payload?.error ?? 'Failed to update active status.');
             }
 
-            setStaff((previous) =>
-                previous.map((staffMember) =>
-                    staffMember.id === member.id ? { ...staffMember, is_active: nextValue } : staffMember
+            setStaff(previous =>
+                previous.map(staffMember =>
+                    staffMember.id === member.id
+                        ? { ...staffMember, is_active: nextValue }
+                        : staffMember
                 )
             );
             toast.success(nextValue ? 'Staff activated.' : 'Staff deactivated.');
             return true;
         } catch (activeError) {
-            toast.error(activeError instanceof Error ? activeError.message : 'Failed to update active status.');
+            toast.error(
+                activeError instanceof Error
+                    ? activeError.message
+                    : 'Failed to update active status.'
+            );
             return false;
         } finally {
             setActiveUpdatingId(null);
@@ -152,6 +166,6 @@ export function useStaff() {
         fetchStaff,
         handleInvite,
         handleRoleUpdate,
-        handleActiveToggle
+        handleActiveToggle,
     };
 }

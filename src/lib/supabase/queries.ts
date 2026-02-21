@@ -120,15 +120,13 @@ export async function insertOrder(
     supabase: SupabaseClient<Database>,
     order: Tables['orders']['Insert']
 ) {
-    const { error } = await supabase
-        .from('orders')
-        .insert(order);
-    
+    const { error } = await supabase.from('orders').insert(order);
+
     // Return early if there's an error
     if (error) {
         return { data: null, error };
     }
-    
+
     // Since we don't use .select(), we return the input object as the "Row".
     // This avoids triggering RLS SELECT policies which guests don't have.
     // Ensure `id` was generated prior to calling this function.
@@ -211,6 +209,9 @@ export async function fetchItemsForValidation(
         .select('id, name, price, is_available, station')
         .in('id', itemIds)
         .returns<
-            Pick<Tables['menu_items']['Row'], 'id' | 'name' | 'price' | 'is_available' | 'station'>[]
+            Pick<
+                Tables['menu_items']['Row'],
+                'id' | 'name' | 'price' | 'is_available' | 'station'
+            >[]
         >();
 }
