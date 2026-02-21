@@ -8,12 +8,15 @@ export async function GET(request: Request) {
         const supabase = await createClient();
 
         // Get the current user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const {
+            data: { user },
+            error: userError,
+        } = await supabase.auth.getUser();
 
         console.log('[API] User check:', {
             hasUser: !!user,
             userId: user?.id,
-            userError: userError?.message
+            userError: userError?.message,
         });
 
         if (userError || !user) {
@@ -27,12 +30,13 @@ export async function GET(request: Request) {
             .select('restaurant_id')
             .eq('user_id', user.id)
             .eq('is_active', true)
+            .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
         console.log('[API] Staff lookup:', {
             staffEntry,
-            staffError: staffError?.message
+            staffError: staffError?.message,
         });
 
         let restaurantId = staffEntry?.restaurant_id;
@@ -47,7 +51,7 @@ export async function GET(request: Request) {
 
             console.log('[API] Agency lookup:', {
                 agencyUser,
-                agencyError: agencyError?.message
+                agencyError: agencyError?.message,
             });
 
             if (agencyUser?.restaurant_ids?.[0]) {
@@ -77,7 +81,7 @@ export async function GET(request: Request) {
 
         console.log('[API] Orders fetch:', {
             count: orders?.length || 0,
-            error: orderError?.message
+            error: orderError?.message,
         });
 
         // Fetch service requests
@@ -90,7 +94,7 @@ export async function GET(request: Request) {
 
         console.log('[API] Requests fetch:', {
             count: requests?.length || 0,
-            error: requestError?.message
+            error: requestError?.message,
         });
 
         // Get restaurant info
@@ -109,22 +113,24 @@ export async function GET(request: Request) {
             restaurantId,
             errors: {
                 orders: orderError?.message,
-                requests: requestError?.message
-            }
+                requests: requestError?.message,
+            },
         };
 
         console.log('[API] Returning response with:', {
             orderCount: response.orders.length,
             requestCount: response.requests.length,
-            restaurantName: response.restaurant.name
+            restaurantName: response.restaurant.name,
         });
 
         return NextResponse.json(response);
-
     } catch (error) {
         console.error('[API] Error:', error);
         return NextResponse.json(
-            { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+            {
+                error: 'Internal server error',
+                details: error instanceof Error ? error.message : 'Unknown error',
+            },
             { status: 500 }
         );
     }

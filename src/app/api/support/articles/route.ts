@@ -31,12 +31,14 @@ export async function GET(request: Request) {
     }
 
     const query = new URL(request.url).searchParams.get('query')?.trim().toLowerCase() ?? '';
-    const filtered = query.length === 0
-        ? ARTICLES
-        : ARTICLES.filter(article =>
-            article.title.toLowerCase().includes(query) ||
-            article.category.toLowerCase().includes(query)
-        );
+    const filtered =
+        query.length === 0
+            ? ARTICLES
+            : ARTICLES.filter(
+                  article =>
+                      article.title.toLowerCase().includes(query) ||
+                      article.category.toLowerCase().includes(query)
+              );
 
     return apiSuccess({ articles: filtered });
 }

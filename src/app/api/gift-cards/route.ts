@@ -5,6 +5,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody, parseQuery } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import { isSchemaNotReadyError } from '@/lib/api/schemaFallback';
 import type { Json } from '@/types/database';
 
 const GiftCardsQuerySchema = z.object({
@@ -63,7 +64,15 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) {
-        return apiError('Failed to fetch gift cards', 500, 'GIFT_CARDS_FETCH_FAILED', error.message);
+        if (isSchemaNotReadyError(error)) {
+            return apiSuccess({ gift_cards: [] });
+        }
+        return apiError(
+            'Failed to fetch gift cards',
+            500,
+            'GIFT_CARDS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({ gift_cards: data ?? [] });
@@ -113,23 +122,31 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to create gift card', 500, 'GIFT_CARD_CREATE_FAILED', error.message);
+        return apiError(
+            'Failed to create gift card',
+            500,
+            'GIFT_CARD_CREATE_FAILED',
+            error.message
+        );
     }
 
-    const { error: txError } = await db
-        .from('gift_card_transactions' as any)
-        .insert({
-            restaurant_id: context.restaurantId,
-            gift_card_id: giftCard.id,
-            amount_delta: balance,
-            balance_after: balance,
-            type: 'issue',
-            metadata: { source: 'merchant_dashboard', idempotency_key: idempotencyKey } as Json,
-            created_by: auth.user.id,
-        });
+    const { error: txError } = await db.from('gift_card_transactions' as any).insert({
+        restaurant_id: context.restaurantId,
+        gift_card_id: giftCard.id,
+        amount_delta: balance,
+        balance_after: balance,
+        type: 'issue',
+        metadata: { source: 'merchant_dashboard', idempotency_key: idempotencyKey } as Json,
+        created_by: auth.user.id,
+    });
 
     if (txError) {
-        return apiError('Failed to write gift card transaction', 500, 'GIFT_CARD_TRANSACTION_CREATE_FAILED', txError.message);
+        return apiError(
+            'Failed to write gift card transaction',
+            500,
+            'GIFT_CARD_TRANSACTION_CREATE_FAILED',
+            txError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

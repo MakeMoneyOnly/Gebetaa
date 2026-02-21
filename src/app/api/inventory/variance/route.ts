@@ -5,8 +5,14 @@ import { parseQuery } from '@/lib/api/validation';
 import type { Json } from '@/types/database';
 
 const VarianceQuerySchema = z.object({
-    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    start_date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+    end_date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
     limit: z.coerce.number().int().min(1).max(500).optional().default(200),
 });
 
@@ -38,9 +44,10 @@ function resolveDateWindow(input: { start_date?: string; end_date?: string }) {
 }
 
 function adjustmentSignedQty(qty: number, metadata: Json) {
-    const direction = typeof metadata === 'object' && metadata !== null
-        ? (metadata as Record<string, unknown>).adjustment_direction
-        : undefined;
+    const direction =
+        typeof metadata === 'object' && metadata !== null
+            ? (metadata as Record<string, unknown>).adjustment_direction
+            : undefined;
     return direction === 'decrease' ? -qty : qty;
 }
 
@@ -83,10 +90,20 @@ export async function GET(request: Request) {
     ]);
 
     if (itemsResult.error) {
-        return apiError('Failed to fetch inventory items', 500, 'INVENTORY_ITEMS_FETCH_FAILED', itemsResult.error.message);
+        return apiError(
+            'Failed to fetch inventory items',
+            500,
+            'INVENTORY_ITEMS_FETCH_FAILED',
+            itemsResult.error.message
+        );
     }
     if (movementsResult.error) {
-        return apiError('Failed to fetch stock movements', 500, 'STOCK_MOVEMENTS_FETCH_FAILED', movementsResult.error.message);
+        return apiError(
+            'Failed to fetch stock movements',
+            500,
+            'STOCK_MOVEMENTS_FETCH_FAILED',
+            movementsResult.error.message
+        );
     }
 
     const movementByItem = new Map<string, { theoretical_stock: number; waste_qty: number }>();
@@ -112,29 +129,31 @@ export async function GET(request: Request) {
         movementByItem.set(movement.inventory_item_id, current);
     }
 
-    const rows: VarianceRow[] = ((itemsResult.data ?? []) as Array<Record<string, unknown>>).map((item) => {
-        const itemId = String(item.id ?? '');
-        const rollup = movementByItem.get(itemId) ?? { theoretical_stock: 0, waste_qty: 0 };
-        const actual = Number(item.current_stock ?? 0);
-        const theoretical = Number(rollup.theoretical_stock.toFixed(3));
-        const variance_qty = Number((actual - theoretical).toFixed(3));
-        const waste_qty = Number(rollup.waste_qty.toFixed(3));
-        const cost = Number(item.cost_per_unit ?? 0);
+    const rows: VarianceRow[] = ((itemsResult.data ?? []) as Array<Record<string, unknown>>).map(
+        item => {
+            const itemId = String(item.id ?? '');
+            const rollup = movementByItem.get(itemId) ?? { theoretical_stock: 0, waste_qty: 0 };
+            const actual = Number(item.current_stock ?? 0);
+            const theoretical = Number(rollup.theoretical_stock.toFixed(3));
+            const variance_qty = Number((actual - theoretical).toFixed(3));
+            const waste_qty = Number(rollup.waste_qty.toFixed(3));
+            const cost = Number(item.cost_per_unit ?? 0);
 
-        return {
-            item_id: itemId,
-            item_name: String(item.name ?? ''),
-            uom: String(item.uom ?? 'unit'),
-            current_stock: actual,
-            theoretical_stock: theoretical,
-            variance_qty,
-            variance_value: Number((variance_qty * cost).toFixed(2)),
-            waste_qty,
-            waste_value: Number((waste_qty * cost).toFixed(2)),
-            reorder_level: Number(item.reorder_level ?? 0),
-            low_stock: actual <= Number(item.reorder_level ?? 0),
-        };
-    });
+            return {
+                item_id: itemId,
+                item_name: String(item.name ?? ''),
+                uom: String(item.uom ?? 'unit'),
+                current_stock: actual,
+                theoretical_stock: theoretical,
+                variance_qty,
+                variance_value: Number((variance_qty * cost).toFixed(2)),
+                waste_qty,
+                waste_value: Number((waste_qty * cost).toFixed(2)),
+                reorder_level: Number(item.reorder_level ?? 0),
+                low_stock: actual <= Number(item.reorder_level ?? 0),
+            };
+        }
+    );
 
     const totals = rows.reduce(
         (acc, row) => {

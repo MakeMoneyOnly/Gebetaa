@@ -42,7 +42,12 @@ export async function GET() {
     ]);
 
     if (restaurantRes.error) {
-        return apiError('Failed to fetch dashboard preset settings', 500, 'DASHBOARD_PRESET_FETCH_FAILED', restaurantRes.error.message);
+        return apiError(
+            'Failed to fetch dashboard preset settings',
+            500,
+            'DASHBOARD_PRESET_FETCH_FAILED',
+            restaurantRes.error.message
+        );
     }
 
     const settings = (restaurantRes.data.settings ?? {}) as Record<string, unknown>;
@@ -83,7 +88,12 @@ export async function PATCH(request: Request) {
         .single();
 
     if (fetchError) {
-        return apiError('Failed to fetch current dashboard settings', 500, 'DASHBOARD_PRESET_FETCH_FAILED', fetchError.message);
+        return apiError(
+            'Failed to fetch current dashboard settings',
+            500,
+            'DASHBOARD_PRESET_FETCH_FAILED',
+            fetchError.message
+        );
     }
 
     const currentSettings = (restaurant.settings ?? {}) as Record<string, unknown>;
@@ -98,7 +108,12 @@ export async function PATCH(request: Request) {
         .eq('id', context.restaurantId);
 
     if (updateError) {
-        return apiError('Failed to update dashboard preset', 500, 'DASHBOARD_PRESET_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update dashboard preset',
+            500,
+            'DASHBOARD_PRESET_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

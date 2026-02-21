@@ -46,7 +46,12 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (staffError) {
-        return apiError('Failed to load staff member', 500, 'STAFF_FETCH_FAILED', staffError.message);
+        return apiError(
+            'Failed to load staff member',
+            500,
+            'STAFF_FETCH_FAILED',
+            staffError.message
+        );
     }
     if (!staffMember || staffMember.is_active === false) {
         return apiError('Staff member not found or inactive', 404, 'STAFF_NOT_FOUND');
@@ -63,7 +68,12 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (openEntryError) {
-        return apiError('Failed to load open time entry', 500, 'TIME_ENTRY_FETCH_FAILED', openEntryError.message);
+        return apiError(
+            'Failed to load open time entry',
+            500,
+            'TIME_ENTRY_FETCH_FAILED',
+            openEntryError.message
+        );
     }
 
     if (parsed.data.action === 'in') {
@@ -114,15 +124,22 @@ export async function POST(request: Request) {
             new_value: inserted as any,
         });
 
-        return apiSuccess({
-            entry: inserted,
-            action: 'in',
-            idempotency_key: idempotencyKey,
-        }, 201);
+        return apiSuccess(
+            {
+                entry: inserted,
+                action: 'in',
+                idempotency_key: idempotencyKey,
+            },
+            201
+        );
     }
 
     if (!openEntry) {
-        return apiError('No open time entry found for staff member', 409, 'CLOCK_OUT_WITHOUT_OPEN_ENTRY');
+        return apiError(
+            'No open time entry found for staff member',
+            409,
+            'CLOCK_OUT_WITHOUT_OPEN_ENTRY'
+        );
     }
 
     const { data: updated, error: updateError } = await context.supabase

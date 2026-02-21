@@ -5,7 +5,10 @@ import { parseJsonBody } from '@/lib/api/validation';
 
 const CreateTableSchema = z.object({
     table_number: z.string().trim().min(1).max(20),
-    status: z.enum(['available', 'occupied', 'reserved', 'bill_requested']).optional().default('available'),
+    status: z
+        .enum(['available', 'occupied', 'reserved', 'bill_requested'])
+        .optional()
+        .default('available'),
     capacity: z.number().int().positive().max(50).optional().default(4),
     zone: z.string().trim().max(50).optional().nullable(),
 });

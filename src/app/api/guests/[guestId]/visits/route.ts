@@ -65,7 +65,12 @@ export async function GET(
         .limit(parsed.data.limit);
 
     if (error) {
-        return apiError('Failed to fetch guest visits', 500, 'GUEST_VISITS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch guest visits',
+            500,
+            'GUEST_VISITS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({

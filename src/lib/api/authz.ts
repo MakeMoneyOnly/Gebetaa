@@ -18,7 +18,10 @@ export async function getAuthenticatedUser() {
     return { ok: true as const, user, supabase };
 }
 
-export async function getAuthorizedRestaurantContext(userId: string, options?: { phase?: PilotPhase }) {
+export async function getAuthorizedRestaurantContext(
+    userId: string,
+    options?: { phase?: PilotPhase }
+) {
     const phase = options?.phase ?? 'p0';
     const supabase = await createClient();
 
@@ -27,18 +30,26 @@ export async function getAuthorizedRestaurantContext(userId: string, options?: {
         .select('restaurant_id')
         .eq('user_id', userId)
         .eq('is_active', true)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
     if (staffError) {
         return {
             ok: false as const,
-            response: apiError('Failed to resolve restaurant context', 500, 'RESTAURANT_RESOLVE_FAILED', staffError.message),
+            response: apiError(
+                'Failed to resolve restaurant context',
+                500,
+                'RESTAURANT_RESOLVE_FAILED',
+                staffError.message
+            ),
         };
     }
 
     if (staffEntry?.restaurant_id) {
-        const pilotGateResponse = enforcePilotAccess(staffEntry.restaurant_id, undefined, { phase });
+        const pilotGateResponse = enforcePilotAccess(staffEntry.restaurant_id, undefined, {
+            phase,
+        });
         if (pilotGateResponse) {
             return { ok: false as const, response: pilotGateResponse };
         }
@@ -55,7 +66,12 @@ export async function getAuthorizedRestaurantContext(userId: string, options?: {
     if (agencyError) {
         return {
             ok: false as const,
-            response: apiError('Failed to resolve restaurant context', 500, 'RESTAURANT_RESOLVE_FAILED', agencyError.message),
+            response: apiError(
+                'Failed to resolve restaurant context',
+                500,
+                'RESTAURANT_RESOLVE_FAILED',
+                agencyError.message
+            ),
         };
     }
 

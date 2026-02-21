@@ -20,15 +20,13 @@ export async function POST(request: Request) {
     }
 
     // Insert the mood rating into the reviews table so it shows up in metrics
-    const { error } = await context.supabase
-        .from('reviews')
-        .insert({
-            restaurant_id: context.restaurantId,
-            rating: rating,
-            user_name: 'Manager Check-in',
-            comment: mood,
-            created_at: new Date().toISOString()
-        });
+    const { error } = await context.supabase.from('reviews').insert({
+        restaurant_id: context.restaurantId,
+        rating: rating,
+        user_name: 'Manager Check-in',
+        comment: mood,
+        created_at: new Date().toISOString(),
+    });
 
     if (error) {
         return apiError('Failed to log mood', 500, 'MOOD_LOG_FAILED', error.message);

@@ -1,11 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiError } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
-import { GET as getInventoryItems, POST as postInventoryItems } from '@/app/api/inventory/items/route';
+import {
+    GET as getInventoryItems,
+    POST as postInventoryItems,
+} from '@/app/api/inventory/items/route';
 import { POST as postInventoryMovement } from '@/app/api/inventory/movements/route';
 import { GET as getInventoryVariance } from '@/app/api/inventory/variance/route';
-import { GET as getPurchaseOrders, POST as postPurchaseOrders } from '@/app/api/inventory/purchase-orders/route';
-import { GET as getSupplierInvoices, POST as postSupplierInvoices } from '@/app/api/inventory/invoices/route';
+import {
+    GET as getPurchaseOrders,
+    POST as postPurchaseOrders,
+} from '@/app/api/inventory/purchase-orders/route';
+import {
+    GET as getSupplierInvoices,
+    POST as postSupplierInvoices,
+} from '@/app/api/inventory/invoices/route';
 import { GET as getRecipes, POST as postRecipes } from '@/app/api/inventory/recipes/route';
 
 vi.mock('@/lib/api/authz', () => ({
@@ -44,7 +53,9 @@ describe('P2 inventory API routes', () => {
     it('GET /api/inventory/items returns 401 when unauthorized', async () => {
         setAuthUnauthorized();
 
-        const response = await getInventoryItems(new Request('http://localhost/api/inventory/items'));
+        const response = await getInventoryItems(
+            new Request('http://localhost/api/inventory/items')
+        );
 
         expect(response.status).toBe(401);
     });
@@ -88,7 +99,9 @@ describe('P2 inventory API routes', () => {
     it('GET /api/inventory/variance returns 401 when unauthorized', async () => {
         setAuthUnauthorized();
 
-        const response = await getInventoryVariance(new Request('http://localhost/api/inventory/variance'));
+        const response = await getInventoryVariance(
+            new Request('http://localhost/api/inventory/variance')
+        );
 
         expect(response.status).toBe(401);
     });
@@ -96,7 +109,9 @@ describe('P2 inventory API routes', () => {
     it('GET /api/inventory/purchase-orders returns 401 when unauthorized', async () => {
         setAuthUnauthorized();
 
-        const response = await getPurchaseOrders(new Request('http://localhost/api/inventory/purchase-orders'));
+        const response = await getPurchaseOrders(
+            new Request('http://localhost/api/inventory/purchase-orders')
+        );
 
         expect(response.status).toBe(401);
     });
@@ -118,7 +133,9 @@ describe('P2 inventory API routes', () => {
     it('GET /api/inventory/invoices returns 401 when unauthorized', async () => {
         setAuthUnauthorized();
 
-        const response = await getSupplierInvoices(new Request('http://localhost/api/inventory/invoices'));
+        const response = await getSupplierInvoices(
+            new Request('http://localhost/api/inventory/invoices')
+        );
 
         expect(response.status).toBe(401);
     });

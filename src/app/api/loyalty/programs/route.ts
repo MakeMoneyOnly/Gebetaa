@@ -4,6 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import { isSchemaNotReadyError } from '@/lib/api/schemaFallback';
 import type { Json } from '@/types/database';
 
 const CreateProgramSchema = z.object({
@@ -33,7 +34,15 @@ export async function GET() {
         .order('created_at', { ascending: false });
 
     if (error) {
-        return apiError('Failed to fetch loyalty programs', 500, 'LOYALTY_PROGRAMS_FETCH_FAILED', error.message);
+        if (isSchemaNotReadyError(error)) {
+            return apiSuccess({ programs: [] });
+        }
+        return apiError(
+            'Failed to fetch loyalty programs',
+            500,
+            'LOYALTY_PROGRAMS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({ programs: data ?? [] });
@@ -82,7 +91,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to create loyalty program', 500, 'LOYALTY_PROGRAM_CREATE_FAILED', error.message);
+        return apiError(
+            'Failed to create loyalty program',
+            500,
+            'LOYALTY_PROGRAM_CREATE_FAILED',
+            error.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

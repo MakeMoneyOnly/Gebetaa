@@ -7,8 +7,14 @@ import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempote
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 const ScheduleQuerySchema = z.object({
-    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    start_date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+    end_date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
 });
 
 const ShiftCreateSchema = z.object({
@@ -64,18 +70,26 @@ export async function GET(request: Request) {
 
         const { startIso, endIso, daySpan } = normalizeWindow(query.data);
         if (daySpan < 0 || daySpan > 31) {
-            return apiError('Invalid schedule window. Maximum span is 31 days.', 400, 'INVALID_SCHEDULE_WINDOW');
+            return apiError(
+                'Invalid schedule window. Maximum span is 31 days.',
+                400,
+                'INVALID_SCHEDULE_WINDOW'
+            );
         }
 
-        console.log(`[Schedule API] Fetching for restaurant ${context.restaurantId} from ${startIso} to ${endIso}`);
+        console.log(
+            `[Schedule API] Fetching for restaurant ${context.restaurantId} from ${startIso} to ${endIso}`
+        );
 
         const adminClient = createServiceRoleClient();
-        
+
         // Use Promise.allSettled to debug which query fails if any
         const results = await Promise.allSettled([
             adminClient
                 .from('shifts')
-                .select('id, staff_id, role, shift_date, start_time, end_time, station, status, notes, created_at, updated_at')
+                .select(
+                    'id, staff_id, role, shift_date, start_time, end_time, station, status, notes, created_at, updated_at'
+                )
                 .eq('restaurant_id', context.restaurantId)
                 .gte('shift_date', startIso)
                 .lte('shift_date', endIso)
@@ -83,7 +97,9 @@ export async function GET(request: Request) {
                 .order('start_time', { ascending: true }),
             adminClient
                 .from('restaurant_staff_with_users')
-                .select('id, user_id, role, is_active, name, full_name, first_name, last_name, email')
+                .select(
+                    'id, user_id, role, is_active, name, full_name, first_name, last_name, email'
+                )
                 .eq('restaurant_id', context.restaurantId)
                 .eq('is_active', true)
                 .order('created_at', { ascending: true }),
@@ -103,23 +119,33 @@ export async function GET(request: Request) {
 
         if (shiftsRes.value.error) {
             console.error('[Schedule API] Shifts DB error:', shiftsRes.value.error);
-            return apiError('Failed to fetch schedule', 500, 'SCHEDULE_FETCH_FAILED', shiftsRes.value.error.message);
+            return apiError(
+                'Failed to fetch schedule',
+                500,
+                'SCHEDULE_FETCH_FAILED',
+                shiftsRes.value.error.message
+            );
         }
         if (staffRes.value.error) {
             console.error('[Schedule API] Staff DB error:', staffRes.value.error);
             // Fallback: If view query fails, try basic staff table?
             // For now, return error to see what's wrong.
-            return apiError('Failed to fetch staff', 500, 'STAFF_FETCH_FAILED', staffRes.value.error.message);
+            return apiError(
+                'Failed to fetch staff',
+                500,
+                'STAFF_FETCH_FAILED',
+                staffRes.value.error.message
+            );
         }
 
         const staffData = staffRes.value.data ?? [];
-        
+
         // Fix names: specific logic for "Owner" name replacement
         // If the name is "Owner" but the role is NOT owner, try to use email part or "Staff Member"
         const processedStaff = staffData.map(s => {
             let displayName = s.full_name || s.name || s.first_name || s.last_name;
-            
-            // If name is effectively "Owner" but they are not the actual owner role, 
+
+            // If name is effectively "Owner" but they are not the actual owner role,
             // OR even if they are owner but we want a better name (user requested removing "Owner" as name).
             // Let's rely on email if name is generic "Owner".
             if (!displayName || displayName === 'Owner') {
@@ -133,9 +159,9 @@ export async function GET(request: Request) {
                 ...s,
                 // We overwrite the raw fields or just ensure the UI uses a computed one?
                 // The UI might use `name` or `first_name`. Let's populate specific fields.
-                name: displayName, 
-                first_name: displayName.split(' ')[0], 
-                last_name: displayName.split(' ').slice(1).join(' ') || ''
+                name: displayName,
+                first_name: displayName.split(' ')[0],
+                last_name: displayName.split(' ').slice(1).join(' ') || '',
             };
         });
 
@@ -147,7 +173,6 @@ export async function GET(request: Request) {
             shifts: shiftsRes.value.data ?? [],
             staff: processedStaff,
         });
-
     } catch (e: any) {
         console.error('[Schedule API] Unexpected error:', e);
         return apiError('Internal Server Error', 500, 'INTERNAL_ERROR', e.message);
@@ -188,7 +213,12 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (staffError) {
-        return apiError('Failed to load staff member', 500, 'STAFF_FETCH_FAILED', staffError.message);
+        return apiError(
+            'Failed to load staff member',
+            500,
+            'STAFF_FETCH_FAILED',
+            staffError.message
+        );
     }
     if (!staffMember || staffMember.is_active === false) {
         return apiError('Staff member not found or inactive', 404, 'STAFF_NOT_FOUND');
@@ -203,14 +233,23 @@ export async function POST(request: Request) {
         .in('status', ['scheduled', 'in_progress']);
 
     if (existingError) {
-        return apiError('Failed to validate schedule overlap', 500, 'SCHEDULE_OVERLAP_CHECK_FAILED', existingError.message);
+        return apiError(
+            'Failed to validate schedule overlap',
+            500,
+            'SCHEDULE_OVERLAP_CHECK_FAILED',
+            existingError.message
+        );
     }
 
-    const overlap = (existingShifts ?? []).find((shift) =>
+    const overlap = (existingShifts ?? []).find(shift =>
         overlaps(parsed.data.start_time, parsed.data.end_time, shift.start_time, shift.end_time)
     );
     if (overlap) {
-        return apiError('Shift overlaps with an existing active shift for this staff member', 409, 'SHIFT_OVERLAP_CONFLICT');
+        return apiError(
+            'Shift overlaps with an existing active shift for this staff member',
+            409,
+            'SHIFT_OVERLAP_CONFLICT'
+        );
     }
 
     const row = {

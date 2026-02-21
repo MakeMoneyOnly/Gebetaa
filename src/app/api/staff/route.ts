@@ -21,12 +21,18 @@ export async function GET() {
     } catch (e) {
         console.error('Service Role Client Creation Failed:', e);
         // Fallback to regular client if service role fails, though data might be incomplete due to RLS
-        return apiError('Server configuration error: Missing Service Role Key', 500, 'CONFIG_ERROR');
+        return apiError(
+            'Server configuration error: Missing Service Role Key',
+            500,
+            'CONFIG_ERROR'
+        );
     }
-    
+
     const { data, error } = await adminClient
         .from('restaurant_staff_with_users')
-        .select('id, user_id, role, is_active, created_at, email, full_name, name, first_name, last_name')
+        .select(
+            'id, user_id, role, is_active, created_at, email, full_name, name, first_name, last_name'
+        )
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: true });
 

@@ -62,16 +62,23 @@ export async function GET(request: Request) {
 
     const { data, error } = await query;
     if (error) {
-        return apiError('Failed to fetch inventory items', 500, 'INVENTORY_ITEMS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch inventory items',
+            500,
+            'INVENTORY_ITEMS_FETCH_FAILED',
+            error.message
+        );
     }
 
     const items = (data ?? []) as Array<Record<string, unknown>>;
     const lowStockOnly = parsed.data.low_stock === 'true';
     const filtered = lowStockOnly
-        ? items.filter((item) => Number(item.current_stock ?? 0) <= Number(item.reorder_level ?? 0))
+        ? items.filter(item => Number(item.current_stock ?? 0) <= Number(item.reorder_level ?? 0))
         : items;
 
-    const low_stock_count = items.filter((item) => Number(item.current_stock ?? 0) <= Number(item.reorder_level ?? 0)).length;
+    const low_stock_count = items.filter(
+        item => Number(item.current_stock ?? 0) <= Number(item.reorder_level ?? 0)
+    ).length;
 
     return apiSuccess({
         items: filtered,
@@ -122,7 +129,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to create inventory item', 500, 'INVENTORY_ITEM_CREATE_FAILED', error.message);
+        return apiError(
+            'Failed to create inventory item',
+            500,
+            'INVENTORY_ITEM_CREATE_FAILED',
+            error.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

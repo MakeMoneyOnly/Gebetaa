@@ -12,10 +12,7 @@ type AuditParams = {
     new_value?: Json | null;
 };
 
-export async function writeAuditLog(
-    supabase: SupabaseClient<Database>,
-    params: AuditParams
-) {
+export async function writeAuditLog(supabase: SupabaseClient<Database>, params: AuditParams) {
     const { error } = await supabase.from('audit_logs').insert({
         restaurant_id: params.restaurant_id ?? null,
         user_id: params.user_id ?? null,

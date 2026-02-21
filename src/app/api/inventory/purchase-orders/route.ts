@@ -8,7 +8,9 @@ import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempote
 import type { Json } from '@/types/database';
 
 const PurchaseOrdersQuerySchema = z.object({
-    status: z.enum(['draft', 'submitted', 'partially_received', 'received', 'cancelled']).optional(),
+    status: z
+        .enum(['draft', 'submitted', 'partially_received', 'received', 'cancelled'])
+        .optional(),
     limit: z.coerce.number().int().min(1).max(200).optional().default(100),
 });
 
@@ -63,7 +65,12 @@ export async function GET(request: Request) {
 
     const { data, error } = await query;
     if (error) {
-        return apiError('Failed to fetch purchase orders', 500, 'PURCHASE_ORDERS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch purchase orders',
+            500,
+            'PURCHASE_ORDERS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({ purchase_orders: data ?? [] });
@@ -93,9 +100,10 @@ export async function POST(request: Request) {
 
     const subtotal = Number(parsed.data.subtotal.toFixed(2));
     const tax = Number(parsed.data.tax_amount.toFixed(2));
-    const total = parsed.data.total_amount !== undefined
-        ? Number(parsed.data.total_amount.toFixed(2))
-        : Number((subtotal + tax).toFixed(2));
+    const total =
+        parsed.data.total_amount !== undefined
+            ? Number(parsed.data.total_amount.toFixed(2))
+            : Number((subtotal + tax).toFixed(2));
 
     const db = context.supabase;
 
@@ -119,7 +127,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to create purchase order', 500, 'PURCHASE_ORDER_CREATE_FAILED', error.message);
+        return apiError(
+            'Failed to create purchase order',
+            500,
+            'PURCHASE_ORDER_CREATE_FAILED',
+            error.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

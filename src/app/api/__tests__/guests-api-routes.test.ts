@@ -59,9 +59,12 @@ describe('Guests API routes', () => {
             supabase: { from: fromMock },
         } as any);
 
-        const response = await getGuestById(new Request('http://localhost/api/guests/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'), {
-            params: Promise.resolve({ guestId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }),
-        });
+        const response = await getGuestById(
+            new Request('http://localhost/api/guests/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+            {
+                params: Promise.resolve({ guestId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }),
+            }
+        );
 
         expect(response.status).toBe(404);
     });

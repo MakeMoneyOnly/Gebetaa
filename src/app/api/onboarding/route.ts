@@ -24,7 +24,10 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
 
     // 1. Verify authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
         return apiError('Unauthorized', 401);
     }
@@ -32,12 +35,20 @@ export async function POST(req: NextRequest) {
     // 2. Parse + validate body
     let body: OnboardingPayload;
     try {
-        body = await req.json() as OnboardingPayload;
+        body = (await req.json()) as OnboardingPayload;
     } catch {
         return apiError('Invalid request body', 400);
     }
 
-    const { full_name, restaurant_name, location, contact_phone, description, brand_color, cuisine_type } = body;
+    const {
+        full_name,
+        restaurant_name,
+        location,
+        contact_phone,
+        description,
+        brand_color,
+        cuisine_type,
+    } = body;
     if (!full_name?.trim()) return apiError('Owner name is required', 400);
     if (!restaurant_name?.trim()) return apiError('Restaurant name is required', 400);
     if (!location?.trim()) return apiError('Location is required', 400);

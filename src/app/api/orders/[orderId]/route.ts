@@ -14,11 +14,7 @@ async function resolveRestaurantIdForUser(userId: string) {
             .eq('is_active', true)
             .limit(1)
             .maybeSingle(),
-        supabase
-            .from('agency_users')
-            .select('restaurant_ids')
-            .eq('user_id', userId)
-            .maybeSingle(),
+        supabase.from('agency_users').select('restaurant_ids').eq('user_id', userId).maybeSingle(),
     ]);
 
     if (staffResult.error) return { error: staffResult.error.message };
@@ -28,16 +24,16 @@ async function resolveRestaurantIdForUser(userId: string) {
     return { restaurantId: agencyResult.data?.restaurant_ids?.[0] ?? null };
 }
 
-export async function GET(
-    _request: Request,
-    context: { params: Promise<{ orderId: string }> }
-) {
+export async function GET(_request: Request, context: { params: Promise<{ orderId: string }> }) {
     try {
         const { orderId } = await context.params;
         const supabase = await createClient();
 
         // Get authenticated user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const {
+            data: { user },
+            error: userError,
+        } = await supabase.auth.getUser();
 
         if (userError || !user) {
             return apiError('Unauthorized', 401, 'UNAUTHORIZED');
@@ -47,7 +43,12 @@ export async function GET(
         const { restaurantId, error: restaurantError } = await resolveRestaurantIdForUser(user.id);
 
         if (restaurantError) {
-            return apiError('Failed to resolve restaurant context', 500, 'RESTAURANT_RESOLVE_FAILED', restaurantError);
+            return apiError(
+                'Failed to resolve restaurant context',
+                500,
+                'RESTAURANT_RESOLVE_FAILED',
+                restaurantError
+            );
         }
         if (!restaurantId) {
             return apiError('No restaurant found for user', 404, 'RESTAURANT_NOT_FOUND');
@@ -57,21 +58,24 @@ export async function GET(
         if (pilotGateResponse) return pilotGateResponse;
 
         // Parallelize: order fetch + events fetch at the same time
-        const [{ data: order, error: orderError }, { data: events, error: eventsError }] = await Promise.all([
-            supabase
-                .from('orders')
-                .select('*')
-                .eq('restaurant_id', restaurantId)
-                .eq('id', orderId)
-                .maybeSingle(),
-            supabase
-                .from('order_events')
-                .select('id, event_type, from_status, to_status, created_at, actor_user_id, metadata')
-                .eq('restaurant_id', restaurantId)
-                .eq('order_id', orderId)
-                .order('created_at', { ascending: false })
-                .limit(50),
-        ]);
+        const [{ data: order, error: orderError }, { data: events, error: eventsError }] =
+            await Promise.all([
+                supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('restaurant_id', restaurantId)
+                    .eq('id', orderId)
+                    .maybeSingle(),
+                supabase
+                    .from('order_events')
+                    .select(
+                        'id, event_type, from_status, to_status, created_at, actor_user_id, metadata'
+                    )
+                    .eq('restaurant_id', restaurantId)
+                    .eq('order_id', orderId)
+                    .order('created_at', { ascending: false })
+                    .limit(50),
+            ]);
 
         if (orderError) {
             return apiError('Failed to fetch order', 500, 'ORDER_FETCH_FAILED', orderError.message);
@@ -80,7 +84,12 @@ export async function GET(
             return apiError('Order not found', 404, 'ORDER_NOT_FOUND');
         }
         if (eventsError) {
-            return apiError('Failed to fetch order events', 500, 'ORDER_EVENTS_FETCH_FAILED', eventsError.message);
+            return apiError(
+                'Failed to fetch order events',
+                500,
+                'ORDER_EVENTS_FETCH_FAILED',
+                eventsError.message
+            );
         }
 
         return apiSuccess({ order, events: events ?? [] });

@@ -2,10 +2,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { generateSignedQRCode } from '@/lib/security/hmac';
 
-export async function POST(
-    _request: Request,
-    context: { params: Promise<{ tableId: string }> }
-) {
+export async function POST(_request: Request, context: { params: Promise<{ tableId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -38,7 +35,12 @@ export async function POST(
         .maybeSingle();
 
     if (restaurantError) {
-        return apiError('Failed to fetch restaurant slug', 500, 'RESTAURANT_FETCH_FAILED', restaurantError.message);
+        return apiError(
+            'Failed to fetch restaurant slug',
+            500,
+            'RESTAURANT_FETCH_FAILED',
+            restaurantError.message
+        );
     }
     if (!restaurant?.slug) {
         return apiError('Restaurant slug missing', 500, 'RESTAURANT_SLUG_MISSING');
@@ -57,7 +59,12 @@ export async function POST(
         .single();
 
     if (updateError) {
-        return apiError('Failed to update table QR code', 500, 'TABLE_QR_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update table QR code',
+            500,
+            'TABLE_QR_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     return apiSuccess({

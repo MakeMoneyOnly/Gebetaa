@@ -3,7 +3,10 @@ import { apiError } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 
 import { GET as getChannelsSummary } from '@/app/api/channels/summary/route';
-import { GET as getOnlineOrderingSettings, PATCH as patchOnlineOrderingSettings } from '@/app/api/channels/online-ordering/settings/route';
+import {
+    GET as getOnlineOrderingSettings,
+    PATCH as patchOnlineOrderingSettings,
+} from '@/app/api/channels/online-ordering/settings/route';
 import { POST as postDeliveryConnect } from '@/app/api/channels/delivery/connect/route';
 import { GET as getDeliveryOrders } from '@/app/api/channels/delivery/orders/route';
 import { POST as postDeliveryAck } from '@/app/api/channels/delivery/orders/[externalOrderId]/ack/route';
@@ -114,14 +117,17 @@ describe('Channels API routes', () => {
         setAuthAndContextOk();
 
         const response = await postDeliveryAck(
-            new Request('http://localhost/api/channels/delivery/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/ack', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-idempotency-key': 'invalid-key',
-                },
-                body: JSON.stringify({}),
-            }),
+            new Request(
+                'http://localhost/api/channels/delivery/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/ack',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-idempotency-key': 'invalid-key',
+                    },
+                    body: JSON.stringify({}),
+                }
+            ),
             { params: Promise.resolve({ externalOrderId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 

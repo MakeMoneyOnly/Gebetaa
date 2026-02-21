@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 // In a real app, this would use the Chapa verify API to validate the webhook
 // But for now we just acknowledge receipt

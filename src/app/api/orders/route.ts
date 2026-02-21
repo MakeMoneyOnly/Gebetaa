@@ -146,6 +146,7 @@ async function resolveRestaurantIdForUser(userId: string) {
         .select('restaurant_id')
         .eq('user_id', userId)
         .eq('is_active', true)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -192,7 +193,12 @@ export async function GET(request: NextRequest) {
         const { restaurantId, error: restaurantError } = await resolveRestaurantIdForUser(user.id);
         if (restaurantError) {
             responseStatus = 500;
-            return apiError('Failed to resolve restaurant context', 500, 'RESTAURANT_RESOLVE_FAILED', restaurantError);
+            return apiError(
+                'Failed to resolve restaurant context',
+                500,
+                'RESTAURANT_RESOLVE_FAILED',
+                restaurantError
+            );
         }
         if (!restaurantId) {
             responseStatus = 404;
@@ -285,7 +291,10 @@ export async function POST(request: NextRequest) {
         const supabase = await createClient();
         const guestContext = await resolveGuestContext(supabase, parsed.data.guest_context);
         if (!guestContext.valid) {
-            return NextResponse.json({ error: guestContext.reason }, { status: guestContext.status });
+            return NextResponse.json(
+                { error: guestContext.reason },
+                { status: guestContext.status }
+            );
         }
 
         const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -327,9 +336,13 @@ export async function POST(request: NextRequest) {
                 .maybeSingle();
 
             if (deliveryError) {
-                console.warn('[POST /api/orders] campaign delivery lookup failed:', deliveryError.message);
+                console.warn(
+                    '[POST /api/orders] campaign delivery lookup failed:',
+                    deliveryError.message
+                );
             } else if (delivery) {
-                const campaignMatches = !attribution.campaign_id || attribution.campaign_id === delivery.campaign_id;
+                const campaignMatches =
+                    !attribution.campaign_id || attribution.campaign_id === delivery.campaign_id;
                 if (campaignMatches) {
                     const { data: campaign, error: campaignError } = await (supabase as any)
                         .from('campaigns' as any)
@@ -339,7 +352,10 @@ export async function POST(request: NextRequest) {
                         .maybeSingle();
 
                     if (campaignError) {
-                        console.warn('[POST /api/orders] campaign validation failed:', campaignError.message);
+                        console.warn(
+                            '[POST /api/orders] campaign validation failed:',
+                            campaignError.message
+                        );
                     } else if (campaign && !delivery.conversion_order_id) {
                         const { error: updateDeliveryError } = await (supabase as any)
                             .from('campaign_deliveries' as any)
@@ -351,7 +367,10 @@ export async function POST(request: NextRequest) {
                             .eq('id', delivery.id);
 
                         if (updateDeliveryError) {
-                            console.warn('[POST /api/orders] campaign conversion update failed:', updateDeliveryError.message);
+                            console.warn(
+                                '[POST /api/orders] campaign conversion update failed:',
+                                updateDeliveryError.message
+                            );
                         } else {
                             campaignAttributionApplied = true;
                         }

@@ -16,7 +16,7 @@ const AlertRulePatchSchema = z
         condition_json: z.record(z.string(), z.unknown()).optional(),
         target_json: z.record(z.string(), z.unknown()).optional(),
     })
-    .refine((value) => Object.keys(value).length > 0, {
+    .refine(value => Object.keys(value).length > 0, {
         message: 'At least one field is required',
     });
 
@@ -48,7 +48,12 @@ export async function PATCH(
     const { ruleId } = await routeContext.params;
     const parsedRuleId = RuleIdSchema.safeParse(ruleId);
     if (!parsedRuleId.success) {
-        return apiError('Invalid alert rule id', 400, 'INVALID_ALERT_RULE_ID', parsedRuleId.error.flatten());
+        return apiError(
+            'Invalid alert rule id',
+            400,
+            'INVALID_ALERT_RULE_ID',
+            parsedRuleId.error.flatten()
+        );
     }
 
     const { data: existing, error: fetchError } = await context.supabase
@@ -59,7 +64,12 @@ export async function PATCH(
         .maybeSingle();
 
     if (fetchError) {
-        return apiError('Failed to load alert rule', 500, 'ALERT_RULE_FETCH_FAILED', fetchError.message);
+        return apiError(
+            'Failed to load alert rule',
+            500,
+            'ALERT_RULE_FETCH_FAILED',
+            fetchError.message
+        );
     }
     if (!existing) {
         return apiError('Alert rule not found', 404, 'ALERT_RULE_NOT_FOUND');
@@ -80,7 +90,12 @@ export async function PATCH(
         .single();
 
     if (updateError) {
-        return apiError('Failed to update alert rule', 500, 'ALERT_RULE_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update alert rule',
+            500,
+            'ALERT_RULE_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

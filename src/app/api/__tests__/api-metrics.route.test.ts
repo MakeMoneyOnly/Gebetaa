@@ -15,7 +15,9 @@ function unauthorizedResponse() {
     return apiError('Unauthorized', 401, 'UNAUTHORIZED');
 }
 
-function buildAuditLogsQuery(rows: Array<{ created_at: string; metadata: Record<string, unknown> }>) {
+function buildAuditLogsQuery(
+    rows: Array<{ created_at: string; metadata: Record<string, unknown> }>
+) {
     const chain: any = {
         select: vi.fn(() => chain),
         eq: vi.fn(() => chain),
@@ -37,7 +39,9 @@ describe('GET /api/analytics/api-metrics', () => {
             response: unauthorizedResponse(),
         } as any);
 
-        const response = await getApiMetrics(new Request('http://localhost/api/analytics/api-metrics?range=week'));
+        const response = await getApiMetrics(
+            new Request('http://localhost/api/analytics/api-metrics?range=week')
+        );
 
         expect(response.status).toBe(401);
     });
@@ -82,11 +86,15 @@ describe('GET /api/analytics/api-metrics', () => {
             },
         } as any);
 
-        const response = await getApiMetrics(new Request('http://localhost/api/analytics/api-metrics?range=week'));
+        const response = await getApiMetrics(
+            new Request('http://localhost/api/analytics/api-metrics?range=week')
+        );
         const payload = await response.json();
 
         expect(response.status).toBe(200);
-        const ordersEntry = payload.data.endpoints.find((entry: any) => entry.endpoint === '/api/orders');
+        const ordersEntry = payload.data.endpoints.find(
+            (entry: any) => entry.endpoint === '/api/orders'
+        );
         expect(ordersEntry).toBeTruthy();
         expect(ordersEntry.requests).toBe(3);
         expect(ordersEntry.errors).toBe(1);

@@ -8,10 +8,7 @@ const TransferSessionSchema = z.object({
     notes: z.string().max(500).optional().nullable(),
 });
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ sessionId: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ sessionId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -37,7 +34,12 @@ export async function POST(
         .maybeSingle();
 
     if (sessionError) {
-        return apiError('Failed to fetch table session', 500, 'TABLE_SESSION_FETCH_FAILED', sessionError.message);
+        return apiError(
+            'Failed to fetch table session',
+            500,
+            'TABLE_SESSION_FETCH_FAILED',
+            sessionError.message
+        );
     }
     if (!session) {
         return apiError('Open table session not found', 404, 'TABLE_SESSION_NOT_FOUND');
@@ -55,7 +57,11 @@ export async function POST(
         .maybeSingle();
 
     if (destinationOpen) {
-        return apiError('Destination table already has an open session', 409, 'DESTINATION_TABLE_OCCUPIED');
+        return apiError(
+            'Destination table already has an open session',
+            409,
+            'DESTINATION_TABLE_OCCUPIED'
+        );
     }
 
     const now = new Date().toISOString();
@@ -69,7 +75,12 @@ export async function POST(
         .eq('id', session.id);
 
     if (closeCurrentError) {
-        return apiError('Failed to close current table session', 500, 'TABLE_SESSION_TRANSFER_CLOSE_FAILED', closeCurrentError.message);
+        return apiError(
+            'Failed to close current table session',
+            500,
+            'TABLE_SESSION_TRANSFER_CLOSE_FAILED',
+            closeCurrentError.message
+        );
     }
 
     const { data: newSession, error: newSessionError } = await restaurantContext.supabase
@@ -91,7 +102,12 @@ export async function POST(
         .single();
 
     if (newSessionError) {
-        return apiError('Failed to create transferred table session', 500, 'TABLE_SESSION_TRANSFER_CREATE_FAILED', newSessionError.message);
+        return apiError(
+            'Failed to create transferred table session',
+            500,
+            'TABLE_SESSION_TRANSFER_CREATE_FAILED',
+            newSessionError.message
+        );
     }
 
     await Promise.all([

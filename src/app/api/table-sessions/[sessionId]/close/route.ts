@@ -7,10 +7,7 @@ const CloseSessionSchema = z.object({
     notes: z.string().max(500).optional().nullable(),
 });
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ sessionId: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ sessionId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -36,7 +33,12 @@ export async function POST(
         .maybeSingle();
 
     if (sessionError) {
-        return apiError('Failed to fetch table session', 500, 'TABLE_SESSION_FETCH_FAILED', sessionError.message);
+        return apiError(
+            'Failed to fetch table session',
+            500,
+            'TABLE_SESSION_FETCH_FAILED',
+            sessionError.message
+        );
     }
     if (!session) {
         return apiError('Open table session not found', 404, 'TABLE_SESSION_NOT_FOUND');
@@ -55,7 +57,12 @@ export async function POST(
         .single();
 
     if (closeError) {
-        return apiError('Failed to close table session', 500, 'TABLE_SESSION_CLOSE_FAILED', closeError.message);
+        return apiError(
+            'Failed to close table session',
+            500,
+            'TABLE_SESSION_CLOSE_FAILED',
+            closeError.message
+        );
     }
 
     await restaurantContext.supabase

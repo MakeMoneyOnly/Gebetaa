@@ -4,6 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody, parseQuery } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import { isSchemaNotReadyError } from '@/lib/api/schemaFallback';
 import type { Json } from '@/types/database';
 
 const CampaignsQuerySchema = z.object({
@@ -55,31 +56,51 @@ export async function GET(request: Request) {
         campaignQuery = campaignQuery.eq('status', parsed.data.status);
     }
 
-    const [{ data: campaigns, error: campaignError }, { data: segments, error: segmentError }] = await Promise.all([
-        campaignQuery,
-        db
-            .from('segments' as any)
-            .select('id, name, rule_json, created_at')
-            .eq('restaurant_id', context.restaurantId)
-            .order('created_at', { ascending: false }),
-    ]);
+    const [{ data: campaigns, error: campaignError }, { data: segments, error: segmentError }] =
+        await Promise.all([
+            campaignQuery,
+            db
+                .from('segments' as any)
+                .select('id, name, rule_json, created_at')
+                .eq('restaurant_id', context.restaurantId)
+                .order('created_at', { ascending: false }),
+        ]);
 
     if (campaignError) {
-        return apiError('Failed to fetch campaigns', 500, 'CAMPAIGNS_FETCH_FAILED', campaignError.message);
+        if (isSchemaNotReadyError(campaignError)) {
+            return apiSuccess({ campaigns: [], segments: [] });
+        }
+        return apiError(
+            'Failed to fetch campaigns',
+            500,
+            'CAMPAIGNS_FETCH_FAILED',
+            campaignError.message
+        );
     }
     if (segmentError) {
-        return apiError('Failed to fetch segments', 500, 'SEGMENTS_FETCH_FAILED', segmentError.message);
+        if (isSchemaNotReadyError(segmentError)) {
+            return apiSuccess({ campaigns: [], segments: [] });
+        }
+        return apiError(
+            'Failed to fetch segments',
+            500,
+            'SEGMENTS_FETCH_FAILED',
+            segmentError.message
+        );
     }
 
     const campaignIds = (campaigns ?? []).map((item: any) => item.id);
-    const deliveriesByCampaign = new Map<string, {
-        total: number;
-        sent: number;
-        opened: number;
-        clicked: number;
-        converted: number;
-        failed: number;
-    }>();
+    const deliveriesByCampaign = new Map<
+        string,
+        {
+            total: number;
+            sent: number;
+            opened: number;
+            clicked: number;
+            converted: number;
+            failed: number;
+        }
+    >();
 
     if (campaignIds.length > 0) {
         const { data: deliveries, error: deliveryError } = await db
@@ -88,7 +109,28 @@ export async function GET(request: Request) {
             .in('campaign_id', campaignIds);
 
         if (deliveryError) {
-            return apiError('Failed to fetch campaign tracking', 500, 'CAMPAIGN_TRACKING_FETCH_FAILED', deliveryError.message);
+            if (isSchemaNotReadyError(deliveryError)) {
+                return apiSuccess({
+                    campaigns: (campaigns ?? []).map((campaign: any) => ({
+                        ...campaign,
+                        tracking: {
+                            total: 0,
+                            sent: 0,
+                            opened: 0,
+                            clicked: 0,
+                            converted: 0,
+                            failed: 0,
+                        },
+                    })),
+                    segments: segments ?? [],
+                });
+            }
+            return apiError(
+                'Failed to fetch campaign tracking',
+                500,
+                'CAMPAIGN_TRACKING_FETCH_FAILED',
+                deliveryError.message
+            );
         }
 
         for (const delivery of deliveries ?? []) {
@@ -104,7 +146,8 @@ export async function GET(request: Request) {
             if (delivery.status === 'sent') current.sent += 1;
             if (delivery.status === 'opened') current.opened += 1;
             if (delivery.status === 'clicked') current.clicked += 1;
-            if (delivery.status === 'converted' || Boolean(delivery.conversion_order_id)) current.converted += 1;
+            if (delivery.status === 'converted' || Boolean(delivery.conversion_order_id))
+                current.converted += 1;
             if (delivery.status === 'failed') current.failed += 1;
             deliveriesByCampaign.set(delivery.campaign_id, current);
         }
@@ -159,7 +202,12 @@ export async function POST(request: Request) {
             .maybeSingle();
 
         if (segmentError) {
-            return apiError('Failed to validate segment', 500, 'SEGMENT_VALIDATION_FAILED', segmentError.message);
+            return apiError(
+                'Failed to validate segment',
+                500,
+                'SEGMENT_VALIDATION_FAILED',
+                segmentError.message
+            );
         }
         if (!segment) {
             return apiError('Segment not found', 404, 'SEGMENT_NOT_FOUND');

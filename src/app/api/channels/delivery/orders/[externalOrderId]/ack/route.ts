@@ -39,7 +39,12 @@ export async function POST(
     const { externalOrderId } = await routeContext.params;
     const parsedOrderId = ExternalOrderIdSchema.safeParse(externalOrderId);
     if (!parsedOrderId.success) {
-        return apiError('Invalid external order id', 400, 'INVALID_EXTERNAL_ORDER_ID', parsedOrderId.error.flatten());
+        return apiError(
+            'Invalid external order id',
+            400,
+            'INVALID_EXTERNAL_ORDER_ID',
+            parsedOrderId.error.flatten()
+        );
     }
 
     const { data: existing, error: fetchError } = await context.supabase
@@ -50,7 +55,12 @@ export async function POST(
         .maybeSingle();
 
     if (fetchError) {
-        return apiError('Failed to load external order', 500, 'EXTERNAL_ORDER_FETCH_FAILED', fetchError.message);
+        return apiError(
+            'Failed to load external order',
+            500,
+            'EXTERNAL_ORDER_FETCH_FAILED',
+            fetchError.message
+        );
     }
     if (!existing) {
         return apiError('External order not found', 404, 'EXTERNAL_ORDER_NOT_FOUND');
@@ -65,7 +75,8 @@ export async function POST(
         });
     }
 
-    const nextStatus = existing.normalized_status === 'new' ? 'acknowledged' : existing.normalized_status;
+    const nextStatus =
+        existing.normalized_status === 'new' ? 'acknowledged' : existing.normalized_status;
     const ackedAt = new Date().toISOString();
 
     const { data: updated, error: updateError } = await context.supabase
@@ -81,7 +92,12 @@ export async function POST(
         .single();
 
     if (updateError) {
-        return apiError('Failed to acknowledge external order', 500, 'EXTERNAL_ORDER_ACK_FAILED', updateError.message);
+        return apiError(
+            'Failed to acknowledge external order',
+            500,
+            'EXTERNAL_ORDER_ACK_FAILED',
+            updateError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

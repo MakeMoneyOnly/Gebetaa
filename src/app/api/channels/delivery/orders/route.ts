@@ -4,8 +4,21 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseQuery } from '@/lib/api/validation';
 
 const DeliveryOrdersQuerySchema = z.object({
-    provider: z.enum(['beu', 'deliver_addis', 'zmall', 'esoora', 'direct_web', 'custom_local']).optional(),
-    status: z.enum(['new', 'acknowledged', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled', 'failed']).optional(),
+    provider: z
+        .enum(['beu', 'deliver_addis', 'zmall', 'esoora', 'direct_web', 'custom_local'])
+        .optional(),
+    status: z
+        .enum([
+            'new',
+            'acknowledged',
+            'preparing',
+            'ready',
+            'out_for_delivery',
+            'completed',
+            'cancelled',
+            'failed',
+        ])
+        .optional(),
     limit: z.coerce.number().int().min(1).max(200).optional().default(50),
 });
 
@@ -35,7 +48,9 @@ export async function GET(request: Request) {
 
     let query = context.supabase
         .from('external_orders')
-        .select('id, provider, provider_order_id, source_channel, normalized_status, total_amount, currency, payload_json, acked_at, created_at, updated_at')
+        .select(
+            'id, provider, provider_order_id, source_channel, normalized_status, total_amount, currency, payload_json, acked_at, created_at, updated_at'
+        )
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false })
         .limit(parsed.data.limit);
@@ -49,7 +64,12 @@ export async function GET(request: Request) {
 
     const { data, error } = await query;
     if (error) {
-        return apiError('Failed to fetch delivery orders', 500, 'DELIVERY_ORDERS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch delivery orders',
+            500,
+            'DELIVERY_ORDERS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({

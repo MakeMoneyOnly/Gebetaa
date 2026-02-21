@@ -18,7 +18,10 @@ class QueryBuilder {
     private op: 'select' | 'insert' | 'update' | 'delete' = 'select';
     private payload: Row | Row[] | null = null;
 
-    constructor(private readonly table: string, private readonly store: TableStore) {}
+    constructor(
+        private readonly table: string,
+        private readonly store: TableStore
+    ) {}
 
     select() {
         return this;
@@ -55,7 +58,9 @@ class QueryBuilder {
     }
 
     then<TResult1 = any, TResult2 = never>(
-        onfulfilled?: ((value: { data: any; error: any }) => TResult1 | PromiseLike<TResult1>) | null,
+        onfulfilled?:
+            | ((value: { data: any; error: any }) => TResult1 | PromiseLike<TResult1>)
+            | null,
         onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
     ): Promise<TResult1 | TResult2> {
         return Promise.resolve(this.execute()).then(onfulfilled as any, onrejected as any);
@@ -87,7 +92,9 @@ class QueryBuilder {
         }
 
         if (this.op === 'update') {
-            const updated = matched.map(row => Object.assign(row, this.payload ?? {}, { updated_at: new Date().toISOString() }));
+            const updated = matched.map(row =>
+                Object.assign(row, this.payload ?? {}, { updated_at: new Date().toISOString() })
+            );
             return { data: updated, error: null };
         }
 
@@ -103,8 +110,18 @@ class QueryBuilder {
 function createHarness() {
     const store: TableStore = {
         tables: [
-            { id: '11111111-1111-4111-8111-111111111111', restaurant_id: 'rest-1', table_number: 'T1', status: 'available' },
-            { id: '22222222-2222-4222-8222-222222222222', restaurant_id: 'rest-1', table_number: 'T2', status: 'available' },
+            {
+                id: '11111111-1111-4111-8111-111111111111',
+                restaurant_id: 'rest-1',
+                table_number: 'T1',
+                status: 'available',
+            },
+            {
+                id: '22222222-2222-4222-8222-222222222222',
+                restaurant_id: 'rest-1',
+                table_number: 'T2',
+                status: 'available',
+            },
         ],
         table_sessions: [],
     };
@@ -275,4 +292,3 @@ describe('Table session lifecycle integration', () => {
         expect(body.code).toBe('DESTINATION_TABLE_OCCUPIED');
     });
 });
-

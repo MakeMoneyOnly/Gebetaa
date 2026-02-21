@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { insertServiceRequest } from '@/lib/supabase/queries';
 import { resolveGuestContext } from '@/lib/security/guestContext';
 import { apiError, apiSuccess } from '@/lib/api/response';
@@ -69,7 +70,12 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
     if (error) {
-        return apiError('Failed to load service requests', 500, 'SERVICE_REQUESTS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to load service requests',
+            500,
+            'SERVICE_REQUESTS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({
@@ -93,10 +99,14 @@ export async function POST(request: NextRequest) {
         const supabase = await createClient();
         const guestContext = await resolveGuestContext(supabase, parsed.data.guest_context);
         if (!guestContext.valid) {
-            return NextResponse.json({ error: guestContext.reason }, { status: guestContext.status });
+            return NextResponse.json(
+                { error: guestContext.reason },
+                { status: guestContext.status }
+            );
         }
 
-        const { data, error } = await insertServiceRequest(supabase, {
+        const adminSupabase = createServiceRoleClient();
+        const { data, error } = await insertServiceRequest(adminSupabase, {
             restaurant_id: guestContext.data.restaurantId,
             table_number: guestContext.data.tableNumber,
             request_type: parsed.data.request_type,
@@ -110,7 +120,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { error: auditError } = await supabase.from('audit_logs').insert({
+        const { error: auditError } = await adminSupabase.from('audit_logs').insert({
             restaurant_id: guestContext.data.restaurantId,
             action: 'service_request_created_guest',
             entity_type: 'service_request',

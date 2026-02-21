@@ -54,7 +54,11 @@ export async function POST(request: Request) {
 
     const restaurantIds = new Set(orders.map(o => o.restaurant_id));
     if (restaurantIds.size > 1) {
-        return apiError('Bulk update requires orders from a single restaurant', 409, 'CROSS_RESTAURANT_BULK_NOT_ALLOWED');
+        return apiError(
+            'Bulk update requires orders from a single restaurant',
+            409,
+            'CROSS_RESTAURANT_BULK_NOT_ALLOWED'
+        );
     }
 
     const restaurantId = orders[0].restaurant_id;
@@ -107,7 +111,10 @@ export async function POST(request: Request) {
 
     const { error: eventError } = await (supabase as any).from('order_events').insert(eventRows);
     if (eventError) {
-        console.warn('[POST /api/orders/bulk-status] order_events insert failed:', eventError.message);
+        console.warn(
+            '[POST /api/orders/bulk-status] order_events insert failed:',
+            eventError.message
+        );
     }
 
     for (const order of orders) {

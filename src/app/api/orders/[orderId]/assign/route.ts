@@ -9,10 +9,7 @@ const AssignOrderSchema = z.object({
     staff_id: z.string().uuid(),
 });
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ orderId: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ orderId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -53,7 +50,12 @@ export async function POST(
         .maybeSingle();
 
     if (assigneeError) {
-        return apiError('Failed to verify assignee', 500, 'ASSIGNEE_LOOKUP_FAILED', assigneeError.message);
+        return apiError(
+            'Failed to verify assignee',
+            500,
+            'ASSIGNEE_LOOKUP_FAILED',
+            assigneeError.message
+        );
     }
     if (!staffAssignee) {
         return apiError('Assignee not found or inactive', 404, 'ASSIGNEE_NOT_FOUND');
@@ -71,7 +73,12 @@ export async function POST(
         },
     });
     if (eventError) {
-        return apiError('Failed to record assignment event', 500, 'ORDER_ASSIGNMENT_EVENT_FAILED', eventError.message);
+        return apiError(
+            'Failed to record assignment event',
+            500,
+            'ORDER_ASSIGNMENT_EVENT_FAILED',
+            eventError.message
+        );
     }
 
     await writeAuditLog(supabase, {

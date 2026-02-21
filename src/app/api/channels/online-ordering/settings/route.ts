@@ -4,21 +4,25 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 
-const OnlineOrderingSettingsSchema = z.object({
-    enabled: z.boolean().optional(),
-    accepts_scheduled_orders: z.boolean().optional(),
-    auto_accept_orders: z.boolean().optional(),
-    prep_time_minutes: z.number().int().min(5).max(180).optional(),
-    max_daily_orders: z.number().int().min(1).max(5000).optional(),
-    service_hours: z.object({
-        start: z.string().regex(/^\d{2}:\d{2}$/),
-        end: z.string().regex(/^\d{2}:\d{2}$/),
-    }).optional(),
-    order_throttling_enabled: z.boolean().optional(),
-    throttle_limit_per_15m: z.number().int().min(1).max(500).optional(),
-}).refine((value) => Object.keys(value).length > 0, {
-    message: 'At least one field is required',
-});
+const OnlineOrderingSettingsSchema = z
+    .object({
+        enabled: z.boolean().optional(),
+        accepts_scheduled_orders: z.boolean().optional(),
+        auto_accept_orders: z.boolean().optional(),
+        prep_time_minutes: z.number().int().min(5).max(180).optional(),
+        max_daily_orders: z.number().int().min(1).max(5000).optional(),
+        service_hours: z
+            .object({
+                start: z.string().regex(/^\d{2}:\d{2}$/),
+                end: z.string().regex(/^\d{2}:\d{2}$/),
+            })
+            .optional(),
+        order_throttling_enabled: z.boolean().optional(),
+        throttle_limit_per_15m: z.number().int().min(1).max(500).optional(),
+    })
+    .refine(value => Object.keys(value).length > 0, {
+        message: 'At least one field is required',
+    });
 
 const defaultOnlineOrderingSettings = {
     enabled: true,
@@ -52,7 +56,12 @@ export async function GET() {
         .single();
 
     if (error) {
-        return apiError('Failed to fetch online ordering settings', 500, 'ONLINE_ORDERING_SETTINGS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch online ordering settings',
+            500,
+            'ONLINE_ORDERING_SETTINGS_FETCH_FAILED',
+            error.message
+        );
     }
 
     const settings = (data.settings ?? {}) as Record<string, unknown>;
@@ -88,7 +97,12 @@ export async function PATCH(request: Request) {
         .single();
 
     if (fetchError) {
-        return apiError('Failed to fetch current settings', 500, 'SETTINGS_FETCH_FAILED', fetchError.message);
+        return apiError(
+            'Failed to fetch current settings',
+            500,
+            'SETTINGS_FETCH_FAILED',
+            fetchError.message
+        );
     }
 
     const currentSettings = (restaurant.settings ?? {}) as Record<string, unknown>;
@@ -117,7 +131,12 @@ export async function PATCH(request: Request) {
         .eq('id', context.restaurantId);
 
     if (updateError) {
-        return apiError('Failed to update online ordering settings', 500, 'ONLINE_ORDERING_SETTINGS_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update online ordering settings',
+            500,
+            'ONLINE_ORDERING_SETTINGS_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

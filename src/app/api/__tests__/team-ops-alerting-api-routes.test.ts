@@ -6,7 +6,10 @@ import { GET as getStaffSchedule, POST as postStaffSchedule } from '@/app/api/st
 import { POST as postStaffClock } from '@/app/api/staff/time-entries/clock/route';
 import { GET as getAlertRules, POST as postAlertRules } from '@/app/api/alerts/rules/route';
 import { PATCH as patchAlertRule } from '@/app/api/alerts/rules/[ruleId]/route';
-import { GET as getDashboardPresets, PATCH as patchDashboardPresets } from '@/app/api/merchant/dashboard-presets/route';
+import {
+    GET as getDashboardPresets,
+    PATCH as patchDashboardPresets,
+} from '@/app/api/merchant/dashboard-presets/route';
 
 vi.mock('@/lib/api/authz', () => ({
     getAuthenticatedUser: vi.fn(),

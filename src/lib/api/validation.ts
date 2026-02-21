@@ -19,7 +19,12 @@ export async function parseJsonBody<T>(
     if (!parsed.success) {
         return {
             success: false,
-            response: apiError('Invalid request payload', 400, 'INVALID_PAYLOAD', parsed.error.flatten()),
+            response: apiError(
+                'Invalid request payload',
+                400,
+                'INVALID_PAYLOAD',
+                parsed.error.flatten()
+            ),
         };
     }
 
@@ -34,7 +39,12 @@ export function parseQuery<T>(
     if (!parsed.success) {
         return {
             success: false,
-            response: apiError('Invalid query params', 400, 'INVALID_QUERY', parsed.error.flatten()),
+            response: apiError(
+                'Invalid query params',
+                400,
+                'INVALID_QUERY',
+                parsed.error.flatten()
+            ),
         };
     }
 

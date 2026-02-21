@@ -6,15 +6,17 @@ import { writeAuditLog } from '@/lib/api/audit';
 
 const GuestIdSchema = z.string().uuid();
 
-const UpdateGuestSchema = z.object({
-    name: z.string().trim().min(1).max(140).optional(),
-    language: z.enum(['en', 'am']).optional(),
-    tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
-    is_vip: z.boolean().optional(),
-    notes: z.string().trim().max(1000).nullable().optional(),
-}).refine((value) => Object.keys(value).length > 0, {
-    message: 'At least one field is required',
-});
+const UpdateGuestSchema = z
+    .object({
+        name: z.string().trim().min(1).max(140).optional(),
+        language: z.enum(['en', 'am']).optional(),
+        tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+        is_vip: z.boolean().optional(),
+        notes: z.string().trim().max(1000).nullable().optional(),
+    })
+    .refine(value => Object.keys(value).length > 0, {
+        message: 'At least one field is required',
+    });
 
 export async function GET(
     _request: Request,

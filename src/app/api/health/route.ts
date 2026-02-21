@@ -75,10 +75,7 @@ async function checkDatabase(): Promise<{
         const supabase = await createClient();
 
         // Simple query to check connectivity
-        const { error } = await supabase
-            .from('restaurants')
-            .select('id')
-            .limit(1);
+        const { error } = await supabase.from('restaurants').select('id').limit(1);
 
         const latency = Date.now() - start;
 
@@ -169,10 +166,7 @@ async function checkRedis(): Promise<{
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest): Promise<NextResponse<HealthStatus>> {
     // Run checks in parallel for efficiency
-    const [databaseCheck, redisCheck] = await Promise.all([
-        checkDatabase(),
-        checkRedis(),
-    ]);
+    const [databaseCheck, redisCheck] = await Promise.all([checkDatabase(), checkRedis()]);
 
     const environmentCheck = checkEnvironment();
 

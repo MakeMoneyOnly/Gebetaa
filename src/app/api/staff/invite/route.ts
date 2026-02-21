@@ -10,6 +10,7 @@ import { StaffInviteEmail } from '@/lib/email/templates/staff-invite';
 const InviteStaffSchema = z.object({
     email: z.string().email().optional().nullable(),
     role: z.enum(['owner', 'admin', 'manager', 'kitchen', 'waiter', 'bar']),
+    label: z.string().trim().min(2).max(120).optional().nullable(),
 });
 
 export async function POST(request: Request) {
@@ -46,7 +47,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to create staff invite', 500, 'STAFF_INVITE_CREATE_FAILED', error.message);
+        return apiError(
+            'Failed to create staff invite',
+            500,
+            'STAFF_INVITE_CREATE_FAILED',
+            error.message
+        );
     }
 
     // Fetch restaurant name for the email
@@ -56,7 +62,11 @@ export async function POST(request: Request) {
         .eq('id', context.restaurantId)
         .single();
 
-    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/join?code=${code}`;
+    const inviteQuery = new URLSearchParams({ code, role: parsed.data.role });
+    if (parsed.data.label) {
+        inviteQuery.set('label', parsed.data.label);
+    }
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/join?${inviteQuery.toString()}`;
     let emailSent = false;
 
     if (parsed.data.email && resend) {
@@ -65,14 +75,14 @@ export async function POST(request: Request) {
             const { data: emailData, error: emailError } = await resend.emails.send({
                 from: EMAIL_FROM,
                 to: parsed.data.email,
-                subject: `You've been invited to join ${restaurant?.name ?? 'Gebeta'}`,
+                subject: `Provision access for ${restaurant?.name ?? 'Gebeta'}`,
                 html: StaffInviteEmail({
                     inviteUrl,
                     restaurantName: restaurant?.name ?? 'Gebeta',
                     role: parsed.data.role,
                 }),
             });
-            
+
             if (emailError) {
                 console.error('Resend API returned error:', emailError);
             } else {
@@ -84,7 +94,12 @@ export async function POST(request: Request) {
             // We don't fail the request if email fails, but we'll flag it in the response
         }
     } else {
-        console.log('Skipping email: Email provided?', Boolean(parsed.data.email), 'Resend client ready?', Boolean(resend));
+        console.log(
+            'Skipping email: Email provided?',
+            Boolean(parsed.data.email),
+            'Resend client ready?',
+            Boolean(resend)
+        );
     }
 
     await writeAuditLog(context.supabase, {
@@ -97,6 +112,7 @@ export async function POST(request: Request) {
             role: parsed.data.role,
             has_email: Boolean(parsed.data.email),
             email_sent: emailSent,
+            label: parsed.data.label ?? null,
         },
         new_value: {
             status: data.status,
@@ -104,9 +120,12 @@ export async function POST(request: Request) {
         },
     });
 
-    return apiSuccess({
-        invite: data,
-        invite_url: inviteUrl,
-        email_sent: emailSent,
-    }, 201);
+    return apiSuccess(
+        {
+            invite: data,
+            invite_url: inviteUrl,
+            email_sent: emailSent,
+        },
+        201
+    );
 }

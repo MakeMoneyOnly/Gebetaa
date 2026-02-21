@@ -53,7 +53,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to connect delivery partner', 500, 'DELIVERY_PARTNER_CONNECT_FAILED', error.message);
+        return apiError(
+            'Failed to connect delivery partner',
+            500,
+            'DELIVERY_PARTNER_CONNECT_FAILED',
+            error.message
+        );
     }
 
     await writeAuditLog(context.supabase, {
@@ -73,8 +78,11 @@ export async function POST(request: Request) {
         },
     });
 
-    return apiSuccess({
-        partner: data,
-        idempotency_key: idempotencyKey,
-    }, 201);
+    return apiSuccess(
+        {
+            partner: data,
+            idempotency_key: idempotencyKey,
+        },
+        201
+    );
 }

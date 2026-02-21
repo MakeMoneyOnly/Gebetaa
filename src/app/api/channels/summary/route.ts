@@ -27,10 +27,20 @@ export async function GET() {
     ]);
 
     if (partnersResult.error) {
-        return apiError('Failed to fetch channel partners', 500, 'CHANNEL_PARTNERS_FETCH_FAILED', partnersResult.error.message);
+        return apiError(
+            'Failed to fetch channel partners',
+            500,
+            'CHANNEL_PARTNERS_FETCH_FAILED',
+            partnersResult.error.message
+        );
     }
     if (ordersResult.error) {
-        return apiError('Failed to fetch external order summary', 500, 'EXTERNAL_ORDERS_FETCH_FAILED', ordersResult.error.message);
+        return apiError(
+            'Failed to fetch external order summary',
+            500,
+            'EXTERNAL_ORDERS_FETCH_FAILED',
+            ordersResult.error.message
+        );
     }
 
     const partners = partnersResult.data ?? [];
@@ -54,8 +64,8 @@ export async function GET() {
         }
     }
 
-    const connectedPartners = partners.filter((partner) => partner.status === 'connected').length;
-    const degradedPartners = partners.filter((partner) => partner.status === 'error').length;
+    const connectedPartners = partners.filter(partner => partner.status === 'connected').length;
+    const degradedPartners = partners.filter(partner => partner.status === 'error').length;
 
     return apiSuccess({
         totals: {

@@ -42,7 +42,10 @@ class QueryBuilder {
     private limitBy: number | null = null;
     private searchTerm: string | null = null;
 
-    constructor(private readonly table: string, private readonly store: TableStore) {}
+    constructor(
+        private readonly table: string,
+        private readonly store: TableStore
+    ) {}
 
     select() {
         return this;
@@ -110,7 +113,9 @@ class QueryBuilder {
     }
 
     then<TResult1 = any, TResult2 = never>(
-        onfulfilled?: ((value: { data: any; error: any }) => TResult1 | PromiseLike<TResult1>) | null,
+        onfulfilled?:
+            | ((value: { data: any; error: any }) => TResult1 | PromiseLike<TResult1>)
+            | null,
         onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
     ): Promise<TResult1 | TResult2> {
         return Promise.resolve(this.execute()).then(onfulfilled as any, onrejected as any);
@@ -143,7 +148,9 @@ class QueryBuilder {
         const matched = tableRows.filter(row => this.filters.every(fn => fn(row)));
 
         if (this.op === 'update') {
-            const updated = matched.map(row => Object.assign(row, this.payload ?? {}, { updated_at: new Date().toISOString() }));
+            const updated = matched.map(row =>
+                Object.assign(row, this.payload ?? {}, { updated_at: new Date().toISOString() })
+            );
             return { data: updated, error: null };
         }
 
@@ -156,10 +163,17 @@ class QueryBuilder {
 
         if (this.searchTerm) {
             const term = this.searchTerm;
-            selected = selected.filter(row =>
-                String(row.table_number ?? '').toLowerCase().includes(term) ||
-                String(row.order_number ?? '').toLowerCase().includes(term) ||
-                String(row.customer_name ?? '').toLowerCase().includes(term)
+            selected = selected.filter(
+                row =>
+                    String(row.table_number ?? '')
+                        .toLowerCase()
+                        .includes(term) ||
+                    String(row.order_number ?? '')
+                        .toLowerCase()
+                        .includes(term) ||
+                    String(row.customer_name ?? '')
+                        .toLowerCase()
+                        .includes(term)
             );
         }
 
@@ -169,7 +183,7 @@ class QueryBuilder {
                 const av = a[key];
                 const bv = b[key];
                 if (av === bv) return 0;
-                return av > bv ? (asc ? 1 : -1) : (asc ? -1 : 1);
+                return av > bv ? (asc ? 1 : -1) : asc ? -1 : 1;
             });
         }
 
@@ -188,8 +202,20 @@ function createHarness() {
         campaigns: [],
         campaign_deliveries: [],
         restaurant_staff: [
-            { id: '11111111-1111-4111-8111-111111111111', user_id: 'staff-user-1', restaurant_id: 'rest-1', is_active: true, role: 'manager' },
-            { id: '22222222-2222-4222-8222-222222222222', user_id: 'staff-user-2', restaurant_id: 'rest-1', is_active: true, role: 'waiter' },
+            {
+                id: '11111111-1111-4111-8111-111111111111',
+                user_id: 'staff-user-1',
+                restaurant_id: 'rest-1',
+                is_active: true,
+                role: 'manager',
+            },
+            {
+                id: '22222222-2222-4222-8222-222222222222',
+                user_id: 'staff-user-2',
+                restaurant_id: 'rest-1',
+                is_active: true,
+                role: 'waiter',
+            },
         ],
         agency_users: [],
         audit_logs: [],
@@ -197,7 +223,9 @@ function createHarness() {
 
     const supabase = {
         auth: {
-            getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'staff-user-1' } }, error: null }),
+            getUser: vi
+                .fn()
+                .mockResolvedValue({ data: { user: { id: 'staff-user-1' } }, error: null }),
         },
         from: (table: string) => new QueryBuilder(table, store),
     } as any;
@@ -265,31 +293,44 @@ describe('Order lifecycle integration', () => {
             conversion_order_id: null,
         });
 
-        const createResponse = await postOrder(new NextRequest('http://localhost/api/orders', {
-            method: 'POST',
-            body: JSON.stringify({
-                guest_context: { slug: 'demo', table: 'T1', sig: 'abc', exp: 9999999999 },
-                campaign_attribution: {
-                    campaign_delivery_id: '0f7f4423-f383-4f0f-9238-2c80112de20d',
-                    campaign_id: 'f1b8b787-11a5-4e78-8f50-91dcae7e96dd',
+        const createResponse = await postOrder(
+            new NextRequest('http://localhost/api/orders', {
+                method: 'POST',
+                body: JSON.stringify({
+                    guest_context: { slug: 'demo', table: 'T1', sig: 'abc', exp: 9999999999 },
+                    campaign_attribution: {
+                        campaign_delivery_id: '0f7f4423-f383-4f0f-9238-2c80112de20d',
+                        campaign_id: 'f1b8b787-11a5-4e78-8f50-91dcae7e96dd',
+                    },
+                    items: [
+                        {
+                            id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+                            name: 'Burger',
+                            quantity: 1,
+                            price: 100,
+                        },
+                    ],
+                    total_price: 100,
+                }),
+                headers: {
+                    'content-type': 'application/json',
+                    'x-forwarded-for': '127.0.0.1',
+                    'user-agent': 'vitest',
                 },
-                items: [{ id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', name: 'Burger', quantity: 1, price: 100 }],
-                total_price: 100,
-            }),
-            headers: {
-                'content-type': 'application/json',
-                'x-forwarded-for': '127.0.0.1',
-                'user-agent': 'vitest',
-            },
-        }));
+            })
+        );
         expect(createResponse.status).toBe(201);
         const created = await createResponse.json();
         expect(created.data.id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
         expect(created.data.campaign_attribution_applied).toBe(true);
         expect(harness.store.campaign_deliveries[0].status).toBe('converted');
-        expect(harness.store.campaign_deliveries[0].conversion_order_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+        expect(harness.store.campaign_deliveries[0].conversion_order_id).toBe(
+            'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+        );
 
-        const queueResponse = await getOrders(new NextRequest('http://localhost/api/orders?limit=20'));
+        const queueResponse = await getOrders(
+            new NextRequest('http://localhost/api/orders?limit=20')
+        );
         expect(queueResponse.status).toBe(200);
         const queueBody = await queueResponse.json();
         expect(queueBody.data.total).toBe(1);
@@ -382,7 +423,10 @@ describe('Order lifecycle integration', () => {
             new Request('http://localhost/api/orders/bulk-status', {
                 method: 'POST',
                 body: JSON.stringify({
-                    order_ids: ['dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'],
+                    order_ids: [
+                        'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+                        'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+                    ],
                     status: 'preparing',
                 }),
                 headers: { 'content-type': 'application/json' },
@@ -392,9 +436,13 @@ describe('Order lifecycle integration', () => {
         const body = await response.json();
         expect(body.data.updated_count).toBe(2);
 
-        const queueResponse = await getOrders(new NextRequest('http://localhost/api/orders?status=preparing&limit=20'));
+        const queueResponse = await getOrders(
+            new NextRequest('http://localhost/api/orders?status=preparing&limit=20')
+        );
         const queueBody = await queueResponse.json();
         expect(queueBody.data.total).toBe(2);
-        expect(harness.store.order_events.filter(e => e.event_type === 'bulk_status_changed').length).toBe(2);
+        expect(
+            harness.store.order_events.filter(e => e.event_type === 'bulk_status_changed').length
+        ).toBe(2);
     });
 });

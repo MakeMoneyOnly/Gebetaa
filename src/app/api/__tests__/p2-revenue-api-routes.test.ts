@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiError } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
-import { GET as getLoyaltyPrograms, POST as postLoyaltyPrograms } from '@/app/api/loyalty/programs/route';
+import {
+    GET as getLoyaltyPrograms,
+    POST as postLoyaltyPrograms,
+} from '@/app/api/loyalty/programs/route';
 import { POST as postLoyaltyAdjust } from '@/app/api/loyalty/accounts/[accountId]/adjust/route';
 import { GET as getGiftCards, POST as postGiftCards } from '@/app/api/gift-cards/route';
 import { POST as postGiftCardRedeem } from '@/app/api/gift-cards/[giftCardId]/redeem/route';
@@ -104,14 +107,17 @@ describe('P2 revenue API routes', () => {
         setAuthAndContextOk();
 
         const response = await postGiftCardRedeem(
-            new Request('http://localhost/api/gift-cards/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/redeem', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-idempotency-key': 'bad-key',
-                },
-                body: JSON.stringify({ amount: 50 }),
-            }),
+            new Request(
+                'http://localhost/api/gift-cards/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/redeem',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-idempotency-key': 'bad-key',
+                    },
+                    body: JSON.stringify({ amount: 50 }),
+                }
+            ),
             { params: Promise.resolve({ giftCardId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 

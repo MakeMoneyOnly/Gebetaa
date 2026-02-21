@@ -16,7 +16,10 @@ const CreateSupplierInvoiceSchema = z.object({
     purchase_order_id: z.string().uuid().optional(),
     invoice_number: z.string().trim().min(3).max(80).optional(),
     supplier_name: z.string().trim().min(2).max(140),
-    status: z.enum(['pending_review', 'approved', 'disputed', 'paid', 'voided']).optional().default('pending_review'),
+    status: z
+        .enum(['pending_review', 'approved', 'disputed', 'paid', 'voided'])
+        .optional()
+        .default('pending_review'),
     currency: z.string().trim().length(3).optional().default('ETB'),
     subtotal: z.coerce.number().min(0).max(100000000).optional().default(0),
     tax_amount: z.coerce.number().min(0).max(100000000).optional().default(0),
@@ -66,7 +69,12 @@ export async function GET(request: Request) {
 
     const { data, error } = await query;
     if (error) {
-        return apiError('Failed to fetch supplier invoices', 500, 'SUPPLIER_INVOICES_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch supplier invoices',
+            500,
+            'SUPPLIER_INVOICES_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({ invoices: data ?? [] });
@@ -104,7 +112,12 @@ export async function POST(request: Request) {
             .eq('id', parsed.data.purchase_order_id)
             .maybeSingle();
         if (poError) {
-            return apiError('Failed to validate purchase order', 500, 'PURCHASE_ORDER_VALIDATION_FAILED', poError.message);
+            return apiError(
+                'Failed to validate purchase order',
+                500,
+                'PURCHASE_ORDER_VALIDATION_FAILED',
+                poError.message
+            );
         }
         if (!po) {
             return apiError('Purchase order not found', 404, 'PURCHASE_ORDER_NOT_FOUND');
@@ -113,16 +126,18 @@ export async function POST(request: Request) {
 
     const subtotal = Number(parsed.data.subtotal.toFixed(2));
     const tax = Number(parsed.data.tax_amount.toFixed(2));
-    const total = parsed.data.total_amount !== undefined
-        ? Number(parsed.data.total_amount.toFixed(2))
-        : Number((subtotal + tax).toFixed(2));
+    const total =
+        parsed.data.total_amount !== undefined
+            ? Number(parsed.data.total_amount.toFixed(2))
+            : Number((subtotal + tax).toFixed(2));
 
     const { data: invoice, error } = await db
         .from('supplier_invoices')
         .insert({
             restaurant_id: context.restaurantId,
             purchase_order_id: parsed.data.purchase_order_id ?? null,
-            invoice_number: parsed.data.invoice_number?.trim().toUpperCase() || generateInvoiceNumber(),
+            invoice_number:
+                parsed.data.invoice_number?.trim().toUpperCase() || generateInvoiceNumber(),
             supplier_name: parsed.data.supplier_name,
             status: parsed.data.status,
             currency: parsed.data.currency.toUpperCase(),
@@ -140,7 +155,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to create supplier invoice', 500, 'SUPPLIER_INVOICE_CREATE_FAILED', error.message);
+        return apiError(
+            'Failed to create supplier invoice',
+            500,
+            'SUPPLIER_INVOICE_CREATE_FAILED',
+            error.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

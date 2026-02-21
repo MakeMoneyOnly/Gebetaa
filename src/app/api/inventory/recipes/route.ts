@@ -36,7 +36,8 @@ export async function GET() {
     const [recipesResult, inventoryResult] = await Promise.all([
         db
             .from('recipes')
-            .select(`
+            .select(
+                `
                 id,
                 menu_item_id,
                 name,
@@ -51,7 +52,8 @@ export async function GET() {
                     uom,
                     waste_pct
                 )
-            `)
+            `
+            )
             .eq('restaurant_id', context.restaurantId)
             .eq('is_active', true)
             .order('created_at', { ascending: false }),
@@ -64,10 +66,20 @@ export async function GET() {
     ]);
 
     if (recipesResult.error) {
-        return apiError('Failed to fetch recipes', 500, 'RECIPES_FETCH_FAILED', recipesResult.error.message);
+        return apiError(
+            'Failed to fetch recipes',
+            500,
+            'RECIPES_FETCH_FAILED',
+            recipesResult.error.message
+        );
     }
     if (inventoryResult.error) {
-        return apiError('Failed to fetch inventory items', 500, 'INVENTORY_ITEMS_FETCH_FAILED', inventoryResult.error.message);
+        return apiError(
+            'Failed to fetch inventory items',
+            500,
+            'INVENTORY_ITEMS_FETCH_FAILED',
+            inventoryResult.error.message
+        );
     }
 
     return apiSuccess({
@@ -100,7 +112,9 @@ export async function POST(request: Request) {
         return parsed.response;
     }
 
-    const itemIds = Array.from(new Set(parsed.data.ingredients.map((item) => item.inventory_item_id)));
+    const itemIds = Array.from(
+        new Set(parsed.data.ingredients.map(item => item.inventory_item_id))
+    );
     const { data: inventoryItems, error: inventoryError } = await db
         .from('inventory_items')
         .select('id')
@@ -108,7 +122,12 @@ export async function POST(request: Request) {
         .in('id', itemIds);
 
     if (inventoryError) {
-        return apiError('Failed to validate ingredients', 500, 'INGREDIENT_VALIDATION_FAILED', inventoryError.message);
+        return apiError(
+            'Failed to validate ingredients',
+            500,
+            'INGREDIENT_VALIDATION_FAILED',
+            inventoryError.message
+        );
     }
     if ((inventoryItems ?? []).length !== itemIds.length) {
         return apiError('One or more inventory items are invalid', 400, 'INVALID_INGREDIENT_ITEM');
@@ -128,10 +147,15 @@ export async function POST(request: Request) {
         .single();
 
     if (recipeError) {
-        return apiError('Failed to create recipe', 500, 'RECIPE_CREATE_FAILED', recipeError.message);
+        return apiError(
+            'Failed to create recipe',
+            500,
+            'RECIPE_CREATE_FAILED',
+            recipeError.message
+        );
     }
 
-    const ingredientRows = parsed.data.ingredients.map((ingredient) => ({
+    const ingredientRows = parsed.data.ingredients.map(ingredient => ({
         restaurant_id: context.restaurantId,
         recipe_id: recipe.id,
         inventory_item_id: ingredient.inventory_item_id,
@@ -146,7 +170,12 @@ export async function POST(request: Request) {
         .select('*');
 
     if (ingredientError) {
-        return apiError('Failed to create recipe ingredients', 500, 'RECIPE_INGREDIENTS_CREATE_FAILED', ingredientError.message);
+        return apiError(
+            'Failed to create recipe ingredients',
+            500,
+            'RECIPE_INGREDIENTS_CREATE_FAILED',
+            ingredientError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

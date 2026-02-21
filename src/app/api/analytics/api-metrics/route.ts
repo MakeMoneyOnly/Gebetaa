@@ -85,11 +85,19 @@ export async function GET(request: Request) {
         .limit(5000);
 
     if (error) {
-        return apiError('Failed to load API metrics', 500, 'API_METRICS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to load API metrics',
+            500,
+            'API_METRICS_FETCH_FAILED',
+            error.message
+        );
     }
 
     const endpointMap = new Map<string, { durations: number[]; total: number; errors: number }>();
-    const trendMap = new Map<string, { endpoint: string; bucket: string; total: number; errors: number; durations: number[] }>();
+    const trendMap = new Map<
+        string,
+        { endpoint: string; bucket: string; total: number; errors: number; durations: number[] }
+    >();
 
     for (const row of data ?? []) {
         const meta = asMetricMetadata(row.metadata);
@@ -125,15 +133,20 @@ export async function GET(request: Request) {
         trendMap.set(trendKey, trendEntry);
     }
 
-    const endpointStats = SLO_TARGETS.map((target) => {
+    const endpointStats = SLO_TARGETS.map(target => {
         const entry = endpointMap.get(target.endpoint) ?? { durations: [], total: 0, errors: 0 };
-        const errorRate = entry.total > 0 ? Number(((entry.errors / entry.total) * 100).toFixed(2)) : 0;
+        const errorRate =
+            entry.total > 0 ? Number(((entry.errors / entry.total) * 100).toFixed(2)) : 0;
         const p95 = percentile(entry.durations, 95);
         const p50 = percentile(entry.durations, 50);
-        const avg = entry.total > 0 ? Math.round(entry.durations.reduce((sum, n) => sum + n, 0) / entry.total) : 0;
+        const avg =
+            entry.total > 0
+                ? Math.round(entry.durations.reduce((sum, n) => sum + n, 0) / entry.total)
+                : 0;
 
         const latencyStatus = entry.total > 0 && p95 > target.p95_latency_ms ? 'breach' : 'healthy';
-        const errorStatus = entry.total > 0 && errorRate > target.error_rate_percent ? 'breach' : 'healthy';
+        const errorStatus =
+            entry.total > 0 && errorRate > target.error_rate_percent ? 'breach' : 'healthy';
 
         return {
             endpoint: target.endpoint,
@@ -155,12 +168,13 @@ export async function GET(request: Request) {
     });
 
     const trend = Array.from(trendMap.values())
-        .map((entry) => ({
+        .map(entry => ({
             endpoint: entry.endpoint,
             bucket: entry.bucket,
             requests: entry.total,
             errors: entry.errors,
-            error_rate_percent: entry.total > 0 ? Number(((entry.errors / entry.total) * 100).toFixed(2)) : 0,
+            error_rate_percent:
+                entry.total > 0 ? Number(((entry.errors / entry.total) * 100).toFixed(2)) : 0,
             p95_latency_ms: percentile(entry.durations, 95),
         }))
         .sort((a, b) => a.bucket.localeCompare(b.bucket) || a.endpoint.localeCompare(b.endpoint));

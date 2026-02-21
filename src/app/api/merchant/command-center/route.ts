@@ -117,7 +117,9 @@ export async function GET(request: NextRequest) {
         const [ordersRes, requestsRes, tablesRes, alertsRes] = await Promise.all([
             supabase
                 .from('orders')
-                .select('id, order_number, status, table_number, created_at, completed_at, total_price')
+                .select(
+                    'id, order_number, status, table_number, created_at, completed_at, total_price'
+                )
                 .eq('restaurant_id', restaurantId)
                 .gte('created_at', sinceIso)
                 .order('created_at', { ascending: false })
@@ -166,8 +168,12 @@ export async function GET(request: NextRequest) {
         const alerts = alertsRes.data ?? [];
 
         const ordersInFlight = orders.filter(o => isInFlightStatus(o.status)).length;
-        const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'served');
-        const activeTables = tables.filter(t => t.is_active !== false && t.status !== 'available').length;
+        const completedOrders = orders.filter(
+            o => o.status === 'completed' || o.status === 'served'
+        );
+        const activeTables = tables.filter(
+            t => t.is_active !== false && t.status !== 'available'
+        ).length;
         const openRequests = requests.filter(r => (r.status ?? 'pending') === 'pending').length;
         const grossSales = orders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0);
         const avgOrderValue = orders.length > 0 ? Math.round(grossSales / orders.length) : 0;
@@ -188,9 +194,8 @@ export async function GET(request: NextRequest) {
             avgTicketMinutes = Math.round(totalMinutes / completedOrders.length);
         }
 
-        const paymentSuccessRate = orders.length > 0
-            ? Math.round((completedOrders.length / orders.length) * 100)
-            : 0;
+        const paymentSuccessRate =
+            orders.length > 0 ? Math.round((completedOrders.length / orders.length) * 100) : 0;
 
         const attentionOrders: AttentionItem[] = orders
             .filter(o => isInFlightStatus(o.status))
@@ -229,15 +234,17 @@ export async function GET(request: NextRequest) {
                 table_number: null,
             }));
 
-        const attentionQueue = [...attentionAlerts, ...attentionRequests, ...attentionOrders].sort((a, b) => {
-            const priorityDiff = resolvePriority(b) - resolvePriority(a);
-            if (priorityDiff !== 0) {
-                return priorityDiff;
+        const attentionQueue = [...attentionAlerts, ...attentionRequests, ...attentionOrders].sort(
+            (a, b) => {
+                const priorityDiff = resolvePriority(b) - resolvePriority(a);
+                if (priorityDiff !== 0) {
+                    return priorityDiff;
+                }
+                const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return bTime - aTime;
             }
-            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-            return bTime - aTime;
-        });
+        );
 
         responseStatus = 200;
         return apiSuccess({

@@ -9,9 +9,14 @@ import type { Json } from '@/types/database';
 const AccountIdSchema = z.string().uuid();
 
 const AdjustLoyaltySchema = z.object({
-    points_delta: z.coerce.number().int().min(-100000).max(100000).refine(value => value !== 0, {
-        message: 'points_delta must not be 0',
-    }),
+    points_delta: z.coerce
+        .number()
+        .int()
+        .min(-100000)
+        .max(100000)
+        .refine(value => value !== 0, {
+            message: 'points_delta must not be 0',
+        }),
     reason: z.string().trim().min(2).max(200),
     order_id: z.string().uuid().optional(),
 });
@@ -33,7 +38,12 @@ export async function POST(
     const { accountId } = await routeContext.params;
     const accountIdParsed = AccountIdSchema.safeParse(accountId);
     if (!accountIdParsed.success) {
-        return apiError('Invalid account id', 400, 'INVALID_LOYALTY_ACCOUNT_ID', accountIdParsed.error.flatten());
+        return apiError(
+            'Invalid account id',
+            400,
+            'INVALID_LOYALTY_ACCOUNT_ID',
+            accountIdParsed.error.flatten()
+        );
     }
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
@@ -57,7 +67,12 @@ export async function POST(
         .maybeSingle();
 
     if (accountError) {
-        return apiError('Failed to load loyalty account', 500, 'LOYALTY_ACCOUNT_FETCH_FAILED', accountError.message);
+        return apiError(
+            'Failed to load loyalty account',
+            500,
+            'LOYALTY_ACCOUNT_FETCH_FAILED',
+            accountError.message
+        );
     }
     if (!account) {
         return apiError('Loyalty account not found', 404, 'LOYALTY_ACCOUNT_NOT_FOUND');
@@ -68,7 +83,11 @@ export async function POST(
 
     const balanceAfter = Number(account.points_balance) + parsed.data.points_delta;
     if (balanceAfter < 0) {
-        return apiError('Insufficient points balance for adjustment', 409, 'LOYALTY_INSUFFICIENT_POINTS');
+        return apiError(
+            'Insufficient points balance for adjustment',
+            409,
+            'LOYALTY_INSUFFICIENT_POINTS'
+        );
     }
 
     const { data: updated, error: updateError } = await db
@@ -83,7 +102,12 @@ export async function POST(
         .single();
 
     if (updateError) {
-        return apiError('Failed to update loyalty balance', 500, 'LOYALTY_ACCOUNT_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update loyalty balance',
+            500,
+            'LOYALTY_ACCOUNT_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     const transactionType = parsed.data.points_delta > 0 ? 'adjustment_credit' : 'adjustment_debit';
@@ -108,7 +132,12 @@ export async function POST(
         .single();
 
     if (txError) {
-        return apiError('Failed to write loyalty transaction', 500, 'LOYALTY_TRANSACTION_CREATE_FAILED', txError.message);
+        return apiError(
+            'Failed to write loyalty transaction',
+            500,
+            'LOYALTY_TRANSACTION_CREATE_FAILED',
+            txError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

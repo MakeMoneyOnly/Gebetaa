@@ -34,7 +34,12 @@ export async function GET(request: Request) {
         .limit(limit);
 
     if (error) {
-        return apiError('Failed to fetch support tickets', 500, 'SUPPORT_TICKETS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch support tickets',
+            500,
+            'SUPPORT_TICKETS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({ tickets: data ?? [] });
@@ -72,7 +77,12 @@ export async function POST(request: Request) {
         .single();
 
     if (error) {
-        return apiError('Failed to create support ticket', 500, 'SUPPORT_TICKET_CREATE_FAILED', error.message);
+        return apiError(
+            'Failed to create support ticket',
+            500,
+            'SUPPORT_TICKET_CREATE_FAILED',
+            error.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

@@ -1,0 +1,202 @@
+import { z } from 'zod';
+import { apiError, apiSuccess } from '@/lib/api/response';
+import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
+import { parseJsonBody, parseQuery } from '@/lib/api/validation';
+import { writeAuditLog } from '@/lib/api/audit';
+import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import type { Json } from '@/types/database';
+
+const PaymentMethodSchema = z.enum([
+    'cash',
+    'card',
+    'telebirr',
+    'chapa',
+    'gift_card',
+    'bank_transfer',
+    'other',
+]);
+
+const PaymentStatusSchema = z.enum([
+    'pending',
+    'authorized',
+    'captured',
+    'failed',
+    'voided',
+    'partially_refunded',
+    'refunded',
+]);
+
+const PaymentsQuerySchema = z.object({
+    method: PaymentMethodSchema.optional(),
+    status: PaymentStatusSchema.optional(),
+    from: z.string().datetime().optional(),
+    to: z.string().datetime().optional(),
+    limit: z.coerce.number().int().min(1).max(300).optional().default(100),
+});
+
+const CreatePaymentSchema = z.object({
+    order_id: z.string().uuid().optional(),
+    method: PaymentMethodSchema,
+    provider: z.string().trim().min(2).max(80).optional().default('internal'),
+    provider_reference: z.string().trim().min(2).max(120).optional(),
+    amount: z.coerce.number().min(0.01).max(100000000),
+    tip_amount: z.coerce.number().min(0).max(100000000).optional().default(0),
+    currency: z.string().trim().length(3).optional().default('ETB'),
+    status: PaymentStatusSchema.optional().default('captured'),
+    authorized_at: z.string().datetime().optional(),
+    captured_at: z.string().datetime().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+});
+
+export async function GET(request: Request) {
+    const auth = await getAuthenticatedUser();
+    if (!auth.ok) {
+        return auth.response;
+    }
+
+    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
+    if (!context.ok) {
+        return context.response;
+    }
+
+    const parsed = parseQuery(
+        Object.fromEntries(new URL(request.url).searchParams.entries()),
+        PaymentsQuerySchema
+    );
+    if (!parsed.success) {
+        return parsed.response;
+    }
+
+    const db = context.supabase;
+    let query = db
+        .from('payments')
+        .select('*')
+        .eq('restaurant_id', context.restaurantId)
+        .order('created_at', { ascending: false })
+        .limit(parsed.data.limit);
+
+    if (parsed.data.method) {
+        query = query.eq('method', parsed.data.method);
+    }
+    if (parsed.data.status) {
+        query = query.eq('status', parsed.data.status);
+    }
+    if (parsed.data.from) {
+        query = query.gte('created_at', parsed.data.from);
+    }
+    if (parsed.data.to) {
+        query = query.lte('created_at', parsed.data.to);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+        return apiError('Failed to fetch payments', 500, 'PAYMENTS_FETCH_FAILED', error.message);
+    }
+
+    const payments = data ?? [];
+    const totals = payments.reduce(
+        (acc, payment) => {
+            const amount = Number(payment.amount ?? 0);
+            const tip = Number(payment.tip_amount ?? 0);
+            acc.gross += amount;
+            acc.tips += tip;
+            acc.net += amount + tip;
+            if (payment.status === 'captured') {
+                acc.captured_count += 1;
+            }
+            if (payment.status === 'failed') {
+                acc.failed_count += 1;
+            }
+            return acc;
+        },
+        {
+            gross: 0,
+            tips: 0,
+            net: 0,
+            captured_count: 0,
+            failed_count: 0,
+        }
+    );
+
+    return apiSuccess({
+        payments,
+        totals: {
+            gross: Number(totals.gross.toFixed(2)),
+            tips: Number(totals.tips.toFixed(2)),
+            net: Number(totals.net.toFixed(2)),
+            captured_count: totals.captured_count,
+            failed_count: totals.failed_count,
+        },
+    });
+}
+
+export async function POST(request: Request) {
+    const auth = await getAuthenticatedUser();
+    if (!auth.ok) {
+        return auth.response;
+    }
+
+    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
+    if (!context.ok) {
+        return context.response;
+    }
+
+    const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
+    if (explicitIdempotencyKey && !isIdempotencyKeyValid(explicitIdempotencyKey)) {
+        return apiError('Invalid idempotency key', 400, 'INVALID_IDEMPOTENCY_KEY');
+    }
+    const idempotencyKey = resolveIdempotencyKey(explicitIdempotencyKey);
+
+    const parsed = await parseJsonBody(request, CreatePaymentSchema);
+    if (!parsed.success) {
+        return parsed.response;
+    }
+
+    const db = context.supabase;
+    const amount = Number(parsed.data.amount.toFixed(2));
+    const tipAmount = Number(parsed.data.tip_amount.toFixed(2));
+
+    const { data: payment, error } = await db
+        .from('payments')
+        .insert({
+            restaurant_id: context.restaurantId,
+            order_id: parsed.data.order_id ?? null,
+            method: parsed.data.method,
+            provider: parsed.data.provider.trim().toLowerCase(),
+            provider_reference: parsed.data.provider_reference?.trim() ?? null,
+            amount,
+            tip_amount: tipAmount,
+            currency: parsed.data.currency.toUpperCase(),
+            status: parsed.data.status,
+            authorized_at: parsed.data.authorized_at ?? null,
+            captured_at: parsed.data.captured_at ?? null,
+            metadata: (parsed.data.metadata ?? {}) as Json,
+            created_by: auth.user.id,
+        })
+        .select('*')
+        .single();
+
+    if (error) {
+        return apiError('Failed to create payment', 500, 'PAYMENT_CREATE_FAILED', error.message);
+    }
+
+    await writeAuditLog(context.supabase, {
+        restaurant_id: context.restaurantId,
+        user_id: auth.user.id,
+        action: 'payment_created',
+        entity_type: 'payment',
+        entity_id: payment.id,
+        metadata: {
+            source: 'merchant_dashboard',
+            idempotency_key: idempotencyKey,
+        },
+        new_value: {
+            method: payment.method,
+            provider: payment.provider,
+            amount: payment.amount,
+            status: payment.status,
+        },
+    });
+
+    return apiSuccess({ payment, idempotency_key: idempotencyKey }, 201);
+}

@@ -11,7 +11,11 @@ function isMutationMethod(method?: string): boolean {
     return ['POST', 'PUT', 'PATCH', 'DELETE'].includes((method ?? '').toUpperCase());
 }
 
-export function enforcePilotAccess(restaurantId: string, method?: string, options?: { phase?: PilotPhase }) {
+export function enforcePilotAccess(
+    restaurantId: string,
+    method?: string,
+    options?: { phase?: PilotPhase }
+) {
     const phase = options?.phase ?? 'p0';
     if (!isPilotRolloutEnabled(phase)) {
         return null;
@@ -27,11 +31,7 @@ export function enforcePilotAccess(restaurantId: string, method?: string, option
     }
 
     if (isPilotMutationBlockEnabled() && isMutationMethod(method)) {
-        return apiError(
-            'Pilot mutation block is enabled',
-            503,
-            'PILOT_MUTATION_BLOCK_ENABLED'
-        );
+        return apiError('Pilot mutation block is enabled', 503, 'PILOT_MUTATION_BLOCK_ENABLED');
     }
 
     return null;

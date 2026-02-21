@@ -6,14 +6,23 @@ import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 
 const UpdateOrderStatusSchema = z.object({
-    status: z.enum(['pending', 'acknowledged', 'preparing', 'ready', 'served', 'completed', 'cancelled']),
+    status: z.enum([
+        'pending',
+        'acknowledged',
+        'preparing',
+        'ready',
+        'served',
+        'completed',
+        'cancelled',
+    ]),
+    type: z.enum(['kitchen', 'bar', 'general']).optional(),
 });
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-    pending: ['acknowledged', 'cancelled'],
-    acknowledged: ['preparing', 'cancelled'],
+    pending: ['acknowledged', 'preparing', 'ready', 'cancelled'], // KDS can fast-track any order
+    acknowledged: ['preparing', 'ready', 'cancelled'],
     preparing: ['ready', 'cancelled'],
-    ready: ['served', 'cancelled'],
+    ready: ['served', 'completed', 'cancelled'],
     served: ['completed'],
     completed: [],
     cancelled: [],
@@ -39,13 +48,24 @@ export async function PATCH(
 
         if (!parsed.success) {
             responseStatus = 400;
-            return apiError('Invalid request payload', 400, 'INVALID_PAYLOAD', parsed.error.flatten());
+            return apiError(
+                'Invalid request payload',
+                400,
+                'INVALID_PAYLOAD',
+                parsed.error.flatten()
+            );
         }
 
         const supabase = await createClient();
 
         // Parallelize: auth check + order fetch at the same time
-        const [{ data: { user }, error: userError }, { data: order, error: orderError }] = await Promise.all([
+        const [
+            {
+                data: { user },
+                error: userError,
+            },
+            { data: order, error: orderError },
+        ] = await Promise.all([
             supabase.auth.getUser(),
             supabase
                 .from('orders')
@@ -87,7 +107,12 @@ export async function PATCH(
 
         if (staffError) {
             responseStatus = 500;
-            return apiError('Failed to verify staff access', 500, 'STAFF_ACCESS_CHECK_FAILED', staffError.message);
+            return apiError(
+                'Failed to verify staff access',
+                500,
+                'STAFF_ACCESS_CHECK_FAILED',
+                staffError.message
+            );
         }
         if (!staff) {
             responseStatus = 403;
@@ -109,7 +134,8 @@ export async function PATCH(
             updated_at: now,
         };
         if (parsed.data.status === 'acknowledged') updatePayload.acknowledged_at = now;
-        if (parsed.data.status === 'ready' || parsed.data.status === 'completed') updatePayload.completed_at = now;
+        if (parsed.data.status === 'ready' || parsed.data.status === 'completed')
+            updatePayload.completed_at = now;
         if (['acknowledged', 'preparing', 'ready'].includes(parsed.data.status)) {
             updatePayload.kitchen_status = parsed.data.status;
         }
@@ -123,7 +149,12 @@ export async function PATCH(
 
         if (updateError || !updatedOrder) {
             responseStatus = 500;
-            return apiError('Failed to update order status', 500, 'ORDER_UPDATE_FAILED', updateError?.message);
+            return apiError(
+                'Failed to update order status',
+                500,
+                'ORDER_UPDATE_FAILED',
+                updateError?.message
+            );
         }
 
         // ✅ Respond immediately — fire-and-forget audit + event + metrics writes
@@ -159,7 +190,7 @@ export async function PATCH(
                 statusCode: responseStatus,
                 durationMs,
             }),
-        ]).catch((err) => {
+        ]).catch(err => {
             console.warn('[PATCH /api/orders/:id/status] background write failed:', err);
         });
 

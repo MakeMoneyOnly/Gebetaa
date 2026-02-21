@@ -26,16 +26,21 @@ function normalizeSegmentRules(ruleJson: unknown) {
     const candidate = ruleJson as Record<string, unknown>;
     return {
         tags_any: Array.isArray(candidate.tags_any)
-            ? candidate.tags_any.filter(item => typeof item === 'string').map(item => item.trim()).filter(Boolean)
+            ? candidate.tags_any
+                  .filter(item => typeof item === 'string')
+                  .map(item => item.trim())
+                  .filter(Boolean)
             : [],
         vip_only: candidate.vip_only === true,
         minimum_visits:
-            typeof candidate.minimum_visits === 'number' && Number.isFinite(candidate.minimum_visits)
+            typeof candidate.minimum_visits === 'number' &&
+            Number.isFinite(candidate.minimum_visits)
                 ? Math.max(0, Math.floor(candidate.minimum_visits))
                 : 0,
-        language: typeof candidate.language === 'string' && candidate.language.length > 0
-            ? candidate.language
-            : null,
+        language:
+            typeof candidate.language === 'string' && candidate.language.length > 0
+                ? candidate.language
+                : null,
     };
 }
 
@@ -58,7 +63,12 @@ export async function POST(
     const { campaignId } = await routeContext.params;
     const campaignIdParsed = CampaignIdSchema.safeParse(campaignId);
     if (!campaignIdParsed.success) {
-        return apiError('Invalid campaign id', 400, 'INVALID_CAMPAIGN_ID', campaignIdParsed.error.flatten());
+        return apiError(
+            'Invalid campaign id',
+            400,
+            'INVALID_CAMPAIGN_ID',
+            campaignIdParsed.error.flatten()
+        );
     }
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
@@ -80,7 +90,12 @@ export async function POST(
         .maybeSingle();
 
     if (campaignError) {
-        return apiError('Failed to load campaign', 500, 'CAMPAIGN_FETCH_FAILED', campaignError.message);
+        return apiError(
+            'Failed to load campaign',
+            500,
+            'CAMPAIGN_FETCH_FAILED',
+            campaignError.message
+        );
     }
     if (!campaign) {
         return apiError('Campaign not found', 404, 'CAMPAIGN_NOT_FOUND');
@@ -102,7 +117,12 @@ export async function POST(
             .maybeSingle();
 
         if (segmentError) {
-            return apiError('Failed to load campaign segment', 500, 'SEGMENT_FETCH_FAILED', segmentError.message);
+            return apiError(
+                'Failed to load campaign segment',
+                500,
+                'SEGMENT_FETCH_FAILED',
+                segmentError.message
+            );
         }
         if (!segment) {
             return apiError('Campaign segment not found', 404, 'SEGMENT_NOT_FOUND');
@@ -120,17 +140,27 @@ export async function POST(
         .limit(guestFetchLimit);
 
     if (guestError) {
-        return apiError('Failed to fetch guests for campaign launch', 500, 'CAMPAIGN_GUEST_FETCH_FAILED', guestError.message);
+        return apiError(
+            'Failed to fetch guests for campaign launch',
+            500,
+            'CAMPAIGN_GUEST_FETCH_FAILED',
+            guestError.message
+        );
     }
 
     const selectedGuests = (guestRows ?? [])
         .filter((guest: any) => {
             if (segmentRules.vip_only && !guest.is_vip) return false;
-            if (segmentRules.minimum_visits > 0 && guest.visit_count < segmentRules.minimum_visits) return false;
+            if (segmentRules.minimum_visits > 0 && guest.visit_count < segmentRules.minimum_visits)
+                return false;
             if (segmentRules.language && guest.language !== segmentRules.language) return false;
             if (segmentRules.tags_any.length > 0) {
-                const guestTags = new Set((guest.tags ?? []).map((tag: string) => tag.toLowerCase()));
-                const overlaps = segmentRules.tags_any.some(tag => guestTags.has(tag.toLowerCase()));
+                const guestTags = new Set(
+                    (guest.tags ?? []).map((tag: string) => tag.toLowerCase())
+                );
+                const overlaps = segmentRules.tags_any.some(tag =>
+                    guestTags.has(tag.toLowerCase())
+                );
                 if (!overlaps) return false;
             }
             return true;
@@ -147,23 +177,26 @@ export async function POST(
     }
 
     if (selectedGuests.length > 0) {
-        const { error: deliveryError } = await db
-            .from('campaign_deliveries' as any)
-            .upsert(
-                selectedGuests.map((guest: any) => ({
-                    campaign_id: campaign.id,
-                    guest_id: guest.id,
-                    status: 'queued',
-                    metadata: {
-                        source: 'campaign_launch',
-                        idempotency_key: idempotencyKey,
-                    } as Json,
-                })),
-                { onConflict: 'campaign_id,guest_id' }
-            );
+        const { error: deliveryError } = await db.from('campaign_deliveries' as any).upsert(
+            selectedGuests.map((guest: any) => ({
+                campaign_id: campaign.id,
+                guest_id: guest.id,
+                status: 'queued',
+                metadata: {
+                    source: 'campaign_launch',
+                    idempotency_key: idempotencyKey,
+                } as Json,
+            })),
+            { onConflict: 'campaign_id,guest_id' }
+        );
 
         if (deliveryError) {
-            return apiError('Failed to queue campaign deliveries', 500, 'CAMPAIGN_DELIVERY_CREATE_FAILED', deliveryError.message);
+            return apiError(
+                'Failed to queue campaign deliveries',
+                500,
+                'CAMPAIGN_DELIVERY_CREATE_FAILED',
+                deliveryError.message
+            );
         }
     }
 
@@ -182,7 +215,12 @@ export async function POST(
         .single();
 
     if (updateError) {
-        return apiError('Failed to update campaign launch state', 500, 'CAMPAIGN_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update campaign launch state',
+            500,
+            'CAMPAIGN_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

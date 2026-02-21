@@ -13,12 +13,18 @@ const CreateStockMovementSchema = z.object({
     adjustment_direction: z.enum(['increase', 'decrease']).optional(),
     unit_cost: z.coerce.number().min(0).max(500000).optional(),
     reason: z.string().trim().min(2).max(280).optional(),
-    reference_type: z.enum(['manual', 'order', 'purchase_order', 'invoice', 'waste_audit', 'stock_count']).optional().default('manual'),
+    reference_type: z
+        .enum(['manual', 'order', 'purchase_order', 'invoice', 'waste_audit', 'stock_count'])
+        .optional()
+        .default('manual'),
     reference_id: z.string().uuid().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
-function resolveNextStock(currentStock: number, payload: z.infer<typeof CreateStockMovementSchema>) {
+function resolveNextStock(
+    currentStock: number,
+    payload: z.infer<typeof CreateStockMovementSchema>
+) {
     if (payload.movement_type === 'count') {
         return Number(payload.qty.toFixed(3));
     }
@@ -69,7 +75,12 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (itemError) {
-        return apiError('Failed to load inventory item', 500, 'INVENTORY_ITEM_FETCH_FAILED', itemError.message);
+        return apiError(
+            'Failed to load inventory item',
+            500,
+            'INVENTORY_ITEM_FETCH_FAILED',
+            itemError.message
+        );
     }
     if (!item) {
         return apiError('Inventory item not found', 404, 'INVENTORY_ITEM_NOT_FOUND');
@@ -96,7 +107,10 @@ export async function POST(request: Request) {
             inventory_item_id: parsed.data.inventory_item_id,
             movement_type: parsed.data.movement_type,
             qty: Number(parsed.data.qty.toFixed(3)),
-            unit_cost: parsed.data.unit_cost !== undefined ? Number(parsed.data.unit_cost.toFixed(2)) : null,
+            unit_cost:
+                parsed.data.unit_cost !== undefined
+                    ? Number(parsed.data.unit_cost.toFixed(2))
+                    : null,
             reason: parsed.data.reason ?? null,
             reference_type: parsed.data.reference_type,
             reference_id: parsed.data.reference_id ?? null,
@@ -107,14 +121,23 @@ export async function POST(request: Request) {
         .single();
 
     if (movementError) {
-        return apiError('Failed to create stock movement', 500, 'STOCK_MOVEMENT_CREATE_FAILED', movementError.message);
+        return apiError(
+            'Failed to create stock movement',
+            500,
+            'STOCK_MOVEMENT_CREATE_FAILED',
+            movementError.message
+        );
     }
 
     const inventoryPatch: Record<string, unknown> = {
         current_stock: nextStock,
     };
 
-    if (parsed.data.unit_cost !== undefined && parsed.data.movement_type !== 'out' && parsed.data.movement_type !== 'waste') {
+    if (
+        parsed.data.unit_cost !== undefined &&
+        parsed.data.movement_type !== 'out' &&
+        parsed.data.movement_type !== 'waste'
+    ) {
         inventoryPatch.cost_per_unit = Number(parsed.data.unit_cost.toFixed(2));
     }
 
@@ -127,7 +150,12 @@ export async function POST(request: Request) {
         .single();
 
     if (updateError) {
-        return apiError('Failed to update inventory stock', 500, 'INVENTORY_STOCK_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update inventory stock',
+            500,
+            'INVENTORY_STOCK_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

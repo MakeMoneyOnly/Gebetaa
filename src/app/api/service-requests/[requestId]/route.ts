@@ -57,7 +57,11 @@ export async function PATCH(
         return apiError('Service request not found', 404, 'SERVICE_REQUEST_NOT_FOUND');
     }
     if (!requestRow.restaurant_id) {
-        return apiError('Service request is missing restaurant context', 400, 'INVALID_SERVICE_REQUEST_CONTEXT');
+        return apiError(
+            'Service request is missing restaurant context',
+            400,
+            'INVALID_SERVICE_REQUEST_CONTEXT'
+        );
     }
 
     const pilotGateResponse = enforcePilotAccess(requestRow.restaurant_id, request.method);
@@ -74,7 +78,12 @@ export async function PATCH(
         .maybeSingle();
 
     if (staffError) {
-        return apiError('Failed to verify staff access', 500, 'STAFF_ACCESS_CHECK_FAILED', staffError.message);
+        return apiError(
+            'Failed to verify staff access',
+            500,
+            'STAFF_ACCESS_CHECK_FAILED',
+            staffError.message
+        );
     }
     if (!staff) {
         return apiError('Forbidden', 403, 'FORBIDDEN');

@@ -11,10 +11,7 @@ const UpdateTableSchema = z.object({
     is_active: z.boolean().optional(),
 });
 
-export async function PATCH(
-    request: Request,
-    context: { params: Promise<{ tableId: string }> }
-) {
+export async function PATCH(request: Request, context: { params: Promise<{ tableId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -49,10 +46,7 @@ export async function PATCH(
     return apiSuccess(data);
 }
 
-export async function DELETE(
-    _request: Request,
-    context: { params: Promise<{ tableId: string }> }
-) {
+export async function DELETE(_request: Request, context: { params: Promise<{ tableId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;

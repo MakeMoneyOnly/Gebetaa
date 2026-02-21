@@ -23,9 +23,18 @@ import { PATCH as patchStaffRole } from '@/app/api/staff/[staffId]/role/route';
 import { PATCH as patchStaffActive } from '@/app/api/staff/[staffId]/active/route';
 import { GET as getAnalyticsOverview } from '@/app/api/analytics/overview/route';
 import { GET as getSupportArticles } from '@/app/api/support/articles/route';
-import { GET as getSupportTickets, POST as postSupportTickets } from '@/app/api/support/tickets/route';
-import { GET as getSettingsSecurity, PATCH as patchSettingsSecurity } from '@/app/api/settings/security/route';
-import { GET as getSettingsNotifications, PATCH as patchSettingsNotifications } from '@/app/api/settings/notifications/route';
+import {
+    GET as getSupportTickets,
+    POST as postSupportTickets,
+} from '@/app/api/support/tickets/route';
+import {
+    GET as getSettingsSecurity,
+    PATCH as patchSettingsSecurity,
+} from '@/app/api/settings/security/route';
+import {
+    GET as getSettingsNotifications,
+    PATCH as patchSettingsNotifications,
+} from '@/app/api/settings/notifications/route';
 
 vi.mock('@/lib/supabase/server', () => ({
     createClient: vi.fn(),
@@ -120,7 +129,9 @@ describe('P0 API routes unit coverage', () => {
         createClientMock.mockResolvedValue(makeAuthOnlySupabase(null));
         const request = new Request('http://localhost/api/orders/order-1');
 
-        const response = await getOrderDetail(request, { params: Promise.resolve({ orderId: 'order-1' }) });
+        const response = await getOrderDetail(request, {
+            params: Promise.resolve({ orderId: 'order-1' }),
+        });
 
         expect(response.status).toBe(401);
     });
@@ -131,7 +142,9 @@ describe('P0 API routes unit coverage', () => {
             body: JSON.stringify({ status: 'bad-status' }),
         });
 
-        const response = await patchOrderStatus(request, { params: Promise.resolve({ orderId: 'order-1' }) });
+        const response = await patchOrderStatus(request, {
+            params: Promise.resolve({ orderId: 'order-1' }),
+        });
         const body = await response.json();
 
         expect(response.status).toBe(400);
@@ -146,7 +159,9 @@ describe('P0 API routes unit coverage', () => {
             headers: { 'content-type': 'application/json' },
         });
 
-        const response = await postOrderAssign(request, { params: Promise.resolve({ orderId: 'order-1' }) });
+        const response = await postOrderAssign(request, {
+            params: Promise.resolve({ orderId: 'order-1' }),
+        });
 
         expect(response.status).toBe(400);
     });
@@ -193,7 +208,9 @@ describe('P0 API routes unit coverage', () => {
             headers: { 'content-type': 'application/json' },
         });
 
-        const response = await patchTable(request, { params: Promise.resolve({ tableId: 'table-1' }) });
+        const response = await patchTable(request, {
+            params: Promise.resolve({ tableId: 'table-1' }),
+        });
 
         expect(response.status).toBe(400);
     });
@@ -202,7 +219,9 @@ describe('P0 API routes unit coverage', () => {
         setAuthUnauthorized();
         const request = new Request('http://localhost/api/tables/table-1', { method: 'DELETE' });
 
-        const response = await deleteTable(request, { params: Promise.resolve({ tableId: 'table-1' }) });
+        const response = await deleteTable(request, {
+            params: Promise.resolve({ tableId: 'table-1' }),
+        });
 
         expect(response.status).toBe(401);
     });
@@ -214,11 +233,17 @@ describe('P0 API routes unit coverage', () => {
             expiresAt: '2099-01-01T00:00:00.000Z',
         } as any);
 
-        const fromMock = vi.fn()
+        const fromMock = vi
+            .fn()
             .mockReturnValueOnce(
                 makeQueryChain({
                     maybeSingle: {
-                        data: { id: 'table-1', table_number: 'T1', qr_version: 1, restaurant_id: 'resto-1' },
+                        data: {
+                            id: 'table-1',
+                            table_number: 'T1',
+                            qr_version: 1,
+                            restaurant_id: 'resto-1',
+                        },
                         error: null,
                     },
                 })
@@ -234,7 +259,12 @@ describe('P0 API routes unit coverage', () => {
             .mockReturnValueOnce(
                 makeQueryChain({
                     single: {
-                        data: { id: 'table-1', table_number: 'T1', qr_code_url: 'https://example.com/guest', qr_version: 2 },
+                        data: {
+                            id: 'table-1',
+                            table_number: 'T1',
+                            qr_code_url: 'https://example.com/guest',
+                            qr_version: 2,
+                        },
                         error: null,
                     },
                 })
@@ -284,7 +314,9 @@ describe('P0 API routes unit coverage', () => {
             headers: { 'content-type': 'application/json' },
         });
 
-        const response = await postSessionTransfer(request, { params: Promise.resolve({ sessionId: 's1' }) });
+        const response = await postSessionTransfer(request, {
+            params: Promise.resolve({ sessionId: 's1' }),
+        });
 
         expect(response.status).toBe(400);
     });
@@ -297,7 +329,9 @@ describe('P0 API routes unit coverage', () => {
             headers: { 'content-type': 'application/json' },
         });
 
-        const response = await postSessionClose(request, { params: Promise.resolve({ sessionId: 's1' }) });
+        const response = await postSessionClose(request, {
+            params: Promise.resolve({ sessionId: 's1' }),
+        });
         const body = await response.json();
 
         expect(response.status).toBe(400);
@@ -333,7 +367,9 @@ describe('P0 API routes unit coverage', () => {
             headers: { 'content-type': 'application/json' },
         });
 
-        const response = await patchStaffRole(request, { params: Promise.resolve({ staffId: 'staff-1' }) });
+        const response = await patchStaffRole(request, {
+            params: Promise.resolve({ staffId: 'staff-1' }),
+        });
 
         expect(response.status).toBe(400);
     });
@@ -346,7 +382,9 @@ describe('P0 API routes unit coverage', () => {
             headers: { 'content-type': 'application/json' },
         });
 
-        const response = await patchStaffActive(request, { params: Promise.resolve({ staffId: 'staff-1' }) });
+        const response = await patchStaffActive(request, {
+            params: Promise.resolve({ staffId: 'staff-1' }),
+        });
 
         expect(response.status).toBe(400);
     });

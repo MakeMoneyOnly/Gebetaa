@@ -28,7 +28,12 @@ export async function GET() {
         .single();
 
     if (error) {
-        return apiError('Failed to fetch notification settings', 500, 'NOTIFICATIONS_SETTINGS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch notification settings',
+            500,
+            'NOTIFICATIONS_SETTINGS_FETCH_FAILED',
+            error.message
+        );
     }
 
     const settings = (data.settings ?? {}) as Record<string, unknown>;
@@ -65,7 +70,12 @@ export async function PATCH(request: Request) {
         .single();
 
     if (fetchError) {
-        return apiError('Failed to fetch current settings', 500, 'SETTINGS_FETCH_FAILED', fetchError.message);
+        return apiError(
+            'Failed to fetch current settings',
+            500,
+            'SETTINGS_FETCH_FAILED',
+            fetchError.message
+        );
     }
 
     const currentSettings = (restaurant.settings ?? {}) as Record<string, unknown>;
@@ -85,7 +95,12 @@ export async function PATCH(request: Request) {
         .eq('id', context.restaurantId);
 
     if (updateError) {
-        return apiError('Failed to update notification settings', 500, 'NOTIFICATIONS_SETTINGS_UPDATE_FAILED', updateError.message);
+        return apiError(
+            'Failed to update notification settings',
+            500,
+            'NOTIFICATIONS_SETTINGS_UPDATE_FAILED',
+            updateError.message
+        );
     }
 
     return apiSuccess(nextNotifications);

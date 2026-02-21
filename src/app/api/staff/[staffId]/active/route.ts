@@ -8,10 +8,7 @@ const UpdateStaffActiveSchema = z.object({
     is_active: z.boolean(),
 });
 
-export async function PATCH(
-    request: Request,
-    context: { params: Promise<{ staffId: string }> }
-) {
+export async function PATCH(request: Request, context: { params: Promise<{ staffId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -36,7 +33,12 @@ export async function PATCH(
         .maybeSingle();
 
     if (existingError) {
-        return apiError('Failed to load staff member', 500, 'STAFF_FETCH_FAILED', existingError.message);
+        return apiError(
+            'Failed to load staff member',
+            500,
+            'STAFF_FETCH_FAILED',
+            existingError.message
+        );
     }
     if (!existing) {
         return apiError('Staff member not found', 404, 'STAFF_NOT_FOUND');
@@ -51,7 +53,12 @@ export async function PATCH(
         .single();
 
     if (error) {
-        return apiError('Failed to update staff status', 500, 'STAFF_STATUS_UPDATE_FAILED', error.message);
+        return apiError(
+            'Failed to update staff status',
+            500,
+            'STAFF_STATUS_UPDATE_FAILED',
+            error.message
+        );
     }
 
     await writeAuditLog(restaurantContext.supabase, {

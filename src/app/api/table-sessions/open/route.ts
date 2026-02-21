@@ -48,7 +48,12 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (existingError) {
-        return apiError('Failed to verify table session state', 500, 'TABLE_SESSION_STATE_FAILED', existingError.message);
+        return apiError(
+            'Failed to verify table session state',
+            500,
+            'TABLE_SESSION_STATE_FAILED',
+            existingError.message
+        );
     }
     if (existingOpen) {
         return apiError('Table already has an open session', 409, 'TABLE_SESSION_ALREADY_OPEN');
@@ -68,7 +73,12 @@ export async function POST(request: Request) {
         .single();
 
     if (sessionError) {
-        return apiError('Failed to open table session', 500, 'TABLE_SESSION_OPEN_FAILED', sessionError.message);
+        return apiError(
+            'Failed to open table session',
+            500,
+            'TABLE_SESSION_OPEN_FAILED',
+            sessionError.message
+        );
     }
 
     await context.supabase

@@ -32,7 +32,12 @@ export async function GET() {
         .order('created_at', { ascending: false });
 
     if (error) {
-        return apiError('Failed to fetch alert rules', 500, 'ALERT_RULES_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch alert rules',
+            500,
+            'ALERT_RULES_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({ rules: data ?? [] });
@@ -76,7 +81,12 @@ export async function POST(request: Request) {
         .single();
 
     if (insertError) {
-        return apiError('Failed to create alert rule', 500, 'ALERT_RULE_CREATE_FAILED', insertError.message);
+        return apiError(
+            'Failed to create alert rule',
+            500,
+            'ALERT_RULE_CREATE_FAILED',
+            insertError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

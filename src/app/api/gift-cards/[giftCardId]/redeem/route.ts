@@ -33,7 +33,12 @@ export async function POST(
     const { giftCardId } = await routeContext.params;
     const giftCardIdParsed = GiftCardIdSchema.safeParse(giftCardId);
     if (!giftCardIdParsed.success) {
-        return apiError('Invalid gift card id', 400, 'INVALID_GIFT_CARD_ID', giftCardIdParsed.error.flatten());
+        return apiError(
+            'Invalid gift card id',
+            400,
+            'INVALID_GIFT_CARD_ID',
+            giftCardIdParsed.error.flatten()
+        );
     }
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
@@ -55,7 +60,12 @@ export async function POST(
         .maybeSingle();
 
     if (giftCardError) {
-        return apiError('Failed to load gift card', 500, 'GIFT_CARD_FETCH_FAILED', giftCardError.message);
+        return apiError(
+            'Failed to load gift card',
+            500,
+            'GIFT_CARD_FETCH_FAILED',
+            giftCardError.message
+        );
     }
     if (!giftCard) {
         return apiError('Gift card not found', 404, 'GIFT_CARD_NOT_FOUND');
@@ -68,7 +78,8 @@ export async function POST(
         return apiError('Gift card is expired', 409, 'GIFT_CARD_EXPIRED');
     }
 
-    const nextBalance = Number(Number(giftCard.current_balance).toFixed(2)) - Number(parsed.data.amount.toFixed(2));
+    const nextBalance =
+        Number(Number(giftCard.current_balance).toFixed(2)) - Number(parsed.data.amount.toFixed(2));
     if (nextBalance < 0) {
         return apiError('Insufficient gift card balance', 409, 'GIFT_CARD_INSUFFICIENT_BALANCE');
     }
@@ -88,7 +99,12 @@ export async function POST(
         .single();
 
     if (updateError) {
-        return apiError('Failed to redeem gift card', 500, 'GIFT_CARD_REDEEM_FAILED', updateError.message);
+        return apiError(
+            'Failed to redeem gift card',
+            500,
+            'GIFT_CARD_REDEEM_FAILED',
+            updateError.message
+        );
     }
 
     const { data: transaction, error: txError } = await db
@@ -111,7 +127,12 @@ export async function POST(
         .single();
 
     if (txError) {
-        return apiError('Failed to create gift card transaction', 500, 'GIFT_CARD_TRANSACTION_CREATE_FAILED', txError.message);
+        return apiError(
+            'Failed to create gift card transaction',
+            500,
+            'GIFT_CARD_TRANSACTION_CREATE_FAILED',
+            txError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

@@ -124,7 +124,15 @@ const options: swaggerJsdoc.Options = {
                         },
                         status: {
                             type: 'string',
-                            enum: ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled'],
+                            enum: [
+                                'pending',
+                                'confirmed',
+                                'preparing',
+                                'ready',
+                                'delivered',
+                                'completed',
+                                'cancelled',
+                            ],
                             description: 'Order status',
                         },
                         total: {
