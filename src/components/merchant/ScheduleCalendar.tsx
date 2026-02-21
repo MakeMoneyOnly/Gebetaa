@@ -299,7 +299,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                         onClick={() => {
                             void createShift();
                         }}
-                        className="h-10 rounded-lg bg-black px-3 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+                        className="bg-brand-crimson h-10 rounded-lg px-3 text-sm font-bold text-white hover:bg-[#a0151e] disabled:opacity-50"
                     >
                         <span className="inline-flex items-center gap-1">
                             <Plus className="h-4 w-4" />

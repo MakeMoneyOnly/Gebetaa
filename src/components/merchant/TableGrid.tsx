@@ -10,6 +10,8 @@ export type TableGridRow = {
     status: 'available' | 'occupied' | 'reserved' | 'bill_requested';
     qr_code_url: string | null;
     active_order_id: string | null;
+    zone: string | null;
+    capacity: number;
 };
 
 interface TableGridProps {
@@ -75,7 +77,7 @@ export function TableGrid({
                 </p>
                 <button
                     onClick={onAddTable}
-                    className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-gray-800"
+                    className="bg-brand-crimson mt-5 inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-bold text-white transition-colors hover:bg-[#a0151e]"
                 >
                     <Plus className="h-4 w-4" />
                     Add Table
@@ -132,7 +134,7 @@ export function TableGrid({
                     <div className="relative z-10 mt-auto grid grid-cols-2 gap-3 border-t border-gray-50 pt-4">
                         <button
                             onClick={() => onShowQR(table)}
-                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-black text-xs font-bold text-white shadow-lg shadow-black/10 transition-all group-hover:scale-[1.02] hover:bg-gray-800"
+                            className="bg-brand-crimson flex h-10 items-center justify-center gap-2 rounded-xl text-xs font-bold text-white shadow-lg shadow-black/10 transition-all group-hover:scale-[1.02] hover:bg-[#a0151e]"
                         >
                             <QrCode className="h-3 w-3" />
                             QR Code

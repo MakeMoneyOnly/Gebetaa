@@ -1,5 +1,8 @@
 'use client';
 
+import type { AppLocale } from '@/lib/i18n/locale';
+import { formatETBCurrency } from '@/lib/format/et';
+
 export type PaymentRow = {
     id: string;
     created_at: string;
@@ -13,17 +16,10 @@ export type PaymentRow = {
 type PaymentMethodBreakdownProps = {
     loading: boolean;
     payments: PaymentRow[];
+    locale: AppLocale;
 };
 
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat('en-ET', {
-        style: 'currency',
-        currency: 'ETB',
-        maximumFractionDigits: 2,
-    }).format(value);
-}
-
-export function PaymentMethodBreakdown({ loading, payments }: PaymentMethodBreakdownProps) {
+export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMethodBreakdownProps) {
     const byMethod = payments.reduce<Record<string, { count: number; amount: number }>>(
         (acc, payment) => {
             const key = payment.method;
@@ -68,7 +64,7 @@ export function PaymentMethodBreakdown({ loading, payments }: PaymentMethodBreak
                                 </p>
                             </div>
                             <p className="text-sm font-bold text-gray-900">
-                                {formatCurrency(details.amount)}
+                                {formatETBCurrency(details.amount, { locale })}
                             </p>
                         </div>
                     ))}

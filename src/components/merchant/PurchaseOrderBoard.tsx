@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { ClipboardList, Loader2 } from 'lucide-react';
+import { formatLocalizedDate } from '@/lib/format/et';
+import type { AppLocale } from '@/lib/i18n/locale';
 
 export type PurchaseOrderRow = {
     id: string;
@@ -18,6 +20,7 @@ interface PurchaseOrderBoardProps {
     orders: PurchaseOrderRow[];
     loading: boolean;
     creating: boolean;
+    locale: AppLocale;
     onCreatePurchaseOrder: (payload: {
         supplier_name: string;
         status: 'draft' | 'submitted';
@@ -33,6 +36,7 @@ export function PurchaseOrderBoard({
     orders,
     loading,
     creating,
+    locale,
     onCreatePurchaseOrder,
 }: PurchaseOrderBoardProps) {
     const [supplierName, setSupplierName] = useState('');
@@ -134,7 +138,7 @@ export function PurchaseOrderBoard({
                         type="button"
                         onClick={submitCreate}
                         disabled={creating}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white disabled:opacity-50"
+                        className="bg-brand-crimson inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-50"
                     >
                         {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                         Create
@@ -170,6 +174,9 @@ export function PurchaseOrderBoard({
                                         </p>
                                         <p className="text-xs text-gray-500">
                                             {order.currency} {Number(order.total_amount).toFixed(2)}
+                                            {order.expected_at
+                                                ? ` · due ${formatLocalizedDate(order.expected_at, locale)}`
+                                                : ''}
                                         </p>
                                     </div>
                                 ))}

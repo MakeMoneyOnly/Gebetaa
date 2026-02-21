@@ -24,7 +24,7 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
                 >
                     <div className="flex items-start justify-between">
                         <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-gray-50 text-xl font-bold text-gray-700 shadow-sm ring-4 ring-white">
-                            {(member.full_name || member.email || member.user_id)
+                            {(member.full_name || member.name || member.email || member.id || 'US')
                                 .slice(0, 2)
                                 .toUpperCase()}
                         </div>
@@ -44,7 +44,7 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
                                   ? `${member.first_name} ${member.last_name ?? ''}`.trim()
                                   : member.email
                                     ? member.email.split('@')[0]
-                                    : `User ${member.user_id.slice(0, 6)}`}
+                                    : `Staff ${member.id?.slice(0, 6)}`}
                         </h3>
                         <div className="mt-2 flex items-center gap-2">
                             <span

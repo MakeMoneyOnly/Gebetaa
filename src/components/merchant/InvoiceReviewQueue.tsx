@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { FileText, Loader2 } from 'lucide-react';
+import { formatLocalizedDate } from '@/lib/format/et';
+import type { AppLocale } from '@/lib/i18n/locale';
 
 export type InvoiceRow = {
     id: string;
@@ -18,6 +20,7 @@ interface InvoiceReviewQueueProps {
     invoices: InvoiceRow[];
     loading: boolean;
     creating: boolean;
+    locale: AppLocale;
     onCreateInvoice: (payload: {
         supplier_name: string;
         status: InvoiceRow['status'];
@@ -33,6 +36,7 @@ export function InvoiceReviewQueue({
     invoices,
     loading,
     creating,
+    locale,
     onCreateInvoice,
 }: InvoiceReviewQueueProps) {
     const [supplierName, setSupplierName] = useState('');
@@ -127,7 +131,7 @@ export function InvoiceReviewQueue({
                         type="button"
                         onClick={submitCreate}
                         disabled={creating}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white disabled:opacity-50"
+                        className="bg-brand-crimson inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-50"
                     >
                         {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                         Add
@@ -157,7 +161,7 @@ export function InvoiceReviewQueue({
                             <p className="mt-2 text-xs text-gray-500">
                                 {invoice.currency} {Number(invoice.total_amount).toFixed(2)}
                                 {invoice.due_at
-                                    ? ` · due ${new Date(invoice.due_at).toLocaleDateString()}`
+                                    ? ` · due ${formatLocalizedDate(invoice.due_at, locale)}`
                                     : ''}
                             </p>
                         </div>

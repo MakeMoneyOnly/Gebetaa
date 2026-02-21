@@ -69,7 +69,7 @@ export function InviteStaffModal({
                         </p>
                     </div>
                     <button
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
+                        className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
                         onClick={onClose}
                     >
                         <X className="h-5 w-5" />
@@ -128,7 +128,7 @@ export function InviteStaffModal({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                            className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                         >
                             {loading ? 'Provisioning...' : 'Create Provisioning Link'}
                         </button>

@@ -120,7 +120,7 @@ export function GuestProfileDrawer({
                         type="button"
                         onClick={onClose}
                         aria-label="Close guest profile drawer"
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
+                        className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -324,7 +324,7 @@ export function GuestProfileDrawer({
                         type="button"
                         onClick={handleSave}
                         disabled={saving || loading || !guest}
-                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                        className="bg-brand-crimson inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                     >
                         {saving ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

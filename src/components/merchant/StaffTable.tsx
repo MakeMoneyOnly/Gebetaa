@@ -50,7 +50,13 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center gap-4">
                                         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-500 shadow-sm ring-2 ring-white">
-                                            {(member.full_name || member.email || member.user_id)
+                                            {(
+                                                member.full_name ||
+                                                member.name ||
+                                                member.email ||
+                                                member.id ||
+                                                'US'
+                                            )
                                                 .slice(0, 2)
                                                 .toUpperCase()}
                                         </div>
@@ -62,10 +68,10 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                                                       ? `${member.first_name} ${member.last_name ?? ''}`.trim()
                                                       : member.email
                                                         ? member.email.split('@')[0]
-                                                        : `User ${member.user_id.slice(0, 6)}`}
+                                                        : `Staff ${member.id?.slice(0, 6)}`}
                                             </div>
                                             <div className="text-xs font-medium text-gray-400">
-                                                {member.email ?? member.user_id}
+                                                {member.email ?? member.user_id ?? 'No Email'}
                                             </div>
                                         </div>
                                     </div>

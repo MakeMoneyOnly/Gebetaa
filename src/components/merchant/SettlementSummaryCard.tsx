@@ -1,5 +1,8 @@
 'use client';
 
+import type { AppLocale } from '@/lib/i18n/locale';
+import { formatETBCurrency } from '@/lib/format/et';
+
 type SettlementSummaryTotals = {
     gross: number;
     refunds: number;
@@ -10,17 +13,10 @@ type SettlementSummaryTotals = {
 type SettlementSummaryCardProps = {
     loading: boolean;
     totals: SettlementSummaryTotals;
+    locale: AppLocale;
 };
 
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat('en-ET', {
-        style: 'currency',
-        currency: 'ETB',
-        maximumFractionDigits: 2,
-    }).format(value);
-}
-
-export function SettlementSummaryCard({ loading, totals }: SettlementSummaryCardProps) {
+export function SettlementSummaryCard({ loading, totals, locale }: SettlementSummaryCardProps) {
     return (
         <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
             <header className="mb-4">
@@ -43,7 +39,7 @@ export function SettlementSummaryCard({ loading, totals }: SettlementSummaryCard
                             Gross Payments
                         </p>
                         <p className="mt-2 text-xl font-bold text-emerald-900">
-                            {formatCurrency(totals.gross)}
+                            {formatETBCurrency(totals.gross, { locale })}
                         </p>
                     </div>
                     <div className="rounded-2xl bg-rose-50 p-4">
@@ -51,7 +47,7 @@ export function SettlementSummaryCard({ loading, totals }: SettlementSummaryCard
                             Refund Outflow
                         </p>
                         <p className="mt-2 text-xl font-bold text-rose-900">
-                            {formatCurrency(totals.refunds)}
+                            {formatETBCurrency(totals.refunds, { locale })}
                         </p>
                     </div>
                     <div className="rounded-2xl bg-blue-50 p-4">
@@ -59,7 +55,7 @@ export function SettlementSummaryCard({ loading, totals }: SettlementSummaryCard
                             Payout Net
                         </p>
                         <p className="mt-2 text-xl font-bold text-blue-900">
-                            {formatCurrency(totals.payoutNet)}
+                            {formatETBCurrency(totals.payoutNet, { locale })}
                         </p>
                     </div>
                     <div className="rounded-2xl bg-amber-50 p-4">
@@ -67,7 +63,7 @@ export function SettlementSummaryCard({ loading, totals }: SettlementSummaryCard
                             Exception Delta
                         </p>
                         <p className="mt-2 text-xl font-bold text-amber-900">
-                            {formatCurrency(totals.exceptionDelta)}
+                            {formatETBCurrency(totals.exceptionDelta, { locale })}
                         </p>
                     </div>
                 </div>

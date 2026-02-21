@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
-type StaffRole = 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar';
+type StaffRole = 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar' | 'runner';
 
 type StaffMember = {
     id: string;
@@ -28,6 +28,7 @@ const ROLE_OPTIONS: { value: StaffRole; description: string }[] = [
     { value: 'kitchen', description: 'Kitchen-focused operational controls.' },
     { value: 'waiter', description: 'Service-floor workflow operations.' },
     { value: 'bar', description: 'Bar station workflow operations.' },
+    { value: 'runner', description: 'Helping floor staff with food delivery.' },
 ];
 
 export function RolePermissionDrawer({
@@ -54,12 +55,10 @@ export function RolePermissionDrawer({
                 <div className="flex items-start justify-between">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">Role & Permissions</h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                            Staff {staff.user_id.slice(0, 8)}
-                        </p>
+                        <p className="mt-1 text-sm text-gray-500">ID: {staff.id?.slice(0, 8)}</p>
                     </div>
                     <button
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
+                        className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
                         onClick={onClose}
                     >
                         <X className="h-5 w-5" />
@@ -100,7 +99,7 @@ export function RolePermissionDrawer({
                         type="button"
                         disabled={loading}
                         onClick={() => onSave(staff.id, role)}
-                        className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                        className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                     >
                         {loading ? 'Saving...' : 'Save Role'}
                     </button>

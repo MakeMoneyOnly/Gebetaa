@@ -183,7 +183,7 @@ export function Sidebar() {
                             <p className="mb-4 text-[12px] leading-relaxed font-medium text-gray-500">
                                 Get advanced analytics & unlimited staff.
                             </p>
-                            <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-black py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-all group-hover:scale-[1.02] hover:bg-gray-800">
+                            <button className="bg-brand-crimson flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-all group-hover:scale-[1.02] hover:bg-[#a0151e]">
                                 Upgrade Now
                                 <ChevronRight className="h-4 w-4 opacity-50" />
                             </button>

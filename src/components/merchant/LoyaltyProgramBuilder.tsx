@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
+import { formatLocalizedDate } from '@/lib/format/et';
+import type { AppLocale } from '@/lib/i18n/locale';
 
 export type LoyaltyProgramRow = {
     id: string;
@@ -14,6 +16,7 @@ interface LoyaltyProgramBuilderProps {
     programs: LoyaltyProgramRow[];
     loading: boolean;
     creating: boolean;
+    locale: AppLocale;
     onCreate: (payload: { name: string; status: LoyaltyProgramRow['status'] }) => Promise<void>;
 }
 
@@ -21,6 +24,7 @@ export function LoyaltyProgramBuilder({
     programs,
     loading,
     creating,
+    locale,
     onCreate,
 }: LoyaltyProgramBuilderProps) {
     const [name, setName] = useState('');
@@ -77,7 +81,7 @@ export function LoyaltyProgramBuilder({
                     type="button"
                     onClick={submit}
                     disabled={creating || name.trim().length < 2}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white disabled:opacity-50"
+                    className="bg-brand-crimson inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-50"
                 >
                     {creating ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -104,8 +108,7 @@ export function LoyaltyProgramBuilder({
                                     {program.name}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                    Created{' '}
-                                    {new Date(program.created_at).toLocaleDateString('en-ET')}
+                                    Created {formatLocalizedDate(program.created_at, locale)}
                                 </p>
                             </div>
                             <span className="rounded-lg bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-700 uppercase">

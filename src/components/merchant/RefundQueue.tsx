@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { formatETBCurrency } from '@/lib/format/et';
+import type { AppLocale } from '@/lib/i18n/locale';
 
 export type RefundRow = {
     id: string;
@@ -25,6 +27,7 @@ type RefundQueueProps = {
     creating: boolean;
     refunds: RefundRow[];
     payments: PaymentOption[];
+    locale: AppLocale;
     onCreateRefund: (payload: {
         payment_reference: string;
         amount: number;
@@ -32,18 +35,10 @@ type RefundQueueProps = {
     }) => Promise<void>;
 };
 
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat('en-ET', {
-        style: 'currency',
-        currency: 'ETB',
-        maximumFractionDigits: 2,
-    }).format(value);
-}
-
-function paymentDisplayLabel(payment: PaymentOption) {
+function paymentDisplayLabel(payment: PaymentOption, locale: AppLocale) {
     const shortId = payment.id.slice(0, 8);
     const reference = payment.provider_reference ? ` · ${payment.provider_reference}` : '';
-    return `${shortId}${reference} · ${payment.method} · ${formatCurrency(Number(payment.amount ?? 0))}`;
+    return `${shortId}${reference} · ${payment.method} · ${formatETBCurrency(Number(payment.amount ?? 0), { locale })}`;
 }
 
 export function RefundQueue({
@@ -51,6 +46,7 @@ export function RefundQueue({
     creating,
     refunds,
     payments,
+    locale,
     onCreateRefund,
 }: RefundQueueProps) {
     const [paymentReference, setPaymentReference] = useState('');
@@ -103,14 +99,17 @@ export function RefundQueue({
                 <datalist id="refund-payment-options">
                     {payments.map(payment => (
                         <option key={payment.id} value={payment.id}>
-                            {paymentDisplayLabel(payment)}
+                            {paymentDisplayLabel(payment, locale)}
                         </option>
                     ))}
                     {payments
                         .filter(payment => Boolean(payment.provider_reference))
                         .map(payment => (
-                            <option key={`${payment.id}-provider`} value={payment.provider_reference!}>
-                                {paymentDisplayLabel(payment)}
+                            <option
+                                key={`${payment.id}-provider`}
+                                value={payment.provider_reference!}
+                            >
+                                {paymentDisplayLabel(payment, locale)}
                             </option>
                         ))}
                 </datalist>
@@ -130,7 +129,7 @@ export function RefundQueue({
                 <button
                     type="submit"
                     disabled={creating}
-                    className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {creating ? 'Submitting...' : 'Submit Refund'}
                 </button>
@@ -160,7 +159,7 @@ export function RefundQueue({
                                         {refund.payment_id}
                                     </td>
                                     <td className="py-2 pr-3 font-semibold text-gray-900">
-                                        {formatCurrency(Number(refund.amount ?? 0))}
+                                        {formatETBCurrency(Number(refund.amount ?? 0), { locale })}
                                     </td>
                                     <td className="py-2 pr-3 text-gray-700">{refund.reason}</td>
                                     <td className="py-2">

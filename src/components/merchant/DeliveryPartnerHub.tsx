@@ -125,7 +125,7 @@ export function DeliveryPartnerHub({
                             void onConnect(providerToConnect, displayName.trim() || undefined)
                         }
                         disabled={connecting}
-                        className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-black text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                        className="bg-brand-crimson mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                     >
                         {connecting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -273,7 +273,7 @@ export function DeliveryPartnerHub({
                                                     onClick={() => void onAcknowledge(order.id)}
                                                     disabled={acknowledgingId === order.id}
                                                     aria-label={`Acknowledge external order ${order.provider_order_id}`}
-                                                    className="inline-flex h-8 items-center gap-1 rounded-lg bg-black px-2 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                                                    className="bg-brand-crimson inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
                                                 >
                                                     {acknowledgingId === order.id ? (
                                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />

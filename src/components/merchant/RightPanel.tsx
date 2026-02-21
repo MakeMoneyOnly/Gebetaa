@@ -194,7 +194,7 @@ export function RightPanel() {
 
                                 {item.hasFile && (
                                     <div className="group/file flex cursor-pointer items-center gap-4 rounded-2xl border border-green-100 bg-green-50 p-4 transition-colors hover:bg-green-100">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white shadow-md shadow-black/10 transition-transform group-hover/file:scale-110">
+                                        <div className="bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md shadow-black/10 transition-transform group-hover/file:scale-110">
                                             <FileText className="h-5 w-5 text-green-400" />
                                         </div>
                                         <div className="flex-1">

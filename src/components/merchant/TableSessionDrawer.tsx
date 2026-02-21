@@ -47,7 +47,7 @@ export function TableSessionDrawer({
                     </div>
                     <button
                         onClick={onClose}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-black hover:text-white"
+                        className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:text-white"
                     >
                         <X className="h-5 w-5" />
                     </button>

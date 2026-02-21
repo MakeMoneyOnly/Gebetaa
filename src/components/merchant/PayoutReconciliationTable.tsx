@@ -1,5 +1,8 @@
 'use client';
 
+import { formatETBCurrency, formatLocalizedDate } from '@/lib/format/et';
+import type { AppLocale } from '@/lib/i18n/locale';
+
 export type PayoutRow = {
     id: string;
     provider: string;
@@ -24,20 +27,14 @@ type PayoutReconciliationTableProps = {
     loading: boolean;
     payouts: PayoutRow[];
     reconciliationEntries: ReconciliationRow[];
+    locale: AppLocale;
 };
-
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat('en-ET', {
-        style: 'currency',
-        currency: 'ETB',
-        maximumFractionDigits: 2,
-    }).format(value);
-}
 
 export function PayoutReconciliationTable({
     loading,
     payouts,
     reconciliationEntries,
+    locale,
 }: PayoutReconciliationTableProps) {
     const openExceptions = reconciliationEntries.filter(
         entry => entry.status === 'exception' || entry.status === 'investigating'
@@ -83,17 +80,17 @@ export function PayoutReconciliationTable({
                                         {payout.provider}
                                     </td>
                                     <td className="py-2 pr-3 text-xs text-gray-600">
-                                        {new Date(payout.period_start).toLocaleDateString()} -{' '}
-                                        {new Date(payout.period_end).toLocaleDateString()}
+                                        {formatLocalizedDate(payout.period_start, locale)} -{' '}
+                                        {formatLocalizedDate(payout.period_end, locale)}
                                     </td>
                                     <td className="py-2 pr-3">
-                                        {formatCurrency(Number(payout.gross ?? 0))}
+                                        {formatETBCurrency(Number(payout.gross ?? 0), { locale })}
                                     </td>
                                     <td className="py-2 pr-3">
-                                        {formatCurrency(Number(payout.fees ?? 0))}
+                                        {formatETBCurrency(Number(payout.fees ?? 0), { locale })}
                                     </td>
                                     <td className="py-2 pr-3 font-semibold">
-                                        {formatCurrency(Number(payout.net ?? 0))}
+                                        {formatETBCurrency(Number(payout.net ?? 0), { locale })}
                                     </td>
                                     <td className="py-2">
                                         <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold capitalize">

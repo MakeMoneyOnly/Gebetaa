@@ -124,7 +124,7 @@ export function CampaignBuilder({
                     type="button"
                     onClick={submit}
                     disabled={creating || name.trim().length < 2}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white disabled:opacity-50"
+                    className="bg-brand-crimson inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-50"
                 >
                     {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     Create Campaign

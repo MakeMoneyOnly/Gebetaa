@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { CreditCard, Loader2 } from 'lucide-react';
+import { formatETBCurrency } from '@/lib/format/et';
+import type { AppLocale } from '@/lib/i18n/locale';
 
 export type GiftCardRow = {
     id: string;
@@ -18,6 +20,7 @@ interface GiftCardManagerProps {
     loading: boolean;
     creating: boolean;
     redeemingId: string | null;
+    locale: AppLocale;
     onCreate: (payload: {
         initial_balance: number;
         currency: string;
@@ -31,6 +34,7 @@ export function GiftCardManager({
     loading,
     creating,
     redeemingId,
+    locale,
     onCreate,
     onRedeem,
 }: GiftCardManagerProps) {
@@ -88,7 +92,7 @@ export function GiftCardManager({
                     type="button"
                     onClick={submitCreate}
                     disabled={creating}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white disabled:opacity-50"
+                    className="bg-brand-crimson inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-50"
                 >
                     {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     Issue Card
@@ -111,9 +115,13 @@ export function GiftCardManager({
                                             {card.code}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                            {card.currency}{' '}
-                                            {Number(card.current_balance).toFixed(2)} /{' '}
-                                            {Number(card.initial_balance).toFixed(2)}
+                                            {formatETBCurrency(Number(card.current_balance), {
+                                                locale,
+                                            })}{' '}
+                                            /{' '}
+                                            {formatETBCurrency(Number(card.initial_balance), {
+                                                locale,
+                                            })}
                                         </p>
                                     </div>
                                     <span className="rounded-lg bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-700 uppercase">

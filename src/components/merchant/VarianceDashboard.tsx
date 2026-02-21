@@ -1,6 +1,8 @@
 'use client';
 
 import { TrendingUp } from 'lucide-react';
+import { formatETBCurrency } from '@/lib/format/et';
+import type { AppLocale } from '@/lib/i18n/locale';
 
 export type VarianceRow = {
     item_id: string;
@@ -27,9 +29,10 @@ interface VarianceDashboardProps {
     loading: boolean;
     rows: VarianceRow[];
     totals: VarianceTotals | null;
+    locale: AppLocale;
 }
 
-export function VarianceDashboard({ loading, rows, totals }: VarianceDashboardProps) {
+export function VarianceDashboard({ loading, rows, totals, locale }: VarianceDashboardProps) {
     return (
         <section className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-4">
@@ -67,18 +70,18 @@ export function VarianceDashboard({ loading, rows, totals }: VarianceDashboardPr
                         </div>
                         <div className="rounded-xl border border-rose-100 bg-rose-50/70 p-3">
                             <p className="text-xs tracking-wide text-rose-700 uppercase">
-                                Waste Value (ETB)
+                                Waste Value
                             </p>
                             <p className="mt-1 text-xl font-bold text-rose-700">
-                                {(totals?.total_waste_value ?? 0).toFixed(2)}
+                                {formatETBCurrency(totals?.total_waste_value ?? 0, { locale })}
                             </p>
                         </div>
                         <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3">
                             <p className="text-xs tracking-wide text-blue-700 uppercase">
-                                Net Variance (ETB)
+                                Net Variance
                             </p>
                             <p className="mt-1 text-xl font-bold text-blue-700">
-                                {(totals?.total_variance_value ?? 0).toFixed(2)}
+                                {formatETBCurrency(totals?.total_variance_value ?? 0, { locale })}
                             </p>
                         </div>
                     </div>
@@ -132,12 +135,12 @@ export function VarianceDashboard({ loading, rows, totals }: VarianceDashboardPr
                                                 }
                                             >
                                                 {row.variance_qty.toFixed(2)} (
-                                                {row.variance_value.toFixed(2)} ETB)
+                                                {formatETBCurrency(row.variance_value, { locale })}
                                             </span>
                                         </td>
                                         <td className="py-3 pr-3 text-rose-700">
-                                            {row.waste_qty.toFixed(2)} ({row.waste_value.toFixed(2)}{' '}
-                                            ETB)
+                                            {row.waste_qty.toFixed(2)} (
+                                            {formatETBCurrency(row.waste_value, { locale })})
                                         </td>
                                     </tr>
                                 ))}

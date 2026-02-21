@@ -14,9 +14,7 @@ interface StaffHeaderProps {
     onInvite?: () => void;
 }
 
-const TABS = [
-    { label: 'Access Directory', href: '/merchant/staff' },
-];
+const TABS = [{ label: 'Access Directory', href: '/merchant/staff' }];
 
 export function StaffHeader({ viewMode, onViewModeChange, onInvite }: StaffHeaderProps) {
     const pathname = usePathname();
@@ -35,7 +33,7 @@ export function StaffHeader({ viewMode, onViewModeChange, onInvite }: StaffHeade
                 {onInvite && (
                     <button
                         onClick={onInvite}
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-black px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800 md:w-auto"
+                        className="bg-brand-crimson flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e] md:w-auto"
                     >
                         <Plus className="h-4 w-4" />
                         Provision Link
