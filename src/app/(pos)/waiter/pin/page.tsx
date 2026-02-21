@@ -51,7 +51,7 @@ export default function WaiterPinPage() {
 
             // Save the staff context to localStorage so the POS knows who is ringing things up
             localStorage.setItem('gebata_waiter_context', JSON.stringify(data.staff));
-            
+
             toast.success(`Welcome, ${data.staff.name || 'Waitstaff'}`);
             router.push(`/waiter?restaurantId=${restaurantId}`);
         } catch (err: any) {
@@ -67,9 +67,8 @@ export default function WaiterPinPage() {
         if (pin.length === 4) {
             void handleSubmit();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pin]);
-
 
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 

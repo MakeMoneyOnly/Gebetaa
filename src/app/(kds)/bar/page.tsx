@@ -84,7 +84,7 @@ function mapOrderToBarTicket(order: Order): Ticket | null {
     }));
 
     // Use bar_status if available, fallback to status
-    const effectiveStatus = order.bar_status || order.status;
+    const effectiveStatus = order.bar_status || order.status || 'pending';
 
     const normalizedStatus: Ticket['status'] =
         effectiveStatus === 'pending' || !effectiveStatus
@@ -283,7 +283,7 @@ export default function BarPage() {
 
                     <button
                         onClick={toggleFullScreen}
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-xl shadow-black/10 transition-all hover:bg-gray-800"
+                        className="bg-brand-crimson flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-xl shadow-black/10 transition-all hover:bg-[#a0151e]"
                     >
                         <Maximize2 className="h-5 w-5" />
                     </button>

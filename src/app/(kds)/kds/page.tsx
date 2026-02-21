@@ -195,7 +195,7 @@ export default function KDSPage() {
                     table: 'orders',
                     filter: `restaurant_id=eq.${restaurantId}`,
                 },
-                (payload) => {
+                payload => {
                     console.log('KDS: Received order change:', payload);
                     void fetchOrders();
                 }
@@ -308,7 +308,7 @@ export default function KDSPage() {
     }
 
     return (
-        <div className="font-manrope flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900 selection:bg-black selection:text-white">
+        <div className="font-manrope selection:bg-brand-crimson flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900 selection:text-white">
             {/* Dashboard-style Title Block */}
             <div className="z-10 flex w-full flex-none items-start justify-between bg-gray-50/90 px-10 py-8 backdrop-blur-sm">
                 <div>
@@ -351,7 +351,7 @@ export default function KDSPage() {
                     </button>
                     <button
                         onClick={toggleFullScreen}
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-xl shadow-black/10 transition-all hover:bg-gray-800"
+                        className="bg-brand-crimson flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-xl shadow-black/10 transition-all hover:bg-[#a0151e]"
                     >
                         <Maximize2 className="h-5 w-5" />
                     </button>

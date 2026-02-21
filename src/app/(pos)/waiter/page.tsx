@@ -50,27 +50,32 @@ export default function WaiterPosPage() {
     const searchParams = useSearchParams();
     const queryRestaurantId = searchParams.get('restaurantId');
     const { restaurantId: roleRestaurantId, loading: roleLoading } = useRole(queryRestaurantId);
-    const restaurantId = queryRestaurantId || roleRestaurantId;
     const router = useRouter();
 
     // Staff Context State
     const [staffContext, setStaffContext] = useState<any>(null);
 
-    // Initial Load Staff Context
+    // Resolve restaurantId: prefer query param > localStorage device info > role hook
+    // (Waiter POS devices have no Supabase auth session — they use a device token)
+    const [deviceRestaurantId, setDeviceRestaurantId] = useState<string | null>(null);
+
     useEffect(() => {
         try {
-            const ctx = localStorage.getItem('gebata_waiter_context');
-            if (ctx) {
-                setStaffContext(JSON.parse(ctx));
-            } else {
-                // If there's no context, we should probably boot them to the PIN screen
-                // router.push(`/waiter/pin?restaurantId=${restaurantId}`);
-                // But let's leave this optional for now for backwards compatibility
+            const raw = localStorage.getItem('gebata_device_info');
+            if (raw) {
+                const info = JSON.parse(raw);
+                if (info?.restaurant_id) setDeviceRestaurantId(info.restaurant_id);
+                if (info) setStaffContext(info);
             }
+            // Also load staff login context if present
+            const ctx = localStorage.getItem('gebata_waiter_context');
+            if (ctx) setStaffContext(JSON.parse(ctx));
         } catch (e) {
-            console.error('Failed to parse staff context', e);
+            console.error('Failed to parse device/staff context', e);
         }
-    }, [restaurantId, router]);
+    }, []);
+
+    const restaurantId = queryRestaurantId || deviceRestaurantId || roleRestaurantId;
 
     // Data State
     const [tables, setTables] = useState<PosTable[]>([]);
@@ -95,11 +100,29 @@ export default function WaiterPosPage() {
 
     const supabase = useMemo(() => getSupabaseClient(), []);
 
+    // Device token for authenticated API calls (set after pairing, no auth session needed)
+    const [deviceToken, setDeviceToken] = useState<string | null>(null);
+    useEffect(() => {
+        const token = localStorage.getItem('gebata_device_token');
+        if (token) setDeviceToken(token);
+    }, []);
+
+    /** Build headers for device-authenticated API calls */
+    const deviceHeaders = useCallback(
+        (): Record<string, string> =>
+            deviceToken
+                ? { 'Content-Type': 'application/json', 'x-device-token': deviceToken }
+                : { 'Content-Type': 'application/json' },
+        [deviceToken]
+    );
+
     // 1. Fetch Tables
     const fetchTables = useCallback(async () => {
         if (!restaurantId) return;
         try {
-            const response = await fetch('/api/tables');
+            // Use device-auth endpoint when running on a paired device
+            const endpoint = deviceToken ? '/api/device/tables' : '/api/tables';
+            const response = await fetch(endpoint, { headers: deviceHeaders() });
             const payload = await response.json();
 
             if (!response.ok) throw new Error(payload.error || 'Failed to load tables');
@@ -118,138 +141,186 @@ export default function WaiterPosPage() {
             console.error(err);
             toast.error('Failed to update tables');
         }
-    }, [restaurantId]);
+    }, [restaurantId, deviceToken, deviceHeaders]);
 
-    // 2. Fetch Menu
+    // 2. Fetch Menu (device-auth route to avoid RLS issues without a user session)
     const fetchMenu = useCallback(async () => {
         if (!restaurantId) return;
         try {
-            const { data, error } = await supabase
-                .from('categories')
-                .select('*, items:menu_items(*)')
-                .eq('restaurant_id', restaurantId)
-                .order('order_index');
-
-            if (error) throw error;
-            setMenu(data as CategoryWithItems[]);
+            if (deviceToken) {
+                const response = await fetch('/api/device/menu', { headers: deviceHeaders() });
+                const payload = await response.json();
+                if (!response.ok) throw new Error(payload.error || 'Failed to load menu');
+                setMenu((payload.data?.categories ?? []) as CategoryWithItems[]);
+            } else {
+                // Fallback: merchant preview via authenticated Supabase client
+                const { data, error } = await supabase
+                    .from('categories')
+                    .select('*, items:menu_items(*)')
+                    .eq('restaurant_id', restaurantId)
+                    .order('order_index');
+                if (error) throw error;
+                setMenu(data as CategoryWithItems[]);
+            }
         } catch (err) {
             console.error('Error fetching menu:', err);
             toast.error('Failed to load menu');
         }
-    }, [restaurantId, supabase]);
+    }, [restaurantId, deviceToken, deviceHeaders, supabase]);
+
     // 3. Fetch Active Orders (for Kitchen tab)
     const fetchActiveOrders = useCallback(async () => {
         if (!restaurantId) return;
         try {
-            const { data, error } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('restaurant_id', restaurantId)
-                .in('status', ['pending', 'acknowledged', 'preparing', 'ready', 'served'])
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setActiveOrders((data as Order[]) || []);
+            if (deviceToken) {
+                const response = await fetch('/api/device/orders', { headers: deviceHeaders() });
+                const payload = await response.json();
+                if (!response.ok) throw new Error(payload.error || 'Failed to load orders');
+                setActiveOrders((payload.data?.orders ?? []) as Order[]);
+            } else {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('restaurant_id', restaurantId)
+                    .in('status', ['pending', 'acknowledged', 'preparing', 'ready', 'served'])
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                setActiveOrders((data as Order[]) || []);
+            }
         } catch (err) {
             console.error('Error fetching active orders:', err);
         }
-    }, [restaurantId, supabase]);
+    }, [restaurantId, deviceToken, deviceHeaders, supabase]);
 
     // 4. Fetch orders for a specific table
-    const fetchTableOrders = useCallback(async (tableNumber: string) => {
-        if (!restaurantId) return;
-        try {
-            const { data, error } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('restaurant_id', restaurantId)
-                .eq('table_number', tableNumber)
-                .in('status', ['pending', 'acknowledged', 'preparing', 'ready', 'served'])
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setTableOrders((data as Order[]) || []);
-        } catch (err) {
-            console.error('Error fetching table orders:', err);
-        }
-    }, [restaurantId, supabase]);
+    const fetchTableOrders = useCallback(
+        async (tableNumber: string) => {
+            if (!restaurantId) return;
+            try {
+                if (deviceToken) {
+                    const response = await fetch(
+                        `/api/device/orders?table_number=${encodeURIComponent(tableNumber)}`,
+                        { headers: deviceHeaders() }
+                    );
+                    const payload = await response.json();
+                    if (!response.ok) throw new Error(payload.error || 'Failed to load table orders');
+                    setTableOrders((payload.data?.orders ?? []) as Order[]);
+                } else {
+                    const { data, error } = await supabase
+                        .from('orders')
+                        .select('*')
+                        .eq('restaurant_id', restaurantId)
+                        .eq('table_number', tableNumber)
+                        .in('status', ['pending', 'acknowledged', 'preparing', 'ready', 'served'])
+                        .order('created_at', { ascending: false });
+                    if (error) throw error;
+                    setTableOrders((data as Order[]) || []);
+                }
+            } catch (err) {
+                console.error('Error fetching table orders:', err);
+            }
+        },
+        [restaurantId, deviceToken, deviceHeaders, supabase]
+    );
 
     // 5. Fetch Active Service Requests
     const fetchServiceRequests = useCallback(async () => {
         if (!restaurantId) return;
         try {
-            const { data, error } = await supabase
-                .from('service_requests')
-                .select('*')
-                .eq('restaurant_id', restaurantId)
-                .in('status', ['pending', 'acknowledged'])
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setServiceRequests((data as ServiceRequest[]) || []);
+            if (deviceToken) {
+                const response = await fetch('/api/device/service-requests', { headers: deviceHeaders() });
+                const payload = await response.json();
+                if (!response.ok) throw new Error(payload.error || 'Failed to load service requests');
+                setServiceRequests((payload.data?.service_requests ?? []) as ServiceRequest[]);
+            } else {
+                const { data, error } = await supabase
+                    .from('service_requests')
+                    .select('*')
+                    .eq('restaurant_id', restaurantId)
+                    .in('status', ['pending', 'acknowledged'])
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                setServiceRequests((data as ServiceRequest[]) || []);
+            }
         } catch (err) {
             console.error('Error fetching service requests:', err);
         }
-    }, [restaurantId, supabase]);
+    }, [restaurantId, deviceToken, deviceHeaders, supabase]);
 
     // Initial Load & Realtime
+    // For device-mode: restaurantId comes from localStorage immediately (no auth session).
+    // We wait for roleLoading only when we have no device context (merchant preview mode).
+    const isDeviceMode = !!deviceRestaurantId;
+    const readyToLoad = restaurantId && (isDeviceMode || !roleLoading);
+
     useEffect(() => {
-        if (!roleLoading && restaurantId) {
-            setLoading(true);
-            Promise.all([fetchTables(), fetchMenu(), fetchActiveOrders(), fetchServiceRequests()]).finally(() =>
-                setLoading(false)
-            );
+        if (!readyToLoad) return;
 
-            const channelName = `pos-tables-${restaurantId}-${Math.random().toString(36).substring(7)}`;
-            const channel = supabase
-                .channel(channelName)
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'tables',
-                        filter: `restaurant_id=eq.${restaurantId}`,
-                    },
-                    () => void fetchTables()
-                )
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'orders',
-                        filter: `restaurant_id=eq.${restaurantId}`,
-                    },
-                    () => {
-                        void fetchTables(); // When orders change, fetch tables
-                        void fetchActiveOrders(); // Update recent orders view
-                    }
-                )
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'service_requests',
-                        filter: `restaurant_id=eq.${restaurantId}`,
-                    },
-                    () => {
-                        void fetchServiceRequests();
-                        // Trigger a ping if a new one came in via toast or bell ring in a real app
-                    }
-                )
-                .subscribe((status, err) => {
-                    console.log('Waiter Realtime status:', status, err);
-                    setConnected(status === 'SUBSCRIBED');
-                });
+        setLoading(true);
+        Promise.all([
+            fetchTables(),
+            fetchMenu(),
+            fetchActiveOrders(),
+            fetchServiceRequests(),
+        ]).finally(() => setLoading(false));
 
-            return () => {
-                setConnected(false);
-                supabase.removeChannel(channel);
-            };
-        }
-    }, [roleLoading, restaurantId, supabase, fetchTables, fetchMenu, fetchActiveOrders, fetchServiceRequests]);
+        const channelName = `pos-tables-${restaurantId}-${Math.random().toString(36).substring(7)}`;
+        const channel = supabase
+            .channel(channelName)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'tables',
+                    filter: `restaurant_id=eq.${restaurantId}`,
+                },
+                () => void fetchTables()
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `restaurant_id=eq.${restaurantId}`,
+                },
+                () => {
+                    void fetchTables();
+                    void fetchActiveOrders();
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'service_requests',
+                    filter: `restaurant_id=eq.${restaurantId}`,
+                },
+                () => {
+                    void fetchServiceRequests();
+                }
+            )
+            .subscribe((status, err) => {
+                console.log('Waiter Realtime status:', status, err);
+                setConnected(status === 'SUBSCRIBED');
+            });
+
+        return () => {
+            setConnected(false);
+            supabase.removeChannel(channel);
+        };
+    }, [
+        readyToLoad,
+        restaurantId,
+        supabase,
+        fetchTables,
+        fetchMenu,
+        fetchActiveOrders,
+        fetchServiceRequests,
+    ]);
+
 
     const handleLogout = async () => {
         const supabaseBrowser = createBrowserClient(
@@ -298,33 +369,33 @@ export default function WaiterPosPage() {
 
     // Submit Order
     const handleSubmitOrder = async () => {
-        if (!selectedTable || cart.length === 0) return;
+        if (!selectedTable || cart.length === 0 || !restaurantId) return;
 
         setIsSubmitting(true);
         try {
-            const orderPayload = {
-                id: crypto.randomUUID(),
-                restaurant_id: restaurantId!,
+            const payload = {
                 table_number: selectedTable.table_number,
-                status: 'pending',
-                payment_status: 'pending',
-                total_price: cartTotal,
-                order_number: `ORD-${Date.now().toString().slice(-6)}`,
+                staff_name: staffContext?.name || 'Waiter',
+                notes: null,
                 items: cart.map(item => ({
-                    id: item.id,
+                    menu_item_id: item.id,
                     name: item.name,
                     quantity: item.quantity,
-                    price: item.price,
-                    notes: item.notes,
-                    status: 'pending',
-                })), // Bypass strict Json typing locally
-                order_type: 'dine_in',
+                    unit_price: item.price,
+                    notes: item.notes || null,
+                })),
             };
 
-            // Direct insertion since staff are authenticated (bypasses Guest API checks)
-            const { error } = await supabase.from('orders').insert(orderPayload);
+            const response = await fetch('/api/device/orders', {
+                method: 'POST',
+                headers: deviceHeaders(),
+                body: JSON.stringify(payload),
+            });
 
-            if (error) throw error;
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to submit order');
+            }
 
             toast.success('Order sent to kitchen!', { duration: 3000 });
             setCart([]);
@@ -346,7 +417,7 @@ export default function WaiterPosPage() {
                 .from('service_requests')
                 .update({ status: 'completed' })
                 .eq('id', id);
-                
+
             if (error) throw error;
             toast.success('Request resolved!');
             void fetchServiceRequests();
@@ -452,7 +523,9 @@ export default function WaiterPosPage() {
                     >
                         Table Orders
                         {tableOrders.length > 0 && (
-                            <span className={`rounded-full px-2 py-0.5 text-xs ${orderSubTab === 'orders' ? 'bg-white/20' : 'bg-black text-white'}`}>
+                            <span
+                                className={`rounded-full px-2 py-0.5 text-xs ${orderSubTab === 'orders' ? 'bg-white/20' : 'bg-black text-white'}`}
+                            >
                                 {tableOrders.length}
                             </span>
                         )}
@@ -504,7 +577,9 @@ export default function WaiterPosPage() {
                         {/* Menu Grid */}
                         <div className="flex-1 overflow-y-auto px-6 pb-32">
                             {filteredCategories
-                                .filter(cat => selectedCategory === 'all' || cat.id === selectedCategory)
+                                .filter(
+                                    cat => selectedCategory === 'all' || cat.id === selectedCategory
+                                )
                                 .map(category => (
                                     <div key={category.id} className="mb-6">
                                         <h3 className="mb-3 ml-1 text-xs font-bold tracking-wider text-gray-400 uppercase">
@@ -528,7 +603,7 @@ export default function WaiterPosPage() {
                                                                 {item.name}
                                                             </span>
                                                             {inCart && (
-                                                                <span className="min-w-[20px] rounded-md bg-black px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
+                                                                <span className="bg-brand-crimson min-w-[20px] rounded-md px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
                                                                     {inCart.quantity}
                                                                 </span>
                                                             )}
@@ -563,7 +638,9 @@ export default function WaiterPosPage() {
                                             <span className="text-sm font-bold text-gray-900">
                                                 {cart.reduce((a, b) => a + b.quantity, 0)} Items
                                             </span>
-                                            <span className="text-xs text-gray-400">Ready to send</span>
+                                            <span className="text-xs text-gray-400">
+                                                Ready to send
+                                            </span>
                                         </div>
                                     </div>
                                     <span className="text-2xl font-black tracking-tight text-gray-900">
@@ -571,7 +648,7 @@ export default function WaiterPosPage() {
                                     </span>
                                 </div>
                                 <Button
-                                    className="h-14 w-full rounded-2xl bg-black text-lg font-bold text-white shadow-xl shadow-black/10 transition-all hover:bg-gray-800 active:scale-[0.98]"
+                                    className="bg-brand-crimson h-14 w-full rounded-2xl text-lg font-bold text-white shadow-xl shadow-black/10 transition-all hover:bg-[#a0151e] active:scale-[0.98]"
                                     onClick={handleSubmitOrder}
                                     disabled={isSubmitting}
                                 >
@@ -588,10 +665,12 @@ export default function WaiterPosPage() {
                         {tableOrders.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 opacity-50">
                                 <ChefHat className="mb-4 h-12 w-12 text-gray-300" />
-                                <p className="font-medium text-gray-400">No active orders for this table</p>
+                                <p className="font-medium text-gray-400">
+                                    No active orders for this table
+                                </p>
                                 <button
                                     onClick={() => setOrderSubTab('new')}
-                                    className="mt-4 rounded-xl bg-black px-6 py-2.5 text-sm font-bold text-white shadow-lg"
+                                    className="bg-brand-crimson mt-4 rounded-xl px-6 py-2.5 text-sm font-bold text-white shadow-lg"
                                 >
                                     + Add Order
                                 </button>
@@ -599,13 +678,19 @@ export default function WaiterPosPage() {
                         ) : (
                             <div className="flex flex-col gap-4">
                                 {/* Running total banner */}
-                                <div className="flex items-center justify-between rounded-2xl bg-black p-4 text-white">
+                                <div className="bg-brand-crimson flex items-center justify-between rounded-2xl p-4 text-white">
                                     <div>
-                                        <p className="text-xs font-bold tracking-widest uppercase text-gray-400">Table Running Total</p>
-                                        <p className="text-2xl font-black">{tableRunningTotal.toFixed(2)} br</p>
+                                        <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">
+                                            Table Running Total
+                                        </p>
+                                        <p className="text-2xl font-black">
+                                            {tableRunningTotal.toFixed(2)} br
+                                        </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs font-bold text-gray-400">{tableOrders.length} orders</p>
+                                        <p className="text-xs font-bold text-gray-400">
+                                            {tableOrders.length} orders
+                                        </p>
                                         <button
                                             onClick={() => setOrderSubTab('new')}
                                             className="mt-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition-all hover:bg-white/20"
@@ -622,42 +707,60 @@ export default function WaiterPosPage() {
                                     >
                                         <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-gray-400">Order #{oi + 1}</span>
+                                                <span className="text-xs font-bold text-gray-400">
+                                                    Order #{oi + 1}
+                                                </span>
                                                 <span className="text-xs text-gray-300">·</span>
                                                 <span className="text-xs font-medium text-gray-400">
-                                                    {order.created_at ? format(new Date(order.created_at), 'HH:mm') : ''}
+                                                    {order.created_at
+                                                        ? format(
+                                                              new Date(order.created_at),
+                                                              'HH:mm'
+                                                          )
+                                                        : ''}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className={`rounded-lg px-2.5 py-1 text-xs font-bold capitalize ${
-                                                    order.status === 'ready' ? 'bg-green-100 text-green-700' :
-                                                    order.status === 'preparing' ? 'bg-blue-100 text-blue-700' :
-                                                    order.status === 'acknowledged' ? 'bg-yellow-100 text-yellow-700' :
-                                                    'bg-gray-100 text-gray-600'
-                                                }`}>
-                                                    {order.status === 'acknowledged' ? 'In Kitchen' : order.status}
+                                                <span
+                                                    className={`rounded-lg px-2.5 py-1 text-xs font-bold capitalize ${
+                                                        order.status === 'ready'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : order.status === 'preparing'
+                                                              ? 'bg-blue-100 text-blue-700'
+                                                              : order.status === 'acknowledged'
+                                                                ? 'bg-yellow-100 text-yellow-700'
+                                                                : 'bg-gray-100 text-gray-600'
+                                                    }`}
+                                                >
+                                                    {order.status === 'acknowledged'
+                                                        ? 'In Kitchen'
+                                                        : order.status}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-2">
-                                            {(Array.isArray(order.items) ? (order.items as any[]) : []).map(
-                                                (item, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="flex items-center justify-between text-sm"
-                                                    >
-                                                        <span className="font-medium text-gray-700">
-                                                            <span className="mr-2 font-bold text-black">
-                                                                {item.quantity}x
-                                                            </span>
-                                                            {item.name}
+                                            {(Array.isArray(order.items)
+                                                ? (order.items as any[])
+                                                : []
+                                            ).map((item, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center justify-between text-sm"
+                                                >
+                                                    <span className="font-medium text-gray-700">
+                                                        <span className="mr-2 font-bold text-black">
+                                                            {item.quantity}x
                                                         </span>
-                                                        <span className="font-bold text-gray-500">
-                                                            {((item.price ?? 0) * item.quantity).toFixed(0)} br
-                                                        </span>
-                                                    </div>
-                                                )
-                                            )}
+                                                        {item.name}
+                                                    </span>
+                                                    <span className="font-bold text-gray-500">
+                                                        {(
+                                                            (item.price ?? 0) * item.quantity
+                                                        ).toFixed(0)}{' '}
+                                                        br
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                         <div className="mt-3 flex justify-end border-t border-gray-50 pt-3">
                                             <span className="text-sm font-black text-gray-900">
@@ -678,23 +781,24 @@ export default function WaiterPosPage() {
     const assignedZones = Array.isArray(staffContext?.assigned_zones)
         ? staffContext.assigned_zones
         : [];
-        
+
     const filteredTables =
         assignedZones.length > 0
             ? tables.filter(
-                  t =>
-                      !t.zone ||
-                      assignedZones.includes(t.zone) ||
-                      assignedZones.includes('All')
+                  t => !t.zone || assignedZones.includes(t.zone) || assignedZones.includes('All')
               )
             : tables;
-            
+
     // Only show service requests for filtered tables
     const visibleTableNumbers = new Set(filteredTables.map(t => t.table_number));
-    const filteredServiceRequests = serviceRequests.filter(sr => visibleTableNumbers.has(sr.table_number));
+    const filteredServiceRequests = serviceRequests.filter(sr =>
+        visibleTableNumbers.has(sr.table_number)
+    );
 
     // --- RENDER: TABLE LIST MODE ---
-    const pendingRequestsCount = filteredServiceRequests.filter(sr => sr.status === 'pending').length;
+    const pendingRequestsCount = filteredServiceRequests.filter(
+        sr => sr.status === 'pending'
+    ).length;
 
     return (
         <div className="font-manrope flex min-h-screen flex-col bg-gray-50 p-6 text-gray-900">
@@ -715,7 +819,8 @@ export default function WaiterPosPage() {
                         </span>
                         <span className="text-gray-300">|</span>
                         <span>
-                            {filteredTables.filter(t => t.status === 'occupied').length} Active Tables
+                            {filteredTables.filter(t => t.status === 'occupied').length} Active
+                            Tables
                         </span>
                     </div>
                 </div>
@@ -740,7 +845,7 @@ export default function WaiterPosPage() {
                                 handleLogout();
                             }
                         }}
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800"
+                        className="bg-brand-crimson flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
                     >
                         <LogOut className="h-5 w-5" />
                     </button>
@@ -785,7 +890,11 @@ export default function WaiterPosPage() {
                                         </div>
                                         {table.status === 'occupied' && (
                                             <div className="flex items-center gap-2">
-                                                {filteredServiceRequests.some(sr => sr.table_number === table.table_number && sr.status === 'pending') && (
+                                                {filteredServiceRequests.some(
+                                                    sr =>
+                                                        sr.table_number === table.table_number &&
+                                                        sr.status === 'pending'
+                                                ) && (
                                                     <span className="flex h-5 w-5 animate-bounce items-center justify-center rounded-full bg-red-500 text-white shadow-lg">
                                                         <Bell className="h-3 w-3" />
                                                     </span>
@@ -846,7 +955,7 @@ export default function WaiterPosPage() {
                                     >
                                         <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3">
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                                <span className="text-xs font-bold tracking-wider text-gray-400 uppercase">
                                                     Table
                                                 </span>
                                                 <span className="text-xl font-black text-gray-900">
@@ -858,7 +967,12 @@ export default function WaiterPosPage() {
                                                     {order.status}
                                                 </span>
                                                 <span className="text-xs font-medium text-gray-400">
-                                                    {order.created_at ? format(new Date(order.created_at), 'HH:mm') : ''}
+                                                    {order.created_at
+                                                        ? format(
+                                                              new Date(order.created_at),
+                                                              'HH:mm'
+                                                          )
+                                                        : ''}
                                                 </span>
                                             </div>
                                         </div>
@@ -877,7 +991,7 @@ export default function WaiterPosPage() {
                                                         </span>
                                                         {item.name}
                                                     </span>
-                                                    <span className="text-xs font-bold capitalize text-gray-400">
+                                                    <span className="text-xs font-bold text-gray-400 capitalize">
                                                         {item.status || 'pending'}
                                                     </span>
                                                 </div>
@@ -915,7 +1029,7 @@ export default function WaiterPosPage() {
                                     >
                                         <div className="mb-3 flex items-center justify-between border-b border-gray-50 pb-3">
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                                <span className="text-xs font-bold tracking-wider text-gray-400 uppercase">
                                                     Table
                                                 </span>
                                                 <span className="text-2xl font-black text-gray-900">
@@ -924,16 +1038,25 @@ export default function WaiterPosPage() {
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 <span className="text-xs font-medium text-gray-400">
-                                                    {request.created_at ? format(new Date(request.created_at), 'HH:mm') : ''}
+                                                    {request.created_at
+                                                        ? format(
+                                                              new Date(request.created_at),
+                                                              'HH:mm'
+                                                          )
+                                                        : ''}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-4">
                                             <span className="text-lg font-bold text-black capitalize">
-                                                {request.request_type === 'bill' ? '🧾 Requested Bill' : `🔔 Call ${request.request_type}`}
+                                                {request.request_type === 'bill'
+                                                    ? '🧾 Requested Bill'
+                                                    : `🔔 Call ${request.request_type}`}
                                             </span>
-                                            <button 
-                                                onClick={() => handleResolveServiceRequest(request.id)}
+                                            <button
+                                                onClick={() =>
+                                                    handleResolveServiceRequest(request.id)
+                                                }
                                                 className="flex h-12 w-full items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-900 transition-colors hover:bg-green-100 hover:text-green-700"
                                             >
                                                 Mark as Resolved
