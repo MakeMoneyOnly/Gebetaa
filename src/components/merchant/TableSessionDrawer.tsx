@@ -39,7 +39,7 @@ export function TableSessionDrawer({
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
-            <div className="h-full w-full max-w-md bg-white shadow-2xl p-6 overflow-y-auto">
+            <div className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-2xl">
                 <div className="flex items-start justify-between">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">Table Session</h3>
@@ -47,7 +47,7 @@ export function TableSessionDrawer({
                     </div>
                     <button
                         onClick={onClose}
-                        className="h-10 w-10 rounded-full bg-gray-100 text-gray-500 hover:bg-black hover:text-white transition-colors flex items-center justify-center"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-black hover:text-white"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -57,7 +57,9 @@ export function TableSessionDrawer({
                     {loading && <p className="text-sm text-gray-500">Loading session state...</p>}
 
                     {!loading && !session && (
-                        <p className="text-sm text-gray-600">No session records found for this table.</p>
+                        <p className="text-sm text-gray-600">
+                            No session records found for this table.
+                        </p>
                     )}
 
                     {!loading && session && (
@@ -72,19 +74,27 @@ export function TableSessionDrawer({
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Guest Count</span>
-                                <span className="font-medium text-gray-900">{session.guest_count ?? 'N/A'}</span>
+                                <span className="font-medium text-gray-900">
+                                    {session.guest_count ?? 'N/A'}
+                                </span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Opened At</span>
-                                <span className="font-medium text-gray-900">{formatTimestamp(session.opened_at)}</span>
+                                <span className="font-medium text-gray-900">
+                                    {formatTimestamp(session.opened_at)}
+                                </span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Closed At</span>
-                                <span className="font-medium text-gray-900">{formatTimestamp(session.closed_at)}</span>
+                                <span className="font-medium text-gray-900">
+                                    {formatTimestamp(session.closed_at)}
+                                </span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Assigned Staff</span>
-                                <span className="font-medium text-gray-900">{session.assigned_staff_id ?? 'N/A'}</span>
+                                <span className="font-medium text-gray-900">
+                                    {session.assigned_staff_id ?? 'N/A'}
+                                </span>
                             </div>
                             <div className="text-sm">
                                 <p className="text-gray-500">Notes</p>

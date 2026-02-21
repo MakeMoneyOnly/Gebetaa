@@ -49,7 +49,7 @@ export function AttentionQueuePanel({
                 <div className="flex items-center gap-2">
                     <Siren className="h-4 w-4 text-rose-500" />
                     <h2 className="text-lg font-bold text-gray-900">Attention Queue</h2>
-                    <span className="rounded-full bg-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                    <span className="rounded-full bg-black px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
                         {items.length}
                     </span>
                 </div>
@@ -97,14 +97,21 @@ export function AttentionQueuePanel({
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {items.slice(0, 8).map((item) => (
-                        <article key={`${item.type}-${item.id}`} className="rounded-2xl border border-gray-100 p-4">
+                    {items.slice(0, 8).map(item => (
+                        <article
+                            key={`${item.type}-${item.id}`}
+                            className="rounded-2xl border border-gray-100 p-4"
+                        >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
-                                    <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${badgeClass(item)}`}>
+                                    <span
+                                        className={`rounded-full px-2 py-1 text-[10px] font-bold tracking-wider uppercase ${badgeClass(item)}`}
+                                    >
                                         {item.type}
                                     </span>
-                                    <span className="text-sm font-semibold text-gray-900">{item.label}</span>
+                                    <span className="text-sm font-semibold text-gray-900">
+                                        {item.label}
+                                    </span>
                                 </div>
                                 <div className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500">
                                     <Clock3 className="h-3.5 w-3.5" />

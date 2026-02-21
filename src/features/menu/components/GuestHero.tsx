@@ -50,11 +50,11 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
     return (
         <div
             className={cn(
-                'bg-white dark:bg-black pt-safe relative mb-6 overflow-visible rounded-b-[40px] px-6 pb-16 shadow-2xl transition-all duration-300',
+                'bg-brand-crimson pt-safe relative mb-6 overflow-visible rounded-b-[40px] px-6 pb-16 shadow-2xl transition-all duration-300',
                 isMenuOpen ? 'z-[9999]' : 'z-10'
             )}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-crimson/10 to-transparent rounded-b-[40px] pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 rounded-b-[40px] bg-gradient-to-br from-black/10 to-transparent" />
             {/* Full Screen Menu Overlay */}
             <AnimatePresence>
                 {isMenuOpen && (
@@ -124,43 +124,43 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                             src="/Logo.gif"
                             alt="Gebeta Logo"
                             fill
-                            className="object-contain object-left"
+                            className="object-contain object-left brightness-0 invert"
                             unoptimized
                         />
                     </div>
                 </div>
                 <button
                     onClick={toggleMenu}
-                    className="flex touch-manipulation flex-col items-end gap-1.5 rounded-full p-2 text-black dark:text-white transition-all active:scale-90"
+                    className="flex touch-manipulation flex-col items-end gap-1.5 rounded-full p-2 text-white transition-all hover:bg-white/10 active:scale-90"
                 >
                     <span className="sr-only">Open Menu</span>
-                    <div className="h-[3px] w-8 rounded-full bg-black dark:bg-white"></div>
-                    <div className="h-[3px] w-5 rounded-full bg-black dark:bg-white"></div>
+                    <div className="h-[3px] w-8 rounded-full bg-white"></div>
+                    <div className="h-[3px] w-5 rounded-full bg-white"></div>
                 </button>
             </div>
 
             {/* Main Copy */}
             <div className="mx-auto max-w-lg">
-                <h1 className="no-select mb-4 text-[3.5rem] leading-[0.9] font-black tracking-tighter text-black dark:text-white">
+                <h1 className="no-select mb-4 text-[3.5rem] leading-[0.9] font-black tracking-tighter text-white">
                     Where flavor <br />
                     goes{' '}
                     <span className="font-manrope text-brand-yellow font-medium italic">wild.</span>
                 </h1>
-                <p className="no-select w-full text-sm leading-relaxed text-black/80 dark:text-white/80">
+                <p className="no-select w-full text-sm leading-relaxed text-white/90">
                     Discover the best local bites, trending dishes, and must-try flavors near you.
                 </p>
             </div>
 
             {/* Food/Drinks Tabs */}
             <div className="absolute right-6 -bottom-6 left-6 z-30">
-                <div className="shadow-2xl flex transform-gpu rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 backdrop-blur-xl p-1">
+                <div className="bg-background flex transform-gpu rounded-full border border-black/10 p-1 shadow-2xl dark:border-white/10">
                     <button
                         onClick={() => handleTabChange('food')}
                         className={cn(
                             'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'food'
-                                ? 'bg-black text-white dark:bg-white dark:text-black'
-                                : 'text-black/50 dark:text-white/50 hover:text-black/80 dark:hover:text-white/80'
+                                ? 'bg-brand-crimson text-white shadow-md'
+                                : 'text-black/50 hover:text-black/80 dark:text-white/50 dark:hover:text-white/80'
                         )}
                     >
                         <Utensils size={18} />
@@ -171,8 +171,8 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                         className={cn(
                             'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'drinks'
-                                ? 'bg-black text-white dark:bg-white dark:text-black'
-                                : 'text-black/50 dark:text-white/50 hover:text-black/80 dark:hover:text-white/80'
+                                ? 'bg-brand-crimson text-white shadow-md'
+                                : 'text-black/50 hover:text-black/80 dark:text-white/50 dark:hover:text-white/80'
                         )}
                     >
                         <CupSoda size={18} />

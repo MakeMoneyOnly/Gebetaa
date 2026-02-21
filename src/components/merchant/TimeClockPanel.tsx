@@ -43,11 +43,16 @@ export function TimeClockPanel({ staff }: { staff: StaffMember[] }) {
             if (!staffId) return;
             try {
                 const date = todayIso();
-                const response = await fetch(`/api/staff/schedule?start_date=${date}&end_date=${date}`, { cache: 'no-store' });
+                const response = await fetch(
+                    `/api/staff/schedule?start_date=${date}&end_date=${date}`,
+                    { cache: 'no-store' }
+                );
                 const payload = await response.json();
                 if (!response.ok) return;
 
-                const rows = ((payload?.data?.shifts ?? []) as ShiftRecord[]).filter((item) => item.staff_id === staffId);
+                const rows = ((payload?.data?.shifts ?? []) as ShiftRecord[]).filter(
+                    item => item.staff_id === staffId
+                );
                 setShifts(rows);
                 if (rows.length > 0 && !shiftId) {
                     setShiftId(rows[0].id);
@@ -61,7 +66,7 @@ export function TimeClockPanel({ staff }: { staff: StaffMember[] }) {
     }, [staffId, shiftId]);
 
     const activeStaffLabel = useMemo(() => {
-        const row = staff.find((member) => member.id === staffId);
+        const row = staff.find(member => member.id === staffId);
         if (!row) return 'Select staff';
         return `${row.user_id.slice(0, 8)} (${row.role})`;
     }, [staff, staffId]);
@@ -100,7 +105,9 @@ export function TimeClockPanel({ staff }: { staff: StaffMember[] }) {
             );
             toast.success(action === 'in' ? 'Clocked in.' : 'Clocked out.');
         } catch (clockError) {
-            toast.error(clockError instanceof Error ? clockError.message : `Failed to clock ${action}.`);
+            toast.error(
+                clockError instanceof Error ? clockError.message : `Failed to clock ${action}.`
+            );
         } finally {
             setWorking(false);
         }
@@ -111,18 +118,22 @@ export function TimeClockPanel({ staff }: { staff: StaffMember[] }) {
             <div className="mb-4 flex items-start justify-between">
                 <div>
                     <h2 className="text-xl font-bold text-gray-900">Time Clock Panel</h2>
-                    <p className="text-sm text-gray-500">Clock team members in and out in real time.</p>
+                    <p className="text-sm text-gray-500">
+                        Clock team members in and out in real time.
+                    </p>
                 </div>
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">{activeStaffLabel}</span>
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">
+                    {activeStaffLabel}
+                </span>
             </div>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                 <select
                     value={staffId}
-                    onChange={(event) => setStaffId(event.target.value)}
+                    onChange={event => setStaffId(event.target.value)}
                     className="h-10 rounded-lg border border-gray-200 px-2 text-sm"
                 >
-                    {staff.map((member) => (
+                    {staff.map(member => (
                         <option key={member.id} value={member.id}>
                             {member.user_id.slice(0, 8)} ({member.role})
                         </option>
@@ -131,20 +142,21 @@ export function TimeClockPanel({ staff }: { staff: StaffMember[] }) {
 
                 <select
                     value={shiftId}
-                    onChange={(event) => setShiftId(event.target.value)}
+                    onChange={event => setShiftId(event.target.value)}
                     className="h-10 rounded-lg border border-gray-200 px-2 text-sm"
                 >
                     <option value="">No linked shift</option>
-                    {shifts.map((shift) => (
+                    {shifts.map(shift => (
                         <option key={shift.id} value={shift.id}>
-                            {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)} ({shift.status})
+                            {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)} (
+                            {shift.status})
                         </option>
                     ))}
                 </select>
 
                 <input
                     value={note}
-                    onChange={(event) => setNote(event.target.value)}
+                    onChange={event => setNote(event.target.value)}
                     placeholder="Note (optional)"
                     className="h-10 rounded-lg border border-gray-200 px-2 text-sm"
                 />

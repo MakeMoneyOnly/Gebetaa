@@ -48,7 +48,7 @@ const DASHBOARD_LOCALE = 'en-ET';
 function parseTags(value: string) {
     return value
         .split(',')
-        .map((item) => item.trim())
+        .map(item => item.trim())
         .filter(Boolean)
         .slice(0, 20);
 }
@@ -108,9 +108,12 @@ export function GuestProfileDrawer({
             >
                 <div className="flex items-start justify-between">
                     <div>
-                        <h3 id={drawerHeadingId} className="text-xl font-bold text-gray-900">Guest Profile</h3>
+                        <h3 id={drawerHeadingId} className="text-xl font-bold text-gray-900">
+                            Guest Profile
+                        </h3>
                         <p className="mt-1 text-sm text-gray-500">
-                            {guest?.name?.trim() || (guest ? `Guest ${guest.id.slice(0, 8)}` : 'Loading...')}
+                            {guest?.name?.trim() ||
+                                (guest ? `Guest ${guest.id.slice(0, 8)}` : 'Loading...')}
                         </p>
                     </div>
                     <button
@@ -124,7 +127,11 @@ export function GuestProfileDrawer({
                 </div>
 
                 {loading || !guest ? (
-                    <div role="status" aria-live="polite" className="mt-6 inline-flex items-center gap-2 text-sm text-gray-500">
+                    <div
+                        role="status"
+                        aria-live="polite"
+                        className="mt-6 inline-flex items-center gap-2 text-sm text-gray-500"
+                    >
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading guest profile...
                     </div>
@@ -132,11 +139,17 @@ export function GuestProfileDrawer({
                     <div className="mt-6 space-y-5">
                         <div className="grid grid-cols-2 gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-3">
                             <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Visits</p>
-                                <p className="mt-1 text-lg font-bold text-gray-900">{guest.visit_count}</p>
+                                <p className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+                                    Visits
+                                </p>
+                                <p className="mt-1 text-lg font-bold text-gray-900">
+                                    {guest.visit_count}
+                                </p>
                             </div>
                             <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Lifetime Value</p>
+                                <p className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+                                    Lifetime Value
+                                </p>
                                 <p className="mt-1 text-lg font-bold text-gray-900">
                                     {new Intl.NumberFormat(DASHBOARD_LOCALE, {
                                         style: 'currency',
@@ -147,36 +160,54 @@ export function GuestProfileDrawer({
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">First Seen</p>
+                                <p className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+                                    First Seen
+                                </p>
                                 <p className="mt-1 text-sm font-semibold text-gray-800">
-                                    {new Date(guest.first_seen_at).toLocaleDateString(DASHBOARD_LOCALE)}
+                                    {new Date(guest.first_seen_at).toLocaleDateString(
+                                        DASHBOARD_LOCALE
+                                    )}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Last Seen</p>
+                                <p className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+                                    Last Seen
+                                </p>
                                 <p className="mt-1 text-sm font-semibold text-gray-800">
-                                    {new Date(guest.last_seen_at).toLocaleDateString(DASHBOARD_LOCALE)}
+                                    {new Date(guest.last_seen_at).toLocaleDateString(
+                                        DASHBOARD_LOCALE
+                                    )}
                                 </p>
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            <label htmlFor={nameInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Name</label>
+                            <label
+                                htmlFor={nameInputId}
+                                className="text-xs font-semibold tracking-wide text-gray-500 uppercase"
+                            >
+                                Name
+                            </label>
                             <input
                                 id={nameInputId}
                                 value={name}
-                                onChange={(event) => setName(event.target.value)}
+                                onChange={event => setName(event.target.value)}
                                 placeholder="Guest name"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
                         </div>
 
                         <div className="space-y-3">
-                            <label htmlFor={languageInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Language</label>
+                            <label
+                                htmlFor={languageInputId}
+                                className="text-xs font-semibold tracking-wide text-gray-500 uppercase"
+                            >
+                                Language
+                            </label>
                             <select
                                 id={languageInputId}
                                 value={language}
-                                onChange={(event) => setLanguage(event.target.value as 'en' | 'am')}
+                                onChange={event => setLanguage(event.target.value as 'en' | 'am')}
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             >
                                 <option value="en">English</option>
@@ -185,16 +216,21 @@ export function GuestProfileDrawer({
                         </div>
 
                         <div className="space-y-3">
-                            <label htmlFor={tagsInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Segmentation Tags</label>
+                            <label
+                                htmlFor={tagsInputId}
+                                className="text-xs font-semibold tracking-wide text-gray-500 uppercase"
+                            >
+                                Segmentation Tags
+                            </label>
                             <input
                                 id={tagsInputId}
                                 value={tagsInput}
-                                onChange={(event) => setTagsInput(event.target.value)}
+                                onChange={event => setTagsInput(event.target.value)}
                                 placeholder="vip, frequent, family"
                                 className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
                             <div className="flex flex-wrap gap-2">
-                                {QUICK_TAGS.map((tag) => (
+                                {QUICK_TAGS.map(tag => (
                                     <button
                                         key={tag}
                                         type="button"
@@ -212,11 +248,16 @@ export function GuestProfileDrawer({
                         </div>
 
                         <div className="space-y-3">
-                            <label htmlFor={notesInputId} className="text-xs font-semibold uppercase tracking-wide text-gray-500">Notes</label>
+                            <label
+                                htmlFor={notesInputId}
+                                className="text-xs font-semibold tracking-wide text-gray-500 uppercase"
+                            >
+                                Notes
+                            </label>
                             <textarea
                                 id={notesInputId}
                                 value={notes}
-                                onChange={(event) => setNotes(event.target.value)}
+                                onChange={event => setNotes(event.target.value)}
                                 placeholder="Preferences, allergies, seating notes..."
                                 className="min-h-[100px] w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                             />
@@ -224,7 +265,7 @@ export function GuestProfileDrawer({
 
                         <button
                             type="button"
-                            onClick={() => setIsVip((value) => !value)}
+                            onClick={() => setIsVip(value => !value)}
                             aria-pressed={isVip}
                             className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${
                                 isVip ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'
@@ -240,10 +281,13 @@ export function GuestProfileDrawer({
                                 {visits.length === 0 ? (
                                     <p className="text-sm text-gray-500">No visit records yet.</p>
                                 ) : (
-                                    visits.map((visit) => (
-                                        <div key={visit.id} className="rounded-xl border border-gray-100 p-3">
+                                    visits.map(visit => (
+                                        <div
+                                            key={visit.id}
+                                            className="rounded-xl border border-gray-100 p-3"
+                                        >
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                                <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
                                                     {visit.channel}
                                                 </span>
                                                 <span className="text-xs font-semibold text-gray-800">
@@ -256,7 +300,9 @@ export function GuestProfileDrawer({
                                                 </span>
                                             </div>
                                             <p className="mt-1 text-xs text-gray-500">
-                                                {new Date(visit.visited_at).toLocaleString(DASHBOARD_LOCALE)}
+                                                {new Date(visit.visited_at).toLocaleString(
+                                                    DASHBOARD_LOCALE
+                                                )}
                                             </p>
                                         </div>
                                     ))
@@ -280,7 +326,11 @@ export function GuestProfileDrawer({
                         disabled={saving || loading || !guest}
                         className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                     >
-                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        {saving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Save className="h-4 w-4" />
+                        )}
                         Save
                     </button>
                 </div>

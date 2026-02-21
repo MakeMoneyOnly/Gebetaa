@@ -35,27 +35,29 @@ export function MetricCard({
     const displayValue = isETB ? value.toString().replace('ETB', '').trim() : value;
 
     return (
-        <div className="bg-white p-5 rounded-[2rem] flex flex-col justify-between h-[180px] relative overflow-hidden shadow-sm hover:shadow-md transition-all group">
-            <div className="flex justify-between items-start mb-2">
-                <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-gray-900 shadow-sm">
+        <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mb-2 flex items-start justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm">
                     <Icon className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                    <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-600 uppercase">
                         {chip}
                     </span>
-                    <div className="flex flex-col items-end mt-[14px]">
-                        <h3 className="text-4xl font-bold text-gray-900 tracking-tight leading-none">{displayValue}</h3>
-                        {isETB && <span className="text-xs font-bold text-gray-400 mt-1">ETB</span>}
+                    <div className="mt-[14px] flex flex-col items-end">
+                        <h3 className="text-4xl leading-none font-bold tracking-tight text-gray-900">
+                            {displayValue}
+                        </h3>
+                        {isETB && <span className="mt-1 text-xs font-bold text-gray-400">ETB</span>}
                     </div>
                 </div>
             </div>
-            <div className="absolute bottom-5 left-5 right-5">
+            <div className="absolute right-5 bottom-5 left-5">
                 <div className="mb-3">
-                    <h3 className="text-gray-900 font-bold text-lg leading-none mb-1">{label}</h3>
-                    <p className="text-gray-400 text-xs font-medium">{subLabel}</p>
+                    <h3 className="mb-1 text-lg leading-none font-bold text-gray-900">{label}</h3>
+                    <p className="text-xs font-medium text-gray-400">{subLabel}</p>
                 </div>
-                <div className="flex justify-between items-center gap-1">
+                <div className="flex items-center justify-between gap-1">
                     {Array.from({ length: 20 }).map((_, i) => {
                         const isActive = i < progress;
                         const opacity = isActive ? 0.3 + 0.7 * (i / Math.max(progress, 1)) : 1;

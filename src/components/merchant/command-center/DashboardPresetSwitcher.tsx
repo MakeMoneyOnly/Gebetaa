@@ -19,15 +19,21 @@ export function DashboardPresetSwitcher({
         const load = async () => {
             setLoading(true);
             try {
-                const response = await fetch('/api/merchant/dashboard-presets', { cache: 'no-store' });
+                const response = await fetch('/api/merchant/dashboard-presets', {
+                    cache: 'no-store',
+                });
                 const payload = await response.json();
                 if (!response.ok) {
                     throw new Error(payload?.error ?? 'Failed to load dashboard preset.');
                 }
 
-                const resolved = (payload?.data?.current_preset ?? payload?.data?.recommended_preset ?? 'owner') as DashboardPreset;
+                const resolved = (payload?.data?.current_preset ??
+                    payload?.data?.recommended_preset ??
+                    'owner') as DashboardPreset;
                 setPreset(resolved);
-                setRecommendedPreset((payload?.data?.recommended_preset ?? 'owner') as DashboardPreset);
+                setRecommendedPreset(
+                    (payload?.data?.recommended_preset ?? 'owner') as DashboardPreset
+                );
                 onPresetResolved(resolved);
             } catch {
                 const fallback: DashboardPreset = 'owner';
@@ -61,7 +67,9 @@ export function DashboardPresetSwitcher({
 
             toast.success('Dashboard preset updated.');
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Failed to save dashboard preset.');
+            toast.error(
+                error instanceof Error ? error.message : 'Failed to save dashboard preset.'
+            );
         } finally {
             setSaving(false);
         }
@@ -73,7 +81,7 @@ export function DashboardPresetSwitcher({
             <select
                 disabled={loading || saving}
                 value={preset}
-                onChange={(event) => {
+                onChange={event => {
                     void persistPreset(event.target.value as DashboardPreset);
                 }}
                 className="h-8 rounded-lg border border-gray-200 bg-gray-50 px-2 text-xs font-semibold text-gray-700"
@@ -82,7 +90,7 @@ export function DashboardPresetSwitcher({
                 <option value="manager">Manager</option>
                 <option value="kitchen_lead">Kitchen Lead</option>
             </select>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+            <span className="text-[10px] font-bold tracking-wide text-emerald-700 uppercase">
                 Recommended: {recommendedPreset.replace('_', ' ')}
             </span>
         </div>

@@ -10,10 +10,22 @@ interface InviteStaffModalProps {
     loading: boolean;
     inviteUrl: string | null;
     onClose: () => void;
-    onInvite: (payload: { email: string | null; role: StaffRole }) => Promise<void>;
+    onInvite: (payload: {
+        email: string | null;
+        role: StaffRole;
+        label: string | null;
+    }) => Promise<void>;
 }
 
 const ROLE_OPTIONS: StaffRole[] = ['admin', 'manager', 'kitchen', 'waiter', 'bar'];
+const ROLE_TARGET: Record<StaffRole, string> = {
+    owner: '/merchant',
+    admin: '/merchant',
+    manager: '/merchant',
+    kitchen: '/kds',
+    waiter: '/waiter',
+    bar: '/bar',
+};
 
 export function InviteStaffModal({
     open,
@@ -22,6 +34,7 @@ export function InviteStaffModal({
     onClose,
     onInvite,
 }: InviteStaffModalProps) {
+    const [label, setLabel] = useState('');
     const [email, setEmail] = useState('');
     const [role, setRole] = useState<StaffRole>('waiter');
     const [error, setError] = useState<string | null>(null);
@@ -41,19 +54,22 @@ export function InviteStaffModal({
         await onInvite({
             email: trimmedEmail.length > 0 ? trimmedEmail : null,
             role,
+            label: label.trim().length > 0 ? label.trim() : null,
         });
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
             <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
                 <div className="flex items-start justify-between">
                     <div>
-                        <h3 className="text-xl font-bold text-gray-900">Invite Staff</h3>
-                        <p className="text-sm text-gray-500 mt-1">Create an invite link with a role assignment.</p>
+                        <h3 className="text-xl font-bold text-gray-900">Provision Access Key</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Create a setup link with role-based module access.
+                        </p>
                     </div>
                     <button
-                        className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition-all"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-black hover:text-white"
                         onClick={onClose}
                     >
                         <X className="h-5 w-5" />
@@ -62,26 +78,41 @@ export function InviteStaffModal({
 
                 <form onSubmit={handleSubmit} className="mt-5 space-y-3">
                     <input
+                        value={label}
+                        onChange={event => setLabel(event.target.value)}
+                        placeholder="Label (e.g. Kitchen Tablet, Waiter Phone)"
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                    />
+                    <input
                         value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        placeholder="Email (optional)"
+                        onChange={event => setEmail(event.target.value)}
+                        placeholder="Email (optional, for person-specific invite)"
                         className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                     />
                     <select
                         value={role}
-                        onChange={(event) => setRole(event.target.value as StaffRole)}
+                        onChange={event => setRole(event.target.value as StaffRole)}
                         className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
                     >
-                        {ROLE_OPTIONS.map((roleOption) => (
+                        {ROLE_OPTIONS.map(roleOption => (
                             <option key={roleOption} value={roleOption}>
                                 {roleOption}
                             </option>
                         ))}
                     </select>
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+                        <p className="text-xs font-semibold text-blue-700">Target Module</p>
+                        <p className="mt-1 text-xs text-blue-900">
+                            After setup this key redirects to{' '}
+                            <span className="font-semibold">{ROLE_TARGET[role]}</span>.
+                        </p>
+                    </div>
                     {error && <p className="text-xs text-red-600">{error}</p>}
                     {inviteUrl && (
                         <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                            <p className="text-xs font-semibold text-emerald-700">Invite URL</p>
+                            <p className="text-xs font-semibold text-emerald-700">
+                                Provisioning URL
+                            </p>
                             <p className="mt-1 text-xs break-all text-emerald-900">{inviteUrl}</p>
                         </div>
                     )}
@@ -90,16 +121,16 @@ export function InviteStaffModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="h-10 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                            className="h-10 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="h-10 px-4 rounded-xl bg-black text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                            className="h-10 rounded-xl bg-black px-4 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                         >
-                            {loading ? 'Inviting...' : 'Create Invite'}
+                            {loading ? 'Provisioning...' : 'Create Provisioning Link'}
                         </button>
                     </div>
                 </form>

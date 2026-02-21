@@ -75,7 +75,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
 
     useEffect(() => {
         if (!form.staff_id && staff.length > 0) {
-            setForm((prev) => ({ ...prev, staff_id: staff[0].id, role: staff[0].role ?? 'waiter' }));
+            setForm(prev => ({ ...prev, staff_id: staff[0].id, role: staff[0].role ?? 'waiter' }));
         }
     }, [form.staff_id, staff]);
 
@@ -86,16 +86,19 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
         try {
             const start = toDateInput(windowStart);
             const end = toDateInput(plusDays(windowStart, 6));
-            const response = await fetch(`/api/staff/schedule?start_date=${start}&end_date=${end}`, { cache: 'no-store' });
-            
+            const response = await fetch(
+                `/api/staff/schedule?start_date=${start}&end_date=${end}`,
+                { cache: 'no-store' }
+            );
+
             if (!response.ok) {
                 let errorMessage = 'Failed to load schedule.';
                 try {
                     const payload = await response.json();
                     errorMessage = payload?.error ?? errorMessage;
                 } catch {
-                     // non-json error (e.g. 500 html page)
-                     errorMessage = `Error ${response.status}: ${response.statusText}`;
+                    // non-json error (e.g. 500 html page)
+                    errorMessage = `Error ${response.status}: ${response.statusText}`;
                 }
                 throw new Error(errorMessage);
             }
@@ -128,7 +131,11 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
             const date = plusDays(windowStart, index);
             return {
                 key: toDateInput(date),
-                label: date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }),
+                label: date.toLocaleDateString([], {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                }),
             };
         });
     }, [windowStart]);
@@ -136,7 +143,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
     const createShift = async () => {
         setSaving(true);
         try {
-            const selectedStaff = staff.find((member) => member.id === form.staff_id);
+            const selectedStaff = staff.find(member => member.id === form.staff_id);
             const response = await fetch('/api/staff/schedule', {
                 method: 'POST',
                 headers: {
@@ -170,17 +177,19 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
             <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 className="text-xl font-bold text-gray-900">Schedule Calendar</h2>
-                    <p className="text-sm text-gray-500">Plan staff coverage by shift and station.</p>
+                    <p className="text-sm text-gray-500">
+                        Plan staff coverage by shift and station.
+                    </p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => setWindowStart((prev) => plusDays(prev, -7))}
+                        onClick={() => setWindowStart(prev => plusDays(prev, -7))}
                         className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
                     >
                         <ChevronLeft className="mx-auto h-4 w-4" />
                     </button>
                     <button
-                        onClick={() => setWindowStart((prev) => plusDays(prev, 7))}
+                        onClick={() => setWindowStart(prev => plusDays(prev, 7))}
                         className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
                     >
                         <ChevronRight className="mx-auto h-4 w-4" />
@@ -189,23 +198,42 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
             </div>
 
             <div className="mb-6 grid grid-cols-1 gap-2 md:grid-cols-7">
-                {days.map((day) => (
-                    <div key={day.key} className="rounded-2xl border border-gray-100 bg-gray-50 p-3">
-                        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{day.label}</p>
+                {days.map(day => (
+                    <div
+                        key={day.key}
+                        className="rounded-2xl border border-gray-100 bg-gray-50 p-3"
+                    >
+                        <p className="text-xs font-bold tracking-wide text-gray-500 uppercase">
+                            {day.label}
+                        </p>
                         <div className="mt-3 space-y-2">
                             {(groupedByDate.get(day.key) ?? []).length === 0 ? (
                                 <p className="text-xs text-gray-400">No shifts</p>
                             ) : (
-                                (groupedByDate.get(day.key) ?? []).map((shift) => (
-                                    <div key={shift.id} className="rounded-xl border border-gray-100 bg-white p-2">
+                                (groupedByDate.get(day.key) ?? []).map(shift => (
+                                    <div
+                                        key={shift.id}
+                                        className="rounded-xl border border-gray-100 bg-white p-2"
+                                    >
                                         <div className="flex items-center justify-between gap-2">
-                                            <span className="text-xs font-semibold text-gray-800">{timeLabel(shift.start_time)} - {timeLabel(shift.end_time)}</span>
-                                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${shiftStatusClass(shift.status)}`}>
+                                            <span className="text-xs font-semibold text-gray-800">
+                                                {timeLabel(shift.start_time)} -{' '}
+                                                {timeLabel(shift.end_time)}
+                                            </span>
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${shiftStatusClass(shift.status)}`}
+                                            >
                                                 {shift.status}
                                             </span>
                                         </div>
-                                        <p className="mt-1 text-[11px] text-gray-500">Staff: {shift.staff_id.slice(0, 8)}</p>
-                                        {shift.station ? <p className="text-[11px] text-gray-500">Station: {shift.station}</p> : null}
+                                        <p className="mt-1 text-[11px] text-gray-500">
+                                            Staff: {shift.staff_id.slice(0, 8)}
+                                        </p>
+                                        {shift.station ? (
+                                            <p className="text-[11px] text-gray-500">
+                                                Station: {shift.station}
+                                            </p>
+                                        ) : null}
                                     </div>
                                 ))
                             )}
@@ -222,10 +250,12 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-6">
                     <select
                         value={form.staff_id}
-                        onChange={(event) => setForm((prev) => ({ ...prev, staff_id: event.target.value }))}
+                        onChange={event =>
+                            setForm(prev => ({ ...prev, staff_id: event.target.value }))
+                        }
                         className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                     >
-                        {staff.map((member) => (
+                        {staff.map(member => (
                             <option key={member.id} value={member.id}>
                                 {member.user_id.slice(0, 8)} ({member.role})
                             </option>
@@ -234,24 +264,32 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                     <input
                         type="date"
                         value={form.shift_date}
-                        onChange={(event) => setForm((prev) => ({ ...prev, shift_date: event.target.value }))}
+                        onChange={event =>
+                            setForm(prev => ({ ...prev, shift_date: event.target.value }))
+                        }
                         className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                     />
                     <input
                         type="time"
                         value={form.start_time}
-                        onChange={(event) => setForm((prev) => ({ ...prev, start_time: event.target.value }))}
+                        onChange={event =>
+                            setForm(prev => ({ ...prev, start_time: event.target.value }))
+                        }
                         className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                     />
                     <input
                         type="time"
                         value={form.end_time}
-                        onChange={(event) => setForm((prev) => ({ ...prev, end_time: event.target.value }))}
+                        onChange={event =>
+                            setForm(prev => ({ ...prev, end_time: event.target.value }))
+                        }
                         className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                     />
                     <input
                         value={form.station}
-                        onChange={(event) => setForm((prev) => ({ ...prev, station: event.target.value }))}
+                        onChange={event =>
+                            setForm(prev => ({ ...prev, station: event.target.value }))
+                        }
                         placeholder="Station"
                         className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                     />

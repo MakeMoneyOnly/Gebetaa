@@ -89,17 +89,17 @@ export function GuestDirectory({
             <div className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="relative w-full lg:max-w-md">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                         <input
                             value={query}
-                            onChange={(event) => onQueryChange(event.target.value)}
+                            onChange={event => onQueryChange(event.target.value)}
                             placeholder="Search guests by name..."
                             aria-label="Search guests by name"
-                            className="h-11 w-full rounded-xl border border-gray-200 pl-9 pr-3 text-sm outline-none focus:border-gray-400"
+                            className="h-11 w-full rounded-xl border border-gray-200 pr-3 pl-9 text-sm outline-none focus:border-gray-400"
                         />
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {SEGMENTS.map((item) => (
+                        {SEGMENTS.map(item => (
                             <button
                                 key={item.id}
                                 type="button"
@@ -131,7 +131,7 @@ export function GuestDirectory({
                         >
                             All Tags
                         </button>
-                        {topTags.map((tag) => (
+                        {topTags.map(tag => (
                             <button
                                 key={tag}
                                 type="button"
@@ -150,12 +150,19 @@ export function GuestDirectory({
                 )}
             </div>
 
-            {error && <p role="alert" className="text-sm font-semibold text-amber-700">{error}</p>}
+            {error && (
+                <p role="alert" className="text-sm font-semibold text-amber-700">
+                    {error}
+                </p>
+            )}
 
             {loading ? (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {Array.from({ length: 6 }).map((_, index) => (
-                        <div key={index} className="min-h-[180px] animate-pulse rounded-[2rem] bg-white p-5 shadow-sm">
+                        <div
+                            key={index}
+                            className="min-h-[180px] animate-pulse rounded-[2rem] bg-white p-5 shadow-sm"
+                        >
                             <div className="h-4 w-28 rounded bg-gray-100" />
                             <div className="mt-3 h-3 w-20 rounded bg-gray-100" />
                             <div className="mt-8 h-8 w-full rounded bg-gray-100" />
@@ -165,11 +172,13 @@ export function GuestDirectory({
             ) : guests.length === 0 ? (
                 <div className="rounded-[2rem] border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
                     <p className="text-base font-semibold text-gray-700">No guests found.</p>
-                    <p className="mt-1 text-sm text-gray-500">Adjust search and segment filters to continue.</p>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Adjust search and segment filters to continue.
+                    </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {guests.map((guest) => (
+                    {guests.map(guest => (
                         <button
                             key={guest.id}
                             type="button"
@@ -182,7 +191,7 @@ export function GuestDirectory({
                                     <User className="h-5 w-5" />
                                 </div>
                                 {guest.is_vip && (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-wide text-amber-700 uppercase">
                                         <Star className="h-3 w-3" />
                                         VIP
                                     </span>
@@ -191,19 +200,22 @@ export function GuestDirectory({
                             <h3 className="mt-4 text-lg font-bold text-gray-900">
                                 {guest.name?.trim() || `Guest ${guest.id.slice(0, 8)}`}
                             </h3>
-                            <p className="mt-1 text-xs uppercase tracking-wide text-gray-500">{formatGuestLanguage(guest.language)}</p>
+                            <p className="mt-1 text-xs tracking-wide text-gray-500 uppercase">
+                                {formatGuestLanguage(guest.language)}
+                            </p>
 
                             <div className="mt-4 flex items-center gap-3 text-xs text-gray-600">
                                 <span>{guest.visit_count} visits</span>
                                 <span>{formatCurrency(Number(guest.lifetime_value ?? 0))}</span>
                             </div>
                             <p className="mt-1 text-xs text-gray-500">
-                                Last seen {new Date(guest.last_seen_at).toLocaleDateString(DASHBOARD_LOCALE)}
+                                Last seen{' '}
+                                {new Date(guest.last_seen_at).toLocaleDateString(DASHBOARD_LOCALE)}
                             </p>
 
                             {(guest.tags?.length ?? 0) > 0 && (
                                 <div className="mt-3 flex flex-wrap gap-1.5">
-                                    {guest.tags.slice(0, 4).map((tag) => (
+                                    {guest.tags.slice(0, 4).map(tag => (
                                         <span
                                             key={`${guest.id}-${tag}`}
                                             className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-700"

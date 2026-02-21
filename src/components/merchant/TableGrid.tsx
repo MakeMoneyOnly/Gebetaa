@@ -48,11 +48,14 @@ export function TableGrid({
 }: TableGridProps) {
     if (isLoading && tables.length === 0) {
         return (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, index) => (
-                    <div key={index} className="min-h-[240px] rounded-[2.5rem] bg-white p-6 shadow-sm animate-pulse">
+                    <div
+                        key={index}
+                        className="min-h-[240px] animate-pulse rounded-[2.5rem] bg-white p-6 shadow-sm"
+                    >
                         <div className="h-6 w-20 rounded-full bg-gray-100" />
-                        <div className="mt-10 h-16 w-20 rounded-xl bg-gray-100 mx-auto" />
+                        <div className="mx-auto mt-10 h-16 w-20 rounded-xl bg-gray-100" />
                         <div className="mt-8 grid grid-cols-2 gap-3">
                             <div className="h-10 rounded-xl bg-gray-100" />
                             <div className="h-10 rounded-xl bg-gray-100" />
@@ -67,10 +70,12 @@ export function TableGrid({
         return (
             <div className="rounded-[2.5rem] border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
                 <p className="text-base font-semibold text-gray-700">No tables found.</p>
-                <p className="mt-1 text-sm text-gray-500">Create your first table to start seating guests.</p>
+                <p className="mt-1 text-sm text-gray-500">
+                    Create your first table to start seating guests.
+                </p>
                 <button
                     onClick={onAddTable}
-                    className="mt-5 h-11 px-5 rounded-xl bg-black text-white text-sm font-bold hover:bg-gray-800 transition-colors inline-flex items-center gap-2"
+                    className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-gray-800"
                 >
                     <Plus className="h-4 w-4" />
                     Add Table
@@ -80,53 +85,61 @@ export function TableGrid({
     }
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-            {tables.map((table) => (
-                <div key={table.id} className="group relative bg-white rounded-[2.5rem] p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[240px] overflow-hidden">
-                    <div className="flex justify-between items-start relative z-10">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-4">
+            {tables.map(table => (
+                <div
+                    key={table.id}
+                    className="group relative flex min-h-[240px] flex-col justify-between overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
+                >
+                    <div className="relative z-10 flex items-start justify-between">
                         <span
                             className={cn(
-                                'px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm',
+                                'rounded-full px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm',
                                 getStatusColor(table.status)
                             )}
                         >
                             {table.status.replace('_', ' ')}
                         </span>
 
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                             <button
                                 onClick={() => onEditTable(table)}
-                                className="h-8 w-8 rounded-full bg-gray-50 text-gray-400 hover:text-black hover:bg-gray-100 flex items-center justify-center transition-all"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all hover:bg-gray-100 hover:text-black"
                             >
                                 <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => onDeleteTable(table)}
-                                className="h-8 w-8 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-all"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </button>
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-center justify-center my-4 relative z-10">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Table</span>
-                        <div className="text-6xl font-black text-gray-900 tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    <div className="relative z-10 my-4 flex flex-col items-center justify-center">
+                        <span className="mb-2 text-xs font-bold tracking-widest text-gray-400 uppercase">
+                            Table
+                        </span>
+                        <div
+                            className="text-6xl font-black tracking-tighter text-gray-900"
+                            style={{ fontVariantNumeric: 'tabular-nums' }}
+                        >
                             {table.table_number}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 mt-auto relative z-10 pt-4 border-t border-gray-50">
+                    <div className="relative z-10 mt-auto grid grid-cols-2 gap-3 border-t border-gray-50 pt-4">
                         <button
                             onClick={() => onShowQR(table)}
-                            className="h-10 rounded-xl bg-black text-white flex items-center justify-center gap-2 hover:bg-gray-800 transition-all shadow-lg shadow-black/10 text-xs font-bold group-hover:scale-[1.02]"
+                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-black text-xs font-bold text-white shadow-lg shadow-black/10 transition-all group-hover:scale-[1.02] hover:bg-gray-800"
                         >
                             <QrCode className="h-3 w-3" />
                             QR Code
                         </button>
                         <button
                             onClick={() => onRefreshTable(table)}
-                            className="h-10 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center gap-2 hover:bg-gray-200 transition-all text-xs font-bold group-hover:scale-[1.02]"
+                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-gray-100 text-xs font-bold text-gray-600 transition-all group-hover:scale-[1.02] hover:bg-gray-200"
                             title="Refresh Status"
                         >
                             <RefreshCcw className="h-3 w-3" />
@@ -134,18 +147,20 @@ export function TableGrid({
                         </button>
                     </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent to-gray-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent to-gray-50/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                 </div>
             ))}
 
             <button
                 onClick={onAddTable}
-                className="group min-h-[240px] rounded-[2.5rem] border-2 border-dashed border-gray-200 hover:border-black/20 bg-gray-50/50 flex flex-col items-center justify-center gap-4 hover:bg-gray-100 transition-all"
+                className="group flex min-h-[240px] flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 border-dashed border-gray-200 bg-gray-50/50 transition-all hover:border-black/20 hover:bg-gray-100"
             >
-                <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-110">
                     <Plus className="h-8 w-8 text-gray-400 group-hover:text-black" />
                 </div>
-                <span className="font-bold text-gray-400 group-hover:text-black transition-colors">Add New Table</span>
+                <span className="font-bold text-gray-400 transition-colors group-hover:text-black">
+                    Add New Table
+                </span>
             </button>
         </div>
     );

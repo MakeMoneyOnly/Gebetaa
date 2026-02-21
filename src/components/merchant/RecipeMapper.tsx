@@ -35,7 +35,12 @@ interface RecipeMapperProps {
         name: string;
         output_qty: number;
         output_uom: string;
-        ingredients: Array<{ inventory_item_id: string; qty_per_recipe: number; uom: string; waste_pct: number }>;
+        ingredients: Array<{
+            inventory_item_id: string;
+            qty_per_recipe: number;
+            uom: string;
+            waste_pct: number;
+        }>;
     }) => Promise<void>;
 }
 
@@ -61,7 +66,7 @@ export function RecipeMapper({
         if (!Number.isFinite(ingredientQtyValue) || ingredientQtyValue <= 0) return;
         if (!Number.isFinite(wastePct) || wastePct < 0 || wastePct > 100) return;
 
-        const selectedItem = inventoryOptions.find((item) => item.id === ingredientId);
+        const selectedItem = inventoryOptions.find(item => item.id === ingredientId);
         if (!selectedItem) return;
 
         await onCreateRecipe({
@@ -91,7 +96,9 @@ export function RecipeMapper({
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900">Recipe Mapper</h3>
-                    <p className="text-sm text-gray-500">Map menu output portions to inventory ingredients for cost tracking.</p>
+                    <p className="text-sm text-gray-500">
+                        Map menu output portions to inventory ingredients for cost tracking.
+                    </p>
                 </div>
                 <BookOpen className="h-5 w-5 text-gray-500" />
             </div>
@@ -99,30 +106,30 @@ export function RecipeMapper({
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-6">
                 <input
                     value={name}
-                    onChange={(event) => setName(event.target.value)}
+                    onChange={event => setName(event.target.value)}
                     placeholder="Recipe name"
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 />
                 <input
                     value={outputQty}
-                    onChange={(event) => setOutputQty(event.target.value)}
+                    onChange={event => setOutputQty(event.target.value)}
                     inputMode="decimal"
                     placeholder="Output qty"
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 />
                 <input
                     value={outputUom}
-                    onChange={(event) => setOutputUom(event.target.value)}
+                    onChange={event => setOutputUom(event.target.value)}
                     placeholder="Output UOM"
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 />
                 <select
                     value={ingredientId}
-                    onChange={(event) => setIngredientId(event.target.value)}
+                    onChange={event => setIngredientId(event.target.value)}
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 >
                     <option value="">Select ingredient</option>
-                    {inventoryOptions.map((item) => (
+                    {inventoryOptions.map(item => (
                         <option key={item.id} value={item.id}>
                             {item.name}
                         </option>
@@ -130,7 +137,7 @@ export function RecipeMapper({
                 </select>
                 <input
                     value={ingredientQty}
-                    onChange={(event) => setIngredientQty(event.target.value)}
+                    onChange={event => setIngredientQty(event.target.value)}
                     inputMode="decimal"
                     placeholder="Ingredient qty"
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
@@ -138,7 +145,7 @@ export function RecipeMapper({
                 <div className="flex gap-2">
                     <input
                         value={ingredientWastePct}
-                        onChange={(event) => setIngredientWastePct(event.target.value)}
+                        onChange={event => setIngredientWastePct(event.target.value)}
                         inputMode="decimal"
                         placeholder="Waste %"
                         className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
@@ -149,7 +156,11 @@ export function RecipeMapper({
                         disabled={creating}
                         className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-semibold text-white disabled:opacity-50"
                     >
-                        {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        {creating ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Plus className="h-4 w-4" />
+                        )}
                         Map
                     </button>
                 </div>
@@ -161,21 +172,19 @@ export function RecipeMapper({
                 <p className="mt-4 text-sm text-gray-500">No recipes mapped yet.</p>
             ) : (
                 <div className="mt-4 space-y-2">
-                    {recipes.map((recipe) => (
+                    {recipes.map(recipe => (
                         <div key={recipe.id} className="rounded-xl border border-gray-100 p-3">
                             <p className="text-sm font-semibold text-gray-900">
-                                {recipe.name} · {Number(recipe.output_qty).toFixed(2)} {recipe.output_uom}
+                                {recipe.name} · {Number(recipe.output_qty).toFixed(2)}{' '}
+                                {recipe.output_uom}
                             </p>
                             <div className="mt-2 space-y-1">
-                                {recipe.ingredients.map((ingredient) => (
+                                {recipe.ingredients.map(ingredient => (
                                     <p key={ingredient.id} className="text-xs text-gray-600">
-                                        Ingredient {ingredient.inventory_item_id.slice(0, 8)} ·
-                                        {' '}
-                                        {Number(ingredient.qty_per_recipe).toFixed(2)}
-                                        {' '}
-                                        {ingredient.uom}
-                                        {' '}
-                                        ({Number(ingredient.waste_pct).toFixed(1)}% waste)
+                                        Ingredient {ingredient.inventory_item_id.slice(0, 8)} ·{' '}
+                                        {Number(ingredient.qty_per_recipe).toFixed(2)}{' '}
+                                        {ingredient.uom} ({Number(ingredient.waste_pct).toFixed(1)}%
+                                        waste)
                                     </p>
                                 ))}
                             </div>

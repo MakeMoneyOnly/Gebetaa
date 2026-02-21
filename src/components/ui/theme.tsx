@@ -63,7 +63,7 @@ export function Theme({
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    'flex items-center gap-2 rounded-full bg-white dark:bg-black p-2 md:px-4 md:py-2 backdrop-blur-md transition-all hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 shadow-lg shadow-black/5 dark:shadow-none',
+                    'flex items-center gap-2 rounded-full bg-white p-2 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-black/5 active:scale-95 md:px-4 md:py-2 dark:bg-black dark:shadow-none dark:hover:bg-white/10',
                     'text-foreground dark:text-white',
                     sizeClasses[size]
                 )}
@@ -76,17 +76,20 @@ export function Theme({
                         {labels[currentTheme as keyof typeof labels] || 'System'}
                     </span>
                 )}
-                <ChevronDown className={cn('opacity-60 dark:opacity-40 transition-transform', isOpen && 'rotate-180', 'h-3 w-3')} />
+                <ChevronDown
+                    className={cn(
+                        'opacity-60 transition-transform dark:opacity-40',
+                        isOpen && 'rotate-180',
+                        'h-3 w-3'
+                    )}
+                />
             </button>
 
             {isOpen && (
                 <>
-                    <div
-                        className="fixed inset-0 z-[100]"
-                        onClick={() => setIsOpen(false)}
-                    />
-                    <div className="absolute right-0 mt-2 z-[101] min-w-[140px] overflow-hidden rounded-2xl bg-white dark:bg-black p-1 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)] animate-in fade-in zoom-in-95">
-                        {themes.map((t) => (
+                    <div className="fixed inset-0 z-[100]" onClick={() => setIsOpen(false)} />
+                    <div className="animate-in fade-in zoom-in-95 absolute right-0 z-[101] mt-2 min-w-[140px] overflow-hidden rounded-2xl bg-white p-1 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)] dark:bg-black">
+                        {themes.map(t => (
                             <button
                                 key={t}
                                 onClick={() => {
@@ -96,13 +99,11 @@ export function Theme({
                                 className={cn(
                                     'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-all hover:bg-black/5 dark:hover:bg-white/10',
                                     theme === t
-                                        ? 'text-foreground dark:text-white bg-black/5 dark:bg-white/5'
+                                        ? 'text-foreground bg-black/5 dark:bg-white/5 dark:text-white'
                                         : 'text-foreground/50 dark:text-white/40'
                                 )}
                             >
-                                <div className="h-4 w-4">
-                                    {icons[t as keyof typeof icons]}
-                                </div>
+                                <div className="h-4 w-4">{icons[t as keyof typeof icons]}</div>
                                 {labels[t as keyof typeof labels]}
                             </button>
                         ))}

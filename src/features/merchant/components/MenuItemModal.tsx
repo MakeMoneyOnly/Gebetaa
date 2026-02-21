@@ -16,7 +16,13 @@ interface MenuItemModalProps {
     onSuccess: () => void;
 }
 
-export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess }: MenuItemModalProps) {
+export function MenuItemModal({
+    isOpen,
+    onClose,
+    category,
+    itemToEdit,
+    onSuccess,
+}: MenuItemModalProps) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
@@ -66,16 +72,14 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                 .upload(filePath, file);
 
             if (uploadError) {
-                // If bucket doesn't exist, this fails. 
+                // If bucket doesn't exist, this fails.
                 // We should ideally create bucket or handle it.
                 // Assuming "menu-items" bucket exists public.
                 throw uploadError;
             }
 
             // 2. Get Public URL
-            const { data } = supabase.storage
-                .from('menu-items')
-                .getPublicUrl(filePath);
+            const { data } = supabase.storage.from('menu-items').getPublicUrl(filePath);
 
             setImageUrl(data.publicUrl);
         } catch (error: any) {
@@ -105,12 +109,11 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
             const itemData = {
                 category_id: category?.id || itemToEdit?.category_id,
 
-
                 name,
                 name_am: nameAm || null,
                 description: description || null,
                 price: parsedPrice,
-                image_url: imageUrl || null
+                image_url: imageUrl || null,
             };
 
             if (itemToEdit) {
@@ -120,9 +123,7 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                     .eq('id', itemToEdit.id);
                 if (error) throw error;
             } else {
-                const { error } = await supabase
-                    .from('menu_items')
-                    .insert([itemData]);
+                const { error } = await supabase.from('menu_items').insert([itemData]);
                 if (error) throw error;
             }
 
@@ -139,42 +140,48 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-lg p-6 relative animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <Card className="animate-in fade-in zoom-in relative max-h-[90vh] w-full max-w-lg overflow-y-auto p-6 duration-200">
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute right-4 top-4 h-8 w-8 p-0"
+                    className="absolute top-4 right-4 h-8 w-8 p-0"
                     onClick={onClose}
                 >
                     <X className="h-4 w-4" />
                 </Button>
 
-                <h2 className="text-xl font-bold text-text-primary mb-6">
+                <h2 className="text-text-primary mb-6 text-xl font-bold">
                     {itemToEdit ? 'Edit Item' : `Add Item to ${category?.name}`}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Image Upload */}
-                    <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed border-surface-200 rounded-xl bg-surface-50">
+                    <div className="border-surface-200 bg-surface-50 flex flex-col items-center gap-4 rounded-xl border-2 border-dashed p-4">
                         {imageUrl ? (
                             <div className="relative h-32 w-full">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={imageUrl} alt="Preview" className="h-full w-full object-contain rounded-lg" />
+                                <img
+                                    src={imageUrl}
+                                    alt="Preview"
+                                    className="h-full w-full rounded-lg object-contain"
+                                />
                                 <button
                                     type="button"
                                     onClick={() => setImageUrl('')}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                                    className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white shadow-md hover:bg-red-600"
                                 >
                                     <X className="h-3 w-3" />
                                 </button>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center">
-                                <div className="p-3 bg-surface-100 rounded-full mb-2">
-                                    <ImageIcon className="h-6 w-6 text-text-tertiary" />
+                                <div className="bg-surface-100 mb-2 rounded-full p-3">
+                                    <ImageIcon className="text-text-tertiary h-6 w-6" />
                                 </div>
-                                <span className="text-sm text-text-secondary">Upload Item Image</span>
+                                <span className="text-text-secondary text-sm">
+                                    Upload Item Image
+                                </span>
                             </div>
                         )}
 
@@ -183,11 +190,16 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                                 type="file"
                                 accept="image/*"
                                 onChange={handleImageUpload}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                                 disabled={uploading}
                             />
-                            <Button type="button" variant="secondary" size="sm" isLoading={uploading}>
-                                <Upload className="h-4 w-4 mr-2" />
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                isLoading={uploading}
+                            >
+                                <Upload className="mr-2 h-4 w-4" />
                                 {uploading ? 'Uploading...' : 'Choose File'}
                             </Button>
                         </div>
@@ -195,46 +207,54 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-text-secondary">Name (English)</label>
+                            <label className="text-text-secondary text-sm font-medium">
+                                Name (English)
+                            </label>
                             <input
                                 required
                                 value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-surface-200 bg-surface-50 focus:border-brand-crimson focus:outline-none"
+                                onChange={e => setName(e.target.value)}
+                                className="border-surface-200 bg-surface-50 focus:border-brand-crimson w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 placeholder="e.g. Burger"
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-text-secondary">Name (Amharic)</label>
+                            <label className="text-text-secondary text-sm font-medium">
+                                Name (Amharic)
+                            </label>
                             <input
                                 value={nameAm}
-                                onChange={(e) => setNameAm(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-surface-200 bg-surface-50 focus:border-brand-crimson focus:outline-none font-amharic"
+                                onChange={e => setNameAm(e.target.value)}
+                                className="border-surface-200 bg-surface-50 focus:border-brand-crimson font-amharic w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 placeholder="e.g. በርገር"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-text-secondary">Price (ETB)</label>
+                        <label className="text-text-secondary text-sm font-medium">
+                            Price (ETB)
+                        </label>
                         <input
                             required
                             type="number"
                             min="0"
                             step="0.01"
                             value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-surface-200 bg-surface-50 focus:border-brand-crimson focus:outline-none"
+                            onChange={e => setPrice(e.target.value)}
+                            className="border-surface-200 bg-surface-50 focus:border-brand-crimson w-full rounded-lg border px-3 py-2 focus:outline-none"
                             placeholder="0.00"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-text-secondary">Description</label>
+                        <label className="text-text-secondary text-sm font-medium">
+                            Description
+                        </label>
                         <textarea
                             value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-surface-200 bg-surface-50 focus:border-brand-crimson focus:outline-none min-h-[100px]"
+                            onChange={e => setDescription(e.target.value)}
+                            className="border-surface-200 bg-surface-50 focus:border-brand-crimson min-h-[100px] w-full rounded-lg border px-3 py-2 focus:outline-none"
                             placeholder="Describe the dish..."
                         />
                     </div>
@@ -245,11 +265,15 @@ export function MenuItemModal({ isOpen, onClose, category, itemToEdit, onSuccess
                         </div>
                     )}
 
-                    <div className="pt-4 flex gap-3">
+                    <div className="flex gap-3 pt-4">
                         <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>
                             Cancel
                         </Button>
-                        <Button type="submit" className="flex-1 bg-brand-crimson text-white hover:bg-brand-crimson-hover" isLoading={loading}>
+                        <Button
+                            type="submit"
+                            className="bg-brand-crimson hover:bg-brand-crimson-hover flex-1 text-white"
+                            isLoading={loading}
+                        >
                             {itemToEdit ? 'Save Changes' : 'Create Item'}
                         </Button>
                     </div>

@@ -16,38 +16,40 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
     if (staff.length === 0) return null;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {staff.map((member) => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {staff.map(member => (
                 <div
                     key={member.id}
-                    className="bg-white p-6 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col gap-6 relative overflow-hidden"
+                    className="group relative flex flex-col gap-6 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
                 >
                     <div className="flex items-start justify-between">
-                        <div className="h-16 w-16 rounded-[1.5rem] flex items-center justify-center text-xl font-bold shadow-sm bg-gray-50 text-gray-700 ring-4 ring-white">
-                            {(member.full_name || member.email || member.user_id).slice(0, 2).toUpperCase()}
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-gray-50 text-xl font-bold text-gray-700 shadow-sm ring-4 ring-white">
+                            {(member.full_name || member.email || member.user_id)
+                                .slice(0, 2)
+                                .toUpperCase()}
                         </div>
                         <button
                             onClick={() => onEditRole(member)}
-                            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 hover:text-black transition-colors"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-50 hover:text-black"
                         >
                             <MoreHorizontal className="h-5 w-5" />
                         </button>
                     </div>
 
                     <div>
-                        <h3 className="font-bold text-lg text-gray-900 tracking-tight">
+                        <h3 className="text-lg font-bold tracking-tight text-gray-900">
                             {member.full_name
                                 ? member.full_name
                                 : member.first_name
-                                    ? `${member.first_name} ${member.last_name ?? ''}`.trim()
-                                    : member.email
-                                        ? member.email.split('@')[0]
-                                        : `User ${member.user_id.slice(0, 6)}`}
+                                  ? `${member.first_name} ${member.last_name ?? ''}`.trim()
+                                  : member.email
+                                    ? member.email.split('@')[0]
+                                    : `User ${member.user_id.slice(0, 6)}`}
                         </h3>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="mt-2 flex items-center gap-2">
                             <span
                                 className={cn(
-                                    'px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider',
+                                    'rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase',
                                     ROLE_BADGE[member.role] ?? 'bg-gray-100 text-gray-600'
                                 )}
                             >
@@ -55,7 +57,7 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
                             </span>
                             <span
                                 className={cn(
-                                    'px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider',
+                                    'rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase',
                                     member.is_active === false
                                         ? 'bg-gray-100 text-gray-600'
                                         : 'bg-emerald-50 text-emerald-700'
@@ -64,15 +66,18 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
                                 {member.is_active === false ? 'inactive' : 'active'}
                             </span>
                         </div>
-                        <p className="text-xs text-gray-400 font-medium mt-3">
-                            Joined {member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}
+                        <p className="mt-3 text-xs font-medium text-gray-400">
+                            Joined{' '}
+                            {member.created_at
+                                ? new Date(member.created_at).toLocaleDateString()
+                                : 'N/A'}
                         </p>
                     </div>
 
-                    <div className="mt-auto pt-4 border-t border-dashed border-gray-100 flex items-center justify-between gap-2 transition-opacity duration-200">
+                    <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed border-gray-100 pt-4 transition-opacity duration-200">
                         {member.role === 'owner' ? (
-                            <div className="w-full flex justify-center">
-                                <span className="text-xs font-bold text-gray-400 px-3 py-1 bg-gray-50 rounded-lg">
+                            <div className="flex w-full justify-center">
+                                <span className="rounded-lg bg-gray-50 px-3 py-1 text-xs font-bold text-gray-400">
                                     Owner Account (Protected)
                                 </span>
                             </div>
@@ -81,7 +86,7 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
                                 <button
                                     type="button"
                                     onClick={() => onEditRole(member)}
-                                    className="h-9 px-3 rounded-xl bg-gray-50 text-xs font-bold text-gray-700 hover:bg-gray-100 flex-1 shadow-sm"
+                                    className="h-9 flex-1 rounded-xl bg-gray-50 px-3 text-xs font-bold text-gray-700 shadow-sm hover:bg-gray-100"
                                 >
                                     Edit Role
                                 </button>
@@ -90,7 +95,7 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
                                     disabled={updatingId === member.id}
                                     onClick={() => onToggleActive(member)}
                                     className={cn(
-                                        'h-9 px-3 rounded-xl text-xs font-bold disabled:opacity-50 flex-1 transition-colors shadow-sm',
+                                        'h-9 flex-1 rounded-xl px-3 text-xs font-bold shadow-sm transition-colors disabled:opacity-50',
                                         member.is_active === false
                                             ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                                             : 'bg-white text-gray-700 hover:bg-red-50 hover:text-red-600'
@@ -99,8 +104,8 @@ export function StaffGrid({ staff, onEditRole, onToggleActive, updatingId }: Vie
                                     {updatingId === member.id
                                         ? '...'
                                         : member.is_active === false
-                                            ? 'Activate'
-                                            : 'Deactivate'}
+                                          ? 'Activate'
+                                          : 'Deactivate'}
                                 </button>
                             </>
                         )}

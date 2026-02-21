@@ -16,17 +16,17 @@ export function ServiceWorkerCleanup() {
         const cleanupServiceWorkers = async () => {
             try {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                
+
                 if (registrations.length > 0) {
                     console.debug(
                         `[ServiceWorkerCleanup] Unregistering ${registrations.length} service worker(s) in development mode`
                     );
-                    
+
                     for (const registration of registrations) {
                         await registration.unregister();
                     }
                 }
-                
+
                 // Also clear any cached service worker data
                 if ('caches' in window) {
                     const cacheNames = await caches.keys();

@@ -108,22 +108,22 @@ describe('OrdersKanbanBoard', () => {
     it('calls onOpenDetails when Details button is clicked', async () => {
         const onOpenDetails = vi.fn();
         render(<OrdersKanbanBoard {...defaultProps} onOpenDetails={onOpenDetails} />);
-        
+
         const detailsButtons = screen.getAllByText('Details');
         fireEvent.click(detailsButtons[0]);
-        
+
         expect(onOpenDetails).toHaveBeenCalled();
     });
 
     it('calls onToggleOrder when checkbox is clicked', async () => {
         const onToggleOrder = vi.fn();
         render(<OrdersKanbanBoard {...defaultProps} onToggleOrder={onToggleOrder} />);
-        
+
         // There are multiple checkboxes (one per order), get the first one
         const checkboxes = screen.getAllByRole('checkbox');
         expect(checkboxes.length).toBeGreaterThan(0);
         fireEvent.click(checkboxes[0]);
-        
+
         expect(onToggleOrder).toHaveBeenCalled();
     });
 
@@ -140,7 +140,7 @@ describe('OrdersKanbanBoard', () => {
     it('disables next status button when no next status', () => {
         const getNextStatus = vi.fn(() => null);
         render(<OrdersKanbanBoard {...defaultProps} getNextStatus={getNextStatus} />);
-        
+
         const doneButtons = screen.getAllByText('Done');
         expect(doneButtons[0]).toBeDisabled();
     });

@@ -14,8 +14,9 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard(props: RoleGuardProps) {
-    const bypassForE2E = typeof window !== 'undefined'
-        && window.localStorage.getItem('__e2e_bypass_auth') === 'true';
+    const bypassForE2E =
+        typeof window !== 'undefined' &&
+        window.localStorage.getItem('__e2e_bypass_auth') === 'true';
 
     if (bypassForE2E) {
         return <>{props.children}</>;
@@ -50,19 +51,23 @@ function RoleGuardWithAuth({ children, allowedRoles, restaurantId, fallback }: R
     }
 
     if (!user || !role || !allowedRoles.includes(role)) {
-        return fallback || (
-            <div className="flex h-screen w-full flex-col items-center justify-center bg-gray-50 p-6 text-center">
-                <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>
-                <p className="mt-2 text-gray-500">You do not have permission to view this page.</p>
-                <div className="mt-6">
-                    <button
-                        onClick={() => router.push('/')}
-                        className="rounded-xl bg-black px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-gray-800 transition-all"
-                    >
-                        Go Home
-                    </button>
+        return (
+            fallback || (
+                <div className="flex h-screen w-full flex-col items-center justify-center bg-gray-50 p-6 text-center">
+                    <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>
+                    <p className="mt-2 text-gray-500">
+                        You do not have permission to view this page.
+                    </p>
+                    <div className="mt-6">
+                        <button
+                            onClick={() => router.push('/')}
+                            className="rounded-xl bg-black px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-gray-800"
+                        >
+                            Go Home
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )
         );
     }
 

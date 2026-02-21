@@ -35,7 +35,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const savedCart = localStorage.getItem('gebeta-cart');
         if (savedCart) {
             try {
-                 
                 setItems(JSON.parse(savedCart));
             } catch (e) {
                 console.error('Failed to parse cart', e);

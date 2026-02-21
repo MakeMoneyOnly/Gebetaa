@@ -29,7 +29,7 @@ interface ChannelHealthBoardProps {
 }
 
 function toLabel(value: string) {
-    return value.replace(/_/g, ' ').replace(/\b\w/g, (match) => match.toUpperCase());
+    return value.replace(/_/g, ' ').replace(/\b\w/g, match => match.toUpperCase());
 }
 
 export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoardProps) {
@@ -37,7 +37,10 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
         return (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="h-[180px] animate-pulse rounded-[2rem] bg-white shadow-sm" />
+                    <div
+                        key={index}
+                        className="h-[180px] animate-pulse rounded-[2rem] bg-white shadow-sm"
+                    />
                 ))}
             </div>
         );
@@ -45,7 +48,10 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
 
     if (error) {
         return (
-            <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+            <div
+                role="alert"
+                className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800"
+            >
                 {error}
             </div>
         );
@@ -74,7 +80,17 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
                     label="Healthy Partners"
                     subLabel="Operational Status"
                     tone="green"
-                    progress={Math.min(20, Math.max(0, Math.round(((totals?.connected_partners ?? 0) / (totals?.delivery_partners || 1)) * 20)))}
+                    progress={Math.min(
+                        20,
+                        Math.max(
+                            0,
+                            Math.round(
+                                ((totals?.connected_partners ?? 0) /
+                                    (totals?.delivery_partners || 1)) *
+                                    20
+                            )
+                        )
+                    )}
                     targetLabel={`Total: ${totals?.delivery_partners ?? 0}`}
                     currentLabel={`Online: ${totals?.connected_partners ?? 0}`}
                 />
@@ -85,7 +101,10 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
                     label="External Orders"
                     subLabel="Last 24 Hours"
                     tone="purple"
-                    progress={Math.min(20, Math.max(1, Math.round(((totals?.external_orders_24h ?? 0) / 100) * 20)))}
+                    progress={Math.min(
+                        20,
+                        Math.max(1, Math.round(((totals?.external_orders_24h ?? 0) / 100) * 20))
+                    )}
                     targetLabel="Target: 100+"
                     currentLabel="Today"
                 />
@@ -107,7 +126,9 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
                     <h3 className="text-sm font-bold text-gray-900">Order Status Mix</h3>
                     <div className="mt-3 flex flex-wrap gap-2">
                         {Object.entries(summary?.statuses ?? {}).length === 0 ? (
-                            <p className="text-sm text-gray-500">No external order status data yet.</p>
+                            <p className="text-sm text-gray-500">
+                                No external order status data yet.
+                            </p>
                         ) : (
                             Object.entries(summary?.statuses ?? {}).map(([status, count]) => (
                                 <span
@@ -127,16 +148,23 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
                         {(summary?.partners ?? []).length === 0 ? (
                             <p className="text-sm text-gray-500">No delivery partners connected.</p>
                         ) : (
-                            (summary?.partners ?? []).map((partner) => (
-                                <div key={partner.id} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
-                                    <p className="text-sm font-semibold text-gray-900">{toLabel(partner.provider)}</p>
-                                    <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
-                                        partner.status === 'connected'
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : partner.status === 'error'
-                                                ? 'bg-amber-100 text-amber-700'
-                                                : 'bg-gray-100 text-gray-700'
-                                    }`}>
+                            (summary?.partners ?? []).map(partner => (
+                                <div
+                                    key={partner.id}
+                                    className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2"
+                                >
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {toLabel(partner.provider)}
+                                    </p>
+                                    <span
+                                        className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                                            partner.status === 'connected'
+                                                ? 'bg-emerald-100 text-emerald-700'
+                                                : partner.status === 'error'
+                                                  ? 'bg-amber-100 text-amber-700'
+                                                  : 'bg-gray-100 text-gray-700'
+                                        }`}
+                                    >
                                         {toLabel(partner.status)}
                                     </span>
                                 </div>

@@ -16,7 +16,8 @@ const FALLBACK_RECOMMENDATIONS: DishItem[] = [
         id: 'fallback-1',
         title: 'Signature Pasta',
         price: 180,
-        imageUrl: 'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Creamy%20Pesto%20Pasta.webp',
+        imageUrl:
+            'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Creamy%20Pesto%20Pasta.webp',
         categories: { name: 'Pizza', section: 'food' },
         rating: 4.8,
         shopName: 'Pizza',
@@ -26,7 +27,8 @@ const FALLBACK_RECOMMENDATIONS: DishItem[] = [
         id: 'fallback-2',
         title: 'Garden Fresh Salad',
         price: 150,
-        imageUrl: 'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Truffle%20Burger.webp',
+        imageUrl:
+            'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Truffle%20Burger.webp',
         categories: { name: 'Vegan', section: 'food' },
         rating: 4.6,
         shopName: 'Vegan',
@@ -36,7 +38,8 @@ const FALLBACK_RECOMMENDATIONS: DishItem[] = [
         id: 'fallback-3',
         title: 'Crispy Wings',
         price: 220,
-        imageUrl: 'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Spicy%20Tonkotsu.webp',
+        imageUrl:
+            'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Spicy%20Tonkotsu.webp',
         categories: { name: 'Burger', section: 'food' },
         rating: 4.9,
         shopName: 'Burger',
@@ -46,7 +49,8 @@ const FALLBACK_RECOMMENDATIONS: DishItem[] = [
         id: 'fallback-4',
         title: 'Berry Smoothie',
         price: 110,
-        imageUrl: 'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Rainbow%20Sushi%20Platter.webp',
+        imageUrl:
+            'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Rainbow%20Sushi%20Platter.webp',
         categories: { name: 'Juice', section: 'drinks' },
         rating: 4.7,
         shopName: 'Juice',
@@ -56,7 +60,8 @@ const FALLBACK_RECOMMENDATIONS: DishItem[] = [
         id: 'fallback-5',
         title: 'Traditional Kitfo',
         price: 190,
-        imageUrl: 'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Honey-Glazed%20Salmon.webp',
+        imageUrl:
+            'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Honey-Glazed%20Salmon.webp',
         categories: { name: 'Traditional', section: 'food' },
         rating: 5.0,
         shopName: 'Traditional',
@@ -71,16 +76,17 @@ export function DishRecommendations({
     trigger,
 }: DishRecommendationsProps) {
     // Use provided recommendations or fallback
-    const displayRecs = (recommendations && recommendations.length > 0)
-        ? recommendations
-        : FALLBACK_RECOMMENDATIONS;
+    const displayRecs =
+        recommendations && recommendations.length > 0 ? recommendations : FALLBACK_RECOMMENDATIONS;
 
     return (
-        <div className="mb-12 border-t border-gray-100 pt-8 mt-4 bg-gray-50/50 -mx-6 px-6">
-            <h3 className="mb-5 font-manrope text-xl font-black tracking-tighter text-black">You might also like</h3>
+        <div className="-mx-6 mt-4 mb-12 border-t border-gray-100 bg-gray-50/50 px-6 pt-8">
+            <h3 className="font-manrope mb-5 text-xl font-black tracking-tighter text-black">
+                You might also like
+            </h3>
 
             <div className="no-scrollbar -mx-6 flex gap-4 overflow-x-auto px-6 pb-6">
-                {displayRecs.map((rec) => (
+                {displayRecs.map(rec => (
                     <div key={rec.id} className="w-[180px] shrink-0">
                         <MenuCard
                             item={{

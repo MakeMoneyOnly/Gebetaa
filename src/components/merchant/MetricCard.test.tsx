@@ -45,11 +45,7 @@ describe('MetricCard', () => {
 
     it('renders target and current labels when provided', () => {
         render(
-            <MetricCard
-                {...defaultProps}
-                targetLabel="Target: 2000"
-                currentLabel="Current: 1250"
-            />
+            <MetricCard {...defaultProps} targetLabel="Target: 2000" currentLabel="Current: 1250" />
         );
         expect(screen.getByText('Target: 2000')).toBeInTheDocument();
         expect(screen.getByText('Current: 1250')).toBeInTheDocument();

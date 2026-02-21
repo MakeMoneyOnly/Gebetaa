@@ -49,10 +49,10 @@ export function CommandCenterHeader({
                 <div className="flex items-center gap-2">
                     <select
                         value={range}
-                        onChange={(event) => onRangeChange(event.target.value as CommandCenterRange)}
-                        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold capitalize text-gray-700 outline-none focus:border-gray-400"
+                        onChange={event => onRangeChange(event.target.value as CommandCenterRange)}
+                        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 capitalize outline-none focus:border-gray-400"
                     >
-                        {RANGE_OPTIONS.map((option) => (
+                        {RANGE_OPTIONS.map(option => (
                             <option key={option} value={option}>
                                 {option}
                             </option>
@@ -72,14 +72,21 @@ export function CommandCenterHeader({
 
             <div className="flex flex-wrap items-center gap-3">
                 <span
-                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${hasSyncError
-                        ? 'bg-rose-100 text-rose-700'
-                        : isStale
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-emerald-100 text-emerald-700'
-                        }`}
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase ${
+                        hasSyncError
+                            ? 'bg-rose-100 text-rose-700'
+                            : isStale
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                    }`}
                 >
-                    {hasSyncError ? <WifiOff className="h-3.5 w-3.5" /> : isStale ? <AlertTriangle className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
+                    {hasSyncError ? (
+                        <WifiOff className="h-3.5 w-3.5" />
+                    ) : isStale ? (
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                    ) : (
+                        <Wifi className="h-3.5 w-3.5" />
+                    )}
                     {hasSyncError ? 'Sync Failed' : isStale ? 'Stale Data' : 'In Sync'}
                 </span>
                 <span className="text-xs font-semibold text-gray-500">

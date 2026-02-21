@@ -17,19 +17,17 @@ export function DishCartFooter({
     onAddToCart,
 }: DishCartFooterProps) {
     return (
-        <div className="z-20 border-t border-white/10 bg-[#0a0a0a] p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
+        <div className="bg-background z-20 border-t border-black/5 p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-5px_30px_rgba(0,0,0,0.05)] dark:border-white/10 dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
             <div className="flex items-center gap-4">
                 {/* Quantity Controls */}
-                <div className="flex h-14 items-center gap-4 rounded-full bg-white/5 border border-white/10 p-2 px-4 text-white">
+                <div className="flex h-14 items-center gap-4 rounded-full border border-black/10 bg-black/5 p-2 px-4 text-black dark:border-white/10 dark:bg-white/5 dark:text-white">
                     <button
                         onClick={onDecrement}
-                        className="text-white flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-transform active:scale-90"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-black/10 text-black transition-transform hover:opacity-80 active:scale-90 dark:bg-white/10 dark:text-white"
                     >
                         <Minus size={16} />
                     </button>
-                    <span className="w-6 text-center text-xl font-black">
-                        {quantity}
-                    </span>
+                    <span className="w-6 text-center text-xl font-black">{quantity}</span>
                     <button
                         onClick={onIncrement}
                         className="bg-brand-crimson flex h-8 w-8 items-center justify-center rounded-full text-white shadow-sm transition-transform active:scale-90"
@@ -41,7 +39,7 @@ export function DishCartFooter({
                 {/* Add to Cart Button */}
                 <button
                     onClick={onAddToCart}
-                    className="bg-white hover:bg-white/90 text-black flex h-14 flex-1 items-center justify-center gap-2 rounded-full text-lg font-bold shadow-lg transition-transform active:scale-95"
+                    className="bg-brand-crimson hover:bg-brand-crimson/90 flex h-14 flex-1 items-center justify-center gap-2 rounded-full text-lg font-bold text-white shadow-lg transition-transform active:scale-95"
                 >
                     Add to Order
                 </button>

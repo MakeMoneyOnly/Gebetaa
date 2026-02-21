@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
-
 export const LoginForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -52,14 +51,13 @@ export const LoginForm = () => {
 
             const role = staffData?.role;
 
-            if (role === 'kitchen') {
-                router.push('/kds');
+            if (role === 'kitchen' || role === 'bar') {
+                router.push('/kds/display');
             } else if (role === 'waiter') {
-                router.push('/staff'); // Future: Staff App
+                router.push('/pos/mobile');
             } else {
-                router.push('/merchant'); // Admin/Owner/Manager
+                router.push('/merchant');
             }
-
         } catch (err: any) {
             setError(err.message || 'Failed to sign in');
         } finally {
@@ -68,59 +66,63 @@ export const LoginForm = () => {
     };
 
     return (
-        <Card className="w-full max-w-md p-8 bg-surface-0/80 backdrop-blur-xl border border-surface-200 shadow-2xl">
-            <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-brand-crimson mb-2">Gebeta</h1>
+        <Card className="bg-surface-0/80 border-surface-200 w-full max-w-md border p-8 shadow-2xl backdrop-blur-xl">
+            <div className="mb-8 text-center">
+                <h1 className="text-brand-crimson mb-2 text-3xl font-bold">Gebeta</h1>
                 <p className="text-text-secondary">Restaurant Operations Platform</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-text-primary">Email</label>
+                    <label className="text-text-primary text-sm font-medium">Email</label>
                     <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-5 w-5 text-text-tertiary" />
+                        <Mail className="text-text-tertiary absolute top-3 left-3 h-5 w-5" />
                         <input
                             type="email"
                             required
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full rounded-lg border border-surface-200 bg-surface-50 pl-10 pr-4 py-2.5 text-text-primary focus:border-brand-crimson focus:ring-1 focus:ring-brand-crimson outline-none transition-all"
+                            onChange={e => setEmail(e.target.value)}
+                            className="border-surface-200 bg-surface-50 text-text-primary focus:border-brand-crimson focus:ring-brand-crimson w-full rounded-lg border py-2.5 pr-4 pl-10 transition-all outline-none focus:ring-1"
                             placeholder="name@restaurant.com"
                         />
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-text-primary">Password</label>
+                    <label className="text-text-primary text-sm font-medium">Password</label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-5 w-5 text-text-tertiary" />
+                        <Lock className="text-text-tertiary absolute top-3 left-3 h-5 w-5" />
                         <input
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full rounded-lg border border-surface-200 bg-surface-50 pl-10 pr-12 py-2.5 text-text-primary focus:border-brand-crimson focus:ring-1 focus:ring-brand-crimson outline-none transition-all"
+                            onChange={e => setPassword(e.target.value)}
+                            className="border-surface-200 bg-surface-50 text-text-primary focus:border-brand-crimson focus:ring-brand-crimson w-full rounded-lg border py-2.5 pr-12 pl-10 transition-all outline-none focus:ring-1"
                             placeholder="••••••••"
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-3 text-text-tertiary hover:text-text-primary"
+                            className="text-text-tertiary hover:text-text-primary absolute top-3 right-3"
                         >
-                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            {showPassword ? (
+                                <EyeOff className="h-5 w-5" />
+                            ) : (
+                                <Eye className="h-5 w-5" />
+                            )}
                         </button>
                     </div>
                 </div>
 
                 {error && (
-                    <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+                    <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
                         {error}
                     </div>
                 )}
 
                 <Button
                     type="submit"
-                    className="w-full bg-brand-crimson hover:bg-brand-crimson-hover text-white h-12 text-lg font-bold shadow-lg shadow-brand-crimson/20"
+                    className="bg-brand-crimson hover:bg-brand-crimson-hover shadow-brand-crimson/20 h-12 w-full text-lg font-bold text-white shadow-lg"
                     isLoading={loading}
                 >
                     Sign In
@@ -128,7 +130,10 @@ export const LoginForm = () => {
             </form>
 
             <div className="mt-6 text-center">
-                <a href="#" className="text-sm text-text-tertiary hover:text-brand-crimson transition-colors">
+                <a
+                    href="#"
+                    className="text-text-tertiary hover:text-brand-crimson text-sm transition-colors"
+                >
                     Forgot your password?
                 </a>
             </div>

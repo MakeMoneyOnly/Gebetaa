@@ -80,7 +80,13 @@ export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: 
                                 <div className="absolute inset-0 h-full w-full">
                                     <FilterShape
                                         active={isActive}
-                                        color={isActive ? '#A81818' : (currentTheme === 'dark' ? '#1a1a1a' : '#f3f4f6')}
+                                        color={
+                                            isActive
+                                                ? '#C91D26'
+                                                : currentTheme === 'dark'
+                                                  ? '#1a1a1a'
+                                                  : '#f3f4f6'
+                                        }
                                     />
                                 </div>
 
@@ -99,7 +105,9 @@ export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: 
                             <span
                                 className={cn(
                                     'text-xs font-bold tracking-wide transition-colors duration-300',
-                                    isActive ? 'text-brand-crimson dark:text-white' : 'text-black/30 dark:text-white/40'
+                                    isActive
+                                        ? 'text-brand-crimson dark:text-white'
+                                        : 'text-black/30 dark:text-white/40'
                                 )}
                             >
                                 {cat.name}

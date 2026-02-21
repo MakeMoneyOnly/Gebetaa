@@ -54,8 +54,8 @@ export function MenuCard({
     return (
         <div
             className={cn(
-                "group tap-highlight-transparent relative touch-manipulation transition-transform duration-300 active:scale-[0.98]",
-                className || "mb-6"
+                'group tap-highlight-transparent relative touch-manipulation transition-transform duration-300 active:scale-[0.98]',
+                className || 'mb-6'
             )}
             onClick={() => {
                 trigger('soft');
@@ -76,14 +76,18 @@ export function MenuCard({
                     className="object-cover"
                     // Avoid Next.js optimizer timeouts for external image hosts during development.
                     unoptimized={isRemoteOrDataImage}
-                    onError={() => setImgSrc('https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Spicy%20Tonkotsu.webp')}
+                    onError={() =>
+                        setImgSrc(
+                            'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Spicy%20Tonkotsu.webp'
+                        )
+                    }
                 />
 
                 {/* Top Floating Elements */}
                 <button
                     onClick={handleLike}
                     className={cn(
-                        'absolute top-3 left-3 z-[20] flex h-9 w-9 touch-manipulation items-center justify-center rounded-full border border-white/30 transition-all shadow-sm active:scale-90',
+                        'absolute top-3 left-3 z-[20] flex h-9 w-9 touch-manipulation items-center justify-center rounded-full border border-white/30 shadow-sm transition-all active:scale-90',
                         'bg-white/30 backdrop-blur-xl hover:bg-white/50',
                         isLiked && 'text-brand-crimson scale-110 shadow-md'
                     )}
@@ -91,8 +95,8 @@ export function MenuCard({
                 >
                     <Heart
                         size={18}
-                        stroke="#a81818"
-                        fill={isLiked ? '#a81818' : 'transparent'}
+                        stroke="#C91D26"
+                        fill={isLiked ? '#C91D26' : 'transparent'}
                         strokeWidth={isLiked ? 0 : 2.5}
                         className="transition-transform duration-300"
                     />
@@ -124,14 +128,18 @@ export function MenuCard({
 
             {/* Info Below */}
             <div className="mt-3 px-1">
-                <h3 className="text-lg leading-tight font-bold text-black/90 dark:text-white/90">{item.title}</h3>
+                <h3 className="text-lg leading-tight font-bold text-black/90 dark:text-white/90">
+                    {item.title}
+                </h3>
                 <div className="mt-1 flex items-center justify-between">
-                    <p className="text-xs font-bold tracking-tight text-black/40 dark:text-white/40 uppercase">
+                    <p className="text-xs font-bold tracking-tight text-black/40 uppercase dark:text-white/40">
                         {item.shopName}
                     </p>
                     <div className="mr-1 flex items-center gap-0.5">
                         <span className="text-brand-crimson text-xs font-bold">★</span>
-                        <span className="text-xs font-bold text-black/90 dark:text-white/90">{item.rating || 4.5}</span>
+                        <span className="text-xs font-bold text-black/90 dark:text-white/90">
+                            {item.rating || 4.5}
+                        </span>
                     </div>
                 </div>
             </div>

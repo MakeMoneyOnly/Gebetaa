@@ -57,10 +57,10 @@ export function BulkActionBar({
                 <div className="flex items-center gap-2">
                     <select
                         value={selectedStatus}
-                        onChange={(event) => onStatusChange(event.target.value as BulkStatus)}
-                        className="h-10 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-semibold capitalize text-gray-700 outline-none focus:ring-2 focus:ring-gray-900/10 transition-all"
+                        onChange={event => onStatusChange(event.target.value as BulkStatus)}
+                        className="h-10 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-semibold text-gray-700 capitalize transition-all outline-none focus:ring-2 focus:ring-gray-900/10"
                     >
-                        {STATUS_OPTIONS.map((status) => (
+                        {STATUS_OPTIONS.map(status => (
                             <option key={status} value={status}>
                                 {status}
                             </option>
@@ -71,7 +71,9 @@ export function BulkActionBar({
                         disabled={loading}
                         className={cn(
                             'h-10 rounded-xl bg-black px-4 text-xs font-bold text-white transition-all duration-200',
-                            loading ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-800 shadow-sm'
+                            loading
+                                ? 'cursor-not-allowed opacity-60'
+                                : 'shadow-sm hover:bg-gray-800'
                         )}
                     >
                         Apply Status
@@ -81,11 +83,11 @@ export function BulkActionBar({
                 <div className="flex items-center gap-2">
                     <select
                         value={selectedStaffId}
-                        onChange={(event) => onStaffChange(event.target.value)}
-                        className="h-10 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-gray-900/10 transition-all"
+                        onChange={event => onStaffChange(event.target.value)}
+                        className="h-10 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-semibold text-gray-700 transition-all outline-none focus:ring-2 focus:ring-gray-900/10"
                     >
                         <option value="">Assign staff…</option>
-                        {staffOptions.map((staff) => (
+                        {staffOptions.map(staff => (
                             <option key={staff.id} value={staff.id}>
                                 {staff.role ?? 'staff'} · {staff.user_id.slice(0, 8)}
                             </option>
@@ -95,9 +97,9 @@ export function BulkActionBar({
                         onClick={onApplyAssign}
                         disabled={loading || !selectedStaffId}
                         className={cn(
-                            'h-10 rounded-xl bg-gray-100 px-4 text-xs font-bold text-gray-700 transition-all duration-200 ring-1 ring-gray-200/80',
+                            'h-10 rounded-xl bg-gray-100 px-4 text-xs font-bold text-gray-700 ring-1 ring-gray-200/80 transition-all duration-200',
                             loading || !selectedStaffId
-                                ? 'opacity-60 cursor-not-allowed'
+                                ? 'cursor-not-allowed opacity-60'
                                 : 'hover:bg-gray-200 hover:text-gray-900'
                         )}
                     >
@@ -108,7 +110,7 @@ export function BulkActionBar({
 
                 <button
                     onClick={onClearSelection}
-                    className="h-10 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-bold text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200"
+                    className="h-10 rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-bold text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-gray-800"
                 >
                     <RefreshCw className="mr-1.5 inline h-3.5 w-3.5" />
                     Clear

@@ -35,22 +35,23 @@ export function DishHeroSection({
             {/* Back Button */}
             <button
                 onClick={onBack}
-                className="absolute top-4 left-4 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full bg-white/50 backdrop-blur-md border border-white/20 text-brand-crimson shadow-sm transition-all hover:bg-white active:scale-90"
+                className="text-brand-crimson absolute top-4 left-4 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-white/50 shadow-sm backdrop-blur-md transition-all hover:bg-white active:scale-90"
             >
                 <ArrowLeft size={24} strokeWidth={2.5} />
             </button>
 
             {/* Top Right Heart Button */}
             <button
-                onClick={(e) => onToggleLike(e)}
-                className={`absolute top-4 right-4 z-20 flex h-10 w-10 touch-manipulation items-center justify-center rounded-full border border-white/30 transition-all shadow-sm active:scale-90 ${isLiked
-                    ? 'text-brand-crimson scale-110 shadow-md'
-                    : 'bg-white/30 backdrop-blur-xl hover:bg-white/50 text-white'
-                    }`}
+                onClick={e => onToggleLike(e)}
+                className={`absolute top-4 right-4 z-20 flex h-10 w-10 touch-manipulation items-center justify-center rounded-full border border-white/30 shadow-sm transition-all active:scale-90 ${
+                    isLiked
+                        ? 'text-brand-crimson scale-110 shadow-md'
+                        : 'bg-white/30 text-white backdrop-blur-xl hover:bg-white/50'
+                }`}
             >
                 <Heart
                     size={20}
-                    stroke={isLiked ? 'currentColor' : '#a81818'}
+                    stroke={isLiked ? 'currentColor' : '#C91D26'}
                     fill={isLiked ? 'currentColor' : 'transparent'}
                     strokeWidth={isLiked ? 0 : 2.5}
                     className="transition-transform duration-300"

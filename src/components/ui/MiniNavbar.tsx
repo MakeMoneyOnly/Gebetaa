@@ -37,7 +37,6 @@ export function MiniNavbar() {
         }
 
         if (isOpen) {
-             
             setHeaderShapeClass('rounded-xl');
         } else {
             shapeTimeoutRef.current = setTimeout(() => {
@@ -69,7 +68,7 @@ export function MiniNavbar() {
 
     const loginButtonElement = (
         <Link href="/auth/login">
-            <button className="w-full rounded-full bg-foreground/10 dark:bg-white/10 px-4 py-2 text-xs text-foreground font-black dark:text-white/80 transition-all duration-200 hover:bg-foreground/20 dark:hover:bg-white/20 sm:w-auto sm:px-4 sm:text-sm shadow-sm">
+            <button className="bg-foreground/10 text-foreground hover:bg-foreground/20 w-full rounded-full px-4 py-2 text-xs font-black shadow-sm transition-all duration-200 sm:w-auto sm:px-4 sm:text-sm dark:bg-white/10 dark:text-white/80 dark:hover:bg-white/20">
                 LogIn
             </button>
         </Link>
@@ -78,7 +77,7 @@ export function MiniNavbar() {
     const signupButtonElement = (
         <div className="group relative w-full sm:w-auto">
             <Link href="/auth/signup">
-                <button className="relative z-10 w-full rounded-full bg-foreground dark:bg-white px-4 py-2 text-xs font-black text-background dark:text-black transition-all duration-200 hover:scale-105 sm:w-auto sm:px-4 sm:text-sm shadow-lg shadow-black/10">
+                <button className="bg-foreground text-background relative z-10 w-full rounded-full px-4 py-2 text-xs font-black shadow-lg shadow-black/10 transition-all duration-200 hover:scale-105 sm:w-auto sm:px-4 sm:text-sm dark:bg-white dark:text-black">
                     Signup
                 </button>
             </Link>
@@ -90,9 +89,9 @@ export function MiniNavbar() {
             className={cn(
                 'fixed top-6 left-1/2 z-20 -translate-x-1/2 transform',
                 'flex flex-col items-center',
-                'py-3 px-6 backdrop-blur-3xl',
+                'px-6 py-3 backdrop-blur-3xl',
                 headerShapeClass,
-                'bg-black/80 dark:bg-black/80 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_50px_-10px_rgba(255,255,255,0.05)]',
+                'bg-black/80 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] dark:bg-black/80 dark:shadow-[0_20px_50px_-10px_rgba(255,255,255,0.05)]',
                 'w-auto min-w-[280px] sm:min-w-0',
                 'transition-all duration-300 ease-in-out'
             )}
@@ -114,7 +113,7 @@ export function MiniNavbar() {
                 </div>
 
                 <button
-                    className="flex h-8 w-8 items-center justify-center text-white dark:text-gray-300 focus:outline-none sm:hidden"
+                    className="flex h-8 w-8 items-center justify-center text-white focus:outline-none sm:hidden dark:text-gray-300"
                     onClick={toggleMenu}
                     aria-label={isOpen ? 'Close Menu' : 'Open Menu'}
                 >

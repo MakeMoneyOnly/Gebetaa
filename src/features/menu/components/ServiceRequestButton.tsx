@@ -6,14 +6,12 @@ import { Drawer } from 'vaul';
 import { useState } from 'react';
 
 interface ServiceRequestButtonProps {
-    guestContext:
-        | {
-              slug: string;
-              table: string;
-              sig: string;
-              exp: number;
-          }
-        | null;
+    guestContext: {
+        slug: string;
+        table: string;
+        sig: string;
+        exp: number;
+    } | null;
     tableNumber: string | null;
 }
 
@@ -103,10 +101,14 @@ export function ServiceRequestButton({ guestContext, tableNumber }: ServiceReque
                             </button>
 
                             {message && (
-                                <p className="text-center text-sm font-semibold text-green-600">{message}</p>
+                                <p className="text-center text-sm font-semibold text-green-600">
+                                    {message}
+                                </p>
                             )}
                             {error && (
-                                <p className="text-center text-sm font-semibold text-red-600">{error}</p>
+                                <p className="text-center text-sm font-semibold text-red-600">
+                                    {error}
+                                </p>
                             )}
                         </div>
                     </Drawer.Content>

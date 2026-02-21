@@ -46,14 +46,18 @@ export function LiveKPICard({
                 <div className={`rounded-xl border px-2.5 py-2 ${toneStyles[tone]}`}>
                     <Icon className="h-4 w-4" />
                 </div>
-                <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
                     Live
                 </span>
             </div>
-            <p className="mb-1 text-3xl font-bold tracking-tight text-gray-900">{error ? '--' : value}</p>
+            <p className="mb-1 text-3xl font-bold tracking-tight text-gray-900">
+                {error ? '--' : value}
+            </p>
             <p className="text-xs font-medium text-gray-500">
                 {title}
-                <span className="block pt-1 text-[11px] text-gray-400">{error ? 'Unavailable' : subtitle}</span>
+                <span className="block pt-1 text-[11px] text-gray-400">
+                    {error ? 'Unavailable' : subtitle}
+                </span>
             </p>
         </div>
     );

@@ -1,6 +1,6 @@
 /**
  * Button Component Stories
- * 
+ *
  * Example Storybook stories for the Button component.
  * Run `pnpm storybook` to view these stories.
  */
@@ -10,7 +10,7 @@ import { Button } from './Button';
 
 /**
  * Button component for user interactions.
- * 
+ *
  * Supports multiple variants, sizes, and states.
  */
 const meta: Meta<typeof Button> = {
@@ -148,12 +148,7 @@ export const WithIcon: Story = {
     args: {
         children: (
             <>
-                <svg
-                    className="mr-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
+                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         strokeLinecap="round"
                         strokeLinejoin="round"

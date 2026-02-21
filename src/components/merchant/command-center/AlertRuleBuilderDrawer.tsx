@@ -133,9 +133,14 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                 <div className="mb-5 flex items-start justify-between">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">Alert Rule Builder</h2>
-                        <p className="text-sm text-gray-500">Configure thresholds and escalation targets.</p>
+                        <p className="text-sm text-gray-500">
+                            Configure thresholds and escalation targets.
+                        </p>
                     </div>
-                    <button onClick={onClose} className="h-9 w-9 rounded-lg border border-gray-200 hover:bg-gray-50">
+                    <button
+                        onClick={onClose}
+                        className="h-9 w-9 rounded-lg border border-gray-200 hover:bg-gray-50"
+                    >
                         <X className="mx-auto h-4 w-4 text-gray-600" />
                     </button>
                 </div>
@@ -143,14 +148,18 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                 <div className="space-y-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
                     <input
                         value={draft.name}
-                        onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
+                        onChange={event =>
+                            setDraft(prev => ({ ...prev, name: event.target.value }))
+                        }
                         placeholder="Rule name"
                         className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm"
                     />
                     <div className="grid grid-cols-2 gap-2">
                         <select
                             value={draft.metric}
-                            onChange={(event) => setDraft((prev) => ({ ...prev, metric: event.target.value }))}
+                            onChange={event =>
+                                setDraft(prev => ({ ...prev, metric: event.target.value }))
+                            }
                             className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                         >
                             <option value="orders_in_flight">Orders In Flight</option>
@@ -159,7 +168,9 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                         </select>
                         <select
                             value={draft.operator}
-                            onChange={(event) => setDraft((prev) => ({ ...prev, operator: event.target.value }))}
+                            onChange={event =>
+                                setDraft(prev => ({ ...prev, operator: event.target.value }))
+                            }
                             className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                         >
                             <option value="gte">&gt;=</option>
@@ -173,12 +184,22 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                             type="number"
                             min={1}
                             value={draft.threshold}
-                            onChange={(event) => setDraft((prev) => ({ ...prev, threshold: Number(event.target.value || 1) }))}
+                            onChange={event =>
+                                setDraft(prev => ({
+                                    ...prev,
+                                    threshold: Number(event.target.value || 1),
+                                }))
+                            }
                             className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                         />
                         <select
                             value={draft.severity}
-                            onChange={(event) => setDraft((prev) => ({ ...prev, severity: event.target.value as RuleDraft['severity'] }))}
+                            onChange={event =>
+                                setDraft(prev => ({
+                                    ...prev,
+                                    severity: event.target.value as RuleDraft['severity'],
+                                }))
+                            }
                             className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                         >
                             <option value="low">Low</option>
@@ -188,7 +209,9 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                         </select>
                         <select
                             value={draft.channel}
-                            onChange={(event) => setDraft((prev) => ({ ...prev, channel: event.target.value }))}
+                            onChange={event =>
+                                setDraft(prev => ({ ...prev, channel: event.target.value }))
+                            }
                             className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm"
                         >
                             <option value="in_app">In-app</option>
@@ -200,7 +223,9 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                         <input
                             type="checkbox"
                             checked={draft.enabled}
-                            onChange={(event) => setDraft((prev) => ({ ...prev, enabled: event.target.checked }))}
+                            onChange={event =>
+                                setDraft(prev => ({ ...prev, enabled: event.target.checked }))
+                            }
                             className="h-4 w-4 rounded border-gray-300"
                         />
                         Enabled
@@ -220,8 +245,10 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                 <div className="mt-5 space-y-2">
                     <h3 className="text-sm font-bold text-gray-800">Existing Rules</h3>
                     {loading ? <p className="text-xs text-gray-500">Loading rules...</p> : null}
-                    {!loading && rules.length === 0 ? <p className="text-xs text-gray-500">No rules yet.</p> : null}
-                    {rules.map((rule) => (
+                    {!loading && rules.length === 0 ? (
+                        <p className="text-xs text-gray-500">No rules yet.</p>
+                    ) : null}
+                    {rules.map(rule => (
                         <button
                             key={rule.id}
                             type="button"
@@ -230,12 +257,14 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                         >
                             <div className="flex items-center justify-between gap-2">
                                 <p className="text-sm font-semibold text-gray-900">{rule.name}</p>
-                                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase text-gray-700">
+                                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-700 uppercase">
                                     {rule.severity}
                                 </span>
                             </div>
                             <p className="mt-1 text-xs text-gray-500">
-                                {String(rule.condition_json.metric ?? 'metric')} {String(rule.condition_json.operator ?? 'op')} {String(rule.condition_json.threshold ?? '-')}
+                                {String(rule.condition_json.metric ?? 'metric')}{' '}
+                                {String(rule.condition_json.operator ?? 'op')}{' '}
+                                {String(rule.condition_json.threshold ?? '-')}
                             </p>
                         </button>
                     ))}

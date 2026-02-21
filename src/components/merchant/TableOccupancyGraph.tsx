@@ -16,22 +16,23 @@ const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_
 
 // Occupancy level colors (Orange scale)
 const OCCUPANCY_COLORS = [
-    'bg-gray-100',    // Level 0 - Empty
-    'bg-orange-200',  // Level 1
-    'bg-orange-300',  // Level 2
-    'bg-orange-400',  // Level 3
-    'bg-orange-500',  // Level 4 - Max
+    'bg-gray-100', // Level 0 - Empty
+    'bg-orange-200', // Level 1
+    'bg-orange-300', // Level 2
+    'bg-orange-400', // Level 3
+    'bg-orange-500', // Level 4 - Max
 ];
 
 const OCCUPANCY_LEVELS = [0, 1, 2, 3, 4];
 
 const TIME_FILTERS = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days'];
 
-export function TableOccupancyGraph({
-    className = '',
-    tables = [],
-}: TableOccupancyGraphProps) {
-    const [hoveredCell, setHoveredCell] = useState<{ table: string; hour: number; count: number } | null>(null);
+export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupancyGraphProps) {
+    const [hoveredCell, setHoveredCell] = useState<{
+        table: string;
+        hour: number;
+        count: number;
+    } | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
     const [timeFilter, setTimeFilter] = useState('Today');
     const [filterOpen, setFilterOpen] = useState(false);
@@ -43,7 +44,7 @@ export function TableOccupancyGraph({
         // Seed randomness based on filter to show different data
         const seedMultiplier = timeFilter === 'Today' ? 1 : timeFilter === 'Yesterday' ? 2 : 3;
 
-        tables.forEach((table) => {
+        tables.forEach(table => {
             data[table.id] = {};
             HOURS.forEach(hour => {
                 // Mock logic: Peak hours at Lunch (12-14) and Dinner (19-21)
@@ -54,7 +55,8 @@ export function TableOccupancyGraph({
                 // Some tables are popular in the morning (7-9)
                 const isBreakfast = hour >= 7 && hour <= 9;
 
-                const isPopular = table.table_number.includes('1') || table.table_number.includes('A');
+                const isPopular =
+                    table.table_number.includes('1') || table.table_number.includes('A');
 
                 if (isLunch || isDinner) {
                     level = 2 + Math.floor((Math.random() * 3 + seedMultiplier) % 3);
@@ -75,8 +77,12 @@ export function TableOccupancyGraph({
         return data;
     }, [tables, timeFilter]);
 
-
-    const handleCellHover = (tableNumber: string, hour: number, count: number, event: React.MouseEvent) => {
+    const handleCellHover = (
+        tableNumber: string,
+        hour: number,
+        count: number,
+        event: React.MouseEvent
+    ) => {
         setHoveredCell({ table: tableNumber, hour, count });
         setTooltipPosition({ x: event.clientX, y: event.clientY });
     };
@@ -94,29 +100,43 @@ export function TableOccupancyGraph({
 
     const getOccupancyLabel = (level: number) => {
         switch (level) {
-            case 0: return 'Empty';
-            case 1: return 'Sparingly Used';
-            case 2: return 'Moderately Busy';
-            case 3: return 'Very Busy';
-            case 4: return 'Fully Booked';
-            default: return 'Unknown';
+            case 0:
+                return 'Empty';
+            case 1:
+                return 'Sparingly Used';
+            case 2:
+                return 'Moderately Busy';
+            case 3:
+                return 'Very Busy';
+            case 4:
+                return 'Fully Booked';
+            default:
+                return 'Unknown';
         }
     };
 
     if (!tables || tables.length === 0) {
         return (
-            <div className={`bg-white p-6 rounded-[2rem] shadow-sm ${className} flex items-center justify-center min-h-[150px]`}>
-                <p className="text-gray-400 font-medium">No table data available.</p>
+            <div
+                className={`rounded-[2rem] bg-white p-6 shadow-sm ${className} flex min-h-[150px] items-center justify-center`}
+            >
+                <p className="font-medium text-gray-400">No table data available.</p>
             </div>
         );
     }
 
     return (
-        <div className={`contribution-graph bg-white p-8 rounded-[2rem] shadow-sm mt-8 ${className}`}>
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div
+            className={`contribution-graph mt-8 rounded-[2rem] bg-white p-8 shadow-sm ${className}`}
+        >
+            <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">Hourly Occupancy</h3>
-                    <p className="text-gray-400 text-xs font-medium">Heatmap of table usage throughout the day</p>
+                    <h3 className="text-xl font-bold tracking-tight text-gray-900">
+                        Hourly Occupancy
+                    </h3>
+                    <p className="text-xs font-medium text-gray-400">
+                        Heatmap of table usage throughout the day
+                    </p>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -124,25 +144,33 @@ export function TableOccupancyGraph({
                     <div className="relative">
                         <button
                             onClick={() => setFilterOpen(!filterOpen)}
-                            className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-xl text-xs font-bold text-gray-700 transition-colors"
+                            className="flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-100"
                         >
                             {timeFilter}
-                            <ChevronDown className={`h-3 w-3 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown
+                                className={`h-3 w-3 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
 
                         {filterOpen && (
                             <>
-                                <div className="fixed inset-0 z-10" onClick={() => setFilterOpen(false)} />
-                                <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                                    {TIME_FILTERS.map((filter) => (
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setFilterOpen(false)}
+                                />
+                                <div className="animate-in fade-in zoom-in-95 absolute top-full right-0 z-20 mt-2 w-40 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl duration-200">
+                                    {TIME_FILTERS.map(filter => (
                                         <button
                                             key={filter}
                                             onClick={() => {
                                                 setTimeFilter(filter);
                                                 setFilterOpen(false);
                                             }}
-                                            className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-gray-50 transition-colors ${timeFilter === filter ? 'text-orange-600 bg-orange-50' : 'text-gray-600'
-                                                }`}
+                                            className={`w-full px-4 py-3 text-left text-xs font-bold transition-colors hover:bg-gray-50 ${
+                                                timeFilter === filter
+                                                    ? 'bg-orange-50 text-orange-600'
+                                                    : 'text-gray-600'
+                                            }`}
                                         >
                                             {filter}
                                         </button>
@@ -153,29 +181,32 @@ export function TableOccupancyGraph({
                     </div>
 
                     {/* Legend */}
-                    <div className="hidden lg:flex items-center text-[10px] gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <span className="text-gray-400 font-medium">Less</span>
+                    <div className="hidden items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-1.5 text-[10px] lg:flex">
+                        <span className="font-medium text-gray-400">Less</span>
                         <div className="flex items-center gap-1">
-                            {OCCUPANCY_LEVELS.map((level) => (
+                            {OCCUPANCY_LEVELS.map(level => (
                                 <div
                                     key={level}
                                     className={`h-2.5 w-2.5 rounded-full ${OCCUPANCY_COLORS[level]}`}
                                 />
                             ))}
                         </div>
-                        <span className="text-gray-400 font-medium">More</span>
+                        <span className="font-medium text-gray-400">More</span>
                     </div>
                 </div>
             </div>
 
             <div className="w-full overflow-x-auto pb-4">
-                <table className="border-separate border-spacing-x-1 border-spacing-y-1 w-full text-xs min-w-[800px]">
+                <table className="w-full min-w-[800px] border-separate border-spacing-x-1 border-spacing-y-1 text-xs">
                     {/* Header: Hours */}
                     <thead>
                         <tr>
-                            <td className="w-16 sticky left-0 bg-white z-10"></td>
-                            {HOURS.map((hour) => (
-                                <td key={hour} className="text-gray-400 font-bold text-[10px] text-center pb-2 min-w-[32px]">
+                            <td className="sticky left-0 z-10 w-16 bg-white"></td>
+                            {HOURS.map(hour => (
+                                <td
+                                    key={hour}
+                                    className="min-w-[32px] pb-2 text-center text-[10px] font-bold text-gray-400"
+                                >
                                     {formatHour(hour)}
                                 </td>
                             ))}
@@ -184,26 +215,29 @@ export function TableOccupancyGraph({
 
                     {/* Body: Tables */}
                     <tbody>
-                        {tables.map((table) => (
+                        {tables.map(table => (
                             <tr key={table.id}>
                                 {/* Row Label - Sticky */}
-                                <td className="text-gray-500 font-bold text-[11px] text-right pr-4 whitespace-nowrap sticky left-0 bg-white z-10">
+                                <td className="sticky left-0 z-10 bg-white pr-4 text-right text-[11px] font-bold whitespace-nowrap text-gray-500">
                                     {table.table_number}
                                 </td>
 
                                 {/* Cells */}
-                                {HOURS.map((hour) => {
+                                {HOURS.map(hour => {
                                     const level = occupancyData[table.id]?.[hour] ?? 0;
                                     return (
                                         <td
                                             key={hour}
-                                            className="h-10 w-10 p-0.5 relative group" // Reduced padding for tighter heatmap
-                                            onMouseEnter={(e) => handleCellHover(table.table_number, hour, level, e)}
+                                            className="group relative h-10 w-10 p-0.5" // Reduced padding for tighter heatmap
+                                            onMouseEnter={e =>
+                                                handleCellHover(table.table_number, hour, level, e)
+                                            }
                                             onMouseLeave={handleCellLeave}
                                         >
                                             <div
-                                                className={`h-full w-full rounded-md transition-all duration-300 ${OCCUPANCY_COLORS[level]
-                                                    } hover:scale-105 hover:shadow-sm`}
+                                                className={`h-full w-full rounded-md transition-all duration-300 ${
+                                                    OCCUPANCY_COLORS[level]
+                                                } hover:scale-105 hover:shadow-sm`}
                                             />
                                         </td>
                                     );
@@ -222,25 +256,25 @@ export function TableOccupancyGraph({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 5, scale: 0.9 }}
                         transition={{ duration: 0.15 }}
-                        className="fixed z-50 rounded-xl bg-gray-900 px-3 py-2 shadow-xl ring-1 ring-white/10 pointer-events-none"
+                        className="pointer-events-none fixed z-50 rounded-xl bg-gray-900 px-3 py-2 shadow-xl ring-1 ring-white/10"
                         style={{
                             left: tooltipPosition.x - 30, // Centered roughly
                             top: tooltipPosition.y - 60,
                         }}
                     >
-                        <div className="flex flex-col gap-0.5 items-center text-center">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <div className="flex flex-col items-center gap-0.5 text-center">
+                            <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
                                 {formatHour(hoveredCell.hour)}
                             </span>
-                            <div className="text-xs font-bold text-white whitespace-nowrap">
+                            <div className="text-xs font-bold whitespace-nowrap text-white">
                                 Table {hoveredCell.table}
                             </div>
-                            <div className="text-[10px] text-orange-400 font-bold mt-0.5">
+                            <div className="mt-0.5 text-[10px] font-bold text-orange-400">
                                 {getOccupancyLabel(hoveredCell.count)}
                             </div>
                         </div>
                         {/* Arrow */}
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
+                        <div className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-gray-900" />
                     </motion.div>
                 )}
             </AnimatePresence>

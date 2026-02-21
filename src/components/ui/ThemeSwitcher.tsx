@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Theme } from "@/components/ui/theme";
+import { Theme } from '@/components/ui/theme';
 
 export const ThemeSwitcher = () => {
     const pathname = usePathname();
@@ -11,12 +11,7 @@ export const ThemeSwitcher = () => {
 
     return (
         <div className="flex items-center gap-3">
-            <Theme
-                size="md"
-                variant="dropdown"
-                showLabel
-                themes={["light", "dark", "system"]}
-            />
+            <Theme size="md" variant="dropdown" showLabel themes={['light', 'dark', 'system']} />
         </div>
-    )
+    );
 };

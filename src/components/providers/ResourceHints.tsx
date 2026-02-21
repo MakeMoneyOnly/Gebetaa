@@ -1,8 +1,8 @@
 /**
  * Resource Hints Component
- * 
+ *
  * Addresses PLATFORM_AUDIT finding PERF-5: Missing resource hints
- * 
+ *
  * This component adds:
  * - DNS prefetch for external domains
  * - Preconnect for critical origins
@@ -37,14 +37,14 @@ const CRITICAL_DOMAINS: ResourceHintConfig[] = [
     // Supabase API
     { url: 'https://axuegixbqsvztdraenkz.supabase.co', type: 'preconnect', crossOrigin: true },
     { url: 'https://axuegixbqsvztdraenkz.supabase.co', type: 'dns-prefetch' },
-    
+
     // Google Fonts
     { url: 'https://fonts.googleapis.com', type: 'preconnect', crossOrigin: true },
     { url: 'https://fonts.gstatic.com', type: 'preconnect', crossOrigin: true },
-    
+
     // External images
     { url: 'https://images.unsplash.com', type: 'preconnect', crossOrigin: true },
-    
+
     // Sentry (if configured)
     { url: 'https://o4506998756614144.ingest.us.sentry.io', type: 'dns-prefetch' },
 ];
@@ -57,7 +57,8 @@ const LIKELY_ROUTES = [
     '/merchant/orders',
     '/merchant/menu',
     '/merchant/analytics',
-    '/kds',
+    '/kds/display',
+    '/pos/mobile',
 ];
 
 /**
@@ -96,7 +97,7 @@ export function useResourceHints(
 
     useEffect(() => {
         // Inject link elements for each hint
-        hints.forEach((hint) => {
+        hints.forEach(hint => {
             const existingLink = document.querySelector(
                 `link[href="${hint.url}"][rel="${hint.type}"]`
             );
@@ -125,7 +126,7 @@ export function useResourceHints(
         // Prefetch likely routes on idle
         if (enablePrefetch && 'requestIdleCallback' in window) {
             window.requestIdleCallback(() => {
-                LIKELY_ROUTES.forEach((route) => {
+                LIKELY_ROUTES.forEach(route => {
                     const existingLink = document.querySelector(
                         `link[href="${route}"][rel="prefetch"]`
                     );
@@ -158,9 +159,7 @@ export function ResourceHints() {
 export function prefetchRoute(route: string) {
     if (typeof document === 'undefined') return;
 
-    const existingLink = document.querySelector(
-        `link[href="${route}"][rel="prefetch"]`
-    );
+    const existingLink = document.querySelector(`link[href="${route}"][rel="prefetch"]`);
 
     if (existingLink) return;
 
@@ -176,9 +175,7 @@ export function prefetchRoute(route: string) {
 export function preloadImage(src: string, priority: 'high' | 'low' | 'auto' = 'auto') {
     if (typeof document === 'undefined') return;
 
-    const existingLink = document.querySelector(
-        `link[href="${src}"][rel="preload"][as="image"]`
-    );
+    const existingLink = document.querySelector(`link[href="${src}"][rel="preload"][as="image"]`);
 
     if (existingLink) return;
 
@@ -186,7 +183,7 @@ export function preloadImage(src: string, priority: 'high' | 'low' | 'auto' = 'a
     link.rel = 'preload';
     link.as = 'image';
     link.href = src;
-    
+
     if (priority !== 'auto') {
         link.setAttribute('importance', priority);
     }
@@ -200,9 +197,7 @@ export function preloadImage(src: string, priority: 'high' | 'low' | 'auto' = 'a
 export function prefetchData(url: string) {
     if (typeof document === 'undefined') return;
 
-    const existingLink = document.querySelector(
-        `link[href="${url}"][rel="prefetch"][as="fetch"]`
-    );
+    const existingLink = document.querySelector(`link[href="${url}"][rel="prefetch"][as="fetch"]`);
 
     if (existingLink) return;
 

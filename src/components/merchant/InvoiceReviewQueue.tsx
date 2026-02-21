@@ -45,7 +45,8 @@ export function InvoiceReviewQueue({
     const submitCreate = async () => {
         const subtotalValue = Number(subtotal);
         const taxValue = Number(taxAmount);
-        if (!supplierName.trim() || !Number.isFinite(subtotalValue) || !Number.isFinite(taxValue)) return;
+        if (!supplierName.trim() || !Number.isFinite(subtotalValue) || !Number.isFinite(taxValue))
+            return;
 
         await onCreateInvoice({
             supplier_name: supplierName.trim(),
@@ -70,7 +71,9 @@ export function InvoiceReviewQueue({
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900">Invoice Review Queue</h3>
-                    <p className="text-sm text-gray-500">Capture supplier invoices and review approval/payment status.</p>
+                    <p className="text-sm text-gray-500">
+                        Capture supplier invoices and review approval/payment status.
+                    </p>
                 </div>
                 <FileText className="h-5 w-5 text-gray-500" />
             </div>
@@ -78,13 +81,13 @@ export function InvoiceReviewQueue({
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-6">
                 <input
                     value={supplierName}
-                    onChange={(event) => setSupplierName(event.target.value)}
+                    onChange={event => setSupplierName(event.target.value)}
                     placeholder="Supplier name"
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 />
                 <select
                     value={status}
-                    onChange={(event) => setStatus(event.target.value as InvoiceRow['status'])}
+                    onChange={event => setStatus(event.target.value as InvoiceRow['status'])}
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 >
                     <option value="pending_review">Pending review</option>
@@ -95,14 +98,14 @@ export function InvoiceReviewQueue({
                 </select>
                 <input
                     value={subtotal}
-                    onChange={(event) => setSubtotal(event.target.value)}
+                    onChange={event => setSubtotal(event.target.value)}
                     inputMode="decimal"
                     placeholder="Subtotal"
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 />
                 <input
                     value={taxAmount}
-                    onChange={(event) => setTaxAmount(event.target.value)}
+                    onChange={event => setTaxAmount(event.target.value)}
                     inputMode="decimal"
                     placeholder="Tax"
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
@@ -110,13 +113,13 @@ export function InvoiceReviewQueue({
                 <input
                     type="date"
                     value={dueAt}
-                    onChange={(event) => setDueAt(event.target.value)}
+                    onChange={event => setDueAt(event.target.value)}
                     className="h-10 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                 />
                 <div className="flex gap-2">
                     <input
                         value={notes}
-                        onChange={(event) => setNotes(event.target.value)}
+                        onChange={event => setNotes(event.target.value)}
                         placeholder="Notes"
                         className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
                     />
@@ -138,20 +141,24 @@ export function InvoiceReviewQueue({
                 <p className="mt-4 text-sm text-gray-500">No invoices in queue.</p>
             ) : (
                 <div className="mt-4 space-y-2">
-                    {invoices.map((invoice) => (
+                    {invoices.map(invoice => (
                         <div key={invoice.id} className="rounded-xl border border-gray-100 p-3">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-900">{invoice.invoice_number}</p>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {invoice.invoice_number}
+                                    </p>
                                     <p className="text-xs text-gray-600">{invoice.supplier_name}</p>
                                 </div>
-                                <span className="rounded-lg bg-gray-100 px-2 py-1 text-[11px] font-semibold uppercase text-gray-700">
+                                <span className="rounded-lg bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-700 uppercase">
                                     {invoice.status.replace('_', ' ')}
                                 </span>
                             </div>
                             <p className="mt-2 text-xs text-gray-500">
                                 {invoice.currency} {Number(invoice.total_amount).toFixed(2)}
-                                {invoice.due_at ? ` · due ${new Date(invoice.due_at).toLocaleDateString()}` : ''}
+                                {invoice.due_at
+                                    ? ` · due ${new Date(invoice.due_at).toLocaleDateString()}`
+                                    : ''}
                             </p>
                         </div>
                     ))}

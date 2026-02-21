@@ -13,9 +13,7 @@ interface CanvasRevealEffectProps {
     reverse?: boolean;
 }
 
-export const CanvasRevealEffect = ({
-    containerClassName,
-}: CanvasRevealEffectProps) => {
+export const CanvasRevealEffect = ({ containerClassName }: CanvasRevealEffectProps) => {
     return (
         <div className={cn('relative h-full w-full bg-transparent', containerClassName)}>
             {/* Simplified animated background using CSS */}
@@ -30,10 +28,12 @@ export const CanvasRevealEffect = ({
                     }}
                 />
             </div>
-            <div className={cn(
-                "absolute inset-0 bg-gradient-to-t to-transparent",
-                "from-background"
-            )} />
+            <div
+                className={cn(
+                    'absolute inset-0 bg-gradient-to-t to-transparent',
+                    'from-background'
+                )}
+            />
             <style jsx>{`
                 @keyframes shimmer {
                     0%,

@@ -14,7 +14,7 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
             <div className="overflow-x-auto">
                 <table className="min-w-full text-left align-middle">
                     <thead className="bg-gray-50/50">
-                        <tr className="border-b border-gray-100 text-[11px] uppercase tracking-widest text-gray-400 font-bold">
+                        <tr className="border-b border-gray-100 text-[11px] font-bold tracking-widest text-gray-400 uppercase">
                             <th className="px-6 py-4">Status</th>
                             <th className="px-6 py-4">User</th>
                             <th className="px-6 py-4">Role</th>
@@ -23,10 +23,10 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                        {staff.map((member) => (
+                        {staff.map(member => (
                             <tr
                                 key={member.id}
-                                className="group hover:bg-gray-50/50 transition-colors"
+                                className="group transition-colors hover:bg-gray-50/50"
                             >
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center gap-2">
@@ -37,8 +37,10 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                                         )}
                                         <span
                                             className={cn(
-                                                'text-xs font-bold uppercase tracking-wide',
-                                                member.is_active !== false ? 'text-emerald-700' : 'text-gray-400'
+                                                'text-xs font-bold tracking-wide uppercase',
+                                                member.is_active !== false
+                                                    ? 'text-emerald-700'
+                                                    : 'text-gray-400'
                                             )}
                                         >
                                             {member.is_active !== false ? 'Active' : 'Inactive'}
@@ -47,20 +49,22 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm ring-2 ring-white shadow-sm">
-                                            {(member.full_name || member.email || member.user_id).slice(0, 2).toUpperCase()}
+                                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gray-100 text-sm font-bold text-gray-500 shadow-sm ring-2 ring-white">
+                                            {(member.full_name || member.email || member.user_id)
+                                                .slice(0, 2)
+                                                .toUpperCase()}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-gray-900 text-sm">
+                                            <div className="text-sm font-bold text-gray-900">
                                                 {member.full_name
                                                     ? member.full_name
                                                     : member.first_name
-                                                        ? `${member.first_name} ${member.last_name ?? ''}`.trim()
-                                                        : member.email
-                                                            ? member.email.split('@')[0]
-                                                            : `User ${member.user_id.slice(0, 6)}`}
+                                                      ? `${member.first_name} ${member.last_name ?? ''}`.trim()
+                                                      : member.email
+                                                        ? member.email.split('@')[0]
+                                                        : `User ${member.user_id.slice(0, 6)}`}
                                             </div>
-                                            <div className="text-xs text-gray-400 font-medium">
+                                            <div className="text-xs font-medium text-gray-400">
                                                 {member.email ?? member.user_id}
                                             </div>
                                         </div>
@@ -69,7 +73,7 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span
                                         className={cn(
-                                            'inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider',
+                                            'inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold tracking-wider uppercase',
                                             ROLE_BADGE[member.role] ?? 'bg-gray-100 text-gray-600'
                                         )}
                                     >
@@ -77,26 +81,29 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                                         {member.role}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-500">
                                     {member.created_at
-                                        ? new Date(member.created_at).toLocaleDateString(undefined, {
-                                              year: 'numeric',
-                                              month: 'long',
-                                              day: 'numeric',
-                                          })
+                                        ? new Date(member.created_at).toLocaleDateString(
+                                              undefined,
+                                              {
+                                                  year: 'numeric',
+                                                  month: 'long',
+                                                  day: 'numeric',
+                                              }
+                                          )
                                         : '-'}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <td className="px-6 py-4 text-right whitespace-nowrap">
                                     <div className="flex items-center justify-end gap-2">
                                         {member.role === 'owner' ? (
-                                            <span className="text-xs font-bold text-gray-400 px-3 py-1 bg-gray-50 rounded-lg">
+                                            <span className="rounded-lg bg-gray-50 px-3 py-1 text-xs font-bold text-gray-400">
                                                 Owner
                                             </span>
                                         ) : (
                                             <>
                                                 <button
                                                     onClick={() => onEditRole(member)}
-                                                    className="inline-flex items-center justify-center h-8 px-3 rounded-lg bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all"
+                                                    className="inline-flex h-8 items-center justify-center rounded-lg bg-white px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50"
                                                 >
                                                     Edit Role
                                                 </button>
@@ -104,7 +111,7 @@ export function StaffTable({ staff, onEditRole, onToggleActive, updatingId }: Vi
                                                     disabled={updatingId === member.id}
                                                     onClick={() => onToggleActive(member)}
                                                     className={cn(
-                                                        'inline-flex items-center justify-center h-8 px-3 rounded-lg text-xs font-bold transition-all shadow-sm',
+                                                        'inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-bold shadow-sm transition-all',
                                                         member.is_active === false
                                                             ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                                                             : 'bg-white text-gray-700 hover:bg-red-50 hover:text-red-600'

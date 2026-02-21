@@ -15,11 +15,41 @@ interface OrdersKanbanBoardProps {
     onToggleOrder: (orderId: string) => void;
 }
 
-const COLUMNS: Array<{ id: string; title: string; statuses: string[]; accent: string; dotColor: string }> = [
-    { id: 'pending',     title: 'Pending',     statuses: ['pending', 'service_pending'],                          accent: 'bg-amber-400',   dotColor: 'bg-amber-400' },
-    { id: 'in-progress', title: 'In Progress', statuses: ['acknowledged', 'preparing', 'service_in_progress'],   accent: 'bg-orange-400',  dotColor: 'bg-orange-400' },
-    { id: 'ready',       title: 'Ready',       statuses: ['ready', 'served'],                                     accent: 'bg-emerald-400', dotColor: 'bg-emerald-400' },
-    { id: 'done',        title: 'Done',        statuses: ['completed', 'cancelled', 'service_completed'],         accent: 'bg-gray-300',    dotColor: 'bg-gray-400' },
+const COLUMNS: Array<{
+    id: string;
+    title: string;
+    statuses: string[];
+    accent: string;
+    dotColor: string;
+}> = [
+    {
+        id: 'pending',
+        title: 'Pending',
+        statuses: ['pending', 'service_pending'],
+        accent: 'bg-amber-400',
+        dotColor: 'bg-amber-400',
+    },
+    {
+        id: 'in-progress',
+        title: 'In Progress',
+        statuses: ['acknowledged', 'preparing', 'service_in_progress'],
+        accent: 'bg-orange-400',
+        dotColor: 'bg-orange-400',
+    },
+    {
+        id: 'ready',
+        title: 'Ready',
+        statuses: ['ready', 'served'],
+        accent: 'bg-emerald-400',
+        dotColor: 'bg-emerald-400',
+    },
+    {
+        id: 'done',
+        title: 'Done',
+        statuses: ['completed', 'cancelled', 'service_completed'],
+        accent: 'bg-gray-300',
+        dotColor: 'bg-gray-400',
+    },
 ];
 
 function statusColor(status: string | null) {
@@ -27,7 +57,8 @@ function statusColor(status: string | null) {
     if (status === 'completed') return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60';
     if (status === 'pending') return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60';
     if (status === 'cancelled') return 'bg-red-50 text-red-700 ring-1 ring-red-200/60';
-    if (status === 'ready' || status === 'served') return 'bg-green-50 text-green-700 ring-1 ring-green-200/60';
+    if (status === 'ready' || status === 'served')
+        return 'bg-green-50 text-green-700 ring-1 ring-green-200/60';
     return 'bg-orange-50 text-orange-700 ring-1 ring-orange-200/60';
 }
 
@@ -52,8 +83,10 @@ export function OrdersKanbanBoard({
 }: OrdersKanbanBoardProps) {
     return (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
-            {COLUMNS.map((column) => {
-                const columnOrders = orders.filter((order) => column.statuses.includes(order.status ?? ''));
+            {COLUMNS.map(column => {
+                const columnOrders = orders.filter(order =>
+                    column.statuses.includes(order.status ?? '')
+                );
                 return (
                     <section
                         key={column.id}
@@ -71,7 +104,12 @@ export function OrdersKanbanBoard({
                         </div>
 
                         {/* Accent bar */}
-                        <div className={cn('mb-4 h-0.5 w-full rounded-full opacity-60', column.accent)} />
+                        <div
+                            className={cn(
+                                'mb-4 h-0.5 w-full rounded-full opacity-60',
+                                column.accent
+                            )}
+                        />
 
                         <div className="space-y-3">
                             {columnOrders.length === 0 ? (
@@ -79,11 +117,12 @@ export function OrdersKanbanBoard({
                                     No orders
                                 </div>
                             ) : (
-                                columnOrders.map((order) => {
+                                columnOrders.map(order => {
                                     const isServiceRequest = order.id.startsWith('sr_');
                                     const nextStatus = getNextStatus(order.status);
                                     const isUpdating = updatingOrderId === order.id;
-                                    const isSelected = !isServiceRequest && selectedOrderIds.includes(order.id);
+                                    const isSelected =
+                                        !isServiceRequest && selectedOrderIds.includes(order.id);
                                     return (
                                         <article
                                             key={order.id}
@@ -96,7 +135,7 @@ export function OrdersKanbanBoard({
                                         >
                                             {/* SR badge or checkbox */}
                                             {isServiceRequest ? (
-                                                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                                                <p className="mb-2 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
                                                     Service request
                                                 </p>
                                             ) : (
@@ -113,7 +152,7 @@ export function OrdersKanbanBoard({
                                             {/* Table + Status */}
                                             <div className="mb-3 flex items-start justify-between gap-2">
                                                 <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                                                    <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                                                         Table
                                                     </p>
                                                     <p className="text-xl font-black tracking-tight text-gray-900">
@@ -122,7 +161,7 @@ export function OrdersKanbanBoard({
                                                 </div>
                                                 <span
                                                     className={cn(
-                                                        'rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide',
+                                                        'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase',
                                                         statusColor(order.status)
                                                     )}
                                                 >
@@ -134,9 +173,19 @@ export function OrdersKanbanBoard({
                                             <div className="mb-4 space-y-2">
                                                 <div className="flex items-center gap-2 text-xs">
                                                     <Clock className="h-3.5 w-3.5 text-gray-400" />
-                                                    <span className={cn('font-semibold', ageColor(order.created_at))}>
+                                                    <span
+                                                        className={cn(
+                                                            'font-semibold',
+                                                            ageColor(order.created_at)
+                                                        )}
+                                                    >
                                                         {order.created_at
-                                                            ? new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                            ? new Date(
+                                                                  order.created_at
+                                                              ).toLocaleTimeString([], {
+                                                                  hour: '2-digit',
+                                                                  minute: '2-digit',
+                                                              })
                                                             : 'N/A'}
                                                     </span>
                                                 </div>
@@ -156,13 +205,17 @@ export function OrdersKanbanBoard({
                                             <div className="grid grid-cols-2 gap-2">
                                                 <button
                                                     onClick={() => onOpenDetails(order.id)}
-                                                    className="h-9 rounded-xl border border-gray-300 bg-white text-xs font-bold text-gray-800 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+                                                    className="h-9 rounded-xl border border-gray-300 bg-white text-xs font-bold text-gray-800 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50"
                                                 >
-                                                    {loadingOrderId === order.id ? 'Loading…' : 'Details'}
+                                                    {loadingOrderId === order.id
+                                                        ? 'Loading…'
+                                                        : 'Details'}
                                                 </button>
                                                 <button
                                                     disabled={!nextStatus || isUpdating}
-                                                    onClick={() => onStatusUpdate(order.id, order.status)}
+                                                    onClick={() =>
+                                                        onStatusUpdate(order.id, order.status)
+                                                    }
                                                     className={cn(
                                                         'h-9 rounded-xl text-xs font-bold transition-all duration-200',
                                                         !nextStatus
@@ -173,8 +226,13 @@ export function OrdersKanbanBoard({
                                                     {isUpdating
                                                         ? 'Updating…'
                                                         : nextStatus
-                                                            ? nextStatus.replace('service_', '').replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-                                                            : 'Done'}
+                                                          ? nextStatus
+                                                                .replace('service_', '')
+                                                                .replace('_', ' ')
+                                                                .replace(/\b\w/g, c =>
+                                                                    c.toUpperCase()
+                                                                )
+                                                          : 'Done'}
                                                 </button>
                                             </div>
                                         </article>
