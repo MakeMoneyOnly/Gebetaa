@@ -53,6 +53,25 @@ export default function WaiterPosPage() {
     const restaurantId = queryRestaurantId || roleRestaurantId;
     const router = useRouter();
 
+    // Staff Context State
+    const [staffContext, setStaffContext] = useState<any>(null);
+
+    // Initial Load Staff Context
+    useEffect(() => {
+        try {
+            const ctx = localStorage.getItem('gebata_waiter_context');
+            if (ctx) {
+                setStaffContext(JSON.parse(ctx));
+            } else {
+                // If there's no context, we should probably boot them to the PIN screen
+                // router.push(`/waiter/pin?restaurantId=${restaurantId}`);
+                // But let's leave this optional for now for backwards compatibility
+            }
+        } catch (e) {
+            console.error('Failed to parse staff context', e);
+        }
+    }, [restaurantId, router]);
+
     // Data State
     const [tables, setTables] = useState<PosTable[]>([]);
     const [menu, setMenu] = useState<CategoryWithItems[]>([]);
@@ -655,8 +674,27 @@ export default function WaiterPosPage() {
         );
     }
 
+    // --- APPLY FILTERS BASED ON STAFF ZONES ---
+    const assignedZones = Array.isArray(staffContext?.assigned_zones)
+        ? staffContext.assigned_zones
+        : [];
+        
+    const filteredTables =
+        assignedZones.length > 0
+            ? tables.filter(
+                  t =>
+                      !t.zone ||
+                      assignedZones.includes(t.zone) ||
+                      assignedZones.includes('All')
+              )
+            : tables;
+            
+    // Only show service requests for filtered tables
+    const visibleTableNumbers = new Set(filteredTables.map(t => t.table_number));
+    const filteredServiceRequests = serviceRequests.filter(sr => visibleTableNumbers.has(sr.table_number));
+
     // --- RENDER: TABLE LIST MODE ---
-    const pendingRequestsCount = serviceRequests.filter(sr => sr.status === 'pending').length;
+    const pendingRequestsCount = filteredServiceRequests.filter(sr => sr.status === 'pending').length;
 
     return (
         <div className="font-manrope flex min-h-screen flex-col bg-gray-50 p-6 text-gray-900">
@@ -664,7 +702,7 @@ export default function WaiterPosPage() {
             <div className="flex items-start justify-between px-2 pt-2 pb-6">
                 <div>
                     <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
-                        Waiter Display
+                        {staffContext?.name ? `${staffContext.name}'s Tables` : 'Waiter Display'}
                     </h1>
                     <div className="flex items-center gap-3 text-sm font-medium text-gray-500">
                         <span
@@ -677,19 +715,31 @@ export default function WaiterPosPage() {
                         </span>
                         <span className="text-gray-300">|</span>
                         <span>
-                            {tables.filter(t => t.status === 'occupied').length} Active Tables
+                            {filteredTables.filter(t => t.status === 'occupied').length} Active Tables
                         </span>
                     </div>
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => void fetchTables()}
+                        onClick={() => {
+                            void fetchTables();
+                            void fetchServiceRequests();
+                        }}
                         className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:bg-gray-50"
                     >
                         <RefreshCw className="h-5 w-5" />
                     </button>
                     <button
-                        onClick={handleLogout}
+                        onClick={() => {
+                            // If they have context, taking them back to PIN screen makes sense.
+                            // If not, full logout.
+                            if (staffContext) {
+                                localStorage.removeItem('gebata_waiter_context');
+                                router.push(`/waiter/pin?restaurantId=${restaurantId}`);
+                            } else {
+                                handleLogout();
+                            }
+                        }}
                         className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white shadow-lg shadow-black/10 transition-colors hover:bg-gray-800"
                     >
                         <LogOut className="h-5 w-5" />
@@ -714,7 +764,7 @@ export default function WaiterPosPage() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            {tables.map(table => (
+                            {filteredTables.map(table => (
                                 <button
                                     key={table.id}
                                     onClick={() => handleTableClick(table)}
@@ -735,7 +785,7 @@ export default function WaiterPosPage() {
                                         </div>
                                         {table.status === 'occupied' && (
                                             <div className="flex items-center gap-2">
-                                                {serviceRequests.some(sr => sr.table_number === table.table_number && sr.status === 'pending') && (
+                                                {filteredServiceRequests.some(sr => sr.table_number === table.table_number && sr.status === 'pending') && (
                                                     <span className="flex h-5 w-5 animate-bounce items-center justify-center rounded-full bg-red-500 text-white shadow-lg">
                                                         <Bell className="h-3 w-3" />
                                                     </span>
@@ -763,7 +813,7 @@ export default function WaiterPosPage() {
                             ))}
                         </div>
 
-                        {!loading && tables.length === 0 && (
+                        {!loading && filteredTables.length === 0 && (
                             <div className="py-10 text-center text-gray-400">
                                 <p>No tables found.</p>
                             </div>
@@ -851,14 +901,14 @@ export default function WaiterPosPage() {
                                 <RefreshCw className="h-5 w-5" />
                             </button>
                         </div>
-                        {serviceRequests.length === 0 ? (
+                        {filteredServiceRequests.length === 0 ? (
                             <div className="flex h-40 flex-col items-center justify-center text-gray-400">
                                 <Bell className="mb-4 h-12 w-12 opacity-50" />
                                 <p>No pending requests</p>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-4">
-                                {serviceRequests.map(request => (
+                                {filteredServiceRequests.map(request => (
                                     <div
                                         key={request.id}
                                         className="rounded-2xl border-l-4 border-l-red-500 bg-white p-5 shadow-sm"
