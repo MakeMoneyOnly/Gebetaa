@@ -15,6 +15,7 @@
 | `scripts/check-realtime.js` | Contains hardcoded Supabase service role key | **DELETE** |
 | `scripts/check-realtime.ts` | Contains hardcoded Supabase service role key | **DELETE** |
 | `scripts/apply-migration.js`| Contains hardcoded Supabase service role key | **DELETE** |
+| `eslint.json`               | Captured secret in lint output               | **DELETE** |
 
 **Risk:** These files expose production database credentials. Even if the database is rotated, this is a security anti-pattern.
 
@@ -129,6 +130,9 @@ type_check_output.txt
 .tmp_finance_dev_pid
 tsconfig.tsbuildinfo
 next-env.d.ts
+eslint.json
+eslint.txt
+ts_errors.txt
 
 # MEDIUM - Duplicates
 fix-slugs.js
@@ -247,6 +251,7 @@ The following files were successfully deleted:
 
 The `.gitignore` was updated with additional patterns.
 - Git history was cleaned using `git-filter-repo` to remove sensitive files.
+- Used `--replace-text` to scrub secret strings from all remaining history.
 - Remote repository history has been force-pushed with the cleaned state.
 
 ---
