@@ -14,6 +14,7 @@
 | --------------------------- | -------------------------------------------- | ---------- |
 | `scripts/check-realtime.js` | Contains hardcoded Supabase service role key | **DELETE** |
 | `scripts/check-realtime.ts` | Contains hardcoded Supabase service role key | **DELETE** |
+| `scripts/apply-migration.js`| Contains hardcoded Supabase service role key | **DELETE** |
 
 **Risk:** These files expose production database credentials. Even if the database is rotated, this is a security anti-pattern.
 
@@ -118,6 +119,7 @@ The `SKILLS/` directory contains 100+ AI skill files for development patterns.
 # CRITICAL - Security Issues
 scripts/check-realtime.js
 scripts/check-realtime.ts
+scripts/apply-migration.js
 
 # HIGH - Temporary Files
 git_log.txt
@@ -174,7 +176,7 @@ git_log.txt
 
 ```bash
 # Run from project root
-rm -f scripts/check-realtime.js scripts/check-realtime.ts
+rm -f scripts/check-realtime.js scripts/check-realtime.ts scripts/apply-migration.js
 rm -f git_log.txt lint_output.txt tsc_output.txt type_check_output.txt
 rm -f .tmp_finance_dev_pid tsconfig.tsbuildinfo next-env.d.ts
 rm -f fix-slugs.js
@@ -207,7 +209,7 @@ rm -f public/vercel.svg public/next.svg public/globe.svg public/window.svg publi
 
 ## ⚠️ ACTION REQUIRED: Rotate Supabase Service Role Key
 
-**The files `scripts/check-realtime.js` and `scripts/check-realtime.ts` were found in git history.**
+**The files `scripts/check-realtime.js`, `scripts/check-realtime.ts`, and `scripts/apply-migration.js` were found in git history.**
 
 This means your Supabase service role key was committed to the repository.
 
@@ -228,6 +230,7 @@ This means your Supabase service role key was committed to the repository.
 The following files were successfully deleted:
 - `scripts/check-realtime.js` (contained hardcoded credentials)
 - `scripts/check-realtime.ts` (contained hardcoded credentials)
+- `scripts/apply-migration.js` (contained hardcoded credentials)
 - `git_log.txt`
 - `lint_output.txt`
 - `tsc_output.txt`
