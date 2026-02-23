@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
@@ -347,9 +347,12 @@ function MenuContent() {
         });
     };
 
-    const buildAuthHref = (path: '/auth/login' | '/auth/signup') => {
+    const buildAuthHref = (path: '/guest/auth/login' | '/guest/auth/signup') => {
         const params = new URLSearchParams(searchParams.toString());
         params.set('entry', 'menu');
+        if (guestSessionId) {
+            params.set('gsid', guestSessionId);
+        }
         const nextUrl = `/${slug}?${params.toString()}`;
         return `${path}?next=${encodeURIComponent(nextUrl)}`;
     };
@@ -412,51 +415,65 @@ function MenuContent() {
 
     if (showPreMenuSplash) {
         return (
-            <main className="app-container relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#10252a_0%,#081114_45%,#040607_100%)] px-6 py-10 text-white">
+            <main className="app-container relative min-h-screen overflow-hidden bg-[#9E1111] text-white">
                 <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute top-[-140px] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#cb3944]/25 blur-[120px]" />
-                    <div className="absolute right-[-120px] bottom-[-120px] h-80 w-80 rounded-full bg-[#f3f6f7]/10 blur-[120px]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.04)_30%,rgba(0,0,0,0)_60%)]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(158,17,17,0.15)_0%,rgba(64,8,8,0.42)_58%,rgba(9,10,14,0.82)_100%)]" />
+                    <div className="absolute top-[-230px] left-1/2 h-[560px] w-[560px] -translate-x-1/2 rounded-full bg-[#ff9090]/18 blur-[140px]" />
                 </div>
 
-                <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur-xl">
-                    <p className="text-xs font-bold tracking-[0.26em] text-white/60 uppercase">
-                        Gebeta | Table {guestContext.table_number}
-                    </p>
-                    <h1 className="mt-3 font-manrope text-3xl leading-tight font-black tracking-tight text-white">
-                        Welcome to {guestContext.restaurant_name}
-                    </h1>
-                    <p className="mt-3 text-sm font-semibold text-white/75">
-                        Order in seconds. Log in to earn loyalty points, redeem gift cards, and unlock member campaigns.
-                    </p>
-
-                    <div className="mt-5 space-y-2 text-xs font-semibold text-white/70">
-                        <p>Earn points on eligible orders.</p>
-                        <p>Use your gift card balance instantly at checkout.</p>
-                        <p>Access members-only campaigns for this restaurant.</p>
+                <div className="relative z-10 flex min-h-screen flex-col px-5 pb-10">
+                    <div className="pt-12 text-center">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-black/18 px-4 py-1.5 backdrop-blur-sm">
+                            <span className="bg-brand-crimson flex h-6 w-6 items-center justify-center rounded-full text-sm font-black text-white">
+                                G
+                            </span>
+                            <span className="font-manrope text-xl font-extrabold tracking-tight">Gebeta</span>
+                        </div>
                     </div>
 
-                    <div className="mt-7 space-y-3">
-                        <Link
-                            href={buildAuthHref('/auth/login')}
-                            className="flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-black text-[#0b1a1e] transition hover:bg-white/90"
-                        >
-                            Log In
-                        </Link>
-                        <Link
-                            href={buildAuthHref('/auth/signup')}
-                            className="flex h-12 w-full items-center justify-center rounded-full border border-white/30 text-sm font-black text-white transition hover:bg-white/10"
-                        >
-                            Sign Up
-                        </Link>
-                    </div>
+                    <div className="mt-auto w-full">
+                        <div className="rounded-[28px] border border-white/18 bg-[linear-gradient(180deg,rgba(7,10,18,0.62)_0%,rgba(7,10,18,0.86)_100%)] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
+                            <p className="text-xs font-black tracking-[0.25em] text-white/65 uppercase">
+                                Gebeta | Table {guestContext.table_number}
+                            </p>
+                            <h1 className="mt-3 font-manrope text-4xl leading-[0.95] font-black tracking-tighter text-white">
+                                Welcome to {guestContext.restaurant_name}
+                            </h1>
+                            <p className="mt-3 text-base leading-7 font-semibold text-white/80">
+                                Order in seconds. Log in to earn loyalty points, redeem gift cards, and unlock member campaigns.
+                            </p>
 
-                    <button
-                        type="button"
-                        onClick={() => void handleSkipToMenu()}
-                        className="mt-6 w-full text-center text-sm font-bold text-white/80 underline-offset-4 transition hover:text-white hover:underline"
-                    >
-                        {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
-                    </button>
+                            <div className="mt-5 space-y-2 text-sm leading-6 font-semibold text-white/72">
+                                <p>Earn points on eligible orders.</p>
+                                <p>Use your gift card balance instantly at checkout.</p>
+                                <p>Access members-only campaigns for this restaurant.</p>
+                            </div>
+
+                            <div className="mt-7 space-y-3">
+                                <Link
+                                    href={buildAuthHref('/guest/auth/login')}
+                                    className="flex h-14 w-full items-center justify-center rounded-full bg-white text-lg font-black text-[#12141a] transition hover:bg-white/95"
+                                >
+                                    Log In
+                                </Link>
+                                <Link
+                                    href={buildAuthHref('/guest/auth/signup')}
+                                    className="flex h-14 w-full items-center justify-center rounded-full border border-white/35 bg-transparent text-lg font-black text-white transition hover:bg-white/8"
+                                >
+                                    Sign Up
+                                </Link>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => void handleSkipToMenu()}
+                                className="mt-6 w-full text-center text-lg font-bold text-white/78 underline-offset-4 transition hover:text-white hover:underline"
+                            >
+                                {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </main>
         );
@@ -535,7 +552,7 @@ function MenuContent() {
                     exp: guestContext.exp,
                     guest_session_id: guestSessionId ?? undefined,
                     auth_state: authState,
-                    login_url: buildAuthHref('/auth/login'),
+                    login_url: buildAuthHref('/guest/auth/login'),
                     ...(campaignDeliveryId
                         ? {
                               campaign_attribution: {
@@ -564,8 +581,19 @@ function MenuContent() {
 
 export default function DynamicMenuPage() {
     return (
-        <CartProvider>
-            <MenuContent />
-        </CartProvider>
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-[#0b1013] text-white">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                    <p className="text-xs font-bold tracking-[0.2em] text-white/60 uppercase">
+                        Loading Menu...
+                    </p>
+                </div>
+            </div>
+        }>
+            <CartProvider>
+                <MenuContent />
+            </CartProvider>
+        </Suspense>
     );
 }

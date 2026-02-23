@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRole } from '@/hooks/useRole';
 import { getSupabaseClient } from '@/lib/supabase/client';
@@ -82,7 +82,7 @@ function mapOrderToTicket(order: Order): Ticket {
     };
 }
 
-export default function KDSPage() {
+function KDSContent() {
     const searchParams = useSearchParams();
     const queryRestaurantId = searchParams.get('restaurantId');
     const { restaurantId: roleRestaurantId, loading: roleLoading } = useRole(queryRestaurantId);
@@ -399,5 +399,24 @@ export default function KDSPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function KDSPage() {
+    return (
+        <Suspense fallback={
+            <div className="font-manrope flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900">
+                <div className="z-10 flex w-full flex-none items-start justify-between bg-gray-50/90 px-10 py-8 backdrop-blur-sm">
+                    <div>
+                        <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                            Kitchen Display
+                        </h1>
+                        <p className="text-sm text-gray-500">Loading KDS...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <KDSContent />
+        </Suspense>
     );
 }

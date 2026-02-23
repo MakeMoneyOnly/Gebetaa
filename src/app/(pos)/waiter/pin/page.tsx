@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Tablet } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-export default function WaiterPinPage() {
+function WaiterPinContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const restaurantId = searchParams.get('restaurantId');
@@ -137,5 +137,17 @@ export default function WaiterPinPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function WaiterPinPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
+                <p>Loading terminal...</p>
+            </div>
+        }>
+            <WaiterPinContent />
+        </Suspense>
     );
 }

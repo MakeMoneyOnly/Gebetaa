@@ -13,8 +13,11 @@ import { createHmac, timingSafeEqual } from 'crypto';
 function getHmacSecret(): string {
     const secret = process.env.QR_HMAC_SECRET;
     if (!secret) {
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('QR_HMAC_SECRET is missing. Using fallback secret for development.');
+        // In development, or during build time when secrets might not be injected yet
+        if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+            console.warn(
+                'QR_HMAC_SECRET is missing. Using fallback secret for development/build.'
+            );
             return 'dev_fallback_secret_do_not_use_in_production';
         }
         throw new Error(
