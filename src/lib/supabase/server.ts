@@ -4,11 +4,16 @@ import type { Database } from '@/types/database';
 
 export async function createClient() {
     const cookieStore = await cookies();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+    // During build or if missing, provide safe fallbacks to prevent crash
+    const url = supabaseUrl || 'https://placeholder.supabase.co';
+    const key = supabaseKey || 'placeholder-key';
 
     return createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-            process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
+        url,
+        key,
         {
             cookies: {
                 getAll() {
