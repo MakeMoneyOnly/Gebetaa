@@ -258,4 +258,31 @@ The `.gitignore` was updated with additional patterns.
 
 **Estimated Space Recovery:** ~50-100KB (more if SKILLS directory removed)  
 **Security Risk Mitigation:** High (removes exposed credentials)  
-**Codebase Cleanliness:** Improved (removes 15+ unnecessary files)
+---
+
+## 🔒 Supabase Key Modernization: 2026-02-21
+
+The project has transitioned from legacy Supabase keys to modern Publishable and Secret keys.
+
+### Changes Made:
+
+1.  **Environment Configuration (`src/lib/config/env.ts`):**
+    -   Added `NEXT_PUBLIC_SUPABASE_URL` back as a required variable.
+    -   Added `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Preferred).
+    -   Added `SUPABASE_SECRET_KEY` (Preferred).
+    -   Marked legacy `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` and `SUPABASE_SERVICE_ROLE_KEY` as optional/fallback.
+2.  **Service Role Client (`src/lib/supabase/service-role.ts`):**
+    -   Now exclusively uses `SUPABASE_SECRET_KEY` (no fallback to legacy service role key).
+3.  **Global Client Utilities:**
+    -   Updated `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/middleware.ts`, `src/lib/supabase/storage.ts`, and `src/lib/supabase.ts` to prioritize `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with a fallback to the legacy key for backward compatibility.
+4.  **Health Checks & Validation:**
+    -   `src/lib/security/validateEnv.ts` updated to recommend modern keys.
+    -   `src/app/api/health/route.ts` updated to require `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+5.  **Application Pages:**
+    -   `src/app/(pos)/waiter/page.tsx` updated to use modern keys in its manual client creation.
+
+### Next Steps for Team:
+-   Generate new **Publishable** and **Secret** keys in the Supabase Dashboard.
+-   Update `.env.local` with `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY`.
+-   Once all environments are updated, the legacy fallback logic can be removed from the code.
+

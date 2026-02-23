@@ -78,3 +78,4 @@ git_log.txt
 # Keep SKILLS/enterprise/ but ignore other skills content
 SKILLS/*
 !SKILLS/enterprise/
+.vercel
