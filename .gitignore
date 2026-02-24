@@ -19,6 +19,8 @@ playwright-report/
 # Environment files
 .env
 .env.local
+.env.preview
+.env.vercel
 .env.development.local
 .env.test.local
 .env.production.local
@@ -79,3 +81,6 @@ git_log.txt
 SKILLS/*
 !SKILLS/enterprise/
 .vercel
+
+# Added by ggshield
+.cache_ggshield

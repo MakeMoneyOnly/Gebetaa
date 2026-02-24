@@ -1,5 +1,8 @@
 import React from 'react';
 
+// Force dynamic rendering to prevent build-time errors
+export const dynamic = 'force-dynamic';
+
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="bg-surface-0 flex min-h-screen flex-col">
