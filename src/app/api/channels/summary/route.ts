@@ -20,7 +20,7 @@ export async function GET() {
             .order('provider', { ascending: true }),
         context.supabase
             .from('external_orders')
-            .select('id, provider, normalized_status, created_at, acked_at, source_channel')
+            .select('id, provider, normalized_status, created_at, acknowledged_at, source_channel')
             .eq('restaurant_id', context.restaurantId)
             .order('created_at', { ascending: false })
             .limit(300),
@@ -56,7 +56,7 @@ export async function GET() {
     for (const order of orders) {
         byProvider[order.provider] = (byProvider[order.provider] ?? 0) + 1;
         byStatus[order.normalized_status] = (byStatus[order.normalized_status] ?? 0) + 1;
-        if (order.acked_at === null) {
+        if (order.acknowledged_at === null) {
             unackedOrders += 1;
         }
         if (new Date(order.created_at).getTime() >= oneDayAgo) {

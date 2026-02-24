@@ -49,7 +49,7 @@ export async function POST(
 
     const { data: existing, error: fetchError } = await context.supabase
         .from('external_orders')
-        .select('id, restaurant_id, provider, normalized_status, acked_at')
+        .select('id, restaurant_id, provider, normalized_status, acknowledged_at')
         .eq('id', parsedOrderId.data)
         .eq('restaurant_id', context.restaurantId)
         .maybeSingle();
@@ -66,7 +66,7 @@ export async function POST(
         return apiError('External order not found', 404, 'EXTERNAL_ORDER_NOT_FOUND');
     }
 
-    if (existing.acked_at) {
+    if (existing.acknowledged_at) {
         return apiSuccess({
             order_id: existing.id,
             acknowledged: true,
@@ -82,13 +82,13 @@ export async function POST(
     const { data: updated, error: updateError } = await context.supabase
         .from('external_orders')
         .update({
-            acked_at: ackedAt,
+            acknowledged_at: ackedAt,
             acked_by: auth.user.id,
             normalized_status: nextStatus,
         })
         .eq('id', existing.id)
         .eq('restaurant_id', context.restaurantId)
-        .select('id, provider, normalized_status, acked_at')
+        .select('id, provider, normalized_status, acknowledged_at')
         .single();
 
     if (updateError) {
@@ -108,11 +108,11 @@ export async function POST(
         entity_id: existing.id,
         old_value: {
             normalized_status: existing.normalized_status,
-            acked_at: existing.acked_at,
+            acked_at: existing.acknowledged_at,
         },
         new_value: {
             normalized_status: updated.normalized_status,
-            acked_at: updated.acked_at,
+            acked_at: updated.acknowledged_at,
         },
         metadata: {
             source: 'merchant_dashboard',
