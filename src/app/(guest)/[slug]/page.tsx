@@ -575,14 +575,16 @@ function MenuContent() {
                                 setOtpFlow('none');
                                 setOtpCode('');
                             }}
-                            className="flex h-14 w-full items-center justify-center rounded-3xl bg-[#FFC900] text-xl font-black tracking-tight text-[#a60000] shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition active:scale-[0.98]"
+                            style={{ WebkitTapHighlightColor: 'transparent' }}
+                            className="flex h-14 w-full items-center justify-center rounded-3xl bg-[#FFC900] text-xl font-black tracking-tight text-[#a60000] shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-75 active:scale-[0.96] active:bg-[#e6b500] select-none touch-manipulation"
                         >
                             Sign In / Sign up
                         </button>
                         <button
                             type="button"
                             onClick={() => void handleSkipToMenu()}
-                            className="flex h-14 w-full items-center justify-center text-xl font-black tracking-tight text-[#FFC900] transition active:scale-[0.98]"
+                            style={{ WebkitTapHighlightColor: 'transparent' }}
+                            className="flex h-14 w-full items-center justify-center text-xl font-black tracking-tight text-[#FFC900] transition-all duration-75 active:scale-[0.96] active:opacity-60 select-none touch-manipulation"
                         >
                             Skip to Menu
                         </button>
