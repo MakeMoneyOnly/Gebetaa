@@ -4,8 +4,14 @@ import type { Database } from '@/types/database';
 
 export async function createClient() {
     const cookieStore = await cookies();
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    
+    // Get and clean environment variables (remove any surrounding quotes)
+    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+    
+    // Strip surrounding quotes if present (common issue when setting env vars)
+    supabaseUrl = supabaseUrl.replace(/^["']|["']$/g, '').trim();
+    supabaseKey = supabaseKey.replace(/^["']|["']$/g, '').trim();
 
     // If environment variables are missing, return a mock client
     if (!supabaseUrl || !supabaseKey) {

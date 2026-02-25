@@ -1,8 +1,13 @@
 import { createBrowserClient } from '@supabase/ssr';
 
 export const createClient = () => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    // Get and clean environment variables (remove any surrounding quotes)
+    let url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    let key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+    
+    // Strip surrounding quotes if present (common issue when setting env vars)
+    url = url.replace(/^["']|["']$/g, '').trim();
+    key = key.replace(/^["']|["']$/g, '').trim();
     
     if (!url || !key) {
         console.warn('Supabase environment variables are not set. Authentication will not work.');
