@@ -173,7 +173,7 @@ export default function BarPage() {
                     void fetchOrders();
                 }
             )
-            .subscribe(status => {
+            .subscribe((status: string) => {
                 setConnected(status === 'SUBSCRIBED');
             });
 
