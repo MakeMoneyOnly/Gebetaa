@@ -558,11 +558,16 @@ function MenuContent() {
 
     if (showPreMenuSplash) {
         return (
-            <main className="app-container h-[100dvh] relative overflow-hidden bg-white text-white">
+            <main
+                className={`app-container h-[100dvh] relative overflow-hidden bg-transparent text-white transition-opacity duration-200 ${
+                    splashLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+            >
                 <img 
-                    src="/Splash%20Screen%20Design.svg" 
+                    src="/splash-bg.webp" 
                     alt="Splash Background" 
                     fetchPriority="high"
+                    onLoad={() => setSplashLoaded(true)}
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
 

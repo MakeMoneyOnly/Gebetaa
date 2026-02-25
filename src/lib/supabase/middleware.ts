@@ -45,10 +45,10 @@ export async function updateSession(request: NextRequest) {
         }
     );
 
-    // IMPORTANT: Use getClaims() for better performance with SSR
-    // Do not run code between createServerClient and supabase.auth.getClaims()
-    const { data } = await supabase.auth.getClaims();
-    const user = data?.claims;
+    // IMPORTANT: Do not run code between createServerClient and supabase.auth.getUser()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
 
     const pathname = request.nextUrl.pathname;
     const protectedPrefixes = ['/app', '/merchant', '/kds', '/staff', '/pos'];
