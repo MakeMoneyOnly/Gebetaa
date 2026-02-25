@@ -114,39 +114,47 @@ function MenuContent() {
         async function validateContext() {
             // ── Online Ordering Mode ──────────────────────────────────────────────
             // No QR params present: user arrived via the storefront link, not a table QR.
-            // Fetch restaurant info directly and synthesize a guest context.
+            // Fetch restaurant info via server-side API (bypasses RLS).
             if (isOnlineOrderMode) {
                 setContextLoading(true);
                 setContextError(null);
                 try {
-                    const { data: restaurant, error: restaurantError } = await supabase
-                        .from('restaurants')
-                        .select('id, name, logo_url')
-                        .eq('slug', slug)
-                        .maybeSingle();
+                    const url = new URL('/api/guest/restaurant', window.location.origin);
+                    url.searchParams.set('slug', slug);
 
-                    if (restaurantError || !restaurant) {
+                    const response = await fetch(url.toString(), { method: 'GET' });
+                    const payload = await response.json();
+
+                    if (!isMountedRef.current) return;
+
+                    if (!response.ok) {
                         setGuestContext(null);
                         setContextError(
-                            restaurantError?.message ??
-                            'Restaurant not found. Please check the URL.'
+                            payload?.error ?? 'Restaurant not found. Please check the URL.'
                         );
                         return;
                     }
 
+                    const data = payload.data as {
+                        restaurant_id: string;
+                        restaurant_name: string;
+                        restaurant_logo_url: string | null;
+                        slug: string;
+                    };
+
                     // Synthesize a context object for online ordering (no real table)
                     setGuestContext({
-                        restaurant_id: restaurant.id,
+                        restaurant_id: data.restaurant_id,
                         table_id: '',
                         table_number: 'Online Order',
-                        slug,
-                        sig: '0'.repeat(64), // bypass signature check (no QR)
-                        exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-                        restaurant_name: restaurant.name ?? slug,
-                        restaurant_logo_url: restaurant.logo_url ?? null,
+                        slug: data.slug,
+                        sig: '0'.repeat(64),
+                        exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
+                        restaurant_name: data.restaurant_name,
+                        restaurant_logo_url: data.restaurant_logo_url,
                         is_online_order: true,
                     });
-                    setShowPreMenuSplash(false); // skip splash for online ordering
+                    // Don't skip splash — let user interact with it normally
                 } catch (error) {
                     if (!isMountedRef.current) return;
                     if (isAbortError(error)) return;

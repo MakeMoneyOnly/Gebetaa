@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
+import { generateSignedQRCode } from '@/lib/security/hmac';
+import { getRequestOrigin } from '@/lib/api/requestOrigin';
 
 const CreateTableSchema = z.object({
     table_number: z.string().trim().min(1).max(20),
@@ -53,6 +55,25 @@ export async function POST(request: Request) {
         return parsed.response;
     }
 
+    // Fetch restaurant slug for QR code generation
+    const { data: restaurant, error: restaurantError } = await context.supabase
+        .from('restaurants')
+        .select('slug')
+        .eq('id', context.restaurantId)
+        .maybeSingle();
+
+    if (restaurantError || !restaurant?.slug) {
+        return apiError(
+            'Failed to fetch restaurant slug for QR generation',
+            500,
+            'RESTAURANT_SLUG_MISSING'
+        );
+    }
+
+    // Generate QR code URL using the current request origin
+    const origin = getRequestOrigin(request);
+    const qr = generateSignedQRCode(restaurant.slug, parsed.data.table_number, origin);
+
     const { data, error } = await context.supabase
         .from('tables')
         .insert({
@@ -61,6 +82,7 @@ export async function POST(request: Request) {
             status: parsed.data.status,
             capacity: parsed.data.capacity,
             zone: parsed.data.zone ?? null,
+            qr_code_url: qr.url,
         })
         .select('*')
         .single();
@@ -71,3 +93,4 @@ export async function POST(request: Request) {
 
     return apiSuccess(data, 201);
 }
+

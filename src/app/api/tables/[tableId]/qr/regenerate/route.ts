@@ -1,35 +1,7 @@
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { generateSignedQRCode } from '@/lib/security/hmac';
-
-/**
- * Derive the canonical base URL from the incoming request.
- * This ensures QR codes point to wherever the dashboard is actually running:
- * - localhost:3000 in local dev
- * - the Vercel deployment URL in production/preview
- * We do NOT rely on NEXT_PUBLIC_APP_URL here because that env var may contain an
- * old ngrok tunnel used for local dev.
- */
-function getRequestOrigin(request: Request): string {
-    // Use x-forwarded-host (set by Vercel / reverse proxies) when available
-    const forwardedHost = request.headers.get('x-forwarded-host');
-    const host = request.headers.get('host');
-    const proto = request.headers.get('x-forwarded-proto') || 'https';
-
-    const resolvedHost = forwardedHost || host;
-    if (resolvedHost) {
-        return `${proto}://${resolvedHost}`;
-    }
-
-    // Fallback: construct from the request URL itself
-    try {
-        const url = new URL(request.url);
-        return url.origin;
-    } catch {
-        // Last resort
-        return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    }
-}
+import { getRequestOrigin } from '@/lib/api/requestOrigin';
 
 export async function POST(request: Request, context: { params: Promise<{ tableId: string }> }) {
     const auth = await getAuthenticatedUser();
