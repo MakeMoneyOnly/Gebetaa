@@ -141,7 +141,7 @@ export default function BarPage() {
 
             const mapped = (data ?? [])
                 .map(mapOrderToBarTicket)
-                .filter((t): t is Ticket => t !== null)
+                .filter((t: Ticket | null): t is Ticket => t !== null)
                 .filter((t: Ticket) => t.status !== 'completed');
 
             setTickets(mapped);

@@ -638,7 +638,7 @@ function MenuContent() {
                         <Drawer.Content className="fixed right-0 bottom-0 left-0 z-[9999] flex flex-col rounded-t-[32px] bg-white shadow-[0_-20px_40px_rgba(0,0,0,0.25)] outline-none">
                             <div className="w-full px-5 pb-8 pt-5 text-black">
                                 <div className="mx-auto mb-6 h-1.5 w-12 flex-shrink-0 lg:hidden rounded-full bg-black/10" />
-                                <div className="mb-4 flex items-center justify-between">
+                                <div className="mb-4 flex items-center">
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -648,14 +648,11 @@ function MenuContent() {
                                             setAuthError(null);
                                             setAuthMessage(null);
                                         }}
-                                        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold text-black/65 transition hover:bg-black/5"
+                                        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold text-black/65 transition hover:bg-black/5 -ml-3"
                                     >
                                         <ArrowLeft size={16} />
                                         Back
                                     </button>
-                                    <span className="font-manrope text-sm font-semibold text-black/55">
-                                        {authView === 'login' ? 'guest login' : 'guest sign up'}
-                                    </span>
                                 </div>
 
                                 <Drawer.Title className="font-manrope text-4xl font-black tracking-tight text-black">
