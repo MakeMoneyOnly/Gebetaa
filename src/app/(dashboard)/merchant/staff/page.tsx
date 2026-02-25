@@ -32,7 +32,12 @@ export default function StaffPage() {
     const [deletingDeviceId, setDeletingDeviceId] = useState<string | null>(null);
     const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
 
-    const { devices, loading: devicesDataLoading, handleProvisionDevice, handleDeleteDevice } = useDevices();
+    const {
+        devices,
+        loading: devicesDataLoading,
+        handleProvisionDevice,
+        handleDeleteDevice,
+    } = useDevices();
 
     const { loading: pageLoading, markLoaded } = usePageLoadGuard('staff');
 
@@ -349,14 +354,18 @@ export default function StaffPage() {
                                                     {deletingStaffId === member.id ? (
                                                         <div className="flex items-center gap-2">
                                                             <button
-                                                                onClick={() => setDeletingStaffId(null)}
+                                                                onClick={() =>
+                                                                    setDeletingStaffId(null)
+                                                                }
                                                                 className="flex-1 rounded-xl bg-gray-100 py-2.5 text-xs font-bold text-gray-500 hover:bg-gray-200"
                                                             >
                                                                 Cancel
                                                             </button>
                                                             <button
                                                                 onClick={async () => {
-                                                                    await handleDeleteStaff(member.id);
+                                                                    await handleDeleteStaff(
+                                                                        member.id
+                                                                    );
                                                                     setDeletingStaffId(null);
                                                                 }}
                                                                 className="flex-1 rounded-xl bg-red-500 py-2.5 text-xs font-bold text-white hover:bg-red-600"
@@ -366,7 +375,9 @@ export default function StaffPage() {
                                                         </div>
                                                     ) : (
                                                         <button
-                                                            onClick={() => setDeletingStaffId(member.id)}
+                                                            onClick={() =>
+                                                                setDeletingStaffId(member.id)
+                                                            }
                                                             className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
@@ -378,7 +389,6 @@ export default function StaffPage() {
                                         </div>
                                     </div>
                                 ))}
-
                             </div>
                         )}
 

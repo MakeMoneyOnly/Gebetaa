@@ -65,10 +65,7 @@ export async function POST(request: Request) {
     const { table_number, items, notes, staff_name } = parsed.data;
     const admin = createServiceRoleClient();
 
-    const totalAmount = items.reduce(
-        (sum, item) => sum + item.unit_price * item.quantity,
-        0
-    );
+    const totalAmount = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
 
     const ticketNumber = `#-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`;
 
@@ -103,7 +100,12 @@ export async function POST(request: Request) {
 
     const { error: itemsError } = await admin.from('order_items').insert(orderItems);
     if (itemsError) {
-        return apiError('Failed to save order items', 500, 'ORDER_ITEMS_FAILED', itemsError.message);
+        return apiError(
+            'Failed to save order items',
+            500,
+            'ORDER_ITEMS_FAILED',
+            itemsError.message
+        );
     }
 
     // Mark the table as occupied

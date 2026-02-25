@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
         const supabase = await createClient();
         const guestContext = await resolveGuestContext(supabase, parsed.data.guest_context);
         if (!guestContext.valid) {
-            return NextResponse.json({ error: guestContext.reason }, { status: guestContext.status });
+            return NextResponse.json(
+                { error: guestContext.reason },
+                { status: guestContext.status }
+            );
         }
 
         const {
@@ -109,7 +112,10 @@ export async function POST(request: NextRequest) {
             .single();
 
         if (insertError || !createdSession) {
-            return NextResponse.json({ error: insertError?.message ?? 'Failed to create session.' }, { status: 500 });
+            return NextResponse.json(
+                { error: insertError?.message ?? 'Failed to create session.' },
+                { status: 500 }
+            );
         }
 
         return NextResponse.json({

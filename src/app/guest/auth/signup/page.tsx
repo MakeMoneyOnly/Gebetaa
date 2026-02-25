@@ -214,13 +214,16 @@ function SignUpContent() {
                     </h2>
                     <div className="border-brand-crimson mt-8 border-l-2 pl-6">
                         <p className="text-xl leading-relaxed font-medium text-white/90 italic">
-                            &ldquo;I sign up once, then every scan at participating restaurants keeps my rewards in sync.&rdquo;
+                            &ldquo;I sign up once, then every scan at participating restaurants
+                            keeps my rewards in sync.&rdquo;
                         </p>
                         <div className="mt-6 flex items-center gap-4">
                             <div className="h-12 w-12 rounded-full bg-white/10" />
                             <div>
                                 <p className="text-base font-bold text-white">Gebeta Rewards</p>
-                                <p className="text-sm font-medium text-white/50">Guest Membership</p>
+                                <p className="text-sm font-medium text-white/50">
+                                    Guest Membership
+                                </p>
                             </div>
                         </div>
                     </div>

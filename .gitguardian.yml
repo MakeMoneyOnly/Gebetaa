@@ -1,0 +1,11 @@
+# GitGuardian configuration
+# See: https://docs.gitguardian.com/ggshield-docs/reference/gitguardian-yaml
+version: 2
+
+secret:
+  # Files and paths to ignore during secret scanning
+  ignored-paths:
+    - "scripts/set-vercel-env.js"
+    - "**/*.env*"
+    - "**/.env.local"
+    - "**/.env.example"

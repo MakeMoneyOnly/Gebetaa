@@ -1,6 +1,6 @@
 /**
  * Off-Premise Context Handler
- * 
+ *
  * Handles URL parameter validation for off-premise ordering mode.
  * When no table session signature is provided, the app boots into off-premise mode
  * for delivery or pickup orders from direct links (e.g., Instagram).

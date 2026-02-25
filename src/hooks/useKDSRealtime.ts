@@ -5,7 +5,13 @@ import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed';
-type ExternalOrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+type ExternalOrderStatus =
+    | 'pending'
+    | 'confirmed'
+    | 'preparing'
+    | 'ready'
+    | 'delivered'
+    | 'cancelled';
 
 interface KDSOrder {
     id: string;
@@ -35,7 +41,7 @@ interface UseKDSRealtimeOptions {
 
 /**
  * Hook for real-time KDS order updates via Supabase Realtime
- * 
+ *
  * Subscribes to both `orders` and `external_orders` tables for
  * comprehensive omnichannel order tracking.
  */
@@ -56,7 +62,7 @@ export function useKDSRealtime({
             if (!mountedRef.current) return;
 
             const order = payload.new;
-            
+
             // Filter by restaurant_id
             if (order.restaurant_id !== restaurantId) {
                 return;
@@ -94,7 +100,7 @@ export function useKDSRealtime({
             if (!mountedRef.current) return;
 
             const order = payload.new;
-            
+
             // Filter by restaurant_id
             if (order.restaurant_id !== restaurantId) {
                 return;
@@ -147,7 +153,7 @@ export function useKDSRealtime({
                     table: 'orders',
                     filter: `restaurant_id=eq.${restaurantId}`,
                 },
-                (payload) => {
+                payload => {
                     handleOrdersChange(payload as unknown as RealtimePayload);
                 }
             )
@@ -159,11 +165,11 @@ export function useKDSRealtime({
                     table: 'external_orders',
                     filter: `restaurant_id=eq.${restaurantId}`,
                 },
-                (payload) => {
+                payload => {
                     handleExternalOrdersChange(payload as unknown as RealtimePayload);
                 }
             )
-            .subscribe((status) => {
+            .subscribe(status => {
                 console.log(`[KDS Realtime] Subscription status: ${status}`);
             });
 
@@ -225,7 +231,7 @@ export function useDriverStatusRealtime({
                     table: 'external_orders',
                     filter: `restaurant_id=eq.${restaurantId}`,
                 },
-                (payload) => {
+                payload => {
                     if (!mountedRef.current) return;
 
                     const order = payload.new as Record<string, unknown>;

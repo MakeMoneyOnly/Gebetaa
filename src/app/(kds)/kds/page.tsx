@@ -404,18 +404,20 @@ function KDSContent() {
 
 export default function KDSPage() {
     return (
-        <Suspense fallback={
-            <div className="font-manrope flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900">
-                <div className="z-10 flex w-full flex-none items-start justify-between bg-gray-50/90 px-10 py-8 backdrop-blur-sm">
-                    <div>
-                        <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
-                            Kitchen Display
-                        </h1>
-                        <p className="text-sm text-gray-500">Loading KDS...</p>
+        <Suspense
+            fallback={
+                <div className="font-manrope flex h-screen flex-col overflow-hidden bg-gray-50 text-gray-900">
+                    <div className="z-10 flex w-full flex-none items-start justify-between bg-gray-50/90 px-10 py-8 backdrop-blur-sm">
+                        <div>
+                            <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                                Kitchen Display
+                            </h1>
+                            <p className="text-sm text-gray-500">Loading KDS...</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }>
+            }
+        >
             <KDSContent />
         </Suspense>
     );

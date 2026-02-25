@@ -1,6 +1,6 @@
 /**
  * Delivery Dispatch Service
- * 
+ *
  * Handles automatic driver dispatch for direct online orders.
  * Integrates with white-label logistics partners in Addis Ababa.
  */
@@ -112,27 +112,27 @@ export function estimateDistance(
  * Get coordinates for an address in Addis Ababa
  * Returns approximate coordinates based on area
  */
-export function getCoordinatesForAddress(address: {
-    area?: string;
-    city: string;
-}): { lat: number; lng: number } {
+export function getCoordinatesForAddress(address: { area?: string; city: string }): {
+    lat: number;
+    lng: number;
+} {
     // Approximate coordinates for Addis Ababa areas
     const areaCoordinates: Record<string, { lat: number; lng: number }> = {
-        'Bole': { lat: 8.9806, lng: 38.7578 },
-        'Kazanchis': { lat: 9.0050, lng: 38.7636 },
-        'Piazza': { lat: 9.0320, lng: 38.7469 },
-        'Megenagna': { lat: 9.0217, lng: 38.7922 },
-        'CMC': { lat: 9.0283, lng: 38.8167 },
-        'Gerji': { lat: 9.0100, lng: 38.7833 },
-        'Sarbet': { lat: 9.0083, lng: 38.7333 },
-        'Merkato': { lat: 9.0333, lng: 38.7417 },
-        'Lideta': { lat: 9.0083, lng: 38.7417 },
-        'Kirkos': { lat: 9.0000, lng: 38.7500 },
+        Bole: { lat: 8.9806, lng: 38.7578 },
+        Kazanchis: { lat: 9.005, lng: 38.7636 },
+        Piazza: { lat: 9.032, lng: 38.7469 },
+        Megenagna: { lat: 9.0217, lng: 38.7922 },
+        CMC: { lat: 9.0283, lng: 38.8167 },
+        Gerji: { lat: 9.01, lng: 38.7833 },
+        Sarbet: { lat: 9.0083, lng: 38.7333 },
+        Merkato: { lat: 9.0333, lng: 38.7417 },
+        Lideta: { lat: 9.0083, lng: 38.7417 },
+        Kirkos: { lat: 9.0, lng: 38.75 },
         'Old Airport': { lat: 8.9833, lng: 38.7667 },
     };
 
     const area = address.area?.trim() ?? '';
-    return areaCoordinates[area] ?? { lat: 9.0000, lng: 38.7500 }; // Default to center
+    return areaCoordinates[area] ?? { lat: 9.0, lng: 38.75 }; // Default to center
 }
 
 /**
@@ -156,7 +156,7 @@ function selectLogisticsPartner(deliveryArea: string): LogisticsPartner | null {
  */
 export async function dispatchDriver(request: DispatchRequest): Promise<DispatchResult> {
     const partner = selectLogisticsPartner(request.deliveryAddress.area ?? '');
-    
+
     if (!partner) {
         return { success: false, error: 'No delivery partner available for this area' };
     }
@@ -173,7 +173,7 @@ export async function dispatchDriver(request: DispatchRequest): Promise<Dispatch
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${partnerConfig.api_key}`,
+                Authorization: `Bearer ${partnerConfig.api_key}`,
             },
             body: JSON.stringify({
                 order_id: request.orderId,
@@ -202,7 +202,7 @@ export async function dispatchDriver(request: DispatchRequest): Promise<Dispatch
         }
 
         const supabase = await createClient();
-        
+
         await supabase
             .from('orders')
             .update({
@@ -282,20 +282,20 @@ export async function cancelDispatch(
 
     try {
         await fetch(`${partnerConfig.api_url}/dispatch/${driverId}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${partnerConfig.api_key}`,
-                },
-                body: JSON.stringify({
-                    order_id: orderId,
-                    reason,
-                }),
-            });
-        } catch (error) {
-            console.error('Failed to cancel with partner:', error);
-            return { success: false, error: 'Failed to cancel dispatch' };
-        }
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${partnerConfig.api_key}`,
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                reason,
+            }),
+        });
+    } catch (error) {
+        console.error('Failed to cancel with partner:', error);
+        return { success: false, error: 'Failed to cancel dispatch' };
+    }
 
     await supabase
         .from('orders')

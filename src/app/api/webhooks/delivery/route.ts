@@ -7,12 +7,12 @@ import type { Json } from '@/types/database';
 
 /**
  * Inbound Webhook Endpoint for Delivery Partners
- * 
+ *
  * POST /api/webhooks/delivery
- * 
+ *
  * Receives order webhooks from external delivery partners (Beu, Zmall, Deliver Addis, etc.)
  * and normalizes them into the external_orders table.
- * 
+ *
  * Headers:
  * - X-Provider: The delivery provider (beu, zmall, deliver_addis, esoora, custom_local)
  * - X-API-Key: The integration API key for the restaurant
@@ -77,20 +77,20 @@ type Provider = keyof typeof PROVIDER_CONFIGS;
 function normalizeStatus(status: string | undefined): string {
     const statusMap: Record<string, string> = {
         // Common statuses
-        'pending': 'pending',
-        'new': 'pending',
-        'confirmed': 'confirmed',
-        'accepted': 'confirmed',
-        'preparing': 'preparing',
-        'cooking': 'preparing',
-        'ready': 'ready',
-        'picked_up': 'picked_up',
-        'on_the_way': 'on_the_way',
-        'delivered': 'delivered',
-        'completed': 'delivered',
-        'cancelled': 'cancelled',
-        'canceled': 'cancelled',
-        'rejected': 'rejected',
+        pending: 'pending',
+        new: 'pending',
+        confirmed: 'confirmed',
+        accepted: 'confirmed',
+        preparing: 'preparing',
+        cooking: 'preparing',
+        ready: 'ready',
+        picked_up: 'picked_up',
+        on_the_way: 'on_the_way',
+        delivered: 'delivered',
+        completed: 'delivered',
+        cancelled: 'cancelled',
+        canceled: 'cancelled',
+        rejected: 'rejected',
     };
 
     return statusMap[status?.toLowerCase() ?? 'pending'] ?? 'pending';
@@ -126,11 +126,7 @@ export async function POST(request: NextRequest) {
 
     // Validate API key
     if (!apiKey) {
-        return apiError(
-            'Missing X-API-Key header',
-            401,
-            'MISSING_API_KEY'
-        );
+        return apiError('Missing X-API-Key header', 401, 'MISSING_API_KEY');
     }
 
     // Parse and validate payload
@@ -148,11 +144,7 @@ export async function POST(request: NextRequest) {
         }
         payload = parsed.data;
     } catch {
-        return apiError(
-            'Failed to parse request body',
-            400,
-            'INVALID_JSON'
-        );
+        return apiError('Failed to parse request body', 400, 'INVALID_JSON');
     }
 
     const supabase = await createClient();
@@ -168,11 +160,7 @@ export async function POST(request: NextRequest) {
 
     if (partnerError) {
         console.error('Failed to query delivery partner:', partnerError);
-        return apiError(
-            'Internal server error',
-            500,
-            'DATABASE_ERROR'
-        );
+        return apiError('Internal server error', 500, 'DATABASE_ERROR');
     }
 
     if (!partner) {
@@ -199,15 +187,12 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        return apiError(
-            'Invalid API key',
-            401,
-            'INVALID_API_KEY'
-        );
+        return apiError('Invalid API key', 401, 'INVALID_API_KEY');
     }
 
     // Generate or extract order ID
-    const providerOrderId = payload.order_id ?? payload.external_order_id ?? generateProviderOrderId(provider);
+    const providerOrderId =
+        payload.order_id ?? payload.external_order_id ?? generateProviderOrderId(provider);
     const totalAmount = payload.total ?? payload.total_amount ?? 0;
     const normalizedStatus = normalizeStatus(payload.status);
 
@@ -235,11 +220,7 @@ export async function POST(request: NextRequest) {
 
         if (updateError) {
             console.error('Failed to update external order:', updateError);
-            return apiError(
-                'Failed to update order',
-                500,
-                'UPDATE_FAILED'
-            );
+            return apiError('Failed to update order', 500, 'UPDATE_FAILED');
         }
 
         return apiSuccess({
@@ -270,12 +251,7 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
         console.error('Failed to create external order:', createError);
-        return apiError(
-            'Failed to create order',
-            500,
-            'CREATE_FAILED',
-            createError.message
-        );
+        return apiError('Failed to create order', 500, 'CREATE_FAILED', createError.message);
     }
 
     // Check if auto-accept is enabled
@@ -308,12 +284,15 @@ export async function POST(request: NextRequest) {
     });
 
     // Return success response
-    return apiSuccess({
-        message: 'Order received successfully',
-        order_id: newOrder.id,
-        provider_order_id: providerOrderId,
-        status: normalizedStatus,
-        auto_accepted: autoAccept,
-        processing_time_ms: Date.now() - startTime,
-    }, 201);
+    return apiSuccess(
+        {
+            message: 'Order received successfully',
+            order_id: newOrder.id,
+            provider_order_id: providerOrderId,
+            status: normalizedStatus,
+            auto_accepted: autoAccept,
+            processing_time_ms: Date.now() - startTime,
+        },
+        201
+    );
 }

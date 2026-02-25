@@ -64,7 +64,7 @@ export default function ChannelsPage() {
     const [orders, setOrders] = useState<ExternalOrder[]>([]);
     const [settings, setSettings] = useState<OnlineOrderingSettings>(defaultSettings);
     const [settingsSaving, setSettingsSaving] = useState(false);
-    
+
     const { restaurantId } = useRole(null);
     const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
 
@@ -230,7 +230,7 @@ export default function ChannelsPage() {
                     {error}
                 </div>
             )}
-            
+
             <ChannelHealthBoard loading={loading} summary={summary} error={null} />
 
             <OnlineOrderingSettingsPanel

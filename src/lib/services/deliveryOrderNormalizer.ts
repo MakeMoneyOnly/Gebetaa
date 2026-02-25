@@ -1,6 +1,6 @@
 /**
  * Delivery Order Normalizer
- * 
+ *
  * Transforms incoming orders from different delivery partners (Beu, Zmall, Deliver Addis, Esoora)
  * into a standardized format for the external_orders table.
  */
@@ -52,13 +52,15 @@ const BeuOrderSchema = z.object({
         city: z.string().optional(),
         area: z.string().optional(),
     }),
-    items: z.array(z.object({
-        id: z.string().or(z.number()),
-        name: z.string(),
-        quantity: z.number(),
-        price: z.number(),
-        notes: z.string().optional(),
-    })),
+    items: z.array(
+        z.object({
+            id: z.string().or(z.number()),
+            name: z.string(),
+            quantity: z.number(),
+            price: z.number(),
+            notes: z.string().optional(),
+        })
+    ),
     subtotal: z.number(),
     delivery_fee: z.number().optional(),
     total: z.number(),
@@ -81,13 +83,15 @@ const ZmallOrderSchema = z.object({
         city: z.string(),
         subCity: z.string().optional(),
     }),
-    orderItems: z.array(z.object({
-        itemId: z.string().or(z.number()),
-        itemName: z.string(),
-        qty: z.number(),
-        unitPrice: z.number(),
-        specialRequest: z.string().optional(),
-    })),
+    orderItems: z.array(
+        z.object({
+            itemId: z.string().or(z.number()),
+            itemName: z.string(),
+            qty: z.number(),
+            unitPrice: z.number(),
+            specialRequest: z.string().optional(),
+        })
+    ),
     orderTotal: z.number(),
     deliveryCharge: z.number().optional(),
     grandTotal: z.number(),
@@ -109,13 +113,15 @@ const DeliverAddisOrderSchema = z.object({
         city: z.string().optional(),
         landmark: z.string().optional(),
     }),
-    products: z.array(z.object({
-        product_id: z.string().or(z.number()),
-        name: z.string(),
-        quantity: z.number(),
-        price: z.number(),
-        extras: z.array(z.string()).optional(),
-    })),
+    products: z.array(
+        z.object({
+            product_id: z.string().or(z.number()),
+            name: z.string(),
+            quantity: z.number(),
+            price: z.number(),
+            extras: z.array(z.string()).optional(),
+        })
+    ),
     subtotal: z.number(),
     delivery_cost: z.number().optional(),
     total: z.number(),
@@ -138,13 +144,15 @@ const EsooraOrderSchema = z.object({
         city: z.string(),
         area: z.string().optional(),
     }),
-    lineItems: z.array(z.object({
-        sku: z.string().or(z.number()),
-        title: z.string(),
-        count: z.number(),
-        price: z.number(),
-        options: z.array(z.string()).optional(),
-    })),
+    lineItems: z.array(
+        z.object({
+            sku: z.string().or(z.number()),
+            title: z.string(),
+            count: z.number(),
+            price: z.number(),
+            options: z.array(z.string()).optional(),
+        })
+    ),
     itemsTotal: z.number(),
     shippingFee: z.number().optional(),
     orderTotal: z.number(),
@@ -156,10 +164,13 @@ const EsooraOrderSchema = z.object({
 /**
  * Parse and normalize a Beu order
  */
-export function parseBeuOrder(rawOrder: unknown, restaurantId: string): NormalizedExternalOrder | null {
+export function parseBeuOrder(
+    rawOrder: unknown,
+    restaurantId: string
+): NormalizedExternalOrder | null {
     try {
         const order = BeuOrderSchema.parse(rawOrder);
-        
+
         return {
             provider: 'beu',
             provider_order_id: order.order_id,
@@ -195,10 +206,13 @@ export function parseBeuOrder(rawOrder: unknown, restaurantId: string): Normaliz
 /**
  * Parse and normalize a Zmall order
  */
-export function parseZmallOrder(rawOrder: unknown, restaurantId: string): NormalizedExternalOrder | null {
+export function parseZmallOrder(
+    rawOrder: unknown,
+    restaurantId: string
+): NormalizedExternalOrder | null {
     try {
         const order = ZmallOrderSchema.parse(rawOrder);
-        
+
         return {
             provider: 'zmall',
             provider_order_id: order.orderId,
@@ -236,10 +250,13 @@ export function parseZmallOrder(rawOrder: unknown, restaurantId: string): Normal
 /**
  * Parse and normalize a Deliver Addis order
  */
-export function parseDeliverAddisOrder(rawOrder: unknown, restaurantId: string): NormalizedExternalOrder | null {
+export function parseDeliverAddisOrder(
+    rawOrder: unknown,
+    restaurantId: string
+): NormalizedExternalOrder | null {
     try {
         const order = DeliverAddisOrderSchema.parse(rawOrder);
-        
+
         return {
             provider: 'deliver_addis',
             provider_order_id: order.id,
@@ -276,10 +293,13 @@ export function parseDeliverAddisOrder(rawOrder: unknown, restaurantId: string):
 /**
  * Parse and normalize an Esoora order
  */
-export function parseEsooraOrder(rawOrder: unknown, restaurantId: string): NormalizedExternalOrder | null {
+export function parseEsooraOrder(
+    rawOrder: unknown,
+    restaurantId: string
+): NormalizedExternalOrder | null {
     try {
         const order = EsooraOrderSchema.parse(rawOrder);
-        
+
         return {
             provider: 'esoora',
             provider_order_id: order.orderNumber,
@@ -314,50 +334,70 @@ export function parseEsooraOrder(rawOrder: unknown, restaurantId: string): Norma
 }
 
 // Status mapping functions
-function mapBeuStatus(status?: string): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
-    const map: Record<string, 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'> = {
-        'new': 'pending',
-        'accepted': 'confirmed',
-        'preparing': 'preparing',
-        'ready': 'ready',
-        'delivered': 'delivered',
-        'cancelled': 'cancelled',
+function mapBeuStatus(
+    status?: string
+): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
+    const map: Record<
+        string,
+        'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+    > = {
+        new: 'pending',
+        accepted: 'confirmed',
+        preparing: 'preparing',
+        ready: 'ready',
+        delivered: 'delivered',
+        cancelled: 'cancelled',
     };
     return map[status?.toLowerCase() ?? ''] ?? 'pending';
 }
 
-function mapZmallStatus(status?: string): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
-    const map: Record<string, 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'> = {
-        'placed': 'pending',
-        'confirmed': 'confirmed',
-        'in_progress': 'preparing',
-        'ready_for_pickup': 'ready',
-        'delivered': 'delivered',
-        'cancelled': 'cancelled',
+function mapZmallStatus(
+    status?: string
+): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
+    const map: Record<
+        string,
+        'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+    > = {
+        placed: 'pending',
+        confirmed: 'confirmed',
+        in_progress: 'preparing',
+        ready_for_pickup: 'ready',
+        delivered: 'delivered',
+        cancelled: 'cancelled',
     };
     return map[status?.toLowerCase() ?? ''] ?? 'pending';
 }
 
-function mapDeliverAddisStatus(status?: string): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
-    const map: Record<string, 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'> = {
-        'pending': 'pending',
-        'accepted': 'confirmed',
-        'cooking': 'preparing',
-        'ready': 'ready',
-        'completed': 'delivered',
-        'cancelled': 'cancelled',
+function mapDeliverAddisStatus(
+    status?: string
+): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
+    const map: Record<
+        string,
+        'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+    > = {
+        pending: 'pending',
+        accepted: 'confirmed',
+        cooking: 'preparing',
+        ready: 'ready',
+        completed: 'delivered',
+        cancelled: 'cancelled',
     };
     return map[status?.toLowerCase() ?? ''] ?? 'pending';
 }
 
-function mapEsooraStatus(status?: string): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
-    const map: Record<string, 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'> = {
-        'received': 'pending',
-        'acknowledged': 'confirmed',
-        'in_preparation': 'preparing',
-        'out_for_delivery': 'ready',
-        'fulfilled': 'delivered',
-        'voided': 'cancelled',
+function mapEsooraStatus(
+    status?: string
+): 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' {
+    const map: Record<
+        string,
+        'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+    > = {
+        received: 'pending',
+        acknowledged: 'confirmed',
+        in_preparation: 'preparing',
+        out_for_delivery: 'ready',
+        fulfilled: 'delivered',
+        voided: 'cancelled',
     };
     return map[status?.toLowerCase() ?? ''] ?? 'pending';
 }

@@ -4,7 +4,15 @@ import { useState, useRef, useEffect } from 'react';
 import { Loader2, Save, Copy, Check, Clock, Globe, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-function ToggleSwitch({ checked, onChange, disabled }: { checked: boolean, onChange: (c: boolean) => void, disabled?: boolean }) {
+function ToggleSwitch({
+    checked,
+    onChange,
+    disabled,
+}: {
+    checked: boolean;
+    onChange: (c: boolean) => void;
+    disabled?: boolean;
+}) {
     return (
         <button
             type="button"
@@ -13,9 +21,9 @@ function ToggleSwitch({ checked, onChange, disabled }: { checked: boolean, onCha
             disabled={disabled}
             onClick={() => onChange(!checked)}
             className={cn(
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#a0151e] focus:ring-offset-2',
+                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:ring-2 focus:ring-[#a0151e] focus:ring-offset-2 focus:outline-none',
                 checked ? 'bg-[#98141F]' : 'bg-gray-200',
-                disabled && 'opacity-50 cursor-not-allowed'
+                disabled && 'cursor-not-allowed opacity-50'
             )}
         >
             <span
@@ -28,7 +36,7 @@ function ToggleSwitch({ checked, onChange, disabled }: { checked: boolean, onCha
     );
 }
 
-function CustomTimeSelect({ value, onChange }: { value: string, onChange: (v: string) => void }) {
+function CustomTimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -52,7 +60,7 @@ function CustomTimeSelect({ value, onChange }: { value: string, onChange: (v: st
             const hh12 = hour12.toString().padStart(2, '0');
             options.push({
                 value: `${hh}:${mm}`,
-                label: `${hh12}:${mm} ${ampm}`
+                label: `${hh12}:${mm} ${ampm}`,
             });
         }
     }
@@ -64,16 +72,18 @@ function CustomTimeSelect({ value, onChange }: { value: string, onChange: (v: st
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="flex h-12 w-full items-center justify-between rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 outline-none transition-all hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
+                className="flex h-12 w-full items-center justify-between rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 transition-all outline-none hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
             >
                 <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gray-400" />
                     <span>{selectedOption ? selectedOption.label : 'Select time'}</span>
                 </div>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                    className={`h-4 w-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                />
             </button>
             {open && (
-                <div className="absolute z-10 mt-2 w-full max-h-60 overflow-y-auto rounded-xl bg-white py-1 shadow-[0px_4px_24px_rgba(0,0,0,0.12)] ring-1 ring-black/5 flex flex-col custom-scrollbar">
+                <div className="custom-scrollbar absolute z-10 mt-2 flex max-h-60 w-full flex-col overflow-y-auto rounded-xl bg-white py-1 shadow-[0px_4px_24px_rgba(0,0,0,0.12)] ring-1 ring-black/5">
                     {options.map(option => (
                         <button
                             key={option.value}
@@ -84,7 +94,9 @@ function CustomTimeSelect({ value, onChange }: { value: string, onChange: (v: st
                             }}
                             className={cn(
                                 'flex w-full items-center justify-between px-4 py-3 text-left text-[14px] transition-colors',
-                                value === option.value ? 'bg-gray-50 font-bold text-[#98141F]' : 'font-medium text-gray-700 hover:bg-gray-50'
+                                value === option.value
+                                    ? 'bg-gray-50 font-bold text-[#98141F]'
+                                    : 'font-medium text-gray-700 hover:bg-gray-50'
                             )}
                         >
                             {option.label}
@@ -132,9 +144,10 @@ export function OnlineOrderingSettingsPanel({
 }: OnlineOrderingSettingsPanelProps) {
     const [copied, setCopied] = useState(false);
 
-    const storeLink = typeof window !== 'undefined' && restaurantSlug 
-        ? `${window.location.origin}/${restaurantSlug}`
-        : '';
+    const storeLink =
+        typeof window !== 'undefined' && restaurantSlug
+            ? `${window.location.origin}/${restaurantSlug}`
+            : '';
 
     const handleCopyLink = async () => {
         if (!storeLink) return;
@@ -152,7 +165,7 @@ export function OnlineOrderingSettingsPanel({
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900">Online Ordering Settings</h3>
-                    <p className="text-sm font-medium text-gray-500 mt-1">
+                    <p className="mt-1 text-sm font-medium text-gray-500">
                         Control online storefront availability and order intake rules.
                     </p>
                 </div>
@@ -160,7 +173,7 @@ export function OnlineOrderingSettingsPanel({
                     type="button"
                     onClick={() => void onSave()}
                     disabled={saving || loading}
-                    className="bg-[#98141F] inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#801019] hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#98141F] px-5 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#801019] hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                 >
                     {saving ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -171,35 +184,52 @@ export function OnlineOrderingSettingsPanel({
                 </button>
             </div>
             {storeLink ? (
-                <div className={cn(
-                    "mt-6 flex items-center justify-between overflow-hidden rounded-[1.25rem] p-1.5 shadow-lg transition-all",
-                    settings.enabled ? "bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900" : "bg-gray-100 shadow-none border border-gray-200"
-                )}>
-                    <div className={cn(
-                        "flex items-center gap-4 py-3 pl-4 transition-opacity",
-                        settings.enabled ? "opacity-100" : "opacity-50 grayscale"
-                    )}>
-                        <div className={cn(
-                            "flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-inner backdrop-blur-md",
-                            settings.enabled ? "bg-white/10" : "bg-gray-300"
-                        )}>
-                            <Globe className={cn("h-5 w-5 text-gray-100", settings.enabled ? "" : "text-gray-500")} />
+                <div
+                    className={cn(
+                        'mt-6 flex items-center justify-between overflow-hidden rounded-[1.25rem] p-1.5 shadow-lg transition-all',
+                        settings.enabled
+                            ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900'
+                            : 'border border-gray-200 bg-gray-100 shadow-none'
+                    )}
+                >
+                    <div
+                        className={cn(
+                            'flex items-center gap-4 py-3 pl-4 transition-opacity',
+                            settings.enabled ? 'opacity-100' : 'opacity-50 grayscale'
+                        )}
+                    >
+                        <div
+                            className={cn(
+                                'flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-inner backdrop-blur-md',
+                                settings.enabled ? 'bg-white/10' : 'bg-gray-300'
+                            )}
+                        >
+                            <Globe
+                                className={cn(
+                                    'h-5 w-5 text-gray-100',
+                                    settings.enabled ? '' : 'text-gray-500'
+                                )}
+                            />
                         </div>
                         <div className="flex flex-col gap-0.5">
-                            <span className={cn(
-                                "text-[10px] font-bold tracking-widest uppercase",
-                                settings.enabled ? "text-gray-400" : "text-gray-500"
-                            )}>
-                                {settings.enabled ? "Your Live Storefront" : "Storefront Disabled"}
-                            </span>
-                            <a 
-                                href={settings.enabled ? storeLink : "#"} 
-                                target={settings.enabled ? "_blank" : undefined}
-                                rel={settings.enabled ? "noopener noreferrer" : undefined}
-                                onClick={(e) => !settings.enabled && e.preventDefault()}
+                            <span
                                 className={cn(
-                                    "text-[15px] font-semibold transition-colors",
-                                    settings.enabled ? "text-white hover:text-[#ff6b7b]" : "text-gray-600 pointer-events-none"
+                                    'text-[10px] font-bold tracking-widest uppercase',
+                                    settings.enabled ? 'text-gray-400' : 'text-gray-500'
+                                )}
+                            >
+                                {settings.enabled ? 'Your Live Storefront' : 'Storefront Disabled'}
+                            </span>
+                            <a
+                                href={settings.enabled ? storeLink : '#'}
+                                target={settings.enabled ? '_blank' : undefined}
+                                rel={settings.enabled ? 'noopener noreferrer' : undefined}
+                                onClick={e => !settings.enabled && e.preventDefault()}
+                                className={cn(
+                                    'text-[15px] font-semibold transition-colors',
+                                    settings.enabled
+                                        ? 'text-white hover:text-[#ff6b7b]'
+                                        : 'pointer-events-none text-gray-600'
                                 )}
                             >
                                 {storeLink}
@@ -211,8 +241,10 @@ export function OnlineOrderingSettingsPanel({
                             onClick={handleCopyLink}
                             disabled={!settings.enabled}
                             className={cn(
-                                "flex h-12 w-12 items-center justify-center rounded-xl transition-all",
-                                settings.enabled ? "bg-white/10 text-white hover:bg-white/20 active:scale-95" : "bg-gray-200 text-gray-400 cursor-not-allowed opacity-50"
+                                'flex h-12 w-12 items-center justify-center rounded-xl transition-all',
+                                settings.enabled
+                                    ? 'bg-white/10 text-white hover:bg-white/20 active:scale-95'
+                                    : 'cursor-not-allowed bg-gray-200 text-gray-400 opacity-50'
                             )}
                             aria-label="Copy store link"
                         >
@@ -247,7 +279,7 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.enabled}
-                            onChange={(checked) => onChange({ ...settings, enabled: checked })}
+                            onChange={checked => onChange({ ...settings, enabled: checked })}
                         />
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
@@ -256,7 +288,9 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.accepts_scheduled_orders}
-                            onChange={(checked) => onChange({ ...settings, accepts_scheduled_orders: checked })}
+                            onChange={checked =>
+                                onChange({ ...settings, accepts_scheduled_orders: checked })
+                            }
                         />
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
@@ -265,7 +299,9 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.auto_accept_orders}
-                            onChange={(checked) => onChange({ ...settings, auto_accept_orders: checked })}
+                            onChange={checked =>
+                                onChange({ ...settings, auto_accept_orders: checked })
+                            }
                         />
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">
@@ -274,7 +310,9 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.order_throttling_enabled}
-                            onChange={(checked) => onChange({ ...settings, order_throttling_enabled: checked })}
+                            onChange={checked =>
+                                onChange({ ...settings, order_throttling_enabled: checked })
+                            }
                         />
                     </div>
 
@@ -294,7 +332,7 @@ export function OnlineOrderingSettingsPanel({
                                         Number.parseInt(event.target.value, 10) || 30,
                                 })
                             }
-                            className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 outline-none transition-all hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
+                            className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 transition-all outline-none hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
                         />
                     </div>
 
@@ -314,33 +352,33 @@ export function OnlineOrderingSettingsPanel({
                                         Number.parseInt(event.target.value, 10) || 300,
                                 })
                             }
-                            className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 outline-none transition-all hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
+                            className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 transition-all outline-none hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
                         />
                     </div>
 
                     <div className="flex flex-col gap-2 pt-2">
-                        <label className="text-sm font-medium text-gray-700">
-                            Service Start
-                        </label>
-                        <CustomTimeSelect 
+                        <label className="text-sm font-medium text-gray-700">Service Start</label>
+                        <CustomTimeSelect
                             value={settings.service_hours.start}
-                            onChange={(val) => onChange({
-                                ...settings,
-                                service_hours: { ...settings.service_hours, start: val },
-                            })}
+                            onChange={val =>
+                                onChange({
+                                    ...settings,
+                                    service_hours: { ...settings.service_hours, start: val },
+                                })
+                            }
                         />
                     </div>
 
                     <div className="flex flex-col gap-2 pt-2">
-                        <label className="text-sm font-medium text-gray-700">
-                            Service End
-                        </label>
-                        <CustomTimeSelect 
+                        <label className="text-sm font-medium text-gray-700">Service End</label>
+                        <CustomTimeSelect
                             value={settings.service_hours.end}
-                            onChange={(val) => onChange({
-                                ...settings,
-                                service_hours: { ...settings.service_hours, end: val },
-                            })}
+                            onChange={val =>
+                                onChange({
+                                    ...settings,
+                                    service_hours: { ...settings.service_hours, end: val },
+                                })
+                            }
                         />
                     </div>
 
@@ -360,7 +398,7 @@ export function OnlineOrderingSettingsPanel({
                                         Number.parseInt(event.target.value, 10) || 40,
                                 })
                             }
-                            className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 outline-none transition-all hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
+                            className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 transition-all outline-none hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
                         />
                     </div>
                 </div>

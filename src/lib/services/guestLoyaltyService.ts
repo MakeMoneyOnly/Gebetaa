@@ -14,8 +14,10 @@ function computePoints(pointsRuleJson: unknown, eligibleSubtotal: number): numbe
     const rawPointsPerUnit = Number(rule.points_per_currency_unit ?? 1);
     const rawCurrencyUnit = Number(rule.currency_unit ?? 1);
 
-    const pointsPerUnit = Number.isFinite(rawPointsPerUnit) && rawPointsPerUnit > 0 ? rawPointsPerUnit : 1;
-    const currencyUnit = Number.isFinite(rawCurrencyUnit) && rawCurrencyUnit > 0 ? rawCurrencyUnit : 1;
+    const pointsPerUnit =
+        Number.isFinite(rawPointsPerUnit) && rawPointsPerUnit > 0 ? rawPointsPerUnit : 1;
+    const currencyUnit =
+        Number.isFinite(rawCurrencyUnit) && rawCurrencyUnit > 0 ? rawCurrencyUnit : 1;
 
     return Math.max(0, Math.floor((eligibleSubtotal / currencyUnit) * pointsPerUnit));
 }
@@ -60,7 +62,8 @@ export async function accrueLoyaltyPointsForCompletedOrder(
     const [{ data: order, error: orderError }, { data: activeProgram, error: programError }] =
         await Promise.all([
             db.from('orders').select('id, total_price').eq('id', orderId).maybeSingle(),
-            db.from('loyalty_programs' as any)
+            db
+                .from('loyalty_programs' as any)
                 .select('id, points_rule_json')
                 .eq('restaurant_id', attribution.restaurant_id)
                 .eq('status', 'active')

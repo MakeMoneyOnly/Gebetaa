@@ -4,22 +4,22 @@ export default function HomePage() {
     return (
         <main className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50">
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
+            <header className="fixed top-0 right-0 left-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl font-bold text-red-600">Gebeta</span>
                         </div>
                         <nav className="flex items-center gap-4">
                             <Link
                                 href="/auth/login"
-                                className="text-gray-600 hover:text-gray-900 font-medium"
+                                className="font-medium text-gray-600 hover:text-gray-900"
                             >
                                 Sign In
                             </Link>
                             <Link
                                 href="/auth/signup"
-                                className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                                className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
                             >
                                 Get Started
                             </Link>
@@ -29,26 +29,26 @@ export default function HomePage() {
             </header>
 
             {/* Hero Section */}
-            <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto text-center">
-                    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 tracking-tight">
+            <section className="px-4 pt-32 pb-20 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl text-center">
+                    <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
                         The Operating System for
-                        <span className="text-red-600 block mt-2">African Restaurants</span>
+                        <span className="mt-2 block text-red-600">African Restaurants</span>
                     </h1>
-                    <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
-                        From order to payment, manage your entire restaurant operation with one powerful platform. 
-                        Built for the unique needs of African hospitality.
+                    <p className="mx-auto mt-6 max-w-3xl text-xl text-gray-600">
+                        From order to payment, manage your entire restaurant operation with one
+                        powerful platform. Built for the unique needs of African hospitality.
                     </p>
-                    <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+                    <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
                         <Link
                             href="/auth/signup"
-                            className="bg-red-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-600/25"
+                            className="rounded-xl bg-red-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-red-600/25 transition-colors hover:bg-red-700"
                         >
                             Start Free Trial
                         </Link>
                         <Link
                             href="/auth/login"
-                            className="bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg border border-gray-200 hover:border-gray-300 transition-colors"
+                            className="rounded-xl border border-gray-200 bg-white px-8 py-4 text-lg font-semibold text-gray-900 transition-colors hover:border-gray-300"
                         >
                             Sign In
                         </Link>
@@ -57,12 +57,12 @@ export default function HomePage() {
             </section>
 
             {/* Features Section */}
-            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-                <div className="max-w-7xl mx-auto">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-16">
+            <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl">
+                    <h2 className="mb-16 text-center text-3xl font-bold text-gray-900 sm:text-4xl">
                         Everything you need to run your restaurant
                     </h2>
-                    <div className="grid md:grid-cols-3 gap-8">
+                    <div className="grid gap-8 md:grid-cols-3">
                         <FeatureCard
                             icon="🍽️"
                             title="Smart Menu Management"
@@ -98,17 +98,18 @@ export default function HomePage() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 px-4 sm:px-6 lg:px-8 bg-red-600">
-                <div className="max-w-4xl mx-auto text-center">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+            <section className="bg-red-600 px-4 py-20 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-4xl text-center">
+                    <h2 className="mb-6 text-3xl font-bold text-white sm:text-4xl">
                         Ready to transform your restaurant?
                     </h2>
-                    <p className="text-xl text-red-100 mb-8">
-                        Join hundreds of restaurants already using Gebeta to streamline their operations.
+                    <p className="mb-8 text-xl text-red-100">
+                        Join hundreds of restaurants already using Gebeta to streamline their
+                        operations.
                     </p>
                     <Link
                         href="/auth/signup"
-                        className="inline-block bg-white text-red-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors"
+                        className="inline-block rounded-xl bg-white px-8 py-4 text-lg font-semibold text-red-600 transition-colors hover:bg-gray-100"
                     >
                         Get Started Free
                     </Link>
@@ -116,10 +117,11 @@ export default function HomePage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-900">
-                <div className="max-w-7xl mx-auto text-center">
+            <footer className="bg-gray-900 px-4 py-12 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl text-center">
                     <p className="text-gray-400">
-                        © {new Date().getFullYear()} Gebeta. The operating system for African restaurants.
+                        © {new Date().getFullYear()} Gebeta. The operating system for African
+                        restaurants.
                     </p>
                 </div>
             </footer>
@@ -127,11 +129,19 @@ export default function HomePage() {
     );
 }
 
-function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
+function FeatureCard({
+    icon,
+    title,
+    description,
+}: {
+    icon: string;
+    title: string;
+    description: string;
+}) {
     return (
-        <div className="p-6 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors">
-            <div className="text-4xl mb-4">{icon}</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
+        <div className="rounded-2xl bg-gray-50 p-6 transition-colors hover:bg-gray-100">
+            <div className="mb-4 text-4xl">{icon}</div>
+            <h3 className="mb-2 text-xl font-semibold text-gray-900">{title}</h3>
             <p className="text-gray-600">{description}</p>
         </div>
     );

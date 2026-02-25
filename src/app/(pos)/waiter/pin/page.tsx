@@ -142,11 +142,13 @@ function WaiterPinContent() {
 
 export default function WaiterPinPage() {
     return (
-        <Suspense fallback={
-            <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-                <p>Loading terminal...</p>
-            </div>
-        }>
+        <Suspense
+            fallback={
+                <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
+                    <p>Loading terminal...</p>
+                </div>
+            }
+        >
             <WaiterPinContent />
         </Suspense>
     );

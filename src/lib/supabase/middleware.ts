@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
     // Get and clean environment variables (remove any surrounding quotes)
     let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
-    
+
     // Strip surrounding quotes if present (common issue when setting env vars)
     supabaseUrl = supabaseUrl.replace(/^["']|["']$/g, '').trim();
     supabaseKey = supabaseKey.replace(/^["']|["']$/g, '').trim();
@@ -29,26 +29,22 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse;
     }
 
-    const supabase = createServerClient(
-        supabaseUrl,
-        supabaseKey,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll();
-                },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-                    supabaseResponse = NextResponse.next({
-                        request,
-                    });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        supabaseResponse.cookies.set(name, value, options)
-                    );
-                },
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+            getAll() {
+                return request.cookies.getAll();
             },
-        }
-    );
+            setAll(cookiesToSet) {
+                cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+                supabaseResponse = NextResponse.next({
+                    request,
+                });
+                cookiesToSet.forEach(({ name, value, options }) =>
+                    supabaseResponse.cookies.set(name, value, options)
+                );
+            },
+        },
+    });
 
     // IMPORTANT: Do not run code between createServerClient and supabase.auth.getUser()
     const {

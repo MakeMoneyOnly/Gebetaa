@@ -53,14 +53,16 @@ function PostLoginContent() {
 export default function GuestPostLoginPage() {
     return (
         <main className="flex min-h-screen items-center justify-center bg-[#0b1013] text-white">
-            <Suspense fallback={
-                <div className="flex flex-col items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-xl bg-white/20" />
-                    <p className="text-xs font-bold tracking-[0.2em] text-white/60 uppercase">
-                        Loading...
-                    </p>
-                </div>
-            }>
+            <Suspense
+                fallback={
+                    <div className="flex flex-col items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-xl bg-white/20" />
+                        <p className="text-xs font-bold tracking-[0.2em] text-white/60 uppercase">
+                            Loading...
+                        </p>
+                    </div>
+                }
+            >
                 <PostLoginContent />
             </Suspense>
         </main>

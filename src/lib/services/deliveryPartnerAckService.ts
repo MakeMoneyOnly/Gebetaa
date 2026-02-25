@@ -1,6 +1,6 @@
 /**
  * Delivery Partner Auto-Acknowledge Service
- * 
+ *
  * Handles automatic acknowledgment of incoming orders from delivery partners.
  * When a merchant has "Auto-accept incoming orders" enabled, this service
  * automatically sends the Ack signal back to the delivery partner.
@@ -99,7 +99,7 @@ export async function autoAcknowledgeOrder(
 ): Promise<AcknowledgeResult> {
     // Check if auto-accept is enabled
     const autoAcceptEnabled = await isAutoAcceptEnabled(restaurantId);
-    
+
     if (!autoAcceptEnabled) {
         return {
             success: false,
@@ -130,7 +130,7 @@ export async function autoAcknowledgeOrder(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${partnerConfig.api_key}`,
+                Authorization: `Bearer ${partnerConfig.api_key}`,
                 'X-Partner': partner,
             },
             body: JSON.stringify({
@@ -177,7 +177,7 @@ export async function autoAcknowledgeOrder(
         };
     } catch (error) {
         console.error('Auto-acknowledge failed:', error);
-        
+
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Acknowledgment failed',
@@ -217,7 +217,7 @@ export async function manualAcknowledgeOrder(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${partnerConfig.api_key}`,
+                Authorization: `Bearer ${partnerConfig.api_key}`,
             },
             body: JSON.stringify({
                 order_id: partnerOrderId,
@@ -262,7 +262,7 @@ export async function manualAcknowledgeOrder(
         };
     } catch (error) {
         console.error('Manual acknowledge failed:', error);
-        
+
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Acknowledgment failed',
@@ -302,7 +302,7 @@ export async function rejectOrder(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${partnerConfig.api_key}`,
+                Authorization: `Bearer ${partnerConfig.api_key}`,
             },
             body: JSON.stringify({
                 order_id: partnerOrderId,
@@ -342,7 +342,7 @@ export async function rejectOrder(
         return { success: true };
     } catch (error) {
         console.error('Order rejection failed:', error);
-        
+
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Rejection failed',

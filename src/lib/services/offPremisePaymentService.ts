@@ -1,6 +1,6 @@
 /**
  * Off-Premise Payment Service
- * 
+ *
  * Handles payment enforcement for off-premise orders (delivery/pickup).
  * Requires upfront digital payment via Chapa or Telebirr before order submission.
  */
@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/server';
  * Generate a unique ID without external dependency
  */
 function generateId(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
         const r = (Math.random() * 16) | 0;
         const v = c === 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
@@ -107,7 +107,7 @@ export async function initializeOffPremisePayment(
 
     // Try Chapa first
     const chapaConfig = PAYMENT_PROVIDERS.chapa;
-    
+
     if (chapaConfig.secret_key) {
         const result = await initializeChapaPayment({
             ...request,
@@ -120,7 +120,11 @@ export async function initializeOffPremisePayment(
                 .from('payments')
                 .update({
                     provider_reference: result.reference,
-                    metadata: { reference: paymentReference, provider: 'chapa', checkout_url: result.checkoutUrl },
+                    metadata: {
+                        reference: paymentReference,
+                        provider: 'chapa',
+                        checkout_url: result.checkoutUrl,
+                    },
                 })
                 .eq('id', payment.id);
 
@@ -130,7 +134,7 @@ export async function initializeOffPremisePayment(
 
     // Fall back to Telebirr
     const telebirrConfig = PAYMENT_PROVIDERS.telebirr;
-    
+
     if (telebirrConfig.app_id && telebirrConfig.app_key) {
         const result = await initializeTelebirrPayment({
             ...request,
@@ -144,7 +148,11 @@ export async function initializeOffPremisePayment(
                 .update({
                     provider: 'telebirr',
                     provider_reference: result.reference,
-                    metadata: { reference: paymentReference, provider: 'telebirr', qr_code: result.qrCode },
+                    metadata: {
+                        reference: paymentReference,
+                        provider: 'telebirr',
+                        qr_code: result.qrCode,
+                    },
                 })
                 .eq('id', payment.id);
 
@@ -186,7 +194,7 @@ async function initializeChapaPayment(params: {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${chapaConfig.secret_key}`,
+                Authorization: `Bearer ${chapaConfig.secret_key}`,
             },
             body: JSON.stringify({
                 amount: params.amount,
@@ -219,7 +227,10 @@ async function initializeChapaPayment(params: {
         return { success: true, checkoutUrl: data.data.checkout_url, reference: params.reference };
     } catch (error) {
         console.error('Chapa payment initialization failed:', error);
-        return { success: false, error: error instanceof Error ? error.message : 'Payment initialization failed' };
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Payment initialization failed',
+        };
     }
 }
 
@@ -271,14 +282,19 @@ async function initializeTelebirrPayment(params: {
         };
     } catch (error) {
         console.error('Telebirr payment initialization failed:', error);
-        return { success: false, error: error instanceof Error ? error.message : 'Payment initialization failed' };
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Payment initialization failed',
+        };
     }
 }
 
 /**
  * Verify payment status
  */
-export async function verifyOffPremisePayment(paymentId: string): Promise<PaymentVerificationResult> {
+export async function verifyOffPremisePayment(
+    paymentId: string
+): Promise<PaymentVerificationResult> {
     const supabase = await createClient();
 
     const { data: payment, error } = await supabase
@@ -326,19 +342,26 @@ export async function verifyOffPremisePayment(paymentId: string): Promise<Paymen
 /**
  * Verify Chapa payment
  */
-async function verifyChapaPayment(paymentId: string, reference: string): Promise<PaymentVerificationResult> {
+async function verifyChapaPayment(
+    paymentId: string,
+    reference: string
+): Promise<PaymentVerificationResult> {
     const supabase = await createClient();
     const chapaConfig = PAYMENT_PROVIDERS.chapa;
 
     try {
         const response = await fetch(`${chapaConfig.api_url}/transaction/verify/${reference}`, {
-            headers: { 'Authorization': `Bearer ${chapaConfig.secret_key}` },
+            headers: { Authorization: `Bearer ${chapaConfig.secret_key}` },
         });
 
         const data = await response.json();
 
         if (!response.ok || data.status !== 'success') {
-            return { success: false, status: 'failed', error: data.message ?? 'Verification failed' };
+            return {
+                success: false,
+                status: 'failed',
+                error: data.message ?? 'Verification failed',
+            };
         }
 
         const txData = data.data;
@@ -363,14 +386,21 @@ async function verifyChapaPayment(paymentId: string, reference: string): Promise
         };
     } catch (error) {
         console.error('Chapa verification failed:', error);
-        return { success: false, status: 'failed', error: error instanceof Error ? error.message : 'Verification failed' };
+        return {
+            success: false,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Verification failed',
+        };
     }
 }
 
 /**
  * Verify Telebirr payment
  */
-async function verifyTelebirrPayment(paymentId: string, reference: string): Promise<PaymentVerificationResult> {
+async function verifyTelebirrPayment(
+    paymentId: string,
+    reference: string
+): Promise<PaymentVerificationResult> {
     const supabase = await createClient();
     const telebirrConfig = PAYMENT_PROVIDERS.telebirr;
 
@@ -391,7 +421,11 @@ async function verifyTelebirrPayment(paymentId: string, reference: string): Prom
         const data = await response.json();
 
         if (!response.ok) {
-            return { success: false, status: 'failed', error: data.message ?? 'Verification failed' };
+            return {
+                success: false,
+                status: 'failed',
+                error: data.message ?? 'Verification failed',
+            };
         }
 
         const status = mapTelebirrStatus(data.tradeStatus);
@@ -414,28 +448,36 @@ async function verifyTelebirrPayment(paymentId: string, reference: string): Prom
         };
     } catch (error) {
         console.error('Telebirr verification failed:', error);
-        return { success: false, status: 'failed', error: error instanceof Error ? error.message : 'Verification failed' };
+        return {
+            success: false,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Verification failed',
+        };
     }
 }
 
-function mapChapaStatus(status: string): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
+function mapChapaStatus(
+    status: string
+): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
     const map: Record<string, 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'> = {
-        'pending': 'pending',
-        'processing': 'processing',
-        'success': 'completed',
-        'failed': 'failed',
-        'cancelled': 'cancelled',
+        pending: 'pending',
+        processing: 'processing',
+        success: 'completed',
+        failed: 'failed',
+        cancelled: 'cancelled',
     };
     return map[status.toLowerCase()] ?? 'pending';
 }
 
-function mapTelebirrStatus(status: string): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
+function mapTelebirrStatus(
+    status: string
+): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
     const map: Record<string, 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'> = {
-        'WAIT_BUYER_PAY': 'pending',
-        'TRADE_SUCCESS': 'completed',
-        'TRADE_FINISHED': 'completed',
-        'TRADE_CLOSED': 'cancelled',
-        'TRADE_FAILED': 'failed',
+        WAIT_BUYER_PAY: 'pending',
+        TRADE_SUCCESS: 'completed',
+        TRADE_FINISHED: 'completed',
+        TRADE_CLOSED: 'cancelled',
+        TRADE_FAILED: 'failed',
     };
     return map[status] ?? 'pending';
 }
@@ -450,6 +492,10 @@ export function isPaymentRequiredForOffPremise(_fulfillmentType: 'delivery' | 'p
 /**
  * Calculate total with delivery fee
  */
-export function calculateOffPremiseTotal(subtotal: number, deliveryFee: number, serviceFee: number = 0): number {
+export function calculateOffPremiseTotal(
+    subtotal: number,
+    deliveryFee: number,
+    serviceFee: number = 0
+): number {
     return subtotal + deliveryFee + serviceFee;
 }

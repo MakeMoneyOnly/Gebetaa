@@ -6,13 +6,16 @@ const envPath = path.resolve('.env.local');
 const env = fs.readFileSync(envPath, 'utf8');
 
 const parseEnv = (content: string) => {
-    return content.split('\n').reduce((acc: Record<string, string>, line: string) => {
-        const match = line.match(/^([^=]+)=(.*)$/);
-        if (match) {
-            acc[match[1].trim()] = match[2].trim().replace(/^['"]|['"]$/g, '');
-        }
-        return acc;
-    }, {} as Record<string, string>);
+    return content.split('\n').reduce(
+        (acc: Record<string, string>, line: string) => {
+            const match = line.match(/^([^=]+)=(.*)$/);
+            if (match) {
+                acc[match[1].trim()] = match[2].trim().replace(/^['"]|['"]$/g, '');
+            }
+            return acc;
+        },
+        {} as Record<string, string>
+    );
 };
 
 const envVars = parseEnv(env);

@@ -1,8 +1,8 @@
 /**
  * KDS Unified Queue API
- * 
+ *
  * GET /api/kds/queue
- * 
+ *
  * Fetches orders from both standard orders (Dine-In) and external_orders (Delivery Partners)
  * for unified KDS display. Sorts by prep time and order age.
  */
@@ -20,7 +20,14 @@ const QueueRequestSchema = z.object({
 
 export interface UnifiedKDSOrder {
     id: string;
-    source: 'dine-in' | 'direct_delivery' | 'direct_pickup' | 'beu' | 'zmall' | 'deliver_addis' | 'esoora';
+    source:
+        | 'dine-in'
+        | 'direct_delivery'
+        | 'direct_pickup'
+        | 'beu'
+        | 'zmall'
+        | 'deliver_addis'
+        | 'esoora';
     sourceLabel: string;
     sourceColor: string;
     orderNumber: string;
@@ -50,19 +57,22 @@ export interface UnifiedKDSOrder {
 
 const SOURCE_CONFIG = {
     'dine-in': { label: 'Dine In', color: '#DC2626' }, // Red
-    'direct_delivery': { label: 'Delivery', color: '#2563EB' }, // Blue
-    'direct_pickup': { label: 'Pickup', color: '#16A34A' }, // Green
-    'beu': { label: 'Beu', color: '#F97316' }, // Orange
-    'zmall': { label: 'Zmall', color: '#22C55E' }, // Green
-    'deliver_addis': { label: 'Deliver Addis', color: '#8B5CF6' }, // Purple
-    'esoora': { label: 'Esoora', color: '#06B6D4' }, // Cyan
+    direct_delivery: { label: 'Delivery', color: '#2563EB' }, // Blue
+    direct_pickup: { label: 'Pickup', color: '#16A34A' }, // Green
+    beu: { label: 'Beu', color: '#F97316' }, // Orange
+    zmall: { label: 'Zmall', color: '#22C55E' }, // Green
+    deliver_addis: { label: 'Deliver Addis', color: '#8B5CF6' }, // Purple
+    esoora: { label: 'Esoora', color: '#06B6D4' }, // Cyan
 };
 
 function calculateElapsedMinutes(createdAt: string): number {
     return Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
 }
 
-function determinePriority(elapsedMinutes: number, estimatedPrepTime?: number): 'normal' | 'high' | 'urgent' {
+function determinePriority(
+    elapsedMinutes: number,
+    estimatedPrepTime?: number
+): 'normal' | 'high' | 'urgent' {
     const threshold = estimatedPrepTime ?? 30;
     if (elapsedMinutes >= threshold + 10) return 'urgent';
     if (elapsedMinutes >= threshold) return 'high';
@@ -71,7 +81,7 @@ function determinePriority(elapsedMinutes: number, estimatedPrepTime?: number): 
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    
+
     const params = {
         restaurant_id: searchParams.get('restaurant_id'),
         status: searchParams.get('status') ?? undefined,
@@ -89,10 +99,8 @@ export async function GET(request: NextRequest) {
     const unifiedOrders: UnifiedKDSOrder[] = [];
 
     // Fetch dine-in orders
-    const dineInStatuses = status 
-        ? [status]
-        : ['pending', 'confirmed', 'preparing'];
-    
+    const dineInStatuses = status ? [status] : ['pending', 'confirmed', 'preparing'];
+
     const { data: dineInOrders, error: dineInError } = await supabase
         .from('orders')
         .select('*')
@@ -105,7 +113,7 @@ export async function GET(request: NextRequest) {
         for (const order of dineInOrders) {
             const orderData = order as Record<string, unknown>;
             const elapsed = calculateElapsedMinutes(orderData.created_at as string);
-            
+
             unifiedOrders.push({
                 id: orderData.id as string,
                 source: 'dine-in',
@@ -113,7 +121,13 @@ export async function GET(request: NextRequest) {
                 sourceColor: SOURCE_CONFIG['dine-in'].color,
                 orderNumber: `T-${orderData.table_id ?? 'N/A'}`,
                 tableNumber: orderData.table_id as string | undefined,
-                items: (orderData.items as Array<{ id: string; name: string; quantity: number; notes?: string }>) ?? [],
+                items:
+                    (orderData.items as Array<{
+                        id: string;
+                        name: string;
+                        quantity: number;
+                        notes?: string;
+                    }>) ?? [],
                 status: orderData.status as string,
                 priority: determinePriority(elapsed),
                 createdAt: orderData.created_at as string,
@@ -124,10 +138,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch external orders
-    const externalStatuses = status 
-        ? [status]
-        : ['pending', 'confirmed', 'preparing'];
-    
+    const externalStatuses = status ? [status] : ['pending', 'confirmed', 'preparing'];
+
     const { data: externalOrders, error: externalError } = await supabase
         .from('external_orders')
         .select('*')
@@ -142,21 +154,33 @@ export async function GET(request: NextRequest) {
             const payloadJson = orderData.payload_json as Record<string, unknown> | null;
             const elapsed = calculateElapsedMinutes(orderData.created_at as string);
             const provider = orderData.provider as string;
-            
-            const source = provider === 'custom_local' 
-                ? (payloadJson?.fulfillment_type === 'pickup' ? 'direct_pickup' : 'direct_delivery')
-                : provider;
-            
-            const config = SOURCE_CONFIG[source as keyof typeof SOURCE_CONFIG] ?? SOURCE_CONFIG['direct_delivery'];
-            
+
+            const source =
+                provider === 'custom_local'
+                    ? payloadJson?.fulfillment_type === 'pickup'
+                        ? 'direct_pickup'
+                        : 'direct_delivery'
+                    : provider;
+
+            const config =
+                SOURCE_CONFIG[source as keyof typeof SOURCE_CONFIG] ??
+                SOURCE_CONFIG['direct_delivery'];
+
             unifiedOrders.push({
                 id: orderData.id as string,
                 source: source as UnifiedKDSOrder['source'],
                 sourceLabel: config.label,
                 sourceColor: config.color,
-                orderNumber: orderData.provider_order_id as string ?? `EXT-${orderData.id}`,
+                orderNumber: (orderData.provider_order_id as string) ?? `EXT-${orderData.id}`,
                 customerName: payloadJson?.customer_name as string | undefined,
-                items: (payloadJson?.items as Array<{ id: string; name: string; quantity: number; notes?: string; modifiers?: string[] }>) ?? [],
+                items:
+                    (payloadJson?.items as Array<{
+                        id: string;
+                        name: string;
+                        quantity: number;
+                        notes?: string;
+                        modifiers?: string[];
+                    }>) ?? [],
                 status: orderData.normalized_status as string,
                 priority: determinePriority(elapsed),
                 createdAt: orderData.created_at as string,
@@ -183,7 +207,9 @@ export async function GET(request: NextRequest) {
             dineIn: unifiedOrders.filter(o => o.source === 'dine-in').length,
             directDelivery: unifiedOrders.filter(o => o.source === 'direct_delivery').length,
             directPickup: unifiedOrders.filter(o => o.source === 'direct_pickup').length,
-            partners: unifiedOrders.filter(o => ['beu', 'zmall', 'deliver_addis', 'esoora'].includes(o.source)).length,
+            partners: unifiedOrders.filter(o =>
+                ['beu', 'zmall', 'deliver_addis', 'esoora'].includes(o.source)
+            ).length,
         },
     });
 }

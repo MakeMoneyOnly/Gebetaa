@@ -176,7 +176,8 @@ function LoginContent() {
                     </h2>
                     <div className="border-brand-crimson mt-8 border-l-2 pl-6">
                         <p className="text-xl leading-relaxed font-medium text-white/90 italic">
-                            &ldquo;One login gives me points, gift card balance, and personalized dining offers.&rdquo;
+                            &ldquo;One login gives me points, gift card balance, and personalized
+                            dining offers.&rdquo;
                         </p>
                         <div className="mt-6 flex items-center gap-4">
                             <div className="h-12 w-12 rounded-full bg-white/10" />

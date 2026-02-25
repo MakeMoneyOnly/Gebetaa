@@ -120,7 +120,6 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
                     currentLabel="Pending"
                 />
             </div>
-
         </div>
     );
 }

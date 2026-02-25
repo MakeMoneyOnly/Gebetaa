@@ -23,38 +23,35 @@ export const FulfillmentSelectionModal: React.FC<FulfillmentSelectionModalProps>
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
-            />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative z-10 w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="relative z-10 mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-brand-crimson to-red-600 px-6 py-5 text-white">
+                <div className="from-brand-crimson bg-gradient-to-r to-red-600 px-6 py-5 text-white">
                     <h2 className="text-xl font-bold">Welcome to {restaurantName}</h2>
-                    <p className="text-white/80 text-sm mt-1">How would you like to order?</p>
+                    <p className="mt-1 text-sm text-white/80">How would you like to order?</p>
                 </div>
 
                 {/* Options */}
-                <div className="p-6 space-y-4">
+                <div className="space-y-4 p-6">
                     {/* Delivery Option */}
                     <button
                         onClick={() => onSelect('delivery')}
                         className={cn(
-                            'w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-200',
-                            'hover:border-blue-500 hover:bg-blue-50 transition-all duration-200',
+                            'flex w-full items-center gap-4 rounded-xl border-2 border-gray-200 p-4',
+                            'transition-all duration-200 hover:border-blue-500 hover:bg-blue-50',
                             'group cursor-pointer'
                         )}
                     >
-                        <div className="flex-shrink-0 w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <Truck className="w-7 h-7 text-blue-600" />
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 transition-colors group-hover:bg-blue-200">
+                            <Truck className="h-7 w-7 text-blue-600" />
                         </div>
                         <div className="flex-1 text-left">
-                            <h3 className="font-bold text-gray-900 text-lg">Delivery</h3>
-                            <p className="text-gray-500 text-sm">We'll bring it to your door</p>
+                            <h3 className="text-lg font-bold text-gray-900">Delivery</h3>
+                            <p className="text-sm text-gray-500">We'll bring it to your door</p>
                         </div>
-                        <div className="text-blue-600 group-hover:translate-x-1 transition-transform">
+                        <div className="text-blue-600 transition-transform group-hover:translate-x-1">
                             →
                         </div>
                     </button>
@@ -63,19 +60,19 @@ export const FulfillmentSelectionModal: React.FC<FulfillmentSelectionModalProps>
                     <button
                         onClick={() => onSelect('pickup')}
                         className={cn(
-                            'w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-200',
-                            'hover:border-green-500 hover:bg-green-50 transition-all duration-200',
+                            'flex w-full items-center gap-4 rounded-xl border-2 border-gray-200 p-4',
+                            'transition-all duration-200 hover:border-green-500 hover:bg-green-50',
                             'group cursor-pointer'
                         )}
                     >
-                        <div className="flex-shrink-0 w-14 h-14 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                            <ShoppingBag className="w-7 h-7 text-green-600" />
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-green-100 transition-colors group-hover:bg-green-200">
+                            <ShoppingBag className="h-7 w-7 text-green-600" />
                         </div>
                         <div className="flex-1 text-left">
-                            <h3 className="font-bold text-gray-900 text-lg">Pickup</h3>
-                            <p className="text-gray-500 text-sm">Ready when you arrive</p>
+                            <h3 className="text-lg font-bold text-gray-900">Pickup</h3>
+                            <p className="text-sm text-gray-500">Ready when you arrive</p>
                         </div>
-                        <div className="text-green-600 group-hover:translate-x-1 transition-transform">
+                        <div className="text-green-600 transition-transform group-hover:translate-x-1">
                             →
                         </div>
                     </button>

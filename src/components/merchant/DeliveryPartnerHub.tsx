@@ -52,7 +52,17 @@ function toLabel(value: string) {
     return value.replace(/_/g, ' ').replace(/\b\w/g, match => match.toUpperCase());
 }
 
-function CustomSelect({ value, onChange, options, placeholder }: { value: string, onChange: (v: string) => void, options: { value: string, label: string }[], placeholder?: string }) {
+function CustomSelect({
+    value,
+    onChange,
+    options,
+    placeholder,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    options: { value: string; label: string }[];
+    placeholder?: string;
+}) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -73,13 +83,17 @@ function CustomSelect({ value, onChange, options, placeholder }: { value: string
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="flex h-12 w-full items-center justify-between rounded-xl bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 outline-none transition-all hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
+                className="flex h-12 w-full items-center justify-between rounded-xl bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 transition-all outline-none hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
             >
-                <span>{selectedOption ? selectedOption.label : placeholder || 'Select Provider'}</span>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+                <span>
+                    {selectedOption ? selectedOption.label : placeholder || 'Select Provider'}
+                </span>
+                <ChevronDown
+                    className={`h-4 w-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                />
             </button>
             {open && (
-                <div className="absolute z-10 mt-2 w-full overflow-hidden rounded-xl bg-white py-1 shadow-[0px_2px_12px_rgba(0,0,0,0.12)] ring-1 ring-black/5 flex flex-col">
+                <div className="absolute z-10 mt-2 flex w-full flex-col overflow-hidden rounded-xl bg-white py-1 shadow-[0px_2px_12px_rgba(0,0,0,0.12)] ring-1 ring-black/5">
                     {options.map(option => (
                         <button
                             key={option.value}
@@ -90,7 +104,9 @@ function CustomSelect({ value, onChange, options, placeholder }: { value: string
                             }}
                             className={cn(
                                 'flex w-full items-center justify-between px-4 py-3 text-left text-[14px] transition-colors hover:bg-gray-50',
-                                value === option.value ? 'bg-gray-50 font-bold text-[#98141F]' : 'font-medium text-gray-700'
+                                value === option.value
+                                    ? 'bg-gray-50 font-bold text-[#98141F]'
+                                    : 'font-medium text-gray-700'
                             )}
                         >
                             {option.label}
@@ -138,13 +154,11 @@ export function DeliveryPartnerHub({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3 mt-4">
+            <div className="mt-4 grid grid-cols-1 gap-6 xl:grid-cols-3">
                 <div className="flex flex-col gap-4">
-                    <h4 className="text-[17px] font-bold text-gray-900">
-                        Connect provider
-                    </h4>
+                    <h4 className="text-[17px] font-bold text-gray-900">Connect provider</h4>
                     <div className="flex flex-col gap-3">
-                        <CustomSelect 
+                        <CustomSelect
                             value={providerToConnect}
                             onChange={v => setProviderToConnect(v as typeof providerToConnect)}
                             options={PROVIDERS.map(p => ({ value: p, label: toLabel(p) }))}
@@ -158,7 +172,7 @@ export function DeliveryPartnerHub({
                                 value={displayName}
                                 onChange={event => setDisplayName(event.target.value)}
                                 placeholder="Store ID / Display Name"
-                                className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
+                                className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-bold text-gray-800 transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
                             />
                         </div>
                         <div>
@@ -170,7 +184,7 @@ export function DeliveryPartnerHub({
                                 value={apiKey}
                                 onChange={event => setApiKey(event.target.value)}
                                 placeholder="Integration API Key"
-                                className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-bold text-gray-800 outline-none transition-all placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
+                                className="h-12 w-full rounded-xl border-0 bg-gray-50 px-4 text-[15px] font-bold text-gray-800 transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
                             />
                         </div>
                     </div>
@@ -180,7 +194,7 @@ export function DeliveryPartnerHub({
                             void onConnect(providerToConnect, displayName.trim() || undefined)
                         }
                         disabled={connecting}
-                        className="bg-[#98141F] mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-bold text-white transition-all hover:bg-[#801019] hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                        className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#98141F] text-[15px] font-bold text-white transition-all hover:bg-[#801019] hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                     >
                         {connecting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -189,17 +203,18 @@ export function DeliveryPartnerHub({
                         )}
                         Link Account
                     </button>
-                    <div className="mt-5 text-center pb-1">
-                        <a href="#" className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                    <div className="mt-5 pb-1 text-center">
+                        <a
+                            href="#"
+                            className="text-xs font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                        >
                             Don't have a {toLabel(providerToConnect)} account? Sign up here.
                         </a>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-4 xl:col-span-2">
-                    <h4 className="text-[17px] font-bold text-gray-900">
-                        Partner status
-                    </h4>
+                    <h4 className="text-[17px] font-bold text-gray-900">Partner status</h4>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         {partners.length === 0 && (
                             <p className="text-sm text-gray-500">
@@ -240,17 +255,15 @@ export function DeliveryPartnerHub({
             </div>
 
             <div className="mt-10 flex flex-col gap-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h4 className="text-[17px] font-bold text-gray-900">
-                        External orders
-                    </h4>
+                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                    <h4 className="text-[17px] font-bold text-gray-900">External orders</h4>
                     <div className="w-full md:w-64">
-                        <CustomSelect 
+                        <CustomSelect
                             value={providerFilter}
                             onChange={v => setProviderFilter(v)}
                             options={[
                                 { value: 'all', label: 'All Providers' },
-                                ...PROVIDERS.map(p => ({ value: p, label: toLabel(p) }))
+                                ...PROVIDERS.map(p => ({ value: p, label: toLabel(p) })),
                             ]}
                         />
                     </div>
@@ -327,7 +340,7 @@ export function DeliveryPartnerHub({
                                                     onClick={() => void onAcknowledge(order.id)}
                                                     disabled={acknowledgingId === order.id}
                                                     aria-label={`Acknowledge external order ${order.provider_order_id}`}
-                                                    className="bg-[#98141F] inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-white transition-all hover:bg-[#801019] hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                                                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#98141F] px-3 text-xs font-bold text-white transition-all hover:bg-[#801019] hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                                                 >
                                                     {acknowledgingId === order.id ? (
                                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />

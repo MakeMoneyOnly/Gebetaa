@@ -1,8 +1,8 @@
 /**
  * Delivery Fee Calculation API
- * 
+ *
  * GET /api/delivery/fee
- * 
+ *
  * Calculates delivery fee based on distance between restaurant and delivery address.
  */
 
@@ -24,12 +24,12 @@ const FeeRequestSchema = z.object({
 // Restaurant coordinates cache (in production, fetch from DB)
 const RESTAURANT_COORDINATES: Record<string, { lat: number; lng: number }> = {
     // Default Addis Ababa center
-    'default': { lat: 9.0000, lng: 38.7500 },
+    default: { lat: 9.0, lng: 38.75 },
 };
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    
+
     const params = {
         restaurant_id: searchParams.get('restaurant_id'),
         delivery_area: searchParams.get('delivery_area'),
@@ -44,7 +44,8 @@ export async function GET(request: NextRequest) {
     const { restaurant_id, delivery_area, delivery_city } = parseResult.data;
 
     // Get restaurant coordinates (in production, fetch from database)
-    const restaurantCoords = RESTAURANT_COORDINATES[restaurant_id] ?? RESTAURANT_COORDINATES['default'];
+    const restaurantCoords =
+        RESTAURANT_COORDINATES[restaurant_id] ?? RESTAURANT_COORDINATES['default'];
 
     // Get delivery coordinates based on area
     const deliveryCoords = getCoordinatesForAddress({
@@ -68,16 +69,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
-    
-    const parseResult = z.object({
-        restaurant_id: z.string().uuid(),
-        restaurant_area: z.string().optional(),
-        delivery_area: z.string().min(1),
-        delivery_city: z.string().default('Addis Ababa'),
-    }).safeParse(body);
+
+    const parseResult = z
+        .object({
+            restaurant_id: z.string().uuid(),
+            restaurant_area: z.string().optional(),
+            delivery_area: z.string().min(1),
+            delivery_city: z.string().default('Addis Ababa'),
+        })
+        .safeParse(body);
 
     if (!parseResult.success) {
-        return apiError('Invalid request body', 400, 'VALIDATION_ERROR', parseResult.error.flatten());
+        return apiError(
+            'Invalid request body',
+            400,
+            'VALIDATION_ERROR',
+            parseResult.error.flatten()
+        );
     }
 
     const { restaurant_id, restaurant_area, delivery_area, delivery_city } = parseResult.data;
@@ -85,7 +93,7 @@ export async function POST(request: NextRequest) {
     // Get coordinates
     const restaurantCoords = restaurant_area
         ? getCoordinatesForAddress({ area: restaurant_area, city: 'Addis Ababa' })
-        : RESTAURANT_COORDINATES[restaurant_id] ?? RESTAURANT_COORDINATES['default'];
+        : (RESTAURANT_COORDINATES[restaurant_id] ?? RESTAURANT_COORDINATES['default']);
 
     const deliveryCoords = getCoordinatesForAddress({
         area: delivery_area,

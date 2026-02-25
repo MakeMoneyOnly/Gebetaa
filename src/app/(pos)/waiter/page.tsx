@@ -203,7 +203,8 @@ function WaiterPosContent() {
                         { headers: deviceHeaders() }
                     );
                     const payload = await response.json();
-                    if (!response.ok) throw new Error(payload.error || 'Failed to load table orders');
+                    if (!response.ok)
+                        throw new Error(payload.error || 'Failed to load table orders');
                     setTableOrders((payload.data?.orders ?? []) as Order[]);
                 } else {
                     const { data, error } = await supabase
@@ -228,9 +229,12 @@ function WaiterPosContent() {
         if (!restaurantId) return;
         try {
             if (deviceToken) {
-                const response = await fetch('/api/device/service-requests', { headers: deviceHeaders() });
+                const response = await fetch('/api/device/service-requests', {
+                    headers: deviceHeaders(),
+                });
                 const payload = await response.json();
-                if (!response.ok) throw new Error(payload.error || 'Failed to load service requests');
+                if (!response.ok)
+                    throw new Error(payload.error || 'Failed to load service requests');
                 setServiceRequests((payload.data?.service_requests ?? []) as ServiceRequest[]);
             } else {
                 const { data, error } = await supabase
@@ -320,7 +324,6 @@ function WaiterPosContent() {
         fetchActiveOrders,
         fetchServiceRequests,
     ]);
-
 
     const handleLogout = async () => {
         const supabaseBrowser = createBrowserClient(
@@ -1108,18 +1111,20 @@ function WaiterPosContent() {
 
 export default function WaiterPosPage() {
     return (
-        <Suspense fallback={
-            <div className="font-manrope flex h-screen flex-col bg-gray-50 p-6">
-                <div className="flex items-start justify-between px-2 pt-2 pb-6">
-                    <div>
-                        <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
-                            Waiter Display
-                        </h1>
-                        <p className="text-sm text-gray-500">Loading POS...</p>
+        <Suspense
+            fallback={
+                <div className="font-manrope flex h-screen flex-col bg-gray-50 p-6">
+                    <div className="flex items-start justify-between px-2 pt-2 pb-6">
+                        <div>
+                            <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                                Waiter Display
+                            </h1>
+                            <p className="text-sm text-gray-500">Loading POS...</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }>
+            }
+        >
             <WaiterPosContent />
         </Suspense>
     );

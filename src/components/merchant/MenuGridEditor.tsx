@@ -201,10 +201,7 @@ export function MenuGridEditor({
         return { updates, error: null };
     }, [bulkPriceMode, bulkPriceValue, selectedItems]);
 
-    const previewResult = useMemo(
-        () => computeBulkPriceUpdates(),
-        [computeBulkPriceUpdates]
-    );
+    const previewResult = useMemo(() => computeBulkPriceUpdates(), [computeBulkPriceUpdates]);
 
     const applyBulkPriceUpdates = async () => {
         const result = computeBulkPriceUpdates();

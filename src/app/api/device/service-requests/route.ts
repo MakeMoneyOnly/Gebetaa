@@ -20,7 +20,12 @@ export async function GET(request: Request) {
         .order('created_at', { ascending: false });
 
     if (error) {
-        return apiError('Failed to fetch service requests', 500, 'SERVICE_REQUESTS_FETCH_FAILED', error.message);
+        return apiError(
+            'Failed to fetch service requests',
+            500,
+            'SERVICE_REQUESTS_FETCH_FAILED',
+            error.message
+        );
     }
 
     return apiSuccess({ service_requests: data ?? [] });

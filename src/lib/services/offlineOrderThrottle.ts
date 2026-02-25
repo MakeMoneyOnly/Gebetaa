@@ -1,6 +1,6 @@
 /**
  * Online Ordering Throttle Service
- * 
+ *
  * Enforces daily order limits and 15-minute throttle limits for online ordering.
  * Used to prevent overwhelming the kitchen during peak hours.
  */
@@ -37,7 +37,9 @@ const DEFAULT_SETTINGS: OnlineOrderingSettings = {
 /**
  * Get online ordering settings for a restaurant
  */
-export async function getOnlineOrderingSettings(restaurantId: string): Promise<OnlineOrderingSettings> {
+export async function getOnlineOrderingSettings(
+    restaurantId: string
+): Promise<OnlineOrderingSettings> {
     const supabase = await createClient();
 
     const { data: restaurant, error } = await supabase
@@ -56,11 +58,18 @@ export async function getOnlineOrderingSettings(restaurantId: string): Promise<O
 
     return {
         enabled: (onlineOrdering.enabled as boolean) ?? DEFAULT_SETTINGS.enabled,
-        max_daily_orders: (onlineOrdering.max_daily_orders as number | null) ?? DEFAULT_SETTINGS.max_daily_orders,
-        throttle_minutes: (onlineOrdering.throttle_minutes as number | null) ?? DEFAULT_SETTINGS.throttle_minutes,
-        auto_accept_orders: (onlineOrdering.auto_accept_orders as boolean) ?? DEFAULT_SETTINGS.auto_accept_orders,
-        estimated_prep_time_minutes: (onlineOrdering.estimated_prep_time_minutes as number) ?? DEFAULT_SETTINGS.estimated_prep_time_minutes,
-        free_delivery_threshold: (onlineOrdering.free_delivery_threshold as number | null) ?? DEFAULT_SETTINGS.free_delivery_threshold,
+        max_daily_orders:
+            (onlineOrdering.max_daily_orders as number | null) ?? DEFAULT_SETTINGS.max_daily_orders,
+        throttle_minutes:
+            (onlineOrdering.throttle_minutes as number | null) ?? DEFAULT_SETTINGS.throttle_minutes,
+        auto_accept_orders:
+            (onlineOrdering.auto_accept_orders as boolean) ?? DEFAULT_SETTINGS.auto_accept_orders,
+        estimated_prep_time_minutes:
+            (onlineOrdering.estimated_prep_time_minutes as number) ??
+            DEFAULT_SETTINGS.estimated_prep_time_minutes,
+        free_delivery_threshold:
+            (onlineOrdering.free_delivery_threshold as number | null) ??
+            DEFAULT_SETTINGS.free_delivery_threshold,
     };
 }
 
@@ -133,8 +142,10 @@ export async function checkOrderThrottle(restaurantId: string): Promise<Throttle
 
             const THROTTLE_THRESHOLD = 5;
             if ((recentCount ?? 0) >= THROTTLE_THRESHOLD) {
-                const nextAvailable = new Date(throttleWindowStart.getTime() + settings.throttle_minutes * 60000);
-                
+                const nextAvailable = new Date(
+                    throttleWindowStart.getTime() + settings.throttle_minutes * 60000
+                );
+
                 return {
                     allowed: false,
                     reason: `Too many orders. Please try again in ${Math.ceil((nextAvailable.getTime() - now.getTime()) / 60000)} minutes`,
@@ -171,8 +182,10 @@ export async function checkOrderThrottle(restaurantId: string): Promise<Throttle
 
         const THROTTLE_THRESHOLD = 5;
         if ((recentCount ?? 0) >= THROTTLE_THRESHOLD) {
-            const nextAvailable = new Date(throttleWindowStart.getTime() + settings.throttle_minutes * 60000);
-            
+            const nextAvailable = new Date(
+                throttleWindowStart.getTime() + settings.throttle_minutes * 60000
+            );
+
             return {
                 allowed: false,
                 reason: `Too many orders. Please try again in ${Math.ceil((nextAvailable.getTime() - now.getTime()) / 60000)} minutes`,

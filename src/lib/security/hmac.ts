@@ -14,10 +14,11 @@ function getHmacSecret(): string {
     const secret = process.env.QR_HMAC_SECRET;
     if (!secret) {
         // In development, or during build time when secrets might not be injected yet
-        if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
-            console.warn(
-                'QR_HMAC_SECRET is missing. Using fallback secret for development/build.'
-            );
+        if (
+            process.env.NODE_ENV === 'development' ||
+            process.env.NEXT_PHASE === 'phase-production-build'
+        ) {
+            console.warn('QR_HMAC_SECRET is missing. Using fallback secret for development/build.');
             return 'dev_fallback_secret_do_not_use_in_production';
         }
         throw new Error(
@@ -65,20 +66,23 @@ function getBaseUrl(): string {
     // If deployed to Vercel, prioritize Vercel's system environment variables
     // to prevent local overrides (like ngrok) from taking precedence in production.
     if (process.env.VERCEL === '1' || process.env.NEXT_PUBLIC_VERCEL_ENV) {
-        const vercelUrl = 
-            process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || 
-            process.env.NEXT_PUBLIC_VERCEL_URL || 
-            process.env.VERCEL_PROJECT_PRODUCTION_URL || 
+        const vercelUrl =
+            process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
+            process.env.NEXT_PUBLIC_VERCEL_URL ||
+            process.env.VERCEL_PROJECT_PRODUCTION_URL ||
             process.env.VERCEL_URL;
-            
+
         if (vercelUrl) {
             return `https://${vercelUrl}`;
         }
     }
 
     // Default fallbacks
-    const url = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://gebetamenu.com';
-    
+    const url =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        'https://gebetamenu.com';
+
     // Clean up trailing slash if any
     return url.replace(/\/$/, '');
 }

@@ -10,12 +10,12 @@
 
 ### Files with Hardcoded Credentials
 
-| File                        | Issue                                        | Action     |
-| --------------------------- | -------------------------------------------- | ---------- |
-| `scripts/check-realtime.js` | Contains hardcoded Supabase service role key | **DELETE** |
-| `scripts/check-realtime.ts` | Contains hardcoded Supabase service role key | **DELETE** |
-| `scripts/apply-migration.js`| Contains hardcoded Supabase service role key | **DELETE** |
-| `eslint.json`               | Captured secret in lint output               | **DELETE** |
+| File                         | Issue                                        | Action     |
+| ---------------------------- | -------------------------------------------- | ---------- |
+| `scripts/check-realtime.js`  | Contains hardcoded Supabase service role key | **DELETE** |
+| `scripts/check-realtime.ts`  | Contains hardcoded Supabase service role key | **DELETE** |
+| `scripts/apply-migration.js` | Contains hardcoded Supabase service role key | **DELETE** |
+| `eslint.json`                | Captured secret in lint output               | **DELETE** |
 
 **Risk:** These files expose production database credentials. Even if the database is rotated, this is a security anti-pattern.
 
@@ -232,6 +232,7 @@ This means your Supabase service role key was committed to the repository.
 ## Cleanup Completed: 2026-02-21
 
 The following files were successfully deleted:
+
 - `scripts/check-realtime.js` (contained hardcoded credentials)
 - `scripts/check-realtime.ts` (contained hardcoded credentials)
 - `scripts/apply-migration.js` (contained hardcoded credentials)
@@ -250,6 +251,7 @@ The following files were successfully deleted:
 - `public/file.svg`
 
 The `.gitignore` was updated with additional patterns.
+
 - Git history was cleaned using `git-filter-repo` to remove sensitive files.
 - Used `--replace-text` to scrub secret strings from all remaining history.
 - Remote repository history has been force-pushed with the cleaned state.
@@ -257,7 +259,8 @@ The `.gitignore` was updated with additional patterns.
 ---
 
 **Estimated Space Recovery:** ~50-100KB (more if SKILLS directory removed)  
-**Security Risk Mitigation:** High (removes exposed credentials)  
+**Security Risk Mitigation:** High (removes exposed credentials)
+
 ---
 
 ## 🔒 Supabase Key Modernization: 2026-02-21
@@ -267,22 +270,22 @@ The project has transitioned from legacy Supabase keys to modern Publishable and
 ### Changes Made:
 
 1.  **Environment Configuration (`src/lib/config/env.ts`):**
-    -   Added `NEXT_PUBLIC_SUPABASE_URL` back as a required variable.
-    -   Added `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Preferred).
-    -   Added `SUPABASE_SECRET_KEY` (Preferred).
-    -   Marked legacy `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` and `SUPABASE_SERVICE_ROLE_KEY` as optional/fallback.
+    - Added `NEXT_PUBLIC_SUPABASE_URL` back as a required variable.
+    - Added `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Preferred).
+    - Added `SUPABASE_SECRET_KEY` (Preferred).
+    - Marked legacy `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` and `SUPABASE_SERVICE_ROLE_KEY` as optional/fallback.
 2.  **Service Role Client (`src/lib/supabase/service-role.ts`):**
-    -   Now exclusively uses `SUPABASE_SECRET_KEY` (no fallback to legacy service role key).
+    - Now exclusively uses `SUPABASE_SECRET_KEY` (no fallback to legacy service role key).
 3.  **Global Client Utilities:**
-    -   Updated `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/middleware.ts`, `src/lib/supabase/storage.ts`, and `src/lib/supabase.ts` to prioritize `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with a fallback to the legacy key for backward compatibility.
+    - Updated `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/middleware.ts`, `src/lib/supabase/storage.ts`, and `src/lib/supabase.ts` to prioritize `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with a fallback to the legacy key for backward compatibility.
 4.  **Health Checks & Validation:**
-    -   `src/lib/security/validateEnv.ts` updated to recommend modern keys.
-    -   `src/app/api/health/route.ts` updated to require `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+    - `src/lib/security/validateEnv.ts` updated to recommend modern keys.
+    - `src/app/api/health/route.ts` updated to require `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 5.  **Application Pages:**
-    -   `src/app/(pos)/waiter/page.tsx` updated to use modern keys in its manual client creation.
+    - `src/app/(pos)/waiter/page.tsx` updated to use modern keys in its manual client creation.
 
 ### Next Steps for Team:
--   Generate new **Publishable** and **Secret** keys in the Supabase Dashboard.
--   Update `.env.local` with `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY`.
--   Once all environments are updated, the legacy fallback logic can be removed from the code.
 
+- Generate new **Publishable** and **Secret** keys in the Supabase Dashboard.
+- Update `.env.local` with `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY`.
+- Once all environments are updated, the legacy fallback logic can be removed from the code.

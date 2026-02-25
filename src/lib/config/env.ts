@@ -221,12 +221,12 @@ export function hasRedis(): boolean {
  */
 export function getAppUrl(): string {
     if (process.env.VERCEL === '1' || process.env.NEXT_PUBLIC_VERCEL_ENV) {
-        const vercelUrl = 
-            process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || 
-            process.env.NEXT_PUBLIC_VERCEL_URL || 
-            process.env.VERCEL_PROJECT_PRODUCTION_URL || 
+        const vercelUrl =
+            process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
+            process.env.NEXT_PUBLIC_VERCEL_URL ||
+            process.env.VERCEL_PROJECT_PRODUCTION_URL ||
             process.env.VERCEL_URL;
-            
+
         if (vercelUrl) {
             return `https://${vercelUrl}`;
         }
