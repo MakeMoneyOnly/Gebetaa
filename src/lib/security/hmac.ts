@@ -91,17 +91,19 @@ function getBaseUrl(): string {
  * Generate signed QR code URL
  * @param restaurantSlug - Restaurant identifier
  * @param tableNumber - Table number
+ * @param baseUrlOverride - Optional base URL override (e.g. derived from the request host)
  * @returns Object containing URL and signature
  */
 export function generateSignedQRCode(
     restaurantSlug: string,
-    tableNumber: string
+    tableNumber: string,
+    baseUrlOverride?: string
 ): { url: string; signature: string; expiresAt: number } {
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     const data = `${restaurantSlug}:${tableNumber}:${expiresAt}`;
     const signature = generateQRSignature(data);
 
-    const baseUrl = getBaseUrl();
+    const baseUrl = (baseUrlOverride ?? getBaseUrl()).replace(/\/$/, '');
     const url = new URL(`${baseUrl}/${restaurantSlug}`);
     url.searchParams.set('table', tableNumber);
     url.searchParams.set('sig', signature);

@@ -20,6 +20,7 @@ interface CartDrawerProps {
         guest_session_id?: string;
         auth_state?: 'guest' | 'authenticated';
         login_url?: string;
+        is_online_order?: boolean;
         campaign_attribution?: {
             campaign_delivery_id: string;
             campaign_id?: string;
@@ -36,7 +37,13 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
     const [orderError, setOrderError] = useState<string | null>(null);
 
     const handlePlaceOrder = async () => {
-        if (!guestContext || !tableNumber) {
+        if (!guestContext) {
+            setOrderError('Unable to place order: missing order context.');
+            return;
+        }
+
+        // For online ordering mode, we don't require a physical table number
+        if (!guestContext.is_online_order && !tableNumber) {
             setOrderError('Unable to place order: invalid or expired table QR context.');
             return;
         }
@@ -64,6 +71,7 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
                     })),
                     total_price: total,
                     notes: undefined,
+                    order_type: guestContext.is_online_order ? 'online' : 'dine_in',
                     ...(guestContext.campaign_attribution
                         ? { campaign_attribution: guestContext.campaign_attribution }
                         : {}),
@@ -108,7 +116,9 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
                                 Your Order
                             </Drawer.Title>
                             <span className="text-sm font-bold tracking-wide text-black/40 uppercase dark:text-white/40">
-                                Table {tableNumber ?? '--'}
+                                {guestContext?.is_online_order
+                                    ? 'Online Order'
+                                    : `Table ${tableNumber ?? '--'}`}
                             </span>
                         </div>
 

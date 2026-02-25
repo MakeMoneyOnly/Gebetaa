@@ -57,6 +57,8 @@ interface GuestContextPayload {
     exp: number;
     restaurant_name: string;
     restaurant_logo_url: string | null;
+    /** Whether this context is for online ordering (no table QR) */
+    is_online_order?: boolean;
 }
 
 interface CampaignAttributionPayload {
@@ -97,6 +99,10 @@ function MenuContent() {
     const campaignId = searchParams.get('cid') ?? searchParams.get('campaign_id');
     const forceMenuEntry = searchParams.get('entry') === 'menu';
     const slug = params.slug;
+
+    // Online ordering mode: no QR params present; this is the merchant's storefront link
+    const isOnlineOrderMode = !tableNumber && !signature && !expiresAt;
+
     const supabase = useMemo(() => createClient(), []);
     const { addToCart, count } = useCart();
 
@@ -106,6 +112,53 @@ function MenuContent() {
         isMountedRef.current = true;
 
         async function validateContext() {
+            // ── Online Ordering Mode ──────────────────────────────────────────────
+            // No QR params present: user arrived via the storefront link, not a table QR.
+            // Fetch restaurant info directly and synthesize a guest context.
+            if (isOnlineOrderMode) {
+                setContextLoading(true);
+                setContextError(null);
+                try {
+                    const { data: restaurant, error: restaurantError } = await supabase
+                        .from('restaurants')
+                        .select('id, name, logo_url')
+                        .eq('slug', slug)
+                        .maybeSingle();
+
+                    if (restaurantError || !restaurant) {
+                        setGuestContext(null);
+                        setContextError(
+                            restaurantError?.message ??
+                            'Restaurant not found. Please check the URL.'
+                        );
+                        return;
+                    }
+
+                    // Synthesize a context object for online ordering (no real table)
+                    setGuestContext({
+                        restaurant_id: restaurant.id,
+                        table_id: '',
+                        table_number: 'Online Order',
+                        slug,
+                        sig: '0'.repeat(64), // bypass signature check (no QR)
+                        exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+                        restaurant_name: restaurant.name ?? slug,
+                        restaurant_logo_url: restaurant.logo_url ?? null,
+                        is_online_order: true,
+                    });
+                    setShowPreMenuSplash(false); // skip splash for online ordering
+                } catch (error) {
+                    if (!isMountedRef.current) return;
+                    if (isAbortError(error)) return;
+                    setGuestContext(null);
+                    setContextError('Unable to load restaurant. Please try again.');
+                } finally {
+                    if (isMountedRef.current) setContextLoading(false);
+                }
+                return;
+            }
+
+            // ── Dine-in QR Mode ───────────────────────────────────────────────────
             if (!slug || !tableNumber || !signature || !expiresAt) {
                 setGuestContext(null);
                 setContextError('Invalid QR link. Please scan the table QR again.');
@@ -153,11 +206,12 @@ function MenuContent() {
         return () => {
             isMountedRef.current = false;
         };
-    }, [expiresAt, signature, slug, tableNumber]);
+    }, [expiresAt, isOnlineOrderMode, signature, slug, supabase, tableNumber]);
 
     useEffect(() => {
         async function upsertGuestSession() {
-            if (!guestContext) return;
+            // Skip guest session upsert in online ordering mode (no table context)
+            if (!guestContext || guestContext.is_online_order) return;
 
             setSessionSyncing(true);
             try {
@@ -545,6 +599,22 @@ function MenuContent() {
         );
     }
 
+    // Online ordering mode: show error if restaurant not found
+    if (isOnlineOrderMode && !guestContext && !contextLoading && contextError) {
+        return (
+            <main className="app-container flex min-h-screen items-center justify-center bg-[var(--background)] px-6 text-center">
+                <div className="max-w-md">
+                    <h1 className="font-manrope text-2xl font-black tracking-tight text-black dark:text-white">
+                        Restaurant Not Found
+                    </h1>
+                    <p className="mt-3 text-sm font-medium text-black/60 dark:text-white/70">
+                        {contextError ?? 'We could not find this restaurant. Please check the URL.'}
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
     if (!showPreMenuSplash && (contextError || !guestContext)) {
         return (
             <main className="app-container flex min-h-screen items-center justify-center bg-[var(--background)] px-6 text-center">
@@ -797,9 +867,16 @@ function MenuContent() {
                 <div className="px-4 pb-20">
                     <div className="mb-4 flex items-center justify-between px-2">
                         <div>
-                            <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
-                                Main Menu
-                            </h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
+                                    Main Menu
+                                </h2>
+                                {guestContext?.is_online_order && (
+                                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black tracking-widest text-emerald-600 uppercase">
+                                        Online Order
+                                    </span>
+                                )}
+                            </div>
                             {authState === 'authenticated' ? (
                                 <p className="mt-1 text-xs font-bold tracking-wide text-emerald-600 dark:text-emerald-400">
                                     You are signed in. Eligible orders earn loyalty points.
@@ -860,6 +937,7 @@ function MenuContent() {
                             guest_session_id: guestSessionId ?? undefined,
                             auth_state: authState,
                             login_url: buildAuthHref('/guest/auth/login'),
+                            is_online_order: guestContext.is_online_order,
                             ...(campaignDeliveryId
                                 ? {
                                       campaign_attribution: {
@@ -869,19 +947,22 @@ function MenuContent() {
                                   }
                                 : {}),
                         }}
-                        tableNumber={guestContext.table_number}
+                        tableNumber={guestContext.is_online_order ? null : guestContext.table_number}
                     />
 
                     <FloatingCart count={count} onClick={() => setCartOpen(true)} />
-                    <ServiceRequestButton
-                        guestContext={{
-                            slug: guestContext.slug,
-                            table: guestContext.table_number,
-                            sig: guestContext.sig,
-                            exp: guestContext.exp,
-                        }}
-                        tableNumber={guestContext.table_number}
-                    />
+                    {/* Only show service request button for dine-in (QR) orders */}
+                    {!guestContext.is_online_order && (
+                        <ServiceRequestButton
+                            guestContext={{
+                                slug: guestContext.slug,
+                                table: guestContext.table_number,
+                                sig: guestContext.sig,
+                                exp: guestContext.exp,
+                            }}
+                            tableNumber={guestContext.table_number}
+                        />
+                    )}
                 </>
             )}
         </main>
