@@ -61,6 +61,28 @@ export function verifyQRSignature(data: string, signature: string): boolean {
     }
 }
 
+function getBaseUrl(): string {
+    // If deployed to Vercel, prioritize Vercel's system environment variables
+    // to prevent local overrides (like ngrok) from taking precedence in production.
+    if (process.env.VERCEL === '1' || process.env.NEXT_PUBLIC_VERCEL_ENV) {
+        const vercelUrl = 
+            process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || 
+            process.env.NEXT_PUBLIC_VERCEL_URL || 
+            process.env.VERCEL_PROJECT_PRODUCTION_URL || 
+            process.env.VERCEL_URL;
+            
+        if (vercelUrl) {
+            return `https://${vercelUrl}`;
+        }
+    }
+
+    // Default fallbacks
+    const url = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://gebetamenu.com';
+    
+    // Clean up trailing slash if any
+    return url.replace(/\/$/, '');
+}
+
 /**
  * Generate signed QR code URL
  * @param restaurantSlug - Restaurant identifier
@@ -75,9 +97,8 @@ export function generateSignedQRCode(
     const data = `${restaurantSlug}:${tableNumber}:${expiresAt}`;
     const signature = generateQRSignature(data);
 
-    const url = new URL(
-        `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://gebetamenu.com'}/${restaurantSlug}`
-    );
+    const baseUrl = getBaseUrl();
+    const url = new URL(`${baseUrl}/${restaurantSlug}`);
     url.searchParams.set('table', tableNumber);
     url.searchParams.set('sig', signature);
     url.searchParams.set('exp', expiresAt.toString());

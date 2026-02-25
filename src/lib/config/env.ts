@@ -217,9 +217,22 @@ export function hasRedis(): boolean {
 
 /**
  * Get the app URL with fallback
+ * Resolves intelligently on Vercel deployments to prevent local overrides.
  */
 export function getAppUrl(): string {
-    return getEnv().NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    if (process.env.VERCEL === '1' || process.env.NEXT_PUBLIC_VERCEL_ENV) {
+        const vercelUrl = 
+            process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL || 
+            process.env.NEXT_PUBLIC_VERCEL_URL || 
+            process.env.VERCEL_PROJECT_PRODUCTION_URL || 
+            process.env.VERCEL_URL;
+            
+        if (vercelUrl) {
+            return `https://${vercelUrl}`;
+        }
+    }
+    const envUrl = getEnv().NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    return envUrl.replace(/\/$/, '');
 }
 
 // Export singleton instance

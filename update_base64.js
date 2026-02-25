@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const b64 = fs.readFileSync('public/splash-bg-opt.webp').toString('base64');
 const uri = 'data:image/webp;base64,' + b64;
