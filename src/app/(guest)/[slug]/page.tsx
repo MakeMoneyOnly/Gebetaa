@@ -558,66 +558,34 @@ function MenuContent() {
     if (showPreMenuSplash) {
         return (
             <main className="app-container h-[100dvh] relative overflow-hidden bg-[#9E1111] text-white">
-                <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_14%,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.03)_30%,rgba(0,0,0,0)_58%)]" />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(170,20,20,0.12)_0%,rgba(103,11,11,0.48)_56%,rgba(10,12,18,0.82)_100%)]" />
-                    <div className="absolute top-[-210px] left-1/2 h-[560px] w-[560px] -translate-x-1/2 rounded-full bg-[#ff9b9b]/16 blur-[140px]" />
-                    <div className="absolute bottom-[18%] left-[-18%] h-[280px] w-[280px] rounded-full bg-[#5f0a0a]/70 blur-[90px]" />
-                    <div className="absolute right-[-24%] bottom-[14%] h-[320px] w-[320px] rounded-full bg-black/40 blur-[110px]" />
-                </div>
+                <img 
+                    src="/Splash%20Screen%20Design.svg" 
+                    alt="Splash Background" 
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                />
 
-                <div className="relative z-10 flex h-full flex-col px-6 pb-10">
-                    <div className="pt-12 text-center">
-                        <div className="inline-flex items-center gap-2 rounded-full bg-black/22 px-4 py-1.5 backdrop-blur-sm">
-                            <span className="bg-brand-crimson flex h-6 w-6 items-center justify-center rounded-full text-sm font-black text-white">
-                                G
-                            </span>
-                            <span className="font-manrope text-xl font-extrabold tracking-tight">Gebeta</span>
-                        </div>
-                    </div>
-
-                    <section className="mt-14">
-                        <p className="text-xs font-black tracking-[0.24em] text-white/70 uppercase">
-                            Gebeta | Table {guestContext?.table_number || tableNumber || '--'}
-                        </p>
-                        <h1 className="font-manrope mt-4 text-[56px] leading-[0.88] font-black tracking-tighter text-white">
-                            Beyond
-                            <br />
-                            Ordinary
-                            <br />
-                            Bites
-                        </h1>
-                        <p className="mt-4 max-w-[320px] text-base leading-7 font-semibold text-white/84">
-                            {guestContext?.restaurant_name ? `${guestContext.restaurant_name} rewards every order.` : 'Rewards for every order.'} Log in to earn loyalty points, use gift cards, and unlock member campaigns.
-                        </p>
-                    </section>
-
-                    <div className="mt-auto">
-                        <p className="mb-5 text-center text-base font-semibold text-white/85">
-                            Unveil top dishes &amp; flavors.
-                        </p>
-                        <div className="space-y-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setAuthError(null);
-                                    setAuthMessage(null);
-                                    setAuthView('login');
-                                    setOtpFlow('none');
-                                    setOtpCode('');
-                                }}
-                                className="flex h-14 w-full items-center justify-center rounded-full bg-white text-lg font-black text-[#151922] shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition hover:bg-white/95"
-                            >
-                                Sign In / Sign Up
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => void handleSkipToMenu()}
-                                className="flex h-14 w-full items-center justify-center rounded-full border border-white/45 bg-black/12 text-lg font-black text-white backdrop-blur-sm transition hover:bg-black/18"
-                            >
-                                {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
-                            </button>
-                        </div>
+                <div className="relative z-10 flex h-full flex-col px-8 pb-[10vh]">
+                    <div className="mt-auto space-y-4">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setAuthError(null);
+                                setAuthMessage(null);
+                                setAuthView('login');
+                                setOtpFlow('none');
+                                setOtpCode('');
+                            }}
+                            className="flex h-14 w-full items-center justify-center rounded-3xl bg-[#FFC900] text-xl font-black tracking-tight text-[#9E1111] shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition active:scale-[0.98]"
+                        >
+                            Sign In / Sign up
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => void handleSkipToMenu()}
+                            className="flex h-14 w-full items-center justify-center rounded-3xl border-2 border-[#FFC900] bg-transparent text-xl font-black tracking-tight text-[#FFC900] backdrop-blur-sm transition active:scale-[0.98]"
+                        >
+                            {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
+                        </button>
                     </div>
                 </div>
 

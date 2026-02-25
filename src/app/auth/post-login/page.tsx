@@ -30,10 +30,10 @@ export default function PostLoginPage() {
                 setMessage('Setting up your workspace...');
 
                 // Get the user's staff record and the associated restaurant's onboarding status
-                const { data: staff } = await supabase
+                const staffResult = await supabase
                     .rpc('get_my_staff_role', { p_restaurant_id: null })
-                    .returns<{ role: string; restaurant_id: string }[]>()
                     .maybeSingle();
+                const staff = staffResult.data as { role: string; restaurant_id: string } | null;
 
                 if (cancelled) return;
 
