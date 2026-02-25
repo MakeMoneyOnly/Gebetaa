@@ -1,23 +1,19 @@
+import { updateSession } from '@/lib/supabase/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-/**
- * Simplified Proxy for debugging
- * This is a minimal proxy to isolate the MIDDLEWARE_INVOCATION_FAILED error
- */
-
-export default async function proxy(request: NextRequest) {
-    // Simple pass-through for now
-    const response = NextResponse.next();
+export async function middleware(request: NextRequest) {
+    // First, update the Supabase session
+    const supabaseResponse = await updateSession(request);
 
     // Add basic security headers
-    response.headers.set('X-DNS-Prefetch-Control', 'on');
-    response.headers.set(
+    supabaseResponse.headers.set('X-DNS-Prefetch-Control', 'on');
+    supabaseResponse.headers.set(
         'Strict-Transport-Security',
         'max-age=63072000; includeSubDomains; preload'
     );
 
-    return response;
+    return supabaseResponse;
 }
 
 // Configure which routes the middleware runs on
@@ -29,7 +25,8 @@ export const config = {
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          * - public folder
+         * - static files
          */
-        '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+        '/((?!_next/static|_next/image|favicon.ico|public/|.*\\..*).*)',
     ],
 };

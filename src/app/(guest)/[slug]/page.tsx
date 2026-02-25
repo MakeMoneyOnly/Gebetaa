@@ -557,14 +557,14 @@ function MenuContent() {
 
     if (showPreMenuSplash) {
         return (
-            <main className="app-container h-[100dvh] relative overflow-hidden bg-[#9E1111] text-white">
+            <main className="app-container h-[100dvh] relative overflow-hidden bg-[#a60000] text-white">
                 <img 
                     src="/Splash%20Screen%20Design.svg" 
                     alt="Splash Background" 
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
 
-                <div className="relative z-10 flex h-full flex-col px-8 pb-[10vh]">
+                <div className="relative z-10 flex h-full flex-col px-22 pb-[calc(10vh-10px)] max-w-md mx-auto">
                     <div className="mt-auto space-y-4">
                         <button
                             type="button"
@@ -575,7 +575,7 @@ function MenuContent() {
                                 setOtpFlow('none');
                                 setOtpCode('');
                             }}
-                            className="flex h-14 w-full items-center justify-center rounded-3xl bg-[#FFC900] text-xl font-black tracking-tight text-[#9E1111] shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition active:scale-[0.98]"
+                            className="flex h-14 w-full items-center justify-center rounded-3xl bg-[#FFC900] text-xl font-black tracking-tight text-[#a60000] shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition active:scale-[0.98]"
                         >
                             Sign In / Sign up
                         </button>
