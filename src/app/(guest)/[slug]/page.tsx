@@ -82,6 +82,7 @@ function MenuContent() {
     const [authLoading, setAuthLoading] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
     const [authMessage, setAuthMessage] = useState<string | null>(null);
+    const [splashLoaded, setSplashLoaded] = useState(false);
     const [loginPhone, setLoginPhone] = useState('');
     const [signupPhone, setSignupPhone] = useState('');
     const [signupName, setSignupName] = useState('');
@@ -557,14 +558,15 @@ function MenuContent() {
 
     if (showPreMenuSplash) {
         return (
-            <main className="app-container h-[100dvh] relative overflow-hidden bg-[#a60000] text-white">
+            <main className="app-container h-[100dvh] relative overflow-hidden bg-white text-white">
                 <img 
                     src="/Splash%20Screen%20Design.svg" 
                     alt="Splash Background" 
+                    fetchPriority="high"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
 
-                <div className="relative z-10 flex h-full flex-col px-22 pb-[calc(10vh-10px)] max-w-md mx-auto">
+                <div className="relative z-10 flex h-full flex-col px-12 pb-[calc(10vh-10px)] max-w-md mx-auto">
                     <div className="mt-auto space-y-4">
                         <button
                             type="button"
@@ -584,7 +586,7 @@ function MenuContent() {
                             onClick={() => void handleSkipToMenu()}
                             className="flex h-14 w-full items-center justify-center rounded-3xl border-2 border-[#FFC900] bg-transparent text-xl font-black tracking-tight text-[#FFC900] backdrop-blur-sm transition active:scale-[0.98]"
                         >
-                            {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
+                            Skip to Menu
                         </button>
                     </div>
                 </div>

@@ -45,12 +45,11 @@ export async function updateSession(request: NextRequest) {
         }
     );
 
-    // Do not run Supabase code during static generation
-    // if (request.nextUrl.pathname.startsWith('/_next')) return supabaseResponse
+    // IMPORTANT: Use getClaims() for better performance with SSR
+    // Do not run code between createServerClient and supabase.auth.getClaims()
+    const { data } = await supabase.auth.getClaims();
+    const user = data?.claims;
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
     const pathname = request.nextUrl.pathname;
     const protectedPrefixes = ['/app', '/merchant', '/kds', '/staff', '/pos'];
     const isProtectedPath = protectedPrefixes.some(prefix => pathname.startsWith(prefix));
@@ -66,5 +65,6 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    // IMPORTANT: You must return the supabaseResponse object as it is.
     return supabaseResponse;
 }
