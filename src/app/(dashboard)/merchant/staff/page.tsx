@@ -9,7 +9,7 @@ import { RolePermissionDrawer } from '@/components/merchant/RolePermissionDrawer
 import { AddPinStaffModal } from '@/components/merchant/AddPinStaffModal';
 import { ProvisionDeviceModal } from '@/components/merchant/ProvisionDeviceModal';
 import { MetricCard } from '@/components/merchant/MetricCard';
-import { Users, Tablet, Shield, Plus, MoreHorizontal, UserCheck, LayoutGrid, Trash2 } from 'lucide-react';
+import { Users, Tablet, Plus, MoreHorizontal, UserCheck, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type SubTab = 'staff' | 'devices';
@@ -25,7 +25,7 @@ export default function StaffPage() {
         handleDeleteStaff,
     } = useStaff();
 
-    const { user, restaurantId } = useRole(null);
+    const { restaurantId } = useRole(null);
     const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
 
     // Delete confirmation states
@@ -160,7 +160,7 @@ export default function StaffPage() {
             </div>
 
             {/* Metrics Section */}
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     icon={Users}
                     chip="TOTAL"
@@ -193,6 +193,17 @@ export default function StaffPage() {
                     progress={Math.min(20, devices.length * 5)}
                     targetLabel="Target: -"
                     currentLabel={`${devices.length} Units`}
+                />
+                <MetricCard
+                    icon={Tablet}
+                    chip="CONNECTED"
+                    value={devices.filter(d => Boolean(d.device_token)).length}
+                    label="Paired Devices"
+                    subLabel="Terminals actively connected"
+                    tone="green"
+                    progress={Math.min(20, devices.filter(d => Boolean(d.device_token)).length * 5)}
+                    targetLabel={`Total: ${devices.length}`}
+                    currentLabel={`Paired: ${devices.filter(d => Boolean(d.device_token)).length}`}
                 />
             </div>
 
@@ -288,9 +299,15 @@ export default function StaffPage() {
                                                 <span className="text-xs font-bold text-gray-400">
                                                     Login PIN
                                                 </span>
-                                                <span className="font-mono text-sm font-bold tracking-widest text-black">
-                                                    {member.pin_code ? '••••' : 'Uses Email'}
-                                                </span>
+                                                {member.pin_code ? (
+                                                    <span className="font-mono text-sm font-bold tracking-widest text-black">
+                                                        ••••
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-sm font-bold text-black">
+                                                        Uses Email
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex justify-between pt-2">
                                                 <span className="text-xs font-bold text-gray-400">

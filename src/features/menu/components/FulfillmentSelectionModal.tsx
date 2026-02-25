@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Truck, ShoppingBag, X } from 'lucide-react';
+import { Truck, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FulfillmentType } from '@/lib/security/offPremiseContext';
 

@@ -10,7 +10,17 @@ export async function updateSession(request: NextRequest) {
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
     // Skip Supabase initialization if environment variables are missing
+    // This is critical for Edge Runtime where env vars might not be available
     if (!supabaseUrl || !supabaseKey) {
+        console.warn('Supabase environment variables not available in middleware');
+        return supabaseResponse;
+    }
+
+    // Validate URL format before passing to Supabase
+    try {
+        new URL(supabaseUrl);
+    } catch {
+        console.error('Invalid SUPABASE_URL format:', supabaseUrl);
         return supabaseResponse;
     }
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, Tablet } from 'lucide-react';
+import { Tablet } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 function WaiterPinContent() {

@@ -1,6 +1,5 @@
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
-import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
     const auth = await getAuthenticatedUser();
@@ -63,7 +62,7 @@ export async function POST(request: Request) {
         if (updateError) return apiError('Failed to update zones', 500);
 
         return apiSuccess({ zones: newSettings.zones });
-    } catch (err) {
+    } catch {
         return apiError('Invalid request body', 400);
     }
 }

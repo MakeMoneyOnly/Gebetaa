@@ -175,10 +175,8 @@ describe('Edge Cases: String Length Boundaries', () => {
             ...baseItem,
             name: '   ',
         });
-        // Should fail if schema trims and checks min length
-        if (result.success) {
-            expect(result.data.name.trim().length).toBeGreaterThan(0);
-        }
+        // Schema now trims and checks min length, so whitespace-only should fail
+        expect(result.success).toBe(false);
     });
 
     it('should handle notes at max length (500 chars)', () => {

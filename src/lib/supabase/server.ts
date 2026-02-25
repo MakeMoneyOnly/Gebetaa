@@ -7,13 +7,31 @@ export async function createClient() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-    // During build or if missing, provide safe fallbacks to prevent crash
-    const url = supabaseUrl || 'https://placeholder.supabase.co';
-    const key = supabaseKey || 'placeholder-key';
+    // If environment variables are missing, return a mock client
+    if (!supabaseUrl || !supabaseKey) {
+        console.warn('Supabase environment variables are not set on server.');
+        return {
+            auth: {
+                getUser: async () => ({ data: { user: null }, error: null }),
+                getSession: async () => ({ data: { session: null }, error: null }),
+            },
+            from: () => ({
+                select: () => ({ data: null, error: new Error('Supabase not configured') }),
+                insert: () => ({ data: null, error: new Error('Supabase not configured') }),
+                update: () => ({ data: null, error: new Error('Supabase not configured') }),
+                delete: () => ({ data: null, error: new Error('Supabase not configured') }),
+                eq: function() { return this; },
+                single: async () => ({ data: null, error: new Error('Supabase not configured') }),
+                maybeSingle: async () => ({ data: null, error: null }),
+                limit: function() { return this; },
+                order: function() { return this; },
+            }),
+        } as unknown as ReturnType<typeof createServerClient<Database>>;
+    }
 
     return createServerClient<Database>(
-        url,
-        key,
+        supabaseUrl,
+        supabaseKey,
         {
             cookies: {
                 getAll() {

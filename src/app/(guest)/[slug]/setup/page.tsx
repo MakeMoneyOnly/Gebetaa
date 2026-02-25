@@ -106,7 +106,7 @@ export default function DeviceSetupPage() {
                 setStatus('invalid');
                 toast.error(result.error || 'Invalid pairing code. Please try again.');
             }
-        } catch (error) {
+        } catch {
             setStatus('invalid');
             toast.error('Connection error. Please try again.');
         }

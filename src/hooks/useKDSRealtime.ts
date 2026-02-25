@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -49,6 +49,7 @@ export function useKDSRealtime({
     const channelRef = useRef<RealtimeChannel | null>(null);
     const supabase = createClient();
     const mountedRef = useRef(false);
+    const [isConnected, setIsConnected] = useState(false);
 
     const handleOrdersChange = useCallback(
         (payload: RealtimePayload) => {
@@ -167,6 +168,7 @@ export function useKDSRealtime({
             });
 
         channelRef.current = channel;
+        setIsConnected(true);
 
         return () => {
             mountedRef.current = false;
@@ -174,11 +176,12 @@ export function useKDSRealtime({
                 channelRef.current.unsubscribe();
                 channelRef.current = null;
             }
+            setIsConnected(false);
         };
     }, [enabled, restaurantId, supabase, handleOrdersChange, handleExternalOrdersChange]);
 
     return {
-        isConnected: channelRef.current !== null,
+        isConnected,
     };
 }
 

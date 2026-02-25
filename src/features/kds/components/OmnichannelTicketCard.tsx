@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Clock, MapPin, User, Phone, Truck, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Clock, MapPin, User, Truck, CheckCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 

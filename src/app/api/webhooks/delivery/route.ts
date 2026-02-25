@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { writeAuditLog } from '@/lib/api/audit';
@@ -112,7 +112,8 @@ export async function POST(request: NextRequest) {
     // Extract headers
     const provider = request.headers.get('X-Provider')?.toLowerCase() as Provider | null;
     const apiKey = request.headers.get('X-API-Key');
-    const signature = request.headers.get('X-Signature');
+    // Signature validation can be added later for enhanced security
+    // const signature = request.headers.get('X-Signature');
 
     // Validate provider
     if (!provider || !PROVIDER_CONFIGS[provider]) {
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
             );
         }
         payload = parsed.data;
-    } catch (error) {
+    } catch {
         return apiError(
             'Failed to parse request body',
             400,

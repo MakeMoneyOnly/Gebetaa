@@ -6,7 +6,6 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { writeAuditLog } from '@/lib/api/audit';
 
 /**
  * Generate a unique ID without external dependency
@@ -444,7 +443,7 @@ function mapTelebirrStatus(status: string): 'pending' | 'processing' | 'complete
 /**
  * Check if payment is required for off-premise order
  */
-export function isPaymentRequiredForOffPremise(fulfillmentType: 'delivery' | 'pickup'): boolean {
+export function isPaymentRequiredForOffPremise(_fulfillmentType: 'delivery' | 'pickup'): boolean {
     return true; // Both delivery and pickup require upfront payment
 }
 

@@ -50,12 +50,12 @@ async function main() {
                 .trim()
                 .replace(/\s+/g, '-');
             console.log(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
-            const { error: updateError } = await supabase
+            const { error: err } = await supabase
                 .from('restaurants')
                 .update({ slug: newSlug })
                 .eq('id', restaurant.id);
 
-            if (updateError) console.error('Error updating:', updateError);
+            if (err) console.error('Error updating:', err);
             else console.log('Successfully updated.');
         } else if (!restaurant.slug) {
             const newSlug = restaurant.name
@@ -64,10 +64,13 @@ async function main() {
                 .trim()
                 .replace(/\s+/g, '-');
             console.log(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
-            const { error: updateError } = await supabase
+            const { error: err2 } = await supabase
                 .from('restaurants')
                 .update({ slug: newSlug })
                 .eq('id', restaurant.id);
+
+            if (err2) console.error('Error updating:', err2);
+            else console.log('Successfully updated.');
         } else {
             const newSlug = restaurant.name
                 .toLowerCase()
@@ -76,12 +79,12 @@ async function main() {
                 .replace(/\s+/g, '-');
             if (restaurant.slug !== newSlug) {
                 console.log(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
-                const { error: updateError } = await supabase
+                const { error: err3 } = await supabase
                     .from('restaurants')
                     .update({ slug: newSlug })
                     .eq('id', restaurant.id);
 
-                if (updateError) console.error('Error updating:', updateError);
+                if (err3) console.error('Error updating:', err3);
                 else console.log('Successfully updated.');
             }
         }

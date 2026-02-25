@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const { error: updateError } = await adminClient
         .from('hardware_devices')
         .update({
-            pairing_code: null, // Clear the code so it can't be reused
+            // pairing_code: null, // Keep the code so it is visible in the cards
             device_token,
             paired_at: new Date().toISOString(),
         })
