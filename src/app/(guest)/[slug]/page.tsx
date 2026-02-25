@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { Drawer } from 'vaul';
 import { createClient } from '@/lib/supabase';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Phone, User, ArrowLeft } from 'lucide-react';
@@ -525,17 +526,6 @@ function MenuContent() {
         }
     };
 
-    if (contextLoading) {
-        return (
-            <main className="app-container flex min-h-screen items-center justify-center bg-[#9E1111] text-white">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    <p className="text-sm font-semibold text-white/80">Loading table...</p>
-                </div>
-            </main>
-        );
-    }
-
     if (loading) {
         return (
             <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
@@ -550,7 +540,7 @@ function MenuContent() {
         );
     }
 
-    if (contextError || !guestContext) {
+    if (!showPreMenuSplash && (contextError || !guestContext)) {
         return (
             <main className="app-container flex min-h-screen items-center justify-center bg-[var(--background)] px-6 text-center">
                 <div className="max-w-md">
@@ -567,7 +557,7 @@ function MenuContent() {
 
     if (showPreMenuSplash) {
         return (
-            <main className="app-container relative min-h-screen overflow-hidden bg-[#9E1111] text-white">
+            <main className="app-container h-[100dvh] relative overflow-hidden bg-[#9E1111] text-white">
                 <div className="pointer-events-none absolute inset-0">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_14%,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.03)_30%,rgba(0,0,0,0)_58%)]" />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(170,20,20,0.12)_0%,rgba(103,11,11,0.48)_56%,rgba(10,12,18,0.82)_100%)]" />
@@ -576,7 +566,7 @@ function MenuContent() {
                     <div className="absolute right-[-24%] bottom-[14%] h-[320px] w-[320px] rounded-full bg-black/40 blur-[110px]" />
                 </div>
 
-                <div className="relative z-10 flex min-h-screen flex-col px-6 pb-10">
+                <div className="relative z-10 flex h-full flex-col px-6 pb-10">
                     <div className="pt-12 text-center">
                         <div className="inline-flex items-center gap-2 rounded-full bg-black/22 px-4 py-1.5 backdrop-blur-sm">
                             <span className="bg-brand-crimson flex h-6 w-6 items-center justify-center rounded-full text-sm font-black text-white">
@@ -588,7 +578,7 @@ function MenuContent() {
 
                     <section className="mt-14">
                         <p className="text-xs font-black tracking-[0.24em] text-white/70 uppercase">
-                            Gebeta | Table {guestContext.table_number}
+                            Gebeta | Table {guestContext?.table_number || tableNumber || '--'}
                         </p>
                         <h1 className="font-manrope mt-4 text-[56px] leading-[0.88] font-black tracking-tighter text-white">
                             Beyond
@@ -598,7 +588,7 @@ function MenuContent() {
                             Bites
                         </h1>
                         <p className="mt-4 max-w-[320px] text-base leading-7 font-semibold text-white/84">
-                            {guestContext.restaurant_name} rewards every order. Log in to earn loyalty points, use gift cards, and unlock member campaigns.
+                            {guestContext?.restaurant_name ? `${guestContext.restaurant_name} rewards every order.` : 'Rewards for every order.'} Log in to earn loyalty points, use gift cards, and unlock member campaigns.
                         </p>
                     </section>
 
@@ -618,198 +608,199 @@ function MenuContent() {
                                 }}
                                 className="flex h-14 w-full items-center justify-center rounded-full bg-white text-lg font-black text-[#151922] shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition hover:bg-white/95"
                             >
-                                Log In
+                                Sign In / Sign Up
                             </button>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setAuthError(null);
-                                    setAuthMessage(null);
-                                    setAuthView('signup');
-                                    setOtpFlow('none');
-                                    setOtpCode('');
-                                }}
+                                onClick={() => void handleSkipToMenu()}
                                 className="flex h-14 w-full items-center justify-center rounded-full border border-white/45 bg-black/12 text-lg font-black text-white backdrop-blur-sm transition hover:bg-black/18"
                             >
-                                Sign Up
+                                {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
                             </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => void handleSkipToMenu()}
-                            className="mt-5 w-full text-center text-[30px] font-black text-white/78 underline-offset-4 transition hover:text-white hover:underline"
-                            style={{ fontSize: '1.92rem', letterSpacing: '-0.01em' }}
-                        >
-                            {sessionSyncing ? 'Preparing menu...' : 'Skip to Menu'}
-                        </button>
                     </div>
                 </div>
 
-                {authView !== 'none' ? (
-                    <div className="absolute inset-0 z-30 flex items-end bg-black/35 backdrop-blur-[2px]">
-                        <div className="w-full rounded-t-[32px] bg-white px-5 pb-8 pt-5 text-black shadow-[0_-20px_40px_rgba(0,0,0,0.25)]">
-                            <div className="mb-4 flex items-center justify-between">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAuthView('none');
-                                        setOtpFlow('none');
-                                        setOtpCode('');
-                                        setAuthError(null);
-                                        setAuthMessage(null);
-                                    }}
-                                    className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold text-black/65 transition hover:bg-black/5"
-                                >
-                                    <ArrowLeft size={16} />
-                                    Back
-                                </button>
-                                <span className="font-manrope text-sm font-semibold text-black/55">
-                                    {authView === 'login' ? 'guest login' : 'guest sign up'}
-                                </span>
-                            </div>
-
-                            <h2 className="font-manrope text-4xl font-black tracking-tight text-black">
-                                {authView === 'login' ? 'Welcome Back' : 'Get Started'}
-                            </h2>
-                            <p className="mt-2 text-base font-medium text-black/60">
-                                {otpFlow === 'none'
-                                    ? authView === 'login'
-                                        ? 'Use your phone number to receive a one-time code.'
-                                        : 'Create your guest account with phone OTP for faster access.'
-                                    : `enter the sms code sent to ${otpTargetPhone}`}
-                            </p>
-
-                            {authError ? (
-                                <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-                                    {authError}
-                                </p>
-                            ) : null}
-                            {authMessage ? (
-                                <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-bold text-green-700">
-                                    {authMessage}
-                                </p>
-                            ) : null}
-
-                            {otpFlow === 'none' ? (
-                                authView === 'login' ? (
-                                    <form onSubmit={handleSendOtp} className="mt-5 space-y-4">
-                                        <div className="relative">
-                                            <Phone className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
-                                            <input
-                                                type="tel"
-                                                inputMode="tel"
-                                                value={loginPhone}
-                                                onChange={e => setLoginPhone(e.target.value)}
-                                                placeholder="Enter phone (e.g. 0911xxxxxx)"
-                                                required
-                                                className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
-                                            />
-                                        </div>
-                                        <button
-                                            type="submit"
-                                            disabled={authLoading}
-                                            className="bg-brand-crimson hover:bg-brand-crimson-hover h-14 w-full rounded-2xl text-xl font-black text-white transition disabled:opacity-70"
-                                        >
-                                            {authLoading ? 'Sending OTP...' : 'send otp'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setAuthView('signup');
-                                                setOtpFlow('none');
-                                                setOtpCode('');
-                                                setAuthError(null);
-                                                setAuthMessage(null);
-                                            }}
-                                            className="w-full text-center text-sm font-bold text-black/55 underline underline-offset-4"
-                                        >
-                                            don&apos;t have an account? sign up
-                                        </button>
-                                    </form>
-                                ) : (
-                                    <form onSubmit={handleSendOtp} className="mt-5 space-y-4">
-                                        <div className="relative">
-                                            <User className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
-                                            <input
-                                                type="text"
-                                                value={signupName}
-                                                onChange={e => setSignupName(e.target.value)}
-                                                placeholder="Enter your name (optional)"
-                                                className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
-                                            />
-                                        </div>
-                                        <div className="relative">
-                                            <Phone className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
-                                            <input
-                                                type="tel"
-                                                inputMode="tel"
-                                                value={signupPhone}
-                                                onChange={e => setSignupPhone(e.target.value)}
-                                                placeholder="Enter phone (e.g. 0911xxxxxx)"
-                                                required
-                                                className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
-                                            />
-                                        </div>
-                                        <button
-                                            type="submit"
-                                            disabled={authLoading}
-                                            className="bg-brand-crimson hover:bg-brand-crimson-hover h-14 w-full rounded-2xl text-xl font-black text-white transition disabled:opacity-70"
-                                        >
-                                            {authLoading ? 'Sending OTP...' : 'send otp'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setAuthView('login');
-                                                setOtpFlow('none');
-                                                setOtpCode('');
-                                                setAuthError(null);
-                                                setAuthMessage(null);
-                                            }}
-                                            className="w-full text-center text-sm font-bold text-black/55 underline underline-offset-4"
-                                        >
-                                            already have an account? sign in
-                                        </button>
-                                    </form>
-                                )
-                            ) : (
-                                <form onSubmit={handleVerifyOtp} className="mt-5 space-y-4">
-                                    <div className="relative">
-                                        <Phone className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={otpCode}
-                                            onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                            placeholder="Enter 6-digit OTP"
-                                            required
-                                            className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        disabled={authLoading}
-                                        className="bg-brand-crimson hover:bg-brand-crimson-hover h-14 w-full rounded-2xl text-xl font-black text-white transition disabled:opacity-70"
-                                    >
-                                        {authLoading ? 'Verifying...' : 'verify otp'}
-                                    </button>
+                <Drawer.Root
+                    open={authView !== 'none'}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setAuthView('none');
+                            setOtpFlow('none');
+                            setOtpCode('');
+                            setAuthError(null);
+                            setAuthMessage(null);
+                        }
+                    }}
+                >
+                    <Drawer.Portal>
+                        <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm" />
+                        <Drawer.Content className="fixed right-0 bottom-0 left-0 z-[9999] flex flex-col rounded-t-[32px] bg-white shadow-[0_-20px_40px_rgba(0,0,0,0.25)] outline-none">
+                            <div className="w-full px-5 pb-8 pt-5 text-black">
+                                <div className="mx-auto mb-6 h-1.5 w-12 flex-shrink-0 lg:hidden rounded-full bg-black/10" />
+                                <div className="mb-4 flex items-center justify-between">
                                     <button
                                         type="button"
-                                        disabled={authLoading}
                                         onClick={() => {
+                                            setAuthView('none');
                                             setOtpFlow('none');
                                             setOtpCode('');
+                                            setAuthError(null);
                                             setAuthMessage(null);
                                         }}
-                                        className="w-full text-center text-sm font-bold text-black/55 underline underline-offset-4 disabled:opacity-60"
+                                        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold text-black/65 transition hover:bg-black/5"
                                     >
-                                        change phone number
+                                        <ArrowLeft size={16} />
+                                        Back
                                     </button>
-                                </form>
-                            )}
-                        </div>
-                    </div>
-                ) : null}
+                                    <span className="font-manrope text-sm font-semibold text-black/55">
+                                        {authView === 'login' ? 'guest login' : 'guest sign up'}
+                                    </span>
+                                </div>
+
+                                <Drawer.Title className="font-manrope text-4xl font-black tracking-tight text-black">
+                                    {authView === 'login' ? 'Welcome Back' : 'Get Started'}
+                                </Drawer.Title>
+                                <p className="mt-2 text-base font-medium text-black/60">
+                                    {otpFlow === 'none'
+                                        ? authView === 'login'
+                                            ? 'Log in to securely access your previous orders and exclusive loyalty rewards.'
+                                            : 'Sign up for a free guest account to unlock faster checkouts, special offers, and rewards.'
+                                        : `Enter the verification code sent via SMS to ${otpTargetPhone} to continue.`}
+                                </p>
+
+                                {authError ? (
+                                    <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                                        {authError}
+                                    </p>
+                                ) : null}
+                                {authMessage ? (
+                                    <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-bold text-green-700">
+                                        {authMessage}
+                                    </p>
+                                ) : null}
+
+                                {otpFlow === 'none' ? (
+                                    authView === 'login' ? (
+                                        <form onSubmit={handleSendOtp} className="mt-5 space-y-4">
+                                            <div className="relative">
+                                                <Phone className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
+                                                <input
+                                                    type="tel"
+                                                    inputMode="tel"
+                                                    value={loginPhone}
+                                                    onChange={e => setLoginPhone(e.target.value)}
+                                                    placeholder="Enter phone (e.g. 0911xxxxxx)"
+                                                    required
+                                                    className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
+                                                />
+                                            </div>
+                                            <button
+                                                type="submit"
+                                                disabled={authLoading}
+                                                className="bg-brand-crimson hover:bg-brand-crimson-hover h-14 w-full rounded-2xl text-xl font-black text-white transition disabled:opacity-70"
+                                            >
+                                                {authLoading ? 'Loading...' : 'Sign In'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setAuthView('signup');
+                                                    setOtpFlow('none');
+                                                    setOtpCode('');
+                                                    setAuthError(null);
+                                                    setAuthMessage(null);
+                                                }}
+                                                className="w-full text-center text-sm font-bold text-black/55 underline underline-offset-4"
+                                            >
+                                                don&apos;t have an account? sign up
+                                            </button>
+                                        </form>
+                                    ) : (
+                                        <form onSubmit={handleSendOtp} className="mt-5 space-y-4">
+                                            <div className="relative">
+                                                <User className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
+                                                <input
+                                                    type="text"
+                                                    value={signupName}
+                                                    onChange={e => setSignupName(e.target.value)}
+                                                    placeholder="Enter your name (optional)"
+                                                    className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
+                                                />
+                                            </div>
+                                            <div className="relative">
+                                                <Phone className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
+                                                <input
+                                                    type="tel"
+                                                    inputMode="tel"
+                                                    value={signupPhone}
+                                                    onChange={e => setSignupPhone(e.target.value)}
+                                                    placeholder="Enter phone (e.g. 0911xxxxxx)"
+                                                    required
+                                                    className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
+                                                />
+                                            </div>
+                                            <button
+                                                type="submit"
+                                                disabled={authLoading}
+                                                className="bg-brand-crimson hover:bg-brand-crimson-hover h-14 w-full rounded-2xl text-xl font-black text-white transition disabled:opacity-70"
+                                            >
+                                                {authLoading ? 'Loading...' : 'Sign Up'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setAuthView('login');
+                                                    setOtpFlow('none');
+                                                    setOtpCode('');
+                                                    setAuthError(null);
+                                                    setAuthMessage(null);
+                                                }}
+                                                className="w-full text-center text-sm font-bold text-black/55 underline underline-offset-4"
+                                            >
+                                                already have an account? sign in
+                                            </button>
+                                        </form>
+                                    )
+                                ) : (
+                                    <form onSubmit={handleVerifyOtp} className="mt-5 space-y-4">
+                                        <div className="relative">
+                                            <Phone className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/35" />
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={otpCode}
+                                                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                placeholder="Enter 6-digit OTP"
+                                                required
+                                                className="w-full rounded-2xl border border-black/12 bg-white px-12 py-4 text-base font-semibold text-black outline-none focus:border-[#0D3B40]/30 focus:ring-2 focus:ring-[#0D3B40]/15"
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            disabled={authLoading}
+                                            className="bg-brand-crimson hover:bg-brand-crimson-hover h-14 w-full rounded-2xl text-xl font-black text-white transition disabled:opacity-70"
+                                        >
+                                            {authLoading ? 'Verifying...' : 'Verify'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            disabled={authLoading}
+                                            onClick={() => {
+                                                setOtpFlow('none');
+                                                setOtpCode('');
+                                                setAuthMessage(null);
+                                            }}
+                                            className="w-full text-center text-sm font-bold text-black/55 underline underline-offset-4 disabled:opacity-60"
+                                        >
+                                            change phone number
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        </Drawer.Content>
+                    </Drawer.Portal>
+                </Drawer.Root>
             </main>
         );
     }
@@ -877,39 +868,43 @@ function MenuContent() {
                 onAddToCart={qty => selectedItem && handleAddToCart(selectedItem, qty)}
             />
 
-            <CartDrawer
-                open={cartOpen}
-                onOpenChange={setCartOpen}
-                guestContext={{
-                    slug: guestContext.slug,
-                    table: guestContext.table_number,
-                    sig: guestContext.sig,
-                    exp: guestContext.exp,
-                    guest_session_id: guestSessionId ?? undefined,
-                    auth_state: authState,
-                    login_url: buildAuthHref('/guest/auth/login'),
-                    ...(campaignDeliveryId
-                        ? {
-                              campaign_attribution: {
-                                  campaign_delivery_id: campaignDeliveryId,
-                                  ...(campaignId ? { campaign_id: campaignId } : {}),
-                              } as CampaignAttributionPayload,
-                          }
-                        : {}),
-                }}
-                tableNumber={guestContext.table_number}
-            />
+            {guestContext && (
+                <>
+                    <CartDrawer
+                        open={cartOpen}
+                        onOpenChange={setCartOpen}
+                        guestContext={{
+                            slug: guestContext.slug,
+                            table: guestContext.table_number,
+                            sig: guestContext.sig,
+                            exp: guestContext.exp,
+                            guest_session_id: guestSessionId ?? undefined,
+                            auth_state: authState,
+                            login_url: buildAuthHref('/guest/auth/login'),
+                            ...(campaignDeliveryId
+                                ? {
+                                      campaign_attribution: {
+                                          campaign_delivery_id: campaignDeliveryId,
+                                          ...(campaignId ? { campaign_id: campaignId } : {}),
+                                      } as CampaignAttributionPayload,
+                                  }
+                                : {}),
+                        }}
+                        tableNumber={guestContext.table_number}
+                    />
 
-            <FloatingCart count={count} onClick={() => setCartOpen(true)} />
-            <ServiceRequestButton
-                guestContext={{
-                    slug: guestContext.slug,
-                    table: guestContext.table_number,
-                    sig: guestContext.sig,
-                    exp: guestContext.exp,
-                }}
-                tableNumber={guestContext.table_number}
-            />
+                    <FloatingCart count={count} onClick={() => setCartOpen(true)} />
+                    <ServiceRequestButton
+                        guestContext={{
+                            slug: guestContext.slug,
+                            table: guestContext.table_number,
+                            sig: guestContext.sig,
+                            exp: guestContext.exp,
+                        }}
+                        tableNumber={guestContext.table_number}
+                    />
+                </>
+            )}
         </main>
     );
 }
