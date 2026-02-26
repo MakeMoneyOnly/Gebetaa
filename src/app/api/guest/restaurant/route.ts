@@ -11,10 +11,7 @@ export async function GET(request: NextRequest) {
     const slug = request.nextUrl.searchParams.get('slug');
 
     if (!slug || slug.trim().length === 0) {
-        return NextResponse.json(
-            { error: 'Missing slug parameter.' },
-            { status: 400 }
-        );
+        return NextResponse.json({ error: 'Missing slug parameter.' }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -26,17 +23,11 @@ export async function GET(request: NextRequest) {
         .maybeSingle();
 
     if (error) {
-        return NextResponse.json(
-            { error: 'Failed to fetch restaurant.' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to fetch restaurant.' }, { status: 500 });
     }
 
     if (!restaurant) {
-        return NextResponse.json(
-            { error: 'Restaurant not found.' },
-            { status: 404 }
-        );
+        return NextResponse.json({ error: 'Restaurant not found.' }, { status: 404 });
     }
 
     return NextResponse.json(

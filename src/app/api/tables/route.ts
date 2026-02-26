@@ -93,4 +93,3 @@ export async function POST(request: Request) {
 
     return apiSuccess(data, 201);
 }
-

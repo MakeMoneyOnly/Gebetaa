@@ -955,7 +955,9 @@ function MenuContent() {
                                   }
                                 : {}),
                         }}
-                        tableNumber={guestContext.is_online_order ? null : guestContext.table_number}
+                        tableNumber={
+                            guestContext.is_online_order ? null : guestContext.table_number
+                        }
                     />
 
                     <FloatingCart count={count} onClick={() => setCartOpen(true)} />
