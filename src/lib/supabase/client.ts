@@ -5,7 +5,12 @@ export function createClient() {
     // Sanitize env vars — Vercel CLI can store values as '"value" \r\n'
     const cleanEnvVar = (val: string | undefined): string => {
         if (!val) return '';
-        return val.replace(/\r/g, '').replace(/\n/g, '').replace(/^[\"']+/, '').replace(/[\"']+$/, '').trim();
+        return val
+            .replace(/\r/g, '')
+            .replace(/\n/g, '')
+            .replace(/^[\"']+/, '')
+            .replace(/[\"']+$/, '')
+            .trim();
     };
 
     const supabaseUrl = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL);

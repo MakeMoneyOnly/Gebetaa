@@ -11,8 +11,8 @@ export async function createClient() {
     const cleanEnvVar = (val: string | undefined): string => {
         if (!val) return '';
         return val
-            .replace(/\r/g, '')   // carriage returns
-            .replace(/\n/g, '')   // newlines
+            .replace(/\r/g, '') // carriage returns
+            .replace(/\n/g, '') // newlines
             .replace(/^["']+/, '') // leading quotes (one or more)
             .replace(/["']+$/, '') // trailing quotes (one or more)
             .trim();
