@@ -21,7 +21,12 @@ export function getRequestOrigin(request: Request): string {
             process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
         if (rawUrl) {
             // Strip any quotes/newlines added by Vercel CLI echo-based setup
-            const productionUrl = rawUrl.replace(/\r/g, '').replace(/\n/g, '').replace(/^["']+/, '').replace(/["']+$/, '').trim();
+            const productionUrl = rawUrl
+                .replace(/\r/g, '')
+                .replace(/\n/g, '')
+                .replace(/^["']+/, '')
+                .replace(/["']+$/, '')
+                .trim();
             if (productionUrl) return `https://${productionUrl}`;
         }
     }
@@ -44,4 +49,3 @@ export function getRequestOrigin(request: Request): string {
         return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     }
 }
-

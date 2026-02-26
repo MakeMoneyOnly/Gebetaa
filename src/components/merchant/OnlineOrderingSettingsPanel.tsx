@@ -154,8 +154,7 @@ export function OnlineOrderingSettingsPanel({
         return '';
     })();
 
-    const storeLink =
-        guestOrigin && restaurantSlug ? `${guestOrigin}/${restaurantSlug}` : '';
+    const storeLink = guestOrigin && restaurantSlug ? `${guestOrigin}/${restaurantSlug}` : '';
 
     const handleCopyLink = async () => {
         if (!storeLink) return;
