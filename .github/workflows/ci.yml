@@ -123,7 +123,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Build application
-              run: pnpm build
+              run: pnpm next build --webpack
               env:
                   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
                   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
