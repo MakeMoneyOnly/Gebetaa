@@ -879,11 +879,6 @@ function MenuContent() {
                                 <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
                                     Main Menu
                                 </h2>
-                                {guestContext?.is_online_order && (
-                                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black tracking-widest text-emerald-600 uppercase">
-                                        Online Order
-                                    </span>
-                                )}
                             </div>
                             {authState === 'authenticated' ? (
                                 <p className="mt-1 text-xs font-bold tracking-wide text-emerald-600 dark:text-emerald-400">

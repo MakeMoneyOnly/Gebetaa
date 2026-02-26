@@ -119,17 +119,38 @@ const OrdersQuerySchema = z.object({
     limit: z.coerce.number().int().positive().max(200).optional().default(50),
 });
 
+const OnlineOrderGuestContextSchema = z.object({
+    slug: z.string().min(1),
+    is_online_order: z.literal(true),
+    // For online orders, table/sig/exp are not real QR values
+    table: z.string().optional(),
+    sig: z.string().optional(),
+    exp: z.union([z.string(), z.number()]).optional(),
+});
+
+const DineInGuestContextSchema = z.object({
+    slug: z.string().min(1),
+    table: z.string().min(1),
+    sig: z.string().min(1),
+    exp: z.union([z.string(), z.number()]),
+    is_online_order: z.literal(false).optional(),
+});
+
+const GuestContextInputSchema = z.union([
+    OnlineOrderGuestContextSchema,
+    DineInGuestContextSchema,
+]);
+
 const CreateOrderRequestSchema = CreateOrderSchema.omit({
     idempotency_key: true,
     restaurant_id: true,
     table_number: true,
 }).extend({
-    guest_context: z.object({
-        slug: z.string().min(1),
-        table: z.string().min(1),
-        sig: z.string().min(1),
-        exp: z.union([z.string(), z.number()]),
-    }),
+    guest_context: GuestContextInputSchema,
+    order_type: z.enum(['dine_in', 'online', 'delivery', 'pickup']).optional().default('dine_in'),
+    delivery_address: z.string().max(500).optional(),
+    customer_name: z.string().max(100).optional(),
+    customer_phone: z.string().max(30).optional(),
     idempotency_key: z.string().uuid().optional(),
     campaign_attribution: z
         .object({
@@ -289,12 +310,47 @@ export async function POST(request: NextRequest) {
         }
 
         const supabase = await createClient();
-        const guestContext = await resolveGuestContext(supabase, parsed.data.guest_context);
-        if (!guestContext.valid) {
-            return NextResponse.json(
-                { error: guestContext.reason },
-                { status: guestContext.status }
-            );
+        const isOnlineOrder =
+            parsed.data.order_type === 'online' ||
+            parsed.data.order_type === 'delivery' ||
+            parsed.data.order_type === 'pickup' ||
+            (parsed.data.guest_context as { is_online_order?: boolean }).is_online_order === true;
+
+        let restaurantId: string;
+        let tableNumber: string;
+
+        if (isOnlineOrder) {
+            // ── Online / Delivery / Pickup: resolve restaurant by slug only ──
+            const slug = parsed.data.guest_context.slug;
+            const { data: restaurant, error: restaurantError } = await supabase
+                .from('restaurants')
+                .select('id, is_active')
+                .eq('slug', slug)
+                .maybeSingle();
+
+            if (restaurantError) {
+                return NextResponse.json({ error: 'Failed to resolve restaurant' }, { status: 500 });
+            }
+            if (!restaurant || restaurant.is_active === false) {
+                return NextResponse.json({ error: 'Restaurant not found or inactive' }, { status: 404 });
+            }
+            restaurantId = restaurant.id;
+            // Represent the order type as the table label for legacy display
+            tableNumber =
+                parsed.data.order_type === 'delivery' ? 'Delivery'
+                : parsed.data.order_type === 'pickup' ? 'Pickup'
+                : 'Online Order';
+        } else {
+            // ── Dine-in: full QR validation via resolveGuestContext ──
+            const guestContext = await resolveGuestContext(supabase, parsed.data.guest_context);
+            if (!guestContext.valid) {
+                return NextResponse.json(
+                    { error: guestContext.reason },
+                    { status: guestContext.status }
+                );
+            }
+            restaurantId = guestContext.data.restaurantId;
+            tableNumber = guestContext.data.tableNumber;
         }
 
         const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -313,13 +369,17 @@ export async function POST(request: NextRequest) {
 
         const idempotencyKey = parsed.data.idempotency_key ?? generateIdempotencyKey();
         const result = await createOrder(supabase, {
-            restaurant_id: guestContext.data.restaurantId,
-            table_number: guestContext.data.tableNumber,
+            restaurant_id: restaurantId,
+            table_number: tableNumber,
             items: parsed.data.items,
             total_price: parsed.data.total_price,
             notes: parsed.data.notes,
             idempotency_key: idempotencyKey,
             guest_fingerprint: fingerprint,
+            order_type: parsed.data.order_type,
+            delivery_address: parsed.data.delivery_address,
+            customer_name: parsed.data.customer_name,
+            customer_phone: parsed.data.customer_phone,
         });
 
         if (!result.success) {
@@ -380,15 +440,16 @@ export async function POST(request: NextRequest) {
         }
 
         const { error: auditError } = await supabase.from('audit_logs').insert({
-            restaurant_id: guestContext.data.restaurantId,
+            restaurant_id: restaurantId,
             action: 'order_created_guest',
             entity_type: 'order',
             entity_id: result.order.id,
             metadata: {
-                table_number: guestContext.data.tableNumber,
+                table_number: tableNumber,
                 item_count: parsed.data.items.length,
-                source: 'guest_web',
-                slug: guestContext.data.slug,
+                source: isOnlineOrder ? 'online_ordering' : 'guest_web',
+                order_type: parsed.data.order_type,
+                slug: parsed.data.guest_context.slug,
                 campaign_attribution: parsed.data.campaign_attribution ?? null,
                 campaign_attribution_applied: campaignAttributionApplied,
             },

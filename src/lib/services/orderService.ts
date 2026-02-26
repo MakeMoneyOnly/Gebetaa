@@ -162,6 +162,10 @@ export async function createOrder(
         notes?: string;
         idempotency_key: string;
         guest_fingerprint: string;
+        order_type?: string;
+        delivery_address?: string;
+        customer_name?: string;
+        customer_phone?: string;
     }
 ): Promise<{ success: true; order: Order } | { success: false; error: string }> {
     // 1. Check for duplicate
@@ -188,18 +192,23 @@ export async function createOrder(
     // 3. Generate order number
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
-    // 4. Insert order - use type assertion to handle DB schema differences
+    // 4. Insert order
     const orderId = crypto.randomUUID();
     const orderInsert = {
         id: orderId,
         restaurant_id: orderData.restaurant_id,
-        table_number: orderData.table_number, // Keep as string
+        table_number: orderData.table_number,
         items: validation.enrichedItems as unknown as OrderInsert['items'],
-        total_price: orderData.total_price, // Correct field name
+        total_price: orderData.total_price,
         idempotency_key: orderData.idempotency_key,
         guest_fingerprint: orderData.guest_fingerprint,
         status: 'pending',
         order_number: orderNumber,
+        // Optional online-ordering fields (DB columns may or may not exist yet)
+        ...(orderData.order_type ? { order_type: orderData.order_type } : {}),
+        ...(orderData.delivery_address ? { delivery_address: orderData.delivery_address } : {}),
+        ...(orderData.customer_name ? { customer_name: orderData.customer_name } : {}),
+        ...(orderData.customer_phone ? { customer_phone: orderData.customer_phone } : {}),
     } as OrderInsert;
 
     const { data: order, error } = await insertOrder(supabase, orderInsert);
