@@ -36,13 +36,11 @@ interface CartDrawerProps {
 
 // ── Order Type Selector pill button ──────────────────────────────────────────
 function OrderTypeButton({
-    type,
     label,
     icon,
     selected,
     onClick,
 }: {
-    type: OrderType;
     label: string;
     icon: React.ReactNode;
     selected: boolean;
@@ -66,7 +64,7 @@ function OrderTypeButton({
     );
 }
 
-export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paymentReturnSuccess, paymentOrderId }: CartDrawerProps) {
+export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paymentReturnSuccess }: CartDrawerProps) {
     const { items, total, updateQuantity, updateInstructions, clearCart } = useCart();
     const { trigger } = useHaptic();
     const [submitting, setSubmitting] = useState(false);
@@ -295,21 +293,18 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                         </p>
                                         <div className="flex gap-2">
                                             <OrderTypeButton
-                                                type="pickup"
                                                 label="Pickup"
                                                 icon={<ShoppingBag size={18} />}
                                                 selected={orderType === 'pickup'}
                                                 onClick={() => setOrderType('pickup')}
                                             />
                                             <OrderTypeButton
-                                                type="delivery"
                                                 label="Delivery"
                                                 icon={<Truck size={18} />}
                                                 selected={orderType === 'delivery'}
                                                 onClick={() => setOrderType('delivery')}
                                             />
                                             <OrderTypeButton
-                                                type="dine_in"
                                                 label="Dine In"
                                                 icon={<Utensils size={18} />}
                                                 selected={orderType === 'dine_in'}

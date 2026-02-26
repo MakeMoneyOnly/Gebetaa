@@ -13,6 +13,7 @@
  *              and also sends POST webhook with JSON body
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { verifyChapaTransaction, isChapaConfigured } from '@/lib/services/chapaService';
 
@@ -44,7 +45,7 @@ function verifyWebhookSignature(request: NextRequest): boolean {
     if (secretBuffer.length !== signatureBuffer.length) return false;
 
     try {
-        return require('crypto').timingSafeEqual(secretBuffer, signatureBuffer) as boolean;
+        return timingSafeEqual(secretBuffer, signatureBuffer);
     } catch {
         return webhookSecret === signature;
     }

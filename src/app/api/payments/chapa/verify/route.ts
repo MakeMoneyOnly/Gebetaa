@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
                 .from('orders')
                 .update({
                     status: 'pending',
-                    ...({ paid_at: new Date().toISOString() } as never),
-                    ...({ chapa_verified: true } as never),
-                })
+                    paid_at: new Date().toISOString(),
+                    chapa_verified: true,
+                } as Record<string, unknown>)
                 .eq('id', orderId);
 
             return NextResponse.json({

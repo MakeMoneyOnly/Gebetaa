@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { CheckCircle2, Lock, CreditCard, Phone, Building2, ChevronRight, X } from 'lucide-react';
+import { CheckCircle2, Lock, Phone, ChevronRight } from 'lucide-react';
 
 type PaymentMethod = 'telebirr' | 'cbe' | 'awash' | 'dashen' | 'card';
 
