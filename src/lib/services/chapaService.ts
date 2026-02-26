@@ -10,15 +10,15 @@
 const CHAPA_BASE_URL = 'https://api.chapa.co/v1';
 
 export interface ChapaInitializeParams {
-    amount: number;               // ETB amount
-    currency?: string;            // defaults to 'ETB'
+    amount: number; // ETB amount
+    currency?: string; // defaults to 'ETB'
     email?: string;
     first_name: string;
     last_name?: string;
-    phone_number?: string;        // 09xxxxxxxx or 07xxxxxxxx format
-    tx_ref: string;               // unique transaction reference
-    callback_url: string;         // webhook URL Chapa POSTs to on success
-    return_url: string;           // where to redirect user after payment
+    phone_number?: string; // 09xxxxxxxx or 07xxxxxxxx format
+    tx_ref: string; // unique transaction reference
+    callback_url: string; // webhook URL Chapa POSTs to on success
+    return_url: string; // where to redirect user after payment
     customization?: {
         title?: string;
         description?: string;
@@ -74,7 +74,7 @@ export async function initializeChapaTransaction(
         }),
     });
 
-    const data = await response.json() as ChapaInitializeResponse;
+    const data = (await response.json()) as ChapaInitializeResponse;
     return data;
 }
 
@@ -89,14 +89,17 @@ export async function verifyChapaTransaction(txRef: string): Promise<ChapaVerify
         throw new Error('CHAPA_SECRET_KEY is not configured');
     }
 
-    const response = await fetch(`${CHAPA_BASE_URL}/transaction/verify/${encodeURIComponent(txRef)}`, {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${secretKey}`,
-        },
-    });
+    const response = await fetch(
+        `${CHAPA_BASE_URL}/transaction/verify/${encodeURIComponent(txRef)}`,
+        {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${secretKey}`,
+            },
+        }
+    );
 
-    const data = await response.json() as ChapaVerifyResponse;
+    const data = (await response.json()) as ChapaVerifyResponse;
     return data;
 }
 

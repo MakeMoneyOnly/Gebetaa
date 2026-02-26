@@ -1,7 +1,16 @@
 'use client';
 
 import { Drawer } from 'vaul';
-import { Minus, Plus, Trash2, Truck, ShoppingBag, Utensils, ChevronRight, CheckCircle2 } from 'lucide-react';
+import {
+    Minus,
+    Plus,
+    Trash2,
+    Truck,
+    ShoppingBag,
+    Utensils,
+    ChevronRight,
+    CheckCircle2,
+} from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useHaptic } from '@/hooks/useHaptic';
 import Image from 'next/image';
@@ -64,7 +73,13 @@ function OrderTypeButton({
     );
 }
 
-export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paymentReturnSuccess }: CartDrawerProps) {
+export function CartDrawer({
+    open,
+    onOpenChange,
+    guestContext,
+    tableNumber,
+    paymentReturnSuccess,
+}: CartDrawerProps) {
     const { items, total, updateQuantity, updateInstructions, clearCart } = useCart();
     const { trigger } = useHaptic();
     const [submitting, setSubmitting] = useState(false);
@@ -87,7 +102,7 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
         if (paymentReturnSuccess) {
             clearCart();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [paymentReturnSuccess]);
 
     const handlePlaceOrder = async () => {
@@ -105,8 +120,14 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
 
         // For online orders, require customer details
         if (isOnlineOrder) {
-            if (!customerName.trim()) { setOrderError('Please enter your name.'); return; }
-            if (!customerPhone.trim()) { setOrderError('Please enter your phone number (09xxxxxxxx).'); return; }
+            if (!customerName.trim()) {
+                setOrderError('Please enter your name.');
+                return;
+            }
+            if (!customerPhone.trim()) {
+                setOrderError('Please enter your phone number (09xxxxxxxx).');
+                return;
+            }
             if (orderType === 'delivery' && !deliveryAddress.trim()) {
                 setOrderError('Please enter your delivery address.');
                 return;
@@ -145,7 +166,7 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                     }),
                 });
 
-                const payload = await response.json() as {
+                const payload = (await response.json()) as {
                     checkout_url?: string;
                     mode?: string;
                     order_id?: string;
@@ -234,8 +255,7 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
         <Drawer.Root open={open} onOpenChange={handleClose}>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm" />
-                <Drawer.Content className="bg-background fixed right-0 bottom-0 left-0 z-[9999] flex h-[92vh] flex-col rounded-t-[32px] border-t border-black/5 outline-none transition-colors duration-300 dark:border-white/10">
-
+                <Drawer.Content className="bg-background fixed right-0 bottom-0 left-0 z-[9999] flex h-[92vh] flex-col rounded-t-[32px] border-t border-black/5 transition-colors duration-300 outline-none dark:border-white/10">
                     {/* ── Success Screen ─────────────────────────────────── */}
                     {step === 'success' ? (
                         <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
@@ -250,8 +270,8 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                     {orderType === 'delivery'
                                         ? 'Your order is being prepared and will be delivered to you.'
                                         : orderType === 'pickup'
-                                        ? 'Your order is being prepared. Come pick it up when ready!'
-                                        : 'Your order has been sent to the kitchen.'}
+                                          ? 'Your order is being prepared. Come pick it up when ready!'
+                                          : 'Your order has been sent to the kitchen.'}
                                 </p>
                             </div>
                             <div className="w-full rounded-2xl border border-black/5 bg-black/5 p-4 dark:border-white/5 dark:bg-white/5">
@@ -318,7 +338,9 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                 {items.length === 0 ? (
                                     <div className="flex h-48 flex-col items-center justify-center text-center text-gray-400">
                                         <p className="text-lg font-medium">Your cart is empty</p>
-                                        <p className="text-sm">Add some delicious items to get started!</p>
+                                        <p className="text-sm">
+                                            Add some delicious items to get started!
+                                        </p>
                                     </div>
                                 ) : (
                                     <div className="space-y-6">
@@ -335,7 +357,9 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                                                 alt={item.title}
                                                                 fill
                                                                 className="object-cover"
-                                                                unoptimized={isRemoteOrDataImageSrc(item.image)}
+                                                                unoptimized={isRemoteOrDataImageSrc(
+                                                                    item.image
+                                                                )}
                                                             />
                                                         )}
                                                     </div>
@@ -346,30 +370,52 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                                             </h3>
                                                             <div className="flex flex-col items-end">
                                                                 <span className="text-brand-crimson font-black">
-                                                                    {(item.price * item.quantity).toLocaleString()}
+                                                                    {(
+                                                                        item.price * item.quantity
+                                                                    ).toLocaleString()}
                                                                 </span>
-                                                                <span className="text-brand-crimson/60 text-xs font-bold">ETB</span>
+                                                                <span className="text-brand-crimson/60 text-xs font-bold">
+                                                                    ETB
+                                                                </span>
                                                             </div>
                                                         </div>
                                                         <div className="mt-2 flex items-center justify-between">
                                                             <div className="flex items-center gap-2 rounded-full border border-black/10 bg-black/5 p-1 px-2 dark:border-white/10 dark:bg-white/5">
                                                                 <button
-                                                                    onClick={() => item.quantity > 1 && updateQuantity(item.uniqueId, -1)}
+                                                                    onClick={() =>
+                                                                        item.quantity > 1 &&
+                                                                        updateQuantity(
+                                                                            item.uniqueId,
+                                                                            -1
+                                                                        )
+                                                                    }
                                                                     disabled={item.quantity <= 1}
                                                                     className="bg-brand-crimson/10 flex h-7 w-7 items-center justify-center rounded-full transition-transform active:scale-90 disabled:opacity-50"
                                                                 >
                                                                     <Minus size={12} />
                                                                 </button>
-                                                                <span className="w-4 text-center text-sm font-bold">{item.quantity}</span>
+                                                                <span className="w-4 text-center text-sm font-bold">
+                                                                    {item.quantity}
+                                                                </span>
                                                                 <button
-                                                                    onClick={() => updateQuantity(item.uniqueId, 1)}
+                                                                    onClick={() =>
+                                                                        updateQuantity(
+                                                                            item.uniqueId,
+                                                                            1
+                                                                        )
+                                                                    }
                                                                     className="bg-brand-crimson flex h-7 w-7 items-center justify-center rounded-full text-white transition-transform active:scale-90"
                                                                 >
                                                                     <Plus size={12} />
                                                                 </button>
                                                             </div>
                                                             <button
-                                                                onClick={() => updateQuantity(item.uniqueId, -item.quantity)}
+                                                                onClick={() =>
+                                                                    updateQuantity(
+                                                                        item.uniqueId,
+                                                                        -item.quantity
+                                                                    )
+                                                                }
                                                                 className="text-brand-crimson bg-brand-crimson/10 flex h-7 w-7 items-center justify-center rounded-full transition-transform active:scale-90"
                                                             >
                                                                 <Trash2 size={12} />
@@ -381,7 +427,12 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                                     type="text"
                                                     placeholder="Add instructions (e.g., No onions)..."
                                                     value={item.instructions || ''}
-                                                    onChange={e => updateInstructions(item.uniqueId, e.target.value)}
+                                                    onChange={e =>
+                                                        updateInstructions(
+                                                            item.uniqueId,
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     className="focus:ring-brand-crimson/40 bg-brand-crimson/5 w-full rounded-xl border border-black/10 px-4 py-2.5 text-sm text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
                                                 />
                                             </div>
@@ -421,14 +472,16 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                         {orderType === 'pickup' && (
                                             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-900/20">
                                                 <p className="text-xs font-bold text-amber-700 dark:text-amber-400">
-                                                    🛍 We&apos;ll prepare your order — head to the counter when ready!
+                                                    🛍 We&apos;ll prepare your order — head to the
+                                                    counter when ready!
                                                 </p>
                                             </div>
                                         )}
                                         {orderType === 'dine_in' && (
                                             <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
                                                 <p className="text-xs font-bold text-blue-700 dark:text-blue-400">
-                                                    🍽 Choose a table when you arrive — your order will be waiting!
+                                                    🍽 Choose a table when you arrive — your order
+                                                    will be waiting!
                                                 </p>
                                             </div>
                                         )}
@@ -447,7 +500,9 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                         <span className="text-3xl font-black text-black dark:text-white">
                                             {total.toLocaleString()}
                                         </span>
-                                        <span className="mb-1 text-sm font-bold text-black/40 dark:text-white/40">ETB</span>
+                                        <span className="mb-1 text-sm font-bold text-black/40 dark:text-white/40">
+                                            ETB
+                                        </span>
                                     </div>
                                 </div>
 
@@ -463,13 +518,27 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                         <>
                                             {isOnlineOrder ? (
                                                 <>
-                                                    {orderType === 'delivery' && <Truck size={18} />}
-                                                    {orderType === 'pickup' && <ShoppingBag size={18} />}
-                                                    {orderType === 'dine_in' && <Utensils size={18} />}
-                                                    Place {orderType === 'delivery' ? 'Delivery' : orderType === 'pickup' ? 'Pickup' : 'Dine-In'} Order
+                                                    {orderType === 'delivery' && (
+                                                        <Truck size={18} />
+                                                    )}
+                                                    {orderType === 'pickup' && (
+                                                        <ShoppingBag size={18} />
+                                                    )}
+                                                    {orderType === 'dine_in' && (
+                                                        <Utensils size={18} />
+                                                    )}
+                                                    Place{' '}
+                                                    {orderType === 'delivery'
+                                                        ? 'Delivery'
+                                                        : orderType === 'pickup'
+                                                          ? 'Pickup'
+                                                          : 'Dine-In'}{' '}
+                                                    Order
                                                 </>
                                             ) : (
-                                                <>Place Order <ChevronRight size={18} /></>
+                                                <>
+                                                    Place Order <ChevronRight size={18} />
+                                                </>
                                             )}
                                         </>
                                     )}
@@ -485,9 +554,14 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paym
                                         {orderError}
                                     </p>
                                 )}
-                                {guestContext?.auth_state !== 'authenticated' && guestContext?.login_url && !isOnlineOrder ? (
+                                {guestContext?.auth_state !== 'authenticated' &&
+                                guestContext?.login_url &&
+                                !isOnlineOrder ? (
                                     <p className="mt-3 text-center text-xs font-semibold text-black/50 dark:text-white/50">
-                                        <a href={guestContext.login_url} className="underline">Log in</a> to earn loyalty points.
+                                        <a href={guestContext.login_url} className="underline">
+                                            Log in
+                                        </a>{' '}
+                                        to earn loyalty points.
                                     </p>
                                 ) : null}
                             </div>

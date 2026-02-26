@@ -30,13 +30,17 @@ const RequestSchema = z.object({
         sig: z.string().optional(),
         exp: z.union([z.string(), z.number()]).optional(),
     }),
-    items: z.array(z.object({
-        id: z.string().uuid(),
-        name: z.string().min(1),
-        quantity: z.number().int().min(1),
-        price: z.number().nonnegative(),
-        notes: z.string().optional(),
-    })).min(1),
+    items: z
+        .array(
+            z.object({
+                id: z.string().uuid(),
+                name: z.string().min(1),
+                quantity: z.number().int().min(1),
+                price: z.number().nonnegative(),
+                notes: z.string().optional(),
+            })
+        )
+        .min(1),
     total_price: z.number().positive(),
     order_type: z.enum(['pickup', 'delivery', 'dine_in']),
     customer_name: z.string().min(1).max(100),
@@ -95,9 +99,11 @@ export async function POST(request: NextRequest) {
 
         // Determine display table number based on order type
         const tableNumber =
-            parsed.data.order_type === 'delivery' ? 'Delivery'
-            : parsed.data.order_type === 'pickup' ? 'Pickup'
-            : 'Online (Dine-In)';
+            parsed.data.order_type === 'delivery'
+                ? 'Delivery'
+                : parsed.data.order_type === 'pickup'
+                  ? 'Pickup'
+                  : 'Online (Dine-In)';
 
         const idempotencyKey = parsed.data.idempotency_key ?? generateIdempotencyKey();
         const txRef = generateChapaTransactionRef(restaurant.slug);
@@ -121,7 +127,9 @@ export async function POST(request: NextRequest) {
             customer_name: parsed.data.customer_name,
             customer_phone: parsed.data.customer_phone,
             chapa_tx_ref: txRef,
-            ...(parsed.data.delivery_address ? { delivery_address: parsed.data.delivery_address } : {}),
+            ...(parsed.data.delivery_address
+                ? { delivery_address: parsed.data.delivery_address }
+                : {}),
             ...(parsed.data.notes ? { notes: parsed.data.notes } : {}),
         };
 

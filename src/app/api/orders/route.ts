@@ -136,10 +136,7 @@ const DineInGuestContextSchema = z.object({
     is_online_order: z.literal(false).optional(),
 });
 
-const GuestContextInputSchema = z.union([
-    OnlineOrderGuestContextSchema,
-    DineInGuestContextSchema,
-]);
+const GuestContextInputSchema = z.union([OnlineOrderGuestContextSchema, DineInGuestContextSchema]);
 
 const CreateOrderRequestSchema = CreateOrderSchema.omit({
     idempotency_key: true,
@@ -329,17 +326,25 @@ export async function POST(request: NextRequest) {
                 .maybeSingle();
 
             if (restaurantError) {
-                return NextResponse.json({ error: 'Failed to resolve restaurant' }, { status: 500 });
+                return NextResponse.json(
+                    { error: 'Failed to resolve restaurant' },
+                    { status: 500 }
+                );
             }
             if (!restaurant || restaurant.is_active === false) {
-                return NextResponse.json({ error: 'Restaurant not found or inactive' }, { status: 404 });
+                return NextResponse.json(
+                    { error: 'Restaurant not found or inactive' },
+                    { status: 404 }
+                );
             }
             restaurantId = restaurant.id;
             // Represent the order type as the table label for legacy display
             tableNumber =
-                parsed.data.order_type === 'delivery' ? 'Delivery'
-                : parsed.data.order_type === 'pickup' ? 'Pickup'
-                : 'Online Order';
+                parsed.data.order_type === 'delivery'
+                    ? 'Delivery'
+                    : parsed.data.order_type === 'pickup'
+                      ? 'Pickup'
+                      : 'Online Order';
         } else {
             // ── Dine-in: full QR validation via resolveGuestContext ──
             const guestContext = await resolveGuestContext(supabase, parsed.data.guest_context);

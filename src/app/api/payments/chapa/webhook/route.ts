@@ -27,7 +27,9 @@ function verifyWebhookSignature(request: NextRequest): boolean {
 
     // If no secret configured, skip verification (dev/mock mode)
     if (!webhookSecret) {
-        console.warn('[Chapa Webhook] CHAPA_WEBHOOK_SECRET not set — skipping signature verification');
+        console.warn(
+            '[Chapa Webhook] CHAPA_WEBHOOK_SECRET not set — skipping signature verification'
+        );
         return true;
     }
 
@@ -66,12 +68,13 @@ async function handleChapaCallback(request: NextRequest) {
         let status: string | null = null;
 
         if (request.method === 'GET') {
-            txRef = request.nextUrl.searchParams.get('trx_ref')
-                ?? request.nextUrl.searchParams.get('tx_ref');
+            txRef =
+                request.nextUrl.searchParams.get('trx_ref') ??
+                request.nextUrl.searchParams.get('tx_ref');
             status = request.nextUrl.searchParams.get('status');
         } else {
             try {
-                const body = await request.json() as {
+                const body = (await request.json()) as {
                     trx_ref?: string;
                     tx_ref?: string;
                     status?: string;
@@ -108,7 +111,9 @@ async function handleChapaCallback(request: NextRequest) {
 
         // Idempotency: already processed
         if (order.status !== 'payment_pending') {
-            console.log(`[Chapa Webhook] Order ${order.order_number} already processed (${order.status})`);
+            console.log(
+                `[Chapa Webhook] Order ${order.order_number} already processed (${order.status})`
+            );
             return NextResponse.json({ message: 'Already processed' });
         }
 
@@ -141,24 +146,28 @@ async function handleChapaCallback(request: NextRequest) {
                 return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
             }
 
-            console.log(`[Chapa Webhook] ✅ Order ${order.order_number} confirmed — now visible to KDS`);
+            console.log(
+                `[Chapa Webhook] ✅ Order ${order.order_number} confirmed — now visible to KDS`
+            );
 
             // Audit log
-            await supabase.from('audit_logs').insert({
-                restaurant_id: order.restaurant_id,
-                action: 'payment_confirmed',
-                entity_type: 'order',
-                entity_id: order.id,
-                metadata: {
-                    tx_ref: txRef,
-                    payment_provider: 'chapa',
-                    mode: isChapaConfigured() ? 'live' : 'mock',
-                },
-                new_value: { status: 'pending' },
-            }).throwOnError();
+            await supabase
+                .from('audit_logs')
+                .insert({
+                    restaurant_id: order.restaurant_id,
+                    action: 'payment_confirmed',
+                    entity_type: 'order',
+                    entity_id: order.id,
+                    metadata: {
+                        tx_ref: txRef,
+                        payment_provider: 'chapa',
+                        mode: isChapaConfigured() ? 'live' : 'mock',
+                    },
+                    new_value: { status: 'pending' },
+                })
+                .throwOnError();
 
             return NextResponse.json({ message: 'Order confirmed', order_id: order.id });
-
         } else {
             // ❌ Payment failed/cancelled — cancel the order
             const { error: cancelError } = await supabase
@@ -171,7 +180,9 @@ async function handleChapaCallback(request: NextRequest) {
                 return NextResponse.json({ error: 'DB update failed' }, { status: 500 });
             }
 
-            console.log(`[Chapa Webhook] ❌ Order ${order.order_number} cancelled — payment ${status ?? 'failed'}`);
+            console.log(
+                `[Chapa Webhook] ❌ Order ${order.order_number} cancelled — payment ${status ?? 'failed'}`
+            );
 
             await supabase.from('audit_logs').insert({
                 restaurant_id: order.restaurant_id,
@@ -184,7 +195,6 @@ async function handleChapaCallback(request: NextRequest) {
 
             return NextResponse.json({ message: 'Order cancelled due to payment failure' });
         }
-
     } catch (err) {
         console.error('[Chapa Webhook] Unhandled error:', err);
         // Return 500 so Chapa retries
