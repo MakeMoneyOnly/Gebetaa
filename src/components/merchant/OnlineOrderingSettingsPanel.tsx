@@ -144,10 +144,18 @@ export function OnlineOrderingSettingsPanel({
 }: OnlineOrderingSettingsPanelProps) {
     const [copied, setCopied] = useState(false);
 
+    // Derive the stable guest-facing origin:
+    // On Vercel always use the production domain so the storefront link works for real guests.
+    // Locally (or if env var is missing) fall back to window.location.origin.
+    const guestOrigin = (() => {
+        const productionUrl = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
+        if (productionUrl) return `https://${productionUrl.replace(/\r|\n|["']/g, '').trim()}`;
+        if (typeof window !== 'undefined') return window.location.origin;
+        return '';
+    })();
+
     const storeLink =
-        typeof window !== 'undefined' && restaurantSlug
-            ? `${window.location.origin}/${restaurantSlug}`
-            : '';
+        guestOrigin && restaurantSlug ? `${guestOrigin}/${restaurantSlug}` : '';
 
     const handleCopyLink = async () => {
         if (!storeLink) return;
