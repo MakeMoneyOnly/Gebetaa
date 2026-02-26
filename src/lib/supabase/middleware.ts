@@ -6,13 +6,20 @@ export async function updateSession(request: NextRequest) {
         request,
     });
 
-    // Get and clean environment variables (remove any surrounding quotes)
-    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+    // Get and clean environment variables
+    // Vercel can store values with extra quotes and \r\n when set via CLI/API
+    const cleanEnvVar = (val: string | undefined): string => {
+        if (!val) return '';
+        return val
+            .replace(/\r/g, '')
+            .replace(/\n/g, '')
+            .replace(/^["']+/, '')
+            .replace(/["']+$/, '')
+            .trim();
+    };
 
-    // Strip surrounding quotes if present (common issue when setting env vars)
-    supabaseUrl = supabaseUrl.replace(/^["']|["']$/g, '').trim();
-    supabaseKey = supabaseKey.replace(/^["']|["']$/g, '').trim();
+    const supabaseUrl = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    const supabaseKey = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
     // Skip Supabase initialization if environment variables are missing
     // This is critical for Edge Runtime where env vars might not be available
