@@ -103,8 +103,19 @@ function MenuContent() {
     // Online ordering mode: no QR params present; this is the merchant's storefront link
     const isOnlineOrderMode = !tableNumber && !signature && !expiresAt;
 
+    // Detect return from Chapa payment (real or mock)
+    const paymentStatus = searchParams.get('payment');
+    const paymentOrderId = searchParams.get('order_id');
+
     const supabase = useMemo(() => createClient(), []);
     const { addToCart, count } = useCart();
+
+    // Auto-open the cart drawer when returning from Chapa with payment success
+    useEffect(() => {
+        if (paymentStatus === 'success') {
+            setCartOpen(true);
+        }
+    }, [paymentStatus]);
 
     const isMountedRef = useRef(true);
 
@@ -953,6 +964,8 @@ function MenuContent() {
                         tableNumber={
                             guestContext.is_online_order ? null : guestContext.table_number
                         }
+                        paymentReturnSuccess={paymentStatus === 'success'}
+                        paymentOrderId={paymentOrderId ?? undefined}
                     />
 
                     <FloatingCart count={count} onClick={() => setCartOpen(true)} />

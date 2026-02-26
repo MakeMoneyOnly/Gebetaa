@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
                         .from('campaigns' as any)
                         .select('id')
                         .eq('id', delivery.campaign_id)
-                        .eq('restaurant_id', guestContext.data.restaurantId)
+                        .eq('restaurant_id', restaurantId)
                         .maybeSingle();
 
                     if (campaignError) {

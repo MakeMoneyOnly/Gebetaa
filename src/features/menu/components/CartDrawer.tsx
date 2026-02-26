@@ -29,6 +29,9 @@ interface CartDrawerProps {
         };
     } | null;
     tableNumber: string | null;
+    /** When true, the drawer starts on the success screen (returning from Chapa) */
+    paymentReturnSuccess?: boolean;
+    paymentOrderId?: string;
 }
 
 // ── Order Type Selector pill button ──────────────────────────────────────────
@@ -63,7 +66,7 @@ function OrderTypeButton({
     );
 }
 
-export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: CartDrawerProps) {
+export function CartDrawer({ open, onOpenChange, guestContext, tableNumber, paymentReturnSuccess, paymentOrderId }: CartDrawerProps) {
     const { items, total, updateQuantity, updateInstructions, clearCart } = useCart();
     const { trigger } = useHaptic();
     const [submitting, setSubmitting] = useState(false);
@@ -76,7 +79,18 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
     const [deliveryAddress, setDeliveryAddress] = useState('');
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
-    const [step, setStep] = useState<'cart' | 'details' | 'success'>('cart');
+    // If returning from Chapa with success, jump straight to success screen
+    const [step, setStep] = useState<'cart' | 'details' | 'success'>(
+        paymentReturnSuccess ? 'success' : 'cart'
+    );
+
+    // Clear cart on successful payment return
+    useEffect(() => {
+        if (paymentReturnSuccess) {
+            clearCart();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [paymentReturnSuccess]);
 
     const handlePlaceOrder = async () => {
         if (!guestContext) {
@@ -91,16 +105,10 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
 
         if (items.length === 0 || submitting) return;
 
-        // For online orders, require details
+        // For online orders, require customer details
         if (isOnlineOrder) {
-            if (!customerName.trim()) {
-                setOrderError('Please enter your name.');
-                return;
-            }
-            if (!customerPhone.trim()) {
-                setOrderError('Please enter your phone number.');
-                return;
-            }
+            if (!customerName.trim()) { setOrderError('Please enter your name.'); return; }
+            if (!customerPhone.trim()) { setOrderError('Please enter your phone number (09xxxxxxxx).'); return; }
             if (orderType === 'delivery' && !deliveryAddress.trim()) {
                 setOrderError('Please enter your delivery address.');
                 return;
@@ -109,59 +117,102 @@ export function CartDrawer({ open, onOpenChange, guestContext, tableNumber }: Ca
 
         setSubmitting(true);
         setOrderError(null);
-        setOrderMessage(null);
 
         try {
-            const effectiveOrderType = isOnlineOrder ? orderType : 'dine_in';
-
-            const response = await fetch('/api/orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    guest_context: {
-                        slug: guestContext.slug,
-                        table: guestContext.table,
-                        sig: guestContext.sig,
-                        exp: guestContext.exp,
-                        is_online_order: guestContext.is_online_order,
-                    },
-                    items: items.map(item => ({
-                        id: item.menuItemId,
-                        name: item.title,
-                        quantity: item.quantity,
-                        price: item.price,
-                        notes: item.instructions,
-                    })),
-                    total_price: total,
-                    order_type: effectiveOrderType,
-                    ...(isOnlineOrder && orderType === 'delivery' ? { delivery_address: deliveryAddress } : {}),
-                    ...(isOnlineOrder ? { customer_name: customerName, customer_phone: customerPhone } : {}),
-                    ...(guestContext.campaign_attribution
-                        ? { campaign_attribution: guestContext.campaign_attribution }
-                        : {}),
-                    ...(guestContext.guest_session_id
-                        ? { guest_session_id: guestContext.guest_session_id }
-                        : {}),
-                }),
-            });
-
-            const payload = await response.json();
-            if (!response.ok) {
-                setOrderError(payload?.error ?? 'Failed to place order.');
-                return;
-            }
-
-            trigger('success');
-            clearCart();
             if (isOnlineOrder) {
-                setStep('success');
+                // ── Online orders: Chapa payment flow ──────────────────────
+                const response = await fetch('/api/payments/chapa/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guest_context: {
+                            slug: guestContext.slug,
+                            is_online_order: true,
+                        },
+                        items: items.map(item => ({
+                            id: item.menuItemId,
+                            name: item.title,
+                            quantity: item.quantity,
+                            price: item.price,
+                            notes: item.instructions,
+                        })),
+                        total_price: total,
+                        order_type: orderType,
+                        customer_name: customerName,
+                        customer_phone: customerPhone,
+                        ...(orderType === 'delivery' ? { delivery_address: deliveryAddress } : {}),
+                        ...(guestContext.campaign_attribution
+                            ? { campaign_attribution: guestContext.campaign_attribution }
+                            : {}),
+                    }),
+                });
+
+                const payload = await response.json() as {
+                    checkout_url?: string;
+                    mode?: string;
+                    order_id?: string;
+                    order_number?: string;
+                    error?: string;
+                };
+
+                if (!response.ok) {
+                    setOrderError(payload?.error ?? 'Failed to initialize payment.');
+                    return;
+                }
+
+                if (payload.checkout_url) {
+                    // Store cart state — it will be cleared on success return
+                    trigger('success');
+                    // Redirect to Chapa (or mock) checkout
+                    window.location.href = payload.checkout_url;
+                    return;
+                }
+
+                setOrderError('Payment gateway error. Please try again.');
             } else {
-                setOrderMessage('Order received! Kitchen has been notified.');
+                // ── Dine-in: direct order placement (no payment) ───────────
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guest_context: {
+                            slug: guestContext.slug,
+                            table: guestContext.table,
+                            sig: guestContext.sig,
+                            exp: guestContext.exp,
+                        },
+                        items: items.map(item => ({
+                            id: item.menuItemId,
+                            name: item.title,
+                            quantity: item.quantity,
+                            price: item.price,
+                            notes: item.instructions,
+                        })),
+                        total_price: total,
+                        order_type: 'dine_in',
+                        ...(guestContext.campaign_attribution
+                            ? { campaign_attribution: guestContext.campaign_attribution }
+                            : {}),
+                        ...(guestContext.guest_session_id
+                            ? { guest_session_id: guestContext.guest_session_id }
+                            : {}),
+                    }),
+                });
+
+                const payload = await response.json();
+                if (!response.ok) {
+                    setOrderError(payload?.error ?? 'Failed to place order.');
+                    return;
+                }
+
+                trigger('success');
+                clearCart();
+                setOrderMessage('Order received! Kitchen has been notified. 🍳');
             }
         } catch (error) {
             if (isAbortError(error)) return;
             console.error('Order submission failed:', error);
-            setOrderError('Network error while placing order. Please retry.');
+            setOrderError('Network error. Please retry.');
         } finally {
             setSubmitting(false);
         }
