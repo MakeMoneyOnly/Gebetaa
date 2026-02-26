@@ -6,7 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useHaptic } from '@/hooks/useHaptic';
 import Image from 'next/image';
 import { isRemoteOrDataImageSrc } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { isAbortError } from '@/hooks/useSafeFetch';
 
 type OrderType = 'pickup' | 'delivery' | 'dine_in';

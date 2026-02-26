@@ -9,7 +9,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { resolveGuestContext } from '@/lib/security/guestContext';
 import {
     checkRateLimit,
     validateOrderItems,
@@ -107,26 +106,28 @@ export async function POST(request: NextRequest) {
 
         // Insert order with status='payment_pending'
         // Kitchen does NOT see it yet — it only becomes visible when payment confirms
+        // Use a plain Record to avoid TS errors on columns not in the generated types yet
+        const insertPayload: Record<string, unknown> = {
+            id: orderId,
+            restaurant_id: restaurant.id,
+            table_number: tableNumber,
+            items: (validation.enrichedItems ?? []) as unknown,
+            total_price: parsed.data.total_price,
+            status: 'payment_pending',
+            order_number: orderNumber,
+            idempotency_key: idempotencyKey,
+            guest_fingerprint: fingerprint,
+            order_type: parsed.data.order_type,
+            customer_name: parsed.data.customer_name,
+            customer_phone: parsed.data.customer_phone,
+            chapa_tx_ref: txRef,
+            ...(parsed.data.delivery_address ? { delivery_address: parsed.data.delivery_address } : {}),
+            ...(parsed.data.notes ? { notes: parsed.data.notes } : {}),
+        };
+
         const { data: order, error: orderError } = await supabase
             .from('orders')
-            .insert({
-                id: orderId,
-                restaurant_id: restaurant.id,
-                table_number: tableNumber,
-                items: (validation.enrichedItems ?? []) as unknown as never,
-                total_price: parsed.data.total_price,
-                status: 'payment_pending' as never,
-                order_number: orderNumber,
-                idempotency_key: idempotencyKey,
-                guest_fingerprint: fingerprint,
-                // Extra fields — graceful if columns don't exist yet
-                ...({ order_type: parsed.data.order_type } as never),
-                ...({ customer_name: parsed.data.customer_name } as never),
-                ...({ customer_phone: parsed.data.customer_phone } as never),
-                ...(parsed.data.delivery_address ? { delivery_address: parsed.data.delivery_address } as never : {}),
-                ...(parsed.data.notes ? { notes: parsed.data.notes } as never : {}),
-                ...({ chapa_tx_ref: txRef } as never),
-            })
+            .insert(insertPayload as never)
             .select('id, order_number, status')
             .single();
 
