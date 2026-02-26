@@ -124,6 +124,16 @@ jobs:
 
             - name: Build application
               run: pnpm build
+              env:
+                  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+                  SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+
+            - name: Verify build output
+              run: |
+                  echo "Checking build output..."
+                  ls -la .next/ || echo "No .next directory found"
+                  ls -la .next/server/ || echo "No .next/server directory found"
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
@@ -131,6 +141,7 @@ jobs:
                   name: build
                   path: .next/
                   retention-days: 7
+                  if-no-files-found: error
 
     # ============================================
     # E2E TESTS
