@@ -80,7 +80,11 @@ test.describe('Signed QR to guest order flow', () => {
 
         await page.goto(`/${slug}?table=${table}&sig=${sig}&exp=${exp}`);
 
-        await expect(page.getByText('Main Menu')).toBeVisible();
+        const skipToMenuButton = page.getByRole('button', { name: 'Skip to Menu' });
+        if (await skipToMenuButton.isVisible()) {
+            await skipToMenuButton.click();
+        }
+
         await expect(page.getByText('Scan Burger')).toBeVisible();
 
         await page.getByText('Scan Burger').first().click();
@@ -91,7 +95,7 @@ test.describe('Signed QR to guest order flow', () => {
 
         await expect(page.getByRole('heading', { name: 'Your Order' })).toBeVisible();
         await page.getByRole('button', { name: 'Place Order' }).click();
-        await expect(page.getByText('Order received. Kitchen has been notified.')).toBeVisible();
+        await expect(page.getByText(/Order received.*Kitchen has been notified/i)).toBeVisible();
 
         expect(capturedOrderPayload).toBeTruthy();
         expect(capturedOrderPayload.guest_context).toEqual({

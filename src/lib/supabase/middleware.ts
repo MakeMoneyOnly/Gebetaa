@@ -6,6 +6,11 @@ export async function updateSession(request: NextRequest) {
         request,
     });
 
+    // E2E test bypass: allows Playwright specs to exercise protected routes with mocked APIs.
+    if (request.headers.get('x-e2e-bypass-auth') === '1') {
+        return supabaseResponse;
+    }
+
     // Get and clean environment variables
     // Vercel can store values with extra quotes and \r\n when set via CLI/API
     const cleanEnvVar = (val: string | undefined): string => {

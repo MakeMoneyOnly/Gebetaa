@@ -8,16 +8,19 @@ function ToggleSwitch({
     checked,
     onChange,
     disabled,
+    ariaLabel,
 }: {
     checked: boolean;
     onChange: (c: boolean) => void;
     disabled?: boolean;
+    ariaLabel?: string;
 }) {
     return (
         <button
             type="button"
             role="switch"
             aria-checked={checked}
+            aria-label={ariaLabel}
             disabled={disabled}
             onClick={() => onChange(!checked)}
             className={cn(
@@ -286,6 +289,7 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.enabled}
+                            ariaLabel="Online ordering enabled"
                             onChange={checked => onChange({ ...settings, enabled: checked })}
                         />
                     </div>
@@ -295,6 +299,7 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.accepts_scheduled_orders}
+                            ariaLabel="Accept scheduled orders"
                             onChange={checked =>
                                 onChange({ ...settings, accepts_scheduled_orders: checked })
                             }
@@ -306,6 +311,7 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.auto_accept_orders}
+                            ariaLabel="Auto-accept incoming orders"
                             onChange={checked =>
                                 onChange({ ...settings, auto_accept_orders: checked })
                             }
@@ -317,6 +323,7 @@ export function OnlineOrderingSettingsPanel({
                         </span>
                         <ToggleSwitch
                             checked={settings.order_throttling_enabled}
+                            ariaLabel="Enable throttling"
                             onChange={checked =>
                                 onChange({ ...settings, order_throttling_enabled: checked })
                             }

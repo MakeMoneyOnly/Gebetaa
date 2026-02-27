@@ -5,11 +5,13 @@ test.describe('Core web journeys', () => {
         await page.goto('/');
 
         await expect(page).toHaveTitle(/Gebeta/i);
-        await expect(page.getByText('The Modern Operating System', { exact: false })).toBeVisible();
+        await expect(
+            page.getByRole('heading', { name: /The Operating System for/i })
+        ).toBeVisible();
 
-        await page.getByRole('button', { name: 'Merchant Login' }).click();
+        await page.getByRole('link', { name: /^Sign In$/ }).first().click();
         await expect(page).toHaveURL(/\/auth\/login$/);
-        await expect(page.getByRole('heading', { name: 'Welcome Back!' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Welcome Back/i })).toBeVisible();
     });
 
     test('login page supports password visibility toggle and sign-up navigation', async ({
@@ -23,7 +25,7 @@ test.describe('Core web journeys', () => {
         await page.getByLabel('Toggle password visibility').click();
         await expect(passwordInput).toHaveAttribute('type', 'text');
 
-        await page.getByRole('link', { name: 'Sign Up' }).click();
+        await page.getByRole('link', { name: /^Sign Up$/ }).click();
         await expect(page).toHaveURL(/\/auth\/signup$/);
         await expect(page.getByRole('heading', { name: 'Get Started' })).toBeVisible();
     });

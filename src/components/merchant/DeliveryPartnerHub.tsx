@@ -57,11 +57,13 @@ function CustomSelect({
     onChange,
     options,
     placeholder,
+    ariaLabel,
 }: {
     value: string;
     onChange: (v: string) => void;
     options: { value: string; label: string }[];
     placeholder?: string;
+    ariaLabel?: string;
 }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -83,6 +85,7 @@ function CustomSelect({
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
+                aria-label={ariaLabel}
                 className="flex h-12 w-full items-center justify-between rounded-xl bg-gray-50 px-4 text-[15px] font-semibold text-gray-800 transition-all outline-none hover:bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#98141F]"
             >
                 <span>
@@ -162,6 +165,7 @@ export function DeliveryPartnerHub({
                             value={providerToConnect}
                             onChange={v => setProviderToConnect(v as typeof providerToConnect)}
                             options={PROVIDERS.map(p => ({ value: p, label: toLabel(p) }))}
+                            ariaLabel="Connect Provider"
                         />
                         <div>
                             <label htmlFor={displayNameId} className="sr-only">
@@ -265,6 +269,7 @@ export function DeliveryPartnerHub({
                                 { value: 'all', label: 'All Providers' },
                                 ...PROVIDERS.map(p => ({ value: p, label: toLabel(p) })),
                             ]}
+                            ariaLabel="External Orders"
                         />
                     </div>
                 </div>

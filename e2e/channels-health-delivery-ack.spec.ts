@@ -184,7 +184,7 @@ test.describe('Channels health and delivery acknowledge flow', () => {
 
         await page.goto('/merchant/channels');
 
-        await expect(page.getByRole('heading', { name: 'Channels' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Channels', exact: true })).toBeVisible();
         await expect(page.getByText('Connected Channels')).toBeVisible();
         await expect(page.getByText('BEU-1001')).toBeVisible();
         await expect(

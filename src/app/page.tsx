@@ -103,7 +103,7 @@ export default function HomePage() {
                     <h2 className="mb-6 text-3xl font-bold text-white sm:text-4xl">
                         Ready to transform your restaurant?
                     </h2>
-                    <p className="mb-8 text-xl text-red-100">
+                    <p className="mb-8 text-xl font-semibold text-white">
                         Join hundreds of restaurants already using Gebeta to streamline their
                         operations.
                     </p>
