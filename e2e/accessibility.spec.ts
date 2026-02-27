@@ -37,7 +37,9 @@ test.describe('Accessibility Tests', () => {
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
                 .analyze();
 
-            const criticalViolations = accessibilityScanResults.violations.filter(v => v.impact === 'critical');
+            const criticalViolations = accessibilityScanResults.violations.filter(
+                v => v.impact === 'critical'
+            );
 
             expect(criticalViolations).toEqual([]);
         });

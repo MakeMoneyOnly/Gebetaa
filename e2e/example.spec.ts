@@ -9,7 +9,10 @@ test.describe('Core web journeys', () => {
             page.getByRole('heading', { name: /The Operating System for/i })
         ).toBeVisible();
 
-        await page.getByRole('link', { name: /^Sign In$/ }).first().click();
+        await page
+            .getByRole('link', { name: /^Sign In$/ })
+            .first()
+            .click();
         await expect(page).toHaveURL(/\/auth\/login$/);
         await expect(page.getByRole('heading', { name: /Welcome Back/i })).toBeVisible();
     });

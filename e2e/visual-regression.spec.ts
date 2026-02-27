@@ -11,7 +11,10 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Visual Regression Tests', () => {
-    test.skip(!!process.env.CI, 'Visual snapshots are maintained outside CI due environment variance.');
+    test.skip(
+        !!process.env.CI,
+        'Visual snapshots are maintained outside CI due environment variance.'
+    );
 
     test.describe('Guest Pages', () => {
         test('landing page visual snapshot', async ({ page }) => {
