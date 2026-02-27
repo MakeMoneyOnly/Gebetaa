@@ -9,4 +9,3 @@ secret:
         - '**/*.env*'
         - '**/.env.local'
         - '**/.env.example'
-

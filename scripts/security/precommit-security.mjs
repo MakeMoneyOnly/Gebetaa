@@ -78,4 +78,3 @@ run(trivy.command, [
     '--timeout',
     '30m',
 ]);
-
