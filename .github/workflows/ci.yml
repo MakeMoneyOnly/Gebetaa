@@ -183,7 +183,7 @@ jobs:
               uses: actions/download-artifact@v4
               with:
                   name: build
-                  path: .
+                  path: .next
 
             - name: Run E2E tests
               run: pnpm run test:e2e
