@@ -113,7 +113,7 @@ jobs:
             NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
             SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-            NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
+            NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
             NEXT_PUBLIC_APP_NAME: 'Gebeta'
         steps:
             - uses: actions/checkout@v4
@@ -219,7 +219,7 @@ jobs:
             contents: write
         environment:
             name: production
-            url: https://gebeta.app
+            url: ${{ secrets.NEXT_PUBLIC_APP_URL }}
         steps:
             - uses: actions/checkout@v4
 
@@ -238,7 +238,13 @@ jobs:
               run: |
                   echo "Waiting for deployment to be ready..."
                   sleep 30
-                  curl -sSf https://gebeta.app/api/health || exit 1
+                  APP_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+                  if [ -z "$APP_URL" ]; then
+                    echo "NEXT_PUBLIC_APP_URL secret is not set"
+                    exit 1
+                  fi
+                  APP_URL="${APP_URL%/}"
+                  curl -sSf "$APP_URL/api/health" || exit 1
                   echo "Health check passed!"
 
             - name: Rollback on Health Check Failure
