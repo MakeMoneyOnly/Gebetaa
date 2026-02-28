@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=2874&auto=format&fit=crop')] bg-cover bg-center">
+        <div className="flex min-h-screen items-center justify-center bg-[url('/splash-bg.webp')] bg-cover bg-center">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div className="relative z-10 w-full max-w-md px-4">
                 <LoginForm />

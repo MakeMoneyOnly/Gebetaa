@@ -17,6 +17,8 @@ jobs:
     lint:
         name: Lint & Type Check
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
 
@@ -47,6 +49,8 @@ jobs:
     test-unit:
         name: Unit Tests
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
 
@@ -78,6 +82,8 @@ jobs:
     security-scan:
         name: Security Scan
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
 
@@ -101,6 +107,8 @@ jobs:
         name: Build
         runs-on: ubuntu-latest
         needs: [lint, test-unit]
+        permissions:
+            contents: read
         env:
             NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
@@ -161,6 +169,8 @@ jobs:
         name: E2E Tests
         runs-on: ubuntu-latest
         needs: build
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
 
@@ -206,6 +216,8 @@ jobs:
         runs-on: ubuntu-latest
         needs: [build, test-e2e]
         if: github.ref == 'refs/heads/develop' && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
+        permissions:
+            contents: read
         environment:
             name: staging
             url: https://staging.gebeta.app
@@ -236,6 +248,8 @@ jobs:
         runs-on: ubuntu-latest
         needs: [build, test-e2e]
         if: github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
+        permissions:
+            contents: write
         environment:
             name: production
             url: https://gebeta.app

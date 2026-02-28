@@ -42,9 +42,6 @@ const CRITICAL_DOMAINS: ResourceHintConfig[] = [
     { url: 'https://fonts.googleapis.com', type: 'preconnect', crossOrigin: true },
     { url: 'https://fonts.gstatic.com', type: 'preconnect', crossOrigin: true },
 
-    // External images
-    { url: 'https://images.unsplash.com', type: 'preconnect', crossOrigin: true },
-
     // Sentry (if configured)
     { url: 'https://o4506998756614144.ingest.us.sentry.io', type: 'dns-prefetch' },
 ];

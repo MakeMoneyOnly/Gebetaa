@@ -27,6 +27,30 @@ const CartDrawer = dynamic(
 );
 
 type MenuItem = DishItem;
+const FALLBACK_IMAGE_URL = 'https://via.placeholder.com/150';
+const ALLOWED_REMOTE_IMAGE_HOSTS = new Set([
+    'via.placeholder.com',
+    'axuegixbqsvztdraenkz.supabase.co',
+]);
+
+function tryParseHttpsUrl(value: string): URL | null {
+    try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'https:' ? parsed : null;
+    } catch {
+        return null;
+    }
+}
+
+function isAllowedRemoteImageUrl(value: string): boolean {
+    const parsed = tryParseHttpsUrl(value);
+    if (!parsed) return false;
+    const hostname = parsed.hostname.toLowerCase();
+    return (
+        ALLOWED_REMOTE_IMAGE_HOSTS.has(hostname) ||
+        hostname.endsWith('.supabase.co')
+    );
+}
 
 interface RawCategory {
     id: string;
@@ -330,8 +354,11 @@ function MenuContent() {
                 }
 
                 const getSmartImageUrl = (path: string | null) => {
-                    if (!path) return 'https://via.placeholder.com/150';
-                    if (path.startsWith('http') || path.startsWith('fab')) return path;
+                    if (!path) return FALLBACK_IMAGE_URL;
+                    if (path.startsWith('fab')) return path;
+                    if (isAllowedRemoteImageUrl(path)) {
+                        return path;
+                    }
                     const { data } = supabase.storage.from('menu-images').getPublicUrl(path);
                     return data.publicUrl;
                 };
@@ -376,14 +403,9 @@ function MenuContent() {
                                 food.title.toLowerCase().trim() === item.name.toLowerCase().trim()
                         );
 
-                        let imageUrl = constantItem
+                        const imageUrl = constantItem
                             ? constantItem.imageUrl
                             : getSmartImageUrl(item.image_url);
-
-                        if (imageUrl.includes('unsplash.com')) {
-                            imageUrl =
-                                'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images/Spicy%20Tonkotsu.webp';
-                        }
 
                         return {
                             id: item.id,
