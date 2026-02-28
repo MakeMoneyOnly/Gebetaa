@@ -36,10 +36,7 @@ export function isRemoteOrDataImageSrc(src: string): boolean {
 
     try {
         const url = new URL(src);
-        const optimizedDomains = [
-            'axuegixbqsvztdraenkz.supabase.co',
-            'i.pravatar.cc',
-        ];
+        const optimizedDomains = ['axuegixbqsvztdraenkz.supabase.co', 'i.pravatar.cc'];
 
         // If domain is whitelisted, allow optimization (return false)
         if (optimizedDomains.includes(url.hostname)) {
