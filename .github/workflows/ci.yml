@@ -186,7 +186,7 @@ jobs:
                   path: .
 
             - name: Run E2E tests
-              run: pnpm test:e2e
+              run: pnpm run test:e2e
               env:
                   CI: true
 
