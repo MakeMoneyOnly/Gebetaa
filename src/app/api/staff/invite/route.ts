@@ -66,7 +66,8 @@ export async function POST(request: Request) {
     if (parsed.data.label) {
         inviteQuery.set('label', parsed.data.label);
     }
-    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/join?${inviteQuery.toString()}`;
+    const { getAppUrl } = await import('@/lib/config/env');
+    const inviteUrl = `${getAppUrl()}/auth/join?${inviteQuery.toString()}`;
     let emailSent = false;
 
     if (parsed.data.email && resend) {

@@ -37,8 +37,6 @@ export function isRemoteOrDataImageSrc(src: string): boolean {
     try {
         const url = new URL(src);
         const optimizedDomains = [
-            'images.unsplash.com',
-            'plus.unsplash.com',
             'axuegixbqsvztdraenkz.supabase.co',
             'i.pravatar.cc',
         ];

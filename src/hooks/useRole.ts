@@ -4,11 +4,6 @@ import { UserRole } from '@/types/models';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
-interface StaffRoleRPCRow {
-    role: string;
-    restaurant_id: string;
-}
-
 export function useRole(restaurantId: string | null) {
     const [role, setRole] = useState<UserRole | null>(null);
     const [loading, setLoading] = useState(true);

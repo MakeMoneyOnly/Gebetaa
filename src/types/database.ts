@@ -218,6 +218,7 @@ export type Database = {
             };
             delivery_partners: {
                 Row: {
+                    api_key: string | null;
                     created_at: string;
                     created_by: string | null;
                     credentials_ref: string | null;
@@ -231,6 +232,7 @@ export type Database = {
                     updated_at: string;
                 };
                 Insert: {
+                    api_key?: string | null;
                     created_at?: string;
                     created_by?: string | null;
                     credentials_ref?: string | null;
@@ -244,6 +246,7 @@ export type Database = {
                     updated_at?: string;
                 };
                 Update: {
+                    api_key?: string | null;
                     created_at?: string;
                     created_by?: string | null;
                     credentials_ref?: string | null;
@@ -259,6 +262,72 @@ export type Database = {
                 Relationships: [
                     {
                         foreignKeyName: 'delivery_partners_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            external_orders: {
+                Row: {
+                    acked_by: string | null;
+                    acknowledged_at: string | null;
+                    created_at: string;
+                    currency: string;
+                    delivery_partner_id: string | null;
+                    id: string;
+                    normalized_status: string;
+                    payload_json: Json;
+                    provider: string;
+                    provider_order_id: string;
+                    restaurant_id: string;
+                    source_channel: string;
+                    total_amount: number;
+                    updated_at: string;
+                };
+                Insert: {
+                    acked_by?: string | null;
+                    acknowledged_at?: string | null;
+                    created_at?: string;
+                    currency?: string;
+                    delivery_partner_id?: string | null;
+                    id?: string;
+                    normalized_status?: string;
+                    payload_json?: Json;
+                    provider: string;
+                    provider_order_id: string;
+                    restaurant_id: string;
+                    source_channel?: string;
+                    total_amount?: number;
+                    updated_at?: string;
+                };
+                Update: {
+                    acked_by?: string | null;
+                    acknowledged_at?: string | null;
+                    created_at?: string;
+                    currency?: string;
+                    delivery_partner_id?: string | null;
+                    id?: string;
+                    normalized_status?: string;
+                    payload_json?: Json;
+                    provider?: string;
+                    provider_order_id?: string;
+                    restaurant_id?: string;
+                    source_channel?: string;
+                    total_amount?: number;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'external_orders_delivery_partner_id_fkey';
+                        columns: ['delivery_partner_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'delivery_partners';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'external_orders_restaurant_id_fkey';
                         columns: ['restaurant_id'];
                         isOneToOne: false;
                         referencedRelation: 'restaurants';
@@ -751,6 +820,7 @@ export type Database = {
                     idempotency_key: string | null;
                     items: Json;
                     kitchen_status: string | null;
+                    metadata: Json | null;
                     notes: string | null;
                     order_number: string;
                     restaurant_id: string;
@@ -771,6 +841,7 @@ export type Database = {
                     idempotency_key?: string | null;
                     items: Json;
                     kitchen_status?: string | null;
+                    metadata?: Json | null;
                     notes?: string | null;
                     order_number: string;
                     restaurant_id: string;
@@ -791,6 +862,7 @@ export type Database = {
                     idempotency_key?: string | null;
                     items?: Json;
                     kitchen_status?: string | null;
+                    metadata?: Json | null;
                     notes?: string | null;
                     order_number?: string;
                     restaurant_id?: string;
@@ -1278,72 +1350,6 @@ export type Database = {
                     },
                     {
                         foreignKeyName: 'recipes_restaurant_id_fkey';
-                        columns: ['restaurant_id'];
-                        isOneToOne: false;
-                        referencedRelation: 'restaurants';
-                        referencedColumns: ['id'];
-                    },
-                ];
-            };
-            external_orders: {
-                Row: {
-                    acked_at: string | null;
-                    acked_by: string | null;
-                    created_at: string;
-                    currency: string;
-                    delivery_partner_id: string | null;
-                    id: string;
-                    normalized_status: string;
-                    payload_json: Json;
-                    provider: string;
-                    provider_order_id: string;
-                    restaurant_id: string;
-                    source_channel: string;
-                    total_amount: number;
-                    updated_at: string;
-                };
-                Insert: {
-                    acked_at?: string | null;
-                    acked_by?: string | null;
-                    created_at?: string;
-                    currency?: string;
-                    delivery_partner_id?: string | null;
-                    id?: string;
-                    normalized_status?: string;
-                    payload_json?: Json;
-                    provider: string;
-                    provider_order_id: string;
-                    restaurant_id: string;
-                    source_channel?: string;
-                    total_amount?: number;
-                    updated_at?: string;
-                };
-                Update: {
-                    acked_at?: string | null;
-                    acked_by?: string | null;
-                    created_at?: string;
-                    currency?: string;
-                    delivery_partner_id?: string | null;
-                    id?: string;
-                    normalized_status?: string;
-                    payload_json?: Json;
-                    provider?: string;
-                    provider_order_id?: string;
-                    restaurant_id?: string;
-                    source_channel?: string;
-                    total_amount?: number;
-                    updated_at?: string;
-                };
-                Relationships: [
-                    {
-                        foreignKeyName: 'external_orders_delivery_partner_id_fkey';
-                        columns: ['delivery_partner_id'];
-                        isOneToOne: false;
-                        referencedRelation: 'delivery_partners';
-                        referencedColumns: ['id'];
-                    },
-                    {
-                        foreignKeyName: 'external_orders_restaurant_id_fkey';
                         columns: ['restaurant_id'];
                         isOneToOne: false;
                         referencedRelation: 'restaurants';

@@ -9,7 +9,7 @@ import { RolePermissionDrawer } from '@/components/merchant/RolePermissionDrawer
 import { AddPinStaffModal } from '@/components/merchant/AddPinStaffModal';
 import { ProvisionDeviceModal } from '@/components/merchant/ProvisionDeviceModal';
 import { MetricCard } from '@/components/merchant/MetricCard';
-import { Users, Tablet, Shield, Plus, MoreHorizontal, UserCheck, LayoutGrid, Trash2 } from 'lucide-react';
+import { Users, Tablet, Plus, MoreHorizontal, UserCheck, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type SubTab = 'staff' | 'devices';
@@ -25,14 +25,19 @@ export default function StaffPage() {
         handleDeleteStaff,
     } = useStaff();
 
-    const { user, restaurantId } = useRole(null);
+    const { restaurantId } = useRole(null);
     const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
 
     // Delete confirmation states
     const [deletingDeviceId, setDeletingDeviceId] = useState<string | null>(null);
     const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
 
-    const { devices, loading: devicesDataLoading, handleProvisionDevice, handleDeleteDevice } = useDevices();
+    const {
+        devices,
+        loading: devicesDataLoading,
+        handleProvisionDevice,
+        handleDeleteDevice,
+    } = useDevices();
 
     const { loading: pageLoading, markLoaded } = usePageLoadGuard('staff');
 
@@ -160,7 +165,7 @@ export default function StaffPage() {
             </div>
 
             {/* Metrics Section */}
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     icon={Users}
                     chip="TOTAL"
@@ -193,6 +198,17 @@ export default function StaffPage() {
                     progress={Math.min(20, devices.length * 5)}
                     targetLabel="Target: -"
                     currentLabel={`${devices.length} Units`}
+                />
+                <MetricCard
+                    icon={Tablet}
+                    chip="CONNECTED"
+                    value={devices.filter(d => Boolean(d.device_token)).length}
+                    label="Paired Devices"
+                    subLabel="Terminals actively connected"
+                    tone="green"
+                    progress={Math.min(20, devices.filter(d => Boolean(d.device_token)).length * 5)}
+                    targetLabel={`Total: ${devices.length}`}
+                    currentLabel={`Paired: ${devices.filter(d => Boolean(d.device_token)).length}`}
                 />
             </div>
 
@@ -288,9 +304,15 @@ export default function StaffPage() {
                                                 <span className="text-xs font-bold text-gray-400">
                                                     Login PIN
                                                 </span>
-                                                <span className="font-mono text-sm font-bold tracking-widest text-black">
-                                                    {member.pin_code ? '••••' : 'Uses Email'}
-                                                </span>
+                                                {member.pin_code ? (
+                                                    <span className="font-mono text-sm font-bold tracking-widest text-black">
+                                                        ••••
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-sm font-bold text-black">
+                                                        Uses Email
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex justify-between pt-2">
                                                 <span className="text-xs font-bold text-gray-400">
@@ -332,14 +354,18 @@ export default function StaffPage() {
                                                     {deletingStaffId === member.id ? (
                                                         <div className="flex items-center gap-2">
                                                             <button
-                                                                onClick={() => setDeletingStaffId(null)}
+                                                                onClick={() =>
+                                                                    setDeletingStaffId(null)
+                                                                }
                                                                 className="flex-1 rounded-xl bg-gray-100 py-2.5 text-xs font-bold text-gray-500 hover:bg-gray-200"
                                                             >
                                                                 Cancel
                                                             </button>
                                                             <button
                                                                 onClick={async () => {
-                                                                    await handleDeleteStaff(member.id);
+                                                                    await handleDeleteStaff(
+                                                                        member.id
+                                                                    );
                                                                     setDeletingStaffId(null);
                                                                 }}
                                                                 className="flex-1 rounded-xl bg-red-500 py-2.5 text-xs font-bold text-white hover:bg-red-600"
@@ -349,7 +375,9 @@ export default function StaffPage() {
                                                         </div>
                                                     ) : (
                                                         <button
-                                                            onClick={() => setDeletingStaffId(member.id)}
+                                                            onClick={() =>
+                                                                setDeletingStaffId(member.id)
+                                                            }
                                                             className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
@@ -361,7 +389,6 @@ export default function StaffPage() {
                                         </div>
                                     </div>
                                 ))}
-
                             </div>
                         )}
 

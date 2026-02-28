@@ -14,8 +14,10 @@ function computePoints(pointsRuleJson: unknown, eligibleSubtotal: number): numbe
     const rawPointsPerUnit = Number(rule.points_per_currency_unit ?? 1);
     const rawCurrencyUnit = Number(rule.currency_unit ?? 1);
 
-    const pointsPerUnit = Number.isFinite(rawPointsPerUnit) && rawPointsPerUnit > 0 ? rawPointsPerUnit : 1;
-    const currencyUnit = Number.isFinite(rawCurrencyUnit) && rawCurrencyUnit > 0 ? rawCurrencyUnit : 1;
+    const pointsPerUnit =
+        Number.isFinite(rawPointsPerUnit) && rawPointsPerUnit > 0 ? rawPointsPerUnit : 1;
+    const currencyUnit =
+        Number.isFinite(rawCurrencyUnit) && rawCurrencyUnit > 0 ? rawCurrencyUnit : 1;
 
     return Math.max(0, Math.floor((eligibleSubtotal / currencyUnit) * pointsPerUnit));
 }
@@ -23,7 +25,7 @@ function computePoints(pointsRuleJson: unknown, eligibleSubtotal: number): numbe
 export async function accrueLoyaltyPointsForCompletedOrder(
     orderId: string
 ): Promise<LoyaltyAccrualResult> {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) {
         return { applied: false, reason: 'Service-role credentials are not configured.' };
     }
 
@@ -60,7 +62,8 @@ export async function accrueLoyaltyPointsForCompletedOrder(
     const [{ data: order, error: orderError }, { data: activeProgram, error: programError }] =
         await Promise.all([
             db.from('orders').select('id, total_price').eq('id', orderId).maybeSingle(),
-            db.from('loyalty_programs' as any)
+            db
+                .from('loyalty_programs' as any)
                 .select('id, points_rule_json')
                 .eq('restaurant_id', attribution.restaurant_id)
                 .eq('status', 'active')

@@ -6,13 +6,16 @@ const envPath = path.resolve('.env.local');
 const env = fs.readFileSync(envPath, 'utf8');
 
 const parseEnv = (content: string) => {
-    return content.split('\n').reduce((acc: Record<string, string>, line: string) => {
-        const match = line.match(/^([^=]+)=(.*)$/);
-        if (match) {
-            acc[match[1].trim()] = match[2].trim().replace(/^['"]|['"]$/g, '');
-        }
-        return acc;
-    }, {} as Record<string, string>);
+    return content.split('\n').reduce(
+        (acc: Record<string, string>, line: string) => {
+            const match = line.match(/^([^=]+)=(.*)$/);
+            if (match) {
+                acc[match[1].trim()] = match[2].trim().replace(/^['"]|['"]$/g, '');
+            }
+            return acc;
+        },
+        {} as Record<string, string>
+    );
 };
 
 const envVars = parseEnv(env);
@@ -50,12 +53,12 @@ async function main() {
                 .trim()
                 .replace(/\s+/g, '-');
             console.log(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
-            const { error: updateError } = await supabase
+            const { error: err } = await supabase
                 .from('restaurants')
                 .update({ slug: newSlug })
                 .eq('id', restaurant.id);
 
-            if (updateError) console.error('Error updating:', updateError);
+            if (err) console.error('Error updating:', err);
             else console.log('Successfully updated.');
         } else if (!restaurant.slug) {
             const newSlug = restaurant.name
@@ -64,10 +67,13 @@ async function main() {
                 .trim()
                 .replace(/\s+/g, '-');
             console.log(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
-            const { error: updateError } = await supabase
+            const { error: err2 } = await supabase
                 .from('restaurants')
                 .update({ slug: newSlug })
                 .eq('id', restaurant.id);
+
+            if (err2) console.error('Error updating:', err2);
+            else console.log('Successfully updated.');
         } else {
             const newSlug = restaurant.name
                 .toLowerCase()
@@ -76,12 +82,12 @@ async function main() {
                 .replace(/\s+/g, '-');
             if (restaurant.slug !== newSlug) {
                 console.log(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
-                const { error: updateError } = await supabase
+                const { error: err3 } = await supabase
                     .from('restaurants')
                     .update({ slug: newSlug })
                     .eq('id', restaurant.id);
 
-                if (updateError) console.error('Error updating:', updateError);
+                if (err3) console.error('Error updating:', err3);
                 else console.log('Successfully updated.');
             }
         }

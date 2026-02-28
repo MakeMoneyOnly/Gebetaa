@@ -10,6 +10,7 @@ import {
     type OnlineOrderingSettings,
 } from '@/components/merchant/OnlineOrderingSettingsPanel';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { useRole } from '@/hooks/useRole';
 
 type ChannelSummary = {
     totals: {
@@ -63,6 +64,12 @@ export default function ChannelsPage() {
     const [orders, setOrders] = useState<ExternalOrder[]>([]);
     const [settings, setSettings] = useState<OnlineOrderingSettings>(defaultSettings);
     const [settingsSaving, setSettingsSaving] = useState(false);
+
+    const { restaurantId } = useRole(null);
+    const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
+
+    // Restaurant slug is now loaded instantly with settings
+
     const [settingsError, setSettingsError] = useState<string | null>(null);
     const [connecting, setConnecting] = useState(false);
     const [acknowledgingId, setAcknowledgingId] = useState<string | null>(null);
@@ -100,12 +107,18 @@ export default function ChannelsPage() {
                 );
             }
             if (!ordersRes.ok) {
-                throw new Error(ordersPayload?.error ?? 'Failed to load delivery orders.');
+                console.warn(ordersPayload?.error ?? 'Failed to load delivery orders.');
+            } else {
+                setOrders((ordersPayload?.data?.orders ?? []) as ExternalOrder[]);
             }
 
             setSummary((summaryPayload?.data ?? null) as ChannelSummary | null);
-            setSettings({ ...defaultSettings, ...(settingsPayload?.data ?? {}) });
-            setOrders((ordersPayload?.data?.orders ?? []) as ExternalOrder[]);
+            const settingsData = settingsPayload?.data ?? {};
+            if (settingsData.slug) {
+                setRestaurantSlug(settingsData.slug);
+            }
+            delete settingsData.slug;
+            setSettings({ ...defaultSettings, ...settingsData });
         } catch (loadError) {
             console.error(loadError);
             setError(
@@ -212,20 +225,20 @@ export default function ChannelsPage() {
                 </p>
             </div>
 
-            <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <RadioTower className="h-4 w-4 text-blue-600" />
-                    Channel Operations Health
+            {error && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+                    {error}
                 </div>
-            </div>
+            )}
 
-            <ChannelHealthBoard loading={loading} summary={summary} error={error} />
+            <ChannelHealthBoard loading={loading} summary={summary} error={null} />
 
             <OnlineOrderingSettingsPanel
                 loading={loading}
                 saving={settingsSaving}
                 error={settingsError}
                 settings={settings}
+                restaurantSlug={restaurantSlug}
                 onChange={setSettings}
                 onSave={saveSettings}
             />

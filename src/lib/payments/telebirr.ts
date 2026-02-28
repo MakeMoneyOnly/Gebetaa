@@ -31,7 +31,15 @@ export class TelebirrProvider implements PaymentProvider {
         );
         this.appId = options?.appId ?? process.env.TELEBIRR_APP_ID ?? '';
         this.appKey = options?.appKey ?? process.env.TELEBIRR_APP_KEY ?? '';
-        this.appUrl = options?.appUrl ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+        let fallbackAppUrl = 'http://localhost:3000';
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { getAppUrl } = require('@/lib/config/env');
+            fallbackAppUrl = getAppUrl();
+        } catch {
+            fallbackAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+        }
+        this.appUrl = options?.appUrl ?? fallbackAppUrl;
     }
 
     private hasConfig(): boolean {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Edit2, Image as ImageIcon, Loader2, Plus, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CategoryWithItems, MenuItem } from '@/types/database';
@@ -167,7 +167,7 @@ export function MenuGridEditor({
         }
     };
 
-    const computeBulkPriceUpdates = (): {
+    const computeBulkPriceUpdates = useCallback((): {
         updates: BulkPriceUpdate[] | null;
         error: string | null;
     } => {
@@ -199,12 +199,9 @@ export function MenuGridEditor({
         }
 
         return { updates, error: null };
-    };
+    }, [bulkPriceMode, bulkPriceValue, selectedItems]);
 
-    const previewResult = useMemo(
-        () => computeBulkPriceUpdates(),
-        [bulkPriceMode, bulkPriceValue, selectedItems]
-    ); // eslint-disable-line react-hooks/exhaustive-deps
+    const previewResult = useMemo(() => computeBulkPriceUpdates(), [computeBulkPriceUpdates]);
 
     const applyBulkPriceUpdates = async () => {
         const result = computeBulkPriceUpdates();

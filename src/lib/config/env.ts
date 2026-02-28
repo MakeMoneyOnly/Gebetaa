@@ -19,14 +19,11 @@ const envSchema = z.object({
     NEXT_PUBLIC_APP_NAME: z.string().default('Gebeta'),
 
     // Supabase - Required
-    NEXT_PUBLIC_SUPABASE_URL: z.string().url({
-        message: 'NEXT_PUBLIC_SUPABASE_URL must be a valid URL',
-    }),
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: z.string().min(1, {
-        message: 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY is required',
-    }),
-    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-    SUPABASE_SECRET_KEY: z.string().optional(),
+    NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+
+    // Supabase - Modern Keys (Optional for build, required for runtime)
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+    SUPABASE_SECRET_KEY: z.string().min(1).optional(),
 
     // Database
     DATABASE_URL: z.string().url().optional(),
@@ -77,7 +74,6 @@ const envSchema = z.object({
  */
 const serverEnvSchema = z.object({
     // These should never be exposed to client
-    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     SUPABASE_SECRET_KEY: z.string().optional(),
     DATABASE_URL: z.string().optional(),
     JWT_SECRET: z.string().optional(),
@@ -221,9 +217,22 @@ export function hasRedis(): boolean {
 
 /**
  * Get the app URL with fallback
+ * Resolves intelligently on Vercel deployments to prevent local overrides.
  */
 export function getAppUrl(): string {
-    return getEnv().NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    if (process.env.VERCEL === '1' || process.env.NEXT_PUBLIC_VERCEL_ENV) {
+        const vercelUrl =
+            process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
+            process.env.NEXT_PUBLIC_VERCEL_URL ||
+            process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+            process.env.VERCEL_URL;
+
+        if (vercelUrl) {
+            return `https://${vercelUrl}`;
+        }
+    }
+    const envUrl = getEnv().NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    return envUrl.replace(/\/$/, '');
 }
 
 // Export singleton instance

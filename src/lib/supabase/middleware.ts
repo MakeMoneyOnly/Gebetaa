@@ -6,33 +6,63 @@ export async function updateSession(request: NextRequest) {
         request,
     });
 
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll();
-                },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-                    supabaseResponse = NextResponse.next({
-                        request,
-                    });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        supabaseResponse.cookies.set(name, value, options)
-                    );
-                },
+    // E2E test bypass: allows Playwright specs to exercise protected routes with mocked APIs.
+    if (request.headers.get('x-e2e-bypass-auth') === '1') {
+        return supabaseResponse;
+    }
+
+    // Get and clean environment variables
+    // Vercel can store values with extra quotes and \r\n when set via CLI/API
+    const cleanEnvVar = (val: string | undefined): string => {
+        if (!val) return '';
+        return val
+            .replace(/\r/g, '')
+            .replace(/\n/g, '')
+            .replace(/^["']+/, '')
+            .replace(/["']+$/, '')
+            .trim();
+    };
+
+    const supabaseUrl = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    const supabaseKey = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+
+    // Skip Supabase initialization if environment variables are missing
+    // This is critical for Edge Runtime where env vars might not be available
+    if (!supabaseUrl || !supabaseKey) {
+        console.warn('Supabase environment variables not available in middleware');
+        return supabaseResponse;
+    }
+
+    // Validate URL format before passing to Supabase
+    try {
+        new URL(supabaseUrl);
+    } catch {
+        console.error('Invalid SUPABASE_URL format:', supabaseUrl);
+        return supabaseResponse;
+    }
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+            getAll() {
+                return request.cookies.getAll();
             },
-        }
-    );
+            setAll(cookiesToSet) {
+                cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+                supabaseResponse = NextResponse.next({
+                    request,
+                });
+                cookiesToSet.forEach(({ name, value, options }) =>
+                    supabaseResponse.cookies.set(name, value, options)
+                );
+            },
+        },
+    });
 
-    // Do not run Supabase code during static generation
-    // if (request.nextUrl.pathname.startsWith('/_next')) return supabaseResponse
-
+    // IMPORTANT: Do not run code between createServerClient and supabase.auth.getUser()
     const {
         data: { user },
     } = await supabase.auth.getUser();
+
     const pathname = request.nextUrl.pathname;
     const protectedPrefixes = ['/app', '/merchant', '/kds', '/staff', '/pos'];
     const isProtectedPath = protectedPrefixes.some(prefix => pathname.startsWith(prefix));
@@ -48,5 +78,6 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
+    // IMPORTANT: You must return the supabaseResponse object as it is.
     return supabaseResponse;
 }

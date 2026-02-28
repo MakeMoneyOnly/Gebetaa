@@ -6,13 +6,13 @@ import { z } from 'zod';
  */
 export const OrderItemSchema = z.object({
     id: z.string().uuid('Invalid item ID'),
-    name: z.string().min(1, 'Item name is required').max(200, 'Item name too long'),
+    name: z.string().trim().min(1, 'Item name is required').max(200, 'Item name too long'),
     quantity: z
         .number()
         .int('Quantity must be a whole number')
         .min(1, 'Minimum quantity is 1')
         .max(100, 'Maximum quantity is 100'),
-    price: z.number().positive('Price must be positive'),
+    price: z.number().nonnegative('Price must be zero or positive'),
     notes: z.string().max(500, 'Notes too long').optional(),
     station: z.enum(['kitchen', 'bar', 'dessert', 'coffee']).optional(),
 });

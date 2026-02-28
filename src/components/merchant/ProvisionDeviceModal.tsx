@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Tablet, Copy, Check, X } from 'lucide-react';
+import { Tablet, Copy, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -30,7 +30,6 @@ export function ProvisionDeviceModal({
     const [deviceType, setDeviceType] = useState<'pos' | 'kds' | 'kiosk' | 'digital_menu'>('pos');
     const [selectedZones, setSelectedZones] = useState<string[]>([]);
     const [newDevice, setNewDevice] = useState<any | null>(null);
-    const [copied, setCopied] = useState(false);
 
     if (!open) return null;
 
@@ -56,8 +55,6 @@ export function ProvisionDeviceModal({
     const handleCopy = () => {
         if (!newDevice?.pairing_code) return;
         navigator.clipboard.writeText(newDevice.pairing_code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
         toast.success('Pairing code copied!');
     };
 

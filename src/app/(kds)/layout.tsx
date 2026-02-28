@@ -1,6 +1,9 @@
 import React from 'react';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 
+// Force dynamic rendering to prevent build-time errors
+export const dynamic = 'force-dynamic';
+
 export default function KDSLayout({ children }: { children: React.ReactNode }) {
     return (
         <RoleGuard allowedRoles={['kitchen', 'admin', 'manager', 'owner']}>

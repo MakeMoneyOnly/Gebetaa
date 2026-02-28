@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useRole } from '@/hooks/useRole';
 import { Button } from '@/components/ui/Button';
@@ -46,7 +46,7 @@ interface ServiceRequest {
     created_at: string;
 }
 
-export default function WaiterPosPage() {
+function WaiterPosContent() {
     const searchParams = useSearchParams();
     const queryRestaurantId = searchParams.get('restaurantId');
     const { restaurantId: roleRestaurantId, loading: roleLoading } = useRole(queryRestaurantId);
@@ -203,7 +203,8 @@ export default function WaiterPosPage() {
                         { headers: deviceHeaders() }
                     );
                     const payload = await response.json();
-                    if (!response.ok) throw new Error(payload.error || 'Failed to load table orders');
+                    if (!response.ok)
+                        throw new Error(payload.error || 'Failed to load table orders');
                     setTableOrders((payload.data?.orders ?? []) as Order[]);
                 } else {
                     const { data, error } = await supabase
@@ -228,9 +229,12 @@ export default function WaiterPosPage() {
         if (!restaurantId) return;
         try {
             if (deviceToken) {
-                const response = await fetch('/api/device/service-requests', { headers: deviceHeaders() });
+                const response = await fetch('/api/device/service-requests', {
+                    headers: deviceHeaders(),
+                });
                 const payload = await response.json();
-                if (!response.ok) throw new Error(payload.error || 'Failed to load service requests');
+                if (!response.ok)
+                    throw new Error(payload.error || 'Failed to load service requests');
                 setServiceRequests((payload.data?.service_requests ?? []) as ServiceRequest[]);
             } else {
                 const { data, error } = await supabase
@@ -321,11 +325,11 @@ export default function WaiterPosPage() {
         fetchServiceRequests,
     ]);
 
-
     const handleLogout = async () => {
         const supabaseBrowser = createBrowserClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
+            process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+                process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
         );
         await supabaseBrowser.auth.signOut();
         router.push('/auth/login');
@@ -1102,5 +1106,26 @@ export default function WaiterPosPage() {
                 </button>
             </nav>
         </div>
+    );
+}
+
+export default function WaiterPosPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="font-manrope flex h-screen flex-col bg-gray-50 p-6">
+                    <div className="flex items-start justify-between px-2 pt-2 pb-6">
+                        <div>
+                            <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                                Waiter Display
+                            </h1>
+                            <p className="text-sm text-gray-500">Loading POS...</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        >
+            <WaiterPosContent />
+        </Suspense>
     );
 }

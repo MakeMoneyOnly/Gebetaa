@@ -1,8 +1,9 @@
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { generateSignedQRCode } from '@/lib/security/hmac';
+import { getRequestOrigin } from '@/lib/api/requestOrigin';
 
-export async function POST(_request: Request, context: { params: Promise<{ tableId: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ tableId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -46,7 +47,8 @@ export async function POST(_request: Request, context: { params: Promise<{ table
         return apiError('Restaurant slug missing', 500, 'RESTAURANT_SLUG_MISSING');
     }
 
-    const qr = generateSignedQRCode(restaurant.slug, table.table_number);
+    const origin = getRequestOrigin(request);
+    const qr = generateSignedQRCode(restaurant.slug, table.table_number, origin);
 
     const { data: updatedTable, error: updateError } = await restaurantContext.supabase
         .from('tables')

@@ -1,3 +1,6 @@
+// Force dynamic rendering for all POS pages to avoid build-time errors
+export const dynamic = 'force-dynamic';
+
 export default function PosLayout({ children }: { children: React.ReactNode }) {
     // This layout bypasses the main dashboard layout
     // No sidebar, no header. Just full screen PWA-style.

@@ -6,6 +6,9 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from 'react-hot-toast';
 import { ServiceWorkerCleanup } from '@/components/providers/ServiceWorkerCleanup';
 
+// Force dynamic rendering to prevent build-time errors with environment variables
+export const dynamic = 'force-dynamic';
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
 

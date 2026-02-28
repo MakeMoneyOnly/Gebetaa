@@ -100,7 +100,10 @@ export async function getAuthorizedRestaurantContext(
 export async function getDeviceContext(request: Request) {
     const token = request.headers.get('x-device-token');
     if (!token) {
-        return { ok: false as const, response: apiError('Missing device token', 401, 'DEVICE_UNAUTHORIZED') };
+        return {
+            ok: false as const,
+            response: apiError('Missing device token', 401, 'DEVICE_UNAUTHORIZED'),
+        };
     }
 
     const admin = createServiceRoleClient();
@@ -111,7 +114,10 @@ export async function getDeviceContext(request: Request) {
         .single();
 
     if (error || !device) {
-        return { ok: false as const, response: apiError('Invalid device token', 401, 'DEVICE_UNAUTHORIZED') };
+        return {
+            ok: false as const,
+            response: apiError('Invalid device token', 401, 'DEVICE_UNAUTHORIZED'),
+        };
     }
 
     return { ok: true as const, device, restaurantId: device.restaurant_id as string, admin };

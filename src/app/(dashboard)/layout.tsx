@@ -5,6 +5,9 @@ import { RightPanel } from '@/components/merchant/RightPanel';
 import { CommandBarShell } from '@/components/merchant/CommandBarShell';
 import { MobileBottomNav } from '@/components/merchant/MobileBottomNav';
 
+// Force dynamic rendering to prevent build-time errors
+export const dynamic = 'force-dynamic';
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <RoleGuard allowedRoles={['owner', 'admin', 'manager']}>

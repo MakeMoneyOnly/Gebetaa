@@ -35,7 +35,7 @@ const _createMockRedis = () => ({
         return mockRedisData.has(key) ? 1 : 0;
     }),
     keys: vi.fn(async (pattern: string) => {
-        const prefix = pattern.replace('*', '');
+        const prefix = pattern.endsWith('*') ? pattern.slice(0, -1) : pattern;
         const keys = Array.from(mockRedisData.keys()) as string[];
         return keys.filter(k => k.startsWith(prefix));
     }),

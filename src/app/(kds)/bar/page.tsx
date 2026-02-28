@@ -141,8 +141,8 @@ export default function BarPage() {
 
             const mapped = (data ?? [])
                 .map(mapOrderToBarTicket)
-                .filter((t): t is Ticket => t !== null)
-                .filter(t => t.status !== 'completed');
+                .filter((t: Ticket | null): t is Ticket => t !== null)
+                .filter((t: Ticket) => t.status !== 'completed');
 
             setTickets(mapped);
         } finally {
@@ -173,7 +173,7 @@ export default function BarPage() {
                     void fetchOrders();
                 }
             )
-            .subscribe(status => {
+            .subscribe((status: string) => {
                 setConnected(status === 'SUBSCRIBED');
             });
 
@@ -306,7 +306,7 @@ export default function BarPage() {
                             >
                                 <TicketCard
                                     {...ticket}
-                                    onStatusChange={status =>
+                                    onStatusChange={(status: 'new' | 'active' | 'completed') =>
                                         handleTicketStatusChange(ticket, status)
                                     }
                                     variant="light"

@@ -51,7 +51,7 @@ export async function GET() {
 
     const { data, error } = await context.supabase
         .from('restaurants')
-        .select('settings')
+        .select('settings, slug')
         .eq('id', context.restaurantId)
         .single();
 
@@ -71,6 +71,7 @@ export async function GET() {
     return apiSuccess({
         ...defaultOnlineOrderingSettings,
         ...onlineOrdering,
+        slug: data.slug,
     });
 }
 

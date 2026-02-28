@@ -138,7 +138,7 @@ test.describe('P1 localization and accessibility regression', () => {
 
         await page.goto('/merchant/guests');
 
-        await expect(page.getByRole('heading', { name: 'Guests' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Guests', exact: true })).toBeVisible();
         await expect(page.getByLabel('Search guests by name')).toBeVisible();
         await expect(page.getByText('English')).toBeVisible();
         await expect(page.getByText(/ETB/).first()).toBeVisible();
@@ -228,7 +228,7 @@ test.describe('P1 localization and accessibility regression', () => {
 
         await page.goto('/merchant/channels');
 
-        await expect(page.getByRole('heading', { name: 'Channels' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Channels', exact: true })).toBeVisible();
         await expect(page.getByLabel('Connect Provider')).toBeVisible();
         await expect(page.getByLabel('Provider display name')).toBeVisible();
         await expect(page.getByLabel('External Orders')).toBeVisible();

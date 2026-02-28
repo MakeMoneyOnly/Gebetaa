@@ -37,7 +37,12 @@ export async function DELETE(
         .eq('restaurant_id', context.restaurantId);
 
     if (deleteError) {
-        return apiError('Failed to delete staff member', 500, 'STAFF_DELETE_FAILED', deleteError.message);
+        return apiError(
+            'Failed to delete staff member',
+            500,
+            'STAFF_DELETE_FAILED',
+            deleteError.message
+        );
     }
 
     await writeAuditLog(context.supabase, {

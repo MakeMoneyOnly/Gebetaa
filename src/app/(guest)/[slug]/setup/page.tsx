@@ -20,7 +20,7 @@ export default function DeviceSetupPage() {
         if (!slug) return;
         // Use the public Supabase REST API to look up the restaurant by its slug
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
         if (supabaseUrl && supabaseKey) {
             fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${slug}&select=name`, {
                 headers: {
@@ -106,7 +106,7 @@ export default function DeviceSetupPage() {
                 setStatus('invalid');
                 toast.error(result.error || 'Invalid pairing code. Please try again.');
             }
-        } catch (error) {
+        } catch {
             setStatus('invalid');
             toast.error('Connection error. Please try again.');
         }

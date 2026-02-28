@@ -14,16 +14,17 @@ export interface EnvValidationResult {
 /**
  * Required environment variables for security
  */
-const REQUIRED_SECURITY_VARS = ['QR_HMAC_SECRET'] as const;
+const REQUIRED_SECURITY_VARS = [
+    'QR_HMAC_SECRET',
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+    'SUPABASE_SECRET_KEY',
+] as const;
 
 /**
  * Optional but recommended environment variables
  */
-const RECOMMENDED_VARS = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
-    'SUPABASE_SERVICE_ROLE_KEY',
-] as const;
+const RECOMMENDED_VARS = [] as const;
 
 /**
  * Validate security-critical environment variables
@@ -59,6 +60,16 @@ export function validateSecurityEnvVars(): EnvValidationResult {
  * Use this in server-side initialization to ensure configuration is complete
  */
 export function requireEnvVars(): void {
+    // During build time, do not throw for missing environment variables
+    // as they may be injected at runtime or handled via fallbacks
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+        const result = validateSecurityEnvVars();
+        if (result.warnings.length > 0) {
+            console.warn('Build-time environment warnings:\n' + result.warnings.join('\n'));
+        }
+        return;
+    }
+
     const result = validateSecurityEnvVars();
 
     if (!result.valid) {

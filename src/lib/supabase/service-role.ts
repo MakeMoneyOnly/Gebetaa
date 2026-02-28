@@ -1,11 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
 export function createServiceRoleClient() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    // Prefer the new Secret Key (sb_secret_...) if available, otherwise fallback to legacy Service Role Key
-    const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    // Use the new Secret Key (sb_secret_...)
+    const supabaseKey = process.env.SUPABASE_SECRET_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
+        // During build time, return a placeholder to prevent crash
+        if (process.env.NEXT_PHASE === 'phase-production-build') {
+            return createClient(
+                supabaseUrl || 'https://placeholder.supabase.co',
+                supabaseKey || 'placeholder-key'
+            );
+        }
+
         console.error('CRITICAL ERROR: Supabase Administrative configuration missing.');
         console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? 'Set' : 'Missing');
         console.error(

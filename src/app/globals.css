@@ -2,8 +2,8 @@
 
 @theme {
     /* Brand Colors - Premium & Vibrant */
-    --color-brand-crimson: #c91d26;
-    --color-brand-crimson-hover: #a0151e;
+    --color-brand-crimson: #a60000;
+    --color-brand-crimson-hover: #800000;
     --color-brand-crimson-light: #ffebec;
 
     --color-brand-mint: #e6f7f1;
@@ -12,7 +12,7 @@
     --color-brand-blue: #0f66de;
     --color-brand-blue-dark: #003366;
 
-    --color-brand-yellow: #ffc107;
+    --color-brand-yellow: #ffc900;
     --color-brand-gold: #d4af37;
 
     /* Base Surfaces mapped to variables */
