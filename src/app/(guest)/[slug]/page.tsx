@@ -46,10 +46,7 @@ function isAllowedRemoteImageUrl(value: string): boolean {
     const parsed = tryParseHttpsUrl(value);
     if (!parsed) return false;
     const hostname = parsed.hostname.toLowerCase();
-    return (
-        ALLOWED_REMOTE_IMAGE_HOSTS.has(hostname) ||
-        hostname.endsWith('.supabase.co')
-    );
+    return ALLOWED_REMOTE_IMAGE_HOSTS.has(hostname) || hostname.endsWith('.supabase.co');
 }
 
 interface RawCategory {
