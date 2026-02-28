@@ -208,46 +208,13 @@ jobs:
                   path: playwright-report/
                   retention-days: 7
 
-    # ============================================
-    # DEPLOY TO STAGING
-    # ============================================
-    deploy-staging:
-        name: Deploy to Staging
-        runs-on: ubuntu-latest
-        needs: [build, test-e2e]
-        if: github.ref == 'refs/heads/develop' && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
-        permissions:
-            contents: read
-        environment:
-            name: staging
-            url: https://staging.gebeta.app
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Deploy to Vercel (Staging)
-              id: deploy-staging
-              uses: amondnet/vercel-action@v25
-              with:
-                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
-                  vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-                  vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-                  scope: ${{ secrets.VERCEL_ORG_ID }}
-
-            - name: Health Check
-              id: health-check
-              run: |
-                  echo "Waiting for deployment to be ready..."
-                  sleep 30
-                  curl -sSf https://staging.gebeta.app/api/health || exit 1
-                  echo "Health check passed!"
-    # ============================================
     # DEPLOY TO PRODUCTION
     # ============================================
     deploy-production:
         name: Deploy to Production
         runs-on: ubuntu-latest
         needs: [build, test-e2e]
-        if: github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
+        if: github.ref == 'refs/heads/main'
         permissions:
             contents: write
         environment:
@@ -258,6 +225,7 @@ jobs:
 
             - name: Deploy to Vercel (Production)
               id: deploy-production
+              if: secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
               uses: amondnet/vercel-action@v25
               with:
                   vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -268,6 +236,7 @@ jobs:
 
             - name: Health Check
               id: health-check
+              if: secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
               run: |
                   echo "Waiting for deployment to be ready..."
                   sleep 30
@@ -275,7 +244,7 @@ jobs:
                   echo "Health check passed!"
 
             - name: Rollback on Health Check Failure
-              if: failure()
+              if: failure() && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
               run: |
                   echo "Health check failed, initiating rollback..."
                   # Vercel automatically keeps previous deployments
