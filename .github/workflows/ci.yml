@@ -225,7 +225,6 @@ jobs:
 
             - name: Deploy to Vercel (Production)
               id: deploy-production
-              if: secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
               uses: amondnet/vercel-action@v25
               with:
                   vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -236,7 +235,6 @@ jobs:
 
             - name: Health Check
               id: health-check
-              if: secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
               run: |
                   echo "Waiting for deployment to be ready..."
                   sleep 30
@@ -244,7 +242,7 @@ jobs:
                   echo "Health check passed!"
 
             - name: Rollback on Health Check Failure
-              if: failure() && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != ''
+              if: failure()
               run: |
                   echo "Health check failed, initiating rollback..."
                   # Vercel automatically keeps previous deployments
