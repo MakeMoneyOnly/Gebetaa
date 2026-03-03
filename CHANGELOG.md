@@ -9,6 +9,158 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-03-01
+
+#### P0-007 Invoice Processing Automation (Inventory)
+
+- Added OCR-assisted supplier invoice parsing API:
+    - `POST /api/inventory/invoices/parse` in `src/app/api/inventory/invoices/parse/route.ts`
+    - Parses OCR text into invoice draft fields and line items, then auto-maps lines to `inventory_items`.
+- Added direct image/PDF invoice ingestion API for Addis operations:
+    - `POST /api/inventory/invoices/ingest` in `src/app/api/inventory/invoices/ingest/route.ts`
+    - Supports provider-specific extraction pipeline with Addis-first fallback order (`oss -> azure -> google -> aws`) and confidence-based review policy metadata.
+- Added invoice OCR parsing utility:
+    - `src/lib/inventory/invoiceOcr.ts`
+- Extended supplier invoice create contract to persist OCR metadata and line-item mapping context:
+    - `src/app/api/inventory/invoices/route.ts`
+- Updated merchant Inventory UI for OCR-assisted invoice intake:
+    - `src/components/merchant/InvoiceReviewQueue.tsx`
+    - `src/app/(dashboard)/merchant/inventory/page.tsx`
+- Added route-level rate limiting and tests for parse endpoint:
+    - `src/lib/api/rateLimitPolicies.ts`
+    - `src/app/api/__tests__/p2-inventory-api-routes.test.ts`
+- Updated Toast parity audit status for invoice processing:
+    - `TOAST_FEATURE_AUDIT.md`
+
+### Added - 2026-02-28
+
+#### P1 KDS Hardening and Operational Readiness (Phase 8.1)
+
+- Implemented dedicated KDS queue API hardening for `KDS-001`:
+    - Upgraded `GET /api/kds/queue` with authenticated restaurant scoping (staff/device context), station filters, SLA filters, and cursor pagination.
+    - Extended response payload with cursor metadata (`next`, `has_more`) and applied filter metadata.
+    - Added queue route test coverage:
+        - `src/app/api/__tests__/kds-api-routes.test.ts`
+    - Added route-level rate limit policy for KDS queue:
+        - `src/lib/api/rateLimitPolicies.ts`
+    - Updated execution task tracking:
+        - `Tasks.md` (`KDS-001` marked complete)
+- Implemented item-level KDS production schema for `KDS-002`:
+    - Added migration `supabase/migrations/20260228_p1_kds_item_state.sql` with:
+        - New tables `kds_order_items` and `kds_item_events`
+        - Backfill from `order_items`, sync trigger, indexes, and RLS policies
+- Implemented item-level KDS actions for `KDS-003`:
+    - Added `POST /api/kds/items/:kdsItemId/action` in `src/app/api/kds/items/[kdsItemId]/action/route.ts`
+    - Supports `start`, `hold`, `ready`, `recall` with transition validation, audit logging, and event writes
+    - Added KDS item action route-level rate limiting in `src/lib/api/rateLimitPolicies.ts`
+- Implemented station-specific KDS board views for `KDS-004`:
+    - Added shared board component `src/features/kds/components/StationBoard.tsx`
+    - Added/updated station routes:
+        - `src/app/(kds)/kds/page.tsx` (role-aware default + station selection)
+        - `src/app/(kds)/bar/page.tsx`
+        - `src/app/(kds)/dessert/page.tsx`
+        - `src/app/(kds)/coffee/page.tsx`
+    - Updated KDS layout role access in `src/app/(kds)/layout.tsx` (includes `bar`)
+- Implemented expeditor consolidation view for `KDS-005`:
+    - Added `src/features/kds/components/ExpeditorBoard.tsx`
+    - Added route `src/app/(kds)/expeditor/page.tsx`
+    - Includes readiness consolidation across stations and final handoff action to served state
+- Hardened Toast-style KDS operational workflow:
+    - Enforced station lifecycle clarity (`Queued -> In Progress -> Ready`) in station boards, with final `Bump (served)` moved to expeditor handoff flow.
+    - Added expeditor-only final handoff endpoint:
+        - `POST /api/kds/orders/:orderId/handoff` in `src/app/api/kds/orders/[orderId]/handoff/route.ts`
+        - Role-gated to override roles (`owner`, `admin`, `manager`) with served-status audit and order event writes.
+    - Restricted recall action to manager/expeditor override paths:
+        - Added recall permission checks in `src/app/api/kds/items/[kdsItemId]/action/route.ts`.
+    - Added configurable ready-ticket auto-archive policy:
+        - `GET|PATCH /api/settings/kds` in `src/app/api/settings/kds/route.ts`.
+        - Queue route now applies `ready_auto_archive_minutes` policy and writes audit/order events for auto-archived tickets.
+    - Updated expeditor UI policy controls and handoff integration:
+        - `src/features/kds/components/ExpeditorBoard.tsx`
+        - Added in-screen auto-archive setting control and handoff permission behavior.
+    - Strengthened KDS route tests for handoff permissions:
+        - `src/app/api/__tests__/kds-handoff.route.test.ts`
+- Extended KDS API tests:
+    - `src/app/api/__tests__/kds-api-routes.test.ts`
+    - Added coverage for KDS item action endpoint auth/validation contracts
+- Implemented high-volume station controls for `KDS-006`:
+    - Added bump-bar hotkeys and selection model on station boards (`1-9`, `S`, `H`, `R`, `Enter`)
+    - Added touch-optimized quick action rail and larger action controls in `src/features/kds/components/StationBoard.tsx`
+    - Added expeditor bump hotkey (`B`) in `src/features/kds/components/ExpeditorBoard.tsx`
+- Implemented KDS alert policy controls with quiet-hours support for `KDS-007`:
+    - Extended `GET|PATCH /api/settings/kds` schema with `alert_policy`
+    - Added expeditor policy controls for new-ticket sound, SLA breach visual, recall visual, and quiet-hours window
+    - Applied policy behavior in station board (new-ticket audio cue, SLA breach banner, recall visual emphasis)
+- Added end-to-end KDS lifecycle coverage for `KDS-008`:
+    - `e2e/kds-operational-flow.spec.ts`
+    - Covers queue ingest -> station prep -> expeditor handoff -> served completion
+- Added KDS reliability telemetry and dashboard panel for `KDS-009`:
+    - Added `GET|POST /api/kds/telemetry` in `src/app/api/kds/telemetry/route.ts`
+    - Added heartbeat telemetry integration from station boards and websocket health tracking
+    - Added merchant KDS reliability panel `src/components/merchant/KdsReliabilityPanel.tsx`
+    - Added telemetry route tests `src/app/api/__tests__/kds-telemetry.route.test.ts`
+
+#### Orders Schema Hardening (Enterprise Contract Fix)
+
+- Added production migration to align `orders` schema with online ordering/payment contract:
+    - `supabase/migrations/20260228_orders_online_columns_backfill.sql`
+    - Adds `order_type`, `delivery_address`, and `chapa_tx_ref`
+    - Adds `orders_order_type_check` constraint and defaults/indexes
+- Applied migration to Supabase project:
+    - `orders_online_columns_backfill` (version `20260228131918`)
+- Removed temporary runtime fallback behavior and restored strict schema-contract writes:
+    - `src/lib/services/orderService.ts`
+    - `src/app/api/payments/chapa/initialize/route.ts`
+- Updated local typed DB models for `orders` schema parity:
+    - `src/types/database.ts`
+
+#### Waiter POS Order Submit Reliability
+
+- Fixed waiter POS device order submission contract mismatch causing `Failed to create order`:
+    - Updated `POST /api/device/orders` to use canonical `orders` columns (`total_price`, `order_number`, `items`, `order_type`) instead of legacy fields.
+    - Updated `order_items` insert mapping to canonical columns (`item_id`, `price`).
+    - Added compensating delete if order-item insert fails.
+    - Ensured table-session continuity by opening a `table_sessions` record when missing on first table order.
+    - Added order event write for device-originated order creation (`source: waiter_pos_device`).
+    - File: `src/app/api/device/orders/route.ts`
+- Implemented Toast-style waiter settlement and close-table flow:
+    - Added `POST /api/device/tables/close` with device auth:
+        - Verifies table and open table session
+        - Blocks close when orders are unpaid/in-progress (`payment_pending`, `pending`, `acknowledged`, `preparing`)
+        - Verifies Chapa transaction reference in live mode
+        - Records settlement in `payments` (`method/provider: chapa`)
+        - Finalizes ready/served orders to `completed` with `order_events`
+        - Closes table session, clears `active_order_id`, sets table to `available`
+        - Writes audit log `waiter_table_closed`
+    - Added waiter UI settlement controls in table orders tab:
+        - Chapa `tx_ref` input
+        - `Settle & Close` action wired to `/api/device/tables/close`
+    - Added API tests:
+        - `src/app/api/__tests__/device-close-table.route.test.ts`
+- Hardened waiter display connectivity and billing workflow:
+    - Fixed waiter POS "Connecting..." stall for paired device mode by using device-safe polling and marking the station live after successful device-path bootstrapping.
+    - Added dedicated `bill_requested` waiter table state in UI flow:
+        - `Request Bill` action is shown before settlement.
+        - Settlement panel and `Settle & Close` action are only shown when table is billing-ready.
+    - Reduced settlement friction by making Chapa `tx_ref` optional at close-time:
+        - If omitted, close only proceeds when active orders are already marked paid via Chapa.
+    - Added `POST /api/device/tables/bill-request` route-level rate limit policy.
+    - Guest `bill` service requests now also promote table status to `bill_requested` for waiter/table-state consistency.
+- Added close-table session recovery hardening for legacy/inconsistent table state:
+    - Added `POST /api/device/tables/ensure-open-session` to deterministically create/recover an open `table_sessions` row for a table.
+    - Waiter POS `Settle & Close` now retries automatically once through ensure-session flow when it receives `TABLE_SESSION_NOT_OPEN`.
+    - Added route-level rate limit policy and contract tests:
+        - `src/app/api/__tests__/device-ensure-open-session.route.test.ts`
+- Added permanent orders settlement schema contract (enterprise fix):
+    - Added migration `supabase/migrations/20260228182000_orders_payment_settlement_columns.sql`
+        - Adds `orders.paid_at` (`TIMESTAMPTZ`)
+        - Adds `orders.chapa_verified` (`BOOLEAN NOT NULL DEFAULT FALSE`)
+        - Backfills null verification flags and adds settlement index
+    - Restored strict close-table schema contract:
+        - `POST /api/device/tables/close` now relies on canonical `orders` payment columns directly (no compatibility fallback query path)
+    - Updated local DB types for orders settlement fields:
+        - `src/types/database.ts`
+
 ### Added - 2026-02-21
 
 #### P2 Addis Localization and Payment Rail Adapters (Phase 6.4)
