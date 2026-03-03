@@ -581,6 +581,7 @@ export type Database = {
                 Row: {
                     allergens: string[] | null;
                     category_id: string;
+                    connected_stations: string[];
                     created_at: string | null;
                     description: string | null;
                     description_am: string | null;
@@ -616,6 +617,7 @@ export type Database = {
                 Insert: {
                     allergens?: string[] | null;
                     category_id: string;
+                    connected_stations?: string[];
                     created_at?: string | null;
                     description?: string | null;
                     description_am?: string | null;
@@ -651,6 +653,7 @@ export type Database = {
                 Update: {
                     allergens?: string[] | null;
                     category_id?: string;
+                    connected_stations?: string[];
                     created_at?: string | null;
                     description?: string | null;
                     description_am?: string | null;
@@ -811,10 +814,13 @@ export type Database = {
                 Row: {
                     acknowledged_at: string | null;
                     bar_status: string | null;
+                    chapa_verified: boolean;
+                    chapa_tx_ref: string | null;
                     completed_at: string | null;
                     created_at: string | null;
                     customer_name: string | null;
                     customer_phone: string | null;
+                    delivery_address: string | null;
                     guest_fingerprint: string | null;
                     id: string;
                     idempotency_key: string | null;
@@ -823,6 +829,8 @@ export type Database = {
                     metadata: Json | null;
                     notes: string | null;
                     order_number: string;
+                    order_type: string | null;
+                    paid_at: string | null;
                     restaurant_id: string;
                     status: string | null;
                     table_number: string;
@@ -832,10 +840,13 @@ export type Database = {
                 Insert: {
                     acknowledged_at?: string | null;
                     bar_status?: string | null;
+                    chapa_verified?: boolean;
+                    chapa_tx_ref?: string | null;
                     completed_at?: string | null;
                     created_at?: string | null;
                     customer_name?: string | null;
                     customer_phone?: string | null;
+                    delivery_address?: string | null;
                     guest_fingerprint?: string | null;
                     id?: string;
                     idempotency_key?: string | null;
@@ -844,6 +855,8 @@ export type Database = {
                     metadata?: Json | null;
                     notes?: string | null;
                     order_number: string;
+                    order_type?: string | null;
+                    paid_at?: string | null;
                     restaurant_id: string;
                     status?: string | null;
                     table_number: string;
@@ -853,10 +866,13 @@ export type Database = {
                 Update: {
                     acknowledged_at?: string | null;
                     bar_status?: string | null;
+                    chapa_verified?: boolean;
+                    chapa_tx_ref?: string | null;
                     completed_at?: string | null;
                     created_at?: string | null;
                     customer_name?: string | null;
                     customer_phone?: string | null;
+                    delivery_address?: string | null;
                     guest_fingerprint?: string | null;
                     id?: string;
                     idempotency_key?: string | null;
@@ -865,6 +881,8 @@ export type Database = {
                     metadata?: Json | null;
                     notes?: string | null;
                     order_number?: string;
+                    order_type?: string | null;
+                    paid_at?: string | null;
                     restaurant_id?: string;
                     status?: string | null;
                     table_number?: string;

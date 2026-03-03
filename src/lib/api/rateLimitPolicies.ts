@@ -14,6 +14,14 @@ export const API_RATE_LIMIT_POLICIES: Record<string, RouteRateLimitPolicy> = {
     '/api/channels/delivery/connect': { windowMs: 60_000, maxRequests: 30 },
     '/api/channels/delivery/orders': { windowMs: 60_000, maxRequests: 80 },
     '/api/channels/delivery/orders/': { windowMs: 60_000, maxRequests: 60 }, // nested ack endpoint
+    '/api/kds/queue': { windowMs: 60_000, maxRequests: 180 },
+    '/api/kds/telemetry': { windowMs: 60_000, maxRequests: 180 },
+    '/api/kds/items/': { windowMs: 60_000, maxRequests: 220 }, // nested KDS item action endpoints
+    '/api/kds/orders/': { windowMs: 60_000, maxRequests: 180 }, // nested KDS order handoff endpoints
+    '/api/settings/kds': { windowMs: 60_000, maxRequests: 60 },
+    '/api/device/tables/ensure-open-session': { windowMs: 60_000, maxRequests: 100 },
+    '/api/device/tables/bill-request': { windowMs: 60_000, maxRequests: 80 },
+    '/api/device/tables/close': { windowMs: 60_000, maxRequests: 60 },
     '/api/staff/schedule': { windowMs: 60_000, maxRequests: 80 },
     '/api/staff/time-entries/clock': { windowMs: 60_000, maxRequests: 80 },
     '/api/alerts/rules': { windowMs: 60_000, maxRequests: 60 },
@@ -30,6 +38,8 @@ export const API_RATE_LIMIT_POLICIES: Record<string, RouteRateLimitPolicy> = {
     '/api/inventory/variance': { windowMs: 60_000, maxRequests: 80 },
     '/api/inventory/purchase-orders': { windowMs: 60_000, maxRequests: 60 },
     '/api/inventory/invoices': { windowMs: 60_000, maxRequests: 60 },
+    '/api/inventory/invoices/ingest': { windowMs: 60_000, maxRequests: 20 },
+    '/api/inventory/invoices/parse': { windowMs: 60_000, maxRequests: 40 },
     '/api/inventory/recipes': { windowMs: 60_000, maxRequests: 60 },
     '/api/finance/payments': { windowMs: 60_000, maxRequests: 80 },
     '/api/finance/refunds': { windowMs: 60_000, maxRequests: 60 },

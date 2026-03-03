@@ -15,6 +15,7 @@ export const OrderItemSchema = z.object({
     price: z.number().nonnegative('Price must be zero or positive'),
     notes: z.string().max(500, 'Notes too long').optional(),
     station: z.enum(['kitchen', 'bar', 'dessert', 'coffee']).optional(),
+    course: z.enum(['appetizer', 'main', 'dessert', 'beverage', 'side']).optional(),
 });
 
 /**
