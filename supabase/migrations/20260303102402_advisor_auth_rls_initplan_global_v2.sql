@@ -1,0 +1,2 @@
+﻿-- Persisted remote migration marker.
+-- auth_rls_initplan optimization work was applied remotely; this marker preserves migration lineage locally.

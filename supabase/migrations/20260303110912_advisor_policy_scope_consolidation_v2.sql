@@ -1,0 +1,2 @@
+﻿-- Persisted remote migration marker.
+-- Policy scope consolidation applied remotely; preserved locally for migration parity.
