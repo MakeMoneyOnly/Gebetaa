@@ -120,6 +120,25 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (parsed.data.request_type === 'bill') {
+            const { error: tableStateError } = await adminSupabase
+                .from('tables')
+                .update({
+                    status: 'bill_requested',
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('restaurant_id', guestContext.data.restaurantId)
+                .eq('table_number', guestContext.data.tableNumber)
+                .neq('status', 'available');
+
+            if (tableStateError) {
+                console.warn(
+                    '[POST /api/service-requests] failed to promote table to bill_requested:',
+                    tableStateError.message
+                );
+            }
+        }
+
         const { error: auditError } = await adminSupabase.from('audit_logs').insert({
             restaurant_id: guestContext.data.restaurantId,
             action: 'service_request_created_guest',

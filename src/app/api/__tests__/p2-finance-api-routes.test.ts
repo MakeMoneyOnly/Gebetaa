@@ -61,6 +61,47 @@ describe('P2 finance API routes', () => {
         expect(response.status).toBe(400);
     });
 
+    it('POST /api/finance/payments returns 409 when split does not belong to provided order', async () => {
+        const splitChain: any = {
+            select: vi.fn(() => splitChain),
+            eq: vi.fn(() => splitChain),
+            maybeSingle: vi.fn().mockResolvedValue({
+                data: {
+                    id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+                    order_id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+                    status: 'open',
+                },
+                error: null,
+            }),
+        };
+
+        const supabase = {
+            from: vi.fn((table: string) => {
+                if (table === 'order_check_splits') return splitChain;
+                return {};
+            }),
+        } as any;
+
+        setAuthAndContextOk(supabase);
+
+        const response = await postPayments(
+            new Request('http://localhost/api/finance/payments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    order_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                    split_id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+                    method: 'cash',
+                    amount: 25,
+                }),
+            })
+        );
+
+        const body = await response.json();
+        expect(response.status).toBe(409);
+        expect(body.code).toBe('PAYMENT_SPLIT_ORDER_MISMATCH');
+    });
+
     it('GET /api/finance/refunds returns 401 when unauthorized', async () => {
         setAuthUnauthorized();
 
