@@ -14,6 +14,7 @@ import {
     ChevronLeft,
     Search,
     ShoppingBag,
+    X,
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
@@ -24,7 +25,7 @@ import { format } from 'date-fns';
 interface PosTable {
     id: string;
     table_number: string;
-    status: 'available' | 'occupied' | 'reserved' | 'cleaning';
+    status: 'available' | 'occupied' | 'reserved' | 'cleaning' | 'bill_requested';
     active_order_id?: string | null;
     capacity: number;
     zone?: string | null;
@@ -44,6 +45,43 @@ interface ServiceRequest {
     status: 'pending' | 'acknowledged' | 'completed';
     notes?: string | null;
     created_at: string;
+}
+
+type DiningOption = 'dine_in' | 'pickup' | 'delivery' | 'online';
+type SplitMethod = 'even' | 'items' | 'custom';
+type SplitPaymentMethod = 'cash' | 'card' | 'telebirr' | 'chapa' | 'other';
+
+interface SettlementSplit {
+    id: string;
+    split_index: number;
+    split_label?: string | null;
+    computed_amount: number;
+    requested_amount?: number | null;
+    status: string;
+}
+
+interface SettlementPayment {
+    id: string;
+    split_id?: string | null;
+    amount: number;
+    tip_amount: number;
+    method: string;
+    status: string;
+}
+
+interface SettlementSplitPayload {
+    order: { id: string; total_price: number; status: string };
+    method?: SplitMethod;
+    order_items?: Array<{
+        id: string;
+        name: string;
+        quantity: number | null;
+        price: number;
+        notes?: string | null;
+    }>;
+    splits: SettlementSplit[];
+    split_items: Array<Record<string, unknown>>;
+    split_payments: SettlementPayment[];
 }
 
 function WaiterPosContent() {
@@ -96,7 +134,26 @@ function WaiterPosContent() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isClosingTable, setIsClosingTable] = useState(false);
+    const [isRequestingBill, setIsRequestingBill] = useState(false);
+    const [chapaTxRef, setChapaTxRef] = useState('');
+    const [selectedSettlementOrderId, setSelectedSettlementOrderId] = useState<string | null>(null);
+    const [splitMethod, setSplitMethod] = useState<SplitMethod>('even');
+    const [splitGuestCount, setSplitGuestCount] = useState(2);
+    const [splitCustomAmounts, setSplitCustomAmounts] = useState<string[]>(['', '']);
+    const [splitPaymentMethod, setSplitPaymentMethod] = useState<SplitPaymentMethod>('cash');
+    const [splitPayload, setSplitPayload] = useState<SettlementSplitPayload | null>(null);
+    const [splitPaymentAmounts, setSplitPaymentAmounts] = useState<Record<string, string>>({});
+    const [splitItemAssignments, setSplitItemAssignments] = useState<Record<string, number>>({});
+    const [isSavingSplitConfig, setIsSavingSplitConfig] = useState(false);
+    const [isLoadingSplitConfig, setIsLoadingSplitConfig] = useState(false);
+    const [capturingSplitId, setCapturingSplitId] = useState<string | null>(null);
     const [connected, setConnected] = useState(false);
+    const [diningOption, setDiningOption] = useState<DiningOption>('dine_in');
+    const [guestName, setGuestName] = useState('');
+    const [guestPhone, setGuestPhone] = useState('');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [dismissedReadyOrderIds, setDismissedReadyOrderIds] = useState<string[]>([]);
 
     const supabase = useMemo(() => getSupabaseClient(), []);
 
@@ -254,8 +311,9 @@ function WaiterPosContent() {
     // Initial Load & Realtime
     // For device-mode: restaurantId comes from localStorage immediately (no auth session).
     // We wait for roleLoading only when we have no device context (merchant preview mode).
-    const isDeviceMode = !!deviceRestaurantId;
-    const readyToLoad = restaurantId && (isDeviceMode || !roleLoading);
+    const isDeviceMode = Boolean(deviceRestaurantId || deviceToken);
+    const readyToLoad =
+        !!restaurantId && (isDeviceMode ? Boolean(deviceToken) : !roleLoading);
 
     useEffect(() => {
         if (!readyToLoad) return;
@@ -266,7 +324,23 @@ function WaiterPosContent() {
             fetchMenu(),
             fetchActiveOrders(),
             fetchServiceRequests(),
-        ]).finally(() => setLoading(false));
+        ]).finally(() => {
+            setLoading(false);
+            if (isDeviceMode) setConnected(true);
+        });
+
+        if (isDeviceMode) {
+            const pollingHandle = window.setInterval(() => {
+                void fetchTables();
+                void fetchActiveOrders();
+                void fetchServiceRequests();
+                setConnected(true);
+            }, 10_000);
+
+            return () => {
+                window.clearInterval(pollingHandle);
+            };
+        }
 
         const channelName = `pos-tables-${restaurantId}-${Math.random().toString(36).substring(7)}`;
         const channel = supabase
@@ -306,6 +380,36 @@ function WaiterPosContent() {
                     void fetchServiceRequests();
                 }
             )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `restaurant_id=eq.${restaurantId}`,
+                },
+                payload => {
+                    const oldOrder = payload.old as Order;
+                    const newOrder = payload.new as Order;
+                    if (newOrder.status === 'ready' && oldOrder.status !== 'ready') {
+                        toast.success(
+                            `Table ${newOrder.table_number || '?'}: Order is READY! 🍳`,
+                            {
+                                duration: 8000,
+                                position: 'top-right',
+                                style: {
+                                    background: '#10B981',
+                                    color: '#fff',
+                                    fontWeight: 'bold',
+                                    fontSize: '16px',
+                                },
+                            }
+                        );
+                        // Trigger haptic if supported
+                        if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+                    }
+                }
+            )
             .subscribe((status, err) => {
                 console.log('Waiter Realtime status:', status, err);
                 setConnected(status === 'SUBSCRIBED');
@@ -317,6 +421,7 @@ function WaiterPosContent() {
         };
     }, [
         readyToLoad,
+        isDeviceMode,
         restaurantId,
         supabase,
         fetchTables,
@@ -335,12 +440,37 @@ function WaiterPosContent() {
         router.push('/auth/login');
     };
 
+    useEffect(() => {
+        if (!selectedTable) return;
+        const latest = tables.find(table => table.id === selectedTable.id);
+        if (!latest) return;
+
+        if (
+            latest.status !== selectedTable.status ||
+            latest.active_order_id !== selectedTable.active_order_id
+        ) {
+            setSelectedTable(prev =>
+                prev
+                    ? {
+                          ...prev,
+                          status: latest.status,
+                          active_order_id: latest.active_order_id,
+                      }
+                    : prev
+            );
+        }
+    }, [tables, selectedTable]);
+
     // Navigation Logic
     const handleTableClick = (table: PosTable) => {
         setSelectedTable(table);
         setViewMode('order');
-        setOrderSubTab(table.status === 'occupied' ? 'orders' : 'new'); // Open orders tab for occupied tables
+        setOrderSubTab(table.status === 'available' ? 'new' : 'orders');
         setCart([]); // Reset cart when entering new table
+        setDiningOption('dine_in');
+        setGuestName('');
+        setGuestPhone('');
+        setDeliveryAddress('');
         void fetchTableOrders(table.table_number); // Fetch existing orders for this table
     };
 
@@ -352,6 +482,10 @@ function WaiterPosContent() {
         setViewMode('list');
         setCart([]);
         setTableOrders([]);
+        setDiningOption('dine_in');
+        setGuestName('');
+        setGuestPhone('');
+        setDeliveryAddress('');
     };
 
     // Cart Logic
@@ -370,15 +504,277 @@ function WaiterPosContent() {
     // Running total from all active orders on table + current cart
     const tableRunningTotal = tableOrders.reduce((sum, o) => sum + (o.total_price ?? 0), 0);
     const grandTotal = tableRunningTotal + cartTotal;
+    const readyOrders = useMemo(
+        () => activeOrders.filter(order => order.status === 'ready'),
+        [activeOrders]
+    );
+    const stickyReadyOrders = useMemo(
+        () => readyOrders.filter(order => !dismissedReadyOrderIds.includes(order.id)),
+        [dismissedReadyOrderIds, readyOrders]
+    );
+
+    useEffect(() => {
+        const readyOrderIds = new Set(readyOrders.map(order => order.id));
+        setDismissedReadyOrderIds(prev => prev.filter(id => readyOrderIds.has(id)));
+    }, [readyOrders]);
+
+    useEffect(() => {
+        if (tableOrders.length === 0) {
+            setSelectedSettlementOrderId(null);
+            setSplitPayload(null);
+            return;
+        }
+
+        setSelectedSettlementOrderId(prev => {
+            if (prev && tableOrders.some(order => order.id === prev)) return prev;
+            return tableOrders[0].id;
+        });
+    }, [tableOrders]);
+
+    useEffect(() => {
+        setSplitCustomAmounts(prev => {
+            const next = [...prev];
+            while (next.length < splitGuestCount) next.push('');
+            return next.slice(0, splitGuestCount);
+        });
+    }, [splitGuestCount]);
+
+    const splitOrderItems = useMemo(
+        () =>
+            (splitPayload?.order_items ?? []).map(item => ({
+                id: String(item.id),
+                name: String(item.name ?? 'Item'),
+                quantity: Number(item.quantity ?? 1),
+                price: Number(item.price ?? 0),
+                notes: item.notes ?? null,
+            })),
+        [splitPayload?.order_items]
+    );
+
+    useEffect(() => {
+        setSplitItemAssignments(prev => {
+            const next: Record<string, number> = {};
+            for (const [orderItemId, guestIndex] of Object.entries(prev)) {
+                if (splitOrderItems.some(item => item.id === orderItemId) && guestIndex < splitGuestCount) {
+                    next[orderItemId] = Math.max(0, guestIndex);
+                }
+            }
+            return next;
+        });
+    }, [splitGuestCount, splitOrderItems]);
+
+    const fetchSplitPayload = useCallback(
+        async (orderId: string) => {
+            setIsLoadingSplitConfig(true);
+            try {
+                const response = await fetch(`/api/orders/${orderId}/split`, {
+                    method: 'GET',
+                    headers: deviceHeaders(),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload?.error ?? 'Failed to load split configuration');
+                }
+                const data = (payload?.data ?? null) as SettlementSplitPayload | null;
+                setSplitPayload(data);
+
+                if (data?.splits && data.splits.length >= 2) {
+                    setSplitGuestCount(Math.max(2, Math.min(12, data.splits.length)));
+                }
+                if (data?.method) {
+                    setSplitMethod(data.method);
+                }
+
+                const splitIdToGuestIndex = new Map<string, number>();
+                for (const split of data?.splits ?? []) {
+                    splitIdToGuestIndex.set(split.id, Number(split.split_index ?? 0));
+                }
+                const assignments: Record<string, number> = {};
+                for (const splitItem of data?.split_items ?? []) {
+                    const splitId = String(splitItem.split_id ?? '');
+                    const orderItemId = String(splitItem.order_item_id ?? '');
+                    if (!splitId || !orderItemId) continue;
+                    const guestIndex = splitIdToGuestIndex.get(splitId);
+                    if (typeof guestIndex === 'number' && Number.isFinite(guestIndex)) {
+                        assignments[orderItemId] = guestIndex;
+                    }
+                }
+                setSplitItemAssignments(assignments);
+            } catch (err: any) {
+                console.error('Split config load error:', err);
+                toast.error(err.message || 'Failed to load split configuration');
+            } finally {
+                setIsLoadingSplitConfig(false);
+            }
+        },
+        [deviceHeaders]
+    );
+
+    useEffect(() => {
+        if (!selectedSettlementOrderId) return;
+        if (selectedTable?.status !== 'bill_requested') return;
+        void fetchSplitPayload(selectedSettlementOrderId);
+    }, [selectedSettlementOrderId, selectedTable?.status, fetchSplitPayload]);
+
+    const splitPaidById = useMemo(() => {
+        const map = new Map<string, number>();
+        const payments = splitPayload?.split_payments ?? [];
+        for (const payment of payments) {
+            if (!payment?.split_id) continue;
+            if (!['captured', 'authorized', 'pending'].includes(payment.status)) continue;
+            const current = map.get(payment.split_id) ?? 0;
+            map.set(payment.split_id, current + Number(payment.amount ?? 0));
+        }
+        return map;
+    }, [splitPayload]);
+
+    const splitItemUnassignedCount = useMemo(
+        () =>
+            splitOrderItems.filter(item => {
+                const guestIndex = splitItemAssignments[item.id];
+                return typeof guestIndex !== 'number' || guestIndex < 0 || guestIndex >= splitGuestCount;
+            }).length,
+        [splitGuestCount, splitItemAssignments, splitOrderItems]
+    );
+
+    const splitItemTotalsByGuest = useMemo(
+        () =>
+            Array.from({ length: splitGuestCount }, (_, guestIndex) =>
+                splitOrderItems
+                    .filter(item => splitItemAssignments[item.id] === guestIndex)
+                    .reduce((sum, item) => sum + item.price * item.quantity, 0)
+            ),
+        [splitGuestCount, splitItemAssignments, splitOrderItems]
+    );
+
+    const handleSaveSplitConfig = async () => {
+        if (!selectedSettlementOrderId) {
+            toast.error('Select an order first');
+            return;
+        }
+
+        let splits: Array<{ guest_name: string; amount?: number; item_ids?: string[] }> = [];
+        if (splitMethod === 'even') {
+            splits = Array.from({ length: splitGuestCount }, (_, idx) => ({
+                guest_name: `Guest ${idx + 1}`,
+            }));
+        } else if (splitMethod === 'custom') {
+            splits = splitCustomAmounts.map((amount, idx) => ({
+                guest_name: `Guest ${idx + 1}`,
+                amount: Number(amount),
+            }));
+        } else {
+            if (splitOrderItems.length === 0) {
+                toast.error('No order items available for item split');
+                return;
+            }
+
+            const missingCount = splitOrderItems.filter(item => {
+                const guestIndex = splitItemAssignments[item.id];
+                return typeof guestIndex !== 'number' || guestIndex < 0 || guestIndex >= splitGuestCount;
+            }).length;
+            if (missingCount > 0) {
+                toast.error('Assign every item to a guest');
+                return;
+            }
+
+            splits = Array.from({ length: splitGuestCount }, (_, idx) => ({
+                guest_name: `Guest ${idx + 1}`,
+                item_ids: splitOrderItems
+                    .filter(item => splitItemAssignments[item.id] === idx)
+                    .map(item => item.id),
+            }));
+        }
+
+        if (
+            splitMethod === 'custom' &&
+            splits.some(entry => typeof entry.amount !== 'number' || !Number.isFinite(entry.amount))
+        ) {
+            toast.error('Enter valid custom amounts for all guests');
+            return;
+        }
+
+        setIsSavingSplitConfig(true);
+        try {
+            const response = await fetch(`/api/orders/${selectedSettlementOrderId}/split`, {
+                method: 'POST',
+                headers: deviceHeaders(),
+                body: JSON.stringify({
+                    method: splitMethod,
+                    splits,
+                }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to save split configuration');
+            }
+            toast.success('Split configuration saved');
+            await fetchSplitPayload(selectedSettlementOrderId);
+        } catch (err: any) {
+            console.error('Split config save error:', err);
+            toast.error(err.message || 'Failed to save split configuration');
+        } finally {
+            setIsSavingSplitConfig(false);
+        }
+    };
+
+    const captureSplitPayment = async (splitId: string, remainingAmount: number) => {
+        if (!selectedSettlementOrderId) return;
+        if (remainingAmount <= 0) {
+            toast('This split is already fully paid');
+            return;
+        }
+
+        const requested = Number(splitPaymentAmounts[splitId] ?? remainingAmount);
+        if (!Number.isFinite(requested) || requested <= 0) {
+            toast.error('Enter a valid payment amount');
+            return;
+        }
+
+        setCapturingSplitId(splitId);
+        try {
+            const response = await fetch('/api/finance/payments', {
+                method: 'POST',
+                headers: deviceHeaders(),
+                body: JSON.stringify({
+                    order_id: selectedSettlementOrderId,
+                    split_id: splitId,
+                    method: splitPaymentMethod,
+                    provider: splitPaymentMethod === 'chapa' ? 'chapa' : 'internal',
+                    amount: Number(requested.toFixed(2)),
+                    status: 'captured',
+                }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to capture split payment');
+            }
+            toast.success('Split payment captured');
+            await fetchSplitPayload(selectedSettlementOrderId);
+        } catch (err: any) {
+            console.error('Split payment capture error:', err);
+            toast.error(err.message || 'Failed to capture split payment');
+        } finally {
+            setCapturingSplitId(null);
+        }
+    };
 
     // Submit Order
     const handleSubmitOrder = async () => {
         if (!selectedTable || cart.length === 0 || !restaurantId) return;
+        if (diningOption === 'delivery' && deliveryAddress.trim().length === 0) {
+            toast.error('Delivery address is required for delivery orders');
+            return;
+        }
 
         setIsSubmitting(true);
         try {
             const payload = {
                 table_number: selectedTable.table_number,
+                order_type: diningOption,
+                customer_name: guestName.trim() || null,
+                customer_phone: guestPhone.trim() || null,
+                delivery_address: diningOption === 'delivery' ? deliveryAddress.trim() : null,
                 staff_name: staffContext?.name || 'Waiter',
                 notes: null,
                 items: cart.map(item => ({
@@ -403,6 +799,10 @@ function WaiterPosContent() {
 
             toast.success('Order sent to kitchen!', { duration: 3000 });
             setCart([]);
+            setGuestName('');
+            setGuestPhone('');
+            setDeliveryAddress('');
+            setDiningOption('dine_in');
             setOrderSubTab('orders'); // Switch to orders view after sending
             void fetchTableOrders(selectedTable.table_number); // Refresh table orders
             void fetchTables(); // Refresh status
@@ -428,6 +828,133 @@ function WaiterPosContent() {
         } catch (err) {
             console.error('Failed to resolve request:', err);
             toast.error('Failed to update request');
+        }
+    };
+
+    const handleSettleAndCloseTable = async () => {
+        if (!selectedTable || !deviceToken) {
+            toast.error('Device authentication is required');
+            return;
+        }
+        if (tableOrders.length === 0) {
+            toast.error('No active orders to settle');
+            return;
+        }
+        if (selectedTable.status !== 'bill_requested') {
+            toast.error('Request bill before settlement');
+            return;
+        }
+
+        setIsClosingTable(true);
+        try {
+            const closePayload = {
+                table_id: selectedTable.id,
+                table_number: selectedTable.table_number,
+                payment: {
+                    provider: 'chapa' as const,
+                    tx_ref: chapaTxRef.trim() || undefined,
+                    amount: Number(tableRunningTotal.toFixed(2)),
+                },
+                notes: `Closed by waiter POS (${staffContext?.name ?? 'Waiter'})`,
+            };
+
+            let response = await fetch('/api/device/tables/close', {
+                method: 'POST',
+                headers: deviceHeaders(),
+                body: JSON.stringify(closePayload),
+            });
+            let payload = await response.json();
+
+            if (!response.ok && payload?.code === 'TABLE_SESSION_NOT_OPEN') {
+                const ensureResponse = await fetch('/api/device/tables/ensure-open-session', {
+                    method: 'POST',
+                    headers: deviceHeaders(),
+                    body: JSON.stringify({
+                        table_id: selectedTable.id,
+                        table_number: selectedTable.table_number,
+                        notes: `Ensured by waiter close retry (${staffContext?.name ?? 'Waiter'})`,
+                    }),
+                });
+                const ensurePayload = await ensureResponse.json();
+                if (!ensureResponse.ok) {
+                    throw new Error(
+                        ensurePayload?.error ??
+                            'Failed to recover open table session for settlement'
+                    );
+                }
+
+                response = await fetch('/api/device/tables/close', {
+                    method: 'POST',
+                    headers: deviceHeaders(),
+                    body: JSON.stringify(closePayload),
+                });
+                payload = await response.json();
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    payload?.error ??
+                        payload?.details?.message ??
+                        'Failed to settle and close table'
+                );
+            }
+
+            toast.success('Table settled and closed');
+            setChapaTxRef('');
+            setCart([]);
+            setTableOrders([]);
+            setSelectedTable(null);
+            setViewMode('list');
+            setOrderSubTab('new');
+            await Promise.all([fetchTables(), fetchActiveOrders(), fetchServiceRequests()]);
+        } catch (err: any) {
+            console.error('Close table error:', err);
+            toast.error(err.message || 'Failed to close table');
+        } finally {
+            setIsClosingTable(false);
+        }
+    };
+
+    const handleRequestBill = async () => {
+        if (!selectedTable || !deviceToken) {
+            toast.error('Device authentication is required');
+            return;
+        }
+        if (selectedTable.status === 'bill_requested') {
+            return;
+        }
+
+        setIsRequestingBill(true);
+        try {
+            const response = await fetch('/api/device/tables/bill-request', {
+                method: 'POST',
+                headers: deviceHeaders(),
+                body: JSON.stringify({
+                    table_id: selectedTable.id,
+                    table_number: selectedTable.table_number,
+                    notes: `Bill requested by waiter ${staffContext?.name ?? 'Waiter'}`,
+                }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error ?? 'Failed to request bill');
+            }
+
+            toast.success('Bill requested. Settlement is now enabled.');
+            await Promise.all([fetchTables(), fetchServiceRequests()]);
+            setSelectedTable(prev =>
+                prev
+                    ? {
+                          ...prev,
+                          status: 'bill_requested',
+                      }
+                    : prev
+            );
+        } catch (err: any) {
+            console.error('Request bill error:', err);
+            toast.error(err.message || 'Failed to request bill');
+        } finally {
+            setIsRequestingBill(false);
         }
     };
 
@@ -492,9 +1019,19 @@ function WaiterPosContent() {
                         </div>
                         <div className="flex items-center gap-2">
                             <span
-                                className={`rounded-lg px-2.5 py-1 text-xs font-bold ${selectedTable.status === 'occupied' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}
+                                className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                                    selectedTable.status === 'bill_requested'
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : selectedTable.status === 'occupied'
+                                          ? 'bg-rose-100 text-rose-700'
+                                          : 'bg-emerald-100 text-emerald-700'
+                                }`}
                             >
-                                {selectedTable.status === 'occupied' ? 'Occupied' : 'Available'}
+                                {selectedTable.status === 'bill_requested'
+                                    ? 'Bill Requested'
+                                    : selectedTable.status === 'occupied'
+                                      ? 'Occupied'
+                                      : 'Available'}
                             </span>
                         </div>
                     </div>
@@ -545,6 +1082,63 @@ function WaiterPosContent() {
                 {/* NEW ORDER TAB */}
                 {orderSubTab === 'new' && (
                     <>
+                        <div className="px-6 pb-4">
+                            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                                <p className="mb-2 text-xs font-bold tracking-widest text-gray-400 uppercase">
+                                    Dining Option
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {(
+                                        [
+                                            { value: 'dine_in', label: 'Dine In' },
+                                            { value: 'pickup', label: 'Pickup' },
+                                            { value: 'delivery', label: 'Delivery' },
+                                            { value: 'online', label: 'Online' },
+                                        ] as const
+                                    ).map(option => (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => setDiningOption(option.value)}
+                                            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                                                diningOption === option.value
+                                                    ? 'bg-black text-white'
+                                                    : 'border border-gray-200 bg-white text-gray-600'
+                                            }`}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                {diningOption !== 'dine_in' && (
+                                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                                        <input
+                                            type="text"
+                                            value={guestName}
+                                            onChange={e => setGuestName(e.target.value)}
+                                            placeholder="Guest name (optional)"
+                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={guestPhone}
+                                            onChange={e => setGuestPhone(e.target.value)}
+                                            placeholder="Guest phone (optional)"
+                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none"
+                                        />
+                                        {diningOption === 'delivery' && (
+                                            <input
+                                                type="text"
+                                                value={deliveryAddress}
+                                                onChange={e => setDeliveryAddress(e.target.value)}
+                                                placeholder="Delivery address (required)"
+                                                className="md:col-span-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none"
+                                            />
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         {/* Category Tabs */}
                         <div className="no-scrollbar flex gap-2 overflow-x-auto px-6 pb-4">
                             <button
@@ -704,6 +1298,352 @@ function WaiterPosContent() {
                                     </div>
                                 </div>
 
+                                {selectedTable.status !== 'bill_requested' ? (
+                                    <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 shadow-sm">
+                                        <p className="mb-1 text-xs font-bold tracking-widest text-amber-700 uppercase">
+                                            Billing
+                                        </p>
+                                        <p className="mb-3 text-sm text-amber-800">
+                                            Request bill before settlement and close-table actions.
+                                        </p>
+                                        <Button
+                                            onClick={handleRequestBill}
+                                            disabled={isRequestingBill || tableRunningTotal <= 0}
+                                            className="rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            {isRequestingBill ? 'Requesting...' : 'Request Bill'}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                                        <p className="mb-2 text-xs font-bold tracking-widest text-gray-400 uppercase">
+                                            Settlement
+                                        </p>
+                                        <div className="space-y-4">
+                                            <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                                                <div className="mb-3 flex flex-wrap items-end gap-2">
+                                                    <div className="min-w-[180px] flex-1">
+                                                        <label className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
+                                                            Order
+                                                        </label>
+                                                        <select
+                                                            value={selectedSettlementOrderId ?? ''}
+                                                            onChange={e =>
+                                                                setSelectedSettlementOrderId(
+                                                                    e.target.value || null
+                                                                )
+                                                            }
+                                                            className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                                                        >
+                                                            {tableOrders.map(order => (
+                                                                <option key={order.id} value={order.id}>
+                                                                    #{order.order_number} -{' '}
+                                                                    {(order.total_price ?? 0).toFixed(
+                                                                        2
+                                                                    )}{' '}
+                                                                    ETB
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="w-[130px]">
+                                                        <label className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
+                                                            Split Mode
+                                                        </label>
+                                                        <select
+                                                            value={splitMethod}
+                                                            onChange={e =>
+                                                                setSplitMethod(
+                                                                    e.target.value as SplitMethod
+                                                                )
+                                                            }
+                                                            className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                                                        >
+                                                            <option value="even">Even</option>
+                                                            <option value="items">Items</option>
+                                                            <option value="custom">Custom</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="w-[96px]">
+                                                        <label className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
+                                                            Guests
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            min={2}
+                                                            max={12}
+                                                            value={splitGuestCount}
+                                                            onChange={e =>
+                                                                setSplitGuestCount(
+                                                                    Math.max(
+                                                                        2,
+                                                                        Math.min(
+                                                                            12,
+                                                                            Number(e.target.value || 2)
+                                                                        )
+                                                                    )
+                                                                )
+                                                            }
+                                                            className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        onClick={handleSaveSplitConfig}
+                                                        disabled={
+                                                            isSavingSplitConfig ||
+                                                            !selectedSettlementOrderId
+                                                        }
+                                                        className="rounded-lg bg-black px-3 py-2 text-xs font-bold text-white hover:bg-gray-800 disabled:opacity-60"
+                                                    >
+                                                        {isSavingSplitConfig
+                                                            ? 'Saving...'
+                                                            : 'Save Split'}
+                                                    </Button>
+                                                </div>
+
+                                                {splitMethod === 'custom' && (
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {splitCustomAmounts.map((amount, idx) => (
+                                                            <input
+                                                                key={`split-custom-${idx}`}
+                                                                type="number"
+                                                                min={0}
+                                                                step={0.01}
+                                                                value={amount}
+                                                                onChange={e =>
+                                                                    setSplitCustomAmounts(prev => {
+                                                                        const next = [...prev];
+                                                                        next[idx] = e.target.value;
+                                                                        return next;
+                                                                    })
+                                                                }
+                                                                placeholder={`Guest ${idx + 1} amount`}
+                                                                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {splitMethod === 'items' && (
+                                                    <div className="space-y-3">
+                                                        {splitOrderItems.length === 0 ? (
+                                                            <p className="text-xs text-gray-500">
+                                                                No order items found for item-based split.
+                                                            </p>
+                                                        ) : (
+                                                            <>
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <p className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
+                                                                        Assign each item to a guest
+                                                                    </p>
+                                                                    <span
+                                                                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                                                                            splitItemUnassignedCount === 0
+                                                                                ? 'bg-emerald-100 text-emerald-700'
+                                                                                : 'bg-amber-100 text-amber-700'
+                                                                        }`}
+                                                                    >
+                                                                        {splitItemUnassignedCount === 0
+                                                                            ? 'All assigned'
+                                                                            : `${splitItemUnassignedCount} unassigned`}
+                                                                    </span>
+                                                                </div>
+
+                                                                <div className="grid gap-2 md:grid-cols-2">
+                                                                    {splitOrderItems.map(item => (
+                                                                        <div
+                                                                            key={item.id}
+                                                                            className="rounded-lg border border-gray-200 bg-white p-2"
+                                                                        >
+                                                                            <div className="mb-2 flex items-start justify-between gap-2">
+                                                                                <div>
+                                                                                    <p className="text-sm font-semibold text-gray-900">
+                                                                                        {item.quantity}x {item.name}
+                                                                                    </p>
+                                                                                    <p className="text-[11px] text-gray-500">
+                                                                                        {(item.price * item.quantity).toFixed(2)} ETB
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex flex-wrap gap-1.5">
+                                                                                {Array.from({ length: splitGuestCount }, (_, idx) => (
+                                                                                    <button
+                                                                                        key={`${item.id}-guest-${idx}`}
+                                                                                        type="button"
+                                                                                        onClick={() =>
+                                                                                            setSplitItemAssignments(prev => ({
+                                                                                                ...prev,
+                                                                                                [item.id]: idx,
+                                                                                            }))
+                                                                                        }
+                                                                                        className={`rounded-md border px-2 py-1 text-[11px] font-semibold ${
+                                                                                            splitItemAssignments[item.id] === idx
+                                                                                                ? 'border-black bg-black text-white'
+                                                                                                : 'border-gray-200 bg-white text-gray-700'
+                                                                                        }`}
+                                                                                    >
+                                                                                        Guest {idx + 1}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+
+                                                                <div className="rounded-lg border border-gray-200 bg-white p-2">
+                                                                    <p className="mb-1 text-[11px] font-bold tracking-widest text-gray-400 uppercase">
+                                                                        Guest Item Totals
+                                                                    </p>
+                                                                    <div className="grid grid-cols-2 gap-1 text-xs text-gray-700 md:grid-cols-4">
+                                                                        {splitItemTotalsByGuest.map((total, idx) => (
+                                                                            <p key={`split-total-${idx}`}>
+                                                                                Guest {idx + 1}: {total.toFixed(2)} ETB
+                                                                            </p>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {isLoadingSplitConfig ? (
+                                                <p className="text-sm text-gray-500">
+                                                    Loading split settlement...
+                                                </p>
+                                            ) : (
+                                                (splitPayload?.splits ?? []).length > 0 && (
+                                                    <div className="space-y-2">
+                                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                                            <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">
+                                                                Split Payments
+                                                            </p>
+                                                            <select
+                                                                value={splitPaymentMethod}
+                                                                onChange={e =>
+                                                                    setSplitPaymentMethod(
+                                                                        e.target
+                                                                            .value as SplitPaymentMethod
+                                                                    )
+                                                                }
+                                                                className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs"
+                                                            >
+                                                                <option value="cash">Cash</option>
+                                                                <option value="card">Card</option>
+                                                                <option value="telebirr">Telebirr</option>
+                                                                <option value="chapa">Chapa</option>
+                                                                <option value="other">Other</option>
+                                                            </select>
+                                                        </div>
+                                                        {splitPayload!.splits.map(split => {
+                                                            const paid =
+                                                                splitPaidById.get(split.id) ?? 0;
+                                                            const remaining = Math.max(
+                                                                0,
+                                                                Number(
+                                                                    (
+                                                                        split.computed_amount - paid
+                                                                    ).toFixed(2)
+                                                                )
+                                                            );
+                                                            const draft =
+                                                                splitPaymentAmounts[split.id] ??
+                                                                remaining.toFixed(2);
+                                                            return (
+                                                                <div
+                                                                    key={split.id}
+                                                                    className="rounded-xl border border-gray-100 bg-white p-3"
+                                                                >
+                                                                    <div className="mb-2 flex items-center justify-between">
+                                                                        <p className="text-sm font-bold text-gray-900">
+                                                                            {split.split_label ||
+                                                                                `Guest ${split.split_index + 1}`}
+                                                                        </p>
+                                                                        <p className="text-xs font-semibold text-gray-500">
+                                                                            Remaining:{' '}
+                                                                            {remaining.toFixed(2)} ETB
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            min={0}
+                                                                            step={0.01}
+                                                                            value={draft}
+                                                                            onChange={e =>
+                                                                                setSplitPaymentAmounts(
+                                                                                    prev => ({
+                                                                                        ...prev,
+                                                                                        [split.id]:
+                                                                                            e.target
+                                                                                                .value,
+                                                                                    })
+                                                                                )
+                                                                            }
+                                                                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+                                                                        />
+                                                                        <Button
+                                                                            onClick={() =>
+                                                                                void captureSplitPayment(
+                                                                                    split.id,
+                                                                                    remaining
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                capturingSplitId ===
+                                                                                    split.id ||
+                                                                                remaining <= 0
+                                                                            }
+                                                                            className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
+                                                                        >
+                                                                            {capturingSplitId ===
+                                                                            split.id
+                                                                                ? 'Paying...'
+                                                                                : 'Capture'}
+                                                                        </Button>
+                                                                    </div>
+                                                                    <p className="mt-1 text-[11px] text-gray-500">
+                                                                        Paid {paid.toFixed(2)} /{' '}
+                                                                        {Number(
+                                                                            split.computed_amount
+                                                                        ).toFixed(2)}{' '}
+                                                                        ETB
+                                                                    </p>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )
+                                            )}
+
+                                            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                                                <div className="flex-1">
+                                                    <input
+                                                        type="text"
+                                                        value={chapaTxRef}
+                                                        onChange={e => setChapaTxRef(e.target.value)}
+                                                        placeholder="Optional: Chapa tx_ref"
+                                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none"
+                                                    />
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        Leave blank to auto-settle from already paid Chapa orders.
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    onClick={handleSettleAndCloseTable}
+                                                    disabled={isClosingTable || tableRunningTotal <= 0}
+                                                    className="bg-brand-crimson rounded-xl px-5 py-2.5 text-sm font-bold text-white hover:bg-[#a0151e] disabled:cursor-not-allowed disabled:opacity-60"
+                                                >
+                                                    {isClosingTable
+                                                        ? 'Closing...'
+                                                        : `Settle ${tableRunningTotal.toFixed(2)} ETB & Close`}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {tableOrders.map((order, oi) => (
                                     <div
                                         key={order.id}
@@ -823,8 +1763,12 @@ function WaiterPosContent() {
                         </span>
                         <span className="text-gray-300">|</span>
                         <span>
-                            {filteredTables.filter(t => t.status === 'occupied').length} Active
-                            Tables
+                            {
+                                filteredTables.filter(
+                                    t => t.status === 'occupied' || t.status === 'bill_requested'
+                                ).length
+                            }{' '}
+                            Active Tables
                         </span>
                     </div>
                 </div>
@@ -878,8 +1822,10 @@ function WaiterPosContent() {
                                     key={table.id}
                                     onClick={() => handleTableClick(table)}
                                     className={`group relative flex flex-col gap-3 overflow-hidden rounded-[1.25rem] p-5 text-left shadow-sm transition-all hover:shadow-md active:scale-95 ${
-                                        table.status === 'occupied'
-                                            ? 'bg-white ring-1 ring-red-100' // Occupied
+                                        table.status === 'bill_requested'
+                                            ? 'bg-white ring-1 ring-amber-200'
+                                            : table.status === 'occupied'
+                                              ? 'bg-white ring-1 ring-red-100'
                                             : 'border border-gray-100 bg-white' // Free
                                     }`}
                                 >
@@ -892,7 +1838,8 @@ function WaiterPosContent() {
                                                 {table.table_number}
                                             </span>
                                         </div>
-                                        {table.status === 'occupied' && (
+                                        {(table.status === 'occupied' ||
+                                            table.status === 'bill_requested') && (
                                             <div className="flex items-center gap-2">
                                                 {filteredServiceRequests.some(
                                                     sr =>
@@ -903,13 +1850,23 @@ function WaiterPosContent() {
                                                         <Bell className="h-3 w-3" />
                                                     </span>
                                                 )}
-                                                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
+                                                <span
+                                                    className={`h-2.5 w-2.5 animate-pulse rounded-full ${
+                                                        table.status === 'bill_requested'
+                                                            ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'
+                                                            : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]'
+                                                    }`}
+                                                />
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="relative z-10 mt-auto">
-                                        {table.status === 'occupied' ? (
+                                        {table.status === 'bill_requested' ? (
+                                            <div className="inline-flex rounded-lg bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">
+                                                Bill Requested
+                                            </div>
+                                        ) : table.status === 'occupied' ? (
                                             <div className="inline-flex rounded-lg bg-red-50 px-2 py-1 text-xs font-bold text-red-600">
                                                 Occupied
                                             </div>
@@ -1073,6 +2030,50 @@ function WaiterPosContent() {
                     </div>
                 )}
             </main>
+
+            {stickyReadyOrders.length > 0 && (
+                <div className="fixed right-3 bottom-24 left-3 z-30 rounded-2xl border border-emerald-200 bg-emerald-600 p-4 text-white shadow-xl">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                        <p className="text-sm font-black tracking-wide uppercase">
+                            {stickyReadyOrders.length} Ready Order
+                            {stickyReadyOrders.length > 1 ? 's' : ''}
+                        </p>
+                        <button
+                            onClick={() =>
+                                setDismissedReadyOrderIds(stickyReadyOrders.map(order => order.id))
+                            }
+                            className="rounded-md bg-white/20 px-2 py-1 text-xs font-bold hover:bg-white/30"
+                        >
+                            Dismiss all
+                        </button>
+                    </div>
+                    <div className="space-y-2">
+                        {stickyReadyOrders.slice(0, 4).map(order => (
+                            <div
+                                key={order.id}
+                                className="flex items-center justify-between rounded-xl bg-white/10 px-3 py-2"
+                            >
+                                <span className="text-sm font-semibold">
+                                    Table {order.table_number || '?'} · Order #{order.order_number}
+                                </span>
+                                <button
+                                    onClick={() =>
+                                        setDismissedReadyOrderIds(prev =>
+                                            prev.includes(order.id)
+                                                ? prev
+                                                : [...prev, order.id]
+                                        )
+                                    }
+                                    className="rounded-md p-1 hover:bg-white/20"
+                                    aria-label={`Dismiss ready order ${order.order_number}`}
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Bottom Nav */}
             <nav className="fixed right-0 bottom-0 left-0 z-20 flex h-20 items-center justify-around border-t border-gray-200 bg-white/90 px-2 pb-2 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] backdrop-blur-lg">

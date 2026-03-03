@@ -43,6 +43,8 @@ export default function InventoryPage() {
     const [creatingRecipe, setCreatingRecipe] = useState(false);
     const [creatingPurchaseOrder, setCreatingPurchaseOrder] = useState(false);
     const [creatingInvoice, setCreatingInvoice] = useState(false);
+    const [parsingInvoice, setParsingInvoice] = useState(false);
+    const [ingestingInvoice, setIngestingInvoice] = useState(false);
     const [refreshToken, setRefreshToken] = useState(0);
 
     const loadAll = useCallback(async () => {
@@ -253,12 +255,37 @@ export default function InventoryPage() {
     };
 
     const handleCreateInvoice = async (payload: {
+        invoice_number?: string;
         supplier_name: string;
         status: InvoiceRow['status'];
         currency: string;
         subtotal: number;
         tax_amount: number;
         due_at?: string;
+        line_items?: Array<{
+            description: string;
+            normalized_description?: string;
+            qty?: number | null;
+            unit_price?: number | null;
+            line_total?: number | null;
+            uom?: string | null;
+            inventory_item_id?: string | null;
+            inventory_item_name?: string | null;
+            match_confidence?: number;
+            match_method?: 'exact' | 'contains' | 'token_overlap' | 'none';
+        }>;
+        ocr_source?: {
+            provider:
+                | 'manual_text'
+                | 'google_vision'
+                | 'google_document_ai'
+                | 'aws_textract'
+                | 'azure_document_intelligence'
+                | 'oss';
+            raw_text_excerpt?: string;
+            parsed_at?: string;
+            average_match_confidence?: number;
+        };
         notes?: string;
     }) => {
         try {
@@ -282,6 +309,129 @@ export default function InventoryPage() {
             );
         } finally {
             setCreatingInvoice(false);
+        }
+    };
+
+    const handleParseInvoice = async (payload: { raw_text: string; currency?: string }) => {
+        try {
+            setParsingInvoice(true);
+            const response = await fetch('/api/inventory/invoices/parse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to parse invoice text.');
+            }
+            toast.success('Invoice fields auto-filled from OCR text.');
+            return result?.data as {
+                draft: {
+                    supplier_name: string;
+                    invoice_number: string | null;
+                    currency: string;
+                    subtotal: number;
+                    tax_amount: number;
+                    total_amount: number;
+                    issued_at: string | null;
+                    due_at: string | null;
+                };
+                line_items: Array<{
+                    description: string;
+                    normalized_description: string;
+                    qty: number | null;
+                    unit_price: number | null;
+                    line_total: number | null;
+                    uom: string | null;
+                    inventory_item_id: string | null;
+                    inventory_item_name: string | null;
+                    match_confidence: number;
+                    match_method: 'exact' | 'contains' | 'token_overlap' | 'none';
+                }>;
+                summary: {
+                    mapped_items: number;
+                    unmapped_items: number;
+                    average_match_confidence: number;
+                };
+            };
+        } catch (parseError) {
+            const message =
+                parseError instanceof Error ? parseError.message : 'Failed to parse invoice text.';
+            toast.error(message);
+            throw parseError;
+        } finally {
+            setParsingInvoice(false);
+        }
+    };
+
+    const handleIngestInvoice = async (payload: {
+        file: File;
+        provider?: 'auto' | 'oss' | 'azure_document_intelligence' | 'google_document_ai' | 'aws_textract';
+        supplier_hint?: string;
+        currency?: string;
+    }) => {
+        try {
+            setIngestingInvoice(true);
+            const formData = new FormData();
+            formData.append('file', payload.file);
+            if (payload.provider) formData.append('provider', payload.provider);
+            if (payload.supplier_hint) formData.append('supplier_hint', payload.supplier_hint);
+            if (payload.currency) formData.append('currency', payload.currency);
+
+            const response = await fetch('/api/inventory/invoices/ingest', {
+                method: 'POST',
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to ingest invoice file.');
+            }
+            toast.success('Invoice file ingested and mapped.');
+            return result?.data as {
+                draft: {
+                    supplier_name: string;
+                    invoice_number: string | null;
+                    currency: string;
+                    subtotal: number;
+                    tax_amount: number;
+                    total_amount: number;
+                    issued_at: string | null;
+                    due_at: string | null;
+                };
+                line_items: Array<{
+                    description: string;
+                    normalized_description: string;
+                    qty: number | null;
+                    unit_price: number | null;
+                    line_total: number | null;
+                    uom: string | null;
+                    inventory_item_id: string | null;
+                    inventory_item_name: string | null;
+                    match_confidence: number;
+                    match_method: 'exact' | 'contains' | 'token_overlap' | 'none';
+                }>;
+                summary: {
+                    mapped_items: number;
+                    unmapped_items: number;
+                    average_match_confidence: number;
+                };
+                metadata: {
+                    provider: 'oss' | 'azure_document_intelligence' | 'google_document_ai' | 'aws_textract';
+                    provider_confidence: number;
+                };
+                addis_review_policy: {
+                    city_profile: string;
+                    auto_receive_eligible: boolean;
+                    recommended_mode: 'auto_receive' | 'human_review';
+                };
+            };
+        } catch (ingestError) {
+            const message =
+                ingestError instanceof Error ? ingestError.message : 'Failed to ingest invoice file.';
+            toast.error(message);
+            throw ingestError;
+        } finally {
+            setIngestingInvoice(false);
         }
     };
 
@@ -338,6 +488,10 @@ export default function InventoryPage() {
                 invoices={invoices}
                 loading={loading}
                 creating={creatingInvoice}
+                parsing={parsingInvoice}
+                ingesting={ingestingInvoice}
+                onIngestInvoice={handleIngestInvoice}
+                onParseInvoice={handleParseInvoice}
                 onCreateInvoice={handleCreateInvoice}
                 locale={locale}
             />
