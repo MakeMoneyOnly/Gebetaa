@@ -9,7 +9,11 @@ const publishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
 
-const hasDbEnv = Boolean(supabaseUrl && publishableKey && serviceRoleKey);
+// Validate URL format before proceeding
+const isValidUrl = supabaseUrl && URL.canParse(supabaseUrl);
+const hasDbEnv = Boolean(isValidUrl && publishableKey && serviceRoleKey);
+
+// Skip all tests if secrets are not configured
 const describeIfDb = hasDbEnv ? describe : describe.skip;
 
 const runId = `policy-hardening-${Date.now()}`;
@@ -75,7 +79,7 @@ describeIfDb('Guest policy hardening integration', () => {
         await adminClient!
             .from('rate_limit_logs')
             .delete()
-            .contains('metadata', { test_run: runId } as Json);
+            .contains('metadata', { test_run: runId } as Record<string, unknown>);
     });
 
     it('orders policy rejects insert without idempotency_key', async () => {
