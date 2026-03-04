@@ -15,6 +15,8 @@ import {
     GET as getSupplierInvoices,
     POST as postSupplierInvoices,
 } from '@/app/api/inventory/invoices/route';
+import { POST as postParseInvoice } from '@/app/api/inventory/invoices/parse/route';
+import { POST as postIngestInvoice } from '@/app/api/inventory/invoices/ingest/route';
 import { GET as getRecipes, POST as postRecipes } from '@/app/api/inventory/recipes/route';
 
 vi.mock('@/lib/api/authz', () => ({
@@ -148,6 +150,61 @@ describe('P2 inventory API routes', () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ supplier_name: '' }),
+            })
+        );
+
+        expect(response.status).toBe(400);
+    });
+
+    it('POST /api/inventory/invoices/parse returns 401 when unauthorized', async () => {
+        setAuthUnauthorized();
+
+        const response = await postParseInvoice(
+            new Request('http://localhost/api/inventory/invoices/parse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ raw_text: 'Invoice' }),
+            })
+        );
+
+        expect(response.status).toBe(401);
+    });
+
+    it('POST /api/inventory/invoices/parse returns 400 for invalid payload', async () => {
+        setAuthAndContextOk();
+
+        const response = await postParseInvoice(
+            new Request('http://localhost/api/inventory/invoices/parse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ raw_text: 'too short' }),
+            })
+        );
+
+        expect(response.status).toBe(400);
+    });
+
+    it('POST /api/inventory/invoices/ingest returns 401 when unauthorized', async () => {
+        setAuthUnauthorized();
+
+        const response = await postIngestInvoice(
+            new Request('http://localhost/api/inventory/invoices/ingest', {
+                method: 'POST',
+            })
+        );
+
+        expect(response.status).toBe(401);
+    });
+
+    it('POST /api/inventory/invoices/ingest returns 400 when file is missing', async () => {
+        setAuthAndContextOk();
+        const formData = new FormData();
+        formData.append('provider', 'auto');
+
+        const response = await postIngestInvoice(
+            new Request('http://localhost/api/inventory/invoices/ingest', {
+                method: 'POST',
+                body: formData,
             })
         );
 

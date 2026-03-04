@@ -31,6 +31,15 @@ export function getRequestOrigin(request: Request): string {
         }
     }
 
+    // Local dev: check if we have an ngrok URL configured
+    // This allows mobile testing since localhost isn't accessible from the phone.
+    if (process.env.VERCEL !== '1') {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+        if (appUrl && (appUrl.includes('ngrok') || appUrl.includes('localtonet'))) {
+            return appUrl.replace(/\/$/, '');
+        }
+    }
+
     // Local dev: read from request headers
     const forwardedHost = request.headers.get('x-forwarded-host');
     const host = request.headers.get('host');

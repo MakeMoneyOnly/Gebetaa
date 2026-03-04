@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { AttentionQueuePanel } from '@/components/merchant/command-center/AttentionQueuePanel';
+import { KdsReliabilityPanel } from '@/components/merchant/KdsReliabilityPanel';
 import { AlertRuleBuilderDrawer } from '@/components/merchant/command-center/AlertRuleBuilderDrawer';
 import {
     DashboardPreset,
@@ -478,6 +479,8 @@ export default function MerchantDashboard() {
                 onOpenTables={() => router.push('/merchant/tables')}
                 onOpenSettings={() => router.push('/merchant/settings')}
             />
+
+            <KdsReliabilityPanel />
 
             <AlertRuleBuilderDrawer
                 open={alertRuleDrawerOpen}

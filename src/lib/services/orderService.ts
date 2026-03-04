@@ -28,6 +28,7 @@ export interface OrderValidationResult {
         quantity: number;
         price: number;
         station?: string;
+        course?: 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
         notes?: string;
     }>;
 }
@@ -44,7 +45,14 @@ export interface RateLimitResult {
  */
 export async function validateOrderItems(
     supabase: SupabaseClient<Database>,
-    items: Array<{ id: string; name: string; quantity: number; price: number; notes?: string }>,
+    items: Array<{
+        id: string;
+        name: string;
+        quantity: number;
+        price: number;
+        notes?: string;
+        course?: 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
+    }>,
     claimedTotal: number
 ): Promise<OrderValidationResult> {
     const itemIds = items.map(i => i.id);
@@ -56,7 +64,7 @@ export async function validateOrderItems(
     }
 
     if (dbItems.length !== itemIds.length) {
-        const foundIds = new Set(dbItems.map(i => i.id));
+        const foundIds = new Set(dbItems.map((i: { id: string }) => i.id));
         const missingIds = itemIds.filter(id => !foundIds.has(id));
         return { isValid: false, error: `Items not found: ${missingIds.join(', ')}` };
     }
@@ -65,7 +73,7 @@ export async function validateOrderItems(
     const enrichedItems = [];
 
     for (const item of items) {
-        const dbItem = dbItems.find(dbi => dbi.id === item.id);
+        const dbItem = dbItems.find((dbi: { id: string }) => dbi.id === item.id);
         if (!dbItem) {
             return { isValid: false, error: `Item ${item.id} not found` };
         }
@@ -79,6 +87,9 @@ export async function validateOrderItems(
         enrichedItems.push({
             ...item,
             station: dbItem.station || 'kitchen',
+            course:
+                (dbItem.course as 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side' | null) ??
+                'main',
         });
     }
 

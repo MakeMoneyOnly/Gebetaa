@@ -1,0 +1,10 @@
+drop index if exists public.idx_items_fasting;
+drop index if exists public.idx_menu_items_popularity;
+drop index if exists public.idx_menu_items_name_search;
+drop index if exists public.idx_orders_acknowledged_at;
+drop index if exists public.idx_orders_chapa_verified_paid_at;
+drop index if exists public.idx_orders_order_number;
+drop index if exists public.idx_order_events_type_created;
+drop index if exists public.idx_order_items_status;
+drop index if exists public.idx_order_items_station;
+drop index if exists public.idx_restaurants_active;

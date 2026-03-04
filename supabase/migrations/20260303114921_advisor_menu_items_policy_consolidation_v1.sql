@@ -1,0 +1,2 @@
+﻿-- Persisted remote migration marker.
+-- Menu item policy consolidation applied remotely; preserved locally for migration parity.

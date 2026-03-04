@@ -77,4 +77,5 @@ run(trivy.command, [
     '1',
     '--timeout',
     '30m',
+    '--skip-db-update',
 ]);

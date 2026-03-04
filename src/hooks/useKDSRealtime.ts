@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -53,7 +53,7 @@ export function useKDSRealtime({
     enabled = true,
 }: UseKDSRealtimeOptions) {
     const channelRef = useRef<RealtimeChannel | null>(null);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
     const mountedRef = useRef(false);
     const [isConnected, setIsConnected] = useState(false);
 
@@ -171,10 +171,17 @@ export function useKDSRealtime({
             )
             .subscribe(status => {
                 console.log(`[KDS Realtime] Subscription status: ${status}`);
+                if (!mountedRef.current) return;
+                if (status === 'SUBSCRIBED') {
+                    setIsConnected(true);
+                    return;
+                }
+                if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+                    setIsConnected(false);
+                }
             });
 
         channelRef.current = channel;
-        setIsConnected(true);
 
         return () => {
             mountedRef.current = false;

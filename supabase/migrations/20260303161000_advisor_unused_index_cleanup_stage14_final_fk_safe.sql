@@ -1,0 +1,14 @@
+drop index if exists public.idx_categories_section;
+drop index if exists public.idx_menu_items_category_available;
+drop index if exists public.idx_orders_fingerprint_created;
+drop index if exists public.idx_orders_kitchen_status;
+drop index if exists public.idx_orders_restaurant_fire_mode_course;
+drop index if exists public.idx_payments_restaurant_split;
+drop index if exists public.idx_payments_restaurant_status;
+drop index if exists public.idx_payouts_restaurant_status;
+drop index if exists public.idx_reconciliation_entries_ledger;
+drop index if exists public.idx_reconciliation_entries_restaurant_source;
+drop index if exists public.idx_reconciliation_entries_restaurant_status;
+drop index if exists public.idx_tables_active;
+drop index if exists public.idx_tables_restaurant;
+drop index if exists public.idx_tables_restaurant_status_active;

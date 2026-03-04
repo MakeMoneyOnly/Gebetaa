@@ -1,7 +1,7 @@
 ﻿# Gebeta Merchant Platform - Execution Grade Master Tasks
 
 Last updated: 2026-02-17
-North star reference: `AUDIT.md`
+North star reference: `TOAST_FEATURE_AUDIT.md`
 Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 1) Operating Rules
@@ -323,15 +323,15 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 8.1 P1 KDS Hardening and Operational Readiness
 
-- [ ] `KDS-001` Add dedicated `GET /api/kds/queue` with station/sla filters and cursor pagination.
-- [ ] `KDS-002` Add migrations for item-level production state (`kds_order_items` and `kds_item_events`).
-- [ ] `KDS-003` Implement item-level KDS actions (`start`, `hold`, `ready`, `recall`) with audit logging.
-- [ ] `KDS-004` Build station-specific KDS board views (kitchen/bar/dessert/coffee) with role-based defaults.
-- [ ] `KDS-005` Build expeditor view for cross-station consolidation and final handoff.
-- [ ] `KDS-006` Add bump-bar hotkeys and touch-optimized controls for high-volume service windows.
-- [ ] `KDS-007` Add audio/visual alert policy controls (new ticket, SLA breach, recall) with quiet-hours support.
-- [ ] `KDS-008` Add KDS E2E coverage for queue ingest -> station prep -> expeditor handoff -> served.
-- [ ] `KDS-009` Add KDS reliability telemetry (queue lag, websocket health, ticket SLA breaches) and dashboard panels.
+- [x] `KDS-001` Add dedicated `GET /api/kds/queue` with station/sla filters and cursor pagination.
+- [x] `KDS-002` Add migrations for item-level production state (`kds_order_items` and `kds_item_events`).
+- [x] `KDS-003` Implement item-level KDS actions (`start`, `hold`, `ready`, `recall`) with audit logging.
+- [x] `KDS-004` Build station-specific KDS board views (kitchen/bar/dessert/coffee) with role-based defaults.
+- [x] `KDS-005` Build expeditor view for cross-station consolidation and final handoff.
+- [x] `KDS-006` Add bump-bar hotkeys and touch-optimized controls for high-volume service windows.
+- [x] `KDS-007` Add audio/visual alert policy controls (new ticket, SLA breach, recall) with quiet-hours support.
+- [x] `KDS-008` Add KDS E2E coverage for queue ingest -> station prep -> expeditor handoff -> served.
+- [x] `KDS-009` Add KDS reliability telemetry (queue lag, websocket health, ticket SLA breaches) and dashboard panels.
 
 ## 8.2 P2 KDS Throughput, Routing, and Hardware
 
@@ -343,6 +343,8 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 - [ ] `KDS-015` Add void/comp/86 propagation from merchant ops to KDS tickets in real time.
 - [ ] `KDS-016` Build KDS performance analytics (ticket cycle time, station bottlenecks, staff throughput).
 - [ ] `KDS-017` Add offline-safe action queue + replay for KDS mutations with idempotent recovery.
+- [ ] `KDS-024` Implement dining-option routing rules engine (pickup/delivery/curbside -> target prep/pack stations).
+- [ ] `KDS-025` Add ticket color semantics by dining behavior (dine-in, pickup, delivery, curbside).
 
 ## 8.3 P3 Enterprise KDS Control Plane
 
@@ -397,9 +399,9 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 ## 10.2 Hardware-Agnostic KDS
 
-- [ ] `KDS-001` Verify KDS performance on generic iPads, Android tablets, and Smart TVs.
-- [ ] `KDS-002` Implement browser-based "Kitchen Display" that requires no install.
-- [ ] `KDS-003` Add offline-mode support for KDS (Local-First Architecture).
+- [ ] `DFKDS-001` Verify KDS performance on generic iPads, Android tablets, and Smart TVs.
+- [ ] `DFKDS-002` Implement browser-based "Kitchen Display" that requires no install.
+- [ ] `DFKDS-003` Add offline-mode support for KDS (Local-First Architecture).
 
 ## 10.3 Offline-First & Resiliency
 
@@ -427,3 +429,11 @@ Execution mode: Step-by-step, dependency-driven, release-gated
 
 - [ ] `REL-004` Load test "Tablet Web KDS" with 500+ active tickers.
 - [ ] `REL-005` Verify "Offline Mode" recovery in poor network conditions.
+
+## 10.7 Discovery, Messaging, and Curbside Parity
+
+- [ ] `DIG-006` Implement "Order with Google" integration (menu sync + order ingestion).
+- [ ] `DIG-007` Implement order-ready SMS notifications triggered from `orders.status = ready`.
+- [ ] `DIG-008` Implement SMS waitlist notifications for table-ready and no-show reminders.
+- [ ] `DIG-009` Implement explicit curbside pickup flow (guest check-in, arrival status, handoff state).
+- [ ] `DIG-010` Route curbside orders with dedicated KDS tags/stations and pickup SLA tracking.

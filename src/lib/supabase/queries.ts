@@ -204,14 +204,9 @@ export async function fetchItemsForValidation(
     supabase: SupabaseClient<Database>,
     itemIds: string[]
 ) {
-    return supabase
+    const db = supabase as any;
+    return db
         .from('menu_items')
-        .select('id, name, price, is_available, station')
-        .in('id', itemIds)
-        .returns<
-            Pick<
-                Tables['menu_items']['Row'],
-                'id' | 'name' | 'price' | 'is_available' | 'station'
-            >[]
-        >();
+        .select('id, name, price, is_available, station, course')
+        .in('id', itemIds);
 }

@@ -28,6 +28,42 @@ const CreateSupplierInvoiceSchema = z.object({
     due_at: z.string().datetime().optional(),
     paid_at: z.string().datetime().optional(),
     notes: z.string().trim().max(600).optional(),
+    line_items: z
+        .array(
+            z.object({
+                description: z.string().trim().min(1).max(200),
+                normalized_description: z.string().trim().min(1).max(220).optional(),
+                qty: z.coerce.number().positive().max(100000).nullable().optional(),
+                unit_price: z.coerce.number().min(0).max(100000000).nullable().optional(),
+                line_total: z.coerce.number().min(0).max(100000000).nullable().optional(),
+                uom: z.string().trim().min(1).max(24).nullable().optional(),
+                inventory_item_id: z.string().uuid().nullable().optional(),
+                inventory_item_name: z.string().trim().min(1).max(140).nullable().optional(),
+                match_confidence: z.coerce.number().min(0).max(1).optional(),
+                match_method: z
+                    .enum(['exact', 'contains', 'token_overlap', 'none'])
+                    .optional(),
+            })
+        )
+        .max(200)
+        .optional(),
+    ocr_source: z
+        .object({
+            provider: z
+                .enum([
+                    'google_vision',
+                    'google_document_ai',
+                    'aws_textract',
+                    'azure_document_intelligence',
+                    'oss',
+                    'manual_text',
+                ])
+                .default('manual_text'),
+            raw_text_excerpt: z.string().trim().min(1).max(4000).optional(),
+            parsed_at: z.string().datetime().optional(),
+            average_match_confidence: z.coerce.number().min(0).max(1).optional(),
+        })
+        .optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -148,7 +184,12 @@ export async function POST(request: Request) {
             due_at: parsed.data.due_at ?? null,
             paid_at: parsed.data.paid_at ?? null,
             notes: parsed.data.notes ?? null,
-            metadata: (parsed.data.metadata ?? {}) as Json,
+            metadata: {
+                ...(parsed.data.metadata ?? {}),
+                processing_mode: parsed.data.ocr_source ? 'ocr_assisted' : 'manual',
+                ...(parsed.data.line_items ? { line_items: parsed.data.line_items } : {}),
+                ...(parsed.data.ocr_source ? { ocr_source: parsed.data.ocr_source } : {}),
+            } as Json,
             created_by: auth.user.id,
         })
         .select('*')
@@ -172,12 +213,14 @@ export async function POST(request: Request) {
         metadata: {
             source: 'merchant_dashboard',
             idempotency_key: idempotencyKey,
+            processing_mode: parsed.data.ocr_source ? 'ocr_assisted' : 'manual',
         },
         new_value: {
             invoice_number: invoice.invoice_number,
             supplier_name: invoice.supplier_name,
             total_amount: invoice.total_amount,
             status: invoice.status,
+            line_items_count: parsed.data.line_items?.length ?? 0,
         },
     });
 

@@ -85,6 +85,8 @@ export function CartDrawer({
     const [submitting, setSubmitting] = useState(false);
     const [orderMessage, setOrderMessage] = useState<string | null>(null);
     const [orderError, setOrderError] = useState<string | null>(null);
+    const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
+    const [placedOrderNumber, setPlacedOrderNumber] = useState<string | null>(null);
 
     // Online ordering state
     const isOnlineOrder = !!guestContext?.is_online_order;
@@ -226,7 +228,10 @@ export function CartDrawer({
 
                 trigger('success');
                 clearCart();
+                setPlacedOrderId(payload?.data?.id ?? null);
+                setPlacedOrderNumber(payload?.data?.order_number ?? null);
                 setOrderMessage('Order received! Kitchen has been notified. 🍳');
+                setStep('success');
             }
         } catch (error) {
             if (isAbortError(error)) return;
@@ -241,6 +246,8 @@ export function CartDrawer({
         // Reset state on close
         if (step === 'success') {
             setStep('cart');
+            setPlacedOrderId(null);
+            setPlacedOrderNumber(null);
             setCustomerName('');
             setCustomerPhone('');
             setDeliveryAddress('');
@@ -258,35 +265,65 @@ export function CartDrawer({
                 <Drawer.Content className="bg-background fixed right-0 bottom-0 left-0 z-[9999] flex h-[92vh] flex-col rounded-t-[32px] border-t border-black/5 transition-colors duration-300 outline-none dark:border-white/10">
                     {/* ── Success Screen ─────────────────────────────────── */}
                     {step === 'success' ? (
-                        <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
+                        <div className="flex flex-1 flex-col items-center gap-5 p-8 text-center">
+                            {/* Icon */}
                             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/20">
                                 <CheckCircle2 size={48} className="text-emerald-500" />
                             </div>
+
+                            {/* Title */}
                             <div>
                                 <h2 className="font-manrope text-2xl font-black tracking-tight text-black dark:text-white">
                                     Order Placed!
                                 </h2>
+                                {placedOrderNumber && (
+                                    <p className="mt-1 text-sm font-bold text-black/40 dark:text-white/40">
+                                        #{placedOrderNumber}
+                                    </p>
+                                )}
                                 <p className="mt-2 text-sm font-medium text-black/50 dark:text-white/50">
-                                    {orderType === 'delivery'
-                                        ? 'Your order is being prepared and will be delivered to you.'
-                                        : orderType === 'pickup'
-                                          ? 'Your order is being prepared. Come pick it up when ready!'
-                                          : 'Your order has been sent to the kitchen.'}
+                                    {isOnlineOrder
+                                        ? orderType === 'delivery'
+                                            ? 'Your order is being prepared and will be delivered to you.'
+                                            : 'Your order is being prepared. Come pick it up when ready!'
+                                        : 'Your order has been sent to the kitchen. Track live below 👇'}
                                 </p>
                             </div>
-                            <div className="w-full rounded-2xl border border-black/5 bg-black/5 p-4 dark:border-white/5 dark:bg-white/5">
-                                <p className="text-sm font-bold text-black/60 dark:text-white/60">
-                                    {orderType === 'delivery' ? `📍 ${deliveryAddress}` : ''}
-                                </p>
-                                <p className="mt-1 text-sm font-bold text-black dark:text-white">
-                                    👤 {customerName} · 📞 {customerPhone}
-                                </p>
-                            </div>
+
+                            {/* ── LIVE TRACKER — dine-in primary CTA ───────────── */}
+                            {!isOnlineOrder && placedOrderId && guestContext && (
+                                <a
+                                    href={`/${guestContext.slug}/tracker?order_id=${placedOrderId}&table=${encodeURIComponent(guestContext.table)}&sig=${encodeURIComponent(guestContext.sig)}&exp=${guestContext.exp}`}
+                                    className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-emerald-500 text-base font-black text-white shadow-lg transition active:scale-95"
+                                >
+                                    🔴 Track Your Order Live
+                                </a>
+                            )}
+
+                            {/* Online order summary card */}
+                            {isOnlineOrder && (
+                                <div className="w-full rounded-2xl border border-black/5 bg-black/5 p-4 text-left dark:border-white/5 dark:bg-white/5">
+                                    {orderType === 'delivery' && deliveryAddress && (
+                                        <p className="text-sm font-bold text-black/60 dark:text-white/60">
+                                            📍 {deliveryAddress}
+                                        </p>
+                                    )}
+                                    {(customerName || customerPhone) && (
+                                        <p className="mt-1 text-sm font-bold text-black dark:text-white">
+                                            {customerName && `👤 ${customerName}`}
+                                            {customerName && customerPhone && ' · '}
+                                            {customerPhone && `📞 ${customerPhone}`}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Done button */}
                             <button
                                 onClick={handleClose}
-                                className="bg-brand-crimson hover:bg-brand-crimson/90 flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold text-white shadow-lg transition-transform active:scale-95"
+                                className="flex h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-black/10 text-sm font-bold text-black/60 transition active:scale-95 dark:border-white/10 dark:text-white/60"
                             >
-                                Done
+                                {!isOnlineOrder ? 'Back to Menu' : 'Done'}
                             </button>
                         </div>
                     ) : (

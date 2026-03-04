@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
-import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
+import {
+    getAuthenticatedUser,
+    getAuthorizedRestaurantContext,
+    getDeviceContext,
+} from '@/lib/api/authz';
 import { parseJsonBody, parseQuery } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
@@ -36,6 +40,7 @@ const PaymentsQuerySchema = z.object({
 
 const CreatePaymentSchema = z.object({
     order_id: z.string().uuid().optional(),
+    split_id: z.string().uuid().optional(),
     method: PaymentMethodSchema,
     provider: z.string().trim().min(2).max(80).optional().default('internal'),
     provider_reference: z.string().trim().min(2).max(120).optional(),
@@ -132,13 +137,25 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const auth = await getAuthenticatedUser();
-    if (!auth.ok) {
-        return auth.response;
-    }
+    let actorUserId: string | null = null;
+    let restaurantId: string;
+    let db: any;
 
-    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
-    if (!context.ok) {
-        return context.response;
+    if (auth.ok) {
+        const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
+        if (!context.ok) {
+            return context.response;
+        }
+        actorUserId = auth.user.id;
+        restaurantId = context.restaurantId;
+        db = context.supabase;
+    } else {
+        const deviceContext = await getDeviceContext(request);
+        if (!deviceContext.ok) {
+            return auth.response;
+        }
+        restaurantId = deviceContext.restaurantId;
+        db = deviceContext.admin;
     }
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
@@ -152,15 +169,50 @@ export async function POST(request: Request) {
         return parsed.response;
     }
 
-    const db = context.supabase;
+    const dbAny = db as any;
     const amount = Number(parsed.data.amount.toFixed(2));
     const tipAmount = Number(parsed.data.tip_amount.toFixed(2));
+    let resolvedOrderId = parsed.data.order_id ?? null;
 
-    const { data: payment, error } = await db
+    if (parsed.data.split_id) {
+        const { data: split, error: splitError } = await dbAny
+            .from('order_check_splits')
+            .select('id, order_id, status')
+            .eq('restaurant_id', restaurantId)
+            .eq('id', parsed.data.split_id)
+            .maybeSingle();
+
+        if (splitError) {
+            return apiError(
+                'Failed to validate payment split',
+                500,
+                'PAYMENT_SPLIT_FETCH_FAILED',
+                splitError.message
+            );
+        }
+        if (!split) {
+            return apiError('Split not found', 404, 'PAYMENT_SPLIT_NOT_FOUND');
+        }
+        if (split.status !== 'open') {
+            return apiError('Split is not open for payment', 409, 'PAYMENT_SPLIT_NOT_OPEN');
+        }
+        if (resolvedOrderId && resolvedOrderId !== split.order_id) {
+            return apiError(
+                'Split does not belong to provided order',
+                409,
+                'PAYMENT_SPLIT_ORDER_MISMATCH'
+            );
+        }
+        resolvedOrderId = split.order_id;
+    }
+
+    const { data: payment, error } = await dbAny
         .from('payments')
         .insert({
-            restaurant_id: context.restaurantId,
-            order_id: parsed.data.order_id ?? null,
+            restaurant_id: restaurantId,
+            // when split_id exists, order_id is forced to the split's order
+            order_id: resolvedOrderId,
+            split_id: parsed.data.split_id ?? null,
             method: parsed.data.method,
             provider: parsed.data.provider.trim().toLowerCase(),
             provider_reference: parsed.data.provider_reference?.trim() ?? null,
@@ -171,7 +223,7 @@ export async function POST(request: Request) {
             authorized_at: parsed.data.authorized_at ?? null,
             captured_at: parsed.data.captured_at ?? null,
             metadata: (parsed.data.metadata ?? {}) as Json,
-            created_by: auth.user.id,
+            created_by: actorUserId,
         })
         .select('*')
         .single();
@@ -180,21 +232,23 @@ export async function POST(request: Request) {
         return apiError('Failed to create payment', 500, 'PAYMENT_CREATE_FAILED', error.message);
     }
 
-    await writeAuditLog(context.supabase, {
-        restaurant_id: context.restaurantId,
-        user_id: auth.user.id,
+    await writeAuditLog(db, {
+        restaurant_id: restaurantId,
+        user_id: actorUserId,
         action: 'payment_created',
         entity_type: 'payment',
         entity_id: payment.id,
         metadata: {
             source: 'merchant_dashboard',
             idempotency_key: idempotencyKey,
+            split_id: parsed.data.split_id ?? null,
         },
         new_value: {
             method: payment.method,
             provider: payment.provider,
             amount: payment.amount,
             status: payment.status,
+            split_id: (payment as { split_id?: string | null }).split_id ?? null,
         },
     });
 

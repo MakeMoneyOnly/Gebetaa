@@ -39,7 +39,11 @@ export async function GET(request: Request) {
 }
 
 const PlaceOrderSchema = z.object({
-    table_number: z.string().min(1),
+    table_number: z.string().min(1).optional(),
+    order_type: z.enum(['dine_in', 'pickup', 'delivery', 'online']).optional().default('dine_in'),
+    customer_name: z.string().max(120).optional().nullable(),
+    customer_phone: z.string().max(30).optional().nullable(),
+    delivery_address: z.string().max(500).optional().nullable(),
     items: z
         .array(
             z.object({
@@ -48,6 +52,7 @@ const PlaceOrderSchema = z.object({
                 quantity: z.number().int().positive(),
                 unit_price: z.number().nonnegative(),
                 notes: z.string().optional().nullable(),
+                course: z.enum(['appetizer', 'main', 'dessert', 'beverage', 'side']).optional(),
             })
         )
         .min(1),
@@ -62,26 +67,94 @@ export async function POST(request: Request) {
     const parsed = await parseJsonBody(request, PlaceOrderSchema);
     if (!parsed.success) return parsed.response;
 
-    const { table_number, items, notes, staff_name } = parsed.data;
+    const {
+        table_number,
+        order_type,
+        customer_name,
+        customer_phone,
+        delivery_address,
+        items,
+        notes,
+        staff_name,
+    } = parsed.data;
     const admin = createServiceRoleClient();
 
-    const totalAmount = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+    const totalPrice = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
+    const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
-    const ticketNumber = `#-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`;
+    if (order_type === 'dine_in' && !table_number) {
+        return apiError('table_number is required for dine-in orders', 400, 'TABLE_REQUIRED');
+    }
+    if (order_type === 'delivery' && !delivery_address) {
+        return apiError(
+            'delivery_address is required for delivery orders',
+            400,
+            'DELIVERY_ADDRESS_REQUIRED'
+        );
+    }
+
+    let table: { id: string; status: string } | null = null;
+    if (table_number) {
+        const { data, error: tableError } = await admin
+            .from('tables')
+            .select('id, status')
+            .eq('restaurant_id', ctx.restaurantId)
+            .eq('table_number', table_number)
+            .maybeSingle();
+
+        if (tableError) {
+            return apiError(
+                'Failed to resolve table',
+                500,
+                'TABLE_FETCH_FAILED',
+                tableError.message
+            );
+        }
+        table = data;
+    }
+    if (order_type === 'dine_in' && !table) {
+        return apiError('Table not found', 404, 'TABLE_NOT_FOUND');
+    }
+
+    const menuItemIds = items.map(item => item.menu_item_id);
+    const { data: menuRows } = await admin
+        .from('menu_items')
+        .select('id, course')
+        .in('id', menuItemIds);
+    const menuCourseMap = new Map(
+        ((menuRows ?? []) as Array<{ id?: string; course?: string | null }>)
+            .filter(row => row.id)
+            .map(row => [String(row.id), String(row.course ?? 'main')])
+    );
+
+    const normalizedItems = items.map(item => ({
+        id: item.menu_item_id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.unit_price,
+        notes: item.notes ?? null,
+        status: 'pending',
+        course: item.course ?? menuCourseMap.get(item.menu_item_id) ?? 'main',
+    }));
 
     const { data: order, error: orderError } = await admin
         .from('orders')
         .insert({
             restaurant_id: ctx.restaurantId,
-            table_number,
+            table_number: table_number ?? null,
             status: 'pending',
-            total_amount: totalAmount,
-            ticket_number: ticketNumber,
-            notes: notes ?? null,
-            staff_name: staff_name ?? null,
-            source: 'pos',
+            total_price: totalPrice,
+            order_number: orderNumber,
+            notes:
+                notes ??
+                (staff_name ? `POS waiter: ${staff_name}` : null),
+            items: normalizedItems,
+            order_type,
+            customer_name: customer_name ?? null,
+            customer_phone: customer_phone ?? null,
+            delivery_address: delivery_address ?? null,
         })
-        .select()
+        .select('*')
         .single();
 
     if (orderError || !order) {
@@ -90,16 +163,18 @@ export async function POST(request: Request) {
 
     const orderItems = items.map(item => ({
         order_id: order.id,
-        menu_item_id: item.menu_item_id,
+        item_id: item.menu_item_id,
         name: item.name,
         quantity: item.quantity,
-        unit_price: item.unit_price,
+        price: item.unit_price,
         notes: item.notes ?? null,
         status: 'pending',
+        course: item.course ?? menuCourseMap.get(item.menu_item_id) ?? 'main',
     }));
 
     const { error: itemsError } = await admin.from('order_items').insert(orderItems);
     if (itemsError) {
+        await admin.from('orders').delete().eq('id', order.id);
         return apiError(
             'Failed to save order items',
             500,
@@ -108,12 +183,52 @@ export async function POST(request: Request) {
         );
     }
 
-    // Mark the table as occupied
-    await admin
-        .from('tables')
-        .update({ status: 'occupied', active_order_id: order.id })
-        .eq('restaurant_id', ctx.restaurantId)
-        .eq('table_number', table_number);
+    if (order_type === 'dine_in' && table) {
+        const { data: existingSession } = await admin
+            .from('table_sessions')
+            .select('id')
+            .eq('restaurant_id', ctx.restaurantId)
+            .eq('table_id', table.id)
+            .eq('status', 'open')
+            .maybeSingle();
+
+        if (!existingSession) {
+            await admin.from('table_sessions').insert({
+                restaurant_id: ctx.restaurantId,
+                table_id: table.id,
+                guest_count: 1,
+                status: 'open',
+                notes:
+                    staff_name ? `Opened by ${staff_name} via waiter POS` : 'Opened via waiter POS',
+            });
+        }
+    }
+
+    await admin.from('order_events').insert({
+        restaurant_id: ctx.restaurantId,
+        order_id: order.id,
+        event_type: 'created',
+        from_status: null,
+        to_status: 'pending',
+        actor_user_id: null,
+        metadata: {
+            source: 'waiter_pos_device',
+            staff_name: staff_name ?? null,
+            table_number: table_number ?? null,
+            order_type,
+            customer_name: customer_name ?? null,
+            customer_phone: customer_phone ?? null,
+        },
+    });
+
+    // Mark the table as occupied for dine-in flows only.
+    if (order_type === 'dine_in' && table_number) {
+        await admin
+            .from('tables')
+            .update({ status: 'occupied', active_order_id: order.id })
+            .eq('restaurant_id', ctx.restaurantId)
+            .eq('table_number', table_number);
+    }
 
     return apiSuccess({ order }, 201);
 }

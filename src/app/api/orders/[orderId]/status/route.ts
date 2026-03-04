@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
+import { sendOrderStatusSms } from '@/lib/notifications/sms';
 
 const UpdateOrderStatusSchema = z.object({
     status: z.enum([
@@ -161,6 +162,25 @@ export async function PATCH(
         responseStatus = 200;
         const response = apiSuccess(updatedOrder);
 
+        const smsPromise = (async () => {
+            if (!updatedOrder?.customer_phone) return;
+            const { data: restaurantSettings } = await supabase
+                .from('restaurants')
+                .select('settings')
+                .eq('id', order.restaurant_id)
+                .maybeSingle();
+            const notificationsSettings = (restaurantSettings?.settings as Record<string, unknown> | null)
+                ?.notifications as Record<string, unknown> | undefined;
+            const smsEnabled = Boolean(notificationsSettings?.sms_enabled);
+            if (!smsEnabled) return;
+
+            await sendOrderStatusSms({
+                toPhone: updatedOrder.customer_phone,
+                orderNumber: updatedOrder.order_number ?? updatedOrder.id,
+                status: parsed.data.status,
+            });
+        })();
+
         // These do NOT block the response
         const durationMs = Date.now() - startedAt;
         Promise.all([
@@ -190,6 +210,7 @@ export async function PATCH(
                 statusCode: responseStatus,
                 durationMs,
             }),
+            smsPromise,
         ]).catch(err => {
             console.warn('[PATCH /api/orders/:id/status] background write failed:', err);
         });
