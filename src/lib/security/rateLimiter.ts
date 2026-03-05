@@ -117,11 +117,13 @@ export async function checkRateLimit(
 
     if (error) {
         console.error('Rate limit check error:', error);
-        // On error, allow the request (fail open)
+        // SECURITY: Fail closed - deny request on error to prevent bypass
+        // This ensures that if the rate limiting system fails, attackers cannot exploit it
         return {
-            allowed: true,
-            remaining: config.maxRequests,
+            allowed: false,
+            remaining: 0,
             resetAt: new Date(now.getTime() + config.windowSec * 1000),
+            retryAfter: config.windowSec,
         };
     }
 

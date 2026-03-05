@@ -13,14 +13,13 @@ import { createHmac, timingSafeEqual } from 'crypto';
 function getHmacSecret(): string {
     const secret = process.env.QR_HMAC_SECRET;
     if (!secret) {
-        // In development, or during build time when secrets might not be injected yet
-        if (
-            process.env.NODE_ENV === 'development' ||
-            process.env.NEXT_PHASE === 'phase-production-build'
-        ) {
-            console.warn('QR_HMAC_SECRET is missing. Using fallback secret for development/build.');
-            return 'dev_fallback_secret_do_not_use_in_production';
+        // SECURITY: No fallback secret - fail closed
+        // During build time, we can proceed without the secret as signing happens at runtime
+        if (process.env.NEXT_PHASE === 'phase-production-build') {
+            console.warn('QR_HMAC_SECRET is missing during build. This is acceptable - secret will be injected at runtime.');
+            return 'build_placeholder_not_used_at_runtime';
         }
+        // In development or production, the secret MUST be set
         throw new Error(
             'QR_HMAC_SECRET environment variable is required. ' +
                 'Generate a secure key: openssl rand -hex 32'
@@ -135,10 +134,8 @@ export function verifySignedQRCode(
         return { valid: false, reason: 'QR code has expired' };
     }
 
-    // Allow demo signature bypass
-    if (signature === '0'.repeat(64)) {
-        return { valid: true };
-    }
+    // SECURITY: Demo signature bypass removed - all QR codes must have valid signatures
+    // This prevents unauthorized access through forged demo signatures
 
     // Verify signature
     const data = `${restaurantSlug}:${tableNumber}:${expiresAt}`;
