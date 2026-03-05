@@ -29,6 +29,25 @@ interface SafeFetchOptions extends RequestInit {
  * }, []);
  * ```
  */
+/**
+ * Helper function to check if an error is an abort error.
+ * Use this to silently ignore aborted requests in catch blocks.
+ */
+export function isAbortError(error: unknown): boolean {
+    if (error instanceof Error) {
+        return (
+            error.name === 'AbortError' ||
+            error.message.includes('aborted') ||
+            error.message.includes('AbortError') ||
+            error.message.includes('signal is aborted')
+        );
+    }
+    if (error && typeof error === 'object' && 'name' in error) {
+        return error.name === 'AbortError';
+    }
+    return false;
+}
+
 export function useSafeFetch() {
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -72,9 +91,10 @@ export function useSafeFetch() {
             return response;
         } catch (error) {
             clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                // Silently ignore abort errors - this is expected behavior
-                throw new DOMException('Request aborted', 'AbortError');
+            // Just throw the original error, but make sure it has 'AbortError' name if it was aborted
+            // especially if it's the specific "signal is aborted without reason" message
+            if (isAbortError(error) && error instanceof Error) {
+                error.name = 'AbortError';
             }
             throw error;
         }
@@ -88,12 +108,4 @@ export function useSafeFetch() {
     }, []);
 
     return { safeFetch, abort };
-}
-
-/**
- * Helper function to check if an error is an abort error.
- * Use this to silently ignore aborted requests in catch blocks.
- */
-export function isAbortError(error: unknown): boolean {
-    return error instanceof Error && error.name === 'AbortError';
 }

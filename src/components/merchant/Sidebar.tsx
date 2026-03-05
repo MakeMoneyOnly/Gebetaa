@@ -39,7 +39,7 @@ const MENU_ITEMS = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const { role } = useRole(null);
+    const { role, loading } = useRole(null);
 
     // Dynamic role-based filtering
     const filteredItems = React.useMemo(() => {
@@ -117,49 +117,63 @@ export function Sidebar() {
 
                 {/* Navigation */}
                 <nav className="space-y-1.5 px-1">
-                    {filteredItems.map(item => {
-                        const isActive =
-                            pathname === item.href || pathname.startsWith(item.href + '/');
-                        const Icon = item.icon;
+                    {loading ? (
+                        // Skeleton Loaders for Enterprise Feel
+                        <>
+                            {[...Array(6)].map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="h-[52px] w-full animate-pulse rounded-2xl bg-gray-50/80"
+                                />
+                            ))}
+                        </>
+                    ) : (
+                        filteredItems.map(item => {
+                            const isActive =
+                                item.href === '/merchant'
+                                    ? pathname === '/merchant'
+                                    : pathname.startsWith(item.href);
+                            const Icon = item.icon;
 
-                        return (
-                            <div key={item.label} className="space-y-1">
-                                <div className="group relative">
-                                    <Link
-                                        href={item.href}
-                                        className={cn(
-                                            'flex items-center justify-between rounded-2xl px-4 py-3.5 transition-all duration-300 ease-out group-hover:scale-[1.02]',
-                                            isActive
-                                                ? 'border border-blue-100/50 bg-gradient-to-br from-blue-50 to-indigo-50/50 text-black shadow-sm'
-                                                : 'text-gray-500 hover:bg-gray-50 hover:text-black'
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-3.5">
-                                            <Icon
-                                                className={cn(
-                                                    'h-[22px] w-[22px] transition-transform duration-300',
-                                                    isActive
-                                                        ? 'text-black'
-                                                        : 'text-gray-400 group-hover:scale-110 group-hover:text-black'
-                                                )}
-                                                strokeWidth={2}
-                                            />
-                                            <span
-                                                className={cn(
-                                                    'truncate text-[15px] tracking-tight transition-all',
-                                                    isActive
-                                                        ? 'font-semibold text-black'
-                                                        : 'font-semibold text-gray-500 group-hover:text-black'
-                                                )}
-                                            >
-                                                {item.label}
-                                            </span>
-                                        </div>
-                                    </Link>
+                            return (
+                                <div key={item.label} className="space-y-1">
+                                    <div className="group relative">
+                                        <Link
+                                            href={item.href}
+                                            className={cn(
+                                                'flex items-center justify-between rounded-2xl px-4 py-3.5 transition-all duration-300 ease-out group-hover:scale-[1.02]',
+                                                isActive
+                                                    ? 'bg-gradient-to-br from-blue-50 to-indigo-50/50 text-black shadow-sm'
+                                                    : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3.5">
+                                                <Icon
+                                                    className={cn(
+                                                        'h-[22px] w-[22px] transition-transform duration-300',
+                                                        isActive
+                                                            ? 'text-black'
+                                                            : 'text-gray-400 group-hover:scale-110 group-hover:text-black'
+                                                    )}
+                                                    strokeWidth={2}
+                                                />
+                                                <span
+                                                    className={cn(
+                                                        'truncate text-[15px] tracking-tight transition-all',
+                                                        isActive
+                                                            ? 'font-semibold text-black'
+                                                            : 'font-semibold text-gray-500 group-hover:text-black'
+                                                    )}
+                                                >
+                                                    {item.label}
+                                                </span>
+                                            </div>
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </nav>
             </div>
 

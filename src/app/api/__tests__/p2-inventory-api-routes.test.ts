@@ -17,6 +17,7 @@ import {
 } from '@/app/api/inventory/invoices/route';
 import { POST as postParseInvoice } from '@/app/api/inventory/invoices/parse/route';
 import { POST as postIngestInvoice } from '@/app/api/inventory/invoices/ingest/route';
+import { POST as postReceiveInvoice } from '@/app/api/inventory/invoices/[invoiceId]/receive/route';
 import { GET as getRecipes, POST as postRecipes } from '@/app/api/inventory/recipes/route';
 
 vi.mock('@/lib/api/authz', () => ({
@@ -206,6 +207,35 @@ describe('P2 inventory API routes', () => {
                 method: 'POST',
                 body: formData,
             })
+        );
+
+        expect(response.status).toBe(400);
+    });
+
+    it('POST /api/inventory/invoices/:id/receive returns 401 when unauthorized', async () => {
+        setAuthUnauthorized();
+
+        const response = await postReceiveInvoice(
+            new Request('http://localhost/api/inventory/invoices/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/receive', {
+                method: 'POST',
+            }),
+            { params: Promise.resolve({ invoiceId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
+        );
+
+        expect(response.status).toBe(401);
+    });
+
+    it('POST /api/inventory/invoices/:id/receive returns 400 for invalid idempotency key', async () => {
+        setAuthAndContextOk();
+
+        const response = await postReceiveInvoice(
+            new Request('http://localhost/api/inventory/invoices/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/receive', {
+                method: 'POST',
+                headers: {
+                    'x-idempotency-key': 'bad-key',
+                },
+            }),
+            { params: Promise.resolve({ invoiceId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 
         expect(response.status).toBe(400);

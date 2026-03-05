@@ -66,10 +66,16 @@ export async function safeFetch<T>(
         const data = (await response.json()) as T;
         return { data, error: null, status: response.status };
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        if (error instanceof Error) {
+            return {
+                data: null,
+                error: error,
+                status: 0,
+            };
+        }
         return {
             data: null,
-            error: new Error(errorMessage),
+            error: new Error(typeof error === 'string' ? error : 'Unknown error'),
             status: 0,
         };
     }
@@ -104,8 +110,9 @@ export async function postJSON<T>(
 export function isTimeoutError(error: Error): boolean {
     return (
         error.name === 'AbortError' ||
-        error.message.includes('timeout') ||
-        error.message.includes('The operation was aborted')
+        error.message.toLowerCase().includes('timeout') ||
+        error.message.toLowerCase().includes('aborted') ||
+        error.message.toLowerCase().includes('signal is aborted')
     );
 }
 

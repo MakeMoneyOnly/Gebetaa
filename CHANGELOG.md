@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added direct image/PDF invoice ingestion API for Addis operations:
     - `POST /api/inventory/invoices/ingest` in `src/app/api/inventory/invoices/ingest/route.ts`
     - Supports provider-specific extraction pipeline with Addis-first fallback order (`oss -> azure -> google -> aws`) and confidence-based review policy metadata.
+- Added invoice receive automation endpoint:
+    - `POST /api/inventory/invoices/:id/receive` in `src/app/api/inventory/invoices/[invoiceId]/receive/route.ts`
+    - Posts inventory `stock_movements` from matched invoice lines (`reference_type: invoice`), enforces confidence gating, persists receive exceptions for low-confidence/unmatched lines, and adds idempotent replay protection.
 - Added invoice OCR parsing utility:
     - `src/lib/inventory/invoiceOcr.ts`
 - Extended supplier invoice create contract to persist OCR metadata and line-item mapping context:
@@ -27,8 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `src/components/merchant/InvoiceReviewQueue.tsx`
     - `src/app/(dashboard)/merchant/inventory/page.tsx`
 - Added route-level rate limiting and tests for parse endpoint:
+    - Added nested invoice receive rate-limit policy.
     - `src/lib/api/rateLimitPolicies.ts`
     - `src/app/api/__tests__/p2-inventory-api-routes.test.ts`
+    - `src/app/api/__tests__/invoice-receive-flow.integration.test.ts`
 - Updated Toast parity audit status for invoice processing:
     - `TOAST_FEATURE_AUDIT.md`
 

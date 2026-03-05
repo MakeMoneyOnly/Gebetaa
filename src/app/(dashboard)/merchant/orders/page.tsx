@@ -10,6 +10,7 @@ import { Order, ServiceRequest } from '@/types/database';
 import { OrdersQueueTable } from '@/components/merchant/OrdersQueueTable';
 import { OrdersKanbanBoard } from '@/components/merchant/OrdersKanbanBoard';
 import { BulkActionBar } from '@/components/merchant/BulkActionBar';
+import { isAbortError } from '@/hooks/useSafeFetch';
 
 type OrderEvent = {
     id: string;
@@ -358,7 +359,7 @@ export default function OrdersPage() {
                     sessionStorage.setItem(cacheKey, JSON.stringify(fresh));
                 } catch {}
             } catch (error) {
-                if ((error as Error).name === 'AbortError') return; // stale request — ignore
+                if (isAbortError(error)) return; // stale request — ignore
                 console.error('Error fetching orders from API:', error);
                 // Do NOT clear orders on error — keep showing stale data
             }
@@ -412,7 +413,7 @@ export default function OrdersPage() {
                     sessionStorage.setItem(cacheKey, JSON.stringify(fresh));
                 } catch {}
             } catch (error) {
-                if ((error as Error).name === 'AbortError') return; // stale request — ignore
+                if (isAbortError(error)) return; // stale request — ignore
                 console.error('Error fetching service requests from API:', error);
                 // Do NOT clear on error — keep showing stale data
             }

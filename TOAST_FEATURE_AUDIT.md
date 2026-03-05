@@ -684,6 +684,7 @@ The following P0 items were progressed beyond the original audit baseline:
 - **P0-004 Kitchen Printer Fallback**: Added printer fallback policy (`off|fallback|always`) in KDS settings, ticket print endpoint, and KDS-triggered fallback printing on action failures/offline conditions.
 - **P0-007 Invoice Processing Automation**: Added OCR-assisted invoice parsing endpoint (`POST /api/inventory/invoices/parse`), draft field auto-fill in merchant inventory UI, and line-item auto-mapping to inventory items stored with supplier invoices for review/audit.
 - **P0-007 Invoice Processing Automation (Addis-specific direct ingest)**: Added direct image/PDF invoice ingestion (`POST /api/inventory/invoices/ingest`) with Addis-first provider fallback order (`oss -> azure -> google -> aws`), provider confidence capture, and review-policy thresholds tuned for human-review-first operation in low-connectivity environments.
+- **P0-007 Invoice Receive Automation**: Added invoice receive endpoint (`POST /api/inventory/invoices/:id/receive`) that applies confidence gating for auto-receive, writes stock movements with `reference_type=invoice`, enforces idempotent replay protection, and persists receive exceptions for unmatched/low-confidence lines.
 
 ---
 

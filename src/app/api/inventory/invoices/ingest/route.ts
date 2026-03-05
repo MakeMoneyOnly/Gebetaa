@@ -43,12 +43,34 @@ export async function POST(request: Request) {
         return apiError('Invalid multipart/form-data payload', 400, 'INVALID_MULTIPART_BODY');
     }
 
-    const file = formData.get('file');
-    if (!(file instanceof File)) {
+    const fileEntry = formData.get('file');
+    if (!fileEntry || typeof fileEntry !== 'object') {
         return apiError('Missing invoice file', 400, 'INVOICE_FILE_REQUIRED');
     }
+    const file = fileEntry as {
+        name?: string;
+        type?: string;
+        size?: number;
+        arrayBuffer?: () => Promise<ArrayBuffer>;
+        text?: () => Promise<string>;
+    };
+    const fileName = file.name || 'invoice-upload';
+    const inferredFromName =
+        fileName.toLowerCase().endsWith('.pdf')
+            ? 'application/pdf'
+            : fileName.toLowerCase().endsWith('.png')
+              ? 'image/png'
+              : fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg')
+                ? 'image/jpeg'
+                : fileName.toLowerCase().endsWith('.webp')
+                  ? 'image/webp'
+                  : fileName.toLowerCase().endsWith('.tif') || fileName.toLowerCase().endsWith('.tiff')
+                    ? 'image/tiff'
+                    : 'application/octet-stream';
+    const fileType = file.type || inferredFromName;
+    const fileSize = Number(file.size ?? 0);
 
-    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    if (!ALLOWED_MIME_TYPES.has(fileType)) {
         return apiError(
             'Unsupported file type. Use PDF, JPG, PNG, WEBP, or TIFF.',
             400,
@@ -56,7 +78,7 @@ export async function POST(request: Request) {
         );
     }
 
-    if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
+    if (fileSize <= 0 || fileSize > MAX_UPLOAD_BYTES) {
         return apiError(
             'Invoice file size must be between 1 byte and 10MB',
             400,
@@ -74,8 +96,20 @@ export async function POST(request: Request) {
             ? String(formData.get('currency')).trim().toUpperCase()
             : 'ETB';
 
-    const arrayBuffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
+    let bytes: Uint8Array;
+    if (typeof file.arrayBuffer === 'function') {
+        const arrayBuffer = await file.arrayBuffer();
+        bytes = new Uint8Array(arrayBuffer);
+    } else if (typeof file.text === 'function') {
+        const text = await file.text();
+        bytes = new Uint8Array(Buffer.from(text));
+    } else {
+        return apiError(
+            'Unable to read invoice file contents',
+            400,
+            'UNREADABLE_INVOICE_FILE_CONTENT'
+        );
+    }
 
     const db = context.supabase;
     const { data: inventoryItems, error: inventoryError } = await db
@@ -96,8 +130,8 @@ export async function POST(request: Request) {
 
     try {
         const extraction = await ingestInvoiceDocument({
-            fileName: file.name,
-            mimeType: file.type,
+            fileName,
+            mimeType: fileType,
             bytes,
             providerPreference: provider,
         });
@@ -155,9 +189,9 @@ export async function POST(request: Request) {
                 provider: extraction.provider,
                 provider_confidence: extraction.confidence,
                 parsed_at: new Date().toISOString(),
-                file_name: file.name,
-                mime_type: file.type,
-                file_size_bytes: file.size,
+                file_name: fileName,
+                mime_type: fileType,
+                file_size_bytes: fileSize,
             },
             addis_review_policy: addisPolicy,
         });
