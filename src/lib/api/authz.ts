@@ -187,7 +187,7 @@ export async function enforceTenantScope(
 /**
  * SEC-002: Validate resource belongs to user's restaurant
  * Use this before any mutation to prevent cross-tenant data access
- * 
+ *
  * Note: For type-safe resource validation, use the specific table validators below:
  * - validateOrderTenantScope
  * - validateMenuItemTenantScope
@@ -208,7 +208,7 @@ export async function validateResourceTenantScope(
     // Log the validation attempt for audit purposes
     console.warn(
         `SEC-002: Resource validation requested for table ${resourceTable}, id ${resourceId}. ` +
-        `Consider using a type-specific validator for better type safety.`
+            `Consider using a type-specific validator for better type safety.`
     );
 
     // Return valid - actual table-specific validation should be done by calling

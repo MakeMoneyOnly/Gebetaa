@@ -25,28 +25,28 @@ This endpoint is called by Gebeta when KDS printer fallback dispatches to `print
 
 ```json
 {
-  "event": "kds.ticket.print.v1",
-  "event_id": "uuid",
-  "occurred_at": "2026-03-01T18:00:00.000Z",
-  "idempotency_key": "uuid",
-  "copies": 1,
-  "payload": {
-    "restaurantId": "uuid",
-    "orderId": "uuid",
-    "orderNumber": "ORD-123",
-    "tableNumber": "T-10",
-    "firedAt": "2026-03-01T18:00:00.000Z",
-    "reason": "manual_kds_print",
-    "items": [
-      {
-        "name": "Doro Wat",
-        "quantity": 1,
-        "station": "kitchen",
-        "notes": "extra spicy",
-        "status": "queued"
-      }
-    ]
-  }
+    "event": "kds.ticket.print.v1",
+    "event_id": "uuid",
+    "occurred_at": "2026-03-01T18:00:00.000Z",
+    "idempotency_key": "uuid",
+    "copies": 1,
+    "payload": {
+        "restaurantId": "uuid",
+        "orderId": "uuid",
+        "orderNumber": "ORD-123",
+        "tableNumber": "T-10",
+        "firedAt": "2026-03-01T18:00:00.000Z",
+        "reason": "manual_kds_print",
+        "items": [
+            {
+                "name": "Doro Wat",
+                "quantity": 1,
+                "station": "kitchen",
+                "notes": "extra spicy",
+                "status": "queued"
+            }
+        ]
+    }
 }
 ```
 
@@ -70,14 +70,13 @@ Shared secret: `KDS_PRINTER_WEBHOOK_SECRET` (fallback: `HMAC_SECRET`).
 
 - Deduplicate by `x-gebeta-idempotency-key` (or `event_id`).
 - Gebeta retries with exponential backoff + jitter for retryable failures:
-  - HTTP `408`, `409`, `425`, `429`, and `5xx`
-  - network/timeouts
+    - HTTP `408`, `409`, `425`, `429`, and `5xx`
+    - network/timeouts
 - Non-retryable: other `4xx`.
 
 ## Expected Response
 
 - Success: any `2xx`.
 - Failure:
-  - retryable: return `429` or `5xx`
-  - non-retryable: return `4xx` (except retryable list above)
-
+    - retryable: return `429` or `5xx`
+    - non-retryable: return `4xx` (except retryable list above)

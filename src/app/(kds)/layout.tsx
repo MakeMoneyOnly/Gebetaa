@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 export default function KDSLayout({ children }: { children: React.ReactNode }) {
     return (
         <RoleGuard allowedRoles={['kitchen', 'bar', 'admin', 'manager', 'owner']}>
-            <div className="font-manrope flex h-dvh w-screen min-h-0 flex-col overflow-hidden bg-gray-50 text-gray-900">
-                <main className="relative flex-1 min-h-0 bg-gray-50">{children}</main>
+            <div className="font-manrope flex h-dvh min-h-0 w-screen flex-col overflow-hidden bg-gray-50 text-gray-900">
+                <main className="relative min-h-0 flex-1 bg-gray-50">{children}</main>
             </div>
         </RoleGuard>
     );

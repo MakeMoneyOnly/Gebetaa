@@ -49,7 +49,11 @@ export async function POST(request: Request) {
 
     const tableStatus = String(table.status ?? 'available');
     if (tableStatus === 'available') {
-        return apiError('Cannot request bill for an available table', 409, 'BILL_REQUEST_INVALID_TABLE_STATE');
+        return apiError(
+            'Cannot request bill for an available table',
+            409,
+            'BILL_REQUEST_INVALID_TABLE_STATE'
+        );
     }
 
     const now = new Date().toISOString();

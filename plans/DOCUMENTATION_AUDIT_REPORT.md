@@ -16,15 +16,15 @@ This audit identified **7 empty folders**, **4 duplicate/outdated files**, and *
 
 The following folders exist but contain no files:
 
-| Folder Path | Recommendation |
-|-------------|----------------|
-| `docs/COMPLIANCE/` | **DELETE** - No compliance docs exist |
-| `docs/DEVELOPMENT/` | **DELETE** - No development guides exist |
-| `docs/OPERATIONS/deployment/` | **DELETE** - Deployment info in Engineering Runbook |
-| `docs/OPERATIONS/disaster-recovery/` | **DELETE** - No DR docs exist |
-| `docs/OPERATIONS/runbooks/` | **DELETE** - Runbooks in Engineering Runbook |
-| `docs/TECHNICAL/api/` | **DELETE** - API docs in Engineering Foundation #5 |
-| `docs/TECHNICAL/integrations/` | **DELETE** - Integration docs in other files |
+| Folder Path                          | Recommendation                                      |
+| ------------------------------------ | --------------------------------------------------- |
+| `docs/COMPLIANCE/`                   | **DELETE** - No compliance docs exist               |
+| `docs/DEVELOPMENT/`                  | **DELETE** - No development guides exist            |
+| `docs/OPERATIONS/deployment/`        | **DELETE** - Deployment info in Engineering Runbook |
+| `docs/OPERATIONS/disaster-recovery/` | **DELETE** - No DR docs exist                       |
+| `docs/OPERATIONS/runbooks/`          | **DELETE** - Runbooks in Engineering Runbook        |
+| `docs/TECHNICAL/api/`                | **DELETE** - API docs in Engineering Foundation #5  |
+| `docs/TECHNICAL/integrations/`       | **DELETE** - Integration docs in other files        |
 
 ---
 
@@ -34,12 +34,12 @@ These files overlap with or are superseded by the new Engineering Foundation doc
 
 ### Files to DELETE:
 
-| Current Path | Superseded By | Reason |
-|--------------|---------------|--------|
-| `docs/TECHNICAL/tech-stack.md` | [`docs/1/Engineering Foundation/2. Tech_Stack.md`](/docs/1/Engineering%20Foundation/2.%20Tech_Stack.md) | New version is more comprehensive with pricing, monitoring, and mobile (Phase 2) sections |
-| `docs/PRODUCT/product-requirements-document.md` | [`docs/1/Engineering Foundation/1. PRD.md`](/docs/1/Engineering%20Foundation/1.%20PRD.md) | New PRD has detailed feature requirements, success metrics, and out-of-scope items |
-| `docs/TECHNICAL/system-design/architecture-diagrams.md` | [`docs/1/Engineering Foundation/3. System_Architecure.md`](/docs/1/Engineering%20Foundation/3.%20System_Architecure.md) | New architecture doc has domain architecture, event flows, and offline architecture |
-| `docs/TECHNICAL/database/schema-snapshot-2026-02-17.md` | [`docs/1/Engineering Foundation/4. Database_Schema.md`](/docs/1/Engineering%20Foundation/4.%20Database_Schema.md) | Old snapshot is outdated; new schema doc is comprehensive |
+| Current Path                                            | Superseded By                                                                                                           | Reason                                                                                    |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `docs/TECHNICAL/tech-stack.md`                          | [`docs/1/Engineering Foundation/2. Tech_Stack.md`](/docs/1/Engineering%20Foundation/2.%20Tech_Stack.md)                 | New version is more comprehensive with pricing, monitoring, and mobile (Phase 2) sections |
+| `docs/PRODUCT/product-requirements-document.md`         | [`docs/1/Engineering Foundation/1. PRD.md`](/docs/1/Engineering%20Foundation/1.%20PRD.md)                               | New PRD has detailed feature requirements, success metrics, and out-of-scope items        |
+| `docs/TECHNICAL/system-design/architecture-diagrams.md` | [`docs/1/Engineering Foundation/3. System_Architecure.md`](/docs/1/Engineering%20Foundation/3.%20System_Architecure.md) | New architecture doc has domain architecture, event flows, and offline architecture       |
+| `docs/TECHNICAL/database/schema-snapshot-2026-02-17.md` | [`docs/1/Engineering Foundation/4. Database_Schema.md`](/docs/1/Engineering%20Foundation/4.%20Database_Schema.md)       | Old snapshot is outdated; new schema doc is comprehensive                                 |
 
 ---
 
@@ -49,24 +49,24 @@ The main [`docs/README.md`](/docs/README.md) references files that **do not exis
 
 ### Referenced but Missing:
 
-| Missing File | Referenced In |
-|--------------|---------------|
-| `STANDARDS/typescript-conventions.md` | README.md line 37 |
-| `STANDARDS/api-conventions.md` | README.md line 38 |
-| `STANDARDS/database-conventions.md` | README.md line 39 |
-| `STANDARDS/testing-standards.md` | README.md line 40 |
-| `TECHNICAL/system-design/multi-tenancy.md` | README.md (structure diagram) |
-| `TECHNICAL/system-design/offline-first.md` | README.md (structure diagram) |
+| Missing File                                        | Referenced In                 |
+| --------------------------------------------------- | ----------------------------- |
+| `STANDARDS/typescript-conventions.md`               | README.md line 37             |
+| `STANDARDS/api-conventions.md`                      | README.md line 38             |
+| `STANDARDS/database-conventions.md`                 | README.md line 39             |
+| `STANDARDS/testing-standards.md`                    | README.md line 40             |
+| `TECHNICAL/system-design/multi-tenancy.md`          | README.md (structure diagram) |
+| `TECHNICAL/system-design/offline-first.md`          | README.md (structure diagram) |
 | `TECHNICAL/system-design/realtime-subscriptions.md` | README.md (structure diagram) |
-| `TECHNICAL/database/schema-reference.md` | README.md (structure diagram) |
-| `TECHNICAL/database/migration-guide.md` | README.md (structure diagram) |
-| `TECHNICAL/api/api-reference.md` | README.md (structure diagram) |
-| `TECHNICAL/integrations/telebirr.md` | README.md (structure diagram) |
-| `TECHNICAL/integrations/chapa.md` | README.md (structure diagram) |
-| `DEVELOPMENT/getting-started.md` | README.md line 54 |
-| `DEVELOPMENT/environment-setup.md` | README.md line 55 |
-| `OPERATIONS/deployment/` (entire folder) | README.md line 47 |
-| `COMPLIANCE/gdpr-compliance.md` | README.md line 93 |
+| `TECHNICAL/database/schema-reference.md`            | README.md (structure diagram) |
+| `TECHNICAL/database/migration-guide.md`             | README.md (structure diagram) |
+| `TECHNICAL/api/api-reference.md`                    | README.md (structure diagram) |
+| `TECHNICAL/integrations/telebirr.md`                | README.md (structure diagram) |
+| `TECHNICAL/integrations/chapa.md`                   | README.md (structure diagram) |
+| `DEVELOPMENT/getting-started.md`                    | README.md line 54             |
+| `DEVELOPMENT/environment-setup.md`                  | README.md line 55             |
+| `OPERATIONS/deployment/` (entire folder)            | README.md line 47             |
+| `COMPLIANCE/gdpr-compliance.md`                     | README.md line 93             |
 
 ---
 
@@ -74,22 +74,22 @@ The main [`docs/README.md`](/docs/README.md) references files that **do not exis
 
 These files are still relevant and should be preserved:
 
-| File Path | Status | Notes |
-|-----------|--------|-------|
-| `docs/README.md` | **UPDATE** | Main index - needs restructuring |
-| `docs/STANDARDS/coding-standards.md` | **KEEP** | Comprehensive coding standards - not covered in Engineering Foundation |
-| `docs/1/Engineering Foundation/0. ENTERPRISE_MASTER_BLUEPRINT.md` | **KEEP** | Master blueprint - the source of truth |
-| `docs/1/Engineering Foundation/1. PRD.md` | **KEEP** | Product Requirements Document |
-| `docs/1/Engineering Foundation/2. Tech_Stack.md` | **KEEP** | Technology Stack |
-| `docs/1/Engineering Foundation/3. System_Architecure.md` | **KEEP** | System Architecture |
-| `docs/1/Engineering Foundation/4. Database_Schema.md` | **KEEP** | Database Schema |
-| `docs/1/Engineering Foundation/5. API_Design_Guide.md` | **KEEP** | API Design Guide |
-| `docs/1/Engineering Foundation/6. ENGINEERING_RUNOOK.md` | **KEEP** | Engineering Runbook |
-| `docs/api/kds-printer-webhook-contract.md` | **KEEP** | Specific API contract for KDS printer |
-| `docs/api/template.md` | **KEEP** | API template |
-| `docs/implementation/*` | **KEEP** | Implementation-specific docs (advisors, migrations, etc.) |
-| `docs/OPERATIONS/database/backup-restore.md` | **KEEP** | Database backup/restore procedures |
-| `docs/OPERATIONS/monitoring/api-reliability-dashboard.md` | **KEEP** | Monitoring documentation |
+| File Path                                                         | Status     | Notes                                                                  |
+| ----------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------- |
+| `docs/README.md`                                                  | **UPDATE** | Main index - needs restructuring                                       |
+| `docs/STANDARDS/coding-standards.md`                              | **KEEP**   | Comprehensive coding standards - not covered in Engineering Foundation |
+| `docs/1/Engineering Foundation/0. ENTERPRISE_MASTER_BLUEPRINT.md` | **KEEP**   | Master blueprint - the source of truth                                 |
+| `docs/1/Engineering Foundation/1. PRD.md`                         | **KEEP**   | Product Requirements Document                                          |
+| `docs/1/Engineering Foundation/2. Tech_Stack.md`                  | **KEEP**   | Technology Stack                                                       |
+| `docs/1/Engineering Foundation/3. System_Architecure.md`          | **KEEP**   | System Architecture                                                    |
+| `docs/1/Engineering Foundation/4. Database_Schema.md`             | **KEEP**   | Database Schema                                                        |
+| `docs/1/Engineering Foundation/5. API_Design_Guide.md`            | **KEEP**   | API Design Guide                                                       |
+| `docs/1/Engineering Foundation/6. ENGINEERING_RUNOOK.md`          | **KEEP**   | Engineering Runbook                                                    |
+| `docs/api/kds-printer-webhook-contract.md`                        | **KEEP**   | Specific API contract for KDS printer                                  |
+| `docs/api/template.md`                                            | **KEEP**   | API template                                                           |
+| `docs/implementation/*`                                           | **KEEP**   | Implementation-specific docs (advisors, migrations, etc.)              |
+| `docs/OPERATIONS/database/backup-restore.md`                      | **KEEP**   | Database backup/restore procedures                                     |
+| `docs/OPERATIONS/monitoring/api-reliability-dashboard.md`         | **KEEP**   | Monitoring documentation                                               |
 
 ---
 
@@ -143,12 +143,12 @@ docs/
 
 ## 6. Action Items Summary
 
-| Action | Count |
-|--------|-------|
-| Delete empty folders | 7 |
-| Remove duplicate/outdated files | 4 |
-| Update docs/README.md | 1 |
-| Keep existing files | 16+ |
+| Action                          | Count |
+| ------------------------------- | ----- |
+| Delete empty folders            | 7     |
+| Remove duplicate/outdated files | 4     |
+| Update docs/README.md           | 1     |
+| Keep existing files             | 16+   |
 
 ---
 

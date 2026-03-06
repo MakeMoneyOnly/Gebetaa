@@ -15,10 +15,7 @@ const HandoffBodySchema = z.object({
 
 const EXPEDITOR_HANDOFF_ROLES = new Set(['owner', 'admin', 'manager']);
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ orderId: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ orderId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -72,12 +69,14 @@ export async function POST(
 
     const [{ data: order, error: orderError }, { data: kdsItems, error: kdsItemsError }] =
         await Promise.all([
-            db.from('orders')
+            db
+                .from('orders')
                 .select('id, status')
                 .eq('id', orderId)
                 .eq('restaurant_id', restaurantContext.restaurantId)
                 .maybeSingle(),
-            dbAny.from('kds_order_items')
+            dbAny
+                .from('kds_order_items')
                 .select('id, status')
                 .eq('order_id', orderId)
                 .eq('restaurant_id', restaurantContext.restaurantId),
@@ -147,10 +146,10 @@ export async function POST(
         dbAny.from('order_events').insert({
             restaurant_id: restaurantContext.restaurantId,
             order_id: order.id,
-                event_type: 'status_changed',
-                from_status: currentStatus,
-                to_status: 'served',
-                actor_user_id: auth.user.id,
+            event_type: 'status_changed',
+            from_status: currentStatus,
+            to_status: 'served',
+            actor_user_id: auth.user.id,
             metadata: {
                 source: 'kds_expeditor_handoff',
                 action: 'bump',

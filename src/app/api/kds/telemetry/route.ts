@@ -130,7 +130,9 @@ export async function GET(request: Request) {
             active_tickets: queueAges.length,
             avg_minutes:
                 queueAges.length > 0
-                    ? Number((queueAges.reduce((sum, n) => sum + n, 0) / queueAges.length).toFixed(1))
+                    ? Number(
+                          (queueAges.reduce((sum, n) => sum + n, 0) / queueAges.length).toFixed(1)
+                      )
                     : 0,
             p50_minutes: percentile(queueAges, 50),
             p95_minutes: percentile(queueAges, 95),
@@ -140,7 +142,9 @@ export async function GET(request: Request) {
             threshold_minutes: sla_minutes,
             breached_tickets: breachedCount,
             breached_ratio_percent:
-                queueAges.length > 0 ? Number(((breachedCount / queueAges.length) * 100).toFixed(2)) : 0,
+                queueAges.length > 0
+                    ? Number(((breachedCount / queueAges.length) * 100).toFixed(2))
+                    : 0,
         },
         websocket: {
             status: connectedRecent ? 'healthy' : 'degraded',

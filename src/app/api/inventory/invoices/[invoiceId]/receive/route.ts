@@ -188,7 +188,9 @@ export async function POST(
 
     const lineItems = parsedLineItems.data;
     const exceptions = buildReceiveExceptions(lineItems);
-    const mappedCount = lineItems.filter(item => item.inventory_item_id && (item.qty ?? 0) > 0).length;
+    const mappedCount = lineItems.filter(
+        item => item.inventory_item_id && (item.qty ?? 0) > 0
+    ).length;
     const mappedRatio = lineItems.length === 0 ? 0 : mappedCount / lineItems.length;
     const computedAverageMatchConfidence =
         lineItems.length === 0
@@ -335,7 +337,11 @@ export async function POST(
     }
 
     const movementIds: string[] = [];
-    const stockChanges: Array<{ inventory_item_id: string; previous_stock: number; next_stock: number }> = [];
+    const stockChanges: Array<{
+        inventory_item_id: string;
+        previous_stock: number;
+        next_stock: number;
+    }> = [];
 
     for (const [inventoryItemId, aggregate] of linesByItem.entries()) {
         const inventoryItem = inventoryById.get(inventoryItemId);

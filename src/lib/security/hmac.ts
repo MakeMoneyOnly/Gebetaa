@@ -16,7 +16,9 @@ function getHmacSecret(): string {
         // SECURITY: No fallback secret - fail closed
         // During build time, we can proceed without the secret as signing happens at runtime
         if (process.env.NEXT_PHASE === 'phase-production-build') {
-            console.warn('QR_HMAC_SECRET is missing during build. This is acceptable - secret will be injected at runtime.');
+            console.warn(
+                'QR_HMAC_SECRET is missing during build. This is acceptable - secret will be injected at runtime.'
+            );
             return 'build_placeholder_not_used_at_runtime';
         }
         // In development or production, the secret MUST be set

@@ -145,9 +145,7 @@ export async function POST(request: Request) {
             status: 'pending',
             total_price: totalPrice,
             order_number: orderNumber,
-            notes:
-                notes ??
-                (staff_name ? `POS waiter: ${staff_name}` : null),
+            notes: notes ?? (staff_name ? `POS waiter: ${staff_name}` : null),
             items: normalizedItems,
             order_type,
             customer_name: customer_name ?? null,
@@ -198,8 +196,9 @@ export async function POST(request: Request) {
                 table_id: table.id,
                 guest_count: 1,
                 status: 'open',
-                notes:
-                    staff_name ? `Opened by ${staff_name} via waiter POS` : 'Opened via waiter POS',
+                notes: staff_name
+                    ? `Opened by ${staff_name} via waiter POS`
+                    : 'Opened via waiter POS',
             });
         }
     }

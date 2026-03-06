@@ -60,22 +60,22 @@ export function generateConfirmationToken(
 ): { token: string; expiresAt: number } {
     const expiresAt = Date.now() + TOKEN_EXPIRATION_MS;
     const nonce = randomBytes(16).toString('hex');
-    
+
     const payload = `${action}:${resourceId}:${userId}:${restaurantId}:${expiresAt}:${nonce}`;
-    const signature = createHmac('sha256', getSigningSecret())
-        .update(payload)
-        .digest('hex');
-    
-    const token = Buffer.from(JSON.stringify({
-        action,
-        resourceId,
-        userId,
-        restaurantId,
-        expiresAt,
-        nonce,
-        signature,
-    })).toString('base64url');
-    
+    const signature = createHmac('sha256', getSigningSecret()).update(payload).digest('hex');
+
+    const token = Buffer.from(
+        JSON.stringify({
+            action,
+            resourceId,
+            userId,
+            restaurantId,
+            expiresAt,
+            nonce,
+            signature,
+        })
+    ).toString('base64url');
+
     return { token, expiresAt };
 }
 
@@ -90,45 +90,49 @@ export function verifyConfirmationToken(
 ): { valid: boolean; reason?: string; resourceId?: string } {
     try {
         const decoded = JSON.parse(Buffer.from(token, 'base64url').toString('utf-8'));
-        
-        const { action, resourceId, userId, restaurantId, expiresAt, nonce, signature } = decoded as ConfirmationToken & { nonce: string; signature: string };
-        
+
+        const { action, resourceId, userId, restaurantId, expiresAt, nonce, signature } =
+            decoded as ConfirmationToken & { nonce: string; signature: string };
+
         // Check expiration
         if (Date.now() > expiresAt) {
             return { valid: false, reason: 'Confirmation token has expired' };
         }
-        
+
         // Verify action matches
         if (action !== expectedAction) {
             return { valid: false, reason: 'Invalid action for confirmation token' };
         }
-        
+
         // Verify user matches
         if (userId !== expectedUserId) {
             return { valid: false, reason: 'Confirmation token does not belong to current user' };
         }
-        
+
         // Verify restaurant matches
         if (restaurantId !== expectedRestaurantId) {
-            return { valid: false, reason: 'Confirmation token does not belong to current restaurant' };
+            return {
+                valid: false,
+                reason: 'Confirmation token does not belong to current restaurant',
+            };
         }
-        
+
         // Verify signature
         const payload = `${action}:${resourceId}:${userId}:${restaurantId}:${expiresAt}:${nonce}`;
         const expectedSignature = createHmac('sha256', getSigningSecret())
             .update(payload)
             .digest('hex');
-        
+
         const signatureBuffer = Buffer.from(signature, 'hex');
         const expectedBuffer = Buffer.from(expectedSignature, 'hex');
-        
+
         if (
             signatureBuffer.length !== expectedBuffer.length ||
             !timingSafeEqual(signatureBuffer, expectedBuffer)
         ) {
             return { valid: false, reason: 'Invalid confirmation token signature' };
         }
-        
+
         return { valid: true, resourceId };
     } catch (error) {
         return { valid: false, reason: 'Invalid confirmation token format' };
@@ -150,22 +154,22 @@ export function withConfirmation<TArgs extends unknown[], TResult>(
         ...args: TArgs
     ): Promise<TResult> => {
         const resourceId = getResourceId(...args);
-        
+
         const verification = verifyConfirmationToken(
             confirmationToken,
             action,
             userId,
             restaurantId
         );
-        
+
         if (!verification.valid) {
             throw new Error(`Confirmation failed: ${verification.reason}`);
         }
-        
+
         if (verification.resourceId !== resourceId) {
             throw new Error('Confirmation token resource ID mismatch');
         }
-        
+
         return handler(resourceId, ...args);
     };
 }
@@ -181,11 +185,9 @@ export function generateConfirmationOTP(
     const secret = getSigningSecret();
     const timeSlot = Math.floor(Date.now() / 60000); // Changes every minute
     const payload = `${action}:${resourceId}:${userId}:${timeSlot}`;
-    
-    const hash = createHmac('sha256', secret)
-        .update(payload)
-        .digest('hex');
-    
+
+    const hash = createHmac('sha256', secret).update(payload).digest('hex');
+
     // Take first 6 characters as OTP
     return hash.slice(0, 6).toUpperCase();
 }
@@ -201,23 +203,21 @@ export function verifyConfirmationOTP(
 ): boolean {
     // Check current time slot and previous time slot (allows 1 minute drift)
     const currentTimeSlot = Math.floor(Date.now() / 60000);
-    
+
     for (let i = 0; i <= 1; i++) {
         const timeSlot = currentTimeSlot - i;
         const secret = getSigningSecret();
         const payload = `${action}:${resourceId}:${userId}:${timeSlot}`;
-        
-        const hash = createHmac('sha256', secret)
-            .update(payload)
-            .digest('hex');
-        
+
+        const hash = createHmac('sha256', secret).update(payload).digest('hex');
+
         const expectedOTP = hash.slice(0, 6).toUpperCase();
-        
+
         if (timingSafeEqual(Buffer.from(otp), Buffer.from(expectedOTP))) {
             return true;
         }
     }
-    
+
     return false;
 }
 

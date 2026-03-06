@@ -17,9 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* 2. Main Content (Center Scrollable area) */}
             <main className="h-screen flex-1 overflow-y-auto bg-white transition-all duration-300 md:ml-[280px] xl:mr-[380px]">
                 <div className="mx-auto max-w-7xl p-4 pb-24 sm:p-6 md:pb-8 lg:p-12">
-                    <RoleGuard allowedRoles={['owner', 'admin', 'manager']}>
-                        {children}
-                    </RoleGuard>
+                    <RoleGuard allowedRoles={['owner', 'admin', 'manager']}>{children}</RoleGuard>
                 </div>
             </main>
 

@@ -25,7 +25,12 @@ interface InvoiceReviewQueueProps {
     locale: AppLocale;
     onIngestInvoice: (payload: {
         file: File;
-        provider?: 'auto' | 'oss' | 'azure_document_intelligence' | 'google_document_ai' | 'aws_textract';
+        provider?:
+            | 'auto'
+            | 'oss'
+            | 'azure_document_intelligence'
+            | 'google_document_ai'
+            | 'aws_textract';
         supplier_hint?: string;
         currency?: string;
     }) => Promise<{
@@ -390,8 +395,8 @@ export function InvoiceReviewQueue({
 
             {parseSummary ? (
                 <p className="mt-3 text-xs text-gray-600">
-                    OCR mapped {parseSummary.mapped_items} line items,{' '}
-                    {parseSummary.unmapped_items} need review (avg confidence{' '}
+                    OCR mapped {parseSummary.mapped_items} line items, {parseSummary.unmapped_items}{' '}
+                    need review (avg confidence{' '}
                     {Math.round(parseSummary.average_match_confidence * 100)}%).
                 </p>
             ) : null}

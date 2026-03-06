@@ -312,8 +312,7 @@ function WaiterPosContent() {
     // For device-mode: restaurantId comes from localStorage immediately (no auth session).
     // We wait for roleLoading only when we have no device context (merchant preview mode).
     const isDeviceMode = Boolean(deviceRestaurantId || deviceToken);
-    const readyToLoad =
-        !!restaurantId && (isDeviceMode ? Boolean(deviceToken) : !roleLoading);
+    const readyToLoad = !!restaurantId && (isDeviceMode ? Boolean(deviceToken) : !roleLoading);
 
     useEffect(() => {
         if (!readyToLoad) return;
@@ -392,19 +391,16 @@ function WaiterPosContent() {
                     const oldOrder = payload.old as Order;
                     const newOrder = payload.new as Order;
                     if (newOrder.status === 'ready' && oldOrder.status !== 'ready') {
-                        toast.success(
-                            `Table ${newOrder.table_number || '?'}: Order is READY! 🍳`,
-                            {
-                                duration: 8000,
-                                position: 'top-right',
-                                style: {
-                                    background: '#10B981',
-                                    color: '#fff',
-                                    fontWeight: 'bold',
-                                    fontSize: '16px',
-                                },
-                            }
-                        );
+                        toast.success(`Table ${newOrder.table_number || '?'}: Order is READY! 🍳`, {
+                            duration: 8000,
+                            position: 'top-right',
+                            style: {
+                                background: '#10B981',
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                fontSize: '16px',
+                            },
+                        });
                         // Trigger haptic if supported
                         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
                     }
@@ -555,7 +551,10 @@ function WaiterPosContent() {
         setSplitItemAssignments(prev => {
             const next: Record<string, number> = {};
             for (const [orderItemId, guestIndex] of Object.entries(prev)) {
-                if (splitOrderItems.some(item => item.id === orderItemId) && guestIndex < splitGuestCount) {
+                if (
+                    splitOrderItems.some(item => item.id === orderItemId) &&
+                    guestIndex < splitGuestCount
+                ) {
                     next[orderItemId] = Math.max(0, guestIndex);
                 }
             }
@@ -632,7 +631,11 @@ function WaiterPosContent() {
         () =>
             splitOrderItems.filter(item => {
                 const guestIndex = splitItemAssignments[item.id];
-                return typeof guestIndex !== 'number' || guestIndex < 0 || guestIndex >= splitGuestCount;
+                return (
+                    typeof guestIndex !== 'number' ||
+                    guestIndex < 0 ||
+                    guestIndex >= splitGuestCount
+                );
             }).length,
         [splitGuestCount, splitItemAssignments, splitOrderItems]
     );
@@ -671,7 +674,11 @@ function WaiterPosContent() {
 
             const missingCount = splitOrderItems.filter(item => {
                 const guestIndex = splitItemAssignments[item.id];
-                return typeof guestIndex !== 'number' || guestIndex < 0 || guestIndex >= splitGuestCount;
+                return (
+                    typeof guestIndex !== 'number' ||
+                    guestIndex < 0 ||
+                    guestIndex >= splitGuestCount
+                );
             }).length;
             if (missingCount > 0) {
                 toast.error('Assign every item to a guest');
@@ -1131,7 +1138,7 @@ function WaiterPosContent() {
                                                 value={deliveryAddress}
                                                 onChange={e => setDeliveryAddress(e.target.value)}
                                                 placeholder="Delivery address (required)"
-                                                className="md:col-span-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none"
+                                                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none md:col-span-2"
                                             />
                                         )}
                                     </div>
@@ -1336,11 +1343,14 @@ function WaiterPosContent() {
                                                             className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
                                                         >
                                                             {tableOrders.map(order => (
-                                                                <option key={order.id} value={order.id}>
+                                                                <option
+                                                                    key={order.id}
+                                                                    value={order.id}
+                                                                >
                                                                     #{order.order_number} -{' '}
-                                                                    {(order.total_price ?? 0).toFixed(
-                                                                        2
-                                                                    )}{' '}
+                                                                    {(
+                                                                        order.total_price ?? 0
+                                                                    ).toFixed(2)}{' '}
                                                                     ETB
                                                                 </option>
                                                             ))}
@@ -1379,7 +1389,9 @@ function WaiterPosContent() {
                                                                         2,
                                                                         Math.min(
                                                                             12,
-                                                                            Number(e.target.value || 2)
+                                                                            Number(
+                                                                                e.target.value || 2
+                                                                            )
                                                                         )
                                                                     )
                                                                 )
@@ -1428,7 +1440,8 @@ function WaiterPosContent() {
                                                     <div className="space-y-3">
                                                         {splitOrderItems.length === 0 ? (
                                                             <p className="text-xs text-gray-500">
-                                                                No order items found for item-based split.
+                                                                No order items found for item-based
+                                                                split.
                                                             </p>
                                                         ) : (
                                                             <>
@@ -1438,12 +1451,14 @@ function WaiterPosContent() {
                                                                     </p>
                                                                     <span
                                                                         className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                                                                            splitItemUnassignedCount === 0
+                                                                            splitItemUnassignedCount ===
+                                                                            0
                                                                                 ? 'bg-emerald-100 text-emerald-700'
                                                                                 : 'bg-amber-100 text-amber-700'
                                                                         }`}
                                                                     >
-                                                                        {splitItemUnassignedCount === 0
+                                                                        {splitItemUnassignedCount ===
+                                                                        0
                                                                             ? 'All assigned'
                                                                             : `${splitItemUnassignedCount} unassigned`}
                                                                     </span>
@@ -1458,33 +1473,57 @@ function WaiterPosContent() {
                                                                             <div className="mb-2 flex items-start justify-between gap-2">
                                                                                 <div>
                                                                                     <p className="text-sm font-semibold text-gray-900">
-                                                                                        {item.quantity}x {item.name}
+                                                                                        {
+                                                                                            item.quantity
+                                                                                        }
+                                                                                        x{' '}
+                                                                                        {item.name}
                                                                                     </p>
                                                                                     <p className="text-[11px] text-gray-500">
-                                                                                        {(item.price * item.quantity).toFixed(2)} ETB
+                                                                                        {(
+                                                                                            item.price *
+                                                                                            item.quantity
+                                                                                        ).toFixed(
+                                                                                            2
+                                                                                        )}{' '}
+                                                                                        ETB
                                                                                     </p>
                                                                                 </div>
                                                                             </div>
                                                                             <div className="flex flex-wrap gap-1.5">
-                                                                                {Array.from({ length: splitGuestCount }, (_, idx) => (
-                                                                                    <button
-                                                                                        key={`${item.id}-guest-${idx}`}
-                                                                                        type="button"
-                                                                                        onClick={() =>
-                                                                                            setSplitItemAssignments(prev => ({
-                                                                                                ...prev,
-                                                                                                [item.id]: idx,
-                                                                                            }))
-                                                                                        }
-                                                                                        className={`rounded-md border px-2 py-1 text-[11px] font-semibold ${
-                                                                                            splitItemAssignments[item.id] === idx
-                                                                                                ? 'border-black bg-black text-white'
-                                                                                                : 'border-gray-200 bg-white text-gray-700'
-                                                                                        }`}
-                                                                                    >
-                                                                                        Guest {idx + 1}
-                                                                                    </button>
-                                                                                ))}
+                                                                                {Array.from(
+                                                                                    {
+                                                                                        length: splitGuestCount,
+                                                                                    },
+                                                                                    (_, idx) => (
+                                                                                        <button
+                                                                                            key={`${item.id}-guest-${idx}`}
+                                                                                            type="button"
+                                                                                            onClick={() =>
+                                                                                                setSplitItemAssignments(
+                                                                                                    prev => ({
+                                                                                                        ...prev,
+                                                                                                        [item.id]:
+                                                                                                            idx,
+                                                                                                    })
+                                                                                                )
+                                                                                            }
+                                                                                            className={`rounded-md border px-2 py-1 text-[11px] font-semibold ${
+                                                                                                splitItemAssignments[
+                                                                                                    item
+                                                                                                        .id
+                                                                                                ] ===
+                                                                                                idx
+                                                                                                    ? 'border-black bg-black text-white'
+                                                                                                    : 'border-gray-200 bg-white text-gray-700'
+                                                                                            }`}
+                                                                                        >
+                                                                                            Guest{' '}
+                                                                                            {idx +
+                                                                                                1}
+                                                                                        </button>
+                                                                                    )
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     ))}
@@ -1495,11 +1534,19 @@ function WaiterPosContent() {
                                                                         Guest Item Totals
                                                                     </p>
                                                                     <div className="grid grid-cols-2 gap-1 text-xs text-gray-700 md:grid-cols-4">
-                                                                        {splitItemTotalsByGuest.map((total, idx) => (
-                                                                            <p key={`split-total-${idx}`}>
-                                                                                Guest {idx + 1}: {total.toFixed(2)} ETB
-                                                                            </p>
-                                                                        ))}
+                                                                        {splitItemTotalsByGuest.map(
+                                                                            (total, idx) => (
+                                                                                <p
+                                                                                    key={`split-total-${idx}`}
+                                                                                >
+                                                                                    Guest {idx + 1}:{' '}
+                                                                                    {total.toFixed(
+                                                                                        2
+                                                                                    )}{' '}
+                                                                                    ETB
+                                                                                </p>
+                                                                            )
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </>
@@ -1531,7 +1578,9 @@ function WaiterPosContent() {
                                                             >
                                                                 <option value="cash">Cash</option>
                                                                 <option value="card">Card</option>
-                                                                <option value="telebirr">Telebirr</option>
+                                                                <option value="telebirr">
+                                                                    Telebirr
+                                                                </option>
                                                                 <option value="chapa">Chapa</option>
                                                                 <option value="other">Other</option>
                                                             </select>
@@ -1562,7 +1611,8 @@ function WaiterPosContent() {
                                                                         </p>
                                                                         <p className="text-xs font-semibold text-gray-500">
                                                                             Remaining:{' '}
-                                                                            {remaining.toFixed(2)} ETB
+                                                                            {remaining.toFixed(2)}{' '}
+                                                                            ETB
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
@@ -1622,17 +1672,22 @@ function WaiterPosContent() {
                                                     <input
                                                         type="text"
                                                         value={chapaTxRef}
-                                                        onChange={e => setChapaTxRef(e.target.value)}
+                                                        onChange={e =>
+                                                            setChapaTxRef(e.target.value)
+                                                        }
                                                         placeholder="Optional: Chapa tx_ref"
                                                         className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none"
                                                     />
                                                     <p className="mt-1 text-xs text-gray-500">
-                                                        Leave blank to auto-settle from already paid Chapa orders.
+                                                        Leave blank to auto-settle from already paid
+                                                        Chapa orders.
                                                     </p>
                                                 </div>
                                                 <Button
                                                     onClick={handleSettleAndCloseTable}
-                                                    disabled={isClosingTable || tableRunningTotal <= 0}
+                                                    disabled={
+                                                        isClosingTable || tableRunningTotal <= 0
+                                                    }
                                                     className="bg-brand-crimson rounded-xl px-5 py-2.5 text-sm font-bold text-white hover:bg-[#a0151e] disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
                                                     {isClosingTable
@@ -1826,7 +1881,7 @@ function WaiterPosContent() {
                                             ? 'bg-white ring-1 ring-amber-200'
                                             : table.status === 'occupied'
                                               ? 'bg-white ring-1 ring-red-100'
-                                            : 'border border-gray-100 bg-white' // Free
+                                              : 'border border-gray-100 bg-white' // Free
                                     }`}
                                 >
                                     <div className="relative z-10 flex items-start justify-between">
@@ -2059,9 +2114,7 @@ function WaiterPosContent() {
                                 <button
                                     onClick={() =>
                                         setDismissedReadyOrderIds(prev =>
-                                            prev.includes(order.id)
-                                                ? prev
-                                                : [...prev, order.id]
+                                            prev.includes(order.id) ? prev : [...prev, order.id]
                                         )
                                     }
                                     className="rounded-md p-1 hover:bg-white/20"

@@ -40,9 +40,7 @@ const CreateSupplierInvoiceSchema = z.object({
                 inventory_item_id: z.string().uuid().nullable().optional(),
                 inventory_item_name: z.string().trim().min(1).max(140).nullable().optional(),
                 match_confidence: z.coerce.number().min(0).max(1).optional(),
-                match_method: z
-                    .enum(['exact', 'contains', 'token_overlap', 'none'])
-                    .optional(),
+                match_method: z.enum(['exact', 'contains', 'token_overlap', 'none']).optional(),
             })
         )
         .max(200)

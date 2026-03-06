@@ -216,9 +216,12 @@ describe('P2 inventory API routes', () => {
         setAuthUnauthorized();
 
         const response = await postReceiveInvoice(
-            new Request('http://localhost/api/inventory/invoices/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/receive', {
-                method: 'POST',
-            }),
+            new Request(
+                'http://localhost/api/inventory/invoices/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/receive',
+                {
+                    method: 'POST',
+                }
+            ),
             { params: Promise.resolve({ invoiceId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 
@@ -229,12 +232,15 @@ describe('P2 inventory API routes', () => {
         setAuthAndContextOk();
 
         const response = await postReceiveInvoice(
-            new Request('http://localhost/api/inventory/invoices/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/receive', {
-                method: 'POST',
-                headers: {
-                    'x-idempotency-key': 'bad-key',
-                },
-            }),
+            new Request(
+                'http://localhost/api/inventory/invoices/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/receive',
+                {
+                    method: 'POST',
+                    headers: {
+                        'x-idempotency-key': 'bad-key',
+                    },
+                }
+            ),
             { params: Promise.resolve({ invoiceId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 

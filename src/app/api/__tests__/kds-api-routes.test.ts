@@ -206,7 +206,9 @@ describe('KDS API routes', () => {
         expect(nextCursor).toBeTruthy();
 
         const secondResponse = await getKdsQueue(
-            new Request(`http://localhost/api/kds/queue?limit=1&cursor=${encodeURIComponent(nextCursor ?? '')}`)
+            new Request(
+                `http://localhost/api/kds/queue?limit=1&cursor=${encodeURIComponent(nextCursor ?? '')}`
+            )
         );
         const secondPayload = await secondResponse.json();
 
@@ -219,11 +221,14 @@ describe('KDS API routes', () => {
         setAuthUnauthorized();
 
         const response = await postKdsItemAction(
-            new Request('http://localhost/api/kds/items/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'start' }),
-            }),
+            new Request(
+                'http://localhost/api/kds/items/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/action',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'start' }),
+                }
+            ),
             { params: Promise.resolve({ kdsItemId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 
@@ -234,11 +239,14 @@ describe('KDS API routes', () => {
         setAuthAndContextOk(makeFakeDb({}));
 
         const response = await postKdsItemAction(
-            new Request('http://localhost/api/kds/items/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'invalid-action' }),
-            }),
+            new Request(
+                'http://localhost/api/kds/items/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/action',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'invalid-action' }),
+                }
+            ),
             { params: Promise.resolve({ kdsItemId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 
@@ -249,14 +257,17 @@ describe('KDS API routes', () => {
         setAuthAndContextOk(makeFakeDb({}));
 
         const response = await postKdsItemAction(
-            new Request('http://localhost/api/kds/items/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/action', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-idempotency-key': 'bad-key',
-                },
-                body: JSON.stringify({ action: 'start' }),
-            }),
+            new Request(
+                'http://localhost/api/kds/items/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/action',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-idempotency-key': 'bad-key',
+                    },
+                    body: JSON.stringify({ action: 'start' }),
+                }
+            ),
             { params: Promise.resolve({ kdsItemId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 

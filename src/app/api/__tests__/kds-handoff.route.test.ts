@@ -46,11 +46,14 @@ describe('POST /api/kds/orders/:id/handoff', () => {
         } as any);
 
         const response = await postKdsHandoff(
-            new Request('http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/handoff', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'bump' }),
-            }),
+            new Request(
+                'http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/handoff',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'bump' }),
+                }
+            ),
             { params: Promise.resolve({ orderId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 
@@ -70,11 +73,14 @@ describe('POST /api/kds/orders/:id/handoff', () => {
         } as any);
 
         const response = await postKdsHandoff(
-            new Request('http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/handoff', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'bump' }),
-            }),
+            new Request(
+                'http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/handoff',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'bump' }),
+                }
+            ),
             { params: Promise.resolve({ orderId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 

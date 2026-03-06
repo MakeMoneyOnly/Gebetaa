@@ -50,10 +50,7 @@ function deriveStationStatus(
     return 'pending';
 }
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ kdsItemId: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ kdsItemId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -109,19 +106,19 @@ export async function POST(
     }
 
     if (action === 'recall') {
-        const [{ data: staffRole, error: staffRoleError }, { data: agencyRole, error: agencyRoleError }] =
-            await Promise.all([
-                db.from('restaurant_staff')
-                    .select('role')
-                    .eq('restaurant_id', restaurantContext.restaurantId)
-                    .eq('user_id', auth.user.id)
-                    .eq('is_active', true)
-                    .maybeSingle(),
-                db.from('agency_users')
-                    .select('role')
-                    .eq('user_id', auth.user.id)
-                    .maybeSingle(),
-            ]);
+        const [
+            { data: staffRole, error: staffRoleError },
+            { data: agencyRole, error: agencyRoleError },
+        ] = await Promise.all([
+            db
+                .from('restaurant_staff')
+                .select('role')
+                .eq('restaurant_id', restaurantContext.restaurantId)
+                .eq('user_id', auth.user.id)
+                .eq('is_active', true)
+                .maybeSingle(),
+            db.from('agency_users').select('role').eq('user_id', auth.user.id).maybeSingle(),
+        ]);
 
         if (staffRoleError || agencyRoleError) {
             return apiError(
@@ -134,8 +131,7 @@ export async function POST(
 
         const staffRoleValue = String(staffRole?.role ?? '');
         const agencyRoleValue = String(agencyRole?.role ?? '');
-        const canRecall =
-            RECALL_OVERRIDE_ROLES.has(staffRoleValue) || agencyRoleValue === 'admin';
+        const canRecall = RECALL_OVERRIDE_ROLES.has(staffRoleValue) || agencyRoleValue === 'admin';
 
         if (!canRecall) {
             return apiError(
@@ -211,26 +207,32 @@ export async function POST(
     }
 
     const [{ data: siblingItems }, { data: order }] = await Promise.all([
-        dbAny.from('kds_order_items')
+        dbAny
+            .from('kds_order_items')
             .select('station, status')
             .eq('order_id', updatedItem.order_id)
             .eq('restaurant_id', restaurantContext.restaurantId),
-        db.from('orders')
+        db
+            .from('orders')
             .select('id, status, kitchen_status, bar_status')
             .eq('id', updatedItem.order_id)
             .maybeSingle(),
     ]);
 
     const nextOrderUpdate: Record<string, unknown> = {};
-    const normalizedSiblings = ((siblingItems ?? []) as Array<{ station?: string; status?: string }>).map(
-        row => ({
-            station: row.station ?? 'kitchen',
-            status: row.status ?? 'queued',
-        })
-    );
+    const normalizedSiblings = (
+        (siblingItems ?? []) as Array<{ station?: string; status?: string }>
+    ).map(row => ({
+        station: row.station ?? 'kitchen',
+        status: row.status ?? 'queued',
+    }));
 
     if (normalizedSiblings.length > 0 && order) {
-        const kitchenStatus = deriveStationStatus(normalizedSiblings, ['kitchen', 'dessert', 'coffee']);
+        const kitchenStatus = deriveStationStatus(normalizedSiblings, [
+            'kitchen',
+            'dessert',
+            'coffee',
+        ]);
         const barStatus = deriveStationStatus(normalizedSiblings, ['bar']);
         if (kitchenStatus) nextOrderUpdate.kitchen_status = kitchenStatus;
         if (barStatus) nextOrderUpdate.bar_status = barStatus;

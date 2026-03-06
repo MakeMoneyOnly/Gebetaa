@@ -148,7 +148,10 @@ function createInMemorySupabase(state: InMemoryState) {
                             if (filter.restaurantId && item.restaurant_id !== filter.restaurantId) {
                                 return false;
                             }
-                            if (typeof filter.isActive === 'boolean' && item.is_active !== filter.isActive) {
+                            if (
+                                typeof filter.isActive === 'boolean' &&
+                                item.is_active !== filter.isActive
+                            ) {
                                 return false;
                             }
                             if (filter.id && item.id !== filter.id) {
@@ -167,14 +170,18 @@ function createInMemorySupabase(state: InMemoryState) {
                     const updateFilter: { restaurantId?: string; id?: string } = {};
                     const chain: any = {
                         eq: (field: string, value: unknown) => {
-                            if (field === 'restaurant_id') updateFilter.restaurantId = String(value);
+                            if (field === 'restaurant_id')
+                                updateFilter.restaurantId = String(value);
                             if (field === 'id') updateFilter.id = String(value);
                             return chain;
                         },
                         select: () => chain,
                         single: async () => {
                             const item = state.inventoryItems.find(row => {
-                                if (updateFilter.restaurantId && row.restaurant_id !== updateFilter.restaurantId) {
+                                if (
+                                    updateFilter.restaurantId &&
+                                    row.restaurant_id !== updateFilter.restaurantId
+                                ) {
                                     return false;
                                 }
                                 if (updateFilter.id && row.id !== updateFilter.id) {
@@ -243,7 +250,8 @@ function createInMemorySupabase(state: InMemoryState) {
                     const updateFilter: { restaurantId?: string; id?: string } = {};
                     const chain: any = {
                         eq: (field: string, value: unknown) => {
-                            if (field === 'restaurant_id') updateFilter.restaurantId = String(value);
+                            if (field === 'restaurant_id')
+                                updateFilter.restaurantId = String(value);
                             if (field === 'id') updateFilter.id = String(value);
                             return chain;
                         },
@@ -294,13 +302,22 @@ function createInMemorySupabase(state: InMemoryState) {
                     },
                     limit: async () => {
                         const rows = state.stockMovements.filter(movement => {
-                            if (filter.restaurantId && movement.restaurant_id !== filter.restaurantId) {
+                            if (
+                                filter.restaurantId &&
+                                movement.restaurant_id !== filter.restaurantId
+                            ) {
                                 return false;
                             }
-                            if (filter.referenceType && movement.reference_type !== filter.referenceType) {
+                            if (
+                                filter.referenceType &&
+                                movement.reference_type !== filter.referenceType
+                            ) {
                                 return false;
                             }
-                            if (filter.referenceId && movement.reference_id !== filter.referenceId) {
+                            if (
+                                filter.referenceId &&
+                                movement.reference_id !== filter.referenceId
+                            ) {
                                 return false;
                             }
                             return true;
@@ -349,9 +366,7 @@ describe('Invoice receive integration flow', () => {
         vi.clearAllMocks();
     });
 
-    it(
-        'ingest -> approve -> receive updates inventory stock and writes invoice movements',
-        async () => {
+    it('ingest -> approve -> receive updates inventory stock and writes invoice movements', async () => {
         const state: InMemoryState = {
             inventoryItems: [
                 {
@@ -456,9 +471,7 @@ describe('Invoice receive integration flow', () => {
         expect(state.stockMovements[0].reference_type).toBe('invoice');
         expect(state.stockMovements[0].reference_id).toBe(invoiceId);
         expect(state.inventoryItems[0].current_stock).toBe(15);
-        },
-        20000
-    );
+    }, 20000);
 
     it('stores receive exceptions and keeps invoice in review queue when confidence is low', async () => {
         const state: InMemoryState = {

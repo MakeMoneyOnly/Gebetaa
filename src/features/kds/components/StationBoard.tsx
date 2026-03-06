@@ -103,7 +103,10 @@ function getModifierStyle(modifier: string): string {
     return 'bg-sky-50 text-sky-700 ring-sky-200';
 }
 
-function urgencyStyles(elapsedMinutes: number, slaMinutes = 30): {
+function urgencyStyles(
+    elapsedMinutes: number,
+    slaMinutes = 30
+): {
     card: string;
     header: string;
     timer: string;
@@ -241,7 +244,9 @@ function isQuietHours(policy: AlertPolicy, now = new Date()): boolean {
 
 function playAlertTone() {
     if (typeof window === 'undefined') return;
-    const Context = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const Context =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Context) return;
 
     const audio = new Context();
@@ -338,7 +343,9 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
             }
 
             try {
-                const response = await fetch(`/api/kds/queue?station=${station}&limit=100&sla_minutes=30`);
+                const response = await fetch(
+                    `/api/kds/queue?station=${station}&limit=100&sla_minutes=30`
+                );
                 const payload = await response.json();
 
                 if (!response.ok) {
@@ -353,11 +360,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                 if (background) {
                     const previousIds = new Set(previousOrderIdsRef.current);
                     const hasNewTicket = nextOrders.some(order => !previousIds.has(order.id));
-                    if (
-                        hasNewTicket &&
-                        policy.new_ticket_sound &&
-                        !isQuietHours(policy)
-                    ) {
+                    if (hasNewTicket && policy.new_ticket_sound && !isQuietHours(policy)) {
                         playAlertTone();
                     }
                 }
@@ -422,7 +425,9 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
     const stationOrders = useMemo(() => {
         return orders.map(order => ({
             ...order,
-            stationItems: (order.items ?? []).filter(item => (item.station ?? 'kitchen') === station),
+            stationItems: (order.items ?? []).filter(
+                item => (item.station ?? 'kitchen') === station
+            ),
         }));
     }, [orders, station]);
 
@@ -675,7 +680,10 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
             setSelectedItemKey(null);
             return;
         }
-        if (selectedItemKey && actionableItems.some(item => `${item.orderId}:${item.itemId}` === selectedItemKey)) {
+        if (
+            selectedItemKey &&
+            actionableItems.some(item => `${item.orderId}:${item.itemId}` === selectedItemKey)
+        ) {
             return;
         }
         setSelectedItemKey(`${actionableItems[0].orderId}:${actionableItems[0].itemId}`);
@@ -694,9 +702,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
             if (!selectedActionableItem) return;
             const actions = allowedActions(selectedActionableItem.status);
             const actionToRun =
-                preferredAction && actions.includes(preferredAction)
-                    ? preferredAction
-                    : actions[0];
+                preferredAction && actions.includes(preferredAction) ? preferredAction : actions[0];
             if (!actionToRun) return;
             void handleItemAction(
                 selectedActionableItem.orderId,
@@ -751,8 +757,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                 const currentIndex = actionableItems.findIndex(
                     item => `${item.orderId}:${item.itemId}` === selectedItemKey
                 );
-                const nextIndex =
-                    currentIndex < 0 ? 0 : Math.max(0, currentIndex - 1);
+                const nextIndex = currentIndex < 0 ? 0 : Math.max(0, currentIndex - 1);
                 const next = actionableItems[nextIndex];
                 if (next) {
                     setSelectedItemKey(`${next.orderId}:${next.itemId}`);
@@ -872,7 +877,9 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                         </span>
                         <span
                             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                isOnline ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                                isOnline
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : 'bg-rose-100 text-rose-700'
                             }`}
                         >
                             {isOnline ? 'Network Online' : 'Offline Mode'}
@@ -919,7 +926,10 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                         >
                             Coffee
                         </Link>
-                        <Link href="/expeditor" className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-700">
+                        <Link
+                            href="/expeditor"
+                            className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-700"
+                        >
                             Expeditor
                         </Link>
                     </nav>
@@ -965,17 +975,29 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
             {/* ── Prep Summary Sidebar ──────────────────────────────────── */}
             {showPrepSummary && (
                 <aside className="mx-8 mb-4 rounded-2xl border border-gray-200 bg-white shadow-sm">
-                    <div className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-                        <h2 className="text-sm font-black tracking-widest text-gray-500 uppercase">Prep Density — {title}</h2>
-                        <span className="text-xs text-gray-400">{prepSummary.reduce((s, i) => s + i.qty, 0)} items across {stationOrders.length} tickets</span>
+                    <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                        <h2 className="text-sm font-black tracking-widest text-gray-500 uppercase">
+                            Prep Density — {title}
+                        </h2>
+                        <span className="text-xs text-gray-400">
+                            {prepSummary.reduce((s, i) => s + i.qty, 0)} items across{' '}
+                            {stationOrders.length} tickets
+                        </span>
                     </div>
                     {prepSummary.length === 0 ? (
-                        <p className="p-4 text-sm text-gray-400">All items are complete or no active tickets.</p>
+                        <p className="p-4 text-sm text-gray-400">
+                            All items are complete or no active tickets.
+                        </p>
                     ) : (
                         <ul className="divide-y divide-gray-50">
                             {prepSummary.map(({ name, qty }) => (
-                                <li key={name} className="flex items-center justify-between px-4 py-2.5">
-                                    <span className="text-sm font-semibold text-gray-800">{name}</span>
+                                <li
+                                    key={name}
+                                    className="flex items-center justify-between px-4 py-2.5"
+                                >
+                                    <span className="text-sm font-semibold text-gray-800">
+                                        {name}
+                                    </span>
                                     <span className="flex h-7 min-w-[28px] items-center justify-center rounded-full bg-gray-900 px-2 text-xs font-black text-white">
                                         ×{qty}
                                     </span>
@@ -1002,130 +1024,179 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
             <main
                 data-lenis-prevent
                 data-lenis-prevent-wheel
-                className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-8 pb-8"
+                className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-8 pb-8"
             >
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                     {stationOrders.map(order => {
                         const urgency = urgencyStyles(order.elapsedMinutes, slaMinutes);
                         return (
-                        <section key={order.id} className={`w-full min-w-0 rounded-[2rem] border shadow-sm ${urgency.card}`}>
-                            <header className={`border-b px-4 py-3 ${urgency.header}`}>
-                                <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                                    Order #{order.orderNumber}
-                                </p>
-                                <p className="text-4xl leading-tight font-black tracking-tight text-gray-900">
-                                    {order.tableNumber ? `Table ${order.tableNumber}` : order.customerName ?? 'Guest'}
-                                </p>
-                                <p className={`mt-1 text-xs ${urgency.timer}`}>
-                                    {order.elapsedMinutes}m elapsed · {statusLabel(order.status)}
-                                    {order.slaStatus === 'breached' && <span className="ml-2">🔴 SLA EXCEEDED</span>}
-                                    {order.slaStatus === 'at_risk' && <span className="ml-2">🟡 AT RISK</span>}
-                                </p>
-                                {order.fireMode === 'manual' ? (
-                                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-                                            Active course: {courseLabel(order.currentCourse as CourseType | null)}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            onClick={() => void handleAdvanceCourse(order)}
-                                            disabled={
-                                                advancingCourseOrderId === order.id ||
-                                                nextCourse(order.currentCourse as CourseType | null) === null
-                                            }
-                                            className="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            {advancingCourseOrderId === order.id
-                                                ? 'Advancing...'
-                                                : 'Advance Course'}
-                                        </button>
-                                    </div>
-                                ) : null}
-                                {printPolicy.mode !== 'off' ? (
-                                    <div className="mt-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => void handlePrintTicket(order.id, 'manual_kds_print')}
-                                            disabled={printingOrderId === order.id}
-                                            className="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            {printingOrderId === order.id ? 'Printing...' : 'Print Chit'}
-                                        </button>
-                                    </div>
-                                ) : null}
-                            </header>
-                            <div data-lenis-prevent className="max-h-[68vh] space-y-2 overflow-y-auto bg-gray-50/30 p-3">
-                                {order.stationItems.map(item => {
-                                    const itemKey = `${order.id}:${item.id}`;
-                                    const isSelected = selectedItemKey === itemKey;
-                                    const isRecalled =
-                                        alertPolicy.recall_visual && (item.status ?? 'queued') === 'recalled';
-                                    return (
-                                    <article
-                                        key={itemKey}
-                                        className={`rounded-2xl border bg-white p-3 shadow-sm ${
-                                            isSelected
-                                                ? 'border-gray-900 ring-2 ring-gray-900/20'
-                                                : 'border-gray-100'
-                                        } ${isRecalled ? 'animate-pulse border-rose-300 bg-rose-50/50' : ''}`}
-                                    >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div>
-                                                <p className="text-2xl leading-tight font-extrabold tracking-tight text-gray-900">
-                                                    {item.quantity}x {item.name}
-                                                </p>
-                                                {item.notes ? <p className="mt-1 text-xs text-gray-600">{item.notes}</p> : null}
-                                                {item.modifiers && item.modifiers.length > 0 && (
-                                                    <div className="mt-2 flex flex-wrap gap-1">
-                                                        {item.modifiers.map((mod, idx) => (
-                                                            <span
-                                                                key={idx}
-                                                                className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-black tracking-tight uppercase ring-1 ring-inset ${getModifierStyle(mod)}`}
-                                                            >
-                                                                {mod}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                <p className="mt-1 text-xs font-medium text-gray-500">
-                                                    Item status: {statusLabel(item.status ?? 'queued')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                            {allowedActions(item.status ?? 'queued').map(action => {
-                                                const key = `${order.id}:${item.id}:${action}`;
-                                                const disabled = actionKey === key;
-                                                return (
-                                                    <button
-                                                        key={action}
-                                                        onClick={() =>
-                                                            void handleItemAction(order.id, item.id, item.kds_item_id, action)
-                                                        }
-                                                        onFocus={() => setSelectedItemKey(itemKey)}
-                                                        onMouseEnter={() => setSelectedItemKey(itemKey)}
-                                                        disabled={disabled}
-                                                        className="min-h-11 min-w-[88px] rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-bold text-gray-800 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    >
-                                                        {disabled ? 'Working...' : actionLabel(action)}
-                                                    </button>
-                                                );
-                                            })}
-                                            {allowedActions(item.status ?? 'queued').length === 0 ? (
-                                                <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
-                                                    Ready
-                                                </span>
-                                            ) : null}
-                                        </div>
-                                    </article>
-                                )})}
-                                {order.stationItems.length === 0 ? (
-                                    <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                                        No {station} items in this ticket.
+                            <section
+                                key={order.id}
+                                className={`w-full min-w-0 rounded-[2rem] border shadow-sm ${urgency.card}`}
+                            >
+                                <header className={`border-b px-4 py-3 ${urgency.header}`}>
+                                    <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                                        Order #{order.orderNumber}
                                     </p>
-                                ) : null}
-                            </div>
-                        </section>
+                                    <p className="text-4xl leading-tight font-black tracking-tight text-gray-900">
+                                        {order.tableNumber
+                                            ? `Table ${order.tableNumber}`
+                                            : (order.customerName ?? 'Guest')}
+                                    </p>
+                                    <p className={`mt-1 text-xs ${urgency.timer}`}>
+                                        {order.elapsedMinutes}m elapsed ·{' '}
+                                        {statusLabel(order.status)}
+                                        {order.slaStatus === 'breached' && (
+                                            <span className="ml-2">🔴 SLA EXCEEDED</span>
+                                        )}
+                                        {order.slaStatus === 'at_risk' && (
+                                            <span className="ml-2">🟡 AT RISK</span>
+                                        )}
+                                    </p>
+                                    {order.fireMode === 'manual' ? (
+                                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                                                Active course:{' '}
+                                                {courseLabel(
+                                                    order.currentCourse as CourseType | null
+                                                )}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => void handleAdvanceCourse(order)}
+                                                disabled={
+                                                    advancingCourseOrderId === order.id ||
+                                                    nextCourse(
+                                                        order.currentCourse as CourseType | null
+                                                    ) === null
+                                                }
+                                                className="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {advancingCourseOrderId === order.id
+                                                    ? 'Advancing...'
+                                                    : 'Advance Course'}
+                                            </button>
+                                        </div>
+                                    ) : null}
+                                    {printPolicy.mode !== 'off' ? (
+                                        <div className="mt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    void handlePrintTicket(
+                                                        order.id,
+                                                        'manual_kds_print'
+                                                    )
+                                                }
+                                                disabled={printingOrderId === order.id}
+                                                className="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {printingOrderId === order.id
+                                                    ? 'Printing...'
+                                                    : 'Print Chit'}
+                                            </button>
+                                        </div>
+                                    ) : null}
+                                </header>
+                                <div
+                                    data-lenis-prevent
+                                    className="max-h-[68vh] space-y-2 overflow-y-auto bg-gray-50/30 p-3"
+                                >
+                                    {order.stationItems.map(item => {
+                                        const itemKey = `${order.id}:${item.id}`;
+                                        const isSelected = selectedItemKey === itemKey;
+                                        const isRecalled =
+                                            alertPolicy.recall_visual &&
+                                            (item.status ?? 'queued') === 'recalled';
+                                        return (
+                                            <article
+                                                key={itemKey}
+                                                className={`rounded-2xl border bg-white p-3 shadow-sm ${
+                                                    isSelected
+                                                        ? 'border-gray-900 ring-2 ring-gray-900/20'
+                                                        : 'border-gray-100'
+                                                } ${isRecalled ? 'animate-pulse border-rose-300 bg-rose-50/50' : ''}`}
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <p className="text-2xl leading-tight font-extrabold tracking-tight text-gray-900">
+                                                            {item.quantity}x {item.name}
+                                                        </p>
+                                                        {item.notes ? (
+                                                            <p className="mt-1 text-xs text-gray-600">
+                                                                {item.notes}
+                                                            </p>
+                                                        ) : null}
+                                                        {item.modifiers &&
+                                                            item.modifiers.length > 0 && (
+                                                                <div className="mt-2 flex flex-wrap gap-1">
+                                                                    {item.modifiers.map(
+                                                                        (mod, idx) => (
+                                                                            <span
+                                                                                key={idx}
+                                                                                className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-black tracking-tight uppercase ring-1 ring-inset ${getModifierStyle(mod)}`}
+                                                                            >
+                                                                                {mod}
+                                                                            </span>
+                                                                        )
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        <p className="mt-1 text-xs font-medium text-gray-500">
+                                                            Item status:{' '}
+                                                            {statusLabel(item.status ?? 'queued')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex flex-wrap gap-2">
+                                                    {allowedActions(item.status ?? 'queued').map(
+                                                        action => {
+                                                            const key = `${order.id}:${item.id}:${action}`;
+                                                            const disabled = actionKey === key;
+                                                            return (
+                                                                <button
+                                                                    key={action}
+                                                                    onClick={() =>
+                                                                        void handleItemAction(
+                                                                            order.id,
+                                                                            item.id,
+                                                                            item.kds_item_id,
+                                                                            action
+                                                                        )
+                                                                    }
+                                                                    onFocus={() =>
+                                                                        setSelectedItemKey(itemKey)
+                                                                    }
+                                                                    onMouseEnter={() =>
+                                                                        setSelectedItemKey(itemKey)
+                                                                    }
+                                                                    disabled={disabled}
+                                                                    className="min-h-11 min-w-[88px] rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-bold text-gray-800 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                >
+                                                                    {disabled
+                                                                        ? 'Working...'
+                                                                        : actionLabel(action)}
+                                                                </button>
+                                                            );
+                                                        }
+                                                    )}
+                                                    {allowedActions(item.status ?? 'queued')
+                                                        .length === 0 ? (
+                                                        <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
+                                                            Ready
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            </article>
+                                        );
+                                    })}
+                                    {order.stationItems.length === 0 ? (
+                                        <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                                            No {station} items in this ticket.
+                                        </p>
+                                    ) : null}
+                                </div>
+                            </section>
                         );
                     })}
 

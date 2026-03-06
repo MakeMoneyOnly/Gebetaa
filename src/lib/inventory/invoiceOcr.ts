@@ -148,7 +148,11 @@ function matchInventoryItem(
     }
 
     if (best.item && best.confidence >= 0.5) {
-        return { item: best.item, confidence: Number(best.confidence.toFixed(2)), method: 'token_overlap' };
+        return {
+            item: best.item,
+            confidence: Number(best.confidence.toFixed(2)),
+            method: 'token_overlap',
+        };
     }
 
     return { item: null, confidence: 0, method: 'none' };
@@ -207,7 +211,10 @@ export function parseInvoiceText(input: {
     const subtotal = extractLabelMoney(source, 'subtotal');
     const taxAmount = extractLabelMoney(source, '(tax|vat)');
     const computedTotal = mappedLineItems.reduce((sum, item) => sum + (item.line_total ?? 0), 0);
-    const labeledTotal = extractLabelMoney(source, '(grand\\s+total|total\\s+due|amount\\s+due|total)');
+    const labeledTotal = extractLabelMoney(
+        source,
+        '(grand\\s+total|total\\s+due|amount\\s+due|total)'
+    );
     const totalAmount = Number((labeledTotal || computedTotal || subtotal + taxAmount).toFixed(2));
 
     const mappedCount = mappedLineItems.filter(line => line.inventory_item_id).length;

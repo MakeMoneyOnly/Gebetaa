@@ -1,68 +1,68 @@
 name: Main Stage5 End Window Analysis
 
 on:
-  schedule:
-    - cron: '0 6 * * 0'
-  workflow_dispatch:
-    inputs:
-      force_run:
-        description: 'Run analysis even if fewer than 14 snapshot days are present'
-        required: false
-        default: 'false'
+    schedule:
+        - cron: '0 6 * * 0'
+    workflow_dispatch:
+        inputs:
+            force_run:
+                description: 'Run analysis even if fewer than 14 snapshot days are present'
+                required: false
+                default: 'false'
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  run_analysis:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    run_analysis:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+            - name: Install PostgreSQL client
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y postgresql-client
 
-      - name: Validate readiness window
-        id: readiness
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          FORCE_RUN: ${{ github.event.inputs.force_run || 'false' }}
-        run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "Missing required secret: SUPABASE_DB_URL"
-            exit 1
-          fi
+            - name: Validate readiness window
+              id: readiness
+              env:
+                  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+                  FORCE_RUN: ${{ github.event.inputs.force_run || 'false' }}
+              run: |
+                  if [ -z "$SUPABASE_DB_URL" ]; then
+                    echo "Missing required secret: SUPABASE_DB_URL"
+                    exit 1
+                  fi
 
-          DAYS=$(psql "$SUPABASE_DB_URL" -t -A -c "select count(distinct date(captured_at)) from ops.stage5_index_usage_snapshots;")
-          DAYS=${DAYS:-0}
-          echo "snapshot_days=$DAYS" >> "$GITHUB_OUTPUT"
-          echo "Snapshot days collected: $DAYS"
+                  DAYS=$(psql "$SUPABASE_DB_URL" -t -A -c "select count(distinct date(captured_at)) from ops.stage5_index_usage_snapshots;")
+                  DAYS=${DAYS:-0}
+                  echo "snapshot_days=$DAYS" >> "$GITHUB_OUTPUT"
+                  echo "Snapshot days collected: $DAYS"
 
-          if [ "$FORCE_RUN" != "true" ] && [ "$DAYS" -lt 14 ]; then
-            echo "run_analysis=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping analysis: need at least 14 snapshot days (or force_run=true)."
-            exit 0
-          fi
+                  if [ "$FORCE_RUN" != "true" ] && [ "$DAYS" -lt 14 ]; then
+                    echo "run_analysis=false" >> "$GITHUB_OUTPUT"
+                    echo "Skipping analysis: need at least 14 snapshot days (or force_run=true)."
+                    exit 0
+                  fi
 
-          echo "run_analysis=true" >> "$GITHUB_OUTPUT"
+                  echo "run_analysis=true" >> "$GITHUB_OUTPUT"
 
-      - name: Run Step 02 analysis SQL
-        if: steps.readiness.outputs.run_analysis == 'true'
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          SNAPSHOT_DAYS: ${{ steps.readiness.outputs.snapshot_days }}
-        run: |
-          mkdir -p artifacts
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/sql/stage5_evidence_window_02_analysis_queries.sql | tee artifacts/stage5-analysis.txt
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "insert into ops.stage5_run_events(event_type, details) values ('stage5_analysis_executed', jsonb_build_object('executed_at', now(), 'snapshot_days', ${SNAPSHOT_DAYS}));"
+            - name: Run Step 02 analysis SQL
+              if: steps.readiness.outputs.run_analysis == 'true'
+              env:
+                  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+                  SNAPSHOT_DAYS: ${{ steps.readiness.outputs.snapshot_days }}
+              run: |
+                  mkdir -p artifacts
+                  psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/sql/stage5_evidence_window_02_analysis_queries.sql | tee artifacts/stage5-analysis.txt
+                  psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "insert into ops.stage5_run_events(event_type, details) values ('stage5_analysis_executed', jsonb_build_object('executed_at', now(), 'snapshot_days', ${SNAPSHOT_DAYS}));"
 
-      - name: Upload analysis artifact
-        if: steps.readiness.outputs.run_analysis == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: stage5-analysis
-          path: artifacts/stage5-analysis.txt
+            - name: Upload analysis artifact
+              if: steps.readiness.outputs.run_analysis == 'true'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: stage5-analysis
+                  path: artifacts/stage5-analysis.txt

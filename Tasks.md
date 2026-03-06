@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Execution Tasks
+# ገበታ Gebeta — Execution Tasks
 
 > **📚 Primary Reference:** This document is derived from [docs/1/Engineering Foundation/0. ENTERPRISE_MASTER_BLUEPRINT.md](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md)
 > For detailed Toast feature comparison, see [TOAST_FEATURE_AUDIT.md](TOAST_FEATURE_AUDIT.md)
@@ -30,20 +30,20 @@ Before starting any task, review these architectural principles:
 
 ## Current Feature Parity Score: 74%
 
-| Feature Category | Toast Features | Gebeta Implementation | Parity | Priority |
-|-----------------|----------------|----------------------|--------|----------|
-| POS & Operations | 15 | 12 | 80% | P0 |
-| Kitchen Display System | 18 | 16 | 89% | P0 |
-| Online Ordering | 12 | 6 | 50% | P1 |
-| Inventory Management | 10 | 7 | 70% | P1 |
-| Loyalty & Marketing | 8 | 4 | 50% | P2 |
-| Reporting & Analytics | 12 | 8 | 67% | P1 |
-| Staff & Payroll | 10 | 6 | 60% | P2 |
-| Table Management | 8 | 7 | 88% | P0 |
-| Payment Processing | 6 | 4 | 67% | P1 |
-| Delivery Services | 8 | 3 | 38% | P2 |
-| Multi-Location | 7 | 3 | 43% | P2 |
-| Hardware Integration | 6 | 2 | 33% | P3 |
+| Feature Category       | Toast Features | Gebeta Implementation | Parity | Priority |
+| ---------------------- | -------------- | --------------------- | ------ | -------- |
+| POS & Operations       | 15             | 12                    | 80%    | P0       |
+| Kitchen Display System | 18             | 16                    | 89%    | P0       |
+| Online Ordering        | 12             | 6                     | 50%    | P1       |
+| Inventory Management   | 10             | 7                     | 70%    | P1       |
+| Loyalty & Marketing    | 8              | 4                     | 50%    | P2       |
+| Reporting & Analytics  | 12             | 8                     | 67%    | P1       |
+| Staff & Payroll        | 10             | 6                     | 60%    | P2       |
+| Table Management       | 8              | 7                     | 88%    | P0       |
+| Payment Processing     | 6              | 4                     | 67%    | P1       |
+| Delivery Services      | 8              | 3                     | 38%    | P2       |
+| Multi-Location         | 7              | 3                     | 43%    | P2       |
+| Hardware Integration   | 6              | 2                     | 33%    | P3       |
 
 ---
 
@@ -54,32 +54,31 @@ Before starting any task, review these architectural principles:
 > **Critical Path:** Without webhooks, digital payments require manual confirmation. Inoperable at scale.
 
 - [ ] `P0-WEB-001` Build Chapa webhook endpoint (`/api/webhooks/chapa`)
-  - Verify HMAC-SHA256 signature with timing-safe comparison
-  - Publish to event bus, return 200 immediately
-  
+    - Verify HMAC-SHA256 signature with timing-safe comparison
+    - Publish to event bus, return 200 immediately
 - [ ] `P0-WEB-002` Build Telebirr webhook endpoint (`/api/webhooks/telebirr`)
-  - Same pattern as Chapa
+    - Same pattern as Chapa
 
 - [ ] `P0-WEB-003` Set up QStash consumer for `payment.completed` events
-  - Update order status to 'confirmed'
-  - Award loyalty points (if guest authenticated)
-  - Submit ERCA e-invoice (if VAT-registered)
+    - Update order status to 'confirmed'
+    - Award loyalty points (if guest authenticated)
+    - Submit ERCA e-invoice (if VAT-registered)
 
 ### Sprint 2: Event Bus & Background Jobs (P0)
 
 - [ ] `P0-EVT-001` Implement Upstash Redis Streams event bus
-  - Publish: `order.created`, `order.completed`, `payment.completed`, `menu.updated`
+    - Publish: `order.created`, `order.completed`, `payment.completed`, `menu.updated`
 
 - [ ] `P0-EVT-002` Set up QStash CRON jobs
-  - EOD report generation at 10PM Addis time
-  - ERCA invoice submission job
+    - EOD report generation at 10PM Addis time
+    - ERCA invoice submission job
 
 - [ ] `P0-EVT-003` Add idempotency key validation to all mutation endpoints
 
 ### Sprint 3: Discount Engine (P1)
 
 - [ ] `P1-DISC-001` Create `discounts` table
-  - types: percentage, fixed_amount, bogo, item_override
+    - types: percentage, fixed_amount, bogo, item_override
 
 - [ ] `P1-DISC-002` Build discount UI in Waiter POS (`/pos/waiter`)
 
@@ -92,7 +91,7 @@ Before starting any task, review these architectural principles:
 ### Sprint 4: KDS Offline Resilience (P1)
 
 - [ ] `P1-KDS-001` Implement PowerSync CRDT sync for KDS tablets
-  - 24-hour offline window
+    - 24-hour offline window
 
 - [ ] `P1-KDS-002` Kitchen printer fallback (ESC/POS integration)
 
@@ -123,7 +122,7 @@ Before starting any task, review these architectural principles:
 From TOAST_FEATURE_AUDIT.md Section 1:
 
 - [ ] `P0-POS-001` Split Check - multiple payments per order
-  - Split by item, split evenly, custom amounts
+    - Split by item, split evenly, custom amounts
 
 - [ ] `P0-POS-002` Course Firing - automated course pacing
 
@@ -245,28 +244,28 @@ Every task is complete when:
 
 ## Reference: Scale Thresholds
 
-| Metric | Threshold | Action |
-|--------|-----------|--------|
-| Restaurants | 200 | Extract Orders + Payments to NestJS |
-| API P99 | > 500ms | Optimize or extract to service |
-| Concurrent POS | 500+ | Move Realtime to dedicated Redis |
-| Daily transactions | 10,000+ | Add read replica for analytics |
+| Metric             | Threshold | Action                              |
+| ------------------ | --------- | ----------------------------------- |
+| Restaurants        | 200       | Extract Orders + Payments to NestJS |
+| API P99            | > 500ms   | Optimize or extract to service      |
+| Concurrent POS     | 500+      | Move Realtime to dedicated Redis    |
+| Daily transactions | 10,000+   | Add read replica for analytics      |
 
 ---
 
 ## Reference Documents
 
-| Document | Purpose |
-|----------|---------|
-| [Engineering Foundation #0](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md) | Master blueprint, architecture |
-| [Engineering Foundation #1](docs/1/Engineering%20Foundation/1.%20PRD.md) | Product requirements |
-| [Engineering Foundation #2](docs/1/Engineering%20Foundation/2.%20Tech_Stack.md) | Tech stack decisions |
-| [Engineering Foundation #3](docs/1/Engineering%20Foundation/3.%20System_Architecure.md) | System architecture |
-| [Engineering Foundation #4](docs/1/Engineering%20Foundation/4.%20Database_Schema.md) | Database schema |
-| [Engineering Foundation #5](docs/1/Engineering%20Foundation/5.%20API_Design_Guide.md) | API design |
-| [Engineering Foundation #6](docs/1/Engineering%20Foundation/6.%20ENGINEERING_RUNOOK.md) | Operations runbook |
-| [TOAST_FEATURE_AUDIT.md](TOAST_FEATURE_AUDIT.md) | Detailed Toast feature comparison |
+| Document                                                                                         | Purpose                           |
+| ------------------------------------------------------------------------------------------------ | --------------------------------- |
+| [Engineering Foundation #0](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md) | Master blueprint, architecture    |
+| [Engineering Foundation #1](docs/1/Engineering%20Foundation/1.%20PRD.md)                         | Product requirements              |
+| [Engineering Foundation #2](docs/1/Engineering%20Foundation/2.%20Tech_Stack.md)                  | Tech stack decisions              |
+| [Engineering Foundation #3](docs/1/Engineering%20Foundation/3.%20System_Architecure.md)          | System architecture               |
+| [Engineering Foundation #4](docs/1/Engineering%20Foundation/4.%20Database_Schema.md)             | Database schema                   |
+| [Engineering Foundation #5](docs/1/Engineering%20Foundation/5.%20API_Design_Guide.md)            | API design                        |
+| [Engineering Foundation #6](docs/1/Engineering%20Foundation/6.%20ENGINEERING_RUNOOK.md)          | Operations runbook                |
+| [TOAST_FEATURE_AUDIT.md](TOAST_FEATURE_AUDIT.md)                                                 | Detailed Toast feature comparison |
 
 ---
 
-*Tasks derived from Engineering Foundation #0 and TOAST_FEATURE_AUDIT.md*
+_Tasks derived from Engineering Foundation #0 and TOAST_FEATURE_AUDIT.md_

@@ -1,6 +1,10 @@
 import { createHash, createHmac, createSign } from 'crypto';
 
-export type InvoiceExtractionProvider = 'aws_textract' | 'google_document_ai' | 'azure_document_intelligence' | 'oss';
+export type InvoiceExtractionProvider =
+    | 'aws_textract'
+    | 'google_document_ai'
+    | 'azure_document_intelligence'
+    | 'oss';
 
 export type InvoiceExtractionResult = {
     provider: InvoiceExtractionProvider;
@@ -323,7 +327,8 @@ async function extractWithGoogleDocumentAi(input: IngestInput): Promise<InvoiceE
     const avgConfidence =
         entities.length > 0
             ? clampConfidence(
-                  entities.reduce((sum, entity) => sum + (entity.confidence ?? 0), 0) / entities.length
+                  entities.reduce((sum, entity) => sum + (entity.confidence ?? 0), 0) /
+                      entities.length
               )
             : 0.6;
 
@@ -344,7 +349,9 @@ async function extractWithGoogleDocumentAi(input: IngestInput): Promise<InvoiceE
     };
 }
 
-async function extractWithAzureDocumentIntelligence(input: IngestInput): Promise<InvoiceExtractionResult> {
+async function extractWithAzureDocumentIntelligence(
+    input: IngestInput
+): Promise<InvoiceExtractionResult> {
     const endpoint = process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT;
     const apiKey = process.env.AZURE_DOCUMENT_INTELLIGENCE_API_KEY;
     if (!endpoint || !apiKey) {
@@ -391,7 +398,15 @@ async function extractWithAzureDocumentIntelligence(input: IngestInput): Promise
                 content?: string;
                 documents?: Array<{
                     confidence?: number;
-                    fields?: Record<string, { valueString?: string; valueCurrency?: { amount?: number; currencyCode?: string }; valueDate?: string; confidence?: number }>;
+                    fields?: Record<
+                        string,
+                        {
+                            valueString?: string;
+                            valueCurrency?: { amount?: number; currencyCode?: string };
+                            valueDate?: string;
+                            confidence?: number;
+                        }
+                    >;
                 }>;
             };
         };

@@ -366,7 +366,12 @@ export default function InventoryPage() {
 
     const handleIngestInvoice = async (payload: {
         file: File;
-        provider?: 'auto' | 'oss' | 'azure_document_intelligence' | 'google_document_ai' | 'aws_textract';
+        provider?:
+            | 'auto'
+            | 'oss'
+            | 'azure_document_intelligence'
+            | 'google_document_ai'
+            | 'aws_textract';
         supplier_hint?: string;
         currency?: string;
     }) => {
@@ -416,7 +421,11 @@ export default function InventoryPage() {
                     average_match_confidence: number;
                 };
                 metadata: {
-                    provider: 'oss' | 'azure_document_intelligence' | 'google_document_ai' | 'aws_textract';
+                    provider:
+                        | 'oss'
+                        | 'azure_document_intelligence'
+                        | 'google_document_ai'
+                        | 'aws_textract';
                     provider_confidence: number;
                 };
                 addis_review_policy: {
@@ -427,7 +436,9 @@ export default function InventoryPage() {
             };
         } catch (ingestError) {
             const message =
-                ingestError instanceof Error ? ingestError.message : 'Failed to ingest invoice file.';
+                ingestError instanceof Error
+                    ? ingestError.message
+                    : 'Failed to ingest invoice file.';
             toast.error(message);
             throw ingestError;
         } finally {

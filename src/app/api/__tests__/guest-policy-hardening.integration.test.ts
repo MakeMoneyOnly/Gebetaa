@@ -160,7 +160,9 @@ describe('Guest policy hardening integration', () => {
         }
 
         const blockedPayload = buildValidOrderPayload(fingerprint, `${runId}:orders-cap-blocked`);
-        const { error: blockedError } = await anonClient.from('orders').insert(blockedPayload as any);
+        const { error: blockedError } = await anonClient
+            .from('orders')
+            .insert(blockedPayload as any);
         expect(blockedError).toBeTruthy();
     });
 

@@ -8,7 +8,7 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer
+    ResponsiveContainer,
 } from 'recharts';
 
 interface ChartDataPoint {
@@ -26,10 +26,7 @@ interface RevenueChartContentProps {
 export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-                data={data}
-                margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
-            >
+            <AreaChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
@@ -49,7 +46,7 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                         color: '#10B981',
                         fontSize: '12px',
                         fontWeight: 'bold',
-                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
                     }}
                     itemStyle={{ color: '#10B981' }}
                     cursor={{ stroke: '#10B981', strokeWidth: 1, strokeDasharray: '3 3' }}
@@ -57,7 +54,7 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                         const numValue = typeof value === 'number' ? value : 0;
                         return [
                             `${numValue.toLocaleString()} ETB`,
-                            name === 'income' ? 'Current Period' : 'Previous Period'
+                            name === 'income' ? 'Current Period' : 'Previous Period',
                         ];
                     }}
                     labelStyle={{ color: '#94A3B8', marginBottom: '8px' }}
@@ -73,7 +70,7 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#64748B', fontSize: 12, fontWeight: 600 }}
-                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
                     domain={[0, 'auto']}
                     width={40}
                 />

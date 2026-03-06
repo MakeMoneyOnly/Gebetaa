@@ -111,4 +111,3 @@ export function markKdsQueueSynced() {
 export function clearOfflineKdsQueue() {
     writeState(defaultState());
 }
-

@@ -45,7 +45,7 @@ function buildOrderStatusMessage(input: OrderStatusSmsInput): string {
 /**
  * Africa's Talking SMS Provider
  * https://africastalking.com/
- * 
+ *
  * Environment variables required:
  * - AFRICAS_TALKING_API_KEY: API key from Africa's Talking dashboard
  * - AFRICAS_TALKING_USERNAME: Your Africa's Talking username
@@ -61,7 +61,7 @@ async function sendWithAfricasTalking(toPhone: string, message: string): Promise
             success: false,
             provider: 'africas_talking',
             skipped: true,
-            error: 'Africa\'s Talking credentials are not configured (AFRICAS_TALKING_API_KEY, AFRICAS_TALKING_USERNAME)',
+            error: "Africa's Talking credentials are not configured (AFRICAS_TALKING_API_KEY, AFRICAS_TALKING_USERNAME)",
         };
     }
 
@@ -89,18 +89,15 @@ async function sendWithAfricasTalking(toPhone: string, message: string): Promise
         body.from = senderId;
     }
 
-    const response = await fetch(
-        'https://api.africastalking.com/version1/messaging',
-        {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'apiKey': apiKey,
-            },
-            body: new URLSearchParams(body).toString(),
-        }
-    );
+    const response = await fetch('https://api.africastalking.com/version1/messaging', {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            apiKey: apiKey,
+        },
+        body: new URLSearchParams(body).toString(),
+    });
 
     if (!response.ok) {
         const details = await response.text().catch(() => 'SMS provider error');
@@ -111,13 +108,19 @@ async function sendWithAfricasTalking(toPhone: string, message: string): Promise
         };
     }
 
-    const result = await response.json().catch(() => ({})) as { SMSMessageData?: { Recipients?: Array<{ status: string; statusCode: number }> } };
-    
+    const result = (await response.json().catch(() => ({}))) as {
+        SMSMessageData?: { Recipients?: Array<{ status: string; statusCode: number }> };
+    };
+
     // Check delivery status
     const recipients = result?.SMSMessageData?.Recipients ?? [];
     const firstRecipient = recipients[0];
-    
-    if (firstRecipient && firstRecipient.statusCode !== 101 && firstRecipient.status?.toLowerCase() !== 'success') {
+
+    if (
+        firstRecipient &&
+        firstRecipient.statusCode !== 101 &&
+        firstRecipient.status?.toLowerCase() !== 'success'
+    ) {
         return {
             success: false,
             provider: 'africas_talking',
@@ -175,7 +178,12 @@ async function sendWithTwilio(toPhone: string, message: string): Promise<SmsSend
 export async function sendSms(toPhone: string, message: string): Promise<SmsSendResult> {
     const normalizedPhone = normalizePhone(toPhone);
     if (!normalizedPhone) {
-        return { success: false, provider: 'log', skipped: true, error: 'Recipient phone is empty' };
+        return {
+            success: false,
+            provider: 'log',
+            skipped: true,
+            error: 'Recipient phone is empty',
+        };
     }
 
     const provider = resolveSmsProvider();

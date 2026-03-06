@@ -96,11 +96,14 @@ describe('KDS printer route', () => {
         } as any);
 
         const response = await postKdsPrint(
-            new Request('http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/print', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reason: 'manual_print' }),
-            }),
+            new Request(
+                'http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/print',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: 'manual_print' }),
+                }
+            ),
             { params: Promise.resolve({ orderId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 
@@ -119,11 +122,14 @@ describe('KDS printer route', () => {
         } as any);
 
         const response = await postKdsPrint(
-            new Request('http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/print', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reason: 'manual_print' }),
-            }),
+            new Request(
+                'http://localhost/api/kds/orders/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/print',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: 'manual_print' }),
+                }
+            ),
             { params: Promise.resolve({ orderId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }) }
         );
 
@@ -133,4 +139,3 @@ describe('KDS printer route', () => {
         expect(body.data.provider).toBe('log');
     });
 });
-

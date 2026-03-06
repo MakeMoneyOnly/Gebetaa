@@ -55,18 +55,17 @@ export async function POST(request: Request) {
         text?: () => Promise<string>;
     };
     const fileName = file.name || 'invoice-upload';
-    const inferredFromName =
-        fileName.toLowerCase().endsWith('.pdf')
-            ? 'application/pdf'
-            : fileName.toLowerCase().endsWith('.png')
-              ? 'image/png'
-              : fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg')
-                ? 'image/jpeg'
-                : fileName.toLowerCase().endsWith('.webp')
-                  ? 'image/webp'
-                  : fileName.toLowerCase().endsWith('.tif') || fileName.toLowerCase().endsWith('.tiff')
-                    ? 'image/tiff'
-                    : 'application/octet-stream';
+    const inferredFromName = fileName.toLowerCase().endsWith('.pdf')
+        ? 'application/pdf'
+        : fileName.toLowerCase().endsWith('.png')
+          ? 'image/png'
+          : fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg')
+            ? 'image/jpeg'
+            : fileName.toLowerCase().endsWith('.webp')
+              ? 'image/webp'
+              : fileName.toLowerCase().endsWith('.tif') || fileName.toLowerCase().endsWith('.tiff')
+                ? 'image/tiff'
+                : 'application/octet-stream';
     const fileType = file.type || inferredFromName;
     const fileSize = Number(file.size ?? 0);
 

@@ -22,7 +22,12 @@ const CloseTableSchema = z.object({
     notes: z.string().trim().max(500).optional(),
 });
 
-const BLOCKING_ORDER_STATUSES = ['payment_pending', 'pending', 'acknowledged', 'preparing'] as const;
+const BLOCKING_ORDER_STATUSES = [
+    'payment_pending',
+    'pending',
+    'acknowledged',
+    'preparing',
+] as const;
 const FINALIZABLE_ORDER_STATUSES = ['ready', 'served'] as const;
 
 export async function POST(request: Request) {
@@ -71,7 +76,14 @@ export async function POST(request: Request) {
         .select('id, status, total_price, chapa_tx_ref, paid_at, chapa_verified')
         .eq('restaurant_id', ctx.restaurantId)
         .eq('table_number', table.table_number)
-        .in('status', ['payment_pending', 'pending', 'acknowledged', 'preparing', 'ready', 'served']);
+        .in('status', [
+            'payment_pending',
+            'pending',
+            'acknowledged',
+            'preparing',
+            'ready',
+            'served',
+        ]);
 
     if (sessionError) {
         return apiError(
@@ -82,7 +94,12 @@ export async function POST(request: Request) {
         );
     }
     if (ordersError) {
-        return apiError('Failed to fetch table orders', 500, 'TABLE_ORDERS_FETCH_FAILED', ordersError.message);
+        return apiError(
+            'Failed to fetch table orders',
+            500,
+            'TABLE_ORDERS_FETCH_FAILED',
+            ordersError.message
+        );
     }
 
     let ensuredOpenSession = openSession;
@@ -145,7 +162,9 @@ export async function POST(request: Request) {
 
     const activeOrders = tableOrders ?? [];
     const blockingOrders = activeOrders.filter(order =>
-        BLOCKING_ORDER_STATUSES.includes(String(order.status) as (typeof BLOCKING_ORDER_STATUSES)[number])
+        BLOCKING_ORDER_STATUSES.includes(
+            String(order.status) as (typeof BLOCKING_ORDER_STATUSES)[number]
+        )
     );
     if (blockingOrders.length > 0) {
         return apiError(
@@ -166,7 +185,9 @@ export async function POST(request: Request) {
     if (activeOrders.length === 0) {
         const now = new Date().toISOString();
         const mergedCloseNotes =
-            [ensuredOpenSession.notes, notes, 'Closed via waiter POS (no active orders)'].filter(Boolean).join(' | ') || null;
+            [ensuredOpenSession.notes, notes, 'Closed via waiter POS (no active orders)']
+                .filter(Boolean)
+                .join(' | ') || null;
 
         await Promise.all([
             admin
@@ -213,7 +234,11 @@ export async function POST(request: Request) {
     }
 
     if (settlementAmount <= 0) {
-        return apiError('No billable orders found for this table', 409, 'TABLE_CLOSE_NO_BILLABLE_ORDERS');
+        return apiError(
+            'No billable orders found for this table',
+            409,
+            'TABLE_CLOSE_NO_BILLABLE_ORDERS'
+        );
     }
 
     if (typeof payment.amount === 'number') {
@@ -258,12 +283,11 @@ export async function POST(request: Request) {
     }
 
     const now = new Date().toISOString();
-    const finalizableOrders = activeOrders
-        .filter(order =>
-            FINALIZABLE_ORDER_STATUSES.includes(
-                String(order.status) as (typeof FINALIZABLE_ORDER_STATUSES)[number]
-            )
-        );
+    const finalizableOrders = activeOrders.filter(order =>
+        FINALIZABLE_ORDER_STATUSES.includes(
+            String(order.status) as (typeof FINALIZABLE_ORDER_STATUSES)[number]
+        )
+    );
     const finalizableOrderIds = finalizableOrders.map(order => order.id);
 
     const { data: paymentRecord, error: paymentError } = await admin
@@ -294,7 +318,12 @@ export async function POST(request: Request) {
         .single();
 
     if (paymentError || !paymentRecord) {
-        return apiError('Failed to record settlement payment', 500, 'PAYMENT_RECORD_FAILED', paymentError?.message);
+        return apiError(
+            'Failed to record settlement payment',
+            500,
+            'PAYMENT_RECORD_FAILED',
+            paymentError?.message
+        );
     }
 
     if (finalizableOrderIds.length > 0) {
@@ -326,7 +355,9 @@ export async function POST(request: Request) {
     }
 
     const mergedCloseNotes =
-        [ensuredOpenSession.notes, notes, `Settled via Chapa: ${payment.tx_ref}`].filter(Boolean).join(' | ') || null;
+        [ensuredOpenSession.notes, notes, `Settled via Chapa: ${payment.tx_ref}`]
+            .filter(Boolean)
+            .join(' | ') || null;
 
     await Promise.all([
         admin

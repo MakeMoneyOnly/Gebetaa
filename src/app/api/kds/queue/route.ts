@@ -21,13 +21,7 @@ import { parseQuery } from '@/lib/api/validation';
 type StationFilter = 'all' | 'kitchen' | 'bar' | 'dessert' | 'coffee' | 'expeditor';
 type SlaFilter = 'on_track' | 'at_risk' | 'breached';
 
-const ACTIVE_KDS_STATUSES = [
-    'pending',
-    'confirmed',
-    'acknowledged',
-    'preparing',
-    'ready',
-] as const;
+const ACTIVE_KDS_STATUSES = ['pending', 'confirmed', 'acknowledged', 'preparing', 'ready'] as const;
 
 const DEFAULT_READY_AUTO_ARCHIVE_MINUTES = 15;
 
@@ -240,9 +234,7 @@ async function autoArchiveReadyOrders(params: {
 
     const now = new Date();
     const nowIso = now.toISOString();
-    const cutoffIso = new Date(
-        now.getTime() - readyAutoArchiveMinutes * 60_000
-    ).toISOString();
+    const cutoffIso = new Date(now.getTime() - readyAutoArchiveMinutes * 60_000).toISOString();
 
     const { data: archivedOrders, error: archiveError } = await archiveBuilder
         .update({
@@ -358,15 +350,14 @@ export async function GET(request: Request) {
         .from('restaurants')
         .select('settings')
         .eq('id', restaurantId);
-    const { data: restaurantSettingsRows } = await (typeof restaurantSettingsBuilder.maybeSingle === 'function'
+    const { data: restaurantSettingsRows } = await (typeof restaurantSettingsBuilder.maybeSingle ===
+    'function'
         ? restaurantSettingsBuilder.maybeSingle()
         : restaurantSettingsBuilder.limit(1));
     const restaurantSettingsRow = Array.isArray(restaurantSettingsRows)
         ? restaurantSettingsRows[0]
         : restaurantSettingsRows;
-    const readyAutoArchiveMinutes = resolveReadyAutoArchiveMinutes(
-        restaurantSettingsRow?.settings
-    );
+    const readyAutoArchiveMinutes = resolveReadyAutoArchiveMinutes(restaurantSettingsRow?.settings);
     const autoArchivedCount = await autoArchiveReadyOrders({
         db,
         restaurantId,
@@ -423,16 +414,22 @@ export async function GET(request: Request) {
     const kdsItemsByOrder = new Map<string, Array<Record<string, unknown>>>();
 
     if (dineInOrderIds.length > 0) {
-        const [{ data: orderItems, error: orderItemsError }, { data: kdsItems, error: kdsItemsError }] =
-            await Promise.all([
-                db.from('order_items')
-                    .select('id, order_id, name, quantity, notes, station, modifiers, course')
-                    .in('order_id', dineInOrderIds),
-                db.from('kds_order_items')
-                    .select('id, order_id, order_item_id, name, quantity, notes, station, status, modifiers')
-                    .eq('restaurant_id', restaurantId)
-                    .in('order_id', dineInOrderIds),
-            ]);
+        const [
+            { data: orderItems, error: orderItemsError },
+            { data: kdsItems, error: kdsItemsError },
+        ] = await Promise.all([
+            db
+                .from('order_items')
+                .select('id, order_id, name, quantity, notes, station, modifiers, course')
+                .in('order_id', dineInOrderIds),
+            db
+                .from('kds_order_items')
+                .select(
+                    'id, order_id, order_item_id, name, quantity, notes, station, status, modifiers'
+                )
+                .eq('restaurant_id', restaurantId)
+                .in('order_id', dineInOrderIds),
+        ]);
 
         if (!orderItemsError) {
             for (const item of (orderItems ?? []) as Array<Record<string, unknown>>) {
@@ -493,7 +490,9 @@ export async function GET(request: Request) {
         if (typeof hydrationBuilder?.insert === 'function') {
             const { data: hydratedItems } = await hydrationBuilder
                 .insert(hydrationRows)
-                .select('id, order_id, order_item_id, name, quantity, notes, station, status, modifiers');
+                .select(
+                    'id, order_id, order_item_id, name, quantity, notes, station, status, modifiers'
+                );
 
             for (const item of (hydratedItems ?? []) as Array<Record<string, unknown>>) {
                 const orderId = String(item.order_id ?? '');
@@ -549,32 +548,32 @@ export async function GET(request: Request) {
                           : undefined,
                   }))
                 : orderItems.length > 0
-                ? orderItems.map((item, idx) => ({
-                      id: String(item.id ?? `${rawOrder.id}-oi-${idx}`),
-                      kds_item_id: undefined,
-                      name: String(item.name ?? 'Item'),
-                      quantity: Number(item.quantity ?? 1),
-                      notes: item.notes ? String(item.notes) : undefined,
-                      station: resolveItemStation(item.station),
-                      course: normalizeCourse(item.course),
-                      status: 'queued',
-                      modifiers: Array.isArray(item.modifiers)
-                          ? item.modifiers.map(mod => String(mod))
-                          : undefined,
-                  }))
-                : fallbackItems.map((item, idx) => ({
-                      id: String(item.id ?? `${rawOrder.id}-item-${idx}`),
-                      kds_item_id: undefined,
-                      name: String(item.name ?? 'Item'),
-                      quantity: Number(item.quantity ?? 1),
-                      notes: item.notes ? String(item.notes) : undefined,
-                      station: resolveItemStation(item.station),
-                      course: normalizeCourse(item.course),
-                      status: 'queued',
-                      modifiers: Array.isArray(item.modifiers)
-                          ? item.modifiers.map(mod => String(mod))
-                          : undefined,
-                  }));
+                  ? orderItems.map((item, idx) => ({
+                        id: String(item.id ?? `${rawOrder.id}-oi-${idx}`),
+                        kds_item_id: undefined,
+                        name: String(item.name ?? 'Item'),
+                        quantity: Number(item.quantity ?? 1),
+                        notes: item.notes ? String(item.notes) : undefined,
+                        station: resolveItemStation(item.station),
+                        course: normalizeCourse(item.course),
+                        status: 'queued',
+                        modifiers: Array.isArray(item.modifiers)
+                            ? item.modifiers.map(mod => String(mod))
+                            : undefined,
+                    }))
+                  : fallbackItems.map((item, idx) => ({
+                        id: String(item.id ?? `${rawOrder.id}-item-${idx}`),
+                        kds_item_id: undefined,
+                        name: String(item.name ?? 'Item'),
+                        quantity: Number(item.quantity ?? 1),
+                        notes: item.notes ? String(item.notes) : undefined,
+                        station: resolveItemStation(item.station),
+                        course: normalizeCourse(item.course),
+                        status: 'queued',
+                        modifiers: Array.isArray(item.modifiers)
+                            ? item.modifiers.map(mod => String(mod))
+                            : undefined,
+                    }));
 
         const visibleItems = normalizedItems.filter(item =>
             shouldIncludeItemByFireMode({
@@ -608,7 +607,9 @@ export async function GET(request: Request) {
             elapsedMinutes,
             slaStatus: slaState,
             fireMode: String(rawOrder.fire_mode ?? 'auto') === 'manual' ? 'manual' : 'auto',
-            currentCourse: rawOrder.current_course ? normalizeCourse(rawOrder.current_course) : null,
+            currentCourse: rawOrder.current_course
+                ? normalizeCourse(rawOrder.current_course)
+                : null,
         });
     }
 
@@ -632,8 +633,7 @@ export async function GET(request: Request) {
                 : provider;
 
         const config =
-            SOURCE_CONFIG[source as keyof typeof SOURCE_CONFIG] ??
-            SOURCE_CONFIG['direct_delivery'];
+            SOURCE_CONFIG[source as keyof typeof SOURCE_CONFIG] ?? SOURCE_CONFIG['direct_delivery'];
 
         const elapsedMinutes = calculateElapsedMinutes(createdAt);
         const slaState = resolveSlaStatus(elapsedMinutes, sla_minutes);
@@ -653,7 +653,9 @@ export async function GET(request: Request) {
                 : undefined,
         }));
 
-        const ticketStation = resolveTicketStation(normalizedItems.map(item => item.station ?? 'kitchen'));
+        const ticketStation = resolveTicketStation(
+            normalizedItems.map(item => item.station ?? 'kitchen')
+        );
 
         unified.push({
             id: String(rawOrder.id),
@@ -711,8 +713,9 @@ export async function GET(request: Request) {
             dineIn: page.filter(o => o.source === 'dine-in').length,
             directDelivery: page.filter(o => o.source === 'direct_delivery').length,
             directPickup: page.filter(o => o.source === 'direct_pickup').length,
-            partners: page.filter(o => ['beu', 'zmall', 'deliver_addis', 'esoora'].includes(o.source))
-                .length,
+            partners: page.filter(o =>
+                ['beu', 'zmall', 'deliver_addis', 'esoora'].includes(o.source)
+            ).length,
         },
         cursor: {
             next: nextCursor,

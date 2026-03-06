@@ -169,8 +169,9 @@ export async function PATCH(
                 .select('settings')
                 .eq('id', order.restaurant_id)
                 .maybeSingle();
-            const notificationsSettings = (restaurantSettings?.settings as Record<string, unknown> | null)
-                ?.notifications as Record<string, unknown> | undefined;
+            const notificationsSettings = (
+                restaurantSettings?.settings as Record<string, unknown> | null
+            )?.notifications as Record<string, unknown> | undefined;
             const smsEnabled = Boolean(notificationsSettings?.sms_enabled);
             if (!smsEnabled) return;
 

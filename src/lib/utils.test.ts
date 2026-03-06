@@ -68,7 +68,9 @@ describe('isRemoteOrDataImageSrc', () => {
     });
 
     it('should return false for whitelisted supabase domain', () => {
-        expect(isRemoteOrDataImageSrc('https://axuegixbqsvztdraenkz.supabase.co/image.jpg')).toBe(false);
+        expect(isRemoteOrDataImageSrc('https://axuegixbqsvztdraenkz.supabase.co/image.jpg')).toBe(
+            false
+        );
     });
 
     it('should return false for whitelisted pravatar domain', () => {
