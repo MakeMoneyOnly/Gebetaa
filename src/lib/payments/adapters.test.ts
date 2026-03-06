@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { PaymentAdapterRegistry } from '@/lib/payments/adapters';
 import type {
     PaymentInitiateInput,
@@ -56,6 +56,14 @@ class MockProvider implements PaymentProvider {
 }
 
 describe('PaymentAdapterRegistry', () => {
+    beforeEach(() => {
+        vi.resetModules();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('falls back to the next provider when preferred provider fails', async () => {
         const registry = new PaymentAdapterRegistry({
             providers: [
@@ -121,5 +129,175 @@ describe('PaymentAdapterRegistry', () => {
         expect(health[0].status).toBe('degraded');
         expect(health[1].provider).toBe('chapa');
         expect(health[1].status).toBe('healthy');
+    });
+
+    it('getProvider returns null for unregistered provider', () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider({ name: 'telebirr' })],
+        });
+
+        const provider = registry.getProvider('chapa');
+
+        expect(provider).toBeNull();
+    });
+
+    it('getProvider returns registered provider', () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider({ name: 'telebirr' })],
+        });
+
+        const provider = registry.getProvider('telebirr');
+
+        expect(provider).not.toBeNull();
+        expect(provider?.name).toBe('telebirr');
+    });
+
+    it('getFallbackPolicy returns current fallback policy', () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [
+                new MockProvider({ name: 'telebirr' }),
+                new MockProvider({ name: 'chapa' }),
+            ],
+            fallbackPolicy: {
+                enabled: true,
+                fallbackOrder: ['telebirr', 'chapa'],
+            },
+        });
+
+        const policy = registry.getFallbackPolicy();
+
+        expect(policy.enabled).toBe(true);
+        expect(policy.fallbackOrder).toEqual(['telebirr', 'chapa']);
+    });
+
+    it('getFallbackPolicy returns a copy of fallback order', () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [
+                new MockProvider({ name: 'telebirr' }),
+                new MockProvider({ name: 'chapa' }),
+            ],
+            fallbackPolicy: {
+                enabled: true,
+                fallbackOrder: ['telebirr', 'chapa'],
+            },
+        });
+
+        const policy1 = registry.getFallbackPolicy();
+        const policy2 = registry.getFallbackPolicy();
+
+        expect(policy1.fallbackOrder).not.toBe(policy2.fallbackOrder);
+    });
+
+    it('healthChecks returns unavailable for missing provider', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider({ name: 'telebirr' })],
+            fallbackPolicy: {
+                enabled: true,
+                fallbackOrder: ['telebirr', 'chapa'],
+            },
+        });
+
+        const health = await registry.healthChecks(['chapa']);
+
+        expect(health).toHaveLength(1);
+        expect(health[0].status).toBe('unavailable');
+        expect(health[0].reason).toContain('not registered');
+    });
+
+    it('verify calls provider verifyPayment', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider({ name: 'telebirr' })],
+        });
+
+        const result = await registry.verify({
+            provider: 'telebirr',
+            transactionReference: 'tx-123',
+        });
+
+        expect(result.status).toBe('success');
+        expect(result.transactionReference).toBe('tx-123');
+    });
+
+    it('verify throws for unregistered provider', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider({ name: 'telebirr' })],
+        });
+
+        await expect(
+            registry.verify({
+                provider: 'chapa',
+                transactionReference: 'tx-123',
+            })
+        ).rejects.toThrow('not registered');
+    });
+
+    it('initiateWithFallback throws when all providers fail', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [
+                new MockProvider({ name: 'telebirr', shouldFailInitiate: true }),
+                new MockProvider({ name: 'chapa', shouldFailInitiate: true }),
+            ],
+            fallbackPolicy: {
+                enabled: true,
+                fallbackOrder: ['telebirr', 'chapa'],
+            },
+        });
+
+        await expect(
+            registry.initiateWithFallback({
+                preferredProvider: 'telebirr',
+                input: { amount: 10, currency: 'ETB', email: 'ops@gebeta.app' },
+            })
+        ).rejects.toThrow('All payment providers failed');
+    });
+
+    it('initiateWithFallback records attempt for missing provider', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider({ name: 'chapa' })],
+            fallbackPolicy: {
+                enabled: true,
+                fallbackOrder: ['telebirr', 'chapa'],
+            },
+        });
+
+        const response = await registry.initiateWithFallback({
+            preferredProvider: 'telebirr',
+            input: { amount: 10, currency: 'ETB', email: 'ops@gebeta.app' },
+        });
+
+        expect(response.result.provider).toBe('chapa');
+        expect(response.attempts[0]).toMatchObject({
+            provider: 'telebirr',
+            ok: false,
+            error: 'Provider not registered',
+        });
+    });
+
+    it('initiateWithFallback skips fallback when disabled', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [
+                new MockProvider({ name: 'telebirr', shouldFailInitiate: true }),
+                new MockProvider({ name: 'chapa' }),
+            ],
+            fallbackPolicy: {
+                enabled: false,
+                fallbackOrder: ['telebirr', 'chapa'],
+            },
+        });
+
+        await expect(
+            registry.initiateWithFallback({
+                preferredProvider: 'telebirr',
+                input: { amount: 10, currency: 'ETB', email: 'ops@gebeta.app' },
+            })
+        ).rejects.toThrow('All payment providers failed');
+    });
+});
+
+describe('createPaymentAdapterRegistry', () => {
+    it('creates a PaymentAdapterRegistry instance', async () => {
+        const { createPaymentAdapterRegistry } = await import('./adapters');
+        const registry = createPaymentAdapterRegistry();
+        expect(registry).toBeInstanceOf(PaymentAdapterRegistry);
     });
 });

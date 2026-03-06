@@ -125,10 +125,9 @@ describe('postJSON', () => {
         });
         vi.spyOn(global, 'fetch').mockResolvedValueOnce(mockResponse);
 
-        const result = await postJSON<{ success: boolean }>(
-            'https://example.com/api',
-            { name: 'test' }
-        );
+        const result = await postJSON<{ success: boolean }>('https://example.com/api', {
+            name: 'test',
+        });
 
         expect(result.data).toEqual({ success: true });
         expect(fetch).toHaveBeenCalledWith(
