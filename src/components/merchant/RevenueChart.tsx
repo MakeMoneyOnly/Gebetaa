@@ -59,11 +59,7 @@ export const RevenueChart = () => {
     return (
         <div ref={containerRef} className="h-[350px] w-full select-none">
             {chartSize.width > 0 && chartSize.height > 0 ? (
-                <RevenueChartContent
-                    data={chartData}
-                    width={chartSize.width}
-                    height={chartSize.height}
-                />
+                <RevenueChartContent data={chartData} />
             ) : (
                 <ChartSkeleton />
             )}
