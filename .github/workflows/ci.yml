@@ -133,7 +133,7 @@ jobs:
                       ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
             - name: Build application
-              run: p
+              run: pnpm build
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
