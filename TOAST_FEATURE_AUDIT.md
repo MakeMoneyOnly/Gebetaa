@@ -1,5 +1,7 @@
 # Gebeta Restaurant OS vs Toast Platform - Comprehensive Feature Audit
 
+> **📚 Primary Reference:** For the authoritative platform blueprint, technical decisions, and architecture, see [docs/1/Engineering Foundation/0. ENTERPRISE_MASTER_BLUEPRINT.md](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md)
+
 **Audit Date:** March 1, 2026  
 **Auditor:** Cline AI  
 **Purpose:** Pixel-perfect feature alignment with Toast Platform  
