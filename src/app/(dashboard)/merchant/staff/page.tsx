@@ -11,8 +11,21 @@ import { ProvisionDeviceModal } from '@/components/merchant/ProvisionDeviceModal
 import { MetricCard } from '@/components/merchant/MetricCard';
 import { Users, Tablet, Plus, MoreHorizontal, UserCheck, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getDeviceTypeLabel } from '@/lib/devices/config';
 
 type SubTab = 'staff' | 'devices';
+
+function formatLastSeen(value: string | null | undefined): string {
+    if (!value) return 'No heartbeat yet';
+    const timestamp = new Date(value);
+    if (Number.isNaN(timestamp.getTime())) return 'No heartbeat yet';
+    const diffMinutes = Math.max(0, Math.round((Date.now() - timestamp.getTime()) / 60000));
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    const diffHours = Math.round(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return timestamp.toLocaleString();
+}
 
 export default function StaffPage() {
     const {
@@ -420,7 +433,7 @@ export default function StaffPage() {
                                             </h3>
                                             <div className="mt-2 flex items-center gap-2">
                                                 <span className="rounded-lg bg-indigo-50 px-2.5 py-1 text-[10px] font-bold tracking-wider text-indigo-700 uppercase">
-                                                    {device.device_type}
+                                                    {getDeviceTypeLabel(device.device_type)}
                                                 </span>
                                             </div>
                                         </div>
@@ -472,6 +485,36 @@ export default function StaffPage() {
                                                         : 'All Zones'}
                                                 </span>
                                             </div>
+                                            <div
+                                                className="mt-2 flex justify-between pt-2"
+                                                style={{
+                                                    borderTop: '1px solid rgba(0,0,0,0.06)',
+                                                }}
+                                            >
+                                                <span className="text-xs font-bold text-gray-400">
+                                                    Last Seen
+                                                </span>
+                                                <span className="text-xs font-bold text-black">
+                                                    {formatLastSeen(device.last_active_at)}
+                                                </span>
+                                            </div>
+                                            {device.device_type === 'terminal' && device.metadata ? (
+                                                <div
+                                                    className="mt-2 flex justify-between pt-2"
+                                                    style={{
+                                                        borderTop: '1px solid rgba(0,0,0,0.06)',
+                                                    }}
+                                                >
+                                                    <span className="text-xs font-bold text-gray-400">
+                                                        Terminal Mode
+                                                    </span>
+                                                    <span className="text-xs font-bold text-black capitalize">
+                                                        {String(
+                                                            device.metadata?.settlement_mode ?? 'cashier'
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         {/* Delete Device */}
