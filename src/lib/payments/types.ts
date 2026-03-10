@@ -1,19 +1,19 @@
 export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled';
 
-export type PaymentProviderName = 'telebirr' | 'chapa' | 'internal';
+export type PaymentProviderName = 'chapa' | 'internal';
 
 export type PaymentProviderHealthStatus = 'healthy' | 'degraded' | 'unavailable';
-
-export type PaymentProviderFallbackPolicy = {
-    enabled: boolean;
-    fallbackOrder: PaymentProviderName[];
-};
 
 export type PaymentInitiateInput = {
     amount: number;
     currency: string;
-    email: string;
+    email?: string;
     metadata?: Record<string, unknown>;
+    returnUrl?: string;
+    callbackUrl?: string;
+    subaccountId?: string;
+    splitType?: 'percentage' | 'flat';
+    splitValue?: number;
 };
 
 export interface PaymentInitiateResponse {

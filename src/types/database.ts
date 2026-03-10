@@ -1454,6 +1454,14 @@ export type Database = {
             restaurants: {
                 Row: {
                     brand_color: string | null;
+                    chapa_settlement_account_name: string | null;
+                    chapa_settlement_account_number_masked: string | null;
+                    chapa_settlement_bank_code: string | null;
+                    chapa_settlement_bank_name: string | null;
+                    chapa_subaccount_id: string | null;
+                    chapa_subaccount_last_error: string | null;
+                    chapa_subaccount_provisioned_at: string | null;
+                    chapa_subaccount_status: string;
                     contact_email: string | null;
                     contact_phone: string | null;
                     cover_image_url: string | null;
@@ -1463,6 +1471,7 @@ export type Database = {
                     description: string | null;
                     features: Json | null;
                     hero_image_url: string | null;
+                    hosted_checkout_fee_percentage: number;
                     hours_weekday: string | null;
                     hours_weekend: string | null;
                     id: string;
@@ -1470,7 +1479,9 @@ export type Database = {
                     location: string | null;
                     logo_url: string | null;
                     name: string;
+                    onboarding_completed: boolean;
                     owner_telegram_chat_id: string | null;
+                    platform_fee_percentage: number;
                     promo_banners: Json | null;
                     settings: Json | null;
                     slug: string;
@@ -1480,6 +1491,14 @@ export type Database = {
                 };
                 Insert: {
                     brand_color?: string | null;
+                    chapa_settlement_account_name?: string | null;
+                    chapa_settlement_account_number_masked?: string | null;
+                    chapa_settlement_bank_code?: string | null;
+                    chapa_settlement_bank_name?: string | null;
+                    chapa_subaccount_id?: string | null;
+                    chapa_subaccount_last_error?: string | null;
+                    chapa_subaccount_provisioned_at?: string | null;
+                    chapa_subaccount_status?: string;
                     contact_email?: string | null;
                     contact_phone?: string | null;
                     cover_image_url?: string | null;
@@ -1489,6 +1508,7 @@ export type Database = {
                     description?: string | null;
                     features?: Json | null;
                     hero_image_url?: string | null;
+                    hosted_checkout_fee_percentage?: number;
                     hours_weekday?: string | null;
                     hours_weekend?: string | null;
                     id?: string;
@@ -1496,7 +1516,9 @@ export type Database = {
                     location?: string | null;
                     logo_url?: string | null;
                     name: string;
+                    onboarding_completed?: boolean;
                     owner_telegram_chat_id?: string | null;
+                    platform_fee_percentage?: number;
                     promo_banners?: Json | null;
                     settings?: Json | null;
                     slug: string;
@@ -1506,6 +1528,14 @@ export type Database = {
                 };
                 Update: {
                     brand_color?: string | null;
+                    chapa_settlement_account_name?: string | null;
+                    chapa_settlement_account_number_masked?: string | null;
+                    chapa_settlement_bank_code?: string | null;
+                    chapa_settlement_bank_name?: string | null;
+                    chapa_subaccount_id?: string | null;
+                    chapa_subaccount_last_error?: string | null;
+                    chapa_subaccount_provisioned_at?: string | null;
+                    chapa_subaccount_status?: string;
                     contact_email?: string | null;
                     contact_phone?: string | null;
                     cover_image_url?: string | null;
@@ -1515,6 +1545,7 @@ export type Database = {
                     description?: string | null;
                     features?: Json | null;
                     hero_image_url?: string | null;
+                    hosted_checkout_fee_percentage?: number;
                     hours_weekday?: string | null;
                     hours_weekend?: string | null;
                     id?: string;
@@ -1522,7 +1553,9 @@ export type Database = {
                     location?: string | null;
                     logo_url?: string | null;
                     name?: string;
+                    onboarding_completed?: boolean;
                     owner_telegram_chat_id?: string | null;
+                    platform_fee_percentage?: number;
                     promo_banners?: Json | null;
                     settings?: Json | null;
                     slug?: string;

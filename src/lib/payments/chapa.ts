@@ -10,6 +10,30 @@ import {
 
 const CHAPA_API_URL = 'https://api.chapa.co/v1';
 
+function normalizeChapaMessage(message: unknown, fallback: string): string {
+    if (typeof message === 'string' && message.trim().length > 0) {
+        return message.trim();
+    }
+
+    if (Array.isArray(message)) {
+        const joined = message
+            .map(item => (typeof item === 'string' ? item : JSON.stringify(item)))
+            .filter(Boolean)
+            .join(', ');
+        return joined || fallback;
+    }
+
+    if (message && typeof message === 'object') {
+        try {
+            return JSON.stringify(message);
+        } catch {
+            return fallback;
+        }
+    }
+
+    return fallback;
+}
+
 export class ChapaProvider implements PaymentProvider {
     name: PaymentProviderName = 'chapa';
     private secretKey: string;
@@ -21,7 +45,17 @@ export class ChapaProvider implements PaymentProvider {
     }
 
     async initiatePayment(input: PaymentInitiateInput): Promise<PaymentInitiateResponse> {
-        const { amount, currency, email, metadata } = input;
+        const {
+            amount,
+            currency,
+            email,
+            metadata,
+            callbackUrl,
+            returnUrl,
+            subaccountId,
+            splitType,
+            splitValue,
+        } = input;
 
         if (!this.secretKey) {
             throw new PaymentProviderError({
@@ -43,7 +77,7 @@ export class ChapaProvider implements PaymentProvider {
             body: JSON.stringify({
                 amount: amount.toString(),
                 currency,
-                email,
+                email: email ?? 'guest@gebeta.app',
                 first_name:
                     typeof metadata?.firstName === 'string' && metadata.firstName.trim().length > 0
                         ? metadata.firstName
@@ -53,13 +87,24 @@ export class ChapaProvider implements PaymentProvider {
                         ? metadata.lastName
                         : 'User',
                 tx_ref: txRef,
-                callback_url: `${this.appUrl}/api/payments/callback/chapa`,
-                return_url: `${this.appUrl}/order/status?ref=${txRef}`,
+                callback_url: callbackUrl ?? `${this.appUrl}/api/webhooks/chapa`,
+                return_url: returnUrl ?? `${this.appUrl}/order/status?ref=${txRef}`,
                 customization: {
                     title: 'Gebeta Order',
                     description: 'Payment for order',
                 },
                 meta: metadata,
+                ...(subaccountId
+                    ? {
+                          subaccounts: {
+                              id: subaccountId,
+                              ...(splitType ? { split_type: splitType } : {}),
+                              ...(typeof splitValue === 'number'
+                                  ? { split_value: splitValue }
+                                  : {}),
+                          },
+                      }
+                    : {}),
             }),
         });
 
@@ -73,7 +118,7 @@ export class ChapaProvider implements PaymentProvider {
             throw new PaymentProviderError({
                 provider: this.name,
                 code: 'CHAPA_INITIATE_FAILED',
-                message: data.message || 'Failed to initiate Chapa payment',
+                message: normalizeChapaMessage(data.message, 'Failed to initiate Chapa payment'),
                 statusCode: response.status || 502,
             });
         }
