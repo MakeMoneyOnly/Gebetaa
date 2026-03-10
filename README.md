@@ -26,7 +26,7 @@ Gebeta is an enterprise-grade restaurant operating system designed specifically 
 - 🍽️ **QR Code Ordering** - Guests scan, browse, and order from their phones
 - 👨‍🍳 **Kitchen Display System (KDS)** - Real-time order management for kitchen staff
 - 📊 **Merchant Dashboard** - Complete command center for restaurant operations
-- 💳 **Local Payments** - Telebirr, Chapa, and cash support
+- 💳 **Local Payments** - Chapa and cash support
 - 📴 **Offline-First** - Works reliably during internet outages
 - 🇪🇹 **Ethiopia-Native** - Built for Addis Ababa's unique needs
 
@@ -71,8 +71,6 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 HMAC_SECRET_KEY=your_hmac_secret
 
 # Optional (payments)
-TELEBIRR_APP_ID=your_telebirr_app_id
-TELEBIRR_APP_KEY=your_telebirr_app_key
 CHAPA_SECRET_KEY=your_chapa_secret
 CHAPA_PUBLIC_KEY=your_chapa_public_key
 
@@ -128,7 +126,7 @@ Gebetaa/
 | **Auth**      | Supabase Auth with Row-Level Security              |
 | **State**     | Zustand, TanStack Query, Dexie.js (offline)        |
 | **Real-time** | Supabase Realtime (WebSocket)                      |
-| **Payments**  | Telebirr, Chapa                                    |
+| **Payments**  | Chapa                                              |
 | **Testing**   | Vitest, Playwright                                 |
 | **CI/CD**     | GitHub Actions, Vercel                             |
 
@@ -203,8 +201,7 @@ See [Security Standards](docs/STANDARDS/security-standards.md) for details.
 
 ### Payment Integration
 
-- **Telebirr** - QR-based mobile money payments
-- **Chapa** - Card and bank transfer payments
+- **Chapa** - Hosted checkout with bank and card payment support
 - **Cash** - Always supported as fallback
 
 ### Connectivity Resilience

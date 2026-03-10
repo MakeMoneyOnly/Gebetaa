@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-03-07
+
+#### Critical Implementation Roadmap
+
+- Added a source-linked critical implementation roadmap:
+    - `docs/implementation/critical-implementation-roadmap.md`
+    - Consolidates the Critical implementation streams from the Enterprise Master Blueprint into an execution order with dependencies, required skills, implementation steps, and success criteria.
+- Updated execution tracking:
+    - `Tasks.md`
+    - Added a `PLAN-CRIT-001` entry linking the roadmap for future delivery sessions.
+- Breaking changes:
+    - None. This update adds planning and tracking artifacts only.
+
 ### Added - 2026-03-01
 
 #### P0-007 Invoice Processing Automation (Inventory)
