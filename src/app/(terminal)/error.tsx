@@ -31,7 +31,8 @@ export default function TerminalError({
                 <h2 className="mb-2 text-xl font-semibold text-white">Terminal Error</h2>
 
                 <p className="mb-6 text-sm text-gray-400">
-                    {error.message || 'The payment terminal encountered an error. Please try again.'}
+                    {error.message ||
+                        'The payment terminal encountered an error. Please try again.'}
                 </p>
 
                 {error.digest && (

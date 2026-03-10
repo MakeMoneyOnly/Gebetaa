@@ -60,7 +60,6 @@ export interface ChapaBankRecord {
     code: string;
 }
 
-
 export interface ChapaSubaccountParams {
     business_name: string;
     account_name: string;
@@ -119,7 +118,7 @@ export async function listChapaBanks(): Promise<ChapaBankRecord[]> {
     }
 
     console.log('Fetching banks from Chapa API...');
-    
+
     const response = await fetch(`${CHAPA_BASE_URL}/banks`, {
         method: 'GET',
         headers: {
@@ -127,7 +126,7 @@ export async function listChapaBanks(): Promise<ChapaBankRecord[]> {
         },
         cache: 'no-store',
     });
-    
+
     const payload = (await response.json()) as {
         status?: string;
         message?: string;
@@ -146,7 +145,8 @@ export async function listChapaBanks(): Promise<ChapaBankRecord[]> {
     // "Banks retrieved". Do not require status === "success" here because the
     // bank directory response shape differs from payment endpoints.
     if (!response.ok || !Array.isArray(payload.data)) {
-        const errorMsg = payload.message ?? `Failed to load Chapa banks (status: ${response.status})`;
+        const errorMsg =
+            payload.message ?? `Failed to load Chapa banks (status: ${response.status})`;
         console.error('Chapa banks API error:', errorMsg);
         throw new Error(errorMsg);
     }
@@ -171,11 +171,10 @@ export async function listChapaBanks(): Promise<ChapaBankRecord[]> {
         })
         .filter((bank): bank is ChapaBankRecord => bank !== null)
         .sort((left, right) => left.name.localeCompare(right.name));
-    
+
     console.log(`Parsed ${banks.length} valid banks from Chapa response`);
     return banks;
 }
-
 
 /**
  * Create a restaurant settlement subaccount for split payments.
@@ -205,9 +204,9 @@ export async function createChapaSubaccount(
         },
         body: JSON.stringify(params),
     });
-    
+
     const data = (await response.json()) as ChapaSubaccountResponse;
-    
+
     console.log('Chapa subaccount API response:', {
         httpStatus: response.status,
         ok: response.ok,
@@ -277,4 +276,3 @@ export function maskSettlementAccountNumber(accountNumber: string): string {
 
     return `${'*'.repeat(Math.max(0, trimmed.length - 4))}${trimmed.slice(-4)}`;
 }
-

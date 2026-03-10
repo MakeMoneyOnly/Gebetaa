@@ -97,7 +97,9 @@ function createSupabaseMock(params: {
                             eq: vi.fn(),
                             order: vi.fn(),
                             limit: vi.fn(),
-                            maybeSingle: vi.fn().mockResolvedValue({ data: params.payment ?? null }),
+                            maybeSingle: vi
+                                .fn()
+                                .mockResolvedValue({ data: params.payment ?? null }),
                         };
                         chain.eq.mockReturnValue(chain);
                         chain.order.mockReturnValue(chain);

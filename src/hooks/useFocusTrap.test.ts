@@ -84,9 +84,7 @@ describe('useFocusTrap', () => {
 
     it('should handle Escape key to deactivate', () => {
         const onDeactivate = vi.fn();
-        const { result } = renderHook(() =>
-            useFocusTrap({ active: true, onDeactivate })
-        );
+        const { result } = renderHook(() => useFocusTrap({ active: true, onDeactivate }));
 
         act(() => {
             document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

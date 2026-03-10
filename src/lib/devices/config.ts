@@ -1,11 +1,6 @@
 import { z } from 'zod';
 
-export const SupportedPaymentMethodSchema = z.enum([
-    'cash',
-    'chapa',
-    'card',
-    'other',
-]);
+export const SupportedPaymentMethodSchema = z.enum(['cash', 'chapa', 'card', 'other']);
 
 export type SupportedPaymentMethod = z.infer<typeof SupportedPaymentMethodSchema>;
 
@@ -152,4 +147,3 @@ export function normalizeDeviceMetadata(
         kiosk_required: safeMetadata.kiosk_required ?? true,
     };
 }
-

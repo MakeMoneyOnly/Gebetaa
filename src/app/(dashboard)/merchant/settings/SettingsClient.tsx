@@ -360,7 +360,7 @@ export function SettingsClient({
                     initialSettings={currentPayments}
                     initialBanks={initialBanks}
                     initialDirectoryUnavailable={initialDirectoryUnavailable}
-                    onSettingsSaved={(updated) => setCurrentPayments(updated)}
+                    onSettingsSaved={updated => setCurrentPayments(updated)}
                 />
             )}
         </div>

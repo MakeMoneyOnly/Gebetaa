@@ -146,7 +146,9 @@ export async function POST(request: NextRequest) {
         }
 
         const idempotencyKey =
-            explicitIdempotencyKey?.trim() || parsed.data.idempotency_key || generateIdempotencyKey();
+            explicitIdempotencyKey?.trim() ||
+            parsed.data.idempotency_key ||
+            generateIdempotencyKey();
         const txRef = generateChapaTransactionRef(restaurant.slug);
         const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
         const orderId = crypto.randomUUID();
@@ -220,10 +222,13 @@ export async function POST(request: NextRequest) {
                     order_id: order.id,
                     restaurant_id: restaurant.id,
                     order_type: parsed.data.order_type,
-                    ...(discountRuntime.discount ? { discount_id: discountRuntime.discount.id } : {}),
+                    ...(discountRuntime.discount
+                        ? { discount_id: discountRuntime.discount.id }
+                        : {}),
                     ...(discountRuntime.calculation.discountAmount > 0
                         ? {
-                              discount_amount: discountRuntime.calculation.discountAmount.toString(),
+                              discount_amount:
+                                  discountRuntime.calculation.discountAmount.toString(),
                           }
                         : {}),
                 },

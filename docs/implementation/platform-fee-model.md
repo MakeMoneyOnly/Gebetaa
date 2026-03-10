@@ -1,4 +1,5 @@
 # Gebeta Platform Fee Model
+
 **Audited and Revised for Addis Ababa operations**
 
 ## Verdict
@@ -229,15 +230,15 @@ Recommended `fee_breakdown` semantics:
 
 ```json
 {
-  "surface": "guest_qr",
-  "checkout_mode": "hosted",
-  "provider": "chapa",
-  "provider_fee_estimated": false,
-  "provider_fee_rate": 0.018,
-  "provider_fee_amount": 18,
-  "platform_fee_rate": 0.03,
-  "platform_fee_amount": 30,
-  "net_amount": 952
+    "surface": "guest_qr",
+    "checkout_mode": "hosted",
+    "provider": "chapa",
+    "provider_fee_estimated": false,
+    "provider_fee_rate": 0.018,
+    "provider_fee_amount": 18,
+    "platform_fee_rate": 0.03,
+    "platform_fee_amount": 30,
+    "net_amount": 952
 }
 ```
 

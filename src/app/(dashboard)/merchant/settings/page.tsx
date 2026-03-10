@@ -66,10 +66,14 @@ const defaultPayments: PaymentSettings = {
     hosted_checkout_fee_percentage: 0.03,
 };
 
-async function getPaymentSettings(supabase: Awaited<ReturnType<typeof createClient>>, restaurantId: string): Promise<PaymentSettings> {
+async function getPaymentSettings(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    restaurantId: string
+): Promise<PaymentSettings> {
     const { data, error } = await supabase
         .from('restaurants')
-        .select(`
+        .select(
+            `
             chapa_settlement_bank_code,
             chapa_settlement_bank_name,
             chapa_settlement_account_name,
@@ -79,10 +83,11 @@ async function getPaymentSettings(supabase: Awaited<ReturnType<typeof createClie
             chapa_subaccount_last_error,
             chapa_subaccount_provisioned_at,
             hosted_checkout_fee_percentage
-        `)
+        `
+        )
         .eq('id', restaurantId)
         .single();
-    
+
     if (error || !data) {
         console.error('Error fetching payment settings:', error);
         return {
@@ -90,7 +95,7 @@ async function getPaymentSettings(supabase: Awaited<ReturnType<typeof createClie
             provider_available: isChapaConfigured(),
         };
     }
-    
+
     return {
         ...defaultPayments,
         provider_available: isChapaConfigured(),
@@ -111,7 +116,7 @@ async function getBanks(): Promise<{ banks: BankOption[]; directoryUnavailable: 
         console.log('Chapa not configured - skipping bank fetch');
         return { banks: [], directoryUnavailable: true };
     }
-    
+
     try {
         const banks = await listChapaBanks();
         console.log(`Successfully fetched ${banks.length} banks from Chapa`);
@@ -122,20 +127,24 @@ async function getBanks(): Promise<{ banks: BankOption[]; directoryUnavailable: 
     }
 }
 
-async function getRestaurantId(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+async function getRestaurantId(
+    supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<string | null> {
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
         return null;
     }
-    
+
     const { data: staffData } = await supabase
         .from('restaurant_staff')
         .select('restaurant_id')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
-    
+
     return staffData?.restaurant_id ?? null;
 }
 
@@ -145,13 +154,15 @@ export const revalidate = 0;
 export default async function SettingsPage() {
     const supabase = await createClient();
     const restaurantId = await getRestaurantId(supabase);
-    
+
     // Fetch all data in parallel
     const [payments, banksResult] = await Promise.all([
-        restaurantId ? getPaymentSettings(supabase, restaurantId) : Promise.resolve({
-            ...defaultPayments,
-            provider_available: isChapaConfigured(),
-        }),
+        restaurantId
+            ? getPaymentSettings(supabase, restaurantId)
+            : Promise.resolve({
+                  ...defaultPayments,
+                  provider_available: isChapaConfigured(),
+              }),
         getBanks(),
     ]);
 

@@ -333,8 +333,8 @@ export async function POST(request: Request) {
             order_type,
             customer_name: customer_name ?? null,
             customer_phone: customer_phone ?? null,
-                discount_id: discountRuntime.discount?.id ?? null,
-                discount_amount: discountRuntime.calculation.discountAmount,
+            discount_id: discountRuntime.discount?.id ?? null,
+            discount_amount: discountRuntime.calculation.discountAmount,
         },
     });
 

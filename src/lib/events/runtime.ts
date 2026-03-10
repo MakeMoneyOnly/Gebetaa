@@ -49,7 +49,9 @@ export async function publishEvent(event: GebetaEvent): Promise<PublishEventResu
             payload: JSON.stringify(event.payload),
         });
     } else if (process.env.NODE_ENV !== 'test') {
-        console.warn(`[events] Upstash Redis not configured, skipping stream publish for ${event.name}`);
+        console.warn(
+            `[events] Upstash Redis not configured, skipping stream publish for ${event.name}`
+        );
     }
 
     return {

@@ -32,7 +32,10 @@ export async function GET() {
     }
 
     try {
-        const discounts = await listActiveDiscountsForRestaurant(context.supabase, context.restaurantId);
+        const discounts = await listActiveDiscountsForRestaurant(
+            context.supabase,
+            context.restaurantId
+        );
         return apiSuccess({ discounts });
     } catch (error) {
         return apiError(
@@ -87,12 +90,7 @@ export async function POST(request: Request) {
         .single();
 
     if (error || !data) {
-        return apiError(
-            'Failed to create discount',
-            500,
-            'DISCOUNT_CREATE_FAILED',
-            error?.message
-        );
+        return apiError('Failed to create discount', 500, 'DISCOUNT_CREATE_FAILED', error?.message);
     }
 
     await writeAuditLog(context.supabase, {

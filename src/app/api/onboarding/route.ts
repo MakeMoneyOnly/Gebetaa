@@ -37,8 +37,12 @@ function normalizePayoutStatus(params: {
     providerMessage?: string | null;
 }) {
     const subaccountId = String(params.subaccountId ?? '').trim();
-    const providerStatus = String(params.providerStatus ?? '').trim().toLowerCase();
-    const providerMessage = String(params.providerMessage ?? '').trim().toLowerCase();
+    const providerStatus = String(params.providerStatus ?? '')
+        .trim()
+        .toLowerCase();
+    const providerMessage = String(params.providerMessage ?? '')
+        .trim()
+        .toLowerCase();
     const haystack = `${providerStatus} ${providerMessage}`;
 
     if (subaccountId) {

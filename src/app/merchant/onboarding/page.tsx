@@ -274,7 +274,8 @@ function StepSettlement({
                     Add your payout destination.
                 </h2>
                 <p className="mt-2 font-medium text-gray-500">
-                    Gebeta will create and manage your Chapa settlement subaccount and route eligible Chapa-hosted payouts to the bank or wallet destination you choose here.
+                    Gebeta will create and manage your Chapa settlement subaccount and route
+                    eligible Chapa-hosted payouts to the bank or wallet destination you choose here.
                 </p>
             </div>
 
@@ -345,9 +346,7 @@ function StepSettlement({
                 value={data.settlement_account_name}
                 onChange={e => onChange({ settlement_account_name: e.target.value })}
                 placeholder={
-                    destinationType === 'wallet'
-                        ? 'e.g. Kaleab Hailu'
-                        : 'e.g. Abyssinia Burger PLC'
+                    destinationType === 'wallet' ? 'e.g. Kaleab Hailu' : 'e.g. Abyssinia Burger PLC'
                 }
             />
 
@@ -368,7 +367,8 @@ function StepSettlement({
             />
 
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
-                This step only sets where eligible Chapa-hosted payouts go. Guest payment methods are configured separately in Guest Menu, Online Ordering, Waiter POS, and Terminal.
+                This step only sets where eligible Chapa-hosted payouts go. Guest payment methods
+                are configured separately in Guest Menu, Online Ordering, Waiter POS, and Terminal.
             </div>
         </div>
     );
@@ -562,9 +562,7 @@ export default function OnboardingPage() {
             } catch (err) {
                 if (!cancelled) {
                     setError(
-                        err instanceof Error
-                            ? err.message
-                            : 'Failed to load payout destinations.'
+                        err instanceof Error ? err.message : 'Failed to load payout destinations.'
                     );
                 }
             } finally {
@@ -814,8 +812,3 @@ export default function OnboardingPage() {
         </main>
     );
 }
-
-
-
-
-

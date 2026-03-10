@@ -140,7 +140,9 @@ export function ProvisionDeviceModal({
                                 </label>
                                 <select
                                     value={deviceType}
-                                    onChange={e => setDeviceType(e.target.value as HardwareDeviceType)}
+                                    onChange={e =>
+                                        setDeviceType(e.target.value as HardwareDeviceType)
+                                    }
                                     className="w-full rounded-2xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 capitalize shadow-sm transition-all outline-none focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
                                 >
                                     <option value="pos">POS Terminal (Waiters)</option>
@@ -208,10 +210,14 @@ export function ProvisionDeviceModal({
                                                 <button
                                                     key={option.method}
                                                     type="button"
-                                                    onClick={() => togglePaymentMethod(option.method)}
+                                                    onClick={() =>
+                                                        togglePaymentMethod(option.method)
+                                                    }
                                                     className={cn(
                                                         'rounded-full px-3 py-1.5 text-xs font-bold transition-all',
-                                                        allowedPaymentMethods.includes(option.method)
+                                                        allowedPaymentMethods.includes(
+                                                            option.method
+                                                        )
                                                             ? 'bg-emerald-600 text-white shadow-md'
                                                             : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'
                                                     )}
@@ -263,9 +269,9 @@ export function ProvisionDeviceModal({
                                 on managed Android tablets for enterprise-grade operation.
                             </div>
                             <div className="rounded-2xl bg-amber-50 px-4 py-3 text-[11px] font-semibold text-amber-700">
-                                Customer kiosk provisioning is temporarily hidden until the dedicated
-                                self-order kiosk UI is implemented. Today the supported managed
-                                device types are Waiter POS, KDS, and Cashier Terminal.
+                                Customer kiosk provisioning is temporarily hidden until the
+                                dedicated self-order kiosk UI is implemented. Today the supported
+                                managed device types are Waiter POS, KDS, and Cashier Terminal.
                             </div>
 
                             <div className="mt-8 flex justify-end gap-3 pt-2">

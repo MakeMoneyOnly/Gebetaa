@@ -12,9 +12,9 @@ North star: Engineering Foundation #0 - Enterprise Master Blueprint
 ## Critical Roadmap
 
 - [x] `PLAN-CRIT-001` Publish the critical implementation roadmap
-  - Reference: [docs/implementation/critical-implementation-roadmap.md](docs/implementation/critical-implementation-roadmap.md)
-  - Scope: payment webhooks, santim migration, event bus, Amharic rollout, offline sync, security hardening, GraphQL federation, observability, POS/KDS parity, and guest notification reliability
-  - Source alignment: blueprint + PRD + tech stack + system architecture + database schema + API design guide + engineering runbook
+    - Reference: [docs/implementation/critical-implementation-roadmap.md](docs/implementation/critical-implementation-roadmap.md)
+    - Scope: payment webhooks, santim migration, event bus, Amharic rollout, offline sync, security hardening, GraphQL federation, observability, POS/KDS parity, and guest notification reliability
+    - Source alignment: blueprint + PRD + tech stack + system architecture + database schema + API design guide + engineering runbook
 
 ---
 

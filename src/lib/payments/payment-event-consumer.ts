@@ -70,8 +70,7 @@ export async function processPaymentLifecycleEvent(
         null;
     const monetaryAmount = payload.amount ?? resolvedOrder?.total_price ?? 0;
     const paymentStatus = payload.status === 'completed' ? 'captured' : 'failed';
-    const paymentSessionStatus =
-        payload.status === 'completed' ? 'captured' : 'failed';
+    const paymentSessionStatus = payload.status === 'completed' ? 'captured' : 'failed';
 
     if (existingPayment?.status === paymentStatus) {
         return {
@@ -138,10 +137,8 @@ export async function processPaymentLifecycleEvent(
 
     if (paymentSessionId) {
         const sessionMetadata = {
-            ...(((resolvedPaymentSession?.metadata as Record<string, unknown> | undefined) ?? {}) as Record<
-                string,
-                unknown
-            >),
+            ...(((resolvedPaymentSession?.metadata as Record<string, unknown> | undefined) ??
+                {}) as Record<string, unknown>),
             webhook_event_id: event.id,
             webhook_trace_id: event.trace_id,
             webhook_status: payload.status,

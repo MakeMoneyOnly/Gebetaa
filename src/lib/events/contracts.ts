@@ -56,5 +56,8 @@ export function createPaymentLifecycleEvent(
     status: PaymentEventStatus,
     payload: PaymentLifecycleEventPayload
 ): PaymentLifecycleEvent {
-    return createGebetaEvent(status === 'completed' ? 'payment.completed' : 'payment.failed', payload);
+    return createGebetaEvent(
+        status === 'completed' ? 'payment.completed' : 'payment.failed',
+        payload
+    );
 }

@@ -111,7 +111,9 @@ export async function getDeviceContext(request: Request) {
     const admin = createServiceRoleClient();
     const { data: device, error } = await admin
         .from('hardware_devices')
-        .select('id, restaurant_id, device_type, name, assigned_zones, status, metadata, last_active_at')
+        .select(
+            'id, restaurant_id, device_type, name, assigned_zones, status, metadata, last_active_at'
+        )
         .eq('device_token', token)
         .single();
 
@@ -125,10 +127,7 @@ export async function getDeviceContext(request: Request) {
     return { ok: true as const, device, restaurantId: device.restaurant_id as string, admin };
 }
 
-export async function getScopedDeviceContext(
-    request: Request,
-    allowedTypes: HardwareDeviceType[]
-) {
+export async function getScopedDeviceContext(request: Request, allowedTypes: HardwareDeviceType[]) {
     const context = await getDeviceContext(request);
     if (!context.ok) {
         return context;
@@ -137,7 +136,11 @@ export async function getScopedDeviceContext(
     if (!allowedTypes.includes(context.device.device_type as HardwareDeviceType)) {
         return {
             ok: false as const,
-            response: apiError('Device type not allowed for this action', 403, 'DEVICE_TYPE_FORBIDDEN'),
+            response: apiError(
+                'Device type not allowed for this action',
+                403,
+                'DEVICE_TYPE_FORBIDDEN'
+            ),
         };
     }
 

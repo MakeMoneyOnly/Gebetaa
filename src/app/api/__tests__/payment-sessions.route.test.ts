@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST as postPaymentSession } from '@/app/api/payments/sessions/route';
-import { createPaymentSession, initiateHostedPaymentSession } from '@/lib/payments/payment-sessions';
+import {
+    createPaymentSession,
+    initiateHostedPaymentSession,
+} from '@/lib/payments/payment-sessions';
 
 const createClientMock = vi.fn();
 const createServiceRoleClientMock = vi.fn();

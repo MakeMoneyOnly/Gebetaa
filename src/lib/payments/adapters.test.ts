@@ -14,11 +14,13 @@ class MockProvider implements PaymentProvider {
     private shouldFailInitiate: boolean;
     private healthStatus: PaymentProviderHealth['status'];
 
-    constructor(params: {
-        name?: PaymentProviderName;
-        shouldFailInitiate?: boolean;
-        healthStatus?: PaymentProviderHealth['status'];
-    } = {}) {
+    constructor(
+        params: {
+            name?: PaymentProviderName;
+            shouldFailInitiate?: boolean;
+            healthStatus?: PaymentProviderHealth['status'];
+        } = {}
+    ) {
         this.name = params.name ?? 'chapa';
         this.shouldFailInitiate = params.shouldFailInitiate ?? false;
         this.healthStatus = params.healthStatus ?? 'healthy';

@@ -57,7 +57,11 @@ export async function GET(request: Request) {
         if (!tableNumber) continue;
         orderTotalsByTable.set(
             tableNumber,
-            Number(((orderTotalsByTable.get(tableNumber) ?? 0) + Number(order.total_price ?? 0)).toFixed(2))
+            Number(
+                (
+                    (orderTotalsByTable.get(tableNumber) ?? 0) + Number(order.total_price ?? 0)
+                ).toFixed(2)
+            )
         );
         orderCountsByTable.set(tableNumber, (orderCountsByTable.get(tableNumber) ?? 0) + 1);
     }
@@ -65,7 +69,9 @@ export async function GET(request: Request) {
     const terminalTables = tables
         .filter(table => {
             const status = String(table.status ?? 'available');
-            return status !== 'available' || orderTotalsByTable.has(String(table.table_number ?? ''));
+            return (
+                status !== 'available' || orderTotalsByTable.has(String(table.table_number ?? ''))
+            );
         })
         .map(table => ({
             ...table,

@@ -1,4 +1,4 @@
- import { z } from 'zod';
+import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
@@ -65,8 +65,12 @@ function normalizePayoutStatus(params: {
     providerMessage?: string | null;
 }) {
     const subaccountId = String(params.subaccountId ?? '').trim();
-    const providerStatus = String(params.providerStatus ?? '').trim().toLowerCase();
-    const providerMessage = String(params.providerMessage ?? '').trim().toLowerCase();
+    const providerStatus = String(params.providerStatus ?? '')
+        .trim()
+        .toLowerCase();
+    const providerMessage = String(params.providerMessage ?? '')
+        .trim()
+        .toLowerCase();
     const haystack = `${providerStatus} ${providerMessage}`;
 
     console.log('normalizePayoutStatus called with:', {
@@ -77,7 +81,7 @@ function normalizePayoutStatus(params: {
     });
 
     // Check for success indicators in status or message
-    const isSuccess = 
+    const isSuccess =
         providerStatus === 'success' ||
         providerStatus === 'active' ||
         haystack.includes('success') ||
@@ -200,19 +204,21 @@ export async function PATCH(request: Request) {
     const currentAccountName = String(current.chapa_settlement_account_name ?? '').trim();
     const currentSubaccountId = String(current.chapa_subaccount_id ?? '').trim();
     const currentMaskedNumber = String(current.chapa_settlement_account_number_masked ?? '').trim();
-    
+
     // Check if account details actually changed
     // Note: providedAccountNumber will be empty if the user didn't change the masked number
     const accountDetailsChanged =
         currentBankCode !== nextBankCode || currentAccountName !== nextAccountName;
-    
+
     // Only need provisioning if:
     // 1. We don't have a subaccount ID yet, OR
     // 2. Account details changed AND user provided a new account number
     const needsProvisioning =
-        currentSubaccountId.length === 0 || 
+        currentSubaccountId.length === 0 ||
         (accountDetailsChanged && providedAccountNumber.length > 0) ||
-        (!accountDetailsChanged && providedAccountNumber.length > 0 && !providedAccountNumber.includes('*'));
+        (!accountDetailsChanged &&
+            providedAccountNumber.length > 0 &&
+            !providedAccountNumber.includes('*'));
 
     if (accountDetailsChanged && providedAccountNumber.length === 0) {
         return apiError(
@@ -308,7 +314,7 @@ export async function PATCH(request: Request) {
         }
 
         // Check if the response indicates success
-        const isSuccess = 
+        const isSuccess =
             subaccount.status === 'success' ||
             String(subaccount.status).toLowerCase() === 'success' ||
             String(subaccount.message).toLowerCase().includes('success') ||
@@ -360,7 +366,8 @@ export async function PATCH(request: Request) {
             chapa_settlement_bank_code: nextBankCode,
             chapa_settlement_bank_name: nextBankName,
             chapa_settlement_account_name: nextAccountName,
-            chapa_settlement_account_number_masked: maskSettlementAccountNumber(providedAccountNumber),
+            chapa_settlement_account_number_masked:
+                maskSettlementAccountNumber(providedAccountNumber),
             chapa_subaccount_id: nextSubaccountId,
             chapa_subaccount_status: nextStatus,
             chapa_subaccount_last_error: nextLastError,

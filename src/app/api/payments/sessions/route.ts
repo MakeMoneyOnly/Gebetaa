@@ -113,10 +113,18 @@ export async function POST(request: NextRequest) {
 
     if (isOnlineOrder) {
         if (!body.customer_name?.trim()) {
-            return apiError('customer_name is required for online ordering', 400, 'CUSTOMER_NAME_REQUIRED');
+            return apiError(
+                'customer_name is required for online ordering',
+                400,
+                'CUSTOMER_NAME_REQUIRED'
+            );
         }
         if (!body.customer_phone?.trim()) {
-            return apiError('customer_phone is required for online ordering', 400, 'CUSTOMER_PHONE_REQUIRED');
+            return apiError(
+                'customer_phone is required for online ordering',
+                400,
+                'CUSTOMER_PHONE_REQUIRED'
+            );
         }
         if (body.order_type === 'delivery' && !body.delivery_address?.trim()) {
             return apiError(
@@ -306,7 +314,8 @@ export async function POST(request: NextRequest) {
             delivery_address: body.delivery_address?.trim() || null,
             metadata: {
                 ...baseMetadata,
-                payment_session_status: paymentChoice === 'pay_now' ? 'pending_provider' : 'created',
+                payment_session_status:
+                    paymentChoice === 'pay_now' ? 'pending_provider' : 'created',
             },
             ...(discountRuntime.discount ? { discount_id: discountRuntime.discount.id } : {}),
             ...(discountRuntime.calculation.discountAmount > 0
@@ -332,7 +341,9 @@ export async function POST(request: NextRequest) {
     }));
 
     if (orderItemsPayload.length > 0) {
-        const { error: orderItemsError } = await adminAny.from('order_items').insert(orderItemsPayload);
+        const { error: orderItemsError } = await adminAny
+            .from('order_items')
+            .insert(orderItemsPayload);
         if (orderItemsError) {
             await adminAny.from('orders').delete().eq('id', order.id);
             return apiError(
@@ -441,7 +452,8 @@ export async function POST(request: NextRequest) {
 
     await writeAuditLog(admin as any, {
         restaurant_id: restaurantId,
-        action: paymentChoice === 'pay_now' ? 'order_created_payment_pending' : 'order_created_guest',
+        action:
+            paymentChoice === 'pay_now' ? 'order_created_payment_pending' : 'order_created_guest',
         entity_type: 'order',
         entity_id: order.id,
         metadata: {

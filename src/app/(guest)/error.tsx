@@ -28,7 +28,9 @@ export default function GuestError({
                     <AlertTriangle className="h-8 w-8 text-amber-600" />
                 </div>
 
-                <h2 className="mb-2 text-xl font-semibold text-gray-900">Oops! Something went wrong</h2>
+                <h2 className="mb-2 text-xl font-semibold text-gray-900">
+                    Oops! Something went wrong
+                </h2>
 
                 <p className="mb-6 text-sm text-gray-600">
                     {error.message || 'We encountered an issue loading the menu. Please try again.'}

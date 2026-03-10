@@ -97,16 +97,16 @@ function PaymentChoiceButton({
         <button
             type="button"
             onClick={onClick}
-            className={`group flex w-full items-center gap-4 rounded-3xl border p-4 text-left outline-none transition-all duration-300 active:scale-[0.98] ${
+            className={`group flex w-full items-center gap-4 rounded-3xl border p-4 text-left transition-all duration-300 outline-none active:scale-[0.98] ${
                 selected
-                    ? 'border-brand-crimson bg-brand-crimson/5 shadow-[0_8px_16px_-6px_rgba(220,38,38,0.15)] dark:bg-brand-crimson/10'
+                    ? 'border-brand-crimson bg-brand-crimson/5 dark:bg-brand-crimson/10 shadow-[0_8px_16px_-6px_rgba(220,38,38,0.15)]'
                     : 'border-black/5 bg-transparent hover:border-black/10 hover:bg-black/5 dark:border-white/5 dark:hover:border-white/10 dark:hover:bg-white/5'
             }`}
         >
             <div
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
                     selected
-                        ? 'scale-105 bg-brand-crimson text-white shadow-lg shadow-brand-crimson/30'
+                        ? 'bg-brand-crimson shadow-brand-crimson/30 scale-105 text-white shadow-lg'
                         : 'bg-black/5 text-black/50 group-hover:scale-105 group-hover:text-black/70 dark:bg-white/10 dark:text-white/50 dark:group-hover:text-white/70'
                 }`}
             >
@@ -120,7 +120,7 @@ function PaymentChoiceButton({
                 >
                     {label}
                 </p>
-                <p className="mt-0.5 text-xs font-medium leading-relaxed text-black/50 dark:text-white/50">
+                <p className="mt-0.5 text-xs leading-relaxed font-medium text-black/50 dark:text-white/50">
                     {description}
                 </p>
             </div>
@@ -256,7 +256,12 @@ export function CartDrawer({
             return;
         }
 
-        if (!isOnlineOrder && step === 'payment' && paymentChoice === 'pay_now' && !digitalPaymentMethod) {
+        if (
+            !isOnlineOrder &&
+            step === 'payment' &&
+            paymentChoice === 'pay_now' &&
+            !digitalPaymentMethod
+        ) {
             setOrderError('Please choose Chapa to continue.');
             return;
         }
@@ -485,7 +490,10 @@ export function CartDrawer({
                                                 onClick={() => setStep('cart')}
                                                 className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5 transition-colors active:scale-95 dark:bg-white/10"
                                             >
-                                                <ChevronRight size={18} className="rotate-180 text-black dark:text-white" />
+                                                <ChevronRight
+                                                    size={18}
+                                                    className="rotate-180 text-black dark:text-white"
+                                                />
                                             </button>
                                         )}
                                         <Drawer.Title className="font-manrope text-2xl font-black tracking-tight text-black dark:text-white">
@@ -706,7 +714,6 @@ export function CartDrawer({
                                         )}
                                     </div>
                                 )}
-
                             </div>
 
                             {/* ── Footer / Checkout ──────────────────────── */}
@@ -719,7 +726,9 @@ export function CartDrawer({
                                             </label>
                                             <select
                                                 value={selectedDiscountId}
-                                                onChange={event => setSelectedDiscountId(event.target.value)}
+                                                onChange={event =>
+                                                    setSelectedDiscountId(event.target.value)
+                                                }
                                                 className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-black dark:border-white/10 dark:bg-neutral-950 dark:text-white"
                                             >
                                                 <option value="">No discount</option>
@@ -794,7 +803,8 @@ export function CartDrawer({
                                                 </>
                                             ) : step === 'cart' ? (
                                                 <>
-                                                    Choose checkout option <ChevronRight size={18} />
+                                                    Choose checkout option{' '}
+                                                    <ChevronRight size={18} />
                                                 </>
                                             ) : paymentChoice === 'pay_now' ? (
                                                 <>
@@ -805,7 +815,8 @@ export function CartDrawer({
                                                 </>
                                             ) : paymentChoice === 'waiter_close_out' ? (
                                                 <>
-                                                    Order and pay with waiter <ChevronRight size={18} />
+                                                    Order and pay with waiter{' '}
+                                                    <ChevronRight size={18} />
                                                 </>
                                             ) : (
                                                 <>
@@ -844,4 +855,3 @@ export function CartDrawer({
         </Drawer.Root>
     );
 }
-

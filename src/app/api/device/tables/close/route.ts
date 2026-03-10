@@ -297,8 +297,16 @@ export async function POST(request: Request) {
         orderId: null,
         surface: ctx.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos',
         channel: 'dine_in',
-        method: paymentProvider === 'cash' ? 'cash' : paymentProvider === 'other' ? 'other' : paymentProvider,
-        provider: paymentProvider === 'cash' || paymentProvider === 'other' ? 'internal' : paymentProvider,
+        method:
+            paymentProvider === 'cash'
+                ? 'cash'
+                : paymentProvider === 'other'
+                  ? 'other'
+                  : paymentProvider,
+        provider:
+            paymentProvider === 'cash' || paymentProvider === 'other'
+                ? 'internal'
+                : paymentProvider,
         amount: settlementAmount,
         status: 'captured',
         metadata: {
@@ -316,7 +324,10 @@ export async function POST(request: Request) {
             order_id: null,
             payment_session_id: paymentSession.id,
             method: paymentProvider,
-            provider: paymentProvider === 'cash' || paymentProvider === 'other' ? 'internal' : paymentProvider,
+            provider:
+                paymentProvider === 'cash' || paymentProvider === 'other'
+                    ? 'internal'
+                    : paymentProvider,
             provider_reference: payment.tx_ref?.trim() || null,
             amount: settlementAmount,
             tip_amount: Number((payment.tip_amount ?? 0).toFixed(2)),

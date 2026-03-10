@@ -115,8 +115,7 @@ function MenuContent() {
     const [otpFlow, setOtpFlow] = useState<'none' | 'login' | 'signup'>('none');
     const params = useParams<{ slug: string }>();
     const searchParams = useSearchParams();
-    const getQueryParam = (key: string) =>
-        searchParams.get(key) ?? searchParams.get(`amp;${key}`);
+    const getQueryParam = (key: string) => searchParams.get(key) ?? searchParams.get(`amp;${key}`);
     const tableNumber = getQueryParam('table');
     const signature = getQueryParam('sig');
     const expiresAt = getQueryParam('exp');

@@ -86,7 +86,11 @@ function statusFromRaw(rawStatus: string | null): PaymentEventStatus {
     return 'failed';
 }
 
-function compareSignature(secret: string, providedSignature: string | null, rawBody: string): boolean {
+function compareSignature(
+    secret: string,
+    providedSignature: string | null,
+    rawBody: string
+): boolean {
     if (!providedSignature) {
         return false;
     }
@@ -112,7 +116,10 @@ function compareSignature(secret: string, providedSignature: string | null, rawB
     });
 }
 
-export function verifyChapaWebhookSignature(rawBody: string, providedSignature: string | null): boolean {
+export function verifyChapaWebhookSignature(
+    rawBody: string,
+    providedSignature: string | null
+): boolean {
     const secret = process.env.CHAPA_WEBHOOK_SECRET;
     if (!secret) {
         return process.env.NODE_ENV !== 'production';
@@ -121,7 +128,10 @@ export function verifyChapaWebhookSignature(rawBody: string, providedSignature: 
     return compareSignature(secret, providedSignature, rawBody);
 }
 
-export function parseChapaWebhook(rawBody: string, searchParams?: URLSearchParams): ParsedWebhookPayload {
+export function parseChapaWebhook(
+    rawBody: string,
+    searchParams?: URLSearchParams
+): ParsedWebhookPayload {
     const body = safeJsonParse(rawBody);
     const data = getNestedRecord(body, 'data');
     const meta = getNestedRecord(data, 'meta');
@@ -160,7 +170,8 @@ async function resolvePaymentContext(
 ): Promise<PaymentContext> {
     const admin = createServiceRoleClient();
     const metadataPaymentSessionId =
-        typeof metadata.payment_session_id === 'string' && metadata.payment_session_id.trim().length > 0
+        typeof metadata.payment_session_id === 'string' &&
+        metadata.payment_session_id.trim().length > 0
             ? metadata.payment_session_id
             : null;
     const metadataOrderId =
@@ -205,7 +216,8 @@ async function resolvePaymentContext(
                 restaurant_id: data.restaurant_id,
                 order_id: data.order_id,
                 payment_id: data.id,
-                payment_session_id: (data as { payment_session_id?: string | null }).payment_session_id ?? null,
+                payment_session_id:
+                    (data as { payment_session_id?: string | null }).payment_session_id ?? null,
             };
         }
     }
@@ -259,7 +271,8 @@ async function resolvePaymentContext(
             restaurant_id: payment.restaurant_id,
             order_id: payment.order_id,
             payment_id: payment.id,
-            payment_session_id: (payment as { payment_session_id?: string | null }).payment_session_id ?? null,
+            payment_session_id:
+                (payment as { payment_session_id?: string | null }).payment_session_id ?? null,
         };
     }
 
@@ -281,7 +294,9 @@ async function resolvePaymentContext(
     }
 
     if (!metadataRestaurantId) {
-        throw new Error(`Unable to resolve payment context for ${provider}:${providerTransactionId}`);
+        throw new Error(
+            `Unable to resolve payment context for ${provider}:${providerTransactionId}`
+        );
     }
 
     return {

@@ -86,8 +86,9 @@ export function PaymentAccountsSettingsPanel({
     const [options] = useState<ChapaBankOption[]>(initialBanks);
     const [directoryUnavailable] = useState(initialDirectoryUnavailable);
     const [settings, setSettings] = useState<PaymentSettings>(initialSettings);
-    
-    const currentOption = options.find(option => option.code === settings.settlement_bank_code) ?? null;
+
+    const currentOption =
+        options.find(option => option.code === settings.settlement_bank_code) ?? null;
     const [destinationType, setDestinationType] = useState<DestinationType>(
         detectDestinationType(currentOption)
     );
@@ -105,7 +106,8 @@ export function PaymentAccountsSettingsPanel({
         setSettlementBankCode(initialSettings.settlement_bank_code ?? '');
         setSettlementAccountName(initialSettings.settlement_account_name ?? '');
         setSettlementAccountNumber(initialSettings.settlement_account_number_masked ?? '');
-        const currentOption = options.find(option => option.code === initialSettings.settlement_bank_code) ?? null;
+        const currentOption =
+            options.find(option => option.code === initialSettings.settlement_bank_code) ?? null;
         setDestinationType(detectDestinationType(currentOption));
     }, [initialSettings, options]);
 
@@ -135,7 +137,9 @@ export function PaymentAccountsSettingsPanel({
         [options]
     );
     const visibleOptions = destinationType === 'wallet' ? walletOptions : bankOptions;
-    const hasSelectedDestination = visibleOptions.some(option => option.code === settlementBankCode);
+    const hasSelectedDestination = visibleOptions.some(
+        option => option.code === settlementBankCode
+    );
     const hasVisibleOptions = visibleOptions.length > 0;
     const savedDestinationMissing =
         Boolean(settings.settlement_bank_code) &&
@@ -146,10 +150,18 @@ export function PaymentAccountsSettingsPanel({
         const bankCodeChanged = settlementBankCode !== (currentOption?.code ?? '');
         const accountNameChanged = settlementAccountName !== settings.settlement_account_name;
         // Check if account number changed from the masked value
-        const accountNumberChanged = settlementAccountNumber !== settings.settlement_account_number_masked;
-        
+        const accountNumberChanged =
+            settlementAccountNumber !== settings.settlement_account_number_masked;
+
         return bankCodeChanged || accountNameChanged || accountNumberChanged;
-    }, [settlementBankCode, settlementAccountName, settlementAccountNumber, currentOption?.code, settings.settlement_account_name, settings.settlement_account_number_masked]);
+    }, [
+        settlementBankCode,
+        settlementAccountName,
+        settlementAccountNumber,
+        currentOption?.code,
+        settings.settlement_account_name,
+        settings.settlement_account_number_masked,
+    ]);
 
     const handleSave = async () => {
         try {
@@ -178,21 +190,23 @@ export function PaymentAccountsSettingsPanel({
 
             // Update settings with the full response from the server
             const nextSettings = payload?.data as PaymentSettings | undefined;
-            
+
             if (nextSettings) {
                 setSettings(nextSettings);
                 setSettlementBankCode(nextSettings.settlement_bank_code ?? '');
                 setSettlementAccountName(nextSettings.settlement_account_name ?? '');
                 setSettlementAccountNumber(nextSettings.settlement_account_number_masked ?? '');
-                
+
                 // Update destination type based on the saved bank
-                const savedOption = options.find(option => option.code === nextSettings.settlement_bank_code) ?? null;
+                const savedOption =
+                    options.find(option => option.code === nextSettings.settlement_bank_code) ??
+                    null;
                 setDestinationType(detectDestinationType(savedOption));
 
                 // Notify parent so lifted state stays in sync across tab switches
                 onSettingsSaved?.(nextSettings);
             }
-            
+
             toast.success('Payout account settings saved.');
         } catch (saveError) {
             const message =
@@ -207,7 +221,8 @@ export function PaymentAccountsSettingsPanel({
     };
 
     // Check if the last_error is actually a success message
-    const lastErrorIsSuccess = settings.last_error?.toLowerCase().includes('success') ||
+    const lastErrorIsSuccess =
+        settings.last_error?.toLowerCase().includes('success') ||
         settings.last_error?.toLowerCase().includes('created') ||
         settings.last_error?.toLowerCase().includes('approved');
 
@@ -232,7 +247,9 @@ export function PaymentAccountsSettingsPanel({
                 <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     <div className="space-y-1 text-sm">
-                        <p className="font-semibold">Chapa is not configured on this environment.</p>
+                        <p className="font-semibold">
+                            Chapa is not configured on this environment.
+                        </p>
                         <p>
                             Add a valid `CHAPA_SECRET_KEY` on the server before merchants can save
                             payout destinations.
@@ -262,7 +279,9 @@ export function PaymentAccountsSettingsPanel({
                 <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     <div className="space-y-1 text-sm">
-                        <p className="font-semibold">Previously saved payout destination is unavailable</p>
+                        <p className="font-semibold">
+                            Previously saved payout destination is unavailable
+                        </p>
                         <p>
                             Chapa's current live directory does not include code{' '}
                             <span className="font-semibold">{settings.settlement_bank_code}</span>.
@@ -340,8 +359,8 @@ export function PaymentAccountsSettingsPanel({
                                     ? 'Directory unavailable - please retry'
                                     : `No ${destinationType === 'wallet' ? 'wallets' : 'banks'} available`
                                 : destinationType === 'wallet'
-                                    ? 'Select a payout wallet'
-                                    : 'Select a payout bank'}
+                                  ? 'Select a payout wallet'
+                                  : 'Select a payout bank'}
                         </option>
                         {visibleOptions.map(option => (
                             <option key={option.code} value={option.code}>
@@ -355,9 +374,7 @@ export function PaymentAccountsSettingsPanel({
 
             <label className="block space-y-1">
                 <span className="text-sm font-semibold text-gray-700">
-                    {destinationType === 'wallet'
-                        ? 'Wallet holder name'
-                        : 'Account holder name'}
+                    {destinationType === 'wallet' ? 'Wallet holder name' : 'Account holder name'}
                 </span>
                 <div className="relative">
                     <Building2 className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -382,9 +399,7 @@ export function PaymentAccountsSettingsPanel({
                 <input
                     type="text"
                     value={settlementAccountNumber}
-                    onChange={event =>
-                        setSettlementAccountNumber(event.target.value)
-                    }
+                    onChange={event => setSettlementAccountNumber(event.target.value)}
                     placeholder={
                         destinationType === 'wallet'
                             ? 'Enter the full wallet number'
@@ -402,23 +417,25 @@ export function PaymentAccountsSettingsPanel({
                     </p>
                 )}
                 <p>
-                    Enter details exactly as registered with your bank or wallet provider.
-                    Leave the number blank to keep the current destination.
+                    Enter details exactly as registered with your bank or wallet provider. Leave the
+                    number blank to keep the current destination.
                 </p>
             </div>
 
-            {settings.last_error && settings.settlement_status !== 'active' && !lastErrorIsSuccess && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                    <p className="font-semibold">Last Chapa error</p>
-                    <p className="mt-1">{settings.last_error}</p>
-                </div>
-            )}
+            {settings.last_error &&
+                settings.settlement_status !== 'active' &&
+                !lastErrorIsSuccess && (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                        <p className="font-semibold">Last Chapa error</p>
+                        <p className="mt-1">{settings.last_error}</p>
+                    </div>
+                )}
 
             <div className="flex justify-end pt-2">
                 <button
                     onClick={() => void handleSave()}
                     disabled={saving || !hasSelectedDestination || !hasChanges}
-                    className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {saving ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

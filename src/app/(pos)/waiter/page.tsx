@@ -141,7 +141,8 @@ function WaiterPosContent() {
     const [isClosingTable, setIsClosingTable] = useState(false);
     const [isRequestingBill, setIsRequestingBill] = useState(false);
     const [chapaTxRef, setChapaTxRef] = useState('');
-    const [settlementPaymentMethod, setSettlementPaymentMethod] = useState<SplitPaymentMethod>('cash');
+    const [settlementPaymentMethod, setSettlementPaymentMethod] =
+        useState<SplitPaymentMethod>('cash');
     const [selectedSettlementOrderId, setSelectedSettlementOrderId] = useState<string | null>(null);
     const [splitMethod, setSplitMethod] = useState<SplitMethod>('even');
     const [splitGuestCount, setSplitGuestCount] = useState(2);
@@ -540,7 +541,8 @@ function WaiterPosContent() {
             calculateDiscount(
                 cart.map(item => ({
                     id: item.id,
-                    category_id: (item as MenuItem & { category_id?: string | null }).category_id ?? null,
+                    category_id:
+                        (item as MenuItem & { category_id?: string | null }).category_id ?? null,
                     price: item.price,
                     quantity: item.quantity,
                 })),
@@ -1324,7 +1326,9 @@ function WaiterPosContent() {
                                             </label>
                                             <select
                                                 value={selectedDiscountId}
-                                                onChange={event => setSelectedDiscountId(event.target.value)}
+                                                onChange={event =>
+                                                    setSelectedDiscountId(event.target.value)
+                                                }
                                                 className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900"
                                             >
                                                 <option value="">No discount</option>
@@ -1341,7 +1345,9 @@ function WaiterPosContent() {
                                                 inputMode="numeric"
                                                 placeholder="Manager PIN"
                                                 value={managerPin}
-                                                onChange={event => setManagerPin(event.target.value)}
+                                                onChange={event =>
+                                                    setManagerPin(event.target.value)
+                                                }
                                                 className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900"
                                             />
                                         )}
@@ -1351,7 +1357,8 @@ function WaiterPosContent() {
                                                     Discount applied
                                                 </span>
                                                 <span className="font-bold text-emerald-600">
-                                                    -{cartDiscountPreview.discountAmount.toFixed(2)} br
+                                                    -{cartDiscountPreview.discountAmount.toFixed(2)}{' '}
+                                                    br
                                                 </span>
                                             </div>
                                         )}
@@ -1799,9 +1806,9 @@ function WaiterPosContent() {
                                                             settlementPaymentMethod === 'cash'
                                                                 ? 'Optional: receipt or drawer note'
                                                                 : settlementPaymentMethod ===
-                                                                      'chapa'
-                                                                    ? 'Optional: Chapa tx_ref'
-                                                                    : 'Optional: external reference'
+                                                                    'chapa'
+                                                                  ? 'Optional: Chapa tx_ref'
+                                                                  : 'Optional: external reference'
                                                         }
                                                         className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-300 focus:outline-none"
                                                     />

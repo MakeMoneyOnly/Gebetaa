@@ -384,7 +384,9 @@ export async function POST(request: NextRequest) {
         }
 
         const idempotencyKey =
-            explicitIdempotencyKey?.trim() || parsed.data.idempotency_key || generateIdempotencyKey();
+            explicitIdempotencyKey?.trim() ||
+            parsed.data.idempotency_key ||
+            generateIdempotencyKey();
         let discountRuntime;
         try {
             discountRuntime = parsed.data.discount_id

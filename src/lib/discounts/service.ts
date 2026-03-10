@@ -38,7 +38,9 @@ function normalizeDiscount(row: Record<string, unknown>): DiscountRecord {
             typeof row.target_category_id === 'string' ? row.target_category_id : null,
         requires_manager_pin: Boolean(row.requires_manager_pin),
         max_uses_per_day:
-            typeof row.max_uses_per_day === 'number' ? row.max_uses_per_day : Number(row.max_uses_per_day ?? null),
+            typeof row.max_uses_per_day === 'number'
+                ? row.max_uses_per_day
+                : Number(row.max_uses_per_day ?? null),
         valid_from: typeof row.valid_from === 'string' ? row.valid_from : null,
         valid_until: typeof row.valid_until === 'string' ? row.valid_until : null,
         is_active: Boolean(row.is_active),
@@ -65,7 +67,9 @@ export async function listActiveDiscountsForRestaurant(
     return ((data ?? []) as Record<string, unknown>[])
         .map(normalizeDiscount)
         .filter(discount => isDiscountActive(discount))
-        .filter(discount => (options?.excludeManagerApproval ? !discount.requires_manager_pin : true));
+        .filter(discount =>
+            options?.excludeManagerApproval ? !discount.requires_manager_pin : true
+        );
 }
 
 export async function getDiscountById(

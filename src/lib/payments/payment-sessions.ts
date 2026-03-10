@@ -89,7 +89,9 @@ async function getRestaurantChapaSplitConfig(
 }> {
     const { data, error } = await db
         .from('restaurants')
-        .select('chapa_subaccount_id, chapa_subaccount_status, hosted_checkout_fee_percentage, platform_fee_percentage')
+        .select(
+            'chapa_subaccount_id, chapa_subaccount_status, hosted_checkout_fee_percentage, platform_fee_percentage'
+        )
         .eq('id', restaurantId)
         .maybeSingle();
 
@@ -98,7 +100,8 @@ async function getRestaurantChapaSplitConfig(
     }
 
     const subaccountId = String(data?.chapa_subaccount_id ?? '').trim();
-    const merchantPayoutStatus = String(data?.chapa_subaccount_status ?? '').trim() || 'not_configured';
+    const merchantPayoutStatus =
+        String(data?.chapa_subaccount_status ?? '').trim() || 'not_configured';
     const splitValue =
         typeof data?.hosted_checkout_fee_percentage === 'number'
             ? Number(data.hosted_checkout_fee_percentage)
@@ -338,16 +341,18 @@ export async function ensurePaymentSessionForRecordedPayment(
                 ? 'cancelled'
                 : input.status === 'partially_refunded' || input.status === 'refunded'
                   ? 'captured'
-              : input.status === 'failed'
-                ? 'failed'
-                : 'pending_provider';
+                  : input.status === 'failed'
+                    ? 'failed'
+                    : 'pending_provider';
 
     if (existing) {
         return updatePaymentSession(db, existing.id, {
             status: nextStatus,
             selected_method: input.method,
             selected_provider:
-                input.provider && input.provider !== 'internal' ? input.provider : existing.selected_provider,
+                input.provider && input.provider !== 'internal'
+                    ? input.provider
+                    : existing.selected_provider,
             amount: Number(input.amount.toFixed(2)),
             metadata: input.metadata ?? existing.metadata,
             ...(nextStatus === 'authorized' ? { authorized_at: new Date().toISOString() } : {}),
@@ -360,8 +365,7 @@ export async function ensurePaymentSessionForRecordedPayment(
         order_id: input.orderId ?? null,
         surface: input.surface,
         channel: input.channel,
-        intent_type:
-            input.method === 'chapa' ? 'assisted_digital' : 'staff_recorded',
+        intent_type: input.method === 'chapa' ? 'assisted_digital' : 'staff_recorded',
         status: nextStatus,
         selected_method: input.method,
         selected_provider: input.provider && input.provider !== 'internal' ? input.provider : null,
@@ -369,5 +373,3 @@ export async function ensurePaymentSessionForRecordedPayment(
         metadata: input.metadata,
     });
 }
-
-

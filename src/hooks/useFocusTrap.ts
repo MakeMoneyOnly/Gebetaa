@@ -74,7 +74,7 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
  */
 export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapReturn {
     const {
-        active: initialActive = false,
+        active = false,
         onActivate,
         onDeactivate,
         returnFocusOnDeactivate = true,
@@ -84,7 +84,7 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
 
     const containerRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLElement | null>(null);
-    const [isActive, setIsActive] = useState(initialActive);
+    const [isActive, setIsActive] = useState(active);
 
     /**
      * Activate the focus trap
@@ -161,15 +161,13 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
     useEffect(() => {
         if (!isActive) return;
 
-        const container = containerRef.current;
-        if (!container) return;
-
         // Add event listeners
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('keydown', handleEscape);
 
+        const container = containerRef.current;
         // Auto-focus on activation
-        if (autoFocus) {
+        if (container && autoFocus) {
             const focusableElements = getFocusableElements(container);
 
             if (initialFocus) {
@@ -198,15 +196,17 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
     /**
      * Sync with external active state
      */
+    const prevActiveRef = useRef(active);
     useEffect(() => {
-        if (initialActive !== isActive) {
-            if (initialActive) {
+        if (active !== prevActiveRef.current) {
+            prevActiveRef.current = active;
+            if (active) {
                 activate();
             } else {
                 deactivate();
             }
         }
-    }, [initialActive, isActive, activate, deactivate]);
+    }, [active, activate, deactivate]);
 
     return {
         containerRef,

@@ -12,7 +12,9 @@ export class PaymentAdapterRegistry {
     private providers: Record<string, PaymentProvider>;
 
     constructor(params?: { providers?: PaymentProvider[] }) {
-        const providerList = params?.providers ?? [new ChapaProvider(process.env.CHAPA_SECRET_KEY ?? '')];
+        const providerList = params?.providers ?? [
+            new ChapaProvider(process.env.CHAPA_SECRET_KEY ?? ''),
+        ];
 
         this.providers = providerList.reduce<Record<string, PaymentProvider>>((acc, provider) => {
             acc[provider.name] = provider;

@@ -498,7 +498,8 @@ export default function StaffPage() {
                                                     {formatLastSeen(device.last_active_at)}
                                                 </span>
                                             </div>
-                                            {device.device_type === 'terminal' && device.metadata ? (
+                                            {device.device_type === 'terminal' &&
+                                            device.metadata ? (
                                                 <div
                                                     className="mt-2 flex justify-between pt-2"
                                                     style={{
@@ -510,7 +511,8 @@ export default function StaffPage() {
                                                     </span>
                                                     <span className="text-xs font-bold text-black capitalize">
                                                         {String(
-                                                            device.metadata?.settlement_mode ?? 'cashier'
+                                                            device.metadata?.settlement_mode ??
+                                                                'cashier'
                                                         )}
                                                     </span>
                                                 </div>

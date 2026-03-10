@@ -157,7 +157,8 @@ export async function POST(request: Request) {
         }
         restaurantId = deviceContext.restaurantId;
         db = deviceContext.admin;
-        paymentSurface = deviceContext.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos';
+        paymentSurface =
+            deviceContext.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos';
     }
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');

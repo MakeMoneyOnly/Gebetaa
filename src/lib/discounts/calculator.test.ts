@@ -52,7 +52,12 @@ describe('calculateDiscount', () => {
     it('caps fixed discounts at the eligible subtotal', () => {
         const result = calculateDiscount(
             items,
-            createDiscount({ type: 'fixed_amount', value: 500, applies_to: 'category', target_category_id: 'cat-2' })
+            createDiscount({
+                type: 'fixed_amount',
+                value: 500,
+                applies_to: 'category',
+                target_category_id: 'cat-2',
+            })
         );
 
         expect(result.discountAmount).toBe(100);
