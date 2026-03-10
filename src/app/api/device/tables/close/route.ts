@@ -9,12 +9,13 @@ import { getDeviceContext } from '@/lib/api/authz';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { parseJsonBody } from '@/lib/api/validation';
 import { isChapaConfigured, verifyChapaTransaction } from '@/lib/services/chapaService';
+import { ensurePaymentSessionForRecordedPayment } from '@/lib/payments/payment-sessions';
 
 const CloseTableSchema = z.object({
     table_id: z.string().uuid().optional(),
     table_number: z.string().trim().min(1).optional(),
     payment: z.object({
-        provider: z.literal('chapa'),
+        provider: z.enum(['cash', 'chapa', 'other']),
         tx_ref: z.string().trim().min(3).optional(),
         amount: z.number().nonnegative().optional(),
         tip_amount: z.number().nonnegative().optional().default(0),
@@ -252,8 +253,9 @@ export async function POST(request: Request) {
         }
     }
 
+    const paymentProvider = payment.provider;
     const hasTxRef = Boolean(payment.tx_ref?.trim());
-    if (hasTxRef) {
+    if (paymentProvider === 'chapa' && hasTxRef) {
         if (isChapaConfigured()) {
             const verified = await verifyChapaTransaction(String(payment.tx_ref));
             const verifiedStatus = String(verified.data?.status ?? '').toLowerCase();
@@ -266,7 +268,7 @@ export async function POST(request: Request) {
                 );
             }
         }
-    } else {
+    } else if (paymentProvider === 'chapa') {
         const unpaidOrders = activeOrders.filter(
             order =>
                 !order.paid_at ||
@@ -290,13 +292,31 @@ export async function POST(request: Request) {
     );
     const finalizableOrderIds = finalizableOrders.map(order => order.id);
 
+    const paymentSession = await ensurePaymentSessionForRecordedPayment(admin as any, {
+        restaurantId: ctx.restaurantId,
+        orderId: null,
+        surface: ctx.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos',
+        channel: 'dine_in',
+        method: paymentProvider === 'cash' ? 'cash' : paymentProvider === 'other' ? 'other' : paymentProvider,
+        provider: paymentProvider === 'cash' || paymentProvider === 'other' ? 'internal' : paymentProvider,
+        amount: settlementAmount,
+        status: 'captured',
+        metadata: {
+            source: `${ctx.device.device_type}_close_table`,
+            table_id: table.id,
+            table_number: table.table_number,
+            order_ids: activeOrders.map(order => order.id),
+        },
+    });
+
     const { data: paymentRecord, error: paymentError } = await admin
         .from('payments')
         .insert({
             restaurant_id: ctx.restaurantId,
             order_id: null,
-            method: 'chapa',
-            provider: 'chapa',
+            payment_session_id: paymentSession.id,
+            method: paymentProvider,
+            provider: paymentProvider === 'cash' || paymentProvider === 'other' ? 'internal' : paymentProvider,
             provider_reference: payment.tx_ref?.trim() || null,
             amount: settlementAmount,
             tip_amount: Number((payment.tip_amount ?? 0).toFixed(2)),
@@ -304,7 +324,8 @@ export async function POST(request: Request) {
             status: 'captured',
             captured_at: now,
             metadata: {
-                source: 'waiter_pos_close_table',
+                source: `${ctx.device.device_type}_close_table`,
+                payment_session_id: paymentSession.id,
                 table_id: table.id,
                 table_number: table.table_number,
                 order_ids: activeOrders.map(order => order.id),
@@ -355,7 +376,13 @@ export async function POST(request: Request) {
     }
 
     const mergedCloseNotes =
-        [ensuredOpenSession.notes, notes, `Settled via Chapa: ${payment.tx_ref}`]
+        [
+            ensuredOpenSession.notes,
+            notes,
+            payment.tx_ref?.trim()
+                ? `Settled via ${paymentProvider}: ${payment.tx_ref}`
+                : `Settled via ${paymentProvider}`,
+        ]
             .filter(Boolean)
             .join(' | ') || null;
 
@@ -386,10 +413,11 @@ export async function POST(request: Request) {
             entity_type: 'table',
             entity_id: table.id,
             metadata: {
-                source: 'waiter_pos_device',
+                source: `${ctx.device.device_type}_device`,
                 table_number: table.table_number,
                 session_id: ensuredOpenSession.id,
                 payment_id: paymentRecord.id,
+                payment_session_id: paymentSession.id,
                 tx_ref: payment.tx_ref,
                 settled_amount: settlementAmount,
             },

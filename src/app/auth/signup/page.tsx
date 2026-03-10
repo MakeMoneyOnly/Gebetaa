@@ -268,13 +268,10 @@ export default function SignUpPage() {
                     transition={{ duration: 0.6, delay: 0.4 }}
                     className="relative z-10 mt-12 border-t border-white/10 pt-8"
                 >
-                    <div className="grid grid-cols-4 gap-8 opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0">
+                    <div className="grid grid-cols-3 gap-8 opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0">
                         {/* Mock Logos */}
                         <div className="flex items-center gap-2 text-lg font-bold">
                             <div className="h-6 w-6 rounded bg-white/20" /> Square
-                        </div>
-                        <div className="flex items-center gap-2 text-lg font-bold">
-                            <div className="h-6 w-6 rounded bg-white/20" /> Telebirr
                         </div>
                         <div className="flex items-center gap-2 text-lg font-bold">
                             <div className="h-6 w-6 rounded bg-white/20" /> Chapa

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,6 +29,24 @@ interface OnboardingData {
     contact_phone: string;
     description: string;
     brand_color: string;
+    settlement_bank_code: string;
+    settlement_account_name: string;
+    settlement_account_number: string;
+}
+
+interface ChapaBankOption {
+    id: string;
+    name: string;
+    code: string;
+}
+
+type DestinationType = 'bank' | 'wallet';
+
+const WALLET_KEYWORDS = ['telebirr', 'cbebirr', 'ebirr', 'mpesa', 'm-pesa', 'kacha', 'yaya'];
+
+function detectDestinationType(option?: ChapaBankOption | null): DestinationType {
+    const haystack = `${option?.name ?? ''} ${option?.code ?? ''}`.toLowerCase();
+    return WALLET_KEYWORDS.some(keyword => haystack.includes(keyword)) ? 'wallet' : 'bank';
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -63,8 +81,9 @@ const BRAND_COLORS = [
 const STEPS = [
     { id: 1, label: 'You', icon: User },
     { id: 2, label: 'Restaurant', icon: Building2 },
-    { id: 3, label: 'Brand', icon: Palette },
-    { id: 4, label: 'Launch', icon: Zap },
+    { id: 3, label: 'Settlement', icon: Phone },
+    { id: 4, label: 'Brand', icon: Palette },
+    { id: 5, label: 'Launch', icon: Zap },
 ];
 
 // ─── Slide animation ──────────────────────────────────────────────────────────
@@ -216,6 +235,144 @@ function StepRestaurantDetails({
     );
 }
 
+function StepSettlement({
+    data,
+    banks,
+    loadingBanks,
+    onChange,
+}: {
+    data: OnboardingData;
+    banks: ChapaBankOption[];
+    loadingBanks: boolean;
+    onChange: (d: Partial<OnboardingData>) => void;
+}) {
+    const [destinationType, setDestinationType] = useState<DestinationType>('bank');
+
+    const bankOptions = useMemo(
+        () => banks.filter(option => detectDestinationType(option) === 'bank'),
+        [banks]
+    );
+    const walletOptions = useMemo(
+        () => banks.filter(option => detectDestinationType(option) === 'wallet'),
+        [banks]
+    );
+    const visibleOptions = destinationType === 'wallet' ? walletOptions : bankOptions;
+
+    useEffect(() => {
+        const selectedOption =
+            banks.find(option => option.code === data.settlement_bank_code) ?? null;
+
+        if (selectedOption) {
+            setDestinationType(detectDestinationType(selectedOption));
+        }
+    }, [banks, data.settlement_bank_code]);
+
+    return (
+        <div className="space-y-6">
+            <div>
+                <h2 className="font-manrope text-3xl font-bold tracking-tight text-gray-900">
+                    Add your payout destination.
+                </h2>
+                <p className="mt-2 font-medium text-gray-500">
+                    Gebeta will create and manage your Chapa settlement subaccount and route eligible Chapa-hosted payouts to the bank or wallet destination you choose here.
+                </p>
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700">
+                    Payout Destination <span className="text-brand-crimson ml-0.5">*</span>
+                </label>
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setDestinationType('bank');
+                            onChange({ settlement_bank_code: '' });
+                        }}
+                        className={
+                            destinationType === 'bank'
+                                ? 'rounded-xl bg-[#0D3B40] px-4 py-2 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/20'
+                                : 'rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition-all hover:border-[#0D3B40]/40'
+                        }
+                    >
+                        Banks
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setDestinationType('wallet');
+                            onChange({ settlement_bank_code: '' });
+                        }}
+                        className={
+                            destinationType === 'wallet'
+                                ? 'rounded-xl bg-[#0D3B40] px-4 py-2 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/20'
+                                : 'rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition-all hover:border-[#0D3B40]/40'
+                        }
+                    >
+                        Wallets
+                    </button>
+                </div>
+                <select
+                    value={data.settlement_bank_code}
+                    onChange={e => onChange({ settlement_bank_code: e.target.value })}
+                    disabled={loadingBanks || visibleOptions.length === 0}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-medium text-gray-900 shadow-sm transition-all outline-none focus:border-[#0D3B40] focus:ring-4 focus:ring-[#0D3B40]/8 disabled:cursor-not-allowed disabled:bg-gray-50"
+                >
+                    <option value="">
+                        {loadingBanks
+                            ? 'Loading payout destinations...'
+                            : visibleOptions.length > 0
+                              ? destinationType === 'wallet'
+                                  ? 'Select your payout wallet'
+                                  : 'Select your payout bank'
+                              : destinationType === 'wallet'
+                                ? 'No wallet destinations are available right now'
+                                : 'No bank destinations are available right now'}
+                    </option>
+                    {visibleOptions.map(option => (
+                        <option key={option.code} value={option.code}>
+                            {option.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <InputField
+                label={destinationType === 'wallet' ? 'Wallet holder name' : 'Account holder name'}
+                icon={Building2}
+                required
+                type="text"
+                value={data.settlement_account_name}
+                onChange={e => onChange({ settlement_account_name: e.target.value })}
+                placeholder={
+                    destinationType === 'wallet'
+                        ? 'e.g. Kaleab Hailu'
+                        : 'e.g. Abyssinia Burger PLC'
+                }
+            />
+
+            <InputField
+                label={destinationType === 'wallet' ? 'Wallet number' : 'Account number'}
+                icon={Phone}
+                required
+                type="text"
+                value={data.settlement_account_number}
+                onChange={e =>
+                    onChange({
+                        settlement_account_number: e.target.value.replace(/\D/g, '').slice(0, 20),
+                    })
+                }
+                placeholder={
+                    destinationType === 'wallet' ? 'e.g. 0912345678' : 'e.g. 1000123456789'
+                }
+            />
+
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+                This step only sets where eligible Chapa-hosted payouts go. Guest payment methods are configured separately in Guest Menu, Online Ordering, Waiter POS, and Terminal.
+            </div>
+        </div>
+    );
+}
 // Step 3: Brand
 function StepBrand({
     data,
@@ -297,6 +454,7 @@ function StepBrand({
 function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean }) {
     const checks = [
         { label: 'Restaurant profile created', done: true },
+        { label: 'Merchant payout account connected', done: true },
         { label: 'Digital menu ready to populate', done: true },
         { label: 'QR code system activated', done: true },
         { label: 'Kitchen display linked', done: true },
@@ -363,6 +521,8 @@ export default function OnboardingPage() {
     const [step, setStep] = useState(1);
     const [direction, setDirection] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [loadingBanks, setLoadingBanks] = useState(true);
+    const [banks, setBanks] = useState<ChapaBankOption[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     const [data, setData] = useState<OnboardingData>({
@@ -373,16 +533,68 @@ export default function OnboardingPage() {
         contact_phone: '',
         description: '',
         brand_color: '#0D3B40',
+        settlement_bank_code: '',
+        settlement_account_name: '',
+        settlement_account_number: '',
     });
 
     const merge = (patch: Partial<OnboardingData>) => setData(prev => ({ ...prev, ...patch }));
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadBanks() {
+            try {
+                setLoadingBanks(true);
+                const response = await fetch('/api/onboarding/banks', { cache: 'no-store' });
+                const payload = (await response.json()) as {
+                    data?: { banks?: ChapaBankOption[] };
+                    error?: string;
+                };
+
+                if (!response.ok) {
+                    throw new Error(payload.error ?? 'Failed to load payout destinations.');
+                }
+
+                if (!cancelled) {
+                    setBanks(payload.data?.banks ?? []);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setError(
+                        err instanceof Error
+                            ? err.message
+                            : 'Failed to load payout destinations.'
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoadingBanks(false);
+                }
+            }
+        }
+
+        void loadBanks();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     // Validation per step
     const canProceed = useMemo(() => {
         if (step === 1) return data.full_name.trim().length > 1;
         if (step === 2)
             return data.restaurant_name.trim().length > 1 && data.location.trim().length > 1;
-        if (step === 3) return true;
+        if (step === 3) {
+            return (
+                data.settlement_bank_code.trim().length > 0 &&
+                data.settlement_account_name.trim().length > 1 &&
+                data.settlement_account_number.trim().length >= 6 &&
+                !loadingBanks
+            );
+        }
+        if (step === 4) return true;
         return false;
     }, [step, data]);
 
@@ -407,6 +619,9 @@ export default function OnboardingPage() {
                     description: data.description.trim() || undefined,
                     brand_color: data.brand_color,
                     cuisine_type: data.cuisine_type || undefined,
+                    settlement_bank_code: data.settlement_bank_code,
+                    settlement_account_name: data.settlement_account_name.trim(),
+                    settlement_account_number: data.settlement_account_number.trim(),
                 }),
             });
 
@@ -518,8 +733,16 @@ export default function OnboardingPage() {
                                 {step === 2 && (
                                     <StepRestaurantDetails data={data} onChange={merge} />
                                 )}
-                                {step === 3 && <StepBrand data={data} onChange={merge} />}
-                                {step === 4 && <StepGoLive data={data} loading={loading} />}
+                                {step === 3 && (
+                                    <StepSettlement
+                                        data={data}
+                                        banks={banks}
+                                        loadingBanks={loadingBanks}
+                                        onChange={merge}
+                                    />
+                                )}
+                                {step === 4 && <StepBrand data={data} onChange={merge} />}
+                                {step === 5 && <StepGoLive data={data} loading={loading} />}
                             </motion.div>
                         </AnimatePresence>
 
@@ -548,7 +771,7 @@ export default function OnboardingPage() {
                                 <div />
                             )}
 
-                            {step < 3 && (
+                            {step < 4 && (
                                 <motion.button
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => go(step + 1)}
@@ -559,17 +782,17 @@ export default function OnboardingPage() {
                                 </motion.button>
                             )}
 
-                            {step === 3 && (
+                            {step === 4 && (
                                 <motion.button
                                     whileTap={{ scale: 0.97 }}
-                                    onClick={() => go(4)}
+                                    onClick={() => go(5)}
                                     className="flex items-center gap-2 rounded-2xl bg-[#0D3B40] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/25 transition-all hover:bg-[#08282C]"
                                 >
                                     Preview &amp; Launch <UtensilsCrossed className="h-4 w-4" />
                                 </motion.button>
                             )}
 
-                            {step === 4 && (
+                            {step === 5 && (
                                 <motion.button
                                     whileTap={{ scale: 0.97 }}
                                     onClick={handleSubmit}
@@ -591,3 +814,8 @@ export default function OnboardingPage() {
         </main>
     );
 }
+
+
+
+
+

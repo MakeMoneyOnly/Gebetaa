@@ -2,12 +2,74 @@
  * GET /api/device/orders  — active orders for the POS (kitchen/waiter view)
  * POST /api/device/orders — place a new order from the POS
  * Requires X-Device-Token header.
+ *
+ * @openapi
+ * /api/device/orders:
+ *   get:
+ *     summary: Get active orders for POS
+ *     tags: [Device, Orders]
+ *     security:
+ *       - deviceToken: []
+ *     parameters:
+ *       - in: query
+ *         name: table_number
+ *         schema:
+ *           type: string
+ *         description: Filter by table number
+ *     responses:
+ *       200:
+ *         description: List of active orders
+ *       401:
+ *         description: Unauthorized - invalid device token
+ *       429:
+ *         description: Rate limit exceeded
+ *   post:
+ *     summary: Create order from POS device
+ *     tags: [Device, Orders]
+ *     security:
+ *       - deviceToken: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               table_number:
+ *                 type: string
+ *               order_type:
+ *                 type: string
+ *                 enum: [dine_in, pickup, delivery, online]
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       201:
+ *         description: Order created
+ *       400:
+ *         description: Invalid request
+ *       429:
+ *         description: Rate limit exceeded
  */
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getDeviceContext } from '@/lib/api/authz';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { z } from 'zod';
 import { parseJsonBody } from '@/lib/api/validation';
+import { createGebetaEvent } from '@/lib/events/contracts';
+import { publishEvent } from '@/lib/events/runtime';
+import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import { prepareOrderDiscount } from '@/lib/discounts/service';
+import {
+    withRateLimit,
+    RATE_LIMIT_CONFIGS,
+    getClientIdentifier,
+    logRateLimitedRequest,
+} from '@/lib/security/rateLimiter';
+import { NextRequest } from 'next/server';
 
 const ACTIVE_STATUSES = ['pending', 'acknowledged', 'preparing', 'ready', 'served'];
 
@@ -44,6 +106,8 @@ const PlaceOrderSchema = z.object({
     customer_name: z.string().max(120).optional().nullable(),
     customer_phone: z.string().max(30).optional().nullable(),
     delivery_address: z.string().max(500).optional().nullable(),
+    discount_id: z.string().uuid().optional().nullable(),
+    manager_pin: z.string().min(4).max(12).optional().nullable(),
     items: z
         .array(
             z.object({
@@ -61,8 +125,33 @@ const PlaceOrderSchema = z.object({
 });
 
 export async function POST(request: Request) {
+    // Rate limiting for order creation
+    const nextRequest = request as NextRequest;
+    const { fingerprint, ipAddress, userAgent } = getClientIdentifier(nextRequest);
+    const rateLimitResult = await logRateLimitedRequest(
+        fingerprint,
+        'device_order_create',
+        ipAddress,
+        userAgent
+    );
+
     const ctx = await getDeviceContext(request);
     if (!ctx.ok) return ctx.response;
+
+    // Check rate limit after device context is validated
+    const rateCheck = await withRateLimit(
+        async () => apiSuccess({}),
+        RATE_LIMIT_CONFIGS.orderCreate
+    )(nextRequest);
+    if (rateCheck.status === 429) {
+        return rateCheck;
+    }
+
+    const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
+    if (explicitIdempotencyKey && !isIdempotencyKeyValid(explicitIdempotencyKey)) {
+        return apiError('Invalid idempotency key', 400, 'INVALID_IDEMPOTENCY_KEY');
+    }
+    const idempotencyKey = resolveIdempotencyKey(explicitIdempotencyKey);
 
     const parsed = await parseJsonBody(request, PlaceOrderSchema);
     if (!parsed.success) return parsed.response;
@@ -73,13 +162,14 @@ export async function POST(request: Request) {
         customer_name,
         customer_phone,
         delivery_address,
+        discount_id,
+        manager_pin,
         items,
         notes,
         staff_name,
     } = parsed.data;
     const admin = createServiceRoleClient();
 
-    const totalPrice = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
     if (order_type === 'dine_in' && !table_number) {
@@ -137,21 +227,47 @@ export async function POST(request: Request) {
         course: item.course ?? menuCourseMap.get(item.menu_item_id) ?? 'main',
     }));
 
+    let discountRuntime;
+    try {
+        discountRuntime = await prepareOrderDiscount({
+            supabase: admin as any,
+            restaurantId: ctx.restaurantId,
+            discountId: discount_id ?? null,
+            managerPin: manager_pin ?? null,
+            items: items.map(item => ({
+                id: item.menu_item_id,
+                price: item.unit_price,
+                quantity: item.quantity,
+            })),
+        });
+    } catch (error) {
+        return apiError(
+            error instanceof Error ? error.message : 'Failed to validate discount',
+            400,
+            'DISCOUNT_INVALID'
+        );
+    }
+
     const { data: order, error: orderError } = await admin
         .from('orders')
         .insert({
             restaurant_id: ctx.restaurantId,
             table_number: table_number ?? null,
             status: 'pending',
-            total_price: totalPrice,
+            total_price: discountRuntime.calculation.total,
             order_number: orderNumber,
+            idempotency_key: idempotencyKey,
             notes: notes ?? (staff_name ? `POS waiter: ${staff_name}` : null),
             items: normalizedItems,
             order_type,
             customer_name: customer_name ?? null,
             customer_phone: customer_phone ?? null,
             delivery_address: delivery_address ?? null,
-        })
+            ...(discountRuntime.discount ? { discount_id: discountRuntime.discount.id } : {}),
+            ...(discountRuntime.calculation.discountAmount > 0
+                ? { discount_amount: discountRuntime.calculation.discountAmount }
+                : {}),
+        } as Record<string, unknown>)
         .select('*')
         .single();
 
@@ -217,6 +333,8 @@ export async function POST(request: Request) {
             order_type,
             customer_name: customer_name ?? null,
             customer_phone: customer_phone ?? null,
+                discount_id: discountRuntime.discount?.id ?? null,
+                discount_amount: discountRuntime.calculation.discountAmount,
         },
     });
 
@@ -228,6 +346,16 @@ export async function POST(request: Request) {
             .eq('restaurant_id', ctx.restaurantId)
             .eq('table_number', table_number);
     }
+
+    await publishEvent(
+        createGebetaEvent('order.created', {
+            restaurant_id: ctx.restaurantId,
+            order_id: order.id,
+            idempotency_key: idempotencyKey,
+            source: 'waiter_pos_device',
+            order_type,
+        })
+    );
 
     return apiSuccess({ order }, 201);
 }

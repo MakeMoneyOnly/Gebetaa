@@ -5,8 +5,8 @@
  * Verifies payment status and returns the order state.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { verifyChapaTransaction, isChapaConfigured } from '@/lib/services/chapaService';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 export async function GET(request: NextRequest) {
     try {
@@ -17,10 +17,11 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Missing tx_ref or order_id' }, { status: 400 });
         }
 
-        const supabase = await createClient();
+        const admin = createServiceRoleClient();
 
-        // Look up order
-        const { data: order, error: orderError } = await supabase
+        // Use the admin client so the payment return flow can always resolve
+        // the server-managed `payment_pending` order created before checkout.
+        const { data: order, error: orderError } = await admin
             .from('orders')
             .select('id, status, order_number, total_price, table_number')
             .eq('id', orderId)
@@ -39,21 +40,19 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Otherwise verify with Chapa (or mock)
-        let paymentSuccess = false;
-
-        if (isChapaConfigured()) {
-            const verify = await verifyChapaTransaction(txRef);
-            paymentSuccess = verify.data?.status === 'success';
-        } else {
-            // In mock mode the webhook should have already confirmed it
-            // but if polled before webhook fires, check tx_ref format
-            paymentSuccess = txRef.startsWith('gebeta-') && txRef.includes('mock');
+        // Otherwise verify with Chapa directly.
+        if (!isChapaConfigured()) {
+            return NextResponse.json(
+                { error: 'Chapa checkout is not configured.' },
+                { status: 503 }
+            );
         }
+        const verify = await verifyChapaTransaction(txRef);
+        const paymentSuccess = verify.data?.status === 'success';
 
         if (paymentSuccess && order.status === 'payment_pending') {
             // Confirm the order (webhook may not have fired yet)
-            await supabase
+            await admin
                 .from('orders')
                 .update({
                     status: 'pending',

@@ -7,13 +7,28 @@ import { parseJsonBody } from '@/lib/api/validation';
 import { createPaymentAdapterRegistry } from '@/lib/payments/adapters';
 import type { PaymentProviderName } from '@/lib/payments/types';
 
+type RestaurantPaymentConfig = {
+    chapa_subaccount_id: string | null;
+    chapa_subaccount_status: string | null;
+    hosted_checkout_fee_percentage?: number | null;
+    platform_fee_percentage?: number | null;
+};
+
 const InitiatePaymentSchema = z.object({
-    provider: z.enum(['telebirr', 'chapa']),
+    provider: z.enum(['chapa']),
     amount: z.coerce.number().min(0.01).max(100000000),
     currency: z.string().trim().length(3).optional().default('ETB'),
     email: z.string().email(),
     metadata: z.record(z.string(), z.unknown()).optional(),
 });
+
+function canUseChapaSubaccount(status: string, subaccountId: string) {
+    if (!subaccountId) {
+        return false;
+    }
+
+    return !['failed', 'verification_required', 'not_configured'].includes(status);
+}
 
 export async function POST(request: Request) {
     const auth = await getAuthenticatedUser();
@@ -40,13 +55,43 @@ export async function POST(request: Request) {
     const registry = createPaymentAdapterRegistry();
 
     try {
+        const { data: restaurant, error: restaurantError } = await context.supabase
+            .from('restaurants')
+            .select('*')
+            .eq('id', context.restaurantId)
+            .maybeSingle();
+
+        if (restaurantError) {
+            throw new Error(restaurantError.message);
+        }
+
+        const paymentConfig = (restaurant ?? null) as RestaurantPaymentConfig | null;
+        const subaccountId = String(paymentConfig?.chapa_subaccount_id ?? '').trim();
+        const subaccountStatus = String(paymentConfig?.chapa_subaccount_status ?? '').trim();
+        const useSubaccount = canUseChapaSubaccount(subaccountStatus, subaccountId);
+        const settlementMode = useSubaccount ? 'subaccount_split' : 'platform_hold';
+
         const initiation = await registry.initiateWithFallback({
             preferredProvider: parsed.data.provider as PaymentProviderName,
             input: {
                 amount: Number(parsed.data.amount.toFixed(2)),
                 currency: parsed.data.currency.toUpperCase(),
                 email: parsed.data.email,
-                metadata: parsed.data.metadata,
+                metadata: {
+                    ...(parsed.data.metadata ?? {}),
+                    settlement_mode: settlementMode,
+                    merchant_payout_status: subaccountStatus || 'not_configured',
+                },
+                ...(useSubaccount
+                    ? {
+                          subaccountId,
+                          splitType: 'percentage' as const,
+                          splitValue:
+                              typeof paymentConfig?.hosted_checkout_fee_percentage === 'number'
+                                  ? Number(paymentConfig.hosted_checkout_fee_percentage)
+                                  : Number(paymentConfig?.platform_fee_percentage ?? 0.03),
+                      }
+                    : {}),
             },
         });
 
@@ -60,12 +105,13 @@ export async function POST(request: Request) {
                 source: 'merchant_dashboard',
                 idempotency_key: idempotencyKey,
                 attempts: initiation.attempts,
+                settlement_mode: settlementMode,
+                merchant_payout_status: subaccountStatus || 'not_configured',
             },
             new_value: {
                 provider: initiation.result.provider,
                 amount: parsed.data.amount,
                 currency: parsed.data.currency.toUpperCase(),
-                fallback_applied: initiation.fallbackApplied,
             },
         });
 
@@ -74,8 +120,8 @@ export async function POST(request: Request) {
             transaction_reference: initiation.result.transactionReference,
             provider: initiation.result.provider,
             attempts: initiation.attempts,
-            fallback_applied: initiation.fallbackApplied,
             idempotency_key: idempotencyKey,
+            settlement_mode: settlementMode,
         });
     } catch (error) {
         return apiError(

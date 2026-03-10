@@ -5,6 +5,8 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { sendOrderStatusSms } from '@/lib/notifications/sms';
+import { createGebetaEvent } from '@/lib/events/contracts';
+import { publishEvent } from '@/lib/events/runtime';
 
 const UpdateOrderStatusSchema = z.object({
     status: z.enum([
@@ -204,6 +206,19 @@ export async function PATCH(
                 actor_user_id: user.id,
                 metadata: { source: 'merchant_dashboard' },
             }),
+            ...(parsed.data.status === 'completed' || parsed.data.status === 'served'
+                ? [
+                      publishEvent(
+                          createGebetaEvent('order.completed', {
+                              restaurant_id: order.restaurant_id,
+                              order_id: order.id,
+                              previous_status: order.status,
+                              status: parsed.data.status,
+                              source: 'merchant_dashboard',
+                          })
+                      ),
+                  ]
+                : []),
             trackApiMetric(supabase, {
                 restaurantId: restaurantIdForMetrics,
                 endpoint: '/api/orders/:id/status',

@@ -86,7 +86,7 @@ export default function HomePage() {
                         <FeatureCard
                             icon="💳"
                             title="Local Payments"
-                            description="Accept Telebirr, Chapa, and cash. Built for Ethiopian payment preferences."
+                            description="Accept Chapa and cash. Built for Ethiopian payment preferences."
                         />
                         <FeatureCard
                             icon="📶"
