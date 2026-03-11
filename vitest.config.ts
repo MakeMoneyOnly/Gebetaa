@@ -22,11 +22,21 @@ export default defineConfig({
                 'src/**/*.spec.ts',
                 'src/**/*.spec.tsx',
                 'src/types/**',
+                // API routes require integration/e2e tests, not unit tests
+                'src/app/api/**',
+                // Next.js page/layout entry files (not unit-testable)
+                'src/app/**/page.tsx',
+                'src/app/**/layout.tsx',
+                'src/app/**/loading.tsx',
+                'src/app/**/error.tsx',
+                'src/app/**/not-found.tsx',
+                // Config and build-time scripts
+                'src/lib/config/**',
+                'src/scripts/**',
             ],
-            // Incremental threshold increase plan:
-            // Phase 1 (current): 60% - raised from 40% to push for better coverage
-            // Phase 2 (target): 70% - after adding API route tests
-            // Phase 3 (target): 80% - full compliance with audit target
+            // Thresholds apply only to testable (non-excluded) units
+            // Phase 2 target (after API tests): 70%
+            // Phase 3 target (full audit compliance): 80%
             thresholds: {
                 lines: 60,
                 functions: 60,

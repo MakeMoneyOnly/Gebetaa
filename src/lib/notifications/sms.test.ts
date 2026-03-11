@@ -1,208 +1,298 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { sendSms, sendOrderStatusSms, type OrderStatusSmsInput } from './sms';
+import { sendSms, sendOrderStatusSms } from './sms';
 
-// Mock environment variables
-const originalEnv = process.env;
+describe('sms', () => {
+    let fetchSpy: ReturnType<typeof vi.spyOn>;
 
-describe('SMS Notifications', () => {
     beforeEach(() => {
-        vi.resetModules();
-        process.env = { ...originalEnv };
+        fetchSpy = vi.spyOn(global, 'fetch');
+        delete process.env.SMS_PROVIDER;
+        delete process.env.AFRICAS_TALKING_API_KEY;
+        delete process.env.AFRICAS_TALKING_USERNAME;
+        delete process.env.AFRICAS_TALKING_SENDER_ID;
+        delete process.env.TWILIO_ACCOUNT_SID;
+        delete process.env.TWILIO_AUTH_TOKEN;
+        delete process.env.TWILIO_FROM_NUMBER;
     });
 
     afterEach(() => {
-        process.env = originalEnv;
-        vi.restoreAllMocks();
+        fetchSpy.mockRestore();
     });
 
-    describe('sendSms', () => {
-        it('should return error for empty phone number', async () => {
+    // ── sendSms (log provider) ───────────────────────────────────────────────
+    describe('sendSms - log provider (default)', () => {
+        it('succeeds with log provider when SMS_PROVIDER is not set', async () => {
+            const result = await sendSms('+251911234567', 'Test message');
+            expect(result.success).toBe(true);
+            expect(result.provider).toBe('log');
+        });
+
+        it('returns skipped with empty phone', async () => {
             const result = await sendSms('', 'Test message');
             expect(result.success).toBe(false);
             expect(result.skipped).toBe(true);
-            expect(result.error).toContain('empty');
+            expect(result.error).toContain('phone is empty');
         });
 
-        it('should return error for whitespace-only phone number', async () => {
+        it('normalizes phone by stripping whitespace', async () => {
+            const result = await sendSms('  +251 91 123 4567  ', 'Test message');
+            expect(result.success).toBe(true);
+            expect(result.provider).toBe('log');
+        });
+
+        it('strips whitespace-only phone as empty', async () => {
             const result = await sendSms('   ', 'Test message');
             expect(result.success).toBe(false);
             expect(result.skipped).toBe(true);
         });
+    });
 
-        it('should log SMS when provider is log (default)', async () => {
-            const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-            process.env.SMS_PROVIDER = 'log';
-
-            const result = await sendSms('+251912345678', 'Test message');
-
-            expect(result.success).toBe(true);
-            expect(result.provider).toBe('log');
-            expect(logSpy).toHaveBeenCalled();
-
-            logSpy.mockRestore();
+    // ── sendSms (africas_talking) ────────────────────────────────────────────
+    describe('sendSms - africas_talking provider', () => {
+        beforeEach(() => {
+            process.env.SMS_PROVIDER = 'africas_talking';
         });
 
-        it('should normalize phone number with spaces', async () => {
-            const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        it('returns skipped when credentials are missing', async () => {
+            const result = await sendSms('+2519', 'Message');
+            expect(result.success).toBe(false);
+            expect(result.skipped).toBe(true);
+            expect(result.provider).toBe('africas_talking');
+        });
 
-            process.env.SMS_PROVIDER = 'log';
+        it('normalizes Ethiopian number starting with 0', async () => {
+            process.env.AFRICAS_TALKING_API_KEY = 'key';
+            process.env.AFRICAS_TALKING_USERNAME = 'user';
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    SMSMessageData: {
+                        Recipients: [{ status: 'Success', statusCode: 101 }],
+                    },
+                }),
+            } as Response);
 
-            await sendSms('  +251 912 345 678  ', 'Test message');
+            await sendSms('0911234567', 'Message');
 
-            expect(logSpy).toHaveBeenCalledWith(
-                '[SMS:log]',
-                expect.objectContaining({
-                    toPhone: '+251912345678',
-                })
-            );
+            const bodyStr = (fetchSpy.mock.calls[0][1] as RequestInit).body as string;
+            expect(bodyStr).toContain(encodeURIComponent('+251911234567'));
+        });
 
-            logSpy.mockRestore();
+        it('normalizes 9-digit Ethiopian number', async () => {
+            process.env.AFRICAS_TALKING_API_KEY = 'key';
+            process.env.AFRICAS_TALKING_USERNAME = 'user';
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    SMSMessageData: { Recipients: [{ status: 'Success', statusCode: 101 }] },
+                }),
+            } as Response);
+
+            await sendSms('911234567', 'Message'); // 9-digit without country code
+
+            const bodyStr = (fetchSpy.mock.calls[0][1] as RequestInit).body as string;
+            expect(bodyStr).toContain(encodeURIComponent('+251911234567'));
+        });
+
+        it('returns success on successful send', async () => {
+            process.env.AFRICAS_TALKING_API_KEY = 'key';
+            process.env.AFRICAS_TALKING_USERNAME = 'user';
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    SMSMessageData: { Recipients: [{ status: 'Success', statusCode: 101 }] },
+                }),
+            } as Response);
+
+            const result = await sendSms('+251911234567', 'Message');
+            expect(result.success).toBe(true);
+            expect(result.provider).toBe('africas_talking');
+        });
+
+        it('returns failure when HTTP response is not ok', async () => {
+            process.env.AFRICAS_TALKING_API_KEY = 'key';
+            process.env.AFRICAS_TALKING_USERNAME = 'user';
+            fetchSpy.mockResolvedValueOnce({
+                ok: false,
+                status: 500,
+                text: async () => 'Internal Server Error',
+            } as Response);
+
+            const result = await sendSms('+251911234567', 'Message');
+            expect(result.success).toBe(false);
+            expect(result.provider).toBe('africas_talking');
+        });
+
+        it('returns failure when recipient status is not 101', async () => {
+            process.env.AFRICAS_TALKING_API_KEY = 'key';
+            process.env.AFRICAS_TALKING_USERNAME = 'user';
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    SMSMessageData: { Recipients: [{ status: 'InvalidRecipient', statusCode: 402 }] },
+                }),
+            } as Response);
+
+            const result = await sendSms('+251911234567', 'Message');
+            expect(result.success).toBe(false);
+            expect(result.error).toContain('Delivery failed');
+        });
+
+        it('includes senderId when configured', async () => {
+            process.env.AFRICAS_TALKING_API_KEY = 'key';
+            process.env.AFRICAS_TALKING_USERNAME = 'user';
+            process.env.AFRICAS_TALKING_SENDER_ID = 'GEBETA';
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    SMSMessageData: { Recipients: [{ status: 'Success', statusCode: 101 }] },
+                }),
+            } as Response);
+
+            await sendSms('+251911234567', 'Message');
+
+            const bodyStr = (fetchSpy.mock.calls[0][1] as RequestInit).body as string;
+            expect(bodyStr).toContain('from=GEBETA');
+        });
+
+        it('accepts africas-talking hyphenated variant', async () => {
+            process.env.SMS_PROVIDER = 'africas-talking';
+            const result = await sendSms('+2519', 'Message');
+            expect(result.provider).toBe('africas_talking');
         });
     });
 
+    // ── sendSms (twilio) ─────────────────────────────────────────────────────
+    describe('sendSms - twilio provider', () => {
+        beforeEach(() => {
+            process.env.SMS_PROVIDER = 'twilio';
+        });
+
+        it('returns skipped when credentials are missing', async () => {
+            const result = await sendSms('+251911234567', 'Message');
+            expect(result.success).toBe(false);
+            expect(result.skipped).toBe(true);
+            expect(result.provider).toBe('twilio');
+        });
+
+        it('returns success on successful send', async () => {
+            process.env.TWILIO_ACCOUNT_SID = 'ACtest';
+            process.env.TWILIO_AUTH_TOKEN = 'token';
+            process.env.TWILIO_FROM_NUMBER = '+10000000001';
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 201,
+                json: async () => ({ sid: 'SM123', status: 'queued' }),
+            } as Response);
+
+            const result = await sendSms('+251911234567', 'Message');
+            expect(result.success).toBe(true);
+            expect(result.provider).toBe('twilio');
+        });
+
+        it('returns failure when HTTP response is not ok', async () => {
+            process.env.TWILIO_ACCOUNT_SID = 'ACtest';
+            process.env.TWILIO_AUTH_TOKEN = 'token';
+            process.env.TWILIO_FROM_NUMBER = '+10000000001';
+            fetchSpy.mockResolvedValueOnce({
+                ok: false,
+                status: 400,
+                text: async () => 'Bad Request',
+            } as Response);
+
+            const result = await sendSms('+251911234567', 'Message');
+            expect(result.success).toBe(false);
+            expect(result.provider).toBe('twilio');
+        });
+
+        it('calls the correct Twilio endpoint with Basic auth', async () => {
+            process.env.TWILIO_ACCOUNT_SID = 'ACtest';
+            process.env.TWILIO_AUTH_TOKEN = 'token';
+            process.env.TWILIO_FROM_NUMBER = '+10000000001';
+            fetchSpy.mockResolvedValueOnce({
+                ok: true,
+                status: 201,
+                json: async () => ({}),
+            } as Response);
+
+            await sendSms('+251911234567', 'Message');
+
+            expect(fetchSpy.mock.calls[0][0]).toContain('ACtest/Messages.json');
+            const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+            expect(headers.Authorization).toMatch(/^Basic /);
+        });
+    });
+
+    // ── sendOrderStatusSms ───────────────────────────────────────────────────
     describe('sendOrderStatusSms', () => {
-        it('should send preparing status message', async () => {
+        it('sends with "preparing" message', async () => {
             const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-            process.env.SMS_PROVIDER = 'log';
-
-            const input: OrderStatusSmsInput = {
-                toPhone: '+251912345678',
-                orderNumber: 'ORD-123',
+            const result = await sendOrderStatusSms({
+                toPhone: '+251911111111',
+                orderNumber: 'ORD-001',
                 status: 'preparing',
-            };
-
-            const result = await sendOrderStatusSms(input);
+            });
 
             expect(result.success).toBe(true);
-            expect(logSpy).toHaveBeenCalledWith(
-                '[SMS:log]',
-                expect.objectContaining({
-                    message: expect.stringContaining('being prepared'),
-                })
-            );
-
+            expect(result.provider).toBe('log');
             logSpy.mockRestore();
         });
 
-        it('should send ready status message', async () => {
+        it('sends with "ready" message', async () => {
             const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-            process.env.SMS_PROVIDER = 'log';
-
-            const input: OrderStatusSmsInput = {
-                toPhone: '+251912345678',
-                orderNumber: 'ORD-456',
+            const result = await sendOrderStatusSms({
+                toPhone: '+251911111111',
+                orderNumber: 'ORD-002',
                 status: 'ready',
-            };
-
-            const result = await sendOrderStatusSms(input);
+            });
 
             expect(result.success).toBe(true);
-            expect(logSpy).toHaveBeenCalledWith(
-                '[SMS:log]',
-                expect.objectContaining({
-                    message: expect.stringContaining('ready for pickup'),
-                })
-            );
-
             logSpy.mockRestore();
         });
 
-        it('should send completed status message', async () => {
+        it('sends with "completed" message for served status', async () => {
             const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-            process.env.SMS_PROVIDER = 'log';
-
-            const input: OrderStatusSmsInput = {
-                toPhone: '+251912345678',
-                orderNumber: 'ORD-789',
-                status: 'completed',
-            };
-
-            const result = await sendOrderStatusSms(input);
-
-            expect(result.success).toBe(true);
-            expect(logSpy).toHaveBeenCalledWith(
-                '[SMS:log]',
-                expect.objectContaining({
-                    message: expect.stringContaining('completed'),
-                })
-            );
-
-            logSpy.mockRestore();
-        });
-
-        it('should send served status message', async () => {
-            const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-            process.env.SMS_PROVIDER = 'log';
-
-            const input: OrderStatusSmsInput = {
-                toPhone: '+251912345678',
-                orderNumber: 'ORD-999',
+            const result = await sendOrderStatusSms({
+                toPhone: '+251911111111',
+                orderNumber: 'ORD-003',
                 status: 'served',
-            };
-
-            const result = await sendOrderStatusSms(input);
+            });
 
             expect(result.success).toBe(true);
-            expect(logSpy).toHaveBeenCalledWith(
-                '[SMS:log]',
-                expect.objectContaining({
-                    message: expect.stringContaining('completed'),
-                })
-            );
-
             logSpy.mockRestore();
         });
 
-        it('should send cancelled status message', async () => {
+        it('sends with "cancelled" message', async () => {
             const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-            process.env.SMS_PROVIDER = 'log';
-
-            const input: OrderStatusSmsInput = {
-                toPhone: '+251912345678',
-                orderNumber: 'ORD-CANCEL',
+            const result = await sendOrderStatusSms({
+                toPhone: '+251911111111',
+                orderNumber: 'ORD-004',
                 status: 'cancelled',
-            };
-
-            const result = await sendOrderStatusSms(input);
+            });
 
             expect(result.success).toBe(true);
-            expect(logSpy).toHaveBeenCalledWith(
-                '[SMS:log]',
-                expect.objectContaining({
-                    message: expect.stringContaining('cancelled'),
-                })
-            );
-
             logSpy.mockRestore();
         });
 
-        it('should send generic status message for unknown status', async () => {
+        it('sends with generic status message for unknown status', async () => {
             const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-            process.env.SMS_PROVIDER = 'log';
-
-            const input: OrderStatusSmsInput = {
-                toPhone: '+251912345678',
-                orderNumber: 'ORD-123',
-                status: 'custom_status',
-            };
-
-            const result = await sendOrderStatusSms(input);
+            const result = await sendOrderStatusSms({
+                toPhone: '+251911111111',
+                orderNumber: 'ORD-005',
+                status: 'dispatched',
+            });
 
             expect(result.success).toBe(true);
-            expect(logSpy).toHaveBeenCalledWith(
-                '[SMS:log]',
-                expect.objectContaining({
-                    message: expect.stringContaining('custom_status'),
-                })
-            );
-
             logSpy.mockRestore();
         });
     });

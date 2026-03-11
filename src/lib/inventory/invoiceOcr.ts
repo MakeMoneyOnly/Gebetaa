@@ -209,11 +209,11 @@ export function parseInvoiceText(input: {
     const source = input.raw_text;
     const { issuedAt, dueAt } = extractDates(source);
     const subtotal = extractLabelMoney(source, 'subtotal');
-    const taxAmount = extractLabelMoney(source, '(tax|vat)');
+    const taxAmount = extractLabelMoney(source, '(?:tax|vat)');
     const computedTotal = mappedLineItems.reduce((sum, item) => sum + (item.line_total ?? 0), 0);
     const labeledTotal = extractLabelMoney(
         source,
-        '(grand\\s+total|total\\s+due|amount\\s+due|total)'
+        '(?:grand\\s+total|total\\s+due|amount\\s+due|total)'
     );
     const totalAmount = Number((labeledTotal || computedTotal || subtotal + taxAmount).toFixed(2));
 
