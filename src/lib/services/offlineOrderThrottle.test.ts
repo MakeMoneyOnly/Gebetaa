@@ -180,7 +180,7 @@ describe('offlineOrderThrottle', () => {
         };
 
         it('returns base prep time when no active orders', async () => {
-            mockSupabase.from.mockImplementation((table) => {
+            mockSupabase.from.mockImplementation(table => {
                 if (table === 'restaurants') {
                     return {
                         select: vi.fn().mockReturnThis(),
@@ -201,7 +201,7 @@ describe('offlineOrderThrottle', () => {
         });
 
         it('adds time for active orders', async () => {
-            mockSupabase.from.mockImplementation((table) => {
+            mockSupabase.from.mockImplementation(table => {
                 if (table === 'restaurants') {
                     return {
                         select: vi.fn().mockReturnThis(),
@@ -223,7 +223,7 @@ describe('offlineOrderThrottle', () => {
         });
 
         it('caps additional time at 30 minutes', async () => {
-            mockSupabase.from.mockImplementation((table) => {
+            mockSupabase.from.mockImplementation(table => {
                 if (table === 'restaurants') {
                     return {
                         select: vi.fn().mockReturnThis(),
@@ -245,7 +245,7 @@ describe('offlineOrderThrottle', () => {
         });
 
         it('returns base time on database error', async () => {
-            mockSupabase.from.mockImplementation((table) => {
+            mockSupabase.from.mockImplementation(table => {
                 if (table === 'restaurants') {
                     return {
                         select: vi.fn().mockReturnThis(),

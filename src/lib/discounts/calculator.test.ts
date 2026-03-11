@@ -44,7 +44,11 @@ describe('calculateDiscount', () => {
 
     describe('percentage discount', () => {
         it('applies percentage discount to full order', () => {
-            const result = calculateDiscount(items, { ...baseDiscount, type: 'percentage', value: 1000 }); // 10%
+            const result = calculateDiscount(items, {
+                ...baseDiscount,
+                type: 'percentage',
+                value: 1000,
+            }); // 10%
             expect(result.subtotal).toBe(350);
             expect(result.discountAmount).toBeCloseTo(35, 1);
             expect(result.total).toBeCloseTo(315, 1);
@@ -52,13 +56,21 @@ describe('calculateDiscount', () => {
         });
 
         it('applies 20% discount correctly', () => {
-            const result = calculateDiscount(items, { ...baseDiscount, type: 'percentage', value: 2000 }); // 20%
+            const result = calculateDiscount(items, {
+                ...baseDiscount,
+                type: 'percentage',
+                value: 2000,
+            }); // 20%
             expect(result.discountAmount).toBeCloseTo(70, 1);
             expect(result.total).toBeCloseTo(280, 1);
         });
 
         it('does not exceed subtotal', () => {
-            const result = calculateDiscount(items, { ...baseDiscount, type: 'percentage', value: 15000 }); // 150%
+            const result = calculateDiscount(items, {
+                ...baseDiscount,
+                type: 'percentage',
+                value: 15000,
+            }); // 150%
             expect(result.discountAmount).toBe(result.subtotal);
             expect(result.total).toBe(0);
         });

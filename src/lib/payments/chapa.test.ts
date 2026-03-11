@@ -36,9 +36,7 @@ describe('ChapaProvider', () => {
         it('throws PaymentProviderError when secret key is missing', async () => {
             const provider = new ChapaProvider('');
 
-            await expect(provider.initiatePayment(baseInput)).rejects.toThrow(
-                PaymentProviderError
-            );
+            await expect(provider.initiatePayment(baseInput)).rejects.toThrow(PaymentProviderError);
         });
 
         it('throws PaymentProviderError when fetch fails', async () => {
@@ -49,9 +47,7 @@ describe('ChapaProvider', () => {
             } as Response);
 
             const provider = new ChapaProvider('valid-key');
-            await expect(provider.initiatePayment(baseInput)).rejects.toThrow(
-                PaymentProviderError
-            );
+            await expect(provider.initiatePayment(baseInput)).rejects.toThrow(PaymentProviderError);
         });
 
         it('throws PaymentProviderError when status is not success', async () => {
@@ -62,9 +58,7 @@ describe('ChapaProvider', () => {
             } as Response);
 
             const provider = new ChapaProvider('valid-key');
-            await expect(provider.initiatePayment(baseInput)).rejects.toThrow(
-                PaymentProviderError
-            );
+            await expect(provider.initiatePayment(baseInput)).rejects.toThrow(PaymentProviderError);
         });
 
         it('returns checkout URL on success', async () => {

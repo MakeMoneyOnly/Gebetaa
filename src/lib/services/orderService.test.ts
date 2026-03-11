@@ -53,9 +53,7 @@ describe('orderService', () => {
     describe('generateIdempotencyKey', () => {
         it('returns a UUID string', () => {
             const key = generateIdempotencyKey();
-            expect(key).toMatch(
-                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-            );
+            expect(key).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
         });
 
         it('generates unique keys', () => {
@@ -88,7 +86,15 @@ describe('orderService', () => {
 
         it('returns invalid when items are not found in DB', async () => {
             vi.mocked(fetchItemsForValidation).mockResolvedValue({
-                data: [{ id: 'item-1', price: 50, is_available: true, station: 'kitchen', course: 'main' }],
+                data: [
+                    {
+                        id: 'item-1',
+                        price: 50,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
+                ],
                 error: null,
             });
 
@@ -100,8 +106,20 @@ describe('orderService', () => {
         it('returns invalid when an item is unavailable', async () => {
             vi.mocked(fetchItemsForValidation).mockResolvedValue({
                 data: [
-                    { id: 'item-1', price: 50, is_available: false, station: 'kitchen', course: 'main' },
-                    { id: 'item-2', price: 150, is_available: true, station: 'kitchen', course: 'main' },
+                    {
+                        id: 'item-1',
+                        price: 50,
+                        is_available: false,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
+                    {
+                        id: 'item-2',
+                        price: 150,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
                 ],
                 error: null,
             });
@@ -114,8 +132,20 @@ describe('orderService', () => {
         it('returns invalid when total price does not match', async () => {
             vi.mocked(fetchItemsForValidation).mockResolvedValue({
                 data: [
-                    { id: 'item-1', price: 50, is_available: true, station: 'kitchen', course: 'main' },
-                    { id: 'item-2', price: 150, is_available: true, station: 'kitchen', course: 'main' },
+                    {
+                        id: 'item-1',
+                        price: 50,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
+                    {
+                        id: 'item-2',
+                        price: 150,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
                 ],
                 error: null,
             });
@@ -128,8 +158,20 @@ describe('orderService', () => {
         it('returns valid when all items exist and total matches', async () => {
             vi.mocked(fetchItemsForValidation).mockResolvedValue({
                 data: [
-                    { id: 'item-1', price: 50, is_available: true, station: 'kitchen', course: 'main' },
-                    { id: 'item-2', price: 150, is_available: true, station: 'kitchen', course: 'main' },
+                    {
+                        id: 'item-1',
+                        price: 50,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
+                    {
+                        id: 'item-2',
+                        price: 150,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
                 ],
                 error: null,
             });
@@ -147,8 +189,20 @@ describe('orderService', () => {
         it('accounts for discount amount in total validation', async () => {
             vi.mocked(fetchItemsForValidation).mockResolvedValue({
                 data: [
-                    { id: 'item-1', price: 50, is_available: true, station: 'kitchen', course: 'main' },
-                    { id: 'item-2', price: 150, is_available: true, station: 'kitchen', course: 'main' },
+                    {
+                        id: 'item-1',
+                        price: 50,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
+                    {
+                        id: 'item-2',
+                        price: 150,
+                        is_available: true,
+                        station: 'kitchen',
+                        course: 'main',
+                    },
                 ],
                 error: null,
             });
@@ -253,7 +307,10 @@ describe('orderService', () => {
 
     describe('checkDuplicateOrder', () => {
         it('returns null when no duplicate found', async () => {
-            vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({ data: null, error: null } as any);
+            vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({
+                data: null,
+                error: null,
+            } as any);
 
             const result = await checkDuplicateOrder({} as any, 'idem-key-1');
             expect(result).toBeNull();

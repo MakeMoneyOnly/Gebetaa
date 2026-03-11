@@ -133,7 +133,9 @@ describe('sms', () => {
                 ok: true,
                 status: 200,
                 json: async () => ({
-                    SMSMessageData: { Recipients: [{ status: 'InvalidRecipient', statusCode: 402 }] },
+                    SMSMessageData: {
+                        Recipients: [{ status: 'InvalidRecipient', statusCode: 402 }],
+                    },
                 }),
             } as Response);
 
@@ -223,7 +225,10 @@ describe('sms', () => {
             await sendSms('+251911234567', 'Message');
 
             expect(fetchSpy.mock.calls[0][0]).toContain('ACtest/Messages.json');
-            const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+            const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<
+                string,
+                string
+            >;
             expect(headers.Authorization).toMatch(/^Basic /);
         });
     });

@@ -148,9 +148,7 @@ describe('chapaService', () => {
 
             await initializeChapaTransaction(params);
 
-            const callBody = JSON.parse(
-                (fetchSpy.mock.calls[0][1] as RequestInit).body as string
-            );
+            const callBody = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
             expect(callBody.currency).toBe('ETB');
         });
 
@@ -167,9 +165,7 @@ describe('chapaService', () => {
                 subaccounts: { id: 'sub-1', split_type: 'percentage', split_value: 5 },
             });
 
-            const callBody = JSON.parse(
-                (fetchSpy.mock.calls[0][1] as RequestInit).body as string
-            );
+            const callBody = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
             expect(callBody.subaccounts.id).toBe('sub-1');
         });
 
@@ -204,7 +200,13 @@ describe('chapaService', () => {
                 json: async () => ({
                     status: 'success',
                     message: 'Transaction verified',
-                    data: { amount: '250.00', currency: 'ETB', status: 'success', reference: 'REF1', tx_ref: 'tx-001' },
+                    data: {
+                        amount: '250.00',
+                        currency: 'ETB',
+                        status: 'success',
+                        reference: 'REF1',
+                        tx_ref: 'tx-001',
+                    },
                 }),
             } as Response);
 

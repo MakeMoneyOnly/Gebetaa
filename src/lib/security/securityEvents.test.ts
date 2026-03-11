@@ -87,7 +87,9 @@ describe('securityEvents', () => {
         });
 
         it('does not throw when insert errors', async () => {
-            const db = makeDb({ insert: vi.fn().mockResolvedValue({ error: { message: 'DB fail' } }) });
+            const db = makeDb({
+                insert: vi.fn().mockResolvedValue({ error: { message: 'DB fail' } }),
+            });
             vi.mocked(createClient).mockResolvedValue(db as any);
 
             await expect(logSecurityEvent(baseEvent)).resolves.not.toThrow();
@@ -269,9 +271,7 @@ describe('securityEvents', () => {
                 }),
             } as any);
 
-            await expect(
-                logInvalidSignatureAttempt('1.2.3.4', 'bot', {})
-            ).resolves.not.toThrow();
+            await expect(logInvalidSignatureAttempt('1.2.3.4', 'bot', {})).resolves.not.toThrow();
         });
     });
 });

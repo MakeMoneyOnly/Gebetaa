@@ -139,16 +139,16 @@ describe('payment-sessions', () => {
             });
 
             const insertMock = db.from().insert;
-            expect(insertMock).toHaveBeenCalledWith(
-                expect.objectContaining({ currency: 'ETB' })
-            );
+            expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({ currency: 'ETB' }));
         });
 
         it('throws when insert errors', async () => {
             const db = makeDb({
                 insert: vi.fn().mockReturnThis(),
                 select: vi.fn().mockReturnThis(),
-                single: vi.fn().mockResolvedValue({ data: null, error: { message: 'insert error' } }),
+                single: vi
+                    .fn()
+                    .mockResolvedValue({ data: null, error: { message: 'insert error' } }),
             });
 
             await expect(
@@ -181,9 +181,7 @@ describe('payment-sessions', () => {
             });
 
             const insertMock = db.from().insert;
-            expect(insertMock).toHaveBeenCalledWith(
-                expect.objectContaining({ status: 'created' })
-            );
+            expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'created' }));
         });
     });
 
@@ -206,12 +204,14 @@ describe('payment-sessions', () => {
                 update: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
                 select: vi.fn().mockReturnThis(),
-                single: vi.fn().mockResolvedValue({ data: null, error: { message: 'update failed' } }),
+                single: vi
+                    .fn()
+                    .mockResolvedValue({ data: null, error: { message: 'update failed' } }),
             });
 
-            await expect(
-                updatePaymentSession(db, 'ps-1', { status: 'failed' })
-            ).rejects.toThrow('update failed');
+            await expect(updatePaymentSession(db, 'ps-1', { status: 'failed' })).rejects.toThrow(
+                'update failed'
+            );
         });
     });
 
@@ -250,12 +250,14 @@ describe('payment-sessions', () => {
                 eq: vi.fn().mockReturnThis(),
                 order: vi.fn().mockReturnThis(),
                 limit: vi.fn().mockReturnThis(),
-                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'query failed' } }),
+                maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: null, error: { message: 'query failed' } }),
             });
 
-            await expect(
-                findLatestPaymentSessionForOrder(db, 'rest-1', 'order-1')
-            ).rejects.toThrow('query failed');
+            await expect(findLatestPaymentSessionForOrder(db, 'rest-1', 'order-1')).rejects.toThrow(
+                'query failed'
+            );
         });
     });
 

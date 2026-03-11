@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-    listActiveDiscountsForRestaurant,
-    getDiscountById,
-    prepareOrderDiscount,
-} from './service';
+import { listActiveDiscountsForRestaurant, getDiscountById, prepareOrderDiscount } from './service';
 
 // Create a mock supabase builder
 function createMockQueryBuilder(result: unknown) {
@@ -88,9 +84,9 @@ describe('discounts/service', () => {
                 order: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } }),
             });
 
-            await expect(
-                listActiveDiscountsForRestaurant(supabase, 'rest-1')
-            ).rejects.toThrow('DB error');
+            await expect(listActiveDiscountsForRestaurant(supabase, 'rest-1')).rejects.toThrow(
+                'DB error'
+            );
         });
 
         it('filters out discounts whose valid_from is in the future', async () => {
@@ -212,7 +208,9 @@ describe('discounts/service', () => {
             supabase.from.mockReturnValue({
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
-                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'Timeout' } }),
+                maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: null, error: { message: 'Timeout' } }),
             });
 
             await expect(getDiscountById(supabase, 'rest-1', 'disc-1')).rejects.toThrow('Timeout');

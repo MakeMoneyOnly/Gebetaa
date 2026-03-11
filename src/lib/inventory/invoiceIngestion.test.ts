@@ -205,9 +205,9 @@ describe('invoiceIngestion', () => {
             process.env.INVOICE_OCR_OPEN_SOURCE_ENDPOINT = 'https://test-ocr.example.com';
             process.env.INVOICE_OCR_PROVIDER_ORDER = 'oss';
 
-            const fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValueOnce(
-                new Error('Network error')
-            );
+            const fetchSpy = vi
+                .spyOn(global, 'fetch')
+                .mockRejectedValueOnce(new Error('Network error'));
 
             const input = {
                 fileName: 'test.pdf',
