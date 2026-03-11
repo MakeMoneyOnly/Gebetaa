@@ -253,7 +253,7 @@ describe('orderService', () => {
 
     describe('checkDuplicateOrder', () => {
         it('returns null when no duplicate found', async () => {
-            vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({ data: null, error: null });
+            vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({ data: null, error: null } as any);
 
             const result = await checkDuplicateOrder({} as any, 'idem-key-1');
             expect(result).toBeNull();
@@ -263,7 +263,7 @@ describe('orderService', () => {
             vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({
                 data: { id: 'order-1', status: 'pending' },
                 error: null,
-            });
+            } as any);
 
             const result = await checkDuplicateOrder({} as any, 'idem-key-1');
             expect(result).toEqual({ id: 'order-1', status: 'pending' });
@@ -273,7 +273,7 @@ describe('orderService', () => {
             vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({
                 data: null,
                 error: { message: 'DB error' } as any,
-            });
+            } as any);
 
             const result = await checkDuplicateOrder({} as any, 'idem-key-1');
             expect(result).toBeNull();
