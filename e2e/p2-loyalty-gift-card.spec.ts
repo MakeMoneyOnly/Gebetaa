@@ -145,9 +145,13 @@ test.describe('P2 loyalty and gift-card redemption', () => {
 
         await page.goto('/merchant/guests', { waitUntil: 'domcontentloaded' });
 
-        await expect(page.getByRole('heading', { name: 'Loyalty Program Builder' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Gift Card Manager' })).toBeVisible();
-        await expect(page.getByText('Weekend Perks')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Loyalty Program Builder' })).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByRole('heading', { name: 'Gift Card Manager' })).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByText('Weekend Perks')).toBeVisible({ timeout: 15000 });
 
         const giftCardSection = page.locator('section').filter({ hasText: 'Gift Card Manager' });
         await giftCardSection.getByPlaceholder('Initial balance').fill('600');

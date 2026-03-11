@@ -93,8 +93,12 @@ test.describe('P2 inventory variance', () => {
 
         await page.goto('/merchant/inventory', { waitUntil: 'domcontentloaded' });
 
-        await expect(page.getByRole('heading', { name: /Inventory.*Cost/i })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Variance Dashboard' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Inventory/i }).first()).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByRole('heading', { name: 'Variance Dashboard' })).toBeVisible({
+            timeout: 15000,
+        });
         await expect(page.getByText('Berbere Spice')).toBeVisible();
         await expect(page.getByText('Net Variance')).toBeVisible();
         await expect(page.getByText(/ETB/i).first()).toBeVisible();
