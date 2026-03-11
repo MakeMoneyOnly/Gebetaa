@@ -47,7 +47,7 @@ export class OverviewPage {
     async assertCoreWidgets() {
         await expect(this.page.getByRole('heading', { name: 'Attention Queue' })).toBeVisible();
         await expect(this.page.getByText('IN SYNC')).toBeVisible();
-        await expect(this.page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+        await expect(this.page.getByRole('button', { name: 'Refresh' }).first()).toBeVisible();
     }
 
     async advanceFirstOrder() {

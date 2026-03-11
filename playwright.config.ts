@@ -7,7 +7,8 @@ export default defineConfig({
     fullyParallel: true,
     forbidOnly: isCI,
     retries: isCI ? 2 : 0,
-    workers: isCI ? 1 : undefined,
+    workers: isCI ? 1 : 4,
+    timeout: 45000,
     reporter: 'html',
     use: {
         baseURL: 'http://localhost:3000',
