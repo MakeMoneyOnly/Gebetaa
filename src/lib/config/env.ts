@@ -71,7 +71,7 @@ const envSchema = z.object({
     AWS_ACCESS_KEY_ID: z.string().optional(),
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_SESSION_TOKEN: z.string().optional(),
-    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
     SENTRY_AUTH_TOKEN: z.string().optional(),
 
     // Analytics
