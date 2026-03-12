@@ -114,7 +114,11 @@ const PlaceOrderSchema = z.object({
                 menu_item_id: z.string().uuid(),
                 name: z.string(),
                 quantity: z.number().int().positive(),
-                unit_price: z.number().nonnegative(),
+                // CRIT-02: unit_price is now in SANTIM (integer), not birr
+                unit_price: z
+                    .number()
+                    .int()
+                    .nonnegative('Unit price must be a non-negative integer (in santim)'),
                 notes: z.string().optional().nullable(),
                 course: z.enum(['appetizer', 'main', 'dessert', 'beverage', 'side']).optional(),
             })

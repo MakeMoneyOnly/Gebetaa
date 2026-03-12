@@ -44,8 +44,10 @@ const CreatePaymentSchema = z.object({
     method: PaymentMethodSchema,
     provider: z.string().trim().min(2).max(80).optional().default('internal'),
     provider_reference: z.string().trim().min(2).max(120).optional(),
-    amount: z.coerce.number().min(0.01).max(100000000),
-    tip_amount: z.coerce.number().min(0).max(100000000).optional().default(0),
+    // CRIT-02: amount is now in SANTIM (integer), not birr
+    amount: z.number().int().min(1, 'Amount must be at least 1 santim').max(1000000000),
+    // CRIT-02: tip_amount is now in SANTIM (integer)
+    tip_amount: z.number().int().min(0).max(1000000000).optional().default(0),
     currency: z.string().trim().length(3).optional().default('ETB'),
     status: PaymentStatusSchema.optional().default('captured'),
     authorized_at: z.string().datetime().optional(),

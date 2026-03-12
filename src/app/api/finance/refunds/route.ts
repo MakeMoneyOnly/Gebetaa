@@ -21,7 +21,8 @@ const CreateRefundSchema = z
         payment_id: z.string().uuid().optional(),
         payment_reference: z.string().trim().min(2).max(120).optional(),
         order_id: z.string().uuid().optional(),
-        amount: z.coerce.number().min(0.01).max(100000000),
+        // CRIT-02: amount is now in SANTIM (integer), not birr
+        amount: z.number().int().min(1, 'Refund amount must be at least 1 santim'),
         reason: z.string().trim().min(3).max(280),
         status: RefundStatusSchema.optional().default('pending'),
         provider_reference: z.string().trim().min(2).max(120).optional(),

@@ -197,7 +197,8 @@ export function OrdersKanbanBoard({
                                                 ) : (
                                                     <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
                                                         <DollarSign className="h-3.5 w-3.5 text-gray-400" />
-                                                        {formatCurrencyCompact(order.total_price)} ETB
+                                                        {formatCurrencyCompact(order.total_price)}{' '}
+                                                        ETB
                                                     </div>
                                                 )}
                                             </div>

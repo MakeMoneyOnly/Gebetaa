@@ -681,7 +681,9 @@ export default function TerminalPage() {
                                                     <p
                                                         className={`text-xl font-black tracking-tight text-emerald-600`}
                                                     >
-                                                        {formatCurrencyCompact(order.total_price ?? 0)}
+                                                        {formatCurrencyCompact(
+                                                            order.total_price ?? 0
+                                                        )}
                                                         <span className="ml-1 text-[10px] font-bold tracking-widest text-emerald-500 uppercase">
                                                             ETB
                                                         </span>

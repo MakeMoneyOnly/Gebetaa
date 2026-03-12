@@ -3,6 +3,14 @@ import { apiError } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseQuery } from '@/lib/api/validation';
 
+/**
+ * Finance Export API
+ *
+ * CRIT-02: All monetary values are exported as INTEGER (santim).
+ * 100 santim = 1 ETB.
+ * Use the monetary utilities (lib/utils/monetary.ts) to convert for display.
+ */
+
 const ExportDatasetSchema = z.enum(['payments', 'refunds', 'payouts', 'reconciliation']);
 type ExportDataset = z.infer<typeof ExportDatasetSchema>;
 

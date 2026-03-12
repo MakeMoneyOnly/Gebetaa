@@ -2,6 +2,10 @@
  * POST /api/device/tables/close
  * Settle a dine-in table and close its open table session.
  * Requires X-Device-Token header.
+ *
+ * IMPORTANT: This endpoint now publishes order.completed events to the
+ * event bus instead of processing loyalty/ERCA synchronously. Background
+ * jobs handle those side effects asynchronously.
  */
 import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
@@ -10,6 +14,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { parseJsonBody } from '@/lib/api/validation';
 import { isChapaConfigured, verifyChapaTransaction } from '@/lib/services/chapaService';
 import { ensurePaymentSessionForRecordedPayment } from '@/lib/payments/payment-sessions';
+import { createGebetaEvent } from '@/lib/events/contracts';
+import { enqueueInternalJob } from '@/lib/events/runtime';
 
 const CloseTableSchema = z.object({
     table_id: z.string().uuid().optional(),
@@ -384,6 +390,27 @@ export async function POST(request: Request) {
                 },
             }))
         );
+
+        // Queue background jobs for each completed order
+        // This removes synchronous cross-domain side effects (loyalty, ERCA, etc.)
+        const jobQueuePromises = finalizableOrderIds.map(orderId =>
+            enqueueInternalJob({
+                path: '/api/jobs/orders/completed',
+                body: createGebetaEvent('order.completed', {
+                    order_id: orderId,
+                    restaurant_id: ctx.restaurantId,
+                    completed_at: now,
+                    trigger: 'table_close',
+                }) as unknown as Record<string, unknown>,
+                deduplicationKey: `order-completed-${orderId}`,
+            }).catch(err => {
+                console.error(`[close-table] Failed to queue job for order ${orderId}:`, err);
+                return undefined;
+            })
+        );
+
+        // Fire and forget - don't block the response on job queuing
+        Promise.all(jobQueuePromises).catch(() => {});
     }
 
     const mergedCloseNotes =

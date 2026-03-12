@@ -1114,7 +1114,7 @@ function WaiterPosContent() {
                             Table Total
                         </span>
                         <span className="text-2xl font-black tracking-tight text-black">
-                            {formatCurrencyCompact(grandTotal)} br
+                            {formatCurrencyCompact(grandTotal)} ETB
                         </span>
                         {tableOrders.length > 0 && (
                             <span className="text-xs text-gray-400">
@@ -1281,7 +1281,7 @@ function WaiterPosContent() {
                                                             )}
                                                         </div>
                                                         <span className="mt-auto text-xs font-medium text-gray-500">
-                                                            {formatCurrencyCompact(item.price)} br
+                                                            {formatCurrencyCompact(item.price)} ETB
                                                         </span>
                                                         <div className="absolute inset-0 origin-center bg-black/0 transition-colors group-active:bg-black/5" />
                                                     </button>
@@ -1316,7 +1316,7 @@ function WaiterPosContent() {
                                         </div>
                                     </div>
                                     <span className="text-2xl font-black tracking-tight text-gray-900">
-                                        {formatCurrencyCompact(cartDiscountPreview.total)} br
+                                        {formatCurrencyCompact(cartDiscountPreview.total)} ETB
                                     </span>
                                 </div>
                                 {availableDiscounts.length > 0 && (
@@ -1358,7 +1358,11 @@ function WaiterPosContent() {
                                                     Discount applied
                                                 </span>
                                                 <span className="font-bold text-emerald-600">
-                                                    -{formatCurrencyCompact(cartDiscountPreview.discountAmount)} br
+                                                    -
+                                                    {formatCurrencyCompact(
+                                                        cartDiscountPreview.discountAmount
+                                                    )}{' '}
+                                                    br
                                                 </span>
                                             </div>
                                         )}
@@ -1401,7 +1405,7 @@ function WaiterPosContent() {
                                             Table Running Total
                                         </p>
                                         <p className="text-2xl font-black">
-                                            {formatCurrencyCompact(tableRunningTotal)} br
+                                            {formatCurrencyCompact(tableRunningTotal)} ETB
                                         </p>
                                     </div>
                                     <div className="text-right">
@@ -1898,7 +1902,7 @@ function WaiterPosContent() {
                                         </div>
                                         <div className="mt-3 flex justify-end border-t border-gray-50 pt-3">
                                             <span className="text-sm font-black text-gray-900">
-                                                {formatCurrencyCompact(order.total_price ?? 0)} br
+                                                {formatCurrencyCompact(order.total_price ?? 0)} ETB
                                             </span>
                                         </div>
                                     </div>

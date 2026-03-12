@@ -317,7 +317,11 @@ export default function AnalyticsPage() {
                         <MetricCard
                             icon={Wallet}
                             chip="REVENUE"
-                            value={metrics ? `${formatCurrencyCompact(metrics.total_revenue)} ETB` : '-'}
+                            value={
+                                metrics
+                                    ? `${formatCurrencyCompact(metrics.total_revenue)} ETB`
+                                    : '-'
+                            }
                             label="Total Revenue"
                             subLabel="Gross Sales"
                             tone="green"
@@ -340,7 +344,9 @@ export default function AnalyticsPage() {
                             icon={TrendingUp}
                             chip="AOV"
                             value={
-                                metrics ? `${formatCurrencyCompact(metrics.avg_order_value)} ETB` : '-'
+                                metrics
+                                    ? `${formatCurrencyCompact(metrics.avg_order_value)} ETB`
+                                    : '-'
                             }
                             label="Average Order"
                             subLabel="Per Transaction"

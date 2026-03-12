@@ -1179,7 +1179,8 @@ export default function OrdersPage() {
                             <div className="flex justify-between border-b border-gray-50 py-2">
                                 <span className="font-medium text-gray-500">Total</span>
                                 <span className="font-bold text-gray-900">
-                                    {formatCurrencyCompact(selectedOrderDetails.order.total_price)} ETB
+                                    {formatCurrencyCompact(selectedOrderDetails.order.total_price)}{' '}
+                                    ETB
                                 </span>
                             </div>
                             <div className="flex justify-between border-b border-gray-50 py-2">

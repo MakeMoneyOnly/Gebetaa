@@ -215,7 +215,7 @@ export function OrdersQueueTable({
                                         ) : (
                                             <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-900">
                                                 <DollarSign className="h-3.5 w-3.5 text-gray-400" />
-                                                {formatCurrencyCompact(order.total_price)}
+                                                {formatCurrencyCompact(order.total_price)} ETB
                                             </div>
                                         )}
                                     </td>

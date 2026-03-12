@@ -598,10 +598,7 @@ export function CartDrawer({
                                                             </h3>
                                                             <div className="flex flex-col items-end">
                                                                 <span className="text-brand-crimson font-black">
-                                                                    {formatCurrencyCompact(item.price * item.quantity)}
-                                                                </span>
-                                                                <span className="text-brand-crimson/60 text-xs font-bold">
-                                                                    ETB
+                                                                    {formatCurrencyCompact(item.price * item.quantity)} ETB
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -757,7 +754,7 @@ export function CartDrawer({
                                     </span>
                                     <div className="flex items-end gap-1">
                                         <span className="text-3xl font-black text-black dark:text-white">
-                                            {formatCurrencyCompact(discountPreview.total)}
+                                            {formatCurrencyCompact(discountPreview.total)} ETB
                                         </span>
                                         <span className="mb-1 text-sm font-bold text-black/40 dark:text-white/40">
                                             ETB

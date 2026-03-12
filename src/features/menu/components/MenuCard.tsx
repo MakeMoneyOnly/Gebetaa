@@ -112,7 +112,7 @@ export function MenuCard({
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight text-white">
                         <span className="text-base font-black">
-                            {formatCurrencyCompact(item.price)}
+                            {formatCurrencyCompact(item.price)} ETB
                         </span>
                         <span className="text-xs font-bold">ETB</span>
                     </div>

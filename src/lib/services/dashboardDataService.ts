@@ -108,6 +108,213 @@ export interface AnalyticsPageData {
     restaurant_id: string;
 }
 
+export interface MenuPageData {
+    categories: CategoryWithItems[];
+    restaurant_id: string;
+}
+
+export interface CategoryWithItems {
+    id: string;
+    name: string;
+    order_index: number | null;
+    items: MenuItemSummary[];
+}
+
+export interface MenuItemSummary {
+    id: string;
+    name: string;
+    price: number | null;
+    description: string | null;
+    is_available: boolean | null;
+    category_id: string;
+}
+
+export interface GuestsPageData {
+    guests: GuestSummary[];
+    total_count: number;
+    restaurant_id: string;
+}
+
+export interface GuestSummary {
+    id: string;
+    name: string | null;
+    phone: string | null;
+    language: string;
+    tags: string[];
+    is_vip: boolean;
+    visit_count: number;
+    lifetime_value: number;
+    first_seen_at: string | null;
+    last_seen_at: string | null;
+}
+
+export interface StaffPageData {
+    staff: StaffMemberSummary[];
+    devices: DeviceSummary[];
+    restaurant_id: string;
+}
+
+export interface StaffMemberSummary {
+    id: string;
+    user_id: string;
+    name: string | null;
+    email: string | null;
+    role: string | null;
+    is_active: boolean;
+    pin_code: string | null;
+    assigned_zones: string[] | null;
+}
+
+export interface DeviceSummary {
+    id: string;
+    name: string;
+    device_type: string;
+    device_token: string | null;
+    pairing_code: string | null;
+    last_active_at: string | null;
+    assigned_zones: string[] | null;
+}
+
+export interface FinancePageData {
+    payments: PaymentSummary[];
+    refunds: RefundSummary[];
+    payouts: PayoutSummary[];
+    reconciliation: ReconciliationSummary[];
+    totals: {
+        payments_gross: number;
+        refunds_total: number;
+        payouts_net: number;
+    };
+    restaurant_id: string;
+}
+
+export interface PaymentSummary {
+    id: string;
+    amount: number;
+    currency: string;
+    payment_method: string;
+    status: string;
+    created_at: string;
+    order_id: string | null;
+}
+
+export interface RefundSummary {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    reason: string | null;
+    created_at: string;
+    payment_reference: string | null;
+}
+
+export interface PayoutSummary {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    created_at: string;
+    processed_at: string | null;
+}
+
+export interface ReconciliationSummary {
+    id: string;
+    date: string;
+    expected: number;
+    actual: number;
+    delta: number;
+    status: string;
+}
+
+export interface ChannelsPageData {
+    summary: {
+        delivery_partners: number;
+        connected_partners: number;
+        degraded_partners: number;
+        external_orders_24h: number;
+        unacked_orders: number;
+    };
+    partners: ChannelPartner[];
+    orders: ExternalOrderSummary[];
+    settings: OnlineOrderingSettings;
+    restaurant_id: string;
+}
+
+export interface ChannelPartner {
+    id: string;
+    provider: string;
+    status: string;
+    updated_at: string;
+    last_sync_at: string | null;
+}
+
+export interface ExternalOrderSummary {
+    id: string;
+    provider: string;
+    provider_order_id: string;
+    normalized_status: string;
+    total_amount: number;
+    currency: string;
+    acked_at: string | null;
+    created_at: string;
+}
+
+export interface OnlineOrderingSettings {
+    enabled: boolean;
+    accepts_scheduled_orders: boolean;
+    auto_accept_orders: boolean;
+    prep_time_minutes: number;
+    max_daily_orders: number;
+    service_hours: { start: string; end: string };
+    order_throttling_enabled: boolean;
+    throttle_limit_per_15m: number;
+}
+
+export interface InventoryPageData {
+    items: InventoryItemSummary[];
+    recipes: RecipeSummary[];
+    purchase_orders: PurchaseOrderSummary[];
+    invoices: InvoiceSummary[];
+    restaurant_id: string;
+}
+
+export interface InventoryItemSummary {
+    id: string;
+    name: string;
+    sku: string | null;
+    uom: string;
+    current_stock: number;
+    reorder_level: number;
+    cost_per_unit: number;
+}
+
+export interface RecipeSummary {
+    id: string;
+    name: string;
+    output_qty: number;
+    output_uom: string;
+}
+
+export interface PurchaseOrderSummary {
+    id: string;
+    po_number: string | null;
+    supplier_name: string;
+    status: string;
+    total_amount: number;
+    currency: string;
+    created_at: string;
+}
+
+export interface InvoiceSummary {
+    id: string;
+    invoice_number: string | null;
+    supplier_name: string;
+    status: string;
+    total_amount: number;
+    currency: string;
+    due_at: string | null;
+}
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -540,6 +747,282 @@ export async function getAnalyticsPageData(
             peak_hour: peakHour ? parseInt(peakHour) : null,
         },
         chart_data: chartData,
+        restaurant_id: restaurantId,
+    };
+}
+
+/**
+ * Fetches menu page data for initial render.
+ */
+export async function getMenuPageData(): Promise<MenuPageData | null> {
+    const supabase = await createClient();
+
+    const restaurantId = await resolveRestaurantId();
+    if (!restaurantId) {
+        return null;
+    }
+
+    const { data, error } = await supabase
+        .from('categories')
+        .select(
+            'id, name, order_index, items:menu_items(id, name, price, description, is_available, category_id)'
+        )
+        .eq('restaurant_id', restaurantId)
+        .order('order_index');
+
+    if (error) {
+        console.error('Failed to fetch menu:', error);
+        return {
+            categories: [],
+            restaurant_id: restaurantId,
+        };
+    }
+
+    return {
+        categories: (data ?? []) as CategoryWithItems[],
+        restaurant_id: restaurantId,
+    };
+}
+
+/**
+ * Fetches guests page data for initial render.
+ *
+ * @param limit - Maximum number of guests to return
+ */
+export async function getGuestsPageData(limit: number = 100): Promise<GuestsPageData | null> {
+    const supabase = await createClient();
+
+    const restaurantId = await resolveRestaurantId();
+    if (!restaurantId) {
+        return null;
+    }
+
+    const { data, error, count } = await supabase
+        .from('guests')
+        .select(
+            'id, name, language, tags, is_vip, visit_count, lifetime_value, first_seen_at, last_seen_at',
+            { count: 'exact' }
+        )
+        .eq('restaurant_id', restaurantId)
+        .order('last_seen_at', { ascending: false })
+        .limit(limit);
+
+    if (error) {
+        console.error('Failed to fetch guests:', error);
+        return {
+            guests: [],
+            total_count: 0,
+            restaurant_id: restaurantId,
+        };
+    }
+
+    return {
+        guests: (data ?? []) as unknown as GuestSummary[],
+        total_count: count ?? 0,
+        restaurant_id: restaurantId,
+    };
+}
+
+/**
+ * Fetches staff page data for initial render.
+ */
+export async function getStaffPageData(): Promise<StaffPageData | null> {
+    const supabase = await createClient();
+
+    const restaurantId = await resolveRestaurantId();
+    if (!restaurantId) {
+        return null;
+    }
+
+    const [staffRes, devicesRes] = await Promise.all([
+        supabase
+            .from('restaurant_staff')
+            .select('id, user_id, name, email, role, is_active, pin_code, assigned_zones')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: true }),
+        supabase
+            .from('devices' as any)
+            .select(
+                'id, name, device_type, device_token, pairing_code, last_active_at, assigned_zones'
+            )
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: true }),
+    ]);
+
+    return {
+        staff: (staffRes.data ?? []) as unknown as StaffMemberSummary[],
+        devices: (devicesRes.data ?? []) as unknown as DeviceSummary[],
+        restaurant_id: restaurantId,
+    };
+}
+
+/**
+ * Fetches finance page data for initial render.
+ */
+export async function getFinancePageData(): Promise<FinancePageData | null> {
+    const supabase = await createClient();
+
+    const restaurantId = await resolveRestaurantId();
+    if (!restaurantId) {
+        return null;
+    }
+
+    const [paymentsRes, refundsRes, payoutsRes, reconciliationRes] = await Promise.all([
+        supabase
+            .from('payments')
+            .select('id, amount, currency, payment_method, status, created_at, order_id')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(200),
+        supabase
+            .from('refunds')
+            .select('id, amount, currency, status, reason, created_at, payment_reference')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(200),
+        supabase
+            .from('payouts')
+            .select('id, amount, currency, status, created_at, processed_at')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(200),
+        supabase
+            .from('reconciliation_entries')
+            .select('id, date, expected, actual, delta, status')
+            .eq('restaurant_id', restaurantId)
+            .order('date', { ascending: false })
+            .limit(200),
+    ]);
+
+    const paymentsGross = (paymentsRes.data ?? []).reduce(
+        (sum, p) => sum + Number(p.amount ?? 0),
+        0
+    );
+    const refundsTotal = (refundsRes.data ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
+    const payoutsNet = (payoutsRes.data ?? []).reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
+
+    return {
+        payments: (paymentsRes.data ?? []) as PaymentSummary[],
+        refunds: (refundsRes.data ?? []) as RefundSummary[],
+        payouts: (payoutsRes.data ?? []) as PayoutSummary[],
+        reconciliation: (reconciliationRes.data ?? []) as ReconciliationSummary[],
+        totals: {
+            payments_gross: paymentsGross,
+            refunds_total: refundsTotal,
+            payouts_net: payoutsNet,
+        },
+        restaurant_id: restaurantId,
+    };
+}
+
+/**
+ * Fetches channels page data for initial render.
+ */
+export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
+    const supabase = await createClient();
+
+    const restaurantId = await resolveRestaurantId();
+    if (!restaurantId) {
+        return null;
+    }
+
+    const [partnersRes, ordersRes, settingsRes] = await Promise.all([
+        supabase
+            .from('delivery_partners')
+            .select('id, provider, status, updated_at, last_sync_at')
+            .eq('restaurant_id', restaurantId),
+        supabase
+            .from('external_orders')
+            .select(
+                'id, provider, provider_order_id, normalized_status, total_amount, currency, acked_at, created_at'
+            )
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(100),
+        supabase
+            .from('online_ordering_settings' as any)
+            .select(
+                'enabled, accepts_scheduled_orders, auto_accept_orders, prep_time_minutes, max_daily_orders, service_hours, order_throttling_enabled, throttle_limit_per_15m'
+            )
+            .eq('restaurant_id', restaurantId)
+            .maybeSingle(),
+    ]);
+
+    const partners = (partnersRes.data ?? []) as ChannelPartner[];
+    const orders = (ordersRes.data ?? []) as ExternalOrderSummary[];
+
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const externalOrders24h = orders.filter(o => o.created_at >= since24h).length;
+    const unackedOrders = orders.filter(o => !o.acked_at).length;
+
+    const defaultSettings: OnlineOrderingSettings = {
+        enabled: true,
+        accepts_scheduled_orders: true,
+        auto_accept_orders: false,
+        prep_time_minutes: 30,
+        max_daily_orders: 300,
+        service_hours: { start: '08:00', end: '22:00' },
+        order_throttling_enabled: false,
+        throttle_limit_per_15m: 40,
+    };
+
+    return {
+        summary: {
+            delivery_partners: partners.length,
+            connected_partners: partners.filter(p => p.status === 'active').length,
+            degraded_partners: partners.filter(p => p.status === 'degraded').length,
+            external_orders_24h: externalOrders24h,
+            unacked_orders: unackedOrders,
+        },
+        partners,
+        orders,
+        settings: { ...defaultSettings, ...(settingsRes.data ?? {}) } as OnlineOrderingSettings,
+        restaurant_id: restaurantId,
+    };
+}
+
+/**
+ * Fetches inventory page data for initial render.
+ */
+export async function getInventoryPageData(): Promise<InventoryPageData | null> {
+    const supabase = await createClient();
+
+    const restaurantId = await resolveRestaurantId();
+    if (!restaurantId) {
+        return null;
+    }
+
+    const [itemsRes, recipesRes, posRes, invoicesRes] = await Promise.all([
+        supabase
+            .from('inventory_items')
+            .select('id, name, sku, uom, current_stock, reorder_level, cost_per_unit')
+            .eq('restaurant_id', restaurantId)
+            .order('name', { ascending: true })
+            .limit(200),
+        supabase
+            .from('recipes')
+            .select('id, name, output_qty, output_uom')
+            .eq('restaurant_id', restaurantId)
+            .order('name', { ascending: true }),
+        supabase
+            .from('purchase_orders')
+            .select('id, po_number, supplier_name, status, total_amount, currency, created_at')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(100),
+        supabase
+            .from('supplier_invoices')
+            .select('id, invoice_number, supplier_name, status, total_amount, currency, due_at')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(100),
+    ]);
+
+    return {
+        items: (itemsRes.data ?? []) as InventoryItemSummary[],
+        recipes: (recipesRes.data ?? []) as RecipeSummary[],
+        purchase_orders: (posRes.data ?? []) as PurchaseOrderSummary[],
+        invoices: (invoicesRes.data ?? []) as InvoiceSummary[],
         restaurant_id: restaurantId,
     };
 }

@@ -135,7 +135,7 @@ export function DishDetailDrawer({
                                 </h2>
                                 <div className="flex flex-col items-end">
                                     <span className="text-brand-crimson text-2xl font-black">
-                                        {formatCurrencyCompact(item.price * quantity)}
+                                        {formatCurrencyCompact(item.price * quantity)} ETB
                                     </span>
                                     <span className="text-xs font-bold text-black/40 dark:text-white/40">
                                         ETB
