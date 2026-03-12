@@ -1,5 +1,5 @@
 /**
- * Merchant Dashboard Page (Hybrid Server/Client Component Pattern)
+ * Merchant Dashboard Server Component
  * 
  * This is a Server Component that fetches initial data on the server,
  * eliminating the loading flash on initial render.
@@ -12,7 +12,7 @@
  * Performance Benefits:
  * - No loading skeleton on initial page load
  * - Instant render with server-provided data
- * - Improved TTI (Time to Interactive): ~1.6s vs ~4.3s for CSR
+ * - Improved TTI (Time to Interactive)
  * - Better SEO and Core Web Vitals
  * 
  * Caching Strategy:
