@@ -2,15 +2,15 @@
 
 /**
  * Merchant Dashboard Client Component
- * 
+ *
  * This component receives initial data from a Server Component,
  * eliminating the loading flash on initial render.
- * 
+ *
  * Architecture Pattern:
  * - Server Component fetches initial data (no loading state)
  * - Client Component handles interactivity (filters, refresh, realtime)
  * - Supabase Realtime merges live updates with server data
- * 
+ *
  * Performance Benefits:
  * - No loading skeleton on initial page load
  * - Instant render with server-provided data
@@ -88,12 +88,12 @@ interface MerchantDashboardClientProps {
 export function MerchantDashboardClient({ initialData }: MerchantDashboardClientProps) {
     const router = useRouter();
     const [range, setRange] = useState<CommandCenterRange>('today');
-    
+
     // Initialize state with server data - NO loading flash!
     const [commandCenter, setCommandCenter] = useState<CommandCenterData | null>(
         initialData ?? null
     );
-    
+
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [timeTick, setTimeTick] = useState(Date.now());
