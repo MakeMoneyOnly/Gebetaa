@@ -2,6 +2,7 @@
 
 import { ArrowDown, ArrowUp, ArrowUpDown, Clock, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 import { Order } from '@/types/database';
 
 type SortKey = 'created_at' | 'table_number' | 'status' | 'total_price';
@@ -214,7 +215,7 @@ export function OrdersQueueTable({
                                         ) : (
                                             <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-900">
                                                 <DollarSign className="h-3.5 w-3.5 text-gray-400" />
-                                                {order.total_price}
+                                                {formatCurrencyCompact(order.total_price)}
                                             </div>
                                         )}
                                     </td>

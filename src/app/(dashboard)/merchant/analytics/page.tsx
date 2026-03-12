@@ -19,6 +19,7 @@ import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { toast } from 'react-hot-toast';
 import { MetricCard } from '@/components/merchant/MetricCard';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 
 type AnalyticsMetrics = {
     total_revenue: number;
@@ -316,7 +317,7 @@ export default function AnalyticsPage() {
                         <MetricCard
                             icon={Wallet}
                             chip="REVENUE"
-                            value={metrics ? `${metrics.total_revenue.toLocaleString()} ETB` : '-'}
+                            value={metrics ? `${formatCurrencyCompact(metrics.total_revenue)} ETB` : '-'}
                             label="Total Revenue"
                             subLabel="Gross Sales"
                             tone="green"
@@ -339,7 +340,7 @@ export default function AnalyticsPage() {
                             icon={TrendingUp}
                             chip="AOV"
                             value={
-                                metrics ? `${metrics.avg_order_value.toLocaleString()} ETB` : '-'
+                                metrics ? `${formatCurrencyCompact(metrics.avg_order_value)} ETB` : '-'
                             }
                             label="Average Order"
                             subLabel="Per Transaction"

@@ -10,6 +10,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 
 interface ChartDataPoint {
     day: string;
@@ -53,7 +54,7 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                     formatter={(value, name) => {
                         const numValue = typeof value === 'number' ? value : 0;
                         return [
-                            `${numValue.toLocaleString()} ETB`,
+                            `${formatCurrencyCompact(numValue)} ETB`,
                             name === 'income' ? 'Current Period' : 'Previous Period',
                         ];
                     }}

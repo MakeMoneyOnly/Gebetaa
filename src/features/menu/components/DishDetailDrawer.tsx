@@ -3,6 +3,7 @@
 import { Drawer } from 'vaul';
 import { useState, useEffect } from 'react';
 import { useHaptic } from '@/hooks/useHaptic';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 import { isRemoteOrDataImageSrc } from '@/lib/utils';
 import { createClient } from '@/lib/supabase';
 import { DishDetailDrawerProps } from './DishDetailDrawer.types';
@@ -134,7 +135,7 @@ export function DishDetailDrawer({
                                 </h2>
                                 <div className="flex flex-col items-end">
                                     <span className="text-brand-crimson text-2xl font-black">
-                                        {(item.price * quantity).toLocaleString()}
+                                        {formatCurrencyCompact(item.price * quantity)}
                                     </span>
                                     <span className="text-xs font-bold text-black/40 dark:text-white/40">
                                         ETB

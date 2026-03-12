@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { calculateDiscount } from '@/lib/discounts/calculator';
 import type { DiscountRecord } from '@/lib/discounts/types';
 import { useDeviceHeartbeat } from '@/hooks/useDeviceHeartbeat';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 
 interface PosTable {
     id: string;
@@ -1113,7 +1114,7 @@ function WaiterPosContent() {
                             Table Total
                         </span>
                         <span className="text-2xl font-black tracking-tight text-black">
-                            {grandTotal.toFixed(2)} br
+                            {formatCurrencyCompact(grandTotal)} br
                         </span>
                         {tableOrders.length > 0 && (
                             <span className="text-xs text-gray-400">
@@ -1280,7 +1281,7 @@ function WaiterPosContent() {
                                                             )}
                                                         </div>
                                                         <span className="mt-auto text-xs font-medium text-gray-500">
-                                                            {item.price} br
+                                                            {formatCurrencyCompact(item.price)} br
                                                         </span>
                                                         <div className="absolute inset-0 origin-center bg-black/0 transition-colors group-active:bg-black/5" />
                                                     </button>
@@ -1315,7 +1316,7 @@ function WaiterPosContent() {
                                         </div>
                                     </div>
                                     <span className="text-2xl font-black tracking-tight text-gray-900">
-                                        {cartDiscountPreview.total.toFixed(2)} br
+                                        {formatCurrencyCompact(cartDiscountPreview.total)} br
                                     </span>
                                 </div>
                                 {availableDiscounts.length > 0 && (
@@ -1357,8 +1358,7 @@ function WaiterPosContent() {
                                                     Discount applied
                                                 </span>
                                                 <span className="font-bold text-emerald-600">
-                                                    -{cartDiscountPreview.discountAmount.toFixed(2)}{' '}
-                                                    br
+                                                    -{formatCurrencyCompact(cartDiscountPreview.discountAmount)} br
                                                 </span>
                                             </div>
                                         )}
@@ -1401,7 +1401,7 @@ function WaiterPosContent() {
                                             Table Running Total
                                         </p>
                                         <p className="text-2xl font-black">
-                                            {tableRunningTotal.toFixed(2)} br
+                                            {formatCurrencyCompact(tableRunningTotal)} br
                                         </p>
                                     </div>
                                     <div className="text-right">
@@ -1827,7 +1827,7 @@ function WaiterPosContent() {
                                                 >
                                                     {isClosingTable
                                                         ? 'Closing...'
-                                                        : `Settle ${tableRunningTotal.toFixed(2)} ETB & Close`}
+                                                        : `Settle ${formatCurrencyCompact(tableRunningTotal)} ETB & Close`}
                                                 </Button>
                                             </div>
                                         </div>
@@ -1898,7 +1898,7 @@ function WaiterPosContent() {
                                         </div>
                                         <div className="mt-3 flex justify-end border-t border-gray-50 pt-3">
                                             <span className="text-sm font-black text-gray-900">
-                                                {(order.total_price ?? 0).toFixed(2)} br
+                                                {formatCurrencyCompact(order.total_price ?? 0)} br
                                             </span>
                                         </div>
                                     </div>

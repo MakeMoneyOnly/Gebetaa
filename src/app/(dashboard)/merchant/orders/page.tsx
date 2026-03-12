@@ -11,6 +11,7 @@ import { OrdersQueueTable } from '@/components/merchant/OrdersQueueTable';
 import { OrdersKanbanBoard } from '@/components/merchant/OrdersKanbanBoard';
 import { BulkActionBar } from '@/components/merchant/BulkActionBar';
 import { isAbortError } from '@/hooks/useSafeFetch';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 
 type OrderEvent = {
     id: string;
@@ -1061,7 +1062,7 @@ export default function OrdersPage() {
                                                                   `${SERVICE_REQUEST_ROW_PREFIX}${r.id}` ===
                                                                   order.id
                                                           )?.notes || 'Request'
-                                                        : `${order.total_price} ETB`}
+                                                        : `${formatCurrencyCompact(order.total_price)} ETB`}
                                                 </p>
                                             </div>
                                         </div>
@@ -1178,7 +1179,7 @@ export default function OrdersPage() {
                             <div className="flex justify-between border-b border-gray-50 py-2">
                                 <span className="font-medium text-gray-500">Total</span>
                                 <span className="font-bold text-gray-900">
-                                    {selectedOrderDetails.order.total_price} ETB
+                                    {formatCurrencyCompact(selectedOrderDetails.order.total_price)} ETB
                                 </span>
                             </div>
                             <div className="flex justify-between border-b border-gray-50 py-2">

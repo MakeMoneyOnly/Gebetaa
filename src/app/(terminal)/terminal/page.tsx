@@ -16,6 +16,7 @@ import { toast } from 'react-hot-toast';
 import { useDeviceHeartbeat } from '@/hooks/useDeviceHeartbeat';
 import type { SupportedPaymentMethod } from '@/lib/devices/config';
 import { getDeviceTypeLabel } from '@/lib/devices/config';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 
 type TerminalTable = {
     id: string;
@@ -680,7 +681,7 @@ export default function TerminalPage() {
                                                     <p
                                                         className={`text-xl font-black tracking-tight text-emerald-600`}
                                                     >
-                                                        {Number(order.total_price ?? 0).toFixed(2)}
+                                                        {formatCurrencyCompact(order.total_price ?? 0)}
                                                         <span className="ml-1 text-[10px] font-bold tracking-widest text-emerald-500 uppercase">
                                                             ETB
                                                         </span>

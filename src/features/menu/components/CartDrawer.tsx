@@ -18,6 +18,7 @@ import { useCart } from '@/context/CartContext';
 import { useHaptic } from '@/hooks/useHaptic';
 import Image from 'next/image';
 import { isRemoteOrDataImageSrc } from '@/lib/utils';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 import { useState, useEffect, useMemo } from 'react';
 import { isAbortError } from '@/hooks/useSafeFetch';
 import { calculateDiscount } from '@/lib/discounts/calculator';
@@ -597,9 +598,7 @@ export function CartDrawer({
                                                             </h3>
                                                             <div className="flex flex-col items-end">
                                                                 <span className="text-brand-crimson font-black">
-                                                                    {(
-                                                                        item.price * item.quantity
-                                                                    ).toLocaleString()}
+                                                                    {formatCurrencyCompact(item.price * item.quantity)}
                                                                 </span>
                                                                 <span className="text-brand-crimson/60 text-xs font-bold">
                                                                     ETB
@@ -758,7 +757,7 @@ export function CartDrawer({
                                     </span>
                                     <div className="flex items-end gap-1">
                                         <span className="text-3xl font-black text-black dark:text-white">
-                                            {discountPreview.total.toLocaleString()}
+                                            {formatCurrencyCompact(discountPreview.total)}
                                         </span>
                                         <span className="mb-1 text-sm font-bold text-black/40 dark:text-white/40">
                                             ETB

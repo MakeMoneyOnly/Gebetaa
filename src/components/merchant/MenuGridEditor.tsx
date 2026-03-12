@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Edit2, Image as ImageIcon, Loader2, Plus, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 import { CategoryWithItems, MenuItem } from '@/types/database';
 
 export interface InlineMenuItemPatch {
@@ -348,7 +349,7 @@ export function MenuGridEditor({
                                                 {item.name}
                                             </h3>
                                             <span className="font-bold whitespace-nowrap text-black">
-                                                {item.price}
+                                                {formatCurrencyCompact(item.price)}
                                             </span>
                                         </div>
                                         <p className="line-clamp-2 text-xs leading-relaxed font-medium text-gray-500">
@@ -537,9 +538,9 @@ export function MenuGridEditor({
                                                 {original.name}
                                             </span>
                                             <span className="font-semibold text-gray-900">
-                                                {original.price}
+                                                {formatCurrencyCompact(original.price)}
                                                 {' -> '}
-                                                {update.price}
+                                                {formatCurrencyCompact(update.price)}
                                             </span>
                                         </div>
                                     );
