@@ -96,11 +96,15 @@ test.describe('Signed QR to guest order flow', () => {
 
         await expect(page.getByRole('heading', { name: 'Your Order', exact: true })).toBeVisible();
         await page.getByRole('button', { name: /Choose checkout option/i }).click();
-        
-        await expect(page.getByRole('heading', { name: 'Payment Method', exact: true })).toBeVisible();
+
+        await expect(
+            page.getByRole('heading', { name: 'Payment Method', exact: true })
+        ).toBeVisible();
         await page.getByRole('button', { name: 'Order and pay later', exact: true }).click();
-        
-        await expect(page.getByRole('heading', { name: 'Order Placed!', exact: true })).toBeVisible({ timeout: 5000 });
+
+        await expect(page.getByRole('heading', { name: 'Order Placed!', exact: true })).toBeVisible(
+            { timeout: 5000 }
+        );
         await expect(page.getByText(/Your order has been sent to the kitchen/i)).toBeVisible();
 
         expect(capturedOrderPayload).toBeTruthy();

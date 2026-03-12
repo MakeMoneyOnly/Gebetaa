@@ -192,7 +192,9 @@ test.describe('Accessibility Tests', () => {
                 // Check that focus indicator is visible (exclude Next.js dev-tools overlay)
                 const focusedElement = page
                     .locator(':focus')
-                    .filter({ hasNot: page.locator('nextjs-portal, [data-nextjs-dev-tools-button]') })
+                    .filter({
+                        hasNot: page.locator('nextjs-portal, [data-nextjs-dev-tools-button]'),
+                    })
                     .first();
                 await expect(focusedElement).toBeVisible();
             }
