@@ -131,9 +131,7 @@ export function DeliveryPartnerHub({
     onConnect,
     onAcknowledge,
 }: DeliveryPartnerHubProps) {
-    const providerToConnectId = 'delivery-provider-connect';
     const displayNameId = 'delivery-provider-display-name';
-    const providerFilterId = 'delivery-provider-filter';
     const [providerToConnect, setProviderToConnect] = useState<
         'beu' | 'deliver_addis' | 'zmall' | 'esoora' | 'custom_local'
     >('beu');

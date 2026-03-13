@@ -19,7 +19,6 @@ export const PaymentMethodSchema = z.enum([
     'cash',
     'card',
     'chapa',
-    'telebirr',
     'gift_card',
     'bank_transfer',
     'other',

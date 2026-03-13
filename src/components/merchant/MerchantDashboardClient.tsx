@@ -45,7 +45,6 @@ import {
     CommandCenterRange,
     CommandCenterMetrics,
 } from '@/components/merchant/command-center/types';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { isAbortError } from '@/hooks/useSafeFetch';
 import { useMerchantActivity } from '@/hooks/useMerchantActivity';
 import type { CommandCenterData } from '@/lib/services/dashboardDataService';

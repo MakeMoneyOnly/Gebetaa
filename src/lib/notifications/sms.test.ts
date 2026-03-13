@@ -10,9 +10,6 @@ describe('sms', () => {
         delete process.env.AFRICAS_TALKING_API_KEY;
         delete process.env.AFRICAS_TALKING_USERNAME;
         delete process.env.AFRICAS_TALKING_SENDER_ID;
-        delete process.env.TWILIO_ACCOUNT_SID;
-        delete process.env.TWILIO_AUTH_TOKEN;
-        delete process.env.TWILIO_FROM_NUMBER;
     });
 
     afterEach(() => {
@@ -166,70 +163,6 @@ describe('sms', () => {
             process.env.SMS_PROVIDER = 'africas-talking';
             const result = await sendSms('+2519', 'Message');
             expect(result.provider).toBe('africas_talking');
-        });
-    });
-
-    // ── sendSms (twilio) ─────────────────────────────────────────────────────
-    describe('sendSms - twilio provider', () => {
-        beforeEach(() => {
-            process.env.SMS_PROVIDER = 'twilio';
-        });
-
-        it('returns skipped when credentials are missing', async () => {
-            const result = await sendSms('+251911234567', 'Message');
-            expect(result.success).toBe(false);
-            expect(result.skipped).toBe(true);
-            expect(result.provider).toBe('twilio');
-        });
-
-        it('returns success on successful send', async () => {
-            process.env.TWILIO_ACCOUNT_SID = 'ACtest';
-            process.env.TWILIO_AUTH_TOKEN = 'token';
-            process.env.TWILIO_FROM_NUMBER = '+10000000001';
-            fetchSpy.mockResolvedValueOnce({
-                ok: true,
-                status: 201,
-                json: async () => ({ sid: 'SM123', status: 'queued' }),
-            } as Response);
-
-            const result = await sendSms('+251911234567', 'Message');
-            expect(result.success).toBe(true);
-            expect(result.provider).toBe('twilio');
-        });
-
-        it('returns failure when HTTP response is not ok', async () => {
-            process.env.TWILIO_ACCOUNT_SID = 'ACtest';
-            process.env.TWILIO_AUTH_TOKEN = 'token';
-            process.env.TWILIO_FROM_NUMBER = '+10000000001';
-            fetchSpy.mockResolvedValueOnce({
-                ok: false,
-                status: 400,
-                text: async () => 'Bad Request',
-            } as Response);
-
-            const result = await sendSms('+251911234567', 'Message');
-            expect(result.success).toBe(false);
-            expect(result.provider).toBe('twilio');
-        });
-
-        it('calls the correct Twilio endpoint with Basic auth', async () => {
-            process.env.TWILIO_ACCOUNT_SID = 'ACtest';
-            process.env.TWILIO_AUTH_TOKEN = 'token';
-            process.env.TWILIO_FROM_NUMBER = '+10000000001';
-            fetchSpy.mockResolvedValueOnce({
-                ok: true,
-                status: 201,
-                json: async () => ({}),
-            } as Response);
-
-            await sendSms('+251911234567', 'Message');
-
-            expect(fetchSpy.mock.calls[0][0]).toContain('ACtest/Messages.json');
-            const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<
-                string,
-                string
-            >;
-            expect(headers.Authorization).toMatch(/^Basic /);
         });
     });
 

@@ -11,7 +11,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createPaymentLifecycleEvent, type PaymentLifecycleEvent } from '@/lib/events/contracts';
+import { createPaymentLifecycleEvent } from '@/lib/events/contracts';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { verifyChapaTransaction } from '@/lib/services/chapaService';
 import { processPaymentLifecycleEvent } from '@/lib/payments/payment-event-consumer';
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         provider,
         provider_transaction_id,
         retry_count,
-        trigger,
+        ..._rest
     } = parsed.data;
     let resolvedOrderId = order_id;
     let resolvedProviderTxRef = provider_transaction_id;

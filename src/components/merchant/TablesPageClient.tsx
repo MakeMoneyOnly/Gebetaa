@@ -83,7 +83,7 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
                 }
 
                 toast.success('Table status updated');
-            } catch (error) {
+            } catch (_error) {
                 // Revert on error
                 setTables(prev =>
                     prev.map(t =>

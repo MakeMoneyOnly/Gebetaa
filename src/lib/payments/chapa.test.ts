@@ -90,7 +90,7 @@ describe('ChapaProvider', () => {
             } as Response);
 
             const provider = new ChapaProvider('valid-key');
-            const result = await provider.initiatePayment({
+            const _result = await provider.initiatePayment({
                 amount: 100,
                 currency: 'ETB',
             });

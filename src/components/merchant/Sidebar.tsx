@@ -17,7 +17,6 @@ import {
     CreditCard,
     Landmark,
     BarChart3,
-    Boxes,
     ChevronRight,
     Search,
 } from 'lucide-react';
@@ -33,7 +32,6 @@ const MENU_ITEMS = [
     { label: 'Channels', href: '/merchant/channels', icon: RadioTower },
     { label: 'Staff', href: '/merchant/staff', icon: Users },
     { label: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
-    { label: 'Inventory', href: '/merchant/inventory', icon: Boxes },
     { label: 'Finance', href: '/merchant/finance', icon: Landmark },
 ];
 
@@ -55,7 +53,6 @@ export function Sidebar() {
                 'Channels',
                 'Staff',
                 'Analytics',
-                'Inventory',
                 'Finance',
             ],
             admin: [
@@ -67,22 +64,12 @@ export function Sidebar() {
                 'Channels',
                 'Staff',
                 'Analytics',
-                'Inventory',
                 'Finance',
             ],
-            manager: [
-                'Dashboard',
-                'Orders',
-                'Menu',
-                'Tables & QR',
-                'Guests',
-                'Staff',
-                'Inventory',
-                'Finance',
-            ],
-            kitchen: ['Orders', 'Menu', 'Inventory'],
+            manager: ['Dashboard', 'Orders', 'Menu', 'Tables & QR', 'Guests', 'Staff', 'Finance'],
+            kitchen: ['Orders', 'Menu'],
             waiter: ['Orders', 'Tables & QR', 'Menu'],
-            bar: ['Orders', 'Menu', 'Inventory', 'Finance'],
+            bar: ['Orders', 'Menu', 'Finance'],
         };
 
         const allowed = rules[role] || [];

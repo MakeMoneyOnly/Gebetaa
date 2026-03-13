@@ -1,4 +1,4 @@
-id; /**
+/**
  * Server-side data fetching utilities for dashboard pages.
  * These functions are designed to be called from Server Components.
  */
@@ -245,7 +245,6 @@ export async function getCommandCenterData(
         const grossSales = completedOrders.reduce((sum, o) => sum + (o.total_price ?? 0), 0);
         const avgTicketTime = calculateAvgTicketTime(orders);
         const activeTables = tables.filter(t => t.status === 'occupied').length;
-        const totalTables = tables.length;
 
         // Calculate unique tables today
         const uniqueTablesToday = new Set(
@@ -411,7 +410,7 @@ export async function getTablesPageData(): Promise<TablesPageData | null> {
  */
 export async function getOrdersPageData(
     status?: string,
-    search?: string
+    _search?: string
 ): Promise<OrdersPageData | null> {
     const supabase = await createClient();
     const restaurantId = await getRestaurantId();

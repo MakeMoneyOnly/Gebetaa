@@ -137,31 +137,6 @@ export class MenuPage {
     }
 }
 
-export class InventoryPage {
-    constructor(private readonly page: Page) {}
-
-    async assertLoaded() {
-        await expect(this.page.getByRole('heading', { name: /Inventory & Cost/i })).toBeVisible();
-        await expect(this.page.getByRole('heading', { name: 'Inventory Table' })).toBeVisible();
-    }
-
-    async createInventoryItem() {
-        await expect(this.page.getByText('Loading inventory...')).toHaveCount(0, {
-            timeout: 15_000,
-        });
-        await this.page.getByPlaceholder('Item name').fill('QA Flour');
-        await this.page.getByPlaceholder('SKU').fill('qa-flour-01');
-        await this.page.getByPlaceholder('UOM').fill('kg');
-        await this.page.getByPlaceholder('Opening stock').fill('25');
-        await this.page.getByPlaceholder('Reorder level').fill('5');
-        await this.page.getByPlaceholder('Cost/UOM').fill('60');
-        await this.page.getByRole('button', { name: /^Add$/ }).click();
-
-        await expect(this.page.getByText('Inventory item created.')).toBeVisible();
-        await expect(this.page.getByRole('rowheader', { name: /QA Flour/i })).toBeVisible();
-    }
-}
-
 export class AnalyticsPage {
     constructor(private readonly page: Page) {}
 

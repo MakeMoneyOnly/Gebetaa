@@ -1,249 +1,260 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { Landmark } from 'lucide-react';
+import { AccountingExportPanel } from '@/components/merchant/AccountingExportPanel';
+import {
+    PaymentMethodBreakdown,
+    type PaymentRow,
+} from '@/components/merchant/PaymentMethodBreakdown';
+import {
+    PayoutReconciliationTable,
+    type PayoutRow,
+    type ReconciliationRow,
+} from '@/components/merchant/PayoutReconciliationTable';
+import { RefundQueue, type RefundRow } from '@/components/merchant/RefundQueue';
+import {
+    SettlementSummaryCard,
+    type SettlementSummaryTotals,
+} from '@/components/merchant/SettlementSummaryCard';
+import { useAppLocale } from '@/hooks/useAppLocale';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
-import type {
-    FinancePageData,
-    PaymentSummary,
-    RefundSummary,
-    PayoutSummary,
-} from '@/lib/services/dashboardDataService';
+import { getP2Copy } from '@/lib/i18n/p2';
 
 interface FinancePageClientProps {
-    initialData: FinancePageData | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    initialData?: any;
 }
 
-export function FinancePageClient({ initialData }: FinancePageClientProps) {
-    const { markLoaded } = usePageLoadGuard('finance');
+type DatasetKey = 'payments' | 'refunds' | 'payouts' | 'reconciliation';
 
-    const [payments, setPayments] = useState<PaymentSummary[]>(initialData?.payments ?? []);
-    const [refunds, setRefunds] = useState<RefundSummary[]>(initialData?.refunds ?? []);
-    const [payouts, setPayouts] = useState<PayoutSummary[]>(initialData?.payouts ?? []);
-    const [totals, setTotals] = useState(
-        initialData?.totals ?? { payments_gross: 0, refunds_total: 0, payouts_net: 0 }
-    );
-    const [refreshing, setRefreshing] = useState(false);
-    const [activeTab, setActiveTab] = useState<'payments' | 'refunds' | 'payouts'>('payments');
+export function FinancePageClient(_props: FinancePageClientProps) {
+    const locale = useAppLocale();
+    const copy = getP2Copy(locale);
+    const { loading, markLoaded } = usePageLoadGuard('finance');
+    const [error, setError] = useState<string | null>(null);
+    const [payments, setPayments] = useState<PaymentRow[]>([]);
+    const [refunds, setRefunds] = useState<RefundRow[]>([]);
+    const [payouts, setPayouts] = useState<PayoutRow[]>([]);
+    const [reconciliationEntries, setReconciliationEntries] = useState<ReconciliationRow[]>([]);
+    const [creatingRefund, setCreatingRefund] = useState(false);
+    const [exporting, setExporting] = useState<DatasetKey | null>(null);
+    const [refreshToken, setRefreshToken] = useState(0);
 
-    const restaurantId = initialData?.restaurant_id;
+    const [paymentsTotals, setPaymentsTotals] = useState<{ gross: number }>({ gross: 0 });
+    const [refundsTotals, setRefundsTotals] = useState<{ total_amount: number }>({
+        total_amount: 0,
+    });
+    const [payoutsTotals, setPayoutsTotals] = useState<{ net: number }>({ net: 0 });
+    const [exceptionsSummary, setExceptionsSummary] = useState<{ total_delta: number }>({
+        total_delta: 0,
+    });
 
-    useEffect(() => {
-        if (initialData) {
+    const loadAll = useCallback(async () => {
+        try {
+            setError(null);
+            const [paymentsRes, refundsRes, payoutsRes, reconciliationRes, exceptionsRes] =
+                await Promise.all([
+                    fetch('/api/finance/payments?limit=200', { method: 'GET', cache: 'no-store' }),
+                    fetch('/api/finance/refunds?limit=200', { method: 'GET', cache: 'no-store' }),
+                    fetch('/api/finance/payouts?limit=200', { method: 'GET', cache: 'no-store' }),
+                    fetch('/api/finance/reconciliation?limit=200', {
+                        method: 'GET',
+                        cache: 'no-store',
+                    }),
+                    fetch('/api/finance/exceptions?limit=200', {
+                        method: 'GET',
+                        cache: 'no-store',
+                    }),
+                ]);
+
+            const [
+                paymentsPayload,
+                refundsPayload,
+                payoutsPayload,
+                reconciliationPayload,
+                exceptionsPayload,
+            ] = await Promise.all([
+                paymentsRes.json(),
+                refundsRes.json(),
+                payoutsRes.json(),
+                reconciliationRes.json(),
+                exceptionsRes.json(),
+            ]);
+
+            if (!paymentsRes.ok) {
+                throw new Error(paymentsPayload?.error ?? 'Failed to load payments.');
+            }
+            if (!refundsRes.ok) {
+                throw new Error(refundsPayload?.error ?? 'Failed to load refunds.');
+            }
+            if (!payoutsRes.ok) {
+                throw new Error(payoutsPayload?.error ?? 'Failed to load payouts.');
+            }
+            if (!reconciliationRes.ok) {
+                throw new Error(reconciliationPayload?.error ?? 'Failed to load reconciliation.');
+            }
+            if (!exceptionsRes.ok) {
+                throw new Error(exceptionsPayload?.error ?? 'Failed to load exceptions.');
+            }
+
+            setPayments((paymentsPayload?.data?.payments ?? []) as PaymentRow[]);
+            setRefunds((refundsPayload?.data?.refunds ?? []) as RefundRow[]);
+            setPayouts((payoutsPayload?.data?.payouts ?? []) as PayoutRow[]);
+            setReconciliationEntries(
+                (reconciliationPayload?.data?.entries ?? []) as ReconciliationRow[]
+            );
+
+            setPaymentsTotals({ gross: Number(paymentsPayload?.data?.totals?.gross ?? 0) });
+            setRefundsTotals({
+                total_amount: Number(refundsPayload?.data?.totals?.total_amount ?? 0),
+            });
+            setPayoutsTotals({ net: Number(payoutsPayload?.data?.totals?.net ?? 0) });
+            setExceptionsSummary({
+                total_delta: Number(exceptionsPayload?.data?.summary?.total_delta ?? 0),
+            });
+        } catch (loadError) {
+            console.error(loadError);
+            const message =
+                loadError instanceof Error ? loadError.message : 'Failed to load finance data.';
+            setError(message);
+            setPayments([]);
+            setRefunds([]);
+            setPayouts([]);
+            setReconciliationEntries([]);
+            setPaymentsTotals({ gross: 0 });
+            setRefundsTotals({ total_amount: 0 });
+            setPayoutsTotals({ net: 0 });
+            setExceptionsSummary({ total_delta: 0 });
+        } finally {
             markLoaded();
         }
-    }, [initialData, markLoaded]);
+    }, [markLoaded]);
 
-    const refreshData = useCallback(async () => {
-        if (!restaurantId) return;
-        setRefreshing(true);
+    useEffect(() => {
+        void loadAll();
+    }, [loadAll, refreshToken]);
+
+    const refresh = () => setRefreshToken(value => value + 1);
+
+    const settlementTotals = useMemo<SettlementSummaryTotals>(
+        () => ({
+            gross: paymentsTotals.gross,
+            refunds: refundsTotals.total_amount,
+            payoutNet: payoutsTotals.net,
+            exceptionDelta: exceptionsSummary.total_delta,
+        }),
+        [
+            exceptionsSummary.total_delta,
+            paymentsTotals.gross,
+            payoutsTotals.net,
+            refundsTotals.total_amount,
+        ]
+    );
+
+    const handleCreateRefund = async (payload: {
+        payment_reference: string;
+        amount: number;
+        reason: string;
+    }) => {
         try {
-            const response = await fetch('/api/finance');
+            setCreatingRefund(true);
+            const response = await fetch('/api/finance/refunds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
             const result = await response.json();
-            if (response.ok) {
-                setPayments(result.data?.payments ?? []);
-                setRefunds(result.data?.refunds ?? []);
-                setPayouts(result.data?.payouts ?? []);
-                setTotals(
-                    result.data?.totals ?? { payments_gross: 0, refunds_total: 0, payouts_net: 0 }
-                );
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to submit refund.');
             }
-        } catch (error) {
-            console.error('Failed to refresh finance data:', error);
-            toast.error('Failed to refresh finance data');
+            toast.success('Refund request submitted.');
+            refresh();
+        } catch (refundError) {
+            toast.error(
+                refundError instanceof Error ? refundError.message : 'Failed to submit refund.'
+            );
         } finally {
-            setRefreshing(false);
+            setCreatingRefund(false);
         }
-    }, [restaurantId]);
+    };
 
-    const handleExport = useCallback(async () => {
+    const handleExport = async (dataset: DatasetKey) => {
         try {
-            const response = await fetch('/api/finance/export');
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `finance-report-${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
-                window.URL.revokeObjectURL(url);
-                toast.success('Report exported');
-            } else {
-                throw new Error('Export failed');
+            setExporting(dataset);
+            const response = await fetch(`/api/finance/export?dataset=${dataset}&format=csv`, {
+                method: 'GET',
+                cache: 'no-store',
+            });
+            if (!response.ok) {
+                const payload = await response.json();
+                throw new Error(payload?.error ?? 'Failed to export finance dataset.');
             }
-        } catch (error) {
-            toast.error('Failed to export report');
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `${dataset}-${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            URL.revokeObjectURL(url);
+            toast.success(`${dataset} export downloaded.`);
+        } catch (exportError) {
+            toast.error(
+                exportError instanceof Error ? exportError.message : 'Failed to export dataset.'
+            );
+        } finally {
+            setExporting(null);
         }
-    }, []);
+    };
 
     return (
         <div className="min-h-screen space-y-6 pb-20">
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-                <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">
-                        Finance
-                    </h1>
-                    <p className="font-medium text-gray-500">
-                        Track payments, refunds, and payouts.
-                    </p>
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={refreshData}
-                        disabled={refreshing}
-                        className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:opacity-50"
-                    >
-                        {refreshing ? 'Refreshing...' : 'Refresh'}
-                    </button>
-                    <button
-                        onClick={handleExport}
-                        className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-gray-800"
-                    >
-                        Export
-                    </button>
+            <div>
+                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                    {copy.finance.title}
+                </h1>
+                <p className="font-medium text-gray-500">{copy.finance.subtitle}</p>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <Landmark className="h-4 w-4 text-blue-600" />
+                    {copy.finance.operationsCenter}
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-                <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
-                    <p className="text-sm font-medium text-emerald-600">Gross Payments</p>
-                    <p className="text-2xl font-bold text-emerald-700">
-                        {totals.payments_gross.toLocaleString()} ETB
-                    </p>
+            {error ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                    {error}
                 </div>
-                <div className="rounded-2xl bg-red-50 p-4 ring-1 ring-red-100">
-                    <p className="text-sm font-medium text-red-600">Total Refunds</p>
-                    <p className="text-2xl font-bold text-red-700">
-                        {totals.refunds_total.toLocaleString()} ETB
-                    </p>
-                </div>
-                <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100">
-                    <p className="text-sm font-medium text-blue-600">Net Payouts</p>
-                    <p className="text-2xl font-bold text-blue-700">
-                        {totals.payouts_net.toLocaleString()} ETB
-                    </p>
-                </div>
+            ) : null}
+
+            <SettlementSummaryCard loading={loading} totals={settlementTotals} locale={locale} />
+
+            <div className="grid gap-6 xl:grid-cols-2">
+                <PaymentMethodBreakdown loading={loading} payments={payments} locale={locale} />
+                <RefundQueue
+                    loading={loading}
+                    creating={creatingRefund}
+                    refunds={refunds}
+                    payments={payments}
+                    onCreateRefund={handleCreateRefund}
+                    locale={locale}
+                />
             </div>
 
-            <div className="flex gap-2">
-                {(['payments', 'refunds', 'payouts'] as const).map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`rounded-xl px-4 py-2 text-sm font-bold capitalize ${
-                            activeTab === tab
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                        {tab}
-                    </button>
-                ))}
-            </div>
+            <PayoutReconciliationTable
+                loading={loading}
+                payouts={payouts}
+                reconciliationEntries={reconciliationEntries}
+                locale={locale}
+            />
 
-            <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-gray-100">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-left">
-                        <thead className="border-b border-gray-100 bg-gray-50/60">
-                            <tr className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
-                                <th className="px-5 py-4">ID</th>
-                                <th className="px-5 py-4">Amount</th>
-                                <th className="px-5 py-4">Status</th>
-                                <th className="px-5 py-4">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {activeTab === 'payments' && payments.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
-                                        No payments found
-                                    </td>
-                                </tr>
-                            )}
-                            {activeTab === 'refunds' && refunds.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
-                                        No refunds found
-                                    </td>
-                                </tr>
-                            )}
-                            {activeTab === 'payouts' && payouts.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
-                                        No payouts found
-                                    </td>
-                                </tr>
-                            )}
-                            {activeTab === 'payments' &&
-                                payments.map(item => (
-                                    <tr
-                                        key={item.id}
-                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
-                                    >
-                                        <td className="px-5 py-4 text-sm font-medium text-gray-900">
-                                            {item.id.slice(0, 8)}
-                                        </td>
-                                        <td className="px-5 py-4 text-sm font-bold text-gray-900">
-                                            {item.amount.toLocaleString()} {item.currency}
-                                        </td>
-                                        <td className="px-5 py-4">
-                                            <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700">
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-5 py-4 text-sm text-gray-500">
-                                            {new Date(item.created_at).toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                            {activeTab === 'refunds' &&
-                                refunds.map(item => (
-                                    <tr
-                                        key={item.id}
-                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
-                                    >
-                                        <td className="px-5 py-4 text-sm font-medium text-gray-900">
-                                            {item.id.slice(0, 8)}
-                                        </td>
-                                        <td className="px-5 py-4 text-sm font-bold text-red-600">
-                                            {item.amount.toLocaleString()} {item.currency}
-                                        </td>
-                                        <td className="px-5 py-4">
-                                            <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-5 py-4 text-sm text-gray-500">
-                                            {new Date(item.created_at).toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                            {activeTab === 'payouts' &&
-                                payouts.map(item => (
-                                    <tr
-                                        key={item.id}
-                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
-                                    >
-                                        <td className="px-5 py-4 text-sm font-medium text-gray-900">
-                                            {item.id.slice(0, 8)}
-                                        </td>
-                                        <td className="px-5 py-4 text-sm font-bold text-blue-600">
-                                            {item.amount.toLocaleString()} {item.currency}
-                                        </td>
-                                        <td className="px-5 py-4">
-                                            <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-5 py-4 text-sm text-gray-500">
-                                            {new Date(item.created_at).toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <AccountingExportPanel exporting={exporting} onExport={handleExport} />
         </div>
     );
 }

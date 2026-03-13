@@ -23,7 +23,7 @@ const mockSupabaseFrom = () => ({
     single: vi.fn().mockResolvedValue({ data: null, error: null }),
 });
 
-const makeSupabase = (fromOverride?: Record<string, unknown>) => ({
+const _makeSupabase = (fromOverride?: Record<string, unknown>) => ({
     from: vi.fn().mockReturnValue({ ...mockSupabaseFrom(), ...(fromOverride ?? {}) }),
     auth: { getUser: vi.fn() },
 });

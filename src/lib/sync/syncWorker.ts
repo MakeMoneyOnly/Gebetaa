@@ -5,14 +5,12 @@
  * Handles background sync between local PowerSync and server
  */
 
-import { getPowerSync } from './powersync-config';
 import {
     getPendingSyncOperations,
     markSyncOperationCompleted,
     markSyncOperationFailed,
     getSyncQueueStatus,
 } from './idempotency';
-import { processPrintQueue } from './printerFallback';
 
 /**
  * Sync worker configuration
@@ -144,9 +142,9 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
 
         const syncResult = await processSyncOperations();
 
-        let printerResult = { processed: 0, succeeded: 0, failed: 0 };
+        let _printerResult = { processed: 0, succeeded: 0, failed: 0 };
         if (cfg.enablePrinterQueue) {
-            printerResult = await processPrinterQueue();
+            _printerResult = await processPrinterQueue();
         }
 
         lastSyncAt = new Date().toISOString();

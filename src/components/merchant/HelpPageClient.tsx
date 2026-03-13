@@ -3,7 +3,6 @@
 import React, { useCallback, useState } from 'react';
 import { BookOpen, Loader2, Search, Send } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { cn } from '@/lib/utils';
 
 interface SupportArticle {
     id: string;

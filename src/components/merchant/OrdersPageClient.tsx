@@ -47,7 +47,7 @@ function getNextStatus(status: string | null): string | null {
 
 export function OrdersPageClient({ initialData }: OrdersPageClientProps) {
     const searchParams = useSearchParams();
-    const { loading, markLoaded } = usePageLoadGuard('orders');
+    const { loading: _loading, markLoaded } = usePageLoadGuard('orders');
 
     // Initialize state with server data - NO loading flash!
     const [orders, setOrders] = useState<OrderSummary[]>(initialData?.orders ?? []);
@@ -185,7 +185,7 @@ export function OrdersPageClient({ initialData }: OrdersPageClientProps) {
             }
 
             toast.success('Service request completed');
-        } catch (error) {
+        } catch (_error) {
             setServiceRequests(prev =>
                 prev.map(r => (r.id === requestId ? { ...r, status: 'pending' } : r))
             );

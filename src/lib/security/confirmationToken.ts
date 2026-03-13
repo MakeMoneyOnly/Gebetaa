@@ -134,7 +134,7 @@ export function verifyConfirmationToken(
         }
 
         return { valid: true, resourceId };
-    } catch (error) {
+    } catch (_error) {
         return { valid: false, reason: 'Invalid confirmation token format' };
     }
 }

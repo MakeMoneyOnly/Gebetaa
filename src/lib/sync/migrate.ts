@@ -9,7 +9,7 @@ import { getPowerSync } from './powersync-config';
 import { generateIdempotencyKey } from './idempotency';
 
 // Import Dexie types for migration (if Dexie is still installed)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type DexieDatabase = any;
 
 /**
@@ -179,7 +179,7 @@ export async function migrateCartLocalStorageToPowerSync(): Promise<{
             return { migrated: true }; // Nothing to migrate
         }
 
-        const cart = JSON.parse(stored);
+        const _cart = JSON.parse(stored);
 
         // Cart data is session-specific, so we just clear it
         // In a real migration, you'd want to preserve the items

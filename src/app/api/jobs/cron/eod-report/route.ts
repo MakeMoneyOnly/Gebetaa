@@ -41,6 +41,7 @@ interface EODReportData {
         cancelledOrders: number;
         totalRevenue: number;
         totalVat: number;
+        totalDiscount: number;
         averageOrderValue: number;
     };
     ordersByStatus: Record<string, number>;
@@ -204,6 +205,7 @@ async function generateEODReport(
             cancelledOrders: cancelledOrders.length,
             totalRevenue,
             totalVat,
+            totalDiscount,
             averageOrderValue,
         },
         ordersByStatus,

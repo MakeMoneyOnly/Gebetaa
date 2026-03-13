@@ -132,12 +132,7 @@ export async function POST(request: Request) {
     // Rate limiting for order creation
     const nextRequest = request as NextRequest;
     const { fingerprint, ipAddress, userAgent } = getClientIdentifier(nextRequest);
-    const rateLimitResult = await logRateLimitedRequest(
-        fingerprint,
-        'device_order_create',
-        ipAddress,
-        userAgent
-    );
+    await logRateLimitedRequest(fingerprint, 'device_order_create', ipAddress, userAgent);
 
     const ctx = await getDeviceContext(request);
     if (!ctx.ok) return ctx.response;

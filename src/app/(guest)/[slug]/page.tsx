@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { Drawer } from 'vaul';
 import { createClient } from '@/lib/supabase';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -102,7 +103,7 @@ function MenuContent() {
     const [guestSessionId, setGuestSessionId] = useState<string | null>(null);
     const [authState, setAuthState] = useState<'guest' | 'authenticated'>('guest');
     const [showPreMenuSplash, setShowPreMenuSplash] = useState(true);
-    const [sessionSyncing, setSessionSyncing] = useState(false);
+    const [_sessionSyncing, setSessionSyncing] = useState(false);
     const [authView, setAuthView] = useState<'none' | 'login' | 'signup'>('none');
     const [authLoading, setAuthLoading] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
@@ -685,10 +686,11 @@ function MenuContent() {
     if (showPreMenuSplash) {
         return (
             <main className="app-container relative h-[100dvh] overflow-hidden bg-white text-white">
-                <img
+                <Image
                     src="/splash-bg-opt.webp"
                     alt="Splash Background"
-                    className="absolute inset-0 z-0 h-full w-full object-cover"
+                    fill
+                    className="object-cover"
                 />
 
                 <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-25 pb-[calc(10vh-30px)]">

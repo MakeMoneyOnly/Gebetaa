@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, _beforeEach } from 'vitest';
 import { listActiveDiscountsForRestaurant, getDiscountById, prepareOrderDiscount } from './service';
 
 // Create a mock supabase builder
-function createMockQueryBuilder(result: unknown) {
+function _createMockQueryBuilder(result: unknown) {
     const builder: Record<string, unknown> = {};
     const methods = ['select', 'eq', 'order', 'in', 'gte', 'maybeSingle', 'insert'];
     for (const m of methods) {

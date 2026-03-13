@@ -787,7 +787,7 @@ export default function TerminalPage() {
                                             <div className="flex-1 overflow-y-auto pr-2">
                                                 {(splitPayload?.splits ?? []).length > 0 ? (
                                                     <div className="space-y-4 pb-4">
-                                                        {splitPayload!.splits.map((split, i) => {
+                                                        {splitPayload!.splits.map(split => {
                                                             const paid =
                                                                 splitPaidById.get(split.id) ?? 0;
                                                             const remaining = Number(

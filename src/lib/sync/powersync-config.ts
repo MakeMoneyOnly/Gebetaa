@@ -19,7 +19,7 @@ interface PowerSyncDatabase {
     close(): Promise<void>;
 }
 
-interface PowerSyncAdapter {
+interface _PowerSyncAdapter {
     dbFilename: string;
 }
 

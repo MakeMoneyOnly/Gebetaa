@@ -74,7 +74,7 @@ export function getSurfaceForOrderMode(isOnlineOrder: boolean): PaymentSessionSu
     return isOnlineOrder ? 'online_order' : 'guest_qr';
 }
 
-export function getDefaultProviderForMethod(method?: string | null): PaymentProviderName {
+export function getDefaultProviderForMethod(_method?: string | null): PaymentProviderName {
     return 'chapa';
 }
 

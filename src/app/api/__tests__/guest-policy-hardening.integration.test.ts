@@ -1,8 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
@@ -22,7 +20,7 @@ function hasRequiredSecrets(): boolean {
         const url = new URL(supabaseUrl);
         console.log('Supabase URL validated:', url.host);
         return true;
-    } catch (e) {
+    } catch {
         console.log('Invalid Supabase URL:', supabaseUrl);
         return false;
     }

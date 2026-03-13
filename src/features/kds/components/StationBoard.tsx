@@ -8,7 +8,6 @@ import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useKDSRealtime } from '@/hooks/useKDSRealtime';
-import { usePowerSync } from '@/lib/sync';
 import {
     getOfflineKdsQueueCount,
     getPendingKdsActions,
@@ -18,14 +17,14 @@ import {
 
 // Keep old imports for backward compatibility during transition
 // TODO: Remove after full migration to PowerSync
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const _enqueueKdsAction = 0;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const _getOfflineKdsQueue = 0;
 const _incrementKdsActionAttempts = 0;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const _markKdsQueueSynced = 0;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const _removeQueuedKdsAction = 0;
 
 type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee';
@@ -389,7 +388,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
             }
         },
         // alertPolicy intentionally omitted — read via alertPolicyRef instead.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
         [restaurantId, station]
     );
 
@@ -585,7 +584,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                 }
 
                 if (!isOnline) {
-                    const queued = await addKdsActionToQueue({
+                    const _queued = await addKdsActionToQueue({
                         orderId,
                         itemId,
                         kdsItemId,

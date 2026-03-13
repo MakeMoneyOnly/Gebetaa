@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { isAbortError } from './useSafeFetch';
 
 /**
  * A hook that provides an abortable effect with automatic cleanup.

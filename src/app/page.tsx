@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, Utensils, Star } from 'lucide-react';
+import { Utensils, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Register GSAP plugins safely
@@ -32,7 +32,7 @@ function MagneticButton({
         const btn = buttonRef.current;
         if (!btn) return;
 
-        let ctx = gsap.context(() => {
+        const ctx = gsap.context(() => {
             btn.addEventListener('mouseenter', () => {
                 gsap.to(btn, {
                     scale: 1.03,
@@ -568,13 +568,16 @@ function OrderShuffler() {
 }
 
 function TelemetryFeed() {
-    const logs = [
-        '[14:32:05] Order #1847 received — Table 8',
-        '[14:32:07] Kitchen acknowledged — ETA 12min',
-        '[14:32:15] Order #1848 received — Delivery',
-        '[14:32:18] Payment confirmed — Telebirr — 450 ETB',
-        '[14:32:22] Order #1847 preparing...',
-    ];
+    const logs = useMemo(
+        () => [
+            '[14:32:05] Order #1847 received — Table 8',
+            '[14:32:07] Kitchen acknowledged — ETA 12min',
+            '[14:32:15] Order #1848 received — Delivery',
+            '[14:32:18] Payment confirmed — Telebirr — 450 ETB',
+            '[14:32:22] Order #1847 preparing...',
+        ],
+        []
+    );
     const [visibleLines, setVisibleLines] = useState<string[]>([]);
     const [currentLineIndex, setCurrentLineIndex] = useState(0);
     const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
@@ -600,7 +603,7 @@ function TelemetryFeed() {
             }, 1000); // Wait before next line
             return () => clearTimeout(timeout);
         }
-    }, [currentLineIndex, currentCharacterIndex, logs]);
+    }, [currentLineIndex, currentCharacterIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <div className="font-jetbrains text-Slate-300 h-full w-full pt-6 text-xs">

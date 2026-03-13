@@ -17,7 +17,6 @@ import {
     calculateLineTotal,
     calculateChange,
     isPaymentSufficient,
-    roundToSantim,
     SANTIM_PER_BIRR,
 } from '@/lib/utils/monetary';
 

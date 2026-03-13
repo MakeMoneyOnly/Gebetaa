@@ -6,13 +6,7 @@
  */
 
 import { getPowerSync } from './powersync-config';
-import {
-    generateIdempotencyKey,
-    queueSyncOperation,
-    markIdempotencyKeyCompleted,
-    isIdempotencyKeyUsed,
-} from './idempotency';
-import type { Database } from '@/types/database';
+import { generateIdempotencyKey, queueSyncOperation } from './idempotency';
 
 /**
  * Order status for offline tracking

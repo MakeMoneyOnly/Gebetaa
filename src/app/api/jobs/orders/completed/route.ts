@@ -3,18 +3,17 @@
  *
  * Job handler for order.completed events.
  * Processes loyalty points accrual, ERCA invoice submission,
- * inventory deduction, and other post-order background tasks.
+ * and other post-order background tasks.
  *
  * This is triggered asynchronously via QStash when an order
  * status changes to 'completed'.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createGebetaEvent, type GebetaEventName } from '@/lib/events/contracts';
+import { createGebetaEvent } from '@/lib/events/contracts';
 import { enqueueInternalJob, publishEvent } from '@/lib/events/runtime';
 import { accrueLoyaltyPointsForCompletedOrder } from '@/lib/services/guestLoyaltyService';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import { randomUUID } from 'crypto';
 
 const OrderCompletedEventSchema = z.object({
     order_id: z.string().uuid(),
@@ -133,11 +132,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const results: {
         loyalty: { success: boolean; pointsAwarded?: number; error?: string };
         erca: { queued: boolean; error?: string };
-        inventory: { success: boolean; error?: string };
     } = {
         loyalty: { success: false },
         erca: { queued: false },
-        inventory: { success: false },
     };
 
     // Process loyalty points (only for authenticated guest orders)
@@ -152,10 +149,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
     results.erca = { queued: true };
 
-    // Inventory deduction would be handled here in Phase 2
-    // For now, mark as success since we don't have the trigger implemented yet
-    results.inventory = { success: true };
-
     // Publish completion event to stream for other consumers
     const completionEvent = createGebetaEvent('order.completed', {
         order_id,
@@ -165,7 +158,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         processed: {
             loyalty: results.loyalty.success,
             erca: results.erca.queued,
-            inventory: results.inventory.success,
         },
     });
 
@@ -186,10 +178,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 erca: {
                     queued: results.erca.queued,
                     error: results.erca.error,
-                },
-                inventory: {
-                    success: results.inventory.success,
-                    error: results.inventory.error,
                 },
             },
         },

@@ -15,12 +15,7 @@ import React, {
     useCallback,
     type ReactNode,
 } from 'react';
-import {
-    initPowerSync,
-    getPowerSync,
-    getPowerSyncConfig,
-    type PowerSyncDatabase,
-} from './powersync-config';
+import { initPowerSync, type PowerSyncDatabase } from './powersync-config';
 
 // Use unknown since @powersync/core types may not be available yet
 type PowerSyncDb = PowerSyncDatabase | null;
@@ -124,7 +119,7 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
                 const status = await worker.getStatus();
                 setLastSyncAt(status.lastSyncAt);
                 setPendingCount(status.pendingOperations);
-            } catch (err) {
+            } catch (_err) {
                 // Silently ignore errors in status update
             }
         };

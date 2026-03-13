@@ -28,7 +28,6 @@ test.describe('Merchant Dashboard full-session audit', () => {
         await shell.gotoSection('/merchant/channels', /\/merchant\/channels$/);
         await shell.gotoSection('/merchant/staff', /\/merchant\/staff$/);
         await shell.gotoSection('/merchant/analytics', /\/merchant\/analytics$/);
-        await shell.gotoSection('/merchant/inventory', /\/merchant\/inventory$/);
         await shell.gotoSection('/merchant/finance', /\/merchant\/finance$/);
         await shell.gotoSection('/merchant/settings', /\/merchant\/settings$/);
     });

@@ -594,7 +594,7 @@ export default function OnboardingPage() {
         }
         if (step === 4) return true;
         return false;
-    }, [step, data]);
+    }, [step, data, loadingBanks]);
 
     const go = (newStep: number) => {
         setDirection(newStep > step ? 1 : -1);

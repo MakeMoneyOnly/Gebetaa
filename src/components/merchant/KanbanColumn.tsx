@@ -21,9 +21,9 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({
-    id,
+    id: _id,
     title,
-    statuses,
+    statuses: _statuses,
     accent,
     dotColor,
     orders,

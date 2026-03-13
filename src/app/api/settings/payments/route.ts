@@ -203,7 +203,6 @@ export async function PATCH(request: Request) {
     const currentBankCode = String(current.chapa_settlement_bank_code ?? '').trim();
     const currentAccountName = String(current.chapa_settlement_account_name ?? '').trim();
     const currentSubaccountId = String(current.chapa_subaccount_id ?? '').trim();
-    const currentMaskedNumber = String(current.chapa_settlement_account_number_masked ?? '').trim();
 
     // Check if account details actually changed
     // Note: providedAccountNumber will be empty if the user didn't change the masked number

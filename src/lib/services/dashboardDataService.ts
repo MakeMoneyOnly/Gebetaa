@@ -270,51 +270,6 @@ export interface OnlineOrderingSettings {
     throttle_limit_per_15m: number;
 }
 
-export interface InventoryPageData {
-    items: InventoryItemSummary[];
-    recipes: RecipeSummary[];
-    purchase_orders: PurchaseOrderSummary[];
-    invoices: InvoiceSummary[];
-    restaurant_id: string;
-}
-
-export interface InventoryItemSummary {
-    id: string;
-    name: string;
-    sku: string | null;
-    uom: string;
-    current_stock: number;
-    reorder_level: number;
-    cost_per_unit: number;
-}
-
-export interface RecipeSummary {
-    id: string;
-    name: string;
-    output_qty: number;
-    output_uom: string;
-}
-
-export interface PurchaseOrderSummary {
-    id: string;
-    po_number: string | null;
-    supplier_name: string;
-    status: string;
-    total_amount: number;
-    currency: string;
-    created_at: string;
-}
-
-export interface InvoiceSummary {
-    id: string;
-    invoice_number: string | null;
-    supplier_name: string;
-    status: string;
-    total_amount: number;
-    currency: string;
-    due_at: string | null;
-}
-
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -977,52 +932,6 @@ export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
         partners,
         orders,
         settings: { ...defaultSettings, ...(settingsRes.data ?? {}) } as OnlineOrderingSettings,
-        restaurant_id: restaurantId,
-    };
-}
-
-/**
- * Fetches inventory page data for initial render.
- */
-export async function getInventoryPageData(): Promise<InventoryPageData | null> {
-    const supabase = await createClient();
-
-    const restaurantId = await resolveRestaurantId();
-    if (!restaurantId) {
-        return null;
-    }
-
-    const [itemsRes, recipesRes, posRes, invoicesRes] = await Promise.all([
-        supabase
-            .from('inventory_items')
-            .select('id, name, sku, uom, current_stock, reorder_level, cost_per_unit')
-            .eq('restaurant_id', restaurantId)
-            .order('name', { ascending: true })
-            .limit(200),
-        supabase
-            .from('recipes')
-            .select('id, name, output_qty, output_uom')
-            .eq('restaurant_id', restaurantId)
-            .order('name', { ascending: true }),
-        supabase
-            .from('purchase_orders')
-            .select('id, po_number, supplier_name, status, total_amount, currency, created_at')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(100),
-        supabase
-            .from('supplier_invoices')
-            .select('id, invoice_number, supplier_name, status, total_amount, currency, due_at')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(100),
-    ]);
-
-    return {
-        items: (itemsRes.data ?? []) as InventoryItemSummary[],
-        recipes: (recipesRes.data ?? []) as RecipeSummary[],
-        purchase_orders: (posRes.data ?? []) as PurchaseOrderSummary[],
-        invoices: (invoicesRes.data ?? []) as InvoiceSummary[],
         restaurant_id: restaurantId,
     };
 }

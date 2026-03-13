@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
     getSurfaceForOrderMode,
     getDefaultProviderForMethod,
@@ -314,7 +314,7 @@ describe('payment-sessions', () => {
             for (const { input, expected } of statuses) {
                 const updatedSession = makeSession({ status: expected });
                 const db = {
-                    from: vi.fn().mockImplementation((table: string) => ({
+                    from: vi.fn().mockImplementation((_table: string) => ({
                         select: vi.fn().mockReturnThis(),
                         insert: vi.fn().mockReturnThis(),
                         update: vi.fn().mockReturnThis(),

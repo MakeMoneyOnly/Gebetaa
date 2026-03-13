@@ -39,10 +39,10 @@ async function logFailedWebhook(orderData: Order, error: unknown): Promise<void>
 }
 
 /**
- * Forwards order data to n8n webhook with retry logic and exponential backoff
+ * Forwards order data to external webhook with retry logic and exponential backoff
  *
  * @param orderData - The order to forward
- * @param webhookUrl - The n8n webhook URL
+ * @param webhookUrl - The webhook URL
  * @param retries - Number of retry attempts (default: 3)
  * @param timeoutMs - Request timeout in milliseconds (default: 5000)
  * @returns WebhookResult indicating success/failure

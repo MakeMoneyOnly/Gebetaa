@@ -63,7 +63,6 @@ const OPTIONAL_ENV_VARS = [
     'QSTASH_TOKEN',
     'CHAPA_SECRET_KEY',
     'CHAPA_WEBHOOK_SECRET',
-    'SENDGRID_API_KEY',
     'SENTRY_AUTH_TOKEN',
 ];
 
@@ -168,7 +167,7 @@ async function checkRedis(): Promise<{
  * GET /api/health
  * Returns comprehensive health status
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 export async function GET(_request: NextRequest): Promise<NextResponse<HealthStatus>> {
     // Run checks in parallel for efficiency
     const [databaseCheck, redisCheck] = await Promise.all([checkDatabase(), checkRedis()]);

@@ -180,7 +180,7 @@ async function generateERCAInvoice(
  */
 async function submitToERCA(
     invoiceData: any,
-    vatNumber: string
+    _vatNumber: string
 ): Promise<{ success: boolean; reference?: string; error?: string }> {
     // This is a stub implementation
     // In production, this would call the actual ERCA API

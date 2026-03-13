@@ -1,4 +1,4 @@
-type SmsProvider = 'africas_talking' | 'twilio' | 'log';
+type SmsProvider = 'africas_talking' | 'log';
 
 export interface SmsSendResult {
     success: boolean;
@@ -17,7 +17,6 @@ export interface OrderStatusSmsInput {
 function resolveSmsProvider(): SmsProvider {
     const provider = (process.env.SMS_PROVIDER ?? 'log').trim().toLowerCase();
     if (provider === 'africas_talking' || provider === 'africas-talking') return 'africas_talking';
-    if (provider === 'twilio') return 'twilio';
     return 'log';
 }
 
@@ -131,50 +130,6 @@ async function sendWithAfricasTalking(toPhone: string, message: string): Promise
     return { success: true, provider: 'africas_talking' };
 }
 
-async function sendWithTwilio(toPhone: string, message: string): Promise<SmsSendResult> {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromPhone = process.env.TWILIO_FROM_NUMBER;
-
-    if (!accountSid || !authToken || !fromPhone) {
-        return {
-            success: false,
-            provider: 'twilio',
-            skipped: true,
-            error: 'Twilio credentials are not configured',
-        };
-    }
-
-    const body = new URLSearchParams({
-        To: normalizePhone(toPhone),
-        From: normalizePhone(fromPhone),
-        Body: message,
-    });
-
-    const response = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-        {
-            method: 'POST',
-            headers: {
-                Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: body.toString(),
-        }
-    );
-
-    if (!response.ok) {
-        const details = await response.text().catch(() => 'SMS provider error');
-        return {
-            success: false,
-            provider: 'twilio',
-            error: details.slice(0, 500),
-        };
-    }
-
-    return { success: true, provider: 'twilio' };
-}
-
 export async function sendSms(toPhone: string, message: string): Promise<SmsSendResult> {
     const normalizedPhone = normalizePhone(toPhone);
     if (!normalizedPhone) {
@@ -189,9 +144,6 @@ export async function sendSms(toPhone: string, message: string): Promise<SmsSend
     const provider = resolveSmsProvider();
     if (provider === 'africas_talking') {
         return sendWithAfricasTalking(normalizedPhone, message);
-    }
-    if (provider === 'twilio') {
-        return sendWithTwilio(normalizedPhone, message);
     }
 
     console.log('[SMS:log]', { toPhone: normalizedPhone, message });
