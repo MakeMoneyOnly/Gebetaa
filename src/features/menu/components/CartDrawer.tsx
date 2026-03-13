@@ -598,7 +598,10 @@ export function CartDrawer({
                                                             </h3>
                                                             <div className="flex flex-col items-end">
                                                                 <span className="text-brand-crimson font-black">
-                                                                    {formatCurrencyCompact(item.price * item.quantity)} ETB
+                                                                    {formatCurrencyCompact(
+                                                                        item.price * item.quantity
+                                                                    )}{' '}
+                                                                    ETB
                                                                 </span>
                                                             </div>
                                                         </div>

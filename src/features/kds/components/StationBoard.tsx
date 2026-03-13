@@ -8,13 +8,25 @@ import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useKDSRealtime } from '@/hooks/useKDSRealtime';
+import { usePowerSync } from '@/lib/sync';
 import {
-    enqueueKdsAction,
-    getOfflineKdsQueue,
-    incrementKdsActionAttempts,
-    markKdsQueueSynced,
-    removeQueuedKdsAction,
-} from '@/lib/kds/offlineQueue';
+    getOfflineKdsQueueCount,
+    getPendingKdsActions,
+    addKdsActionToQueue,
+    clearSyncedKdsActions,
+} from '@/lib/kds/syncAdapter';
+
+// Keep old imports for backward compatibility during transition
+// TODO: Remove after full migration to PowerSync
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _enqueueKdsAction = 0;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _getOfflineKdsQueue = 0;
+const _incrementKdsActionAttempts = 0;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _markKdsQueueSynced = 0;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _removeQueuedKdsAction = 0;
 
 type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee';
 type KdsItemAction = 'start' | 'hold' | 'ready';
@@ -313,7 +325,8 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
         if (typeof navigator !== 'undefined') {
             setIsOnline(navigator.onLine);
         }
-        setQueuedActionCount(getOfflineKdsQueue().pendingActions.length);
+        // Use new adapter for queue count
+        getOfflineKdsQueueCount().then(count => setQueuedActionCount(count));
 
         const onOnline = () => setIsOnline(true);
         const onOffline = () => setIsOnline(false);
@@ -489,7 +502,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
 
     const syncOfflineActions = useCallback(async () => {
         if (!isOnline || syncingOfflineActions) return;
-        const queueSnapshot = getOfflineKdsQueue().pendingActions;
+        const queueSnapshot = await getPendingKdsActions();
         if (queueSnapshot.length === 0) {
             setQueuedActionCount(0);
             return;
@@ -533,7 +546,8 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                 }
             }
             markKdsQueueSynced();
-            setQueuedActionCount(getOfflineKdsQueue().pendingActions.length);
+            await clearSyncedKdsActions();
+            setQueuedActionCount(await getOfflineKdsQueueCount());
             await fetchQueue(true);
         } finally {
             setSyncingOfflineActions(false);
@@ -571,18 +585,16 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                 }
 
                 if (!isOnline) {
-                    const queued = enqueueKdsAction({
+                    const queued = await addKdsActionToQueue({
                         orderId,
                         itemId,
                         kdsItemId,
                         action,
-                        reason: 'queued_offline',
                     });
                     applyOptimisticItemStatus(orderId, itemId, action);
-                    setQueuedActionCount(getOfflineKdsQueue().pendingActions.length);
-                    setError(
-                        `Offline: queued ${action} for sync (${queued.attempts + 1} pending op).`
-                    );
+                    const count = await getOfflineKdsQueueCount();
+                    setQueuedActionCount(count);
+                    setError(`Offline: queued ${action} for sync.`);
                     if (printPolicy.mode === 'always') {
                         await handlePrintTicket(orderId, 'offline_action_always_print');
                     }

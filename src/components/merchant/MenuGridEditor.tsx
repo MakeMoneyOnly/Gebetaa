@@ -349,7 +349,7 @@ export function MenuGridEditor({
                                                 {item.name}
                                             </h3>
                                             <span className="font-bold whitespace-nowrap text-black">
-                                                {formatCurrencyCompact(item.price)} ETB
+                                                {formatCurrencyCompact(item.price)}
                                             </span>
                                         </div>
                                         <p className="line-clamp-2 text-xs leading-relaxed font-medium text-gray-500">
@@ -538,9 +538,9 @@ export function MenuGridEditor({
                                                 {original.name}
                                             </span>
                                             <span className="font-semibold text-gray-900">
-                                                {formatCurrencyCompact(original.price)} ETB
+                                                {formatCurrencyCompact(original.price)}
                                                 {' -> '}
-                                                {formatCurrencyCompact(update.price)} ETB
+                                                {formatCurrencyCompact(update.price)}
                                             </span>
                                         </div>
                                     );
