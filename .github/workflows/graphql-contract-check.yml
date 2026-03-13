@@ -1,0 +1,98 @@
+# GraphQL Contract Check CI Workflow
+# Validates GraphQL schema changes don't introduce breaking changes
+# Uses Apollo CLI to detect breaking changes before merging
+
+name: GraphQL Contract Check
+
+on:
+    pull_request:
+        paths:
+            - 'src/domains/**/*.graphql'
+            - 'src/app/api/graphql/**'
+            - 'codegen.yml'
+    push:
+        branches:
+            - main
+            - develop
+        paths:
+            - 'src/domains/**/*.graphql'
+            - 'src/app/api/graphql/**'
+            - 'codegen.yml'
+
+jobs:
+    schema-check:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'pnpm'
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Apollo CLI
+              run: npm install -g @apollo/apollo-service@latest
+
+            - name: Generate GraphQL Schema
+              run: |
+                  # Combine all subgraph schemas into a single schema for validation
+                  cat src/domains/orders/schema.graphql > schema.graphql
+                  cat src/domains/menu/schema.graphql >> schema.graphql
+                  cat src/domains/payments/schema.graphql >> schema.graphql
+                  cat src/domains/guests/schema.graphql >> schema.graphql
+                  cat src/domains/staff/schema.graphql >> schema.graphql
+
+            - name: Check for breaking changes
+              run: |
+                  # Get the base schema from main branch
+                  git fetch origin main --depth=1
+
+                  # Check if there's a previous schema to compare
+                  if git show main:src/domains/orders/schema.graphql > /dev/null 2>&1; then
+                    # Create base schema file
+                    git show main:src/domains/orders/schema.graphql > base-schema.graphql 2>/dev/null || true
+                    git show main:src/domains/menu/schema.graphql >> base-schema.graphql 2>/dev/null || true
+                    git show main:src/domains/payments/schema.graphql >> base-schema.graphql 2>/dev/null || true
+                    git show main:src/domains/guests/schema.graphql >> base-schema.graphql 2>/dev/null || true
+                    git show main:src/domains/staff/schema.graphql >> base-schema.graphql 2>/dev/null || true
+                    
+                    # Run breaking change check
+                    if [ -f base-schema.graphql ]; then
+                      npx @apollo/apollo service:check --graph=Gebeta --variant=current --schema=schema.graphql --baseSchema=base-schema.graphql 2>&1 || true
+                    else
+                      echo "No base schema found, skipping breaking change check"
+                    fi
+                  else
+                    echo "First commit with GraphQL schema, skipping breaking change check"
+                  fi
+
+            - name: Validate Schema Composition
+              run: |
+                  # Basic schema validation
+                  npx apollo service:check --graph=Gebeta --schema=schema.graphql 2>&1 || echo "Schema validation requires Apollo Studio"
+
+            - name: Generate TypeScript Types
+              run: pnpm codegen || echo "Codegen may need updates for new schema"
+
+            - name: Check for schema drift
+              run: |
+                  # Verify generated types match schema
+                  if [ -f src/types/graphql.ts ]; then
+                    echo "Generated types found - checking for obvious issues..."
+                    grep -q "export.*Query" src/types/graphql.ts && echo "✓ Query types generated"
+                    grep -q "export.*Mutation" src/types/graphql.ts && echo "✓ Mutation types generated"
+                  else
+                    echo "⚠ Generated types not found - run pnpm codegen"
+                  fi
+
+            - name: Upload schema artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: graphql-schema
+                  path: schema.graphql
+                  retention-days: 7

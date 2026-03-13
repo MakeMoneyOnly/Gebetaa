@@ -1,0 +1,135 @@
+# Staff Subgraph Schema
+# GraphQL Federation 2 subgraph for Staff domain
+
+extend schema
+    @link(
+        url: "https://specs.apollo.dev/federation/v2.0"
+        import: ["@key", "@shareable", "@external", "@extends"]
+    )
+
+enum StaffRole {
+    OWNER
+    ADMIN
+    MANAGER
+    KITCHEN
+    BAR
+    WAITER
+}
+
+type Staff @key(fields: "id") {
+    id: ID!
+    restaurantId: ID! @external
+    userId: ID!
+    fullName: String!
+    role: StaffRole!
+    pinCode: String # Hashed - only exposed for PIN verification
+    isActive: Boolean!
+    hireDate: String
+    phone: String
+    email: String
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Shift @key(fields: "id") {
+    id: ID!
+    staffId: ID! @external
+    restaurantId: ID! @external
+    startTime: String!
+    endTime: String
+    breakMinutes: Int!
+    status: String! # SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+    notes: String
+}
+
+type TimeEntry @key(fields: "id") {
+    id: ID!
+    staffId: ID! @external
+    restaurantId: ID! @external
+    clockInTime: String!
+    clockOutTime: String
+    breakMinutes: Int!
+    totalHours: Float
+    date: String!
+}
+
+# Pagination
+type StaffConnection {
+    edges: [StaffEdge!]!
+    pageInfo: PageInfo!
+}
+
+type StaffEdge {
+    cursor: String!
+    node: Staff!
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+}
+
+# Error types
+type StaffResult {
+    success: Boolean!
+    staff: Staff
+    error: GebetaError
+}
+
+type PinVerificationResult {
+    success: Boolean!
+    staff: Staff
+    error: GebetaError
+}
+
+type GebetaError {
+    code: String!
+    message: String!
+    messageAm: String
+}
+
+# Input types
+input CreateStaffInput {
+    restaurantId: ID!
+    userId: ID!
+    fullName: String!
+    role: StaffRole!
+    phone: String
+    email: String
+    pinCode: String
+}
+
+input UpdateStaffInput {
+    fullName: String
+    role: StaffRole
+    isActive: Boolean
+    phone: String
+    email: String
+}
+
+input VerifyPinInput {
+    restaurantId: ID!
+    pinCode: String!
+}
+
+# Queries
+type Query {
+    staff(restaurantId: ID!, first: Int = 20, after: String, role: StaffRole): StaffConnection!
+    staffMember(id: ID!): Staff
+    staffByUserId(userId: ID!): Staff
+    shifts(restaurantId: ID!, staffId: ID, startDate: String, endDate: String): [Shift!]!
+    timeEntries(restaurantId: ID!, staffId: ID, startDate: String, endDate: String): [TimeEntry!]!
+    clockedInStaff(restaurantId: ID!): [Staff!]!
+}
+
+# Mutations
+type Mutation {
+    createStaff(input: CreateStaffInput!): StaffResult!
+    updateStaff(id: ID!, input: UpdateStaffInput!): StaffResult!
+    deactivateStaff(id: ID!): StaffResult!
+    verifyPin(input: VerifyPinInput!): PinVerificationResult!
+    clockIn(staffId: ID!): StaffResult!
+    clockOut(staffId: ID!): StaffResult!
+}

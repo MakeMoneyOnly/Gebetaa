@@ -1,0 +1,121 @@
+# Guests & Loyalty Subgraph Schema
+# GraphQL Federation 2 subgraph for Guests domain
+
+extend schema
+    @link(
+        url: "https://specs.apollo.dev/federation/v2.0"
+        import: ["@key", "@shareable", "@external", "@extends"]
+    )
+
+type Guest @key(fields: "id") {
+    id: ID!
+    restaurantId: ID! @external
+    fullName: String
+    phone: String
+    email: String
+    visitCount: Int!
+    lifetimeValueSantim: Int!
+    firstVisitAt: String!
+    lastVisitAt: String!
+    loyaltyAccount: LoyaltyAccount
+}
+
+type LoyaltyAccount @key(fields: "id") {
+    id: ID!
+    guestId: ID! @external
+    restaurantId: ID! @external
+    pointsBalance: Int!
+    tier: String!
+    status: String!
+    transactions: [LoyaltyTransaction!]!
+}
+
+type LoyaltyTransaction @key(fields: "id") {
+    id: ID!
+    accountId: ID! @external
+    points: Int! # positive = earn, negative = redeem
+    transactionType: String!
+    orderId: ID
+    createdAt: String!
+}
+
+# Pagination
+type GuestConnection {
+    edges: [GuestEdge!]!
+    pageInfo: PageInfo!
+}
+
+type GuestEdge {
+    cursor: String!
+    node: Guest!
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+}
+
+# Error types
+type LoyaltyResult {
+    success: Boolean!
+    account: LoyaltyAccount
+    transaction: LoyaltyTransaction
+    error: GebetaError
+}
+
+type GuestResult {
+    success: Boolean!
+    guest: Guest
+    error: GebetaError
+}
+
+type GebetaError {
+    code: String!
+    message: String!
+    messageAm: String
+}
+
+# Input types
+input EnrollLoyaltyInput {
+    guestId: ID!
+    restaurantId: ID!
+    phone: String!
+    fullName: String
+}
+
+input RedeemPointsInput {
+    accountId: ID!
+    points: Int!
+    orderId: ID!
+}
+
+input AdjustPointsInput {
+    accountId: ID!
+    points: Int!
+    reason: String!
+}
+
+# Queries
+type Query {
+    guests(restaurantId: ID!, first: Int = 20, after: String, search: String): GuestConnection!
+    guest(id: ID!): Guest
+    loyaltyAccount(guestId: ID!, restaurantId: ID!): LoyaltyAccount
+    loyaltyTransactions(accountId: ID!, first: Int = 20): [LoyaltyTransaction!]!
+}
+
+# Mutations
+type Mutation {
+    enrollLoyalty(input: EnrollLoyaltyInput!): LoyaltyResult!
+    redeemPoints(input: RedeemPointsInput!): LoyaltyResult!
+    adjustPoints(input: AdjustPointsInput!): LoyaltyResult!
+    createGuest(input: CreateGuestInput!): GuestResult!
+}
+
+input CreateGuestInput {
+    restaurantId: ID!
+    fullName: String
+    phone: String!
+    email: String
+}
