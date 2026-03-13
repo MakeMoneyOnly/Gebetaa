@@ -1,6 +1,6 @@
 import { Skeleton } from '@/components/ui/Skeleton';
 
-export default function AnalyticsLoading() {
+export default function MenuLoading() {
     return (
         <div className="min-h-screen space-y-6 pb-20">
             <div className="flex items-start justify-between">
@@ -11,17 +11,16 @@ export default function AnalyticsLoading() {
                 <Skeleton className="h-10 w-32 rounded-full" />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {[1, 2, 3, 4].map(i => (
-                    <Skeleton key={i} className="h-40 rounded-[2rem]" />
+            <div className="flex gap-2 overflow-x-auto pb-2">
+                {[1, 2, 3, 4, 5].map(i => (
+                    <Skeleton key={i} className="h-10 w-24 flex-shrink-0 rounded-full" />
                 ))}
             </div>
 
-            <Skeleton className="h-[400px] rounded-[2.5rem]" />
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <Skeleton className="h-[500px] rounded-[2.5rem]" />
-                <Skeleton className="h-[500px] rounded-[2.5rem]" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                    <Skeleton key={i} className="h-64 rounded-[2rem]" />
+                ))}
             </div>
         </div>
     );
