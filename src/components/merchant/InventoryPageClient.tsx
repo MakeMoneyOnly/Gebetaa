@@ -4,7 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
-import type { InventoryPageData, InventoryItemSummary, PurchaseOrderSummary } from '@/lib/services/dashboardDataService';
+import type {
+    InventoryPageData,
+    InventoryItemSummary,
+    PurchaseOrderSummary,
+} from '@/lib/services/dashboardDataService';
 
 interface InventoryPageClientProps {
     initialData: InventoryPageData | null;
@@ -14,7 +18,9 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
     const { markLoaded } = usePageLoadGuard('inventory');
 
     const [items, setItems] = useState<InventoryItemSummary[]>(initialData?.items ?? []);
-    const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>(initialData?.purchase_orders ?? []);
+    const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>(
+        initialData?.purchase_orders ?? []
+    );
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'items' | 'orders'>('items');
 
@@ -48,15 +54,21 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
     const stats = {
         totalItems: items.length,
         lowStock: lowStockItems.length,
-        pendingOrders: purchaseOrders.filter(po => po.status === 'pending' || po.status === 'submitted').length,
+        pendingOrders: purchaseOrders.filter(
+            po => po.status === 'pending' || po.status === 'submitted'
+        ).length,
     };
 
     return (
         <div className="min-h-screen space-y-6 pb-20">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Inventory</h1>
-                    <p className="font-medium text-gray-500">Manage inventory items and purchase orders.</p>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">
+                        Inventory
+                    </h1>
+                    <p className="font-medium text-gray-500">
+                        Manage inventory items and purchase orders.
+                    </p>
                 </div>
                 <button
                     onClick={refreshData}
@@ -87,7 +99,10 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
                     <h3 className="mb-2 font-bold text-red-800">Low Stock Alerts</h3>
                     <div className="flex flex-wrap gap-2">
                         {lowStockItems.slice(0, 5).map(item => (
-                            <span key={item.id} className="rounded-full bg-white px-3 py-1 text-sm font-medium text-red-700">
+                            <span
+                                key={item.id}
+                                className="rounded-full bg-white px-3 py-1 text-sm font-medium text-red-700"
+                            >
                                 {item.name}: {item.current_stock} {item.uom}
                             </span>
                         ))}
@@ -128,23 +143,43 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
                             <tbody>
                                 {items.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-5 py-8 text-center text-gray-500">No inventory items</td>
+                                        <td
+                                            colSpan={5}
+                                            className="px-5 py-8 text-center text-gray-500"
+                                        >
+                                            No inventory items
+                                        </td>
                                     </tr>
                                 ) : (
                                     items.map(item => (
-                                        <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                            <td className="px-5 py-4 text-sm font-bold text-gray-900">{item.name}</td>
-                                            <td className="px-5 py-4 text-sm text-gray-500">{item.sku ?? 'N/A'}</td>
+                                        <tr
+                                            key={item.id}
+                                            className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                                        >
+                                            <td className="px-5 py-4 text-sm font-bold text-gray-900">
+                                                {item.name}
+                                            </td>
+                                            <td className="px-5 py-4 text-sm text-gray-500">
+                                                {item.sku ?? 'N/A'}
+                                            </td>
                                             <td className="px-5 py-4">
-                                                <span className={cn(
-                                                    'text-sm font-bold',
-                                                    item.current_stock <= item.reorder_level ? 'text-red-600' : 'text-gray-900'
-                                                )}>
+                                                <span
+                                                    className={cn(
+                                                        'text-sm font-bold',
+                                                        item.current_stock <= item.reorder_level
+                                                            ? 'text-red-600'
+                                                            : 'text-gray-900'
+                                                    )}
+                                                >
                                                     {item.current_stock} {item.uom}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-sm text-gray-500">{item.reorder_level} {item.uom}</td>
-                                            <td className="px-5 py-4 text-sm text-gray-900">{item.cost_per_unit.toLocaleString()} ETB</td>
+                                            <td className="px-5 py-4 text-sm text-gray-500">
+                                                {item.reorder_level} {item.uom}
+                                            </td>
+                                            <td className="px-5 py-4 text-sm text-gray-900">
+                                                {item.cost_per_unit.toLocaleString()} ETB
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -170,25 +205,45 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
                             <tbody>
                                 {purchaseOrders.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-5 py-8 text-center text-gray-500">No purchase orders</td>
+                                        <td
+                                            colSpan={5}
+                                            className="px-5 py-8 text-center text-gray-500"
+                                        >
+                                            No purchase orders
+                                        </td>
                                     </tr>
                                 ) : (
                                     purchaseOrders.map(po => (
-                                        <tr key={po.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                            <td className="px-5 py-4 text-sm font-bold text-gray-900">{po.po_number ?? 'N/A'}</td>
-                                            <td className="px-5 py-4 text-sm text-gray-600">{po.supplier_name}</td>
+                                        <tr
+                                            key={po.id}
+                                            className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                                        >
+                                            <td className="px-5 py-4 text-sm font-bold text-gray-900">
+                                                {po.po_number ?? 'N/A'}
+                                            </td>
+                                            <td className="px-5 py-4 text-sm text-gray-600">
+                                                {po.supplier_name}
+                                            </td>
                                             <td className="px-5 py-4">
-                                                <span className={cn(
-                                                    'rounded-full px-2 py-1 text-xs font-bold',
-                                                    po.status === 'received' ? 'bg-emerald-100 text-emerald-700' :
-                                                    po.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-gray-100 text-gray-600'
-                                                )}>
+                                                <span
+                                                    className={cn(
+                                                        'rounded-full px-2 py-1 text-xs font-bold',
+                                                        po.status === 'received'
+                                                            ? 'bg-emerald-100 text-emerald-700'
+                                                            : po.status === 'pending'
+                                                              ? 'bg-amber-100 text-amber-700'
+                                                              : 'bg-gray-100 text-gray-600'
+                                                    )}
+                                                >
                                                     {po.status}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-sm font-bold text-gray-900">{po.total_amount.toLocaleString()} {po.currency}</td>
-                                            <td className="px-5 py-4 text-sm text-gray-500">{new Date(po.created_at).toLocaleDateString()}</td>
+                                            <td className="px-5 py-4 text-sm font-bold text-gray-900">
+                                                {po.total_amount.toLocaleString()} {po.currency}
+                                            </td>
+                                            <td className="px-5 py-4 text-sm text-gray-500">
+                                                {new Date(po.created_at).toLocaleDateString()}
+                                            </td>
                                         </tr>
                                     ))
                                 )}

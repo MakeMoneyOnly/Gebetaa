@@ -66,34 +66,42 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
     }, [restaurantId]);
 
     // Handle table status update
-    const handleStatusUpdate = useCallback(async (tableId: string, newStatus: string) => {
-        // Optimistic update
-        setTables(prev =>
-            prev.map(t => (t.id === tableId ? { ...t, status: newStatus } : t))
-        );
+    const handleStatusUpdate = useCallback(
+        async (tableId: string, newStatus: string) => {
+            // Optimistic update
+            setTables(prev => prev.map(t => (t.id === tableId ? { ...t, status: newStatus } : t)));
 
-        try {
-            const response = await fetch(`/api/tables/${tableId}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-            });
+            try {
+                const response = await fetch(`/api/tables/${tableId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus }),
+                });
 
-            if (!response.ok) {
-                throw new Error('Failed to update table status');
+                if (!response.ok) {
+                    throw new Error('Failed to update table status');
+                }
+
+                toast.success('Table status updated');
+            } catch (error) {
+                // Revert on error
+                setTables(prev =>
+                    prev.map(t =>
+                        t.id === tableId
+                            ? {
+                                  ...t,
+                                  status:
+                                      initialData?.tables.find(it => it.id === tableId)?.status ??
+                                      t.status,
+                              }
+                            : t
+                    )
+                );
+                toast.error('Failed to update table status');
             }
-
-            toast.success('Table status updated');
-        } catch (error) {
-            // Revert on error
-            setTables(prev =>
-                prev.map(t =>
-                    t.id === tableId ? { ...t, status: initialData?.tables.find(it => it.id === tableId)?.status ?? t.status } : t
-                )
-            );
-            toast.error('Failed to update table status');
-        }
-    }, [initialData?.tables]);
+        },
+        [initialData?.tables]
+    );
 
     // Calculate stats
     const stats = useMemo(() => {
@@ -176,9 +184,7 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
                             </span>
                         </div>
                         {table.capacity && (
-                            <p className="text-sm text-gray-500">
-                                Seats: {table.capacity}
-                            </p>
+                            <p className="text-sm text-gray-500">Seats: {table.capacity}</p>
                         )}
                     </button>
                 ))}
@@ -186,7 +192,7 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
 
             {/* Selected Table Panel */}
             {selectedTable && (
-                <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl bg-white p-6 shadow-lg ring-1 ring-gray-200">
+                <div className="fixed right-0 bottom-0 left-0 rounded-t-3xl bg-white p-6 shadow-lg ring-1 ring-gray-200">
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-lg font-bold text-gray-900">
                             Table {selectedTable.table_number}

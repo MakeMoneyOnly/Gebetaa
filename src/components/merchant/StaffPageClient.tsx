@@ -43,9 +43,7 @@ export function StaffPageClient({ initialData }: StaffPageClientProps) {
 
     const handleToggleActive = useCallback(async (staffId: string, currentStatus: boolean) => {
         const newStatus = !currentStatus;
-        setStaff(prev =>
-            prev.map(s => (s.id === staffId ? { ...s, is_active: newStatus } : s))
-        );
+        setStaff(prev => prev.map(s => (s.id === staffId ? { ...s, is_active: newStatus } : s)));
 
         try {
             const response = await fetch(`/api/staff/${staffId}`, {
@@ -67,11 +65,14 @@ export function StaffPageClient({ initialData }: StaffPageClientProps) {
     const stats = {
         total: staff.length,
         active: staff.filter(s => s.is_active).length,
-        byRole: staff.reduce((acc, s) => {
-            const role = s.role ?? 'unknown';
-            acc[role] = (acc[role] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>),
+        byRole: staff.reduce(
+            (acc, s) => {
+                const role = s.role ?? 'unknown';
+                acc[role] = (acc[role] || 0) + 1;
+                return acc;
+            },
+            {} as Record<string, number>
+        ),
     };
 
     return (
@@ -103,7 +104,10 @@ export function StaffPageClient({ initialData }: StaffPageClientProps) {
                     <p className="text-sm font-medium text-gray-500">By Role</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                         {Object.entries(stats.byRole).map(([role, count]) => (
-                            <span key={role} className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold">
+                            <span
+                                key={role}
+                                className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold"
+                            >
                                 {role}: {count}
                             </span>
                         ))}
@@ -119,13 +123,17 @@ export function StaffPageClient({ initialData }: StaffPageClientProps) {
                             'rounded-2xl p-6 ring-1',
                             member.is_active
                                 ? 'bg-white ring-gray-100'
-                                : 'bg-gray-50 ring-gray-200 opacity-60'
+                                : 'bg-gray-50 opacity-60 ring-gray-200'
                         )}
                     >
                         <div className="mb-4 flex items-start justify-between">
                             <div>
-                                <h3 className="font-bold text-gray-900">{member.name ?? 'Unknown'}</h3>
-                                <p className="text-sm text-gray-500 capitalize">{(member.role ?? 'unknown').replace('_', ' ')}</p>
+                                <h3 className="font-bold text-gray-900">
+                                    {member.name ?? 'Unknown'}
+                                </h3>
+                                <p className="text-sm text-gray-500 capitalize">
+                                    {(member.role ?? 'unknown').replace('_', ' ')}
+                                </p>
                             </div>
                             <button
                                 onClick={() => handleToggleActive(member.id, member.is_active)}
@@ -139,9 +147,7 @@ export function StaffPageClient({ initialData }: StaffPageClientProps) {
                                 {member.is_active ? 'Active' : 'Inactive'}
                             </button>
                         </div>
-                        {member.email && (
-                            <p className="text-sm text-gray-500">{member.email}</p>
-                        )}
+                        {member.email && <p className="text-sm text-gray-500">{member.email}</p>}
                     </div>
                 ))}
             </div>

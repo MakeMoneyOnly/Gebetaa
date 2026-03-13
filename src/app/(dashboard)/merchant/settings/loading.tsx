@@ -11,7 +11,7 @@ export default function SettingsLoading() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6 lg:col-span-2">
                     <Skeleton className="h-64 rounded-[2rem]" />
                     <Skeleton className="h-48 rounded-[2rem]" />
                 </div>

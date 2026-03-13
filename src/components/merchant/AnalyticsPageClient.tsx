@@ -51,16 +51,21 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
     }, [restaurantId, range]);
 
     // Handle range change
-    const handleRangeChange = useCallback((newRange: string) => {
-        router.push(`/merchant/analytics?range=${newRange}`);
-    }, [router]);
+    const handleRangeChange = useCallback(
+        (newRange: string) => {
+            router.push(`/merchant/analytics?range=${newRange}`);
+        },
+        [router]
+    );
 
     return (
         <div className="min-h-screen space-y-6 pb-20">
             {/* Header */}
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Analytics</h1>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">
+                        Analytics
+                    </h1>
                     <p className="font-medium text-gray-500">
                         Track your restaurant performance and insights.
                     </p>

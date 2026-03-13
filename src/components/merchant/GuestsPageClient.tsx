@@ -33,7 +33,7 @@ export function GuestsPageClient({ initialData }: GuestsPageClientProps) {
         try {
             const params = new URLSearchParams();
             if (searchQuery) params.set('q', searchQuery);
-            
+
             const response = await fetch(`/api/guests?${params}`);
             const result = await response.json();
             if (response.ok) {
@@ -50,9 +50,7 @@ export function GuestsPageClient({ initialData }: GuestsPageClientProps) {
 
     const handleToggleVip = useCallback(async (guestId: string, currentStatus: boolean) => {
         const newStatus = !currentStatus;
-        setGuests(prev =>
-            prev.map(g => (g.id === guestId ? { ...g, is_vip: newStatus } : g))
-        );
+        setGuests(prev => prev.map(g => (g.id === guestId ? { ...g, is_vip: newStatus } : g)));
 
         try {
             const response = await fetch(`/api/guests/${guestId}`, {
@@ -72,9 +70,10 @@ export function GuestsPageClient({ initialData }: GuestsPageClientProps) {
     }, []);
 
     const filteredGuests = searchQuery
-        ? guests.filter(g =>
-              g.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              g.phone?.includes(searchQuery)
+        ? guests.filter(
+              g =>
+                  g.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  g.phone?.includes(searchQuery)
           )
         : guests;
 
@@ -94,7 +93,9 @@ export function GuestsPageClient({ initialData }: GuestsPageClientProps) {
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
                     <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Guests</h1>
-                    <p className="font-medium text-gray-500">Manage your guest directory and profiles.</p>
+                    <p className="font-medium text-gray-500">
+                        Manage your guest directory and profiles.
+                    </p>
                 </div>
                 <button
                     onClick={refreshData}
@@ -125,7 +126,7 @@ export function GuestsPageClient({ initialData }: GuestsPageClientProps) {
                     type="text"
                     placeholder="Search by name or phone..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none"
                 />
             </div>
@@ -162,10 +163,14 @@ export function GuestsPageClient({ initialData }: GuestsPageClientProps) {
                                             </span>
                                         </td>
                                         <td className="px-5 py-4">
-                                            <span className="text-sm text-gray-600">{guest.phone ?? 'N/A'}</span>
+                                            <span className="text-sm text-gray-600">
+                                                {guest.phone ?? 'N/A'}
+                                            </span>
                                         </td>
                                         <td className="px-5 py-4">
-                                            <span className="text-sm font-semibold text-gray-900">{guest.visit_count}</span>
+                                            <span className="text-sm font-semibold text-gray-900">
+                                                {guest.visit_count}
+                                            </span>
                                         </td>
                                         <td className="px-5 py-4">
                                             <span className="text-sm font-bold text-gray-900">
@@ -174,7 +179,7 @@ export function GuestsPageClient({ initialData }: GuestsPageClientProps) {
                                         </td>
                                         <td className="px-5 py-4">
                                             <button
-                                                onClick={(e) => {
+                                                onClick={e => {
                                                     e.stopPropagation();
                                                     handleToggleVip(guest.id, guest.is_vip);
                                                 }}

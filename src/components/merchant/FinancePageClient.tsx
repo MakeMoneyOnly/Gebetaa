@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
-import type { FinancePageData, PaymentSummary, RefundSummary, PayoutSummary } from '@/lib/services/dashboardDataService';
+import type {
+    FinancePageData,
+    PaymentSummary,
+    RefundSummary,
+    PayoutSummary,
+} from '@/lib/services/dashboardDataService';
 
 interface FinancePageClientProps {
     initialData: FinancePageData | null;
@@ -15,7 +20,9 @@ export function FinancePageClient({ initialData }: FinancePageClientProps) {
     const [payments, setPayments] = useState<PaymentSummary[]>(initialData?.payments ?? []);
     const [refunds, setRefunds] = useState<RefundSummary[]>(initialData?.refunds ?? []);
     const [payouts, setPayouts] = useState<PayoutSummary[]>(initialData?.payouts ?? []);
-    const [totals, setTotals] = useState(initialData?.totals ?? { payments_gross: 0, refunds_total: 0, payouts_net: 0 });
+    const [totals, setTotals] = useState(
+        initialData?.totals ?? { payments_gross: 0, refunds_total: 0, payouts_net: 0 }
+    );
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'payments' | 'refunds' | 'payouts'>('payments');
 
@@ -37,7 +44,9 @@ export function FinancePageClient({ initialData }: FinancePageClientProps) {
                 setPayments(result.data?.payments ?? []);
                 setRefunds(result.data?.refunds ?? []);
                 setPayouts(result.data?.payouts ?? []);
-                setTotals(result.data?.totals ?? { payments_gross: 0, refunds_total: 0, payouts_net: 0 });
+                setTotals(
+                    result.data?.totals ?? { payments_gross: 0, refunds_total: 0, payouts_net: 0 }
+                );
             }
         } catch (error) {
             console.error('Failed to refresh finance data:', error);
@@ -71,8 +80,12 @@ export function FinancePageClient({ initialData }: FinancePageClientProps) {
         <div className="min-h-screen space-y-6 pb-20">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Finance</h1>
-                    <p className="font-medium text-gray-500">Track payments, refunds, and payouts.</p>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">
+                        Finance
+                    </h1>
+                    <p className="font-medium text-gray-500">
+                        Track payments, refunds, and payouts.
+                    </p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -94,15 +107,21 @@ export function FinancePageClient({ initialData }: FinancePageClientProps) {
             <div className="grid grid-cols-3 gap-4">
                 <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
                     <p className="text-sm font-medium text-emerald-600">Gross Payments</p>
-                    <p className="text-2xl font-bold text-emerald-700">{totals.payments_gross.toLocaleString()} ETB</p>
+                    <p className="text-2xl font-bold text-emerald-700">
+                        {totals.payments_gross.toLocaleString()} ETB
+                    </p>
                 </div>
                 <div className="rounded-2xl bg-red-50 p-4 ring-1 ring-red-100">
                     <p className="text-sm font-medium text-red-600">Total Refunds</p>
-                    <p className="text-2xl font-bold text-red-700">{totals.refunds_total.toLocaleString()} ETB</p>
+                    <p className="text-2xl font-bold text-red-700">
+                        {totals.refunds_total.toLocaleString()} ETB
+                    </p>
                 </div>
                 <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100">
                     <p className="text-sm font-medium text-blue-600">Net Payouts</p>
-                    <p className="text-2xl font-bold text-blue-700">{totals.payouts_net.toLocaleString()} ETB</p>
+                    <p className="text-2xl font-bold text-blue-700">
+                        {totals.payouts_net.toLocaleString()} ETB
+                    </p>
                 </div>
             </div>
 
@@ -136,49 +155,91 @@ export function FinancePageClient({ initialData }: FinancePageClientProps) {
                         <tbody>
                             {activeTab === 'payments' && payments.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">No payments found</td>
+                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
+                                        No payments found
+                                    </td>
                                 </tr>
                             )}
                             {activeTab === 'refunds' && refunds.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">No refunds found</td>
+                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
+                                        No refunds found
+                                    </td>
                                 </tr>
                             )}
                             {activeTab === 'payouts' && payouts.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">No payouts found</td>
+                                    <td colSpan={4} className="px-5 py-8 text-center text-gray-500">
+                                        No payouts found
+                                    </td>
                                 </tr>
                             )}
-                            {activeTab === 'payments' && payments.map(item => (
-                                <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                    <td className="px-5 py-4 text-sm font-medium text-gray-900">{item.id.slice(0, 8)}</td>
-                                    <td className="px-5 py-4 text-sm font-bold text-gray-900">{item.amount.toLocaleString()} {item.currency}</td>
-                                    <td className="px-5 py-4">
-                                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700">{item.status}</span>
-                                    </td>
-                                    <td className="px-5 py-4 text-sm text-gray-500">{new Date(item.created_at).toLocaleDateString()}</td>
-                                </tr>
-                            ))}
-                            {activeTab === 'refunds' && refunds.map(item => (
-                                <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                    <td className="px-5 py-4 text-sm font-medium text-gray-900">{item.id.slice(0, 8)}</td>
-                                    <td className="px-5 py-4 text-sm font-bold text-red-600">{item.amount.toLocaleString()} {item.currency}</td>
-                                    <td className="px-5 py-4">
-                                        <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">{item.status}</span>
-                                    </td>
-                                    <td className="px-5 py-4 text-sm text-gray-500">{new Date(item.created_at).toLocaleDateString()}</td>
-                                </tr>
-                            ))}
-                            {activeTab === 'payouts' && payouts.map(item => (
-                                <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                                    <td className="px-5 py-4 text-sm font-medium text-gray-900">{item.id.slice(0, 8)}</td>
-                                    <td className="px-5 py-4 text-sm font-bold text-blue-600">{item.amount.toLocaleString()} {item.currency}</td>
-                                    <td className="px-5 py-4">
-                                        <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">{item.status}</span>
-                                    </td>
-                                    <td className="px-5 py-4 text-sm text-gray-500">{new Date(item.created_at).toLocaleDateString()}</td>
-                                </tr>
-                            ))}
+                            {activeTab === 'payments' &&
+                                payments.map(item => (
+                                    <tr
+                                        key={item.id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                                    >
+                                        <td className="px-5 py-4 text-sm font-medium text-gray-900">
+                                            {item.id.slice(0, 8)}
+                                        </td>
+                                        <td className="px-5 py-4 text-sm font-bold text-gray-900">
+                                            {item.amount.toLocaleString()} {item.currency}
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700">
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm text-gray-500">
+                                            {new Date(item.created_at).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            {activeTab === 'refunds' &&
+                                refunds.map(item => (
+                                    <tr
+                                        key={item.id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                                    >
+                                        <td className="px-5 py-4 text-sm font-medium text-gray-900">
+                                            {item.id.slice(0, 8)}
+                                        </td>
+                                        <td className="px-5 py-4 text-sm font-bold text-red-600">
+                                            {item.amount.toLocaleString()} {item.currency}
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm text-gray-500">
+                                            {new Date(item.created_at).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            {activeTab === 'payouts' &&
+                                payouts.map(item => (
+                                    <tr
+                                        key={item.id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                                    >
+                                        <td className="px-5 py-4 text-sm font-medium text-gray-900">
+                                            {item.id.slice(0, 8)}
+                                        </td>
+                                        <td className="px-5 py-4 text-sm font-bold text-blue-600">
+                                            {item.amount.toLocaleString()} {item.currency}
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-sm text-gray-500">
+                                            {new Date(item.created_at).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>

@@ -13,7 +13,9 @@ interface MenuPageClientProps {
 export function MenuPageClient({ initialData }: MenuPageClientProps) {
     const { markLoaded } = usePageLoadGuard('menu');
 
-    const [categories, setCategories] = useState<CategoryWithItems[]>(initialData?.categories ?? []);
+    const [categories, setCategories] = useState<CategoryWithItems[]>(
+        initialData?.categories ?? []
+    );
     const [refreshing, setRefreshing] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -42,38 +44,41 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
         }
     }, [restaurantId]);
 
-    const handleToggleAvailability = useCallback(async (itemId: string, currentStatus: boolean | null) => {
-        const newStatus = !currentStatus;
-        setCategories(prev =>
-            prev.map(cat => ({
-                ...cat,
-                items: cat.items.map(item =>
-                    item.id === itemId ? { ...item, is_available: newStatus } : item
-                ),
-            }))
-        );
-
-        try {
-            const response = await fetch(`/api/menu/items/${itemId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_available: newStatus }),
-            });
-
-            if (!response.ok) throw new Error('Failed to update item');
-            toast.success(newStatus ? 'Item available' : 'Item unavailable');
-        } catch (error) {
+    const handleToggleAvailability = useCallback(
+        async (itemId: string, currentStatus: boolean | null) => {
+            const newStatus = !currentStatus;
             setCategories(prev =>
                 prev.map(cat => ({
                     ...cat,
                     items: cat.items.map(item =>
-                        item.id === itemId ? { ...item, is_available: currentStatus } : item
+                        item.id === itemId ? { ...item, is_available: newStatus } : item
                     ),
                 }))
             );
-            toast.error('Failed to update item');
-        }
-    }, []);
+
+            try {
+                const response = await fetch(`/api/menu/items/${itemId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_available: newStatus }),
+                });
+
+                if (!response.ok) throw new Error('Failed to update item');
+                toast.success(newStatus ? 'Item available' : 'Item unavailable');
+            } catch (error) {
+                setCategories(prev =>
+                    prev.map(cat => ({
+                        ...cat,
+                        items: cat.items.map(item =>
+                            item.id === itemId ? { ...item, is_available: currentStatus } : item
+                        ),
+                    }))
+                );
+                toast.error('Failed to update item');
+            }
+        },
+        []
+    );
 
     const filteredCategories = selectedCategory
         ? categories.filter(c => c.id === selectedCategory)
@@ -93,7 +98,9 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
                     <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Menu</h1>
-                    <p className="font-medium text-gray-500">Manage your menu items and categories.</p>
+                    <p className="font-medium text-gray-500">
+                        Manage your menu items and categories.
+                    </p>
                 </div>
                 <button
                     onClick={refreshData}
@@ -149,7 +156,10 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
 
             <div className="space-y-6">
                 {filteredCategories.map(category => (
-                    <div key={category.id} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+                    <div
+                        key={category.id}
+                        className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100"
+                    >
                         <h2 className="mb-4 text-lg font-bold text-gray-900">{category.name}</h2>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             {category.items.map(item => (
@@ -159,16 +169,20 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                                         'rounded-xl p-4 ring-1',
                                         item.is_available !== false
                                             ? 'bg-white ring-gray-100'
-                                            : 'bg-gray-50 ring-gray-200 opacity-60'
+                                            : 'bg-gray-50 opacity-60 ring-gray-200'
                                     )}
                                 >
                                     <div className="mb-2 flex items-start justify-between">
                                         <div>
                                             <h3 className="font-bold text-gray-900">{item.name}</h3>
-                                            <p className="text-sm text-gray-500">{item.price?.toLocaleString() ?? 0} ETB</p>
+                                            <p className="text-sm text-gray-500">
+                                                {item.price?.toLocaleString() ?? 0} ETB
+                                            </p>
                                         </div>
                                         <button
-                                            onClick={() => handleToggleAvailability(item.id, item.is_available)}
+                                            onClick={() =>
+                                                handleToggleAvailability(item.id, item.is_available)
+                                            }
                                             className={cn(
                                                 'rounded-lg px-2 py-1 text-xs font-bold',
                                                 item.is_available !== false
@@ -176,11 +190,15 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                                                     : 'bg-gray-200 text-gray-600'
                                             )}
                                         >
-                                            {item.is_available !== false ? 'Available' : 'Unavailable'}
+                                            {item.is_available !== false
+                                                ? 'Available'
+                                                : 'Unavailable'}
                                         </button>
                                     </div>
                                     {item.description && (
-                                        <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                                        <p className="line-clamp-2 text-sm text-gray-500">
+                                            {item.description}
+                                        </p>
                                     )}
                                 </div>
                             ))}

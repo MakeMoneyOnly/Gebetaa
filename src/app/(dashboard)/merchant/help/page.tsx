@@ -75,7 +75,5 @@ export default async function HelpPage() {
     ]);
 
     // Pass server-fetched data to Client Component
-    return (
-        <HelpPageClient initialArticles={initialArticles} initialTickets={initialTickets} />
-    );
+    return <HelpPageClient initialArticles={initialArticles} initialTickets={initialTickets} />;
 }

@@ -4,7 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
-import type { ChannelsPageData, ChannelPartner, ExternalOrderSummary } from '@/lib/services/dashboardDataService';
+import type {
+    ChannelsPageData,
+    ChannelPartner,
+    ExternalOrderSummary,
+} from '@/lib/services/dashboardDataService';
 
 interface ChannelsPageClientProps {
     initialData: ChannelsPageData | null;
@@ -15,13 +19,15 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
 
     const [partners, setPartners] = useState<ChannelPartner[]>(initialData?.partners ?? []);
     const [orders, setOrders] = useState<ExternalOrderSummary[]>(initialData?.orders ?? []);
-    const [summary, setSummary] = useState(initialData?.summary ?? {
-        delivery_partners: 0,
-        connected_partners: 0,
-        degraded_partners: 0,
-        external_orders_24h: 0,
-        unacked_orders: 0,
-    });
+    const [summary, setSummary] = useState(
+        initialData?.summary ?? {
+            delivery_partners: 0,
+            connected_partners: 0,
+            degraded_partners: 0,
+            external_orders_24h: 0,
+            unacked_orders: 0,
+        }
+    );
     const [refreshing, setRefreshing] = useState(false);
 
     const restaurantId = initialData?.restaurant_id;
@@ -64,9 +70,7 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
             if (!response.ok) throw new Error('Failed to acknowledge order');
             toast.success('Order acknowledged');
         } catch (error) {
-            setOrders(prev =>
-                prev.map(o => (o.id === orderId ? { ...o, acked_at: null } : o))
-            );
+            setOrders(prev => prev.map(o => (o.id === orderId ? { ...o, acked_at: null } : o)));
             toast.error('Failed to acknowledge order');
         }
     }, []);
@@ -77,8 +81,12 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
         <div className="min-h-screen space-y-6 pb-20">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Channels</h1>
-                    <p className="font-medium text-gray-500">Manage delivery partners and online orders.</p>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">
+                        Channels
+                    </h1>
+                    <p className="font-medium text-gray-500">
+                        Manage delivery partners and online orders.
+                    </p>
                 </div>
                 <button
                     onClick={refreshData}
@@ -96,7 +104,9 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
                 </div>
                 <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
                     <p className="text-sm font-medium text-emerald-600">Connected</p>
-                    <p className="text-2xl font-bold text-emerald-700">{summary.connected_partners}</p>
+                    <p className="text-2xl font-bold text-emerald-700">
+                        {summary.connected_partners}
+                    </p>
                 </div>
                 <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
                     <p className="text-sm font-medium text-amber-600">Degraded</p>
@@ -104,7 +114,9 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
                 </div>
                 <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100">
                     <p className="text-sm font-medium text-blue-600">Orders (24h)</p>
-                    <p className="text-2xl font-bold text-blue-700">{summary.external_orders_24h}</p>
+                    <p className="text-2xl font-bold text-blue-700">
+                        {summary.external_orders_24h}
+                    </p>
                 </div>
                 <div className="rounded-2xl bg-red-50 p-4 ring-1 ring-red-100">
                     <p className="text-sm font-medium text-red-600">Unacked</p>
@@ -124,7 +136,8 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
                                 <div>
                                     <span className="font-medium">{order.provider_order_id}</span>
                                     <span className="ml-2 text-sm text-gray-500">
-                                        {order.provider} • {order.total_amount.toLocaleString()} {order.currency}
+                                        {order.provider} • {order.total_amount.toLocaleString()}{' '}
+                                        {order.currency}
                                     </span>
                                 </div>
                                 <button
@@ -152,9 +165,14 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
                                     className="flex items-center justify-between rounded-xl bg-gray-50 p-3"
                                 >
                                     <div>
-                                        <span className="font-bold text-gray-900 capitalize">{partner.provider}</span>
+                                        <span className="font-bold text-gray-900 capitalize">
+                                            {partner.provider}
+                                        </span>
                                         <p className="text-xs text-gray-500">
-                                            Last sync: {partner.last_sync_at ? new Date(partner.last_sync_at).toLocaleString() : 'Never'}
+                                            Last sync:{' '}
+                                            {partner.last_sync_at
+                                                ? new Date(partner.last_sync_at).toLocaleString()
+                                                : 'Never'}
                                         </p>
                                     </div>
                                     <span
@@ -187,9 +205,12 @@ export function ChannelsPageClient({ initialData }: ChannelsPageClientProps) {
                                     className="flex items-center justify-between rounded-xl bg-gray-50 p-3"
                                 >
                                     <div>
-                                        <span className="font-medium">{order.provider_order_id}</span>
+                                        <span className="font-medium">
+                                            {order.provider_order_id}
+                                        </span>
                                         <p className="text-xs text-gray-500">
-                                            {order.provider} • {order.total_amount.toLocaleString()} {order.currency}
+                                            {order.provider} • {order.total_amount.toLocaleString()}{' '}
+                                            {order.currency}
                                         </p>
                                     </div>
                                     <span
