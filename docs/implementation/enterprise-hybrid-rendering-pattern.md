@@ -306,6 +306,7 @@ export function OrdersPageClient({ initialData }) {
     ```
 
 4. **Optimistic Updates**
+
     ```tsx
     const handleUpdate = async (id: string, status: string) => {
         // Optimistically update UI
