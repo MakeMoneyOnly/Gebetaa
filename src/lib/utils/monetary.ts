@@ -61,7 +61,10 @@ export function formatCurrency(
     }
 
     const birrValue = santimToBirr(santim);
-    const formatted = birrValue.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    const formatted = birrValue.toLocaleString(locale, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    });
 
     return showCurrency ? `${currencySymbol} ${formatted}` : formatted;
 }
