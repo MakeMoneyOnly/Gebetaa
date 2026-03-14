@@ -16,10 +16,11 @@ export async function GET() {
     const envStatus = {
         NODE_ENV: process.env.NODE_ENV,
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'missing',
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
             ? 'set'
             : 'missing',
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'missing',
+        SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY ? 'set' : 'missing',
+        SUPABASE_DB_URL: process.env.SUPABASE_DB_URL ? 'set' : 'missing',
         REDIS_URL: process.env.REDIS_URL ? 'set' : 'missing',
         QR_HMAC_SECRET: process.env.QR_HMAC_SECRET ? 'set' : 'missing',
         VERCEL_ENV: process.env.VERCEL_ENV || 'not on vercel',

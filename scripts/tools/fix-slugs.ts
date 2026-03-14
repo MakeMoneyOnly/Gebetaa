@@ -21,7 +21,7 @@ const parseEnv = (content: string) => {
 const envVars = parseEnv(env);
 
 const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = envVars.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = envVars.SUPABASE_SECRET_KEY || envVars.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('Missing Supabase credentials');

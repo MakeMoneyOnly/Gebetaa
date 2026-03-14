@@ -10,13 +10,13 @@ let supabase: SupabaseClient<Database> | null = null;
 function getSupabaseClient(): SupabaseClient<Database> {
     if (!supabase) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const supabaseKey = process.env.SUPABASE_SECRET_KEY;
 
         if (!supabaseUrl || !supabaseKey) {
             // During build, return a mock client that won't be used
             // In production, these env vars must be set
             throw new Error(
-                `Supabase configuration missing. NEXT_PUBLIC_SUPABASE_URL: ${!!supabaseUrl}, SUPABASE_SERVICE_ROLE_KEY: ${!!supabaseKey}`
+                `Supabase configuration missing. NEXT_PUBLIC_SUPABASE_URL: ${!!supabaseUrl}, SUPABASE_SECRET_KEY: ${!!supabaseKey}`
             );
         }
 

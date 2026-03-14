@@ -8,7 +8,7 @@ on:
 
 env:
     NODE_VERSION: '20'
-    PNPM_VERSION: '9'
+    PNPM_VERSION: '9.0.0'
 
 jobs:
     # ============================================
@@ -27,7 +27,6 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -57,7 +56,6 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -80,6 +78,17 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
             - name: Run Trivy vulnerability scanner
               uses: aquasecurity/trivy-action@master
@@ -106,9 +115,13 @@ jobs:
             NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
             NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
             SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
+            SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL || '' }}
             NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
             NEXT_PUBLIC_APP_NAME: 'Gebeta'
             NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || '' }}
+            QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET || '0000000000000000000000000000000000000000000000000000000000000000' }}
+            UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+            UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
         steps:
             - uses: actions/checkout@v4
 
@@ -119,7 +132,6 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -172,7 +184,6 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: ${{ env.NODE_VERSION }}
-                  cache: 'pnpm'
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
@@ -190,6 +201,16 @@ jobs:
               run: pnpm test:e2e
               env:
                   CI: true
+                  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
+                  SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
+                  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL || '' }}
+                  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
+                  NEXT_PUBLIC_APP_NAME: 'Gebeta'
+                  NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || '' }}
+                  QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET || '0000000000000000000000000000000000000000000000000000000000000000' }}
+                  UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+                  UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
 
             - name: Upload Playwright report
               uses: actions/upload-artifact@v4
