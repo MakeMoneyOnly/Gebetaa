@@ -8,6 +8,19 @@ export async function updateSession(request: NextRequest) {
 
     // E2E test bypass: allows Playwright specs to exercise protected routes with mocked APIs.
     if (request.headers.get('x-e2e-bypass-auth') === '1') {
+        // Set mock auth cookies for E2E tests
+        supabaseResponse.cookies.set('sb-access-token', 'e2e-mock-access-token', {
+            httpOnly: true,
+            path: '/',
+            sameSite: 'lax',
+            maxAge: 3600,
+        });
+        supabaseResponse.cookies.set('sb-refresh-token', 'e2e-mock-refresh-token', {
+            httpOnly: true,
+            path: '/',
+            sameSite: 'lax',
+            maxAge: 86400,
+        });
         return supabaseResponse;
     }
 
