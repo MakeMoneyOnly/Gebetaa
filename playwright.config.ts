@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const isCI = !!process.env.CI;
+const isCI = process.env.CI === 'true';
+
+// Helper to get env var or fallback
+const getEnv = (key: string, fallback: string = ''): string => process.env[key] || fallback;
 
 export default defineConfig({
     testDir: './e2e',
@@ -19,6 +22,18 @@ export default defineConfig({
         url: 'http://localhost:3000',
         reuseExistingServer: !isCI,
         timeout: 120 * 1000,
+        env: {
+            CI: 'true',
+            NEXT_PUBLIC_SUPABASE_URL: getEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://placeholder.supabase.co'),
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: getEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'placeholder-key'),
+            SUPABASE_SECRET_KEY: getEnv('SUPABASE_SECRET_KEY', 'placeholder-secret'),
+            SUPABASE_DB_URL: getEnv('SUPABASE_DB_URL'),
+            NEXT_PUBLIC_APP_URL: getEnv('NEXT_PUBLIC_APP_URL', 'https://gebeta.app'),
+            NEXT_PUBLIC_APP_NAME: getEnv('NEXT_PUBLIC_APP_NAME', 'Gebeta'),
+            QR_HMAC_SECRET: getEnv('QR_HMAC_SECRET', '0000000000000000000000000000000000000000000000000000000000000000'),
+            UPSTASH_REDIS_REST_URL: getEnv('UPSTASH_REDIS_REST_URL'),
+            UPSTASH_REDIS_REST_TOKEN: getEnv('UPSTASH_REDIS_REST_TOKEN'),
+        },
     },
     projects: isCI
         ? [
