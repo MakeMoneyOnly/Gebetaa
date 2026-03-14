@@ -146,15 +146,16 @@ export class AnalyticsPage {
 
     async assertLoaded() {
         await expect(this.page.getByRole('heading', { name: /^Analytics$/i })).toBeVisible();
-        await expect(this.page.getByRole('heading', { name: 'Revenue Trends' })).toBeVisible();
+        await expect(this.page.getByRole('heading', { name: 'Revenue Over Time' })).toBeVisible();
     }
 
     async changeRangeAndValidate() {
-        await this.page.getByRole('button', { name: /This Week/i }).click();
-        await this.page.getByRole('button', { name: 'Today' }).click();
+        // Range buttons render lowercase from the array ['today','week','month']
+        await this.page.getByRole('button', { name: 'week' }).click();
+        await this.page.getByRole('button', { name: 'today' }).click();
         await expect(this.page.getByText(/ETB/i).first()).toBeVisible();
         await expect(this.page.getByText('Total Revenue')).toBeVisible();
-        await expect(this.page.getByRole('heading', { name: 'Order Performance' })).toBeVisible();
+        await expect(this.page.getByRole('heading', { name: 'Revenue Over Time' })).toBeVisible();
     }
 }
 
