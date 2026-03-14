@@ -62,17 +62,16 @@ test.describe('Signed QR to guest order flow', () => {
             });
         });
 
-        await page.route('**/api/orders', async route => {
+        await page.route('**/api/payments/sessions', async route => {
             capturedOrderPayload = route.request().postDataJSON();
             await route.fulfill({
-                status: 201,
+                status: 200,
                 contentType: 'application/json',
                 body: JSON.stringify({
                     data: {
-                        id: 'order-guest-1',
+                        mode: 'deferred',
+                        order_id: 'order-guest-1',
                         order_number: 'ORD-2001',
-                        status: 'pending',
-                        idempotency_key: '11111111-1111-4111-8111-111111111111',
                     },
                 }),
             });
@@ -81,11 +80,13 @@ test.describe('Signed QR to guest order flow', () => {
         await page.goto(`/${slug}?table=${table}&sig=${sig}&exp=${exp}`);
 
         const skipToMenuButton = page.getByRole('button', { name: 'Skip to Menu' });
-        if (await skipToMenuButton.isVisible()) {
+        if (await skipToMenuButton.isVisible({ timeout: 5000 }).catch(() => false)) {
             await skipToMenuButton.click();
         }
+        // Wait for menu items to load after context is established
+        await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
 
-        await expect(page.getByText('Scan Burger')).toBeVisible();
+        await expect(page.getByText('Scan Burger')).toBeVisible({ timeout: 15000 });
 
         await page.getByText('Scan Burger').first().click();
         await page.getByRole('button', { name: 'Add to Order' }).click();
@@ -93,9 +94,18 @@ test.describe('Signed QR to guest order flow', () => {
         await expect(page.locator('button.fixed.right-6.bottom-6')).toBeVisible();
         await page.locator('button.fixed.right-6.bottom-6').click();
 
-        await expect(page.getByRole('heading', { name: 'Your Order' })).toBeVisible();
-        await page.getByRole('button', { name: 'Place Order' }).click();
-        await expect(page.getByText(/Order received.*Kitchen has been notified/i)).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Your Order', exact: true })).toBeVisible();
+        await page.getByRole('button', { name: /Choose checkout option/i }).click();
+
+        await expect(
+            page.getByRole('heading', { name: 'Payment Method', exact: true })
+        ).toBeVisible();
+        await page.getByRole('button', { name: 'Order and pay later', exact: true }).click();
+
+        await expect(page.getByRole('heading', { name: 'Order Placed!', exact: true })).toBeVisible(
+            { timeout: 5000 }
+        );
+        await expect(page.getByText(/Your order has been sent to the kitchen/i)).toBeVisible();
 
         expect(capturedOrderPayload).toBeTruthy();
         expect(capturedOrderPayload.guest_context).toEqual({

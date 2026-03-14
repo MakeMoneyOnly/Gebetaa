@@ -1,14 +1,17 @@
 # FK Protected Keep List (2026-03-03)
 
 ## Purpose
+
 Accepted exception list for zero-scan non-unique indexes that are currently the only non-partial FK-leading coverage.
 
 ## Decision
+
 - Status: `FK_PROTECTED_KEEP`
 - Action: do not drop unless same-stage migration adds an alternate non-partial FK-leading index and includes rollback SQL.
 - Review cadence: quarterly, and after significant query-shape changes.
 
 ## Keep List (34)
+
 - `public.idx_alert_events_rule_id`
 - `public.idx_categories_restaurant_order`
 - `public.idx_orders_tenant`
@@ -45,4 +48,5 @@ Accepted exception list for zero-scan non-unique indexes that are currently the 
 - `public.idx_workflow_audit_logs_tenant_id`
 
 ## Verification SQL
+
 Run `supabase/sql/fk_protected_keep_verification.sql` and confirm count remains `34` before any new index-drop campaign.

@@ -1,0 +1,106 @@
+# Menu Subgraph Schema
+# GraphQL Federation 2 subgraph for Menu domain
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+
+type MenuItem @key(fields: "id") {
+    id: ID!
+    restaurantId: ID!
+    categoryId: ID!
+    name: String!
+    nameAm: String
+    description: String
+    descriptionAm: String
+    price: Int!
+    imageUrl: String
+    isAvailable: Boolean!
+    isFeatured: Boolean!
+    modifierGroups: [ModifierGroup!]!
+    category: Category
+}
+
+type ModifierGroup @key(fields: "id") {
+    id: ID!
+    name: String!
+    nameAm: String
+    required: Boolean!
+    multiSelect: Boolean!
+    minSelect: Int!
+    maxSelect: Int
+    options: [ModifierOption!]!
+}
+
+type ModifierOption @key(fields: "id") {
+    id: ID!
+    name: String!
+    nameAm: String
+    priceAdjustment: Int!
+    isAvailable: Boolean!
+}
+
+type Category @key(fields: "id") {
+    id: ID!
+    restaurantId: ID!
+    name: String!
+    nameAm: String
+    imageUrl: String
+    sortOrder: Int!
+    kdsStation: String
+    items: [MenuItem!]!
+}
+
+# Error types
+type MenuItemResult {
+    success: Boolean!
+    menuItem: MenuItem
+    error: GebetaError
+}
+
+type GebetaError {
+    code: String!
+    message: String!
+    messageAm: String
+}
+
+# Input types
+input CreateMenuItemInput {
+    restaurantId: ID!
+    categoryId: ID!
+    name: String!
+    nameAm: String
+    description: String
+    descriptionAm: String
+    price: Int!
+    imageUrl: String
+    isFeatured: Boolean = false
+    modifierGroupIds: [ID!]
+}
+
+input UpdateMenuItemInput {
+    name: String
+    nameAm: String
+    description: String
+    descriptionAm: String
+    price: Int
+    imageUrl: String
+    isAvailable: Boolean
+    isFeatured: Boolean
+    modifierGroupIds: [ID!]
+}
+
+# Queries
+type Query {
+    menuItems(restaurantId: ID!, categoryId: ID, availableOnly: Boolean): [MenuItem!]!
+    menuItem(id: ID!): MenuItem
+    categories(restaurantId: ID!): [Category!]!
+    category(id: ID!): Category
+    searchMenu(restaurantId: ID!, query: String!): [MenuItem!]!
+}
+
+# Mutations
+type Mutation {
+    createMenuItem(input: CreateMenuItemInput!): MenuItemResult!
+    updateMenuItem(id: ID!, input: UpdateMenuItemInput!): MenuItemResult!
+    markItemAvailability(id: ID!, available: Boolean!): MenuItemResult!
+    updateMenuItemPrice(id: ID!, price: Int!): MenuItemResult!
+}

@@ -47,7 +47,7 @@ export class OverviewPage {
     async assertCoreWidgets() {
         await expect(this.page.getByRole('heading', { name: 'Attention Queue' })).toBeVisible();
         await expect(this.page.getByText('IN SYNC')).toBeVisible();
-        await expect(this.page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+        await expect(this.page.getByRole('button', { name: 'Refresh' }).first()).toBeVisible();
     }
 
     async advanceFirstOrder() {
@@ -132,33 +132,12 @@ export class MenuPage {
         await expect(this.page.getByRole('heading', { name: /No categories yet/i })).toBeVisible();
         await this.page.getByRole('button', { name: /Create Category/i }).click();
         await this.page.getByLabel('Category name').fill('QA Specials');
+        await expect(this.page.getByRole('button', { name: /^Create$/ })).toBeVisible();
         await this.page.getByRole('button', { name: /^Create$/ }).click();
-        await expect(this.page.getByText(/sign in to manage categories/i)).toBeVisible();
-    }
-}
-
-export class InventoryPage {
-    constructor(private readonly page: Page) {}
-
-    async assertLoaded() {
-        await expect(this.page.getByRole('heading', { name: /Inventory & Cost/i })).toBeVisible();
-        await expect(this.page.getByRole('heading', { name: 'Inventory Table' })).toBeVisible();
-    }
-
-    async createInventoryItem() {
-        await expect(this.page.getByText('Loading inventory...')).toHaveCount(0, {
-            timeout: 15_000,
-        });
-        await this.page.getByPlaceholder('Item name').fill('QA Flour');
-        await this.page.getByPlaceholder('SKU').fill('qa-flour-01');
-        await this.page.getByPlaceholder('UOM').fill('kg');
-        await this.page.getByPlaceholder('Opening stock').fill('25');
-        await this.page.getByPlaceholder('Reorder level').fill('5');
-        await this.page.getByPlaceholder('Cost/UOM').fill('60');
-        await this.page.getByRole('button', { name: /^Add$/ }).click();
-
-        await expect(this.page.getByText('Inventory item created.')).toBeVisible();
-        await expect(this.page.getByRole('rowheader', { name: /QA Flour/i })).toBeVisible();
+        // After category creation, the app shows a success toast and the modal closes.
+        // The new category heading appears in the menu list.
+        await expect(this.page.getByText('Category created.')).toBeVisible({ timeout: 8000 });
+        await expect(this.page.getByRole('heading', { name: 'QA Specials' })).toBeVisible();
     }
 }
 
@@ -167,15 +146,16 @@ export class AnalyticsPage {
 
     async assertLoaded() {
         await expect(this.page.getByRole('heading', { name: /^Analytics$/i })).toBeVisible();
-        await expect(this.page.getByRole('heading', { name: 'Revenue Trends' })).toBeVisible();
+        await expect(this.page.getByRole('heading', { name: 'Revenue Over Time' })).toBeVisible();
     }
 
     async changeRangeAndValidate() {
-        await this.page.getByRole('button', { name: /This Week/i }).click();
-        await this.page.getByRole('button', { name: 'Today' }).click();
+        // Range buttons render lowercase from the array ['today','week','month']
+        await this.page.getByRole('button', { name: 'week' }).click();
+        await this.page.getByRole('button', { name: 'today' }).click();
         await expect(this.page.getByText(/ETB/i).first()).toBeVisible();
         await expect(this.page.getByText('Total Revenue')).toBeVisible();
-        await expect(this.page.getByRole('heading', { name: 'Order Performance' })).toBeVisible();
+        await expect(this.page.getByRole('heading', { name: 'Revenue Over Time' })).toBeVisible();
     }
 }
 

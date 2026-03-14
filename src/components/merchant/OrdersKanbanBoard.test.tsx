@@ -8,6 +8,12 @@ vi.mock('@/lib/utils', () => ({
     cn: (...args: string[]) => args.filter(Boolean).join(' '),
 }));
 
+// Mock lucide-react to avoid heavy icon loading in tests
+vi.mock('lucide-react', () => ({
+    Clock: () => null,
+    DollarSign: () => null,
+}));
+
 // Helper to create a minimal valid Order mock
 function createMockOrder(overrides: Partial<Order> & { id: string }): Order {
     return {

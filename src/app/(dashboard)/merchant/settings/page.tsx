@@ -1,9 +1,6 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { Bell, Loader2, Lock, Save, Shield } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { SettingsClient } from './SettingsClient';
+import { createClient } from '@/lib/supabase/server';
+import { listChapaBanks, isChapaConfigured } from '@/lib/services/chapaService';
 
 type SecuritySettings = {
     require_mfa: boolean;
@@ -18,6 +15,26 @@ type NotificationSettings = {
     in_app_enabled: boolean;
     escalation_enabled: boolean;
     escalation_minutes: number;
+};
+
+type PaymentSettings = {
+    provider: 'chapa';
+    provider_available: boolean;
+    settlement_bank_code: string;
+    settlement_bank_name: string;
+    settlement_account_name: string;
+    settlement_account_number_masked: string;
+    settlement_status: string;
+    subaccount_id: string | null;
+    last_error: string | null;
+    provisioned_at: string | null;
+    hosted_checkout_fee_percentage: number;
+};
+
+type BankOption = {
+    id: string;
+    name: string;
+    code: string;
 };
 
 const defaultSecurity: SecuritySettings = {
@@ -35,318 +52,127 @@ const defaultNotifications: NotificationSettings = {
     escalation_minutes: 15,
 };
 
-export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState<'security' | 'notifications'>('security');
-    const { loading, markLoaded } = usePageLoadGuard('settings');
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [security, setSecurity] = useState<SecuritySettings>(defaultSecurity);
-    const [notifications, setNotifications] = useState<NotificationSettings>(defaultNotifications);
-    const [ipRangesText, setIpRangesText] = useState('');
+const defaultPayments: PaymentSettings = {
+    provider: 'chapa',
+    provider_available: true,
+    settlement_bank_code: '',
+    settlement_bank_name: '',
+    settlement_account_name: '',
+    settlement_account_number_masked: '',
+    settlement_status: 'not_configured',
+    subaccount_id: null,
+    last_error: null,
+    provisioned_at: null,
+    hosted_checkout_fee_percentage: 0.03,
+};
 
-    const loadSettings = async () => {
-        try {
-            setError(null);
-            const [securityRes, notificationsRes] = await Promise.all([
-                fetch('/api/settings/security', { method: 'GET' }),
-                fetch('/api/settings/notifications', { method: 'GET' }),
-            ]);
-            const securityPayload = await securityRes.json();
-            const notificationsPayload = await notificationsRes.json();
+async function getPaymentSettings(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    restaurantId: string
+): Promise<PaymentSettings> {
+    const { data, error } = await supabase
+        .from('restaurants')
+        .select(
+            `
+            chapa_settlement_bank_code,
+            chapa_settlement_bank_name,
+            chapa_settlement_account_name,
+            chapa_settlement_account_number_masked,
+            chapa_subaccount_status,
+            chapa_subaccount_id,
+            chapa_subaccount_last_error,
+            chapa_subaccount_provisioned_at,
+            hosted_checkout_fee_percentage
+        `
+        )
+        .eq('id', restaurantId)
+        .single();
 
-            if (!securityRes.ok) {
-                throw new Error(securityPayload?.error ?? 'Failed to load security settings.');
-            }
-            if (!notificationsRes.ok) {
-                throw new Error(
-                    notificationsPayload?.error ?? 'Failed to load notification settings.'
-                );
-            }
+    if (error || !data) {
+        console.error('Error fetching payment settings:', error);
+        return {
+            ...defaultPayments,
+            provider_available: isChapaConfigured(),
+        };
+    }
 
-            const resolvedSecurity = {
-                ...defaultSecurity,
-                ...(securityPayload?.data ?? {}),
-            } as SecuritySettings;
-            const resolvedNotifications = {
-                ...defaultNotifications,
-                ...(notificationsPayload?.data ?? {}),
-            } as NotificationSettings;
-
-            setSecurity(resolvedSecurity);
-            setNotifications(resolvedNotifications);
-            setIpRangesText((resolvedSecurity.allowed_ip_ranges ?? []).join('\n'));
-        } catch (loadError) {
-            console.error(loadError);
-            setError(loadError instanceof Error ? loadError.message : 'Failed to load settings.');
-        } finally {
-            markLoaded();
-        }
+    return {
+        ...defaultPayments,
+        provider_available: isChapaConfigured(),
+        settlement_bank_code: data.chapa_settlement_bank_code ?? '',
+        settlement_bank_name: data.chapa_settlement_bank_name ?? '',
+        settlement_account_name: data.chapa_settlement_account_name ?? '',
+        settlement_account_number_masked: data.chapa_settlement_account_number_masked ?? '',
+        settlement_status: data.chapa_subaccount_status ?? 'not_configured',
+        subaccount_id: data.chapa_subaccount_id,
+        last_error: data.chapa_subaccount_last_error,
+        provisioned_at: data.chapa_subaccount_provisioned_at,
+        hosted_checkout_fee_percentage: data.hosted_checkout_fee_percentage ?? 0.03,
     };
+}
 
-    useEffect(() => {
-        void loadSettings();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+async function getBanks(): Promise<{ banks: BankOption[]; directoryUnavailable: boolean }> {
+    if (!isChapaConfigured()) {
+        console.log('Chapa not configured - skipping bank fetch');
+        return { banks: [], directoryUnavailable: true };
+    }
 
-    const saveSecurity = async () => {
-        try {
-            setSaving(true);
-            const payload = {
-                ...security,
-                allowed_ip_ranges: ipRangesText
-                    .split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0),
-            };
-            const response = await fetch('/api/settings/security', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            const body = await response.json();
-            if (!response.ok) {
-                throw new Error(body?.error ?? 'Failed to save security settings.');
-            }
-            setSecurity(body?.data ?? payload);
-            toast.success('Security settings saved.');
-        } catch (saveError) {
-            toast.error(
-                saveError instanceof Error ? saveError.message : 'Failed to save security settings.'
-            );
-        } finally {
-            setSaving(false);
-        }
-    };
+    try {
+        const banks = await listChapaBanks();
+        console.log(`Successfully fetched ${banks.length} banks from Chapa`);
+        return { banks, directoryUnavailable: false };
+    } catch (error) {
+        console.error('Failed to fetch banks from Chapa:', error);
+        return { banks: [], directoryUnavailable: true };
+    }
+}
 
-    const saveNotifications = async () => {
-        try {
-            setSaving(true);
-            const response = await fetch('/api/settings/notifications', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(notifications),
-            });
-            const body = await response.json();
-            if (!response.ok) {
-                throw new Error(body?.error ?? 'Failed to save notifications.');
-            }
-            setNotifications(body?.data ?? notifications);
-            toast.success('Notification settings saved.');
-        } catch (saveError) {
-            toast.error(
-                saveError instanceof Error ? saveError.message : 'Failed to save notifications.'
-            );
-        } finally {
-            setSaving(false);
-        }
-    };
+async function getRestaurantId(
+    supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<string | null> {
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+        return null;
+    }
+
+    const { data: staffData } = await supabase
+        .from('restaurant_staff')
+        .select('restaurant_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+    return staffData?.restaurant_id ?? null;
+}
+
+// Disable caching for this page to always fetch fresh data
+export const revalidate = 0;
+
+export default async function SettingsPage() {
+    const supabase = await createClient();
+    const restaurantId = await getRestaurantId(supabase);
+
+    // Fetch all data in parallel
+    const [payments, banksResult] = await Promise.all([
+        restaurantId
+            ? getPaymentSettings(supabase, restaurantId)
+            : Promise.resolve({
+                  ...defaultPayments,
+                  provider_available: isChapaConfigured(),
+              }),
+        getBanks(),
+    ]);
 
     return (
-        <div className="min-h-screen space-y-8 bg-white pb-20">
-            <div>
-                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">Settings</h1>
-                <p className="font-medium text-gray-500">Security and routing preferences.</p>
-                {error && <p className="mt-2 text-xs font-semibold text-amber-700">{error}</p>}
-            </div>
-
-            <div className="flex gap-2">
-                <button
-                    onClick={() => setActiveTab('security')}
-                    className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${activeTab === 'security' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                    <Shield className="h-4 w-4" />
-                    Security
-                </button>
-                <button
-                    onClick={() => setActiveTab('notifications')}
-                    className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${activeTab === 'notifications' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                    <Bell className="h-4 w-4" />
-                    Notifications
-                </button>
-            </div>
-
-            {loading && (
-                <div className="flex items-center gap-2 rounded-[2rem] border border-gray-100 bg-white p-6 text-gray-500 shadow-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading settings...
-                </div>
-            )}
-
-            {!loading && activeTab === 'security' && (
-                <div className="max-w-3xl space-y-4 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="text-xl font-bold text-gray-900">Security Controls</h2>
-                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">Require MFA</span>
-                        <input
-                            type="checkbox"
-                            checked={security.require_mfa}
-                            onChange={event =>
-                                setSecurity(prev => ({
-                                    ...prev,
-                                    require_mfa: event.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
-                    <label className="block space-y-1">
-                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                            Session Timeout (minutes)
-                        </span>
-                        <input
-                            type="number"
-                            min={5}
-                            max={1440}
-                            value={security.session_timeout_minutes}
-                            onChange={event =>
-                                setSecurity(prev => ({
-                                    ...prev,
-                                    session_timeout_minutes:
-                                        Number.parseInt(event.target.value, 10) || 120,
-                                }))
-                            }
-                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                        />
-                    </label>
-                    <label className="block space-y-1">
-                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                            Allowed IP Ranges (one per line)
-                        </span>
-                        <textarea
-                            value={ipRangesText}
-                            onChange={event => setIpRangesText(event.target.value)}
-                            className="min-h-[120px] w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                            placeholder="10.0.0.0/24"
-                        />
-                    </label>
-                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">
-                            Alert on Suspicious Login
-                        </span>
-                        <input
-                            type="checkbox"
-                            checked={security.alert_on_suspicious_login}
-                            onChange={event =>
-                                setSecurity(prev => ({
-                                    ...prev,
-                                    alert_on_suspicious_login: event.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
-                    <div className="flex justify-end pt-2">
-                        <button
-                            onClick={() => void saveSecurity()}
-                            disabled={saving}
-                            className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
-                        >
-                            {saving ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Lock className="h-4 w-4" />
-                            )}
-                            Save Security
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {!loading && activeTab === 'notifications' && (
-                <div className="max-w-3xl space-y-4 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="text-xl font-bold text-gray-900">Notification Routing</h2>
-                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">
-                            Email Notifications
-                        </span>
-                        <input
-                            type="checkbox"
-                            checked={notifications.email_enabled}
-                            onChange={event =>
-                                setNotifications(prev => ({
-                                    ...prev,
-                                    email_enabled: event.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
-                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">SMS Notifications</span>
-                        <input
-                            type="checkbox"
-                            checked={notifications.sms_enabled}
-                            onChange={event =>
-                                setNotifications(prev => ({
-                                    ...prev,
-                                    sms_enabled: event.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
-                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">
-                            In-app Notifications
-                        </span>
-                        <input
-                            type="checkbox"
-                            checked={notifications.in_app_enabled}
-                            onChange={event =>
-                                setNotifications(prev => ({
-                                    ...prev,
-                                    in_app_enabled: event.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
-                    <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
-                        <span className="text-sm font-medium text-gray-700">
-                            Escalation Enabled
-                        </span>
-                        <input
-                            type="checkbox"
-                            checked={notifications.escalation_enabled}
-                            onChange={event =>
-                                setNotifications(prev => ({
-                                    ...prev,
-                                    escalation_enabled: event.target.checked,
-                                }))
-                            }
-                        />
-                    </label>
-                    <label className="block space-y-1">
-                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                            Escalation Time (minutes)
-                        </span>
-                        <input
-                            type="number"
-                            min={1}
-                            max={240}
-                            value={notifications.escalation_minutes}
-                            onChange={event =>
-                                setNotifications(prev => ({
-                                    ...prev,
-                                    escalation_minutes:
-                                        Number.parseInt(event.target.value, 10) || 15,
-                                }))
-                            }
-                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                        />
-                    </label>
-                    <div className="flex justify-end pt-2">
-                        <button
-                            onClick={() => void saveNotifications()}
-                            disabled={saving}
-                            className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
-                        >
-                            {saving ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Save className="h-4 w-4" />
-                            )}
-                            Save Routing
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
+        <SettingsClient
+            security={defaultSecurity}
+            notifications={defaultNotifications}
+            payments={payments}
+            banks={banksResult.banks}
+            directoryUnavailable={banksResult.directoryUnavailable}
+        />
     );
 }

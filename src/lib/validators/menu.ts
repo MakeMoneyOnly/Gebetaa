@@ -3,10 +3,17 @@ import { z } from 'zod';
 /**
  * Update Price Schema
  * Validates price update requests
+ *
+ * CRIT-02: Price is now INTEGER in SANTIM (100 santim = 1 ETB)
  */
 export const UpdatePriceSchema = z.object({
     itemId: z.string().uuid('Invalid item ID'),
-    price: z.number().positive('Price must be positive').max(999999.99, 'Price too high'),
+    // price is now in SANTIM (integer), not birr (decimal)
+    price: z
+        .number()
+        .int()
+        .positive('Price must be a positive integer (in santim)')
+        .max(99999999, 'Price too high'),
     restaurant_id: z.string().uuid('Invalid restaurant ID'),
 });
 
@@ -45,6 +52,8 @@ export const UpdateCategorySchema = z.object({
 /**
  * Create Menu Item Schema
  * Validates menu item creation requests
+ *
+ * CRIT-02: Price is now INTEGER in SANTIM (100 santim = 1 ETB)
  */
 export const CreateMenuItemSchema = z.object({
     category_id: z.string().uuid('Invalid category ID'),
@@ -52,7 +61,12 @@ export const CreateMenuItemSchema = z.object({
     name_am: z.string().max(200, 'Amharic name too long').optional().nullable(),
     description: z.string().max(1000, 'Description too long').optional().nullable(),
     description_am: z.string().max(1000, 'Amharic description too long').optional().nullable(),
-    price: z.number().positive('Price must be positive').max(999999.99, 'Price too high'),
+    // price is now in SANTIM (integer), not birr (decimal)
+    price: z
+        .number()
+        .int()
+        .positive('Price must be a positive integer (in santim)')
+        .max(99999999, 'Price too high'),
     is_available: z.boolean().optional(),
     is_fasting: z.boolean().optional(),
     is_chef_special: z.boolean().optional(),

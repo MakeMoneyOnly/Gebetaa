@@ -20,7 +20,6 @@ import {
     PackageCheck,
     ArrowLeft,
     RefreshCw,
-    MoreHorizontal,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -149,7 +148,10 @@ function TrackerContent() {
     // Build the tracking URL once
     const trackUrl = useMemo(() => {
         if (!orderId || !sig || !exp || !table) return null;
-        const u = new URL('/api/guest/track', typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+        const u = new URL(
+            '/api/guest/track',
+            typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+        );
         u.searchParams.set('slug', slug);
         u.searchParams.set('order_id', orderId);
         u.searchParams.set('table', table);
@@ -245,7 +247,7 @@ function TrackerContent() {
 
     if (loading && !order) {
         return (
-            <main className="flex min-h-screen items-center justify-center bg-slate-50 font-manrope">
+            <main className="font-manrope flex min-h-screen items-center justify-center bg-slate-50">
                 <div className="flex flex-col items-center gap-3 text-slate-400">
                     <ChefHat className="h-10 w-10 animate-pulse" />
                     <p className="text-sm font-medium">Loading your order...</p>
@@ -256,9 +258,11 @@ function TrackerContent() {
 
     if (error && !order) {
         return (
-            <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center font-manrope">
+            <main className="font-manrope flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-6 text-center">
                 <ChefHat className="h-12 w-12 text-slate-300" />
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">Can't load order</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                    Can't load order
+                </h1>
                 <p className="text-sm font-medium text-slate-500">{error}</p>
                 <button
                     onClick={() => void fetchStatus()}
@@ -271,7 +275,7 @@ function TrackerContent() {
     }
 
     return (
-        <main className="min-h-screen bg-[#f8fafc] font-manrope pb-12">
+        <main className="font-manrope min-h-screen bg-[#f8fafc] pb-12">
             {/* ── Header ──────────────────────────────────────────────────── */}
             <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 px-5 py-4 backdrop-blur-md">
                 <div className="mx-auto flex max-w-lg items-center justify-between">
@@ -285,7 +289,9 @@ function TrackerContent() {
                         <p className="text-xs font-semibold text-slate-400">Live tracker</p>
                         {order && (
                             <p className="text-sm font-bold text-slate-900">
-                                Order #{order.order_number} <span className="text-slate-300 font-normal mx-1">/</span> Table {order.table_number}
+                                Order #{order.order_number}{' '}
+                                <span className="mx-1 font-normal text-slate-300">/</span> Table{' '}
+                                {order.table_number}
                             </p>
                         )}
                     </div>
@@ -302,19 +308,17 @@ function TrackerContent() {
                 {/* ── Order Progress Card ──────────────────────────────────── */}
                 <div
                     className={`overflow-hidden rounded-[2rem] border shadow-sm transition-all ${
-                        allReady
-                            ? 'border-emerald-200/60 bg-white'
-                            : 'border-slate-200/60 bg-white'
+                        allReady ? 'border-emerald-200/60 bg-white' : 'border-slate-200/60 bg-white'
                     }`}
                 >
                     <div className="p-6 md:p-8">
                         {/* Overall progress bar */}
                         <div className="mb-6 flex items-start justify-between">
                             <div>
-                                <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+                                <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
                                     {allReady ? 'Your food is ready!' : 'Kitchen is cooking...'}
                                 </h1>
-                                <p className="mt-1 md:mt-2 text-sm font-medium text-slate-500">
+                                <p className="mt-1 text-sm font-medium text-slate-500 md:mt-2">
                                     {order ? elapsedLabel(order.created_at) : ''}
                                     {totalItems > 0 && <span className="mx-1.5">·</span>}
                                     {totalItems > 0 && `${readyItems}/${totalItems} items ready`}
@@ -322,7 +326,9 @@ function TrackerContent() {
                             </div>
                             <div
                                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold shadow-sm ${
-                                    allReady ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-700 border border-slate-100'
+                                    allReady
+                                        ? 'bg-emerald-500 text-white'
+                                        : 'border border-slate-100 bg-slate-50 text-slate-700'
                                 }`}
                             >
                                 {progressPct}%
@@ -341,13 +347,13 @@ function TrackerContent() {
                     </div>
 
                     {/* ── Order Status Steps ────────────────────────────────── */}
-                    <div className="border-t border-slate-100 px-6 py-6 md:px-8 bg-slate-50/80">
-                        <div className="flex items-start justify-between relative z-0">
+                    <div className="border-t border-slate-100 bg-slate-50/80 px-6 py-6 md:px-8">
+                        <div className="relative z-0 flex items-start justify-between">
                             {/* Connector line background */}
-                            <div className="absolute top-[11px] left-6 right-6 h-[2px] bg-slate-200 -z-10" />
+                            <div className="absolute top-[11px] right-6 left-6 -z-10 h-[2px] bg-slate-200" />
                             {/* Connector line active */}
-                            <div 
-                                className="absolute top-[11px] left-6 h-[2px] bg-slate-900 -z-10 transition-all duration-700 ease-out" 
+                            <div
+                                className="absolute top-[11px] left-6 -z-10 h-[2px] bg-slate-900 transition-all duration-700 ease-out"
                                 style={{ width: `calc(${(orderStepIndex / 4) * 100}% - 3rem)` }}
                             />
 
@@ -356,21 +362,30 @@ function TrackerContent() {
                                     const isActive = idx === orderStepIndex;
                                     const isDone = idx < orderStepIndex;
                                     return (
-                                        <div key={label} className="flex flex-col items-center gap-2">
+                                        <div
+                                            key={label}
+                                            className="flex flex-col items-center gap-2"
+                                        >
                                             <div
                                                 className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-500 ${
                                                     isDone
                                                         ? 'bg-slate-900 text-white shadow-md shadow-slate-900/20'
                                                         : isActive
-                                                          ? 'bg-white text-slate-900 ring-4 ring-slate-900/10 shadow-sm border-2 border-slate-900'
-                                                          : 'bg-white text-slate-400 border border-slate-200'
+                                                          ? 'border-2 border-slate-900 bg-white text-slate-900 shadow-sm ring-4 ring-slate-900/10'
+                                                          : 'border border-slate-200 bg-white text-slate-400'
                                                 }`}
                                             >
-                                                {isDone ? <CheckCircle2 size={12} strokeWidth={3} /> : idx + 1}
+                                                {isDone ? (
+                                                    <CheckCircle2 size={12} strokeWidth={3} />
+                                                ) : (
+                                                    idx + 1
+                                                )}
                                             </div>
                                             <p
-                                                className={`text-[11px] font-semibold transition-colors mt-1 ${
-                                                    isDone || isActive ? 'text-slate-800' : 'text-slate-400'
+                                                className={`mt-1 text-[11px] font-semibold transition-colors ${
+                                                    isDone || isActive
+                                                        ? 'text-slate-800'
+                                                        : 'text-slate-400'
                                                 }`}
                                             >
                                                 {label}
@@ -404,19 +419,25 @@ function TrackerContent() {
                                 return (
                                     <div
                                         key={item.id}
-                                        className="group flex flex-col gap-3 rounded-2xl bg-white p-4 text-left shadow-sm border border-slate-100 transition-all hover:shadow-md md:p-5"
+                                        className="group flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all hover:shadow-md md:p-5"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-center gap-3">
                                                 <div
                                                     className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-                                                        isReady ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-600'
+                                                        isReady
+                                                            ? 'bg-emerald-50 text-emerald-600'
+                                                            : 'bg-slate-50 text-slate-600'
                                                     }`}
                                                 >
-                                                    {isReady ? <PackageCheck size={24} /> : <ChefHat size={24} />}
+                                                    {isReady ? (
+                                                        <PackageCheck size={24} />
+                                                    ) : (
+                                                        <ChefHat size={24} />
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-base font-bold text-slate-900 leading-tight">
+                                                    <h3 className="text-base leading-tight font-bold text-slate-900">
                                                         {item.quantity}× {item.name}
                                                     </h3>
                                                     <p className="mt-1 text-sm font-medium text-slate-500 capitalize">
@@ -433,10 +454,11 @@ function TrackerContent() {
                                             </div>
                                         </div>
 
-                                        {(item.notes || (item.modifiers && item.modifiers.length > 0)) && (
+                                        {(item.notes ||
+                                            (item.modifiers && item.modifiers.length > 0)) && (
                                             <div className="mt-2 pl-[60px]">
                                                 {item.notes && (
-                                                    <p className="text-sm font-medium text-slate-500 italic mb-2">
+                                                    <p className="mb-2 text-sm font-medium text-slate-500 italic">
                                                         "{item.notes}"
                                                     </p>
                                                 )}
@@ -445,7 +467,7 @@ function TrackerContent() {
                                                         {item.modifiers.map((mod, i) => (
                                                             <span
                                                                 key={i}
-                                                                className="rounded-lg bg-slate-50 border border-slate-200/60 px-2 py-1 text-xs font-bold text-slate-600"
+                                                                className="rounded-lg border border-slate-200/60 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-600"
                                                             >
                                                                 {mod}
                                                             </span>
@@ -473,11 +495,13 @@ function TrackerContent() {
 
                 {/* ── All Ready Banner ─────────────────────────────────────── */}
                 {allReady && (
-                    <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-6 md:p-8 text-center shadow-sm">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 mb-4">
+                    <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-6 text-center shadow-sm md:p-8">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                             <PackageCheck className="h-8 w-8 text-emerald-600" />
                         </div>
-                        <h2 className="text-2xl font-bold tracking-tight text-emerald-900">Your food is ready!</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-emerald-900">
+                            Your food is ready!
+                        </h2>
                         <p className="mt-2 text-base font-medium text-emerald-700/80">
                             Your waiter will bring it to your table shortly.
                         </p>
@@ -485,8 +509,14 @@ function TrackerContent() {
                 )}
 
                 {/* ── Last updated ──────────────────────────────────────────── */}
-                <p className="text-center text-xs font-medium text-slate-400 pt-4">
-                    Last updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · Auto-refreshes every 8s
+                <p className="pt-4 text-center text-xs font-medium text-slate-400">
+                    Last updated{' '}
+                    {lastRefresh.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                    })}{' '}
+                    · Auto-refreshes every 8s
                 </p>
             </div>
         </main>

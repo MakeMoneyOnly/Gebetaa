@@ -23,6 +23,15 @@ const eslintConfig = defineConfig([
             '@typescript-eslint/no-explicit-any': 'off',
             'react/no-unescaped-entities': 'off',
             'react-hooks/set-state-in-effect': 'off',
+            // Allow underscore-prefixed variables (intentionally unused function params)
+            '@typescript-eslint/no-unused-vars': [
+                'warn',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
+                },
+            ],
         },
     },
 ]);

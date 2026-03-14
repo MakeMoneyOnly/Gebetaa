@@ -5,6 +5,7 @@ import { Heart, Plus } from 'lucide-react';
 import Image from 'next/image';
 
 import { useHaptic } from '@/hooks/useHaptic';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 import { cn, isRemoteOrDataImageSrc } from '@/lib/utils';
 
 interface MenuItemProps {
@@ -111,7 +112,7 @@ export function MenuCard({
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight text-white">
                         <span className="text-base font-black">
-                            {Math.round(item.price).toLocaleString()}
+                            {formatCurrencyCompact(item.price)} ETB
                         </span>
                         <span className="text-xs font-bold">ETB</span>
                     </div>

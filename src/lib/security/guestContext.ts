@@ -38,6 +38,7 @@ export async function resolveGuestContext(
     }
 
     const { slug, table, sig, exp } = parsed.data;
+
     const signatureCheck = verifySignedQRCode(slug, table, sig, exp);
     if (!signatureCheck.valid) {
         return { valid: false, reason: signatureCheck.reason ?? 'Invalid QR code', status: 403 };

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PaymentAdapterRegistry } from '@/lib/payments/adapters';
 import type {
     PaymentInitiateInput,
@@ -14,12 +14,14 @@ class MockProvider implements PaymentProvider {
     private shouldFailInitiate: boolean;
     private healthStatus: PaymentProviderHealth['status'];
 
-    constructor(params: {
-        name: PaymentProviderName;
-        shouldFailInitiate?: boolean;
-        healthStatus?: PaymentProviderHealth['status'];
-    }) {
-        this.name = params.name;
+    constructor(
+        params: {
+            name?: PaymentProviderName;
+            shouldFailInitiate?: boolean;
+            healthStatus?: PaymentProviderHealth['status'];
+        } = {}
+    ) {
+        this.name = params.name ?? 'chapa';
         this.shouldFailInitiate = params.shouldFailInitiate ?? false;
         this.healthStatus = params.healthStatus ?? 'healthy';
     }
@@ -56,70 +58,89 @@ class MockProvider implements PaymentProvider {
 }
 
 describe('PaymentAdapterRegistry', () => {
-    it('falls back to the next provider when preferred provider fails', async () => {
+    beforeEach(() => {
+        vi.resetModules();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('initiates Chapa payments without fallback', async () => {
         const registry = new PaymentAdapterRegistry({
-            providers: [
-                new MockProvider({ name: 'telebirr', shouldFailInitiate: true }),
-                new MockProvider({ name: 'chapa' }),
-            ],
-            fallbackPolicy: {
-                enabled: true,
-                fallbackOrder: ['telebirr', 'chapa'],
-            },
+            providers: [new MockProvider()],
         });
 
         const response = await registry.initiateWithFallback({
-            preferredProvider: 'telebirr',
+            preferredProvider: 'chapa',
             input: { amount: 10, currency: 'ETB', email: 'ops@gebeta.app' },
         });
 
         expect(response.result.provider).toBe('chapa');
-        expect(response.fallbackApplied).toBe(true);
-        expect(response.attempts).toHaveLength(2);
-        expect(response.attempts[0]).toMatchObject({ provider: 'telebirr', ok: false });
-        expect(response.attempts[1]).toMatchObject({ provider: 'chapa', ok: true });
-    });
-
-    it('returns preferred provider when initiate succeeds without fallback', async () => {
-        const registry = new PaymentAdapterRegistry({
-            providers: [
-                new MockProvider({ name: 'telebirr' }),
-                new MockProvider({ name: 'chapa' }),
-            ],
-            fallbackPolicy: {
-                enabled: true,
-                fallbackOrder: ['telebirr', 'chapa'],
-            },
-        });
-
-        const response = await registry.initiateWithFallback({
-            preferredProvider: 'telebirr',
-            input: { amount: 20, currency: 'ETB', email: 'ops@gebeta.app' },
-        });
-
-        expect(response.result.provider).toBe('telebirr');
         expect(response.fallbackApplied).toBe(false);
-        expect(response.attempts).toHaveLength(1);
+        expect(response.attempts).toEqual([{ provider: 'chapa', ok: true }]);
     });
 
-    it('returns provider health checks in requested order', async () => {
+    it('throws when the requested provider is not registered', async () => {
         const registry = new PaymentAdapterRegistry({
-            providers: [
-                new MockProvider({ name: 'telebirr', healthStatus: 'degraded' }),
-                new MockProvider({ name: 'chapa', healthStatus: 'healthy' }),
-            ],
-            fallbackPolicy: {
-                enabled: true,
-                fallbackOrder: ['telebirr', 'chapa'],
-            },
+            providers: [],
+        });
+
+        await expect(
+            registry.initiateWithFallback({
+                preferredProvider: 'chapa',
+                input: { amount: 10, currency: 'ETB', email: 'ops@gebeta.app' },
+            })
+        ).rejects.toThrow('Provider chapa is not registered');
+    });
+
+    it('returns provider health checks', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider({ healthStatus: 'degraded' })],
         });
 
         const health = await registry.healthChecks();
 
-        expect(health).toHaveLength(2);
-        expect(health[0].provider).toBe('telebirr');
+        expect(health).toHaveLength(1);
+        expect(health[0].provider).toBe('chapa');
         expect(health[0].status).toBe('degraded');
-        expect(health[1].provider).toBe('chapa');
-        expect(health[1].status).toBe('healthy');
+    });
+
+    it('returns unavailable health for unknown provider requests', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [],
+        });
+
+        const health = await registry.healthChecks(['chapa']);
+
+        expect(health).toHaveLength(1);
+        expect(health[0].status).toBe('unavailable');
+    });
+
+    it('verify calls the registered provider', async () => {
+        const registry = new PaymentAdapterRegistry({
+            providers: [new MockProvider()],
+        });
+
+        const result = await registry.verify({
+            provider: 'chapa',
+            transactionReference: 'tx-123',
+        });
+
+        expect(result.status).toBe('success');
+        expect(result.transactionReference).toBe('tx-123');
+    });
+});
+
+describe('createPaymentAdapterRegistry', () => {
+    it('creates a PaymentAdapterRegistry instance', async () => {
+        const { createPaymentAdapterRegistry } = await import('./adapters');
+        const registry = createPaymentAdapterRegistry();
+
+        expect(registry).toBeDefined();
+        expect(typeof registry.getProvider).toBe('function');
+        expect(typeof registry.healthChecks).toBe('function');
+        expect(typeof registry.initiateWithFallback).toBe('function');
+        expect(typeof registry.verify).toBe('function');
     });
 });

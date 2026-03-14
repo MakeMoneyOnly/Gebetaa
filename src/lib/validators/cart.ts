@@ -3,18 +3,23 @@
  *
  * Addresses: localStorage Parsing Without Schema Validation (High Priority Audit Finding #6)
  * Location: src/context/CartContext.tsx:46-77
+ *
+ * CRIT-02: All monetary values are now INTEGER in SANTIM (100 santim = 1 ETB)
  */
 
 import { z } from 'zod';
 
 /**
  * Cart Item Schema - validates individual cart items
+ *
+ * CRIT-02: price is now in SANTIM (integer)
  */
 export const CartItemSchema = z.object({
     id: z.string().uuid('Invalid item ID'),
     name: z.string().min(1, 'Item name is required'),
     name_am: z.string().nullable().optional(),
-    price: z.number().positive('Price must be positive'),
+    // price is now in SANTIM (integer), not birr
+    price: z.number().int().positive('Price must be a positive integer (in santim)'),
     quantity: z.number().int().min(1, 'Quantity must be at least 1'),
     image_url: z.string().nullable().optional(),
     station: z.enum(['kitchen', 'bar', 'dessert', 'coffee']).nullable().optional(),

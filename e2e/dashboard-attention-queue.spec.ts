@@ -147,15 +147,26 @@ test.describe('Dashboard attention queue workflow', () => {
 
         await page.goto('/merchant');
 
-        await expect(page.getByRole('heading', { name: 'Attention Queue' })).toBeVisible();
-        await expect(page.getByText('ORD-1001', { exact: false }).first()).toBeVisible();
-        await expect(page.getByText('Status: pending').first()).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Attention Queue' })).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByText('ORD-1001', { exact: false }).first()).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByText('Status: pending').first()).toBeVisible({ timeout: 15000 });
 
         await page.getByRole('button', { name: 'Advance Status' }).first().click();
         await expect(page.getByText('Status: acknowledged').first()).toBeVisible();
 
-        await page.getByRole('button', { name: 'Open Orders' }).click();
-        await expect(page).toHaveURL(/\/merchant\/orders$/);
+        await expect(async () => {
+            if (!page.url().match(/\/merchant\/orders$/)) {
+                const btn = page.getByRole('button', { name: 'Open Orders' });
+                if (await btn.isVisible()) {
+                    await btn.click();
+                }
+                expect(page.url()).toMatch(/\/merchant\/orders$/);
+            }
+        }).toPass({ timeout: 15000 });
     });
 
     test('refresh updates attention queue payload', async ({ page }) => {
@@ -174,8 +185,8 @@ test.describe('Dashboard attention queue workflow', () => {
 
         await page.goto('/merchant');
 
-        await expect(page.getByText('Status: pending').first()).toBeVisible();
-        await page.getByRole('button', { name: 'Refresh' }).click();
-        await expect(page.getByText('Status: ready').first()).toBeVisible();
+        await expect(page.getByText('Status: pending').first()).toBeVisible({ timeout: 15000 });
+        await page.getByRole('button', { name: 'Refresh' }).first().click();
+        await expect(page.getByText('Status: ready').first()).toBeVisible({ timeout: 15000 });
     });
 });

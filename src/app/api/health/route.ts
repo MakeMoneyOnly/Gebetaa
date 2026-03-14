@@ -58,11 +58,11 @@ const REQUIRED_ENV_VARS = [
 const OPTIONAL_ENV_VARS = [
     'DATABASE_URL',
     'REDIS_URL',
+    'UPSTASH_REDIS_REST_URL',
+    'UPSTASH_REDIS_REST_TOKEN',
+    'QSTASH_TOKEN',
     'CHAPA_SECRET_KEY',
-    'TELEBIRR_API_BASE_URL',
-    'TELEBIRR_APP_ID',
-    'TELEBIRR_APP_KEY',
-    'SENDGRID_API_KEY',
+    'CHAPA_WEBHOOK_SECRET',
     'SENTRY_AUTH_TOKEN',
 ];
 
@@ -167,7 +167,7 @@ async function checkRedis(): Promise<{
  * GET /api/health
  * Returns comprehensive health status
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 export async function GET(_request: NextRequest): Promise<NextResponse<HealthStatus>> {
     // Run checks in parallel for efficiency
     const [databaseCheck, redisCheck] = await Promise.all([checkDatabase(), checkRedis()]);

@@ -199,7 +199,6 @@ export default function TablesPage() {
         }
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const fetchOccupancyTimeline = async (_signal?: AbortSignal) => {
         try {
             const since = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();

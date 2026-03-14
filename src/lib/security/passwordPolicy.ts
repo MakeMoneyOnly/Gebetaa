@@ -177,10 +177,7 @@ export function getPasswordRequirements(): string {
  * Check if password has been used recently
  * (In production, this would check against a history table)
  */
-export async function isPasswordReused(
-    _userId: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-    _newPassword: string // eslint-disable-line @typescript-eslint/no-unused-vars
-): Promise<boolean> {
+export async function isPasswordReused(_userId: string, _newPassword: string): Promise<boolean> {
     // This is a placeholder - in production, hash the password
     // and compare against stored password history
     // For now, we return false (no reuse detected)

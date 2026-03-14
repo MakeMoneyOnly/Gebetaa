@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Tablet, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Laptop } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { getDeviceTypeLabel } from '@/lib/devices/config';
 
 export default function DeviceSetupPage() {
     const [pairingCode, setPairingCode] = useState('');
@@ -48,19 +49,6 @@ export default function DeviceSetupPage() {
         }
     }, [slug]);
 
-    const getDeviceLabel = (deviceType?: string) => {
-        switch (deviceType) {
-            case 'kds':
-                return 'Kitchen Display System';
-            case 'pos':
-                return 'Waiter POS';
-            case 'kiosk':
-                return 'Customer Kiosk';
-            default:
-                return 'Service Terminal';
-        }
-    };
-
     const getPageTitle = () => {
         const name =
             restaurantName ||
@@ -98,6 +86,10 @@ export default function DeviceSetupPage() {
                         router.push('/kds');
                     } else if (result.data.device_type === 'pos') {
                         router.push('/waiter');
+                    } else if (result.data.device_type === 'terminal') {
+                        router.push('/terminal');
+                    } else if (result.data.device_type === 'kiosk') {
+                        router.push(`/${slug}?entry=menu`);
                     } else {
                         router.push('/');
                     }
@@ -191,7 +183,7 @@ export default function DeviceSetupPage() {
                             Paired Successfully
                         </p>
                         <h1 className="mt-2 text-3xl font-black tracking-tight text-gray-900">
-                            {getPageTitle()} {getDeviceLabel(deviceInfo?.device_type)}
+                            {getPageTitle()} {getDeviceTypeLabel(deviceInfo?.device_type)}
                         </h1>
                         <p className="mt-3 text-sm font-semibold text-gray-500">
                             <span className="font-bold text-gray-900">{deviceInfo?.name}</span> is
@@ -208,7 +200,7 @@ export default function DeviceSetupPage() {
                                         Launching
                                     </p>
                                     <p className="text-xl font-black text-gray-900">
-                                        {getDeviceLabel(deviceInfo?.device_type)}
+                                        {getDeviceTypeLabel(deviceInfo?.device_type)}
                                     </p>
                                 </div>
                             </div>

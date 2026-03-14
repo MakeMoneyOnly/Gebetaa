@@ -1,6 +1,27 @@
 import Dexie, { Table } from 'dexie';
 
 /**
+ * @deprecated Use PowerSync instead
+ *
+ * CRIT-05: This file is deprecated.
+ *
+ * Migration guide:
+ * - Replace imports from '@/lib/offlineQueue' with '@/lib/sync'
+ * - Use createOfflineOrder() instead of queueOrder()
+ * - Use getPendingOfflineOrders() instead of getPendingOrders()
+ * - Use updateOfflineOrderStatus() instead of updateQueuedOrder()
+ *
+ * New sync module provides:
+ * - PowerSync-backed SQLite for offline-first operation
+ * - Automatic conflict resolution with CRDT
+ * - Idempotency key handling built-in
+ * - Printer fallback queue
+ * - Sync worker for background sync
+ *
+ * See: src/lib/sync/index.ts
+ */
+
+/**
  * Sync conflict resolution implementation
  * Addresses ARCH-2: Last-write-wins with audit trail
  */

@@ -1,0 +1,125 @@
+# Payments Subgraph Schema
+# GraphQL Federation 2 subgraph for Payments domain
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+
+enum PaymentMethod {
+    CASH
+    TELEBIRR
+    CHAPA
+    CBE_BIRR
+    AMOLE
+}
+
+enum PaymentStatus {
+    PENDING
+    CAPTURED
+    FAILED
+    REFUNDED
+}
+
+type Payment @key(fields: "id") {
+    id: ID!
+    restaurantId: ID!
+    orderId: ID!
+    amount: Int!
+    currencyCode: String!
+    method: PaymentMethod!
+    provider: String
+    providerTransactionId: String
+    status: PaymentStatus!
+    capturedAt: String
+    idempotencyKey: String!
+    createdAt: String!
+}
+
+type DailyRevenueReport {
+    date: String!
+    totalRevenueSantim: Int!
+    orderCount: Int!
+    byMethod: [RevenueByMethod!]!
+}
+
+type RevenueByMethod {
+    method: PaymentMethod!
+    totalSantim: Int!
+    count: Int!
+}
+
+# Error types
+type TelebirrPaymentResult {
+    success: Boolean!
+    payment: Payment
+    ussdCode: String
+    qrCode: String
+    expiresAt: String
+    error: GebetaError
+}
+
+type ChapaPaymentResult {
+    success: Boolean!
+    payment: Payment
+    checkoutUrl: String
+    error: GebetaError
+}
+
+type PaymentResult {
+    success: Boolean!
+    payment: Payment
+    error: GebetaError
+}
+
+type RefundResult {
+    success: Boolean!
+    refund: Payment
+    error: GebetaError
+}
+
+type GebetaError {
+    code: String!
+    message: String!
+    messageAm: String
+}
+
+# Input types
+input InitiateTelebirrInput {
+    orderId: ID!
+    amountSantim: Int!
+    phoneNumber: String
+    idempotencyKey: String!
+}
+
+input InitiateChapaInput {
+    orderId: ID!
+    amountSantim: Int!
+    customerEmail: String
+    customerName: String
+    idempotencyKey: String!
+}
+
+input RecordCashPaymentInput {
+    orderId: ID!
+    amountSantim: Int!
+    idempotencyKey: String!
+}
+
+input ProcessRefundInput {
+    paymentId: ID!
+    amountSantim: Int!
+    reason: String
+}
+
+# Queries
+type Query {
+    payments(restaurantId: ID!, orderId: ID): [Payment!]!
+    payment(id: ID!): Payment
+    dailyRevenue(restaurantId: ID!, date: String!): DailyRevenueReport!
+}
+
+# Mutations
+type Mutation {
+    initiateTelebirrPayment(input: InitiateTelebirrInput!): TelebirrPaymentResult!
+    initiateChapaPayment(input: InitiateChapaInput!): ChapaPaymentResult!
+    recordCashPayment(input: RecordCashPaymentInput!): PaymentResult!
+    processRefund(input: ProcessRefundInput!): RefundResult!
+}

@@ -6,11 +6,6 @@ type P2Copy = {
         subtitle: string;
         operationsCenter: string;
     };
-    inventory: {
-        title: string;
-        subtitle: string;
-        operationsCenter: string;
-    };
     guests: {
         title: string;
         subtitle: string;
@@ -27,11 +22,6 @@ const copy: Record<AppLocale, P2Copy> = {
                 'Settlement visibility, refund operations, payout matching, and accounting export.',
             operationsCenter: 'Finance Operations Center',
         },
-        inventory: {
-            title: 'Inventory & Cost',
-            subtitle: 'Ingredient stock, procurement operations, and variance controls.',
-            operationsCenter: 'Inventory Operations Center',
-        },
         guests: {
             title: 'Guests',
             subtitle: 'CRM starter with profiles, tags, and visit history.',
@@ -43,18 +33,13 @@ const copy: Record<AppLocale, P2Copy> = {
         finance: {
             title: 'ፋይናንስ እና ማስታረቅ',
             subtitle: 'የመክፈያ ማጠቃለያ፣ የመመለሻ ሂደቶች፣ የክፍያ ማዛመድ እና የሂሳብ ኤክስፖርት።',
-            operationsCenter: 'የፋይናንስ ኦፕሬሽንስ ማዕከል',
-        },
-        inventory: {
-            title: 'እቃ እና ወጪ',
-            subtitle: 'የእቃ ክምችት፣ የግዥ ሂደቶች እና የልዩነት ቁጥጥር።',
-            operationsCenter: 'የእቃ ኦፕሬሽንስ ማዕከል',
+            operationsCenter: 'የፋይናንስ ኦፕርሴሽንስ ማዕከል',
         },
         guests: {
             title: 'እንግዶች',
             subtitle: 'የደንበኛ ፕሮፋይል፣ መለያዎች እና የጉብኝት ታሪክ መነሻ።',
             growthTitle: 'የገቢ እድገት ክፍል (P2)',
-            growthSubtitle: 'ታማኝነት፣ የስጦታ ካርዶች እና የካምፔን ኦፕሬሽኖች ከእንግዶች ጋር።',
+            growthSubtitle: 'ታማኝነት፣ የስጦታ ካርዶች እና የካምፔን ኦፕርሴሽኖች ከእንግዶች ጋር።',
         },
     },
 };

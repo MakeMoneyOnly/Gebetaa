@@ -2,9 +2,8 @@
  * POST /api/payments/chapa/initialize
  *
  * Called when a guest completes their order details and clicks "Proceed to Pay".
- * Creates the order with status='payment_pending' and returns either:
- *   - A real Chapa checkout_url (when CHAPA_SECRET_KEY is configured)
- *   - A mock checkout URL (development/demo mode)
+ * Creates the order with status='payment_pending' and returns the real
+ * hosted Chapa checkout URL from the official transaction initialize flow.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -21,6 +20,9 @@ import {
     isChapaConfigured,
 } from '@/lib/services/chapaService';
 import { getAppUrl } from '@/lib/config/env';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { prepareOrderDiscount } from '@/lib/discounts/service';
+import { isIdempotencyKeyValid } from '@/lib/api/idempotency';
 
 const RequestSchema = z.object({
     guest_context: z.object({
@@ -48,6 +50,7 @@ const RequestSchema = z.object({
     customer_email: z.string().email().optional(),
     delivery_address: z.string().max(500).optional(),
     notes: z.string().max(1000).optional(),
+    discount_id: z.string().uuid().optional(),
     idempotency_key: z.string().uuid().optional(),
 });
 
@@ -64,6 +67,7 @@ export async function POST(request: NextRequest) {
         }
 
         const supabase = await createClient();
+        const admin = createServiceRoleClient();
 
         // Resolve restaurant by slug (online orders skip QR validation)
         const { data: restaurant, error: restaurantError } = await supabase
@@ -87,11 +91,42 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        let discountRuntime;
+        try {
+            discountRuntime = parsed.data.discount_id
+                ? await prepareOrderDiscount({
+                      supabase: createServiceRoleClient() as any,
+                      restaurantId: restaurant.id,
+                      discountId: parsed.data.discount_id,
+                      items: parsed.data.items.map(item => ({
+                          id: item.id,
+                          price: item.price,
+                          quantity: item.quantity,
+                      })),
+                      excludeManagerApproval: true,
+                  })
+                : {
+                      discount: null,
+                      calculation: {
+                          subtotal: parsed.data.total_price,
+                          discountAmount: 0,
+                          total: parsed.data.total_price,
+                          applied: false,
+                      },
+                  };
+        } catch (error) {
+            return NextResponse.json(
+                { error: error instanceof Error ? error.message : 'Failed to validate discount' },
+                { status: 400 }
+            );
+        }
+
         // Validate order items (price check)
         const validation = await validateOrderItems(
             supabase,
             parsed.data.items,
-            parsed.data.total_price
+            discountRuntime.calculation.total,
+            discountRuntime.calculation.discountAmount
         );
         if (!validation.isValid) {
             return NextResponse.json({ error: validation.error }, { status: 400 });
@@ -105,7 +140,15 @@ export async function POST(request: NextRequest) {
                   ? 'Pickup'
                   : 'Online (Dine-In)';
 
-        const idempotencyKey = parsed.data.idempotency_key ?? generateIdempotencyKey();
+        const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
+        if (explicitIdempotencyKey && !isIdempotencyKeyValid(explicitIdempotencyKey)) {
+            return NextResponse.json({ error: 'Invalid idempotency key' }, { status: 400 });
+        }
+
+        const idempotencyKey =
+            explicitIdempotencyKey?.trim() ||
+            parsed.data.idempotency_key ||
+            generateIdempotencyKey();
         const txRef = generateChapaTransactionRef(restaurant.slug);
         const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
         const orderId = crypto.randomUUID();
@@ -118,7 +161,7 @@ export async function POST(request: NextRequest) {
             restaurant_id: restaurant.id,
             table_number: tableNumber,
             items: (validation.enrichedItems ?? []) as unknown,
-            total_price: parsed.data.total_price,
+            total_price: discountRuntime.calculation.total,
             status: 'payment_pending',
             order_number: orderNumber,
             idempotency_key: idempotencyKey,
@@ -131,9 +174,17 @@ export async function POST(request: NextRequest) {
                 ? { delivery_address: parsed.data.delivery_address }
                 : {}),
             ...(parsed.data.notes ? { notes: parsed.data.notes } : {}),
+            ...(discountRuntime.discount ? { discount_id: discountRuntime.discount.id } : {}),
+            ...(discountRuntime.calculation.discountAmount > 0
+                ? { discount_amount: discountRuntime.calculation.discountAmount }
+                : {}),
         };
 
-        const { data: order, error: orderError } = await supabase
+        // Use the admin client here because guest-facing RLS only allows
+        // direct inserts in a limited set of statuses. The payment flow needs
+        // to create a server-controlled pre-payment order in `payment_pending`
+        // before the guest is redirected to Chapa.
+        const { data: order, error: orderError } = await admin
             .from('orders')
             .insert(insertPayload as never)
             .select('id, order_number, status')
@@ -146,16 +197,15 @@ export async function POST(request: NextRequest) {
 
         const appUrl = getAppUrl();
         const returnUrl = `${appUrl}/${restaurant.slug}?payment=success&order_id=${order.id}&tx_ref=${txRef}`;
-        const callbackUrl = `${appUrl}/api/payments/chapa/webhook`;
+        const callbackUrl = `${appUrl}/api/webhooks/chapa`;
 
-        // ── REAL Chapa mode ───────────────────────────────────────────────────
         if (isChapaConfigured()) {
             const nameParts = (parsed.data.customer_name ?? '').trim().split(' ');
             const firstName = nameParts[0] ?? 'Guest';
             const lastName = nameParts.slice(1).join(' ') || restaurant.name;
 
             const chapaResponse = await initializeChapaTransaction({
-                amount: parsed.data.total_price,
+                amount: discountRuntime.calculation.total,
                 currency: 'ETB',
                 first_name: firstName,
                 last_name: lastName,
@@ -172,12 +222,21 @@ export async function POST(request: NextRequest) {
                     order_id: order.id,
                     restaurant_id: restaurant.id,
                     order_type: parsed.data.order_type,
+                    ...(discountRuntime.discount
+                        ? { discount_id: discountRuntime.discount.id }
+                        : {}),
+                    ...(discountRuntime.calculation.discountAmount > 0
+                        ? {
+                              discount_amount:
+                                  discountRuntime.calculation.discountAmount.toString(),
+                          }
+                        : {}),
                 },
             });
 
             if (chapaResponse.status !== 'success' || !chapaResponse.data?.checkout_url) {
                 // Cleanup the pending order if Chapa init failed
-                await supabase.from('orders').delete().eq('id', order.id);
+                await admin.from('orders').delete().eq('id', order.id);
                 return NextResponse.json(
                     { error: chapaResponse.message || 'Payment gateway error' },
                     { status: 502 }
@@ -193,16 +252,14 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // ── MOCK mode (no CHAPA_SECRET_KEY) ──────────────────────────────────
-        const mockCheckoutUrl = `${appUrl}/checkout/mock?tx_ref=${txRef}&order_id=${order.id}&return_url=${encodeURIComponent(returnUrl)}&amount=${parsed.data.total_price}`;
-
-        return NextResponse.json({
-            mode: 'mock',
-            checkout_url: mockCheckoutUrl,
-            order_id: order.id,
-            order_number: order.order_number,
-            tx_ref: txRef,
-        });
+        await admin.from('orders').delete().eq('id', order.id);
+        return NextResponse.json(
+            {
+                error: 'Chapa checkout is not configured. Set CHAPA_SECRET_KEY to enable live payments.',
+                code: 'CHAPA_NOT_CONFIGURED',
+            },
+            { status: 503 }
+        );
     } catch (err) {
         console.error('[POST /api/payments/chapa/initialize]', err);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

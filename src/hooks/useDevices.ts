@@ -1,17 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import type { HardwareDeviceMetadata, HardwareDeviceType } from '@/lib/devices/config';
 
 export type HardwareDevice = {
     id: string;
     restaurant_id: string;
     name: string;
-    device_type: 'pos' | 'kds' | 'kiosk' | 'digital_menu';
+    device_type: HardwareDeviceType;
     status: 'active' | 'inactive' | 'maintenance';
     pairing_code: string | null;
     device_token: string | null;
     paired_at: string | null;
     last_active_at: string | null;
     assigned_zones: string[];
+    metadata?: HardwareDeviceMetadata | null;
     created_at: string;
 };
 
@@ -53,8 +55,9 @@ export function useDevices() {
 
     const handleProvisionDevice = async (payload: {
         name: string;
-        device_type: string;
+        device_type: HardwareDeviceType;
         assigned_zones?: string[];
+        metadata?: HardwareDeviceMetadata;
     }) => {
         try {
             const response = await fetch('/api/devices/provision', {

@@ -28,10 +28,6 @@ interface ChannelHealthBoardProps {
     error: string | null;
 }
 
-function toLabel(value: string) {
-    return value.replace(/_/g, ' ').replace(/\b\w/g, match => match.toUpperCase());
-}
-
 export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoardProps) {
     if (loading) {
         return (

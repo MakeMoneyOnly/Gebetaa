@@ -6,7 +6,7 @@ import { createPaymentAdapterRegistry } from '@/lib/payments/adapters';
 import type { PaymentProviderName } from '@/lib/payments/types';
 
 const VerifyPaymentSchema = z.object({
-    provider: z.enum(['telebirr', 'chapa']),
+    provider: z.enum(['chapa']),
     transaction_reference: z.string().trim().min(3).max(200),
 });
 

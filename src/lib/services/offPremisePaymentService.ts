@@ -2,7 +2,7 @@
  * Off-Premise Payment Service
  *
  * Handles payment enforcement for off-premise orders (delivery/pickup).
- * Requires upfront digital payment via Chapa or Telebirr before order submission.
+ * Requires upfront digital payment via Chapa before order submission.
  */
 
 import { createClient } from '@/lib/supabase/server';
@@ -25,12 +25,6 @@ const PAYMENT_PROVIDERS = {
         api_url: process.env.CHAPA_API_URL ?? 'https://api.chapa.co/v1',
         secret_key: process.env.CHAPA_SECRET_KEY,
         public_key: process.env.CHAPA_PUBLIC_KEY,
-    },
-    telebirr: {
-        name: 'Telebirr',
-        api_url: process.env.TELEBIRR_API_URL ?? 'https://api.telebirr.com.et',
-        app_id: process.env.TELEBIRR_APP_ID,
-        app_key: process.env.TELEBIRR_APP_KEY,
     },
 } as const;
 
@@ -89,6 +83,7 @@ export async function initializeOffPremisePayment(
             method: 'digital',
             provider: 'chapa',
             status: 'pending',
+            tip_amount: 0,
             metadata: {
                 reference: paymentReference,
                 customer_phone: request.customerPhone,
@@ -105,7 +100,6 @@ export async function initializeOffPremisePayment(
         return { success: false, error: 'Failed to initialize payment' };
     }
 
-    // Try Chapa first
     const chapaConfig = PAYMENT_PROVIDERS.chapa;
 
     if (chapaConfig.secret_key) {
@@ -129,34 +123,6 @@ export async function initializeOffPremisePayment(
                 .eq('id', payment.id);
 
             return { ...result, paymentId: payment.id, provider: 'chapa' };
-        }
-    }
-
-    // Fall back to Telebirr
-    const telebirrConfig = PAYMENT_PROVIDERS.telebirr;
-
-    if (telebirrConfig.app_id && telebirrConfig.app_key) {
-        const result = await initializeTelebirrPayment({
-            ...request,
-            paymentId: payment.id,
-            reference: paymentReference,
-        });
-
-        if (result.success) {
-            await supabase
-                .from('payments')
-                .update({
-                    provider: 'telebirr',
-                    provider_reference: result.reference,
-                    metadata: {
-                        reference: paymentReference,
-                        provider: 'telebirr',
-                        qr_code: result.qrCode,
-                    },
-                })
-                .eq('id', payment.id);
-
-            return { ...result, paymentId: payment.id, provider: 'telebirr' };
         }
     }
 
@@ -235,61 +201,6 @@ async function initializeChapaPayment(params: {
 }
 
 /**
- * Initialize Telebirr payment (QR-based)
- */
-async function initializeTelebirrPayment(params: {
-    orderId: string;
-    amount: number;
-    customerPhone: string;
-    returnUrl: string;
-    webhookUrl: string;
-    reference: string;
-    paymentId?: string;
-}): Promise<PaymentInitializationResult> {
-    const telebirrConfig = PAYMENT_PROVIDERS.telebirr;
-
-    try {
-        const response = await fetch(`${telebirrConfig.api_url}/v1/payment/order`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-App-Id': telebirrConfig.app_id!,
-            },
-            body: JSON.stringify({
-                appId: telebirrConfig.app_id,
-                appKey: telebirrConfig.app_key,
-                outTradeNo: params.reference,
-                totalAmount: params.amount,
-                subject: `Gebetaa Order`,
-                shortCode: process.env.TELEBIRR_SHORT_CODE,
-                notifyUrl: params.webhookUrl,
-                returnUrl: params.returnUrl,
-                timeoutExpress: '30m',
-            }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || data.code !== '0') {
-            throw new Error(data.message ?? 'Telebirr initialization failed');
-        }
-
-        return {
-            success: true,
-            qrCode: data.qrCode ?? data.qr_code,
-            checkoutUrl: data.redirectUrl ?? data.redirect_url,
-            reference: params.reference,
-        };
-    } catch (error) {
-        console.error('Telebirr payment initialization failed:', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Payment initialization failed',
-        };
-    }
-}
-
-/**
  * Verify payment status
  */
 export async function verifyOffPremisePayment(
@@ -324,10 +235,6 @@ export async function verifyOffPremisePayment(
 
     if (provider === 'chapa' && PAYMENT_PROVIDERS.chapa.secret_key) {
         return verifyChapaPayment(payment.id, reference);
-    }
-
-    if (provider === 'telebirr' && PAYMENT_PROVIDERS.telebirr.app_id) {
-        return verifyTelebirrPayment(payment.id, reference);
     }
 
     return {
@@ -394,68 +301,6 @@ async function verifyChapaPayment(
     }
 }
 
-/**
- * Verify Telebirr payment
- */
-async function verifyTelebirrPayment(
-    paymentId: string,
-    reference: string
-): Promise<PaymentVerificationResult> {
-    const supabase = await createClient();
-    const telebirrConfig = PAYMENT_PROVIDERS.telebirr;
-
-    try {
-        const response = await fetch(`${telebirrConfig.api_url}/v1/payment/query`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-App-Id': telebirrConfig.app_id!,
-            },
-            body: JSON.stringify({
-                appId: telebirrConfig.app_id,
-                appKey: telebirrConfig.app_key,
-                outTradeNo: reference,
-            }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            return {
-                success: false,
-                status: 'failed',
-                error: data.message ?? 'Verification failed',
-            };
-        }
-
-        const status = mapTelebirrStatus(data.tradeStatus);
-
-        await supabase
-            .from('payments')
-            .update({
-                status,
-                captured_at: status === 'completed' ? new Date().toISOString() : null,
-            })
-            .eq('id', paymentId);
-
-        return {
-            success: status === 'completed',
-            status,
-            amount: data.totalAmount,
-            currency: 'ETB',
-            paidAt: data.payTime ?? undefined,
-            reference,
-        };
-    } catch (error) {
-        console.error('Telebirr verification failed:', error);
-        return {
-            success: false,
-            status: 'failed',
-            error: error instanceof Error ? error.message : 'Verification failed',
-        };
-    }
-}
-
 function mapChapaStatus(
     status: string
 ): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
@@ -467,19 +312,6 @@ function mapChapaStatus(
         cancelled: 'cancelled',
     };
     return map[status.toLowerCase()] ?? 'pending';
-}
-
-function mapTelebirrStatus(
-    status: string
-): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
-    const map: Record<string, 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'> = {
-        WAIT_BUYER_PAY: 'pending',
-        TRADE_SUCCESS: 'completed',
-        TRADE_FINISHED: 'completed',
-        TRADE_CLOSED: 'cancelled',
-        TRADE_FAILED: 'failed',
-    };
-    return map[status] ?? 'pending';
 }
 
 /**

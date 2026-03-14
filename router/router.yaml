@@ -1,0 +1,88 @@
+# Apollo Router Configuration
+# GraphQL Federation 2 Router for Gebeta
+# Deployed to Railway as always-on container
+
+# Supergraph configuration
+supergraph:
+    listen: 0.0.0.0:4000
+
+# CORS configuration
+cors:
+    origins:
+        - 'https://gebeta.app'
+        - 'https://www.gebeta.app'
+        - 'https://gebeta-menu.com'
+        - 'https://www.gebeta-menu.com'
+        - 'https://gebetamenu.com'
+        - 'https://www.gebetamenu.com'
+        - 'http://localhost:3000'
+        - 'http://localhost:3001'
+    methods:
+        - GET
+        - POST
+        - OPTIONS
+    headers:
+        - authorization
+        - content-type
+        - x-guest-session
+        - x-gebeta-request-id
+    credentials: true
+
+# Authentication - JWT validation
+authentication:
+    router:
+        jwt:
+            jwks:
+                - url: https://YOUR_PROJECT.supabase.co/auth/v1/.well-known/jwks.json
+                  issuer: https://YOUR_PROJECT.supabase.co/auth/v1
+            header_name: Authorization
+            header_value_prefix: Bearer
+
+# Rate limiting
+traffic_shaping:
+    router:
+        rate_limit:
+            capacity: 1000
+            interval: 1s
+    subgraphs:
+        default:
+            rate_limit:
+                capacity: 500
+                interval: 1s
+
+# Query complexity and depth limits
+limits:
+    max_depth: 10
+    max_aliases: 30
+    max_tokens: 10000
+    max_query_size: 524288 # 512KB
+
+# GraphQL validation
+include_subgraph_errors:
+    all: true
+
+# Subgraph configuration
+# In production, these would point to separate services
+# For now, they point to the Next.js GraphQL endpoint
+subgraphs:
+    gebeta:
+        routing_url: https://gebeta-app.vercel.app/api/graphql
+        introspection: true
+
+# Telemetry - Optional for production monitoring
+# Enable in production with proper APM integration
+telemetry:
+    enabled: false # Set to true when APM is configured
+
+# Request headers
+headers:
+    all:
+        request:
+            - propagate:
+                  named: 'x-gebeta-request-id'
+            - propagate:
+                  named: 'x-guest-session'
+        response:
+            - set:
+                  named: 'x-gebeta-router-version'
+                  value: '2.1.0'

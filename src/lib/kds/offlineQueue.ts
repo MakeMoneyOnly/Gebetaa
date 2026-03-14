@@ -1,6 +1,25 @@
 type KdsItemAction = 'start' | 'hold' | 'ready' | 'recall';
 type ConflictResolutionMode = 'server-wins' | 'client-wins' | 'merge';
 
+/**
+ * @deprecated Use PowerSync instead
+ *
+ * CRIT-05: This file is deprecated.
+ *
+ * Migration guide:
+ * - Replace imports from '@/lib/kds/offlineQueue' with '@/lib/sync'
+ * - Use createKdsItem() and executeKdsAction() from kdsSync
+ * - Use PowerSyncProvider for offline-first operation
+ *
+ * New sync module provides:
+ * - PowerSync-backed SQLite for offline-first KDS
+ * - Automatic station-based filtering
+ * - Conflict resolution built-in
+ * - Print job queue for offline printing
+ *
+ * See: src/lib/sync/kdsSync.ts and src/lib/sync/usePowerSync.tsx
+ */
+
 export interface QueuedKdsAction {
     id: string;
     orderId: string;
@@ -111,4 +130,3 @@ export function markKdsQueueSynced() {
 export function clearOfflineKdsQueue() {
     writeState(defaultState());
 }
-

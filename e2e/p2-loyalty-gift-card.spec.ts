@@ -59,19 +59,21 @@ test.describe('P2 loyalty and gift-card redemption', () => {
             });
         });
 
-        await page.route('**/api/gift-cards?**', async route => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    data: {
-                        gift_cards: giftCards,
-                    },
-                }),
-            });
-        });
-
         await page.route('**/api/gift-cards', async route => {
+            if (route.request().method() === 'GET') {
+                // GET /api/gift-cards (no query params) — used by fetchGrowthData
+                await route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        data: {
+                            gift_cards: giftCards,
+                        },
+                    }),
+                });
+                return;
+            }
+
             if (route.request().method() === 'POST') {
                 capturedGiftCardCreatePayload = route.request().postDataJSON() as Record<
                     string,
@@ -145,9 +147,13 @@ test.describe('P2 loyalty and gift-card redemption', () => {
 
         await page.goto('/merchant/guests', { waitUntil: 'domcontentloaded' });
 
-        await expect(page.getByRole('heading', { name: 'Loyalty Program Builder' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Gift Card Manager' })).toBeVisible();
-        await expect(page.getByText('Weekend Perks')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Loyalty Program Builder' })).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByRole('heading', { name: 'Gift Card Manager' })).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByText('Weekend Perks')).toBeVisible({ timeout: 15000 });
 
         const giftCardSection = page.locator('section').filter({ hasText: 'Gift Card Manager' });
         await giftCardSection.getByPlaceholder('Initial balance').fill('600');

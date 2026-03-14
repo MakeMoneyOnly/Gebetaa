@@ -5,14 +5,22 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
-import { CategoryWithItems, MenuItem } from '@/types/database';
 import { toast } from 'react-hot-toast';
 
 interface MenuItemModalProps {
     isOpen: boolean;
     onClose: () => void;
-    category: CategoryWithItems | null;
-    itemToEdit?: MenuItem | null;
+    category: string | null;
+    categoryName?: string;
+    itemToEdit?: {
+        id: string;
+        name: string;
+        name_am?: string | null;
+        price: number | null;
+        description?: string | null;
+        image_url?: string | null;
+        category_id: string;
+    } | null;
     onSuccess: () => void;
 }
 
@@ -20,6 +28,7 @@ export function MenuItemModal({
     isOpen,
     onClose,
     category,
+    categoryName,
     itemToEdit,
     onSuccess,
 }: MenuItemModalProps) {
@@ -42,7 +51,7 @@ export function MenuItemModal({
             if (itemToEdit) {
                 setName(itemToEdit.name);
                 setNameAm(itemToEdit.name_am || '');
-                setPrice(itemToEdit.price.toString());
+                setPrice((itemToEdit.price ?? 0).toString());
                 setDescription(itemToEdit.description || '');
                 setImageUrl(itemToEdit.image_url || '');
             } else {
@@ -107,7 +116,7 @@ export function MenuItemModal({
             setFormError(null);
 
             const itemData = {
-                category_id: category?.id || itemToEdit?.category_id,
+                category_id: category || itemToEdit?.category_id,
 
                 name,
                 name_am: nameAm || null,
@@ -152,7 +161,7 @@ export function MenuItemModal({
                 </Button>
 
                 <h2 className="text-text-primary mb-6 text-xl font-bold">
-                    {itemToEdit ? 'Edit Item' : `Add Item to ${category?.name}`}
+                    {itemToEdit ? 'Edit Item' : `Add Item to ${categoryName ?? 'Category'}`}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

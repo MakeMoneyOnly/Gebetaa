@@ -1,0 +1,154 @@
+# Orders Subgraph Schema
+# GraphQL Federation 2 subgraph for Orders domain
+
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+
+# JSON Scalar for flexible data
+scalar JSON @specifiedBy(url: "https://specs.apollo.dev/graphqlspec/current/#sec-Scalars")
+
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    PREPARING
+    READY
+    SERVED
+    CANCELLED
+}
+
+enum OrderType {
+    DINE_IN
+    TAKEAWAY
+    DELIVERY
+}
+
+type Order @key(fields: "id") {
+    id: ID!
+    restaurantId: ID!
+    tableId: ID
+    orderNumber: String!
+    status: OrderStatus!
+    type: OrderType!
+    totalPrice: Int!
+    discountAmount: Int!
+    notes: String
+    guestId: ID
+    staffId: ID
+    idempotencyKey: String!
+    items: [OrderItem!]!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type OrderItem @key(fields: "id") {
+    id: ID!
+    restaurantId: ID!
+    orderId: ID!
+    menuItemId: ID!
+    quantity: Int!
+    unitPrice: Int!
+    itemTotal: Int!
+    modifiers: JSON
+    notes: String
+    status: String!
+    kdsStation: String
+}
+
+# Pagination
+type OrderConnection {
+    edges: [OrderEdge!]!
+    pageInfo: PageInfo!
+}
+
+type OrderEdge {
+    cursor: String!
+    node: Order!
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+}
+
+# Error types
+type GebetaError {
+    code: String!
+    message: String!
+    messageAm: String
+}
+
+type CreateOrderResult {
+    success: Boolean!
+    order: Order
+    error: GebetaError
+}
+
+type UpdateOrderResult {
+    success: Boolean!
+    order: Order
+    error: GebetaError
+}
+
+type CancelOrderResult {
+    success: Boolean!
+    order: Order
+    error: GebetaError
+}
+
+# Input types
+input CreateOrderInput {
+    restaurantId: ID!
+    tableId: ID
+    type: OrderType!
+    items: [OrderItemInput!]!
+    notes: String
+    idempotencyKey: String!
+}
+
+input OrderItemInput {
+    menuItemId: ID!
+    quantity: Int!
+    modifiers: JSON
+    notes: String
+    idempotencyKey: String!
+}
+
+input UpdateOrderStatusInput {
+    id: ID!
+    status: OrderStatus!
+}
+
+input CreateGuestOrderInput {
+    restaurantId: ID!
+    tableId: ID
+    guestSessionId: ID!
+    items: [OrderItemInput!]!
+    notes: String
+    idempotencyKey: String!
+}
+
+# Queries
+type Query {
+    orders(
+        restaurantId: ID!
+        status: OrderStatus
+        tableId: ID
+        first: Int = 20
+        after: String
+    ): OrderConnection!
+
+    order(id: ID!): Order
+
+    activeOrders(restaurantId: ID!): [Order!]!
+
+    kdsOrders(restaurantId: ID!, station: String!): [Order!]!
+}
+
+# Mutations
+type Mutation {
+    createOrder(input: CreateOrderInput!): CreateOrderResult!
+    updateOrderStatus(input: UpdateOrderStatusInput!): UpdateOrderResult!
+    createGuestOrder(input: CreateGuestOrderInput!): CreateOrderResult!
+    cancelOrder(id: ID!, reason: String): CancelOrderResult!
+}

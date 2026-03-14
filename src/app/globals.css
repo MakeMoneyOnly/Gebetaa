@@ -1,16 +1,24 @@
 @import 'tailwindcss';
 
 @theme {
+    /* Gebeta Landing Page Tokens */
+    --color-Ember: #a81818;
+    --color-Ember-dark: #8b1313;
+    --color-Ember-light: #fdf2f2;
+    --color-Charcoal: #111827;
+    --color-Slate: #1f2937;
+    --color-Cream: #f9fafb;
+    --color-Gold: #d4a853;
+    --color-Coffee: #5d4037;
+    --color-Success: #10b981;
+
+    --font-jakarta: var(--font-plus-jakarta), sans-serif;
+    --font-playfair: var(--font-playfair), serif;
+    --font-jetbrains: var(--font-jetbrains), monospace;
+    --font-geist: var(--font-geist), sans-serif;
+    --font-instrument: var(--font-instrument), serif;
+
     /* Brand Colors - Premium & Vibrant */
-    --color-brand-crimson: #a60000;
-    --color-brand-crimson-hover: #800000;
-    --color-brand-crimson-light: #ffebec;
-
-    --color-brand-mint: #e6f7f1;
-    --color-brand-mint-dark: #0f5132;
-
-    --color-brand-blue: #0f66de;
-    --color-brand-blue-dark: #003366;
 
     --color-brand-yellow: #ffc900;
     --color-brand-gold: #d4af37;
@@ -218,6 +226,13 @@ body {
 
 /* ── KDS SLA Breach Pulse Animation ─────────────────────────────────────── */
 @keyframes slaPulse {
-    0%, 100% { background-color: rgb(254 226 226); border-color: rgb(248 113 113); }
-    50% { background-color: rgb(254 202 202); border-color: rgb(239 68 68); }
+    0%,
+    100% {
+        background-color: rgb(254 226 226);
+        border-color: rgb(248 113 113);
+    }
+    50% {
+        background-color: rgb(254 202 202);
+        border-color: rgb(239 68 68);
+    }
 }

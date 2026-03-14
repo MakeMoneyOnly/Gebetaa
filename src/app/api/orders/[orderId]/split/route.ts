@@ -40,7 +40,9 @@ function buildEvenAmounts(totalPrice: number, splitCount: number): number[] {
     const base = Math.floor(totalCents / splitCount);
     const remainder = totalCents - base * splitCount;
 
-    const cents = Array.from({ length: splitCount }, (_, idx) => (idx < remainder ? base + 1 : base));
+    const cents = Array.from({ length: splitCount }, (_, idx) =>
+        idx < remainder ? base + 1 : base
+    );
     return cents.map(fromCents);
 }
 
@@ -123,19 +125,21 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
     orderItems = (orderItemsData ?? []) as Array<Record<string, unknown>>;
 
     if (splitIds.length > 0) {
-        const [{ data: splitItemsData, error: splitItemsError }, { data: splitPaymentsData, error: splitPaymentsError }] =
-            await Promise.all([
-                dbAny
-                    .from('order_check_split_items')
-                    .select('*')
-                    .eq('restaurant_id', restaurantId)
-                    .eq('order_id', orderId),
-                dbAny
-                    .from('payments')
-                    .select('id, split_id, amount, tip_amount, method, status, created_at')
-                    .eq('restaurant_id', restaurantId)
-                    .in('split_id', splitIds),
-            ]);
+        const [
+            { data: splitItemsData, error: splitItemsError },
+            { data: splitPaymentsData, error: splitPaymentsError },
+        ] = await Promise.all([
+            dbAny
+                .from('order_check_split_items')
+                .select('*')
+                .eq('restaurant_id', restaurantId)
+                .eq('order_id', orderId),
+            dbAny
+                .from('payments')
+                .select('id, split_id, amount, tip_amount, method, status, created_at')
+                .eq('restaurant_id', restaurantId)
+                .in('split_id', splitIds),
+        ]);
 
         if (splitItemsError) {
             return apiError(
@@ -161,7 +165,9 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
     const inferredMethod: SplitMethod =
         splitItems.length > 0
             ? 'items'
-            : splitRows.some(row => row.requested_amount !== null && row.requested_amount !== undefined)
+            : splitRows.some(
+                    row => row.requested_amount !== null && row.requested_amount !== undefined
+                )
               ? 'custom'
               : 'even';
 
@@ -238,7 +244,11 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         return apiError('Order not found', 404, 'ORDER_NOT_FOUND');
     }
     if (order.status === 'cancelled' || order.status === 'completed') {
-        return apiError('Order cannot be split in current status', 409, 'ORDER_SPLIT_INVALID_STATUS');
+        return apiError(
+            'Order cannot be split in current status',
+            409,
+            'ORDER_SPLIT_INVALID_STATUS'
+        );
     }
 
     const totalPrice = Number(order.total_price ?? 0);
@@ -404,7 +414,11 @@ async function computeSplitPlan(
 
     if (payload.method === 'custom') {
         const amounts = payload.splits.map((split, index) => {
-            if (typeof split.amount !== 'number' || !Number.isFinite(split.amount) || split.amount <= 0) {
+            if (
+                typeof split.amount !== 'number' ||
+                !Number.isFinite(split.amount) ||
+                split.amount <= 0
+            ) {
                 return { index, amount: null };
             }
             return { index, amount: Number(split.amount.toFixed(2)) };
@@ -429,7 +443,10 @@ async function computeSplitPlan(
                     'Custom split amounts must match order total',
                     400,
                     'ORDER_SPLIT_TOTAL_MISMATCH',
-                    { expected_total: Number(totalPrice.toFixed(2)), provided_total: Number(sum.toFixed(2)) }
+                    {
+                        expected_total: Number(totalPrice.toFixed(2)),
+                        provided_total: Number(sum.toFixed(2)),
+                    }
                 ),
             };
         }
@@ -534,7 +551,10 @@ async function computeSplitPlan(
             seen.add(itemId);
         }
 
-        const computedAmount = deduped.reduce((acc, itemId) => acc + (itemAmountById.get(itemId) ?? 0), 0);
+        const computedAmount = deduped.reduce(
+            (acc, itemId) => acc + (itemAmountById.get(itemId) ?? 0),
+            0
+        );
         plan.push({
             split_index: index,
             split_label: input.guest_name?.trim() || `Guest ${index + 1}`,

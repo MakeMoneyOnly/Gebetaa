@@ -26,7 +26,7 @@ Gebeta is an enterprise-grade restaurant operating system designed specifically 
 - 🍽️ **QR Code Ordering** - Guests scan, browse, and order from their phones
 - 👨‍🍳 **Kitchen Display System (KDS)** - Real-time order management for kitchen staff
 - 📊 **Merchant Dashboard** - Complete command center for restaurant operations
-- 💳 **Local Payments** - Telebirr, Chapa, and cash support
+- 💳 **Local Payments** - Chapa and cash support
 - 📴 **Offline-First** - Works reliably during internet outages
 - 🇪🇹 **Ethiopia-Native** - Built for Addis Ababa's unique needs
 
@@ -71,8 +71,6 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 HMAC_SECRET_KEY=your_hmac_secret
 
 # Optional (payments)
-TELEBIRR_APP_ID=your_telebirr_app_id
-TELEBIRR_APP_KEY=your_telebirr_app_key
 CHAPA_SECRET_KEY=your_chapa_secret
 CHAPA_PUBLIC_KEY=your_chapa_public_key
 
@@ -128,7 +126,7 @@ Gebetaa/
 | **Auth**      | Supabase Auth with Row-Level Security              |
 | **State**     | Zustand, TanStack Query, Dexie.js (offline)        |
 | **Real-time** | Supabase Realtime (WebSocket)                      |
-| **Payments**  | Telebirr, Chapa                                    |
+| **Payments**  | Chapa                                              |
 | **Testing**   | Vitest, Playwright                                 |
 | **CI/CD**     | GitHub Actions, Vercel                             |
 
@@ -136,23 +134,26 @@ Gebetaa/
 
 ## 📚 Documentation
 
-### For Developers
+> **⚠️ Start Here:** For the authoritative platform blueprint, technical decisions, and architecture, see [Engineering Foundation](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md)
 
-- [Getting Started](docs/DEVELOPMENT/getting-started.md)
-- [Tech Stack](docs/TECHNICAL/tech-stack.md)
-- [API Reference](docs/TECHNICAL/api/)
+### Engineering Foundation (Primary)
+
+- [0. Enterprise Master Blueprint](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md) — Master blueprint, Toast comparison, 12 laws
+- [1. Product Requirements](docs/1/Engineering%20Foundation/1.%20PRD.md) — Feature requirements
+- [2. Tech Stack](docs/1/Engineering%20Foundation/2.%20Tech_Stack.md) — Technology decisions
+- [3. System Architecture](docs/1/Engineering%20Foundation/3.%20System_Architecure.md) — Architecture diagrams
+- [4. Database Schema](docs/1/Engineering%20Foundation/4.%20Database_Schema.md) — Schema reference
+- [5. API Design Guide](docs/1/Engineering%20Foundation/5.%20API_Design_Guide.md) — API conventions
+- [6. Engineering Runbook](docs/1/Engineering%20Foundation/6.%20ENGINEERING_RUNOOK.md) — Operations & deployment
+
+### Execution
+
+- [Tasks](Tasks.md) — Sprint-based task list derived from Engineering Foundation
+
+### Reference
+
 - [Coding Standards](docs/STANDARDS/)
-
-### For Product
-
-- [Product Requirements](docs/PRODUCT/product-requirements-document.md)
-- [Roadmap](Tasks.md)
-- [AUDIT.md](AUDIT.md) - North Star document
-
-### For Operations
-
-- [Runbooks](docs/OPERATIONS/runbooks/)
-- [Deployment Guide](docs/OPERATIONS/deployment/)
+- [Toast Feature Audit](TOAST_FEATURE_AUDIT.md) — Detailed Toast feature comparison
 
 ---
 
@@ -200,8 +201,7 @@ See [Security Standards](docs/STANDARDS/security-standards.md) for details.
 
 ### Payment Integration
 
-- **Telebirr** - QR-based mobile money payments
-- **Chapa** - Card and bank transfer payments
+- **Chapa** - Hosted checkout with bank and card payment support
 - **Cash** - Always supported as fallback
 
 ### Connectivity Resilience

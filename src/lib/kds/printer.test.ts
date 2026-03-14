@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-    dispatchKdsPrintJob,
-    normalizeKdsPrintPolicy,
-    type KdsPrintPayload,
-} from './printer';
+import { dispatchKdsPrintJob, normalizeKdsPrintPolicy, type KdsPrintPayload } from './printer';
 
 const BASE_PAYLOAD: KdsPrintPayload = {
     restaurantId: 'rest-1',
@@ -100,4 +96,3 @@ describe('kds printer bridge', () => {
         expect(result.attempts).toBe(2);
     });
 });
-

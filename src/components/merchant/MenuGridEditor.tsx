@@ -3,7 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Edit2, Image as ImageIcon, Loader2, Plus, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CategoryWithItems, MenuItem } from '@/types/database';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
+import type { CategoryWithItems, MenuItemSummary } from '@/lib/services/dashboardDataService';
 
 export interface InlineMenuItemPatch {
     name: string;
@@ -13,7 +14,7 @@ export interface InlineMenuItemPatch {
 }
 
 export interface BulkPriceUpdate {
-    itemId: string;
+    id: string;
     price: number;
 }
 
@@ -21,8 +22,8 @@ interface MenuGridEditorProps {
     category: CategoryWithItems;
     readOnly?: boolean;
     onAddItem: (category: CategoryWithItems) => void;
-    onOpenAdvancedEdit: (category: CategoryWithItems, item: MenuItem) => void;
-    onSaveInline: (item: MenuItem, patch: InlineMenuItemPatch) => Promise<void>;
+    onOpenAdvancedEdit: (category: CategoryWithItems, item: MenuItemSummary) => void;
+    onSaveInline: (item: MenuItemSummary, patch: InlineMenuItemPatch) => Promise<void>;
     onBulkAvailabilityUpdate: (itemIds: string[], isAvailable: boolean) => Promise<void>;
     onBulkPriceUpdate: (updates: BulkPriceUpdate[]) => Promise<void>;
 }
@@ -70,13 +71,13 @@ export function MenuGridEditor({
         setSelectedIds([]);
     }, [category.id]);
 
-    const startInlineEdit = (item: MenuItem) => {
+    const startInlineEdit = (item: MenuItemSummary) => {
         if (readOnly) return;
         setEditingItemId(item.id);
         setFieldError(null);
         setFormState({
             name: item.name,
-            price: item.price.toString(),
+            price: (item.price ?? 0).toString(),
             description: item.description ?? '',
             is_available: item.is_available ?? true,
         });
@@ -185,11 +186,12 @@ export function MenuGridEditor({
         }
 
         const updates = selectedItems.map(item => {
+            const currentPrice = item.price ?? 0;
             const nextPrice =
-                bulkPriceMode === 'set' ? parsedValue : item.price * (1 + parsedValue / 100);
+                bulkPriceMode === 'set' ? parsedValue : currentPrice * (1 + parsedValue / 100);
 
             return {
-                itemId: item.id,
+                id: item.id,
                 price: Number(nextPrice.toFixed(2)),
             };
         });
@@ -348,7 +350,7 @@ export function MenuGridEditor({
                                                 {item.name}
                                             </h3>
                                             <span className="font-bold whitespace-nowrap text-black">
-                                                {item.price}
+                                                {formatCurrencyCompact(item.price ?? 0)}
                                             </span>
                                         </div>
                                         <p className="line-clamp-2 text-xs leading-relaxed font-medium text-gray-500">
@@ -525,21 +527,21 @@ export function MenuGridEditor({
                             <div className="max-h-44 space-y-1 overflow-y-auto">
                                 {(previewResult.updates ?? []).slice(0, 8).map(update => {
                                     const original = selectedItems.find(
-                                        item => item.id === update.itemId
+                                        item => item.id === update.id
                                     );
                                     if (!original) return null;
                                     return (
                                         <div
-                                            key={update.itemId}
+                                            key={update.id}
                                             className="flex items-center justify-between text-sm"
                                         >
                                             <span className="line-clamp-1 pr-2 text-gray-700">
                                                 {original.name}
                                             </span>
                                             <span className="font-semibold text-gray-900">
-                                                {original.price}
+                                                {formatCurrencyCompact(original.price ?? 0)}
                                                 {' -> '}
-                                                {update.price}
+                                                {formatCurrencyCompact(update.price)}
                                             </span>
                                         </div>
                                     );

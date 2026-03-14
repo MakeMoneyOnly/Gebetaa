@@ -9,11 +9,11 @@ import { parseJsonBody, parseQuery } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import type { Json } from '@/types/database';
+import { ensurePaymentSessionForRecordedPayment } from '@/lib/payments/payment-sessions';
 
 const PaymentMethodSchema = z.enum([
     'cash',
     'card',
-    'telebirr',
     'chapa',
     'gift_card',
     'bank_transfer',
@@ -44,8 +44,10 @@ const CreatePaymentSchema = z.object({
     method: PaymentMethodSchema,
     provider: z.string().trim().min(2).max(80).optional().default('internal'),
     provider_reference: z.string().trim().min(2).max(120).optional(),
-    amount: z.coerce.number().min(0.01).max(100000000),
-    tip_amount: z.coerce.number().min(0).max(100000000).optional().default(0),
+    // CRIT-02: amount is now in SANTIM (integer), not birr
+    amount: z.number().int().min(1, 'Amount must be at least 1 santim').max(1000000000),
+    // CRIT-02: tip_amount is now in SANTIM (integer)
+    tip_amount: z.number().int().min(0).max(1000000000).optional().default(0),
     currency: z.string().trim().length(3).optional().default('ETB'),
     status: PaymentStatusSchema.optional().default('captured'),
     authorized_at: z.string().datetime().optional(),
@@ -140,6 +142,7 @@ export async function POST(request: Request) {
     let actorUserId: string | null = null;
     let restaurantId: string;
     let db: any;
+    let paymentSurface: 'waiter_pos' | 'terminal' = 'waiter_pos';
 
     if (auth.ok) {
         const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
@@ -156,6 +159,8 @@ export async function POST(request: Request) {
         }
         restaurantId = deviceContext.restaurantId;
         db = deviceContext.admin;
+        paymentSurface =
+            deviceContext.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos';
     }
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
@@ -173,6 +178,7 @@ export async function POST(request: Request) {
     const amount = Number(parsed.data.amount.toFixed(2));
     const tipAmount = Number(parsed.data.tip_amount.toFixed(2));
     let resolvedOrderId = parsed.data.order_id ?? null;
+    let paymentChannel: 'dine_in' | 'pickup' | 'delivery' | 'online' = 'dine_in';
 
     if (parsed.data.split_id) {
         const { data: split, error: splitError } = await dbAny
@@ -206,12 +212,48 @@ export async function POST(request: Request) {
         resolvedOrderId = split.order_id;
     }
 
+    if (resolvedOrderId) {
+        const { data: orderForPayment } = await dbAny
+            .from('orders')
+            .select('order_type')
+            .eq('restaurant_id', restaurantId)
+            .eq('id', resolvedOrderId)
+            .maybeSingle();
+
+        const orderType = String(orderForPayment?.order_type ?? 'dine_in');
+        paymentChannel =
+            orderType === 'delivery'
+                ? 'delivery'
+                : orderType === 'pickup'
+                  ? 'pickup'
+                  : orderType === 'online'
+                    ? 'online'
+                    : 'dine_in';
+    }
+
+    const paymentSession = await ensurePaymentSessionForRecordedPayment(dbAny, {
+        restaurantId,
+        orderId: resolvedOrderId,
+        surface: paymentSurface,
+        channel: paymentChannel,
+        method: parsed.data.method,
+        provider: parsed.data.provider.trim().toLowerCase(),
+        amount,
+        status: parsed.data.status,
+        metadata: {
+            ...(parsed.data.metadata ?? {}),
+            source: auth.ok ? 'merchant_dashboard' : paymentSurface,
+            split_id: parsed.data.split_id ?? null,
+        } as Json,
+    });
+
     const { data: payment, error } = await dbAny
         .from('payments')
         .insert({
             restaurant_id: restaurantId,
             // when split_id exists, order_id is forced to the split's order
             order_id: resolvedOrderId,
+            payment_session_id: paymentSession.id,
             split_id: parsed.data.split_id ?? null,
             method: parsed.data.method,
             provider: parsed.data.provider.trim().toLowerCase(),
@@ -222,7 +264,10 @@ export async function POST(request: Request) {
             status: parsed.data.status,
             authorized_at: parsed.data.authorized_at ?? null,
             captured_at: parsed.data.captured_at ?? null,
-            metadata: (parsed.data.metadata ?? {}) as Json,
+            metadata: {
+                ...(parsed.data.metadata ?? {}),
+                payment_session_id: paymentSession.id,
+            } as Json,
             created_by: actorUserId,
         })
         .select('*')
@@ -242,6 +287,7 @@ export async function POST(request: Request) {
             source: 'merchant_dashboard',
             idempotency_key: idempotencyKey,
             split_id: parsed.data.split_id ?? null,
+            payment_session_id: paymentSession.id,
         },
         new_value: {
             method: payment.method,

@@ -2,6 +2,10 @@
  * POST /api/device/tables/close
  * Settle a dine-in table and close its open table session.
  * Requires X-Device-Token header.
+ *
+ * IMPORTANT: This endpoint now publishes order.completed events to the
+ * event bus instead of processing loyalty/ERCA synchronously. Background
+ * jobs handle those side effects asynchronously.
  */
 import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
@@ -9,12 +13,15 @@ import { getDeviceContext } from '@/lib/api/authz';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { parseJsonBody } from '@/lib/api/validation';
 import { isChapaConfigured, verifyChapaTransaction } from '@/lib/services/chapaService';
+import { ensurePaymentSessionForRecordedPayment } from '@/lib/payments/payment-sessions';
+import { createGebetaEvent } from '@/lib/events/contracts';
+import { enqueueInternalJob } from '@/lib/events/runtime';
 
 const CloseTableSchema = z.object({
     table_id: z.string().uuid().optional(),
     table_number: z.string().trim().min(1).optional(),
     payment: z.object({
-        provider: z.literal('chapa'),
+        provider: z.enum(['cash', 'chapa', 'other']),
         tx_ref: z.string().trim().min(3).optional(),
         amount: z.number().nonnegative().optional(),
         tip_amount: z.number().nonnegative().optional().default(0),
@@ -22,7 +29,12 @@ const CloseTableSchema = z.object({
     notes: z.string().trim().max(500).optional(),
 });
 
-const BLOCKING_ORDER_STATUSES = ['payment_pending', 'pending', 'acknowledged', 'preparing'] as const;
+const BLOCKING_ORDER_STATUSES = [
+    'payment_pending',
+    'pending',
+    'acknowledged',
+    'preparing',
+] as const;
 const FINALIZABLE_ORDER_STATUSES = ['ready', 'served'] as const;
 
 export async function POST(request: Request) {
@@ -71,7 +83,14 @@ export async function POST(request: Request) {
         .select('id, status, total_price, chapa_tx_ref, paid_at, chapa_verified')
         .eq('restaurant_id', ctx.restaurantId)
         .eq('table_number', table.table_number)
-        .in('status', ['payment_pending', 'pending', 'acknowledged', 'preparing', 'ready', 'served']);
+        .in('status', [
+            'payment_pending',
+            'pending',
+            'acknowledged',
+            'preparing',
+            'ready',
+            'served',
+        ]);
 
     if (sessionError) {
         return apiError(
@@ -82,7 +101,12 @@ export async function POST(request: Request) {
         );
     }
     if (ordersError) {
-        return apiError('Failed to fetch table orders', 500, 'TABLE_ORDERS_FETCH_FAILED', ordersError.message);
+        return apiError(
+            'Failed to fetch table orders',
+            500,
+            'TABLE_ORDERS_FETCH_FAILED',
+            ordersError.message
+        );
     }
 
     let ensuredOpenSession = openSession;
@@ -145,7 +169,9 @@ export async function POST(request: Request) {
 
     const activeOrders = tableOrders ?? [];
     const blockingOrders = activeOrders.filter(order =>
-        BLOCKING_ORDER_STATUSES.includes(String(order.status) as (typeof BLOCKING_ORDER_STATUSES)[number])
+        BLOCKING_ORDER_STATUSES.includes(
+            String(order.status) as (typeof BLOCKING_ORDER_STATUSES)[number]
+        )
     );
     if (blockingOrders.length > 0) {
         return apiError(
@@ -166,7 +192,9 @@ export async function POST(request: Request) {
     if (activeOrders.length === 0) {
         const now = new Date().toISOString();
         const mergedCloseNotes =
-            [ensuredOpenSession.notes, notes, 'Closed via waiter POS (no active orders)'].filter(Boolean).join(' | ') || null;
+            [ensuredOpenSession.notes, notes, 'Closed via waiter POS (no active orders)']
+                .filter(Boolean)
+                .join(' | ') || null;
 
         await Promise.all([
             admin
@@ -213,7 +241,11 @@ export async function POST(request: Request) {
     }
 
     if (settlementAmount <= 0) {
-        return apiError('No billable orders found for this table', 409, 'TABLE_CLOSE_NO_BILLABLE_ORDERS');
+        return apiError(
+            'No billable orders found for this table',
+            409,
+            'TABLE_CLOSE_NO_BILLABLE_ORDERS'
+        );
     }
 
     if (typeof payment.amount === 'number') {
@@ -227,8 +259,9 @@ export async function POST(request: Request) {
         }
     }
 
+    const paymentProvider = payment.provider;
     const hasTxRef = Boolean(payment.tx_ref?.trim());
-    if (hasTxRef) {
+    if (paymentProvider === 'chapa' && hasTxRef) {
         if (isChapaConfigured()) {
             const verified = await verifyChapaTransaction(String(payment.tx_ref));
             const verifiedStatus = String(verified.data?.status ?? '').toLowerCase();
@@ -241,7 +274,7 @@ export async function POST(request: Request) {
                 );
             }
         }
-    } else {
+    } else if (paymentProvider === 'chapa') {
         const unpaidOrders = activeOrders.filter(
             order =>
                 !order.paid_at ||
@@ -258,21 +291,49 @@ export async function POST(request: Request) {
     }
 
     const now = new Date().toISOString();
-    const finalizableOrders = activeOrders
-        .filter(order =>
-            FINALIZABLE_ORDER_STATUSES.includes(
-                String(order.status) as (typeof FINALIZABLE_ORDER_STATUSES)[number]
-            )
-        );
+    const finalizableOrders = activeOrders.filter(order =>
+        FINALIZABLE_ORDER_STATUSES.includes(
+            String(order.status) as (typeof FINALIZABLE_ORDER_STATUSES)[number]
+        )
+    );
     const finalizableOrderIds = finalizableOrders.map(order => order.id);
+
+    const paymentSession = await ensurePaymentSessionForRecordedPayment(admin as any, {
+        restaurantId: ctx.restaurantId,
+        orderId: null,
+        surface: ctx.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos',
+        channel: 'dine_in',
+        method:
+            paymentProvider === 'cash'
+                ? 'cash'
+                : paymentProvider === 'other'
+                  ? 'other'
+                  : paymentProvider,
+        provider:
+            paymentProvider === 'cash' || paymentProvider === 'other'
+                ? 'internal'
+                : paymentProvider,
+        amount: settlementAmount,
+        status: 'captured',
+        metadata: {
+            source: `${ctx.device.device_type}_close_table`,
+            table_id: table.id,
+            table_number: table.table_number,
+            order_ids: activeOrders.map(order => order.id),
+        },
+    });
 
     const { data: paymentRecord, error: paymentError } = await admin
         .from('payments')
         .insert({
             restaurant_id: ctx.restaurantId,
             order_id: null,
-            method: 'chapa',
-            provider: 'chapa',
+            payment_session_id: paymentSession.id,
+            method: paymentProvider,
+            provider:
+                paymentProvider === 'cash' || paymentProvider === 'other'
+                    ? 'internal'
+                    : paymentProvider,
             provider_reference: payment.tx_ref?.trim() || null,
             amount: settlementAmount,
             tip_amount: Number((payment.tip_amount ?? 0).toFixed(2)),
@@ -280,7 +341,8 @@ export async function POST(request: Request) {
             status: 'captured',
             captured_at: now,
             metadata: {
-                source: 'waiter_pos_close_table',
+                source: `${ctx.device.device_type}_close_table`,
+                payment_session_id: paymentSession.id,
                 table_id: table.id,
                 table_number: table.table_number,
                 order_ids: activeOrders.map(order => order.id),
@@ -294,7 +356,12 @@ export async function POST(request: Request) {
         .single();
 
     if (paymentError || !paymentRecord) {
-        return apiError('Failed to record settlement payment', 500, 'PAYMENT_RECORD_FAILED', paymentError?.message);
+        return apiError(
+            'Failed to record settlement payment',
+            500,
+            'PAYMENT_RECORD_FAILED',
+            paymentError?.message
+        );
     }
 
     if (finalizableOrderIds.length > 0) {
@@ -323,10 +390,39 @@ export async function POST(request: Request) {
                 },
             }))
         );
+
+        // Queue background jobs for each completed order
+        // This removes synchronous cross-domain side effects (loyalty, ERCA, etc.)
+        const jobQueuePromises = finalizableOrderIds.map(orderId =>
+            enqueueInternalJob({
+                path: '/api/jobs/orders/completed',
+                body: createGebetaEvent('order.completed', {
+                    order_id: orderId,
+                    restaurant_id: ctx.restaurantId,
+                    completed_at: now,
+                    trigger: 'table_close',
+                }) as unknown as Record<string, unknown>,
+                deduplicationKey: `order-completed-${orderId}`,
+            }).catch(err => {
+                console.error(`[close-table] Failed to queue job for order ${orderId}:`, err);
+                return undefined;
+            })
+        );
+
+        // Fire and forget - don't block the response on job queuing
+        Promise.all(jobQueuePromises).catch(() => {});
     }
 
     const mergedCloseNotes =
-        [ensuredOpenSession.notes, notes, `Settled via Chapa: ${payment.tx_ref}`].filter(Boolean).join(' | ') || null;
+        [
+            ensuredOpenSession.notes,
+            notes,
+            payment.tx_ref?.trim()
+                ? `Settled via ${paymentProvider}: ${payment.tx_ref}`
+                : `Settled via ${paymentProvider}`,
+        ]
+            .filter(Boolean)
+            .join(' | ') || null;
 
     await Promise.all([
         admin
@@ -355,10 +451,11 @@ export async function POST(request: Request) {
             entity_type: 'table',
             entity_id: table.id,
             metadata: {
-                source: 'waiter_pos_device',
+                source: `${ctx.device.device_type}_device`,
                 table_number: table.table_number,
                 session_id: ensuredOpenSession.id,
                 payment_id: paymentRecord.id,
+                payment_session_id: paymentSession.id,
                 tx_ref: payment.tx_ref,
                 settled_amount: settlementAmount,
             },

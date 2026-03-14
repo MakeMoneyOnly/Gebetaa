@@ -1,0 +1,71 @@
+# Apollo Router Configuration for GraphOS
+# This router fetches its supergraph from Apollo GraphOS
+#
+# Required Environment Variables:
+#   APOLLO_KEY: Your Apollo GraphOS API key
+#   APOLLO_GRAPH_REF: graph-name@variant (e.g., gebeta-production@current)
+
+# GraphOS supergraph configuration
+supergraph:
+    listen: 0.0.0.0:4000
+
+# Fetch supergraph from GraphOS (using environment variables)
+apollo:
+    api_key: ${APOLLO_KEY}
+    graph_ref: ${APOLLO_GRAPH_REF}
+
+# CORS configuration
+cors:
+    origins:
+        - 'https://gebeta.app'
+        - 'https://www.gebeta.app'
+        - 'https://gebetamenu.com'
+        - 'https://www.gebetamenu.com'
+        - 'http://localhost:3000'
+        - 'http://localhost:3001'
+    methods:
+        - GET
+        - POST
+        - OPTIONS
+    headers:
+        - authorization
+        - content-type
+        - x-guest-session
+        - x-gebeta-request-id
+    credentials: true
+
+# Rate limiting
+traffic_shaping:
+    router:
+        rate_limit:
+            capacity: 1000
+            interval: 1s
+    subgraphs:
+        default:
+            rate_limit:
+                capacity: 500
+                interval: 1s
+
+# Query complexity and depth limits
+limits:
+    max_depth: 10
+    max_aliases: 30
+    max_tokens: 10000
+    max_query_size: 524288 # 512KB
+
+# Include subgraph errors in response
+include_subgraph_errors:
+    all: true
+
+# Request/Response headers
+headers:
+    all:
+        request:
+            - propagate:
+                  named: 'x-gebeta-request-id'
+            - propagate:
+                  named: 'x-guest-session'
+        response:
+            - set:
+                  named: 'x-gebeta-router-version'
+                  value: '2.1.0'

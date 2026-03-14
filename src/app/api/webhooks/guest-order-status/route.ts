@@ -8,12 +8,7 @@ const GuestOrderStatusSchema = z.object({
     eventType: z.string(),
     details: z.object({
         orderGuid: z.string().uuid(),
-        guestOrderStatus: z.enum([
-            'IN_PREPARATION',
-            'READY_FOR_PICKUP',
-            'CLOSED',
-            'VOIDED',
-        ]),
+        guestOrderStatus: z.enum(['IN_PREPARATION', 'READY_FOR_PICKUP', 'CLOSED', 'VOIDED']),
         lastUpdated: z.string().datetime().optional(),
     }),
 });

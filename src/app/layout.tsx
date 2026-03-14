@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Manrope } from 'next/font/google';
+import {
+    Inter,
+    Plus_Jakarta_Sans,
+    Playfair_Display,
+    JetBrains_Mono,
+    Manrope,
+    Geist,
+    Instrument_Serif,
+} from 'next/font/google';
 import './globals.css';
 import { LenisRoot } from '@/components/providers/LenisRoot';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
@@ -11,6 +19,30 @@ export const dynamic = 'force-dynamic';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
+const plusJakartaSans = Plus_Jakarta_Sans({
+    subsets: ['latin'],
+    variable: '--font-plus-jakarta',
+    display: 'swap',
+});
+const playfair = Playfair_Display({
+    subsets: ['latin'],
+    variable: '--font-playfair',
+    style: ['normal', 'italic'],
+    display: 'swap',
+});
+const jetbrainsMono = JetBrains_Mono({
+    subsets: ['latin'],
+    variable: '--font-jetbrains',
+    display: 'swap',
+});
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
+const instrumentSerif = Instrument_Serif({
+    subsets: ['latin'],
+    weight: '400',
+    style: ['italic'],
+    variable: '--font-instrument',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
     title: 'Gebeta - Restaurant Infrastructure',
@@ -31,7 +63,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`${inter.variable} ${manrope.variable} overscroll-none antialiased`}>
+            <body
+                className={`${inter.variable} ${manrope.variable} ${plusJakartaSans.variable} ${playfair.variable} ${jetbrainsMono.variable} ${geist.variable} ${instrumentSerif.variable} text-Charcoal bg-Cream overscroll-none antialiased`}
+            >
                 <ServiceWorkerCleanup />
                 <LenisRoot>
                     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>

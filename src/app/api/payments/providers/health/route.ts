@@ -6,7 +6,7 @@ import { createPaymentAdapterRegistry } from '@/lib/payments/adapters';
 import type { PaymentProviderName } from '@/lib/payments/types';
 
 const HealthQuerySchema = z.object({
-    provider: z.enum(['telebirr', 'chapa']).optional(),
+    provider: z.enum(['chapa']).optional(),
 });
 
 export async function GET(request: Request) {
@@ -32,11 +32,9 @@ export async function GET(request: Request) {
     try {
         const provider = parsed.data.provider as PaymentProviderName | undefined;
         const checks = await registry.healthChecks(provider ? [provider] : undefined);
-        const fallbackPolicy = registry.getFallbackPolicy();
 
         return apiSuccess({
             provider_health: checks,
-            fallback_policy: fallbackPolicy,
             restaurant_id: context.restaurantId,
         });
     } catch (error) {

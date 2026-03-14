@@ -1,0 +1,49 @@
+# GraphQL Code Generator Configuration
+# Generates TypeScript types from GraphQL schemas for type-safe queries
+# Run with: pnpm codegen
+
+overwrite: true
+schema:
+    - 'src/domains/**/*.graphql'
+    - 'src/app/api/graphql/route.ts'
+
+documents: null
+
+generates:
+    # Generated types for the GraphQL API
+    src/types/graphql.ts:
+        plugins:
+            - 'typescript'
+            - 'typescript-resolvers'
+            - 'typescript-operations'
+        config:
+            contextType: '@/lib/graphql/context#GraphQLContext'
+            scalars:
+                JSON: 'Record<string, unknown>'
+            useIndexSignature: true
+            enumsAsTypes: true
+            defaultScalarType: 'unknown'
+
+    # Generated hooks for React components
+    src/types/graphql-hooks.ts:
+        plugins:
+            - 'typescript-react-apollo'
+        config:
+            withHooks: true
+            withComponent: false
+            withHOC: false
+            withQuery: true
+            withMutation: true
+            withSubscription: false
+            apolloClientServiceImportFrom: '@apollo/client'
+
+    # GraphQL schema JSON (for Apollo Router)
+    src/types/schema.graphql.json:
+        plugins:
+            - 'introspection'
+        config:
+            minify: true
+
+hooks:
+    afterAllFileWrite:
+        - pnpm prettier --write

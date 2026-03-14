@@ -38,6 +38,7 @@ export async function POST(request: Request) {
             // pairing_code: null, // Keep the code so it is visible in the cards
             device_token,
             paired_at: new Date().toISOString(),
+            last_active_at: new Date().toISOString(),
         })
         .eq('id', device.id);
 
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
             device_type: device.device_type,
             name: device.name,
             assigned_zones: device.assigned_zones,
+            metadata: device.metadata ?? null,
         },
         200
     );

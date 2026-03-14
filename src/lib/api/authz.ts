@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { apiError } from '@/lib/api/response';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { logSecurityEvent } from '@/lib/security/securityEvents';
+import type { HardwareDeviceType } from '@/lib/devices/config';
 
 type PilotPhase = 'p0' | 'p1' | 'p2';
 
@@ -110,7 +111,9 @@ export async function getDeviceContext(request: Request) {
     const admin = createServiceRoleClient();
     const { data: device, error } = await admin
         .from('hardware_devices')
-        .select('id, restaurant_id, device_type, name, assigned_zones, status')
+        .select(
+            'id, restaurant_id, device_type, name, assigned_zones, status, metadata, last_active_at'
+        )
         .eq('device_token', token)
         .single();
 
@@ -122,6 +125,26 @@ export async function getDeviceContext(request: Request) {
     }
 
     return { ok: true as const, device, restaurantId: device.restaurant_id as string, admin };
+}
+
+export async function getScopedDeviceContext(request: Request, allowedTypes: HardwareDeviceType[]) {
+    const context = await getDeviceContext(request);
+    if (!context.ok) {
+        return context;
+    }
+
+    if (!allowedTypes.includes(context.device.device_type as HardwareDeviceType)) {
+        return {
+            ok: false as const,
+            response: apiError(
+                'Device type not allowed for this action',
+                403,
+                'DEVICE_TYPE_FORBIDDEN'
+            ),
+        };
+    }
+
+    return context;
 }
 
 /**
@@ -187,7 +210,7 @@ export async function enforceTenantScope(
 /**
  * SEC-002: Validate resource belongs to user's restaurant
  * Use this before any mutation to prevent cross-tenant data access
- * 
+ *
  * Note: For type-safe resource validation, use the specific table validators below:
  * - validateOrderTenantScope
  * - validateMenuItemTenantScope
@@ -208,7 +231,7 @@ export async function validateResourceTenantScope(
     // Log the validation attempt for audit purposes
     console.warn(
         `SEC-002: Resource validation requested for table ${resourceTable}, id ${resourceId}. ` +
-        `Consider using a type-specific validator for better type safety.`
+            `Consider using a type-specific validator for better type safety.`
     );
 
     // Return valid - actual table-specific validation should be done by calling

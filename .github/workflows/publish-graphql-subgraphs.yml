@@ -1,0 +1,68 @@
+# GraphQL Subgraph Publishing Workflow
+# Publishes subgraph schemas to Apollo GraphOS on push to main
+
+name: Publish GraphQL Subgraphs
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'src/domains/**/*.graphql'
+
+jobs:
+    publish-subgraphs:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install Rover
+              run: |
+                  curl -sSL https://rover.apollo.dev/nix/latest | sh
+                  echo "$HOME/.rover/bin" >> $GITHUB_PATH
+
+            - name: Publish Orders Subgraph
+              env:
+                  APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+              run: |
+                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                      --name orders \
+                      --schema ./src/domains/orders/schema.graphql \
+                      --routing-url https://gebeta.app/api/graphql
+
+            - name: Publish Menu Subgraph
+              env:
+                  APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+              run: |
+                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                      --name menu \
+                      --schema ./src/domains/menu/schema.graphql \
+                      --routing-url https://gebeta.app/api/graphql
+
+            - name: Publish Payments Subgraph
+              env:
+                  APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+              run: |
+                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                      --name payments \
+                      --schema ./src/domains/payments/schema.graphql \
+                      --routing-url https://gebeta.app/api/graphql
+
+            - name: Publish Guests Subgraph
+              env:
+                  APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+              run: |
+                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                      --name guests \
+                      --schema ./src/domains/guests/schema.graphql \
+                      --routing-url https://gebeta.app/api/graphql
+
+            - name: Publish Staff Subgraph
+              env:
+                  APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+              run: |
+                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                      --name staff \
+                      --schema ./src/domains/staff/schema.graphql \
+                      --routing-url https://gebeta.app/api/graphql

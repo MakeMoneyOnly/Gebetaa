@@ -13,10 +13,7 @@ const PrintTicketBodySchema = z.object({
     reason: z.string().trim().min(2).max(120).optional().default('manual_print'),
 });
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ orderId: string }> }
-) {
+export async function POST(request: Request, context: { params: Promise<{ orderId: string }> }) {
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;
@@ -35,12 +32,14 @@ export async function POST(
 
     const [{ data: order, error: orderError }, { data: restaurant, error: restaurantError }] =
         await Promise.all([
-            db.from('orders')
+            db
+                .from('orders')
                 .select('id, restaurant_id, order_number, table_number')
                 .eq('restaurant_id', restaurantContext.restaurantId)
                 .eq('id', orderId)
                 .maybeSingle(),
-            db.from('restaurants')
+            db
+                .from('restaurants')
                 .select('settings')
                 .eq('id', restaurantContext.restaurantId)
                 .maybeSingle(),
@@ -162,11 +161,6 @@ export async function POST(
             },
         });
 
-        return apiError(
-            'Failed to print ticket',
-            502,
-            'KDS_PRINT_DISPATCH_FAILED',
-            error?.message
-        );
+        return apiError('Failed to print ticket', 502, 'KDS_PRINT_DISPATCH_FAILED', error?.message);
     }
 }

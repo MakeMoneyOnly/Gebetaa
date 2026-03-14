@@ -13,14 +13,12 @@ vi.mock('@/lib/api/authz', () => ({
 const mockInitiateWithFallback = vi.fn();
 const mockVerify = vi.fn();
 const mockHealthChecks = vi.fn();
-const mockGetFallbackPolicy = vi.fn();
 
 vi.mock('@/lib/payments/adapters', () => ({
     createPaymentAdapterRegistry: vi.fn(() => ({
         initiateWithFallback: mockInitiateWithFallback,
         verify: mockVerify,
         healthChecks: mockHealthChecks,
-        getFallbackPolicy: mockGetFallbackPolicy,
     })),
 }));
 
@@ -35,15 +33,32 @@ function setAuthUnauthorized() {
 }
 
 function setAuthAndContextOk() {
+    const mockSupabase = {
+        from: vi.fn(() => ({
+            select: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({
+                        data: {
+                            chapa_subaccount_id: 'subacct-1',
+                            chapa_subaccount_status: 'active',
+                            platform_fee_percentage: 0.03,
+                        },
+                        error: null,
+                    }),
+                }),
+            }),
+        })),
+    };
+
     getAuthenticatedUserMock.mockResolvedValue({
         ok: true,
         user: { id: 'user-1' },
-        supabase: {},
+        supabase: mockSupabase,
     } as any);
     getAuthorizedRestaurantContextMock.mockResolvedValue({
         ok: true,
         restaurantId: 'resto-1',
-        supabase: {},
+        supabase: mockSupabase,
     } as any);
 }
 
@@ -90,21 +105,17 @@ describe('P2 payment adapter API routes', () => {
             new Request('http://localhost/api/payments/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ provider: 'telebirr' }),
+                body: JSON.stringify({ provider: 'cash' }),
             })
         );
         expect(response.status).toBe(400);
     });
 
-    it('GET /api/payments/providers/health returns provider health and fallback policy', async () => {
+    it('GET /api/payments/providers/health returns provider health', async () => {
         setAuthAndContextOk();
         mockHealthChecks.mockResolvedValue([
-            { provider: 'telebirr', status: 'healthy', checkedAt: '2026-02-20T00:00:00.000Z' },
+            { provider: 'chapa', status: 'healthy', checkedAt: '2026-02-20T00:00:00.000Z' },
         ]);
-        mockGetFallbackPolicy.mockReturnValue({
-            enabled: true,
-            fallbackOrder: ['telebirr', 'chapa'],
-        });
 
         const response = await getProviderHealth(
             new Request('http://localhost/api/payments/providers/health')
@@ -113,6 +124,6 @@ describe('P2 payment adapter API routes', () => {
 
         const payload = await response.json();
         expect(payload?.data?.provider_health).toHaveLength(1);
-        expect(payload?.data?.fallback_policy?.enabled).toBe(true);
+        expect(payload?.data?.provider_health?.[0]?.provider).toBe('chapa');
     });
 });

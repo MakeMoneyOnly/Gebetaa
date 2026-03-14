@@ -11,8 +11,14 @@ const AlertPolicySchema = z.object({
     sla_breach_visual: z.boolean().optional(),
     recall_visual: z.boolean().optional(),
     quiet_hours_enabled: z.boolean().optional(),
-    quiet_hours_start: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-    quiet_hours_end: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+    quiet_hours_start: z
+        .string()
+        .regex(/^\d{2}:\d{2}$/)
+        .optional(),
+    quiet_hours_end: z
+        .string()
+        .regex(/^\d{2}:\d{2}$/)
+        .optional(),
 });
 
 const KdsSettingsSchema = z.object({
@@ -169,7 +175,7 @@ export async function PATCH(request: Request) {
 
     const { error: updateError } = await context.supabase
         .from('restaurants')
-        .update({ settings: (nextSettings as unknown) as Json })
+        .update({ settings: nextSettings as unknown as Json })
         .eq('id', context.restaurantId);
 
     if (updateError) {
@@ -188,8 +194,8 @@ export async function PATCH(request: Request) {
         entity_type: 'restaurant',
         entity_id: context.restaurantId,
         metadata: { source: 'kds_settings_api' },
-        old_value: ({ kds: currentKds } as unknown) as Json,
-        new_value: ({ kds: nextKds } as unknown) as Json,
+        old_value: { kds: currentKds } as unknown as Json,
+        new_value: { kds: nextKds } as unknown as Json,
     });
 
     return apiSuccess({

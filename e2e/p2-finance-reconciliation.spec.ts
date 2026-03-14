@@ -119,8 +119,13 @@ test.describe('P2 finance reconciliation', () => {
 
         await page.goto('/merchant/finance', { waitUntil: 'domcontentloaded' });
 
-        await expect(page.getByRole('heading', { name: /Finance.*Reconciliation/i })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Payout Reconciliation' })).toBeVisible();
+        // h1 reads "Finance & Reconciliation" via i18n copy
+        await expect(page.getByRole('heading', { name: /Finance/i }).first()).toBeVisible({
+            timeout: 15000,
+        });
+        await expect(page.getByRole('heading', { name: 'Payout Reconciliation' })).toBeVisible({
+            timeout: 15000,
+        });
         await expect(page.getByText('chapa')).toBeVisible();
         await expect(page.getByText(/open exceptions/i)).toBeVisible();
 

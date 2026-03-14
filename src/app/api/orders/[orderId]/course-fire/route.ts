@@ -53,7 +53,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ order
         .maybeSingle();
 
     if (existingOrderError) {
-        return apiError('Failed to load order', 500, 'ORDER_FETCH_FAILED', existingOrderError.message);
+        return apiError(
+            'Failed to load order',
+            500,
+            'ORDER_FETCH_FAILED',
+            existingOrderError.message
+        );
     }
     if (!existingOrder) {
         return apiError('Order not found', 404, 'ORDER_NOT_FOUND');

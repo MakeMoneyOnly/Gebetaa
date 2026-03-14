@@ -59,11 +59,11 @@ export async function POST(request: Request) {
 
     const { data: openEntry, error: openEntryError } = await context.supabase
         .from('time_entries')
-        .select('id, shift_id, staff_id, clock_in_at, clock_out_at, status')
+        .select('id, shift_id, staff_id, clock_in, clock_out')
         .eq('restaurant_id', context.restaurantId)
         .eq('staff_id', parsed.data.staff_id)
-        .eq('status', 'open')
-        .order('clock_in_at', { ascending: false })
+        .is('clock_out', null)
+        .order('clock_in', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -86,15 +86,8 @@ export async function POST(request: Request) {
             .insert({
                 restaurant_id: context.restaurantId,
                 staff_id: parsed.data.staff_id,
-                shift_id: parsed.data.shift_id ?? null,
-                clock_in_at: occurredAt,
-                source: parsed.data.source ?? 'dashboard',
-                status: 'open',
-                created_by: auth.user.id,
-                metadata: {
-                    note: parsed.data.note ?? null,
-                    idempotency_key: idempotencyKey,
-                },
+                shift_id: parsed.data.shift_id ?? '',
+                clock_in: occurredAt,
             })
             .select('*')
             .single();
@@ -145,13 +138,7 @@ export async function POST(request: Request) {
     const { data: updated, error: updateError } = await context.supabase
         .from('time_entries')
         .update({
-            clock_out_at: occurredAt,
-            status: 'closed',
-            metadata: {
-                note: parsed.data.note ?? null,
-                closed_by: auth.user.id,
-                idempotency_key: idempotencyKey,
-            },
+            clock_out: occurredAt,
         })
         .eq('id', openEntry.id)
         .eq('restaurant_id', context.restaurantId)

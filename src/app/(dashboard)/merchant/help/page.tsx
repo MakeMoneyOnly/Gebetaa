@@ -1,17 +1,20 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { resolveRestaurantId } from '@/lib/services/dashboardDataService';
+import { HelpPageClient } from '@/components/merchant/HelpPageClient';
 
-import React, { useEffect, useState } from 'react';
-import { BookOpen, Loader2, Search, Send } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
-type SupportArticle = {
+// Revalidate every 3600 seconds (1 hour) - help content changes rarely
+export const revalidate = 3600;
+
+interface SupportArticle {
     id: string;
     title: string;
     category: string;
-};
+}
 
-type SupportTicket = {
+interface SupportTicket {
     id: string;
     subject: string;
     description: string;
@@ -20,261 +23,57 @@ type SupportTicket = {
     source: string;
     created_at: string;
     updated_at: string;
-};
+}
 
-export default function HelpPage() {
-    const [query, setQuery] = useState('');
-    const {
-        loading: articlesLoading,
-        markLoaded: markArticlesLoaded,
-        setLoading: setArticlesLoading,
-    } = usePageLoadGuard('help.articles');
-    const [articles, setArticles] = useState<SupportArticle[]>([]);
-    const {
-        loading: ticketsLoading,
-        markLoaded: markTicketsLoaded,
-        setLoading: setTicketsLoading,
-    } = usePageLoadGuard('help.tickets');
-    const [tickets, setTickets] = useState<SupportTicket[]>([]);
-    const [ticketSubmitting, setTicketSubmitting] = useState(false);
-    const [subject, setSubject] = useState('');
-    const [description, setDescription] = useState('');
-    const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
+async function getInitialArticles(): Promise<SupportArticle[]> {
+    try {
+        // For now, return empty array - the client will fetch from API
+        // In production, this could fetch from a CMS or database
+        return [];
+    } catch (error) {
+        console.error('Failed to fetch initial articles:', error);
+        return [];
+    }
+}
 
-    const loadArticles = async (searchQuery: string) => {
-        try {
-            setArticlesLoading(true);
-            const response = await fetch(
-                `/api/support/articles?query=${encodeURIComponent(searchQuery)}`,
-                { method: 'GET' }
-            );
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to load articles.');
-            }
-            setArticles((payload?.data?.articles ?? []) as SupportArticle[]);
-        } catch (error) {
-            console.error(error);
-            toast.error(error instanceof Error ? error.message : 'Failed to load articles.');
-        } finally {
-            markArticlesLoaded();
-        }
-    };
+async function getInitialTickets(restaurantId: string): Promise<SupportTicket[]> {
+    try {
+        const { createClient } = await import('@/lib/supabase/server');
+        const supabase = await createClient();
 
-    const loadTickets = async () => {
-        try {
-            setTicketsLoading(true);
-            const response = await fetch('/api/support/tickets?limit=20', { method: 'GET' });
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to load support tickets.');
-            }
-            setTickets((payload?.data?.tickets ?? []) as SupportTicket[]);
-        } catch (error) {
-            console.error(error);
-            toast.error(error instanceof Error ? error.message : 'Failed to load tickets.');
-        } finally {
-            markTicketsLoaded();
-        }
-    };
+        const { data, error } = await supabase
+            .from('support_tickets')
+            .select('id, subject, description, priority, status, source, created_at, updated_at')
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false })
+            .limit(20);
 
-    useEffect(() => {
-        void loadArticles('');
-        void loadTickets();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        await loadArticles(query);
-    };
-
-    const handleTicketSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const trimmedSubject = subject.trim();
-        const trimmedDescription = description.trim();
-        if (trimmedSubject.length < 3) {
-            toast.error('Subject must be at least 3 characters.');
-            return;
-        }
-        if (trimmedDescription.length < 5) {
-            toast.error('Description must be at least 5 characters.');
-            return;
+        if (error) {
+            console.error('Failed to fetch tickets:', error);
+            return [];
         }
 
-        try {
-            setTicketSubmitting(true);
-            const response = await fetch('/api/support/tickets', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    subject: trimmedSubject,
-                    description: trimmedDescription,
-                    priority,
-                    diagnostics_json: { source_page: 'merchant_help' },
-                }),
-            });
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to create ticket.');
-            }
+        return (data ?? []) as SupportTicket[];
+    } catch (error) {
+        console.error('Failed to fetch initial tickets:', error);
+        return [];
+    }
+}
 
-            setSubject('');
-            setDescription('');
-            setPriority('medium');
-            toast.success('Support ticket created.');
-            await loadTickets();
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Failed to create ticket.');
-        } finally {
-            setTicketSubmitting(false);
-        }
-    };
+export default async function HelpPage() {
+    // Check authentication and restaurant context
+    const restaurantId = await resolveRestaurantId();
 
-    return (
-        <div className="min-h-screen space-y-8 bg-white pb-20">
-            <div>
-                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
-                    Help & Support
-                </h1>
-                <p className="font-medium text-gray-500">
-                    Knowledge base, ticketing, and support history.
-                </p>
-            </div>
+    if (!restaurantId) {
+        redirect('/auth/signin?error=no_restaurant');
+    }
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
-                    <div className="mb-4 flex items-center gap-2">
-                        <BookOpen className="h-5 w-5 text-orange-600" />
-                        <h2 className="text-xl font-bold text-gray-900">Knowledge Base</h2>
-                    </div>
-                    <form onSubmit={handleSearch} className="mb-4 flex gap-2">
-                        <div className="relative flex-1">
-                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                            <input
-                                value={query}
-                                onChange={event => setQuery(event.target.value)}
-                                placeholder="Search articles..."
-                                className="h-11 w-full rounded-xl border border-gray-200 pr-3 pl-9 text-sm outline-none focus:border-gray-400"
-                            />
-                        </div>
-                        <button className="bg-brand-crimson h-11 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e]">
-                            Search
-                        </button>
-                    </form>
+    // Fetch initial data on the server in parallel
+    const [initialArticles, initialTickets] = await Promise.all([
+        getInitialArticles(),
+        getInitialTickets(restaurantId),
+    ]);
 
-                    {articlesLoading && (
-                        <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Loading articles...
-                        </div>
-                    )}
-
-                    {!articlesLoading && (
-                        <div className="space-y-2">
-                            {articles.length === 0 && (
-                                <p className="text-sm text-gray-500">No articles found.</p>
-                            )}
-                            {articles.map(article => (
-                                <div
-                                    key={article.id}
-                                    className="rounded-xl border border-gray-100 p-3"
-                                >
-                                    <p className="text-sm font-semibold text-gray-900">
-                                        {article.title}
-                                    </p>
-                                    <p className="mt-1 text-xs text-gray-500">{article.category}</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-xl font-bold text-gray-900">Create Support Ticket</h2>
-                    <form onSubmit={handleTicketSubmit} className="space-y-3">
-                        <input
-                            value={subject}
-                            onChange={event => setSubject(event.target.value)}
-                            placeholder="Subject"
-                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                        />
-                        <textarea
-                            value={description}
-                            onChange={event => setDescription(event.target.value)}
-                            placeholder="Describe your issue..."
-                            className="min-h-[120px] w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                        />
-                        <select
-                            value={priority}
-                            onChange={event =>
-                                setPriority(
-                                    event.target.value as 'low' | 'medium' | 'high' | 'critical'
-                                )
-                            }
-                            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
-                        >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="critical">Critical</option>
-                        </select>
-                        <button
-                            type="submit"
-                            disabled={ticketSubmitting}
-                            className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            {ticketSubmitting ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Send className="h-4 w-4" />
-                            )}
-                            Submit Ticket
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
-                <h2 className="mb-4 text-xl font-bold text-gray-900">Ticket History Timeline</h2>
-                {ticketsLoading && (
-                    <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Loading ticket history...
-                    </div>
-                )}
-                {!ticketsLoading && (
-                    <div className="space-y-3">
-                        {tickets.length === 0 && (
-                            <p className="text-sm text-gray-500">No support tickets yet.</p>
-                        )}
-                        {tickets.map(ticket => (
-                            <div key={ticket.id} className="rounded-xl border border-gray-100 p-4">
-                                <div className="flex items-center justify-between gap-2">
-                                    <p className="text-sm font-semibold text-gray-900">
-                                        {ticket.subject}
-                                    </p>
-                                    <span className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
-                                        {ticket.status}
-                                    </span>
-                                </div>
-                                <p className="mt-2 line-clamp-2 text-xs text-gray-600">
-                                    {ticket.description}
-                                </p>
-                                <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-500">
-                                    <span>Priority: {ticket.priority}</span>
-                                    <span>
-                                        Created: {new Date(ticket.created_at).toLocaleString()}
-                                    </span>
-                                    <span>
-                                        Updated: {new Date(ticket.updated_at).toLocaleString()}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+    // Pass server-fetched data to Client Component
+    return <HelpPageClient initialArticles={initialArticles} initialTickets={initialTickets} />;
 }

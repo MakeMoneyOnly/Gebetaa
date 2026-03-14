@@ -4,6 +4,14 @@ import React, { useState } from 'react';
 import { Tablet, Copy, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import {
+    getPaymentOptionsForSurface,
+    type HardwareDeviceMetadata,
+    type HardwareDeviceType,
+    type SupportedPaymentMethod,
+    type TerminalReceiptMode,
+    type TerminalSettlementMode,
+} from '@/lib/devices/config';
 
 interface ProvisionDeviceModalProps {
     open: boolean;
@@ -13,8 +21,9 @@ interface ProvisionDeviceModalProps {
     onClose: () => void;
     onProvision: (payload: {
         name: string;
-        device_type: 'pos' | 'kds' | 'kiosk' | 'digital_menu';
+        device_type: HardwareDeviceType;
         assigned_zones?: string[];
+        metadata?: HardwareDeviceMetadata;
     }) => Promise<any>;
 }
 
@@ -27,9 +36,20 @@ export function ProvisionDeviceModal({
     onProvision,
 }: ProvisionDeviceModalProps) {
     const [name, setName] = useState('');
-    const [deviceType, setDeviceType] = useState<'pos' | 'kds' | 'kiosk' | 'digital_menu'>('pos');
+    const [deviceType, setDeviceType] = useState<HardwareDeviceType>('pos');
     const [selectedZones, setSelectedZones] = useState<string[]>([]);
     const [newDevice, setNewDevice] = useState<any | null>(null);
+    const [stationName, setStationName] = useState('');
+    const [settlementMode, setSettlementMode] = useState<TerminalSettlementMode>('cashier');
+    const [receiptMode, setReceiptMode] = useState<TerminalReceiptMode>('prompt');
+    const [allowedPaymentMethods, setAllowedPaymentMethods] = useState<SupportedPaymentMethod[]>([
+        'cash',
+        'chapa',
+    ]);
+
+    const terminalPaymentOptions = getPaymentOptionsForSurface('terminal').filter(
+        option => option.method !== 'card'
+    );
 
     if (!open) return null;
 
@@ -39,6 +59,17 @@ export function ProvisionDeviceModal({
             name: name.trim(),
             device_type: deviceType,
             assigned_zones: selectedZones.length > 0 ? selectedZones : undefined,
+            metadata:
+                deviceType === 'terminal'
+                    ? {
+                          station_name: stationName.trim() || undefined,
+                          settlement_mode: settlementMode,
+                          allowed_payment_methods: allowedPaymentMethods,
+                          receipt_mode: receiptMode,
+                          managed_mode: 'dedicated',
+                          kiosk_required: true,
+                      }
+                    : undefined,
         });
 
         if (device) {
@@ -50,6 +81,16 @@ export function ProvisionDeviceModal({
         setSelectedZones(prev =>
             prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone]
         );
+    };
+
+    const togglePaymentMethod = (method: SupportedPaymentMethod) => {
+        setAllowedPaymentMethods(prev => {
+            if (prev.includes(method)) {
+                return prev.length === 1 ? prev : prev.filter(entry => entry !== method);
+            }
+
+            return [...prev, method];
+        });
     };
 
     const handleCopy = () => {
@@ -99,14 +140,99 @@ export function ProvisionDeviceModal({
                                 </label>
                                 <select
                                     value={deviceType}
-                                    onChange={e => setDeviceType(e.target.value as any)}
+                                    onChange={e =>
+                                        setDeviceType(e.target.value as HardwareDeviceType)
+                                    }
                                     className="w-full rounded-2xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 capitalize shadow-sm transition-all outline-none focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
                                 >
                                     <option value="pos">POS Terminal (Waiters)</option>
                                     <option value="kds">Kitchen Display (KDS)</option>
-                                    <option value="kiosk">Customer Kiosk</option>
+                                    <option value="terminal">Cashier Terminal</option>
                                 </select>
                             </div>
+                            {deviceType === 'terminal' && (
+                                <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                                    <div>
+                                        <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-400 uppercase">
+                                            Station Name
+                                        </label>
+                                        <input
+                                            value={stationName}
+                                            onChange={e => setStationName(e.target.value)}
+                                            placeholder="e.g. Front Cashier"
+                                            className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-400 uppercase">
+                                                Settlement Mode
+                                            </label>
+                                            <select
+                                                value={settlementMode}
+                                                onChange={e =>
+                                                    setSettlementMode(
+                                                        e.target.value as TerminalSettlementMode
+                                                    )
+                                                }
+                                                className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                            >
+                                                <option value="cashier">Cashier</option>
+                                                <option value="counter">Counter</option>
+                                                <option value="hybrid">Hybrid</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-400 uppercase">
+                                                Receipt Mode
+                                            </label>
+                                            <select
+                                                value={receiptMode}
+                                                onChange={e =>
+                                                    setReceiptMode(
+                                                        e.target.value as TerminalReceiptMode
+                                                    )
+                                                }
+                                                className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                            >
+                                                <option value="prompt">Prompt Staff</option>
+                                                <option value="auto">Auto Prompt</option>
+                                                <option value="disabled">Disabled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="mb-2 block text-xs font-bold tracking-wider text-gray-400 uppercase">
+                                            Allowed Payment Methods
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {terminalPaymentOptions.map(option => (
+                                                <button
+                                                    key={option.method}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        togglePaymentMethod(option.method)
+                                                    }
+                                                    className={cn(
+                                                        'rounded-full px-3 py-1.5 text-xs font-bold transition-all',
+                                                        allowedPaymentMethods.includes(
+                                                            option.method
+                                                        )
+                                                            ? 'bg-emerald-600 text-white shadow-md'
+                                                            : 'bg-white text-gray-600 shadow-sm hover:bg-gray-100'
+                                                    )}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="mt-2 text-[11px] font-semibold text-gray-500">
+                                            Defaults follow Gebeta&apos;s current cashier setup:
+                                            cash and Chapa.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                             <div className="pt-2">
                                 <label className="mb-2 block text-xs font-bold tracking-wider text-gray-400 uppercase">
                                     Zone Restriction
@@ -137,6 +263,15 @@ export function ProvisionDeviceModal({
                                 <p className="mt-2 text-[11px] font-semibold text-gray-400">
                                     Optional: Restrict device to specific zones
                                 </p>
+                            </div>
+                            <div className="rounded-2xl bg-gray-50 px-4 py-3 text-[11px] font-semibold text-gray-500">
+                                Staff devices should be installed as a PWA and locked to kiosk mode
+                                on managed Android tablets for enterprise-grade operation.
+                            </div>
+                            <div className="rounded-2xl bg-amber-50 px-4 py-3 text-[11px] font-semibold text-amber-700">
+                                Customer kiosk provisioning is temporarily hidden until the
+                                dedicated self-order kiosk UI is implemented. Today the supported
+                                managed device types are Waiter POS, KDS, and Cashier Terminal.
                             </div>
 
                             <div className="mt-8 flex justify-end gap-3 pt-2">

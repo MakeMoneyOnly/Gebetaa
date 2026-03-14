@@ -112,6 +112,11 @@ import {
 import { resolveGuestContext } from '@/lib/security/guestContext';
 import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
+import { isIdempotencyKeyValid } from '@/lib/api/idempotency';
+import { createGebetaEvent } from '@/lib/events/contracts';
+import { publishEvent } from '@/lib/events/runtime';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { prepareOrderDiscount } from '@/lib/discounts/service';
 
 const OrdersQuerySchema = z.object({
     status: z.string().optional(),
@@ -148,6 +153,7 @@ const CreateOrderRequestSchema = CreateOrderSchema.omit({
     delivery_address: z.string().max(500).optional(),
     customer_name: z.string().max(100).optional(),
     customer_phone: z.string().max(30).optional(),
+    discount_id: z.string().uuid().optional(),
     idempotency_key: z.string().uuid().optional(),
     campaign_attribution: z
         .object({
@@ -372,12 +378,50 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const idempotencyKey = parsed.data.idempotency_key ?? generateIdempotencyKey();
+        const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
+        if (explicitIdempotencyKey && !isIdempotencyKeyValid(explicitIdempotencyKey)) {
+            return NextResponse.json({ error: 'Invalid idempotency key' }, { status: 400 });
+        }
+
+        const idempotencyKey =
+            explicitIdempotencyKey?.trim() ||
+            parsed.data.idempotency_key ||
+            generateIdempotencyKey();
+        let discountRuntime;
+        try {
+            discountRuntime = parsed.data.discount_id
+                ? await prepareOrderDiscount({
+                      supabase: createServiceRoleClient() as any,
+                      restaurantId,
+                      discountId: parsed.data.discount_id,
+                      items: parsed.data.items.map(item => ({
+                          id: item.id,
+                          price: item.price,
+                          quantity: item.quantity,
+                      })),
+                      excludeManagerApproval: true,
+                  })
+                : {
+                      discount: null,
+                      calculation: {
+                          subtotal: parsed.data.total_price,
+                          discountAmount: 0,
+                          total: parsed.data.total_price,
+                          applied: false,
+                      },
+                  };
+        } catch (error) {
+            return NextResponse.json(
+                { error: error instanceof Error ? error.message : 'Failed to validate discount' },
+                { status: 400 }
+            );
+        }
+
         const result = await createOrder(supabase, {
             restaurant_id: restaurantId,
             table_number: tableNumber,
             items: parsed.data.items,
-            total_price: parsed.data.total_price,
+            total_price: discountRuntime.calculation.total,
             notes: parsed.data.notes,
             idempotency_key: idempotencyKey,
             guest_fingerprint: fingerprint,
@@ -385,6 +429,8 @@ export async function POST(request: NextRequest) {
             delivery_address: parsed.data.delivery_address,
             customer_name: parsed.data.customer_name,
             customer_phone: parsed.data.customer_phone,
+            discount_id: discountRuntime.discount?.id,
+            discount_amount: discountRuntime.calculation.discountAmount,
         });
 
         if (!result.success) {
@@ -460,12 +506,23 @@ export async function POST(request: NextRequest) {
             },
             new_value: {
                 status: result.order.status,
-                total_price: parsed.data.total_price,
+                total_price: discountRuntime.calculation.total,
+                discount_amount: discountRuntime.calculation.discountAmount,
             },
         });
         if (auditError) {
             console.warn('[POST /api/orders] audit insert failed:', auditError.message);
         }
+
+        await publishEvent(
+            createGebetaEvent('order.created', {
+                restaurant_id: restaurantId,
+                order_id: result.order.id,
+                idempotency_key: idempotencyKey,
+                source: isOnlineOrder ? 'online_ordering' : 'guest_web',
+                order_type: parsed.data.order_type,
+            })
+        );
 
         return NextResponse.json(
             {

@@ -95,7 +95,7 @@ export async function checkRateLimit(
     fingerprint: string,
     action: string,
     config: RateLimitConfig,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     _restaurantId?: string
 ): Promise<{
     allowed: boolean;

@@ -35,6 +35,10 @@ import {
     GET as getSettingsNotifications,
     PATCH as patchSettingsNotifications,
 } from '@/app/api/settings/notifications/route';
+import {
+    GET as getSettingsPayments,
+    PATCH as patchSettingsPayments,
+} from '@/app/api/settings/payments/route';
 
 vi.mock('@/lib/supabase/server', () => ({
     createClient: vi.fn(),
@@ -467,6 +471,30 @@ describe('P0 API routes unit coverage', () => {
         });
 
         const response = await patchSettingsNotifications(request);
+
+        expect(response.status).toBe(400);
+    });
+
+    it('GET /api/settings/payments returns 401 when not authenticated', async () => {
+        setAuthUnauthorized();
+
+        const response = await getSettingsPayments();
+
+        expect(response.status).toBe(401);
+    });
+
+    it('PATCH /api/settings/payments returns 400 for invalid payload', async () => {
+        setAuthAndContextOk();
+        const request = new Request('http://localhost/api/settings/payments', {
+            method: 'PATCH',
+            body: JSON.stringify({
+                settlement_bank_code: '',
+                settlement_account_name: '',
+            }),
+            headers: { 'content-type': 'application/json' },
+        });
+
+        const response = await patchSettingsPayments(request);
 
         expect(response.status).toBe(400);
     });

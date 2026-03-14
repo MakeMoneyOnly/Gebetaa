@@ -83,9 +83,12 @@ export function KdsReliabilityPanel() {
                             <Timer className="h-3.5 w-3.5" />
                             Queue Lag
                         </div>
-                        <p className="text-2xl font-black text-gray-900">{data.queue_lag.p95_minutes}m</p>
+                        <p className="text-2xl font-black text-gray-900">
+                            {data.queue_lag.p95_minutes}m
+                        </p>
                         <p className="text-xs text-gray-500">
-                            P95, avg {data.queue_lag.avg_minutes}m, {data.queue_lag.active_tickets} active
+                            P95, avg {data.queue_lag.avg_minutes}m, {data.queue_lag.active_tickets}{' '}
+                            active
                         </p>
                     </article>
 
@@ -94,9 +97,12 @@ export function KdsReliabilityPanel() {
                             <AlertTriangle className="h-3.5 w-3.5" />
                             SLA Breaches
                         </div>
-                        <p className="text-2xl font-black text-gray-900">{data.sla.breached_tickets}</p>
+                        <p className="text-2xl font-black text-gray-900">
+                            {data.sla.breached_tickets}
+                        </p>
                         <p className="text-xs text-gray-500">
-                            Threshold {data.sla.threshold_minutes}m, {data.sla.breached_ratio_percent}% breached
+                            Threshold {data.sla.threshold_minutes}m,{' '}
+                            {data.sla.breached_ratio_percent}% breached
                         </p>
                     </article>
 
@@ -113,8 +119,8 @@ export function KdsReliabilityPanel() {
                             {data.websocket.healthy ? 'Healthy' : 'Degraded'}
                         </p>
                         <p className="text-xs text-gray-500">
-                            Stations: {data.websocket.connected_stations.join(', ') || 'none'} | Samples:{' '}
-                            {data.websocket.samples_in_window}
+                            Stations: {data.websocket.connected_stations.join(', ') || 'none'} |
+                            Samples: {data.websocket.samples_in_window}
                         </p>
                     </article>
                 </div>

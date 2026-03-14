@@ -53,7 +53,8 @@ export async function validateOrderItems(
         notes?: string;
         course?: 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
     }>,
-    claimedTotal: number
+    claimedTotal: number,
+    discountAmount: number = 0
 ): Promise<OrderValidationResult> {
     const itemIds = items.map(i => i.id);
 
@@ -93,12 +94,16 @@ export async function validateOrderItems(
         });
     }
 
-    // Allow for minor floating point differences
-    if (Math.abs(calculatedTotal - claimedTotal) > 0.01) {
+    const expectedTotal = Math.max(0, calculatedTotal - discountAmount);
+
+    // Allow for minor floating point differences while discounts are still on the
+    // pre-Santim money path. This keeps the current app stable until the full
+    // integer-money migration lands.
+    if (Math.abs(expectedTotal - claimedTotal) > 0.01) {
         return {
             isValid: false,
             error: 'Price mismatch. The menu might have been updated.',
-            calculatedTotal,
+            calculatedTotal: expectedTotal,
         };
     }
 
@@ -177,6 +182,8 @@ export async function createOrder(
         delivery_address?: string;
         customer_name?: string;
         customer_phone?: string;
+        discount_id?: string;
+        discount_amount?: number;
     }
 ): Promise<{ success: true; order: Order } | { success: false; error: string }> {
     // 1. Check for duplicate
@@ -194,7 +201,12 @@ export async function createOrder(
     }
 
     // 2. Validate items
-    const validation = await validateOrderItems(supabase, orderData.items, orderData.total_price);
+    const validation = await validateOrderItems(
+        supabase,
+        orderData.items,
+        orderData.total_price,
+        orderData.discount_amount ?? 0
+    );
 
     if (!validation.isValid) {
         return { success: false, error: validation.error || 'Validation failed' };
@@ -220,7 +232,14 @@ export async function createOrder(
         ...(orderData.delivery_address ? { delivery_address: orderData.delivery_address } : {}),
         ...(orderData.customer_name ? { customer_name: orderData.customer_name } : {}),
         ...(orderData.customer_phone ? { customer_phone: orderData.customer_phone } : {}),
-    } as OrderInsert;
+        ...(orderData.discount_id ? { discount_id: orderData.discount_id } : {}),
+        ...(typeof orderData.discount_amount === 'number'
+            ? { discount_amount: orderData.discount_amount }
+            : {}),
+    } as OrderInsert & {
+        discount_id?: string;
+        discount_amount?: number;
+    };
 
     const { data: order, error } = await insertOrder(supabase, orderInsert);
 

@@ -11,7 +11,6 @@ import { MemorySessionStore, type SessionData } from './sessionStore';
 // Note: Redis tests can be added when RedisSessionStore needs to be tested
 const mockRedisData = new Map<string, string>();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _createMockRedis = () => ({
     data: mockRedisData,
     get: vi.fn(async (key: string) => {
