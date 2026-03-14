@@ -14,8 +14,8 @@ export const OrderItemSchema = z.object({
         .int('Quantity must be a whole number')
         .min(1, 'Minimum quantity is 1')
         .max(100, 'Maximum quantity is 100'),
-    // price is now in SANTIM (integer), not birr (decimal)
-    price: z.number().int().nonnegative('Price must be a non-negative integer (in santim)'),
+    // price accepts birr (decimal) values
+    price: z.number().nonnegative('Price must be a non-negative value (in birr)'),
     notes: z.string().max(500, 'Notes too long').optional(),
     station: z.enum(['kitchen', 'bar', 'dessert', 'coffee']).optional(),
     course: z.enum(['appetizer', 'main', 'dessert', 'beverage', 'side']).optional(),
@@ -34,8 +34,8 @@ export const CreateOrderSchema = z.object({
         .array(OrderItemSchema)
         .min(1, 'At least one item is required')
         .max(50, 'Maximum 50 items per order'),
-    // total_price is now in SANTIM (integer), not birr (decimal)
-    total_price: z.number().int().positive('Total price must be a positive integer (in santim)'),
+    // total_price accepts birr (decimal) values
+    total_price: z.number().positive('Total price must be a positive value (in birr)'),
     notes: z.string().max(1000, 'Notes too long').optional(),
     idempotency_key: z.string().uuid('Invalid idempotency key'),
 });

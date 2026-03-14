@@ -26,6 +26,7 @@ export const SANTIM_PER_BIRR = 100;
  */
 export function birrToSantim(birr: number): number {
     if (!Number.isFinite(birr)) return 0;
+    if (birr < 0) return 0; // Negative values return 0
     return Math.round(birr * SANTIM_PER_BIRR);
 }
 
@@ -36,6 +37,7 @@ export function birrToSantim(birr: number): number {
  */
 export function santimToBirr(santim: number): number {
     if (!Number.isFinite(santim)) return 0;
+    if (santim < 0) return 0; // Negative values return 0
     return santim / SANTIM_PER_BIRR;
 }
 
@@ -61,7 +63,9 @@ export function formatCurrency(
     }
 
     const birrValue = santimToBirr(santim);
-    const formatted = birrValue.toLocaleString(locale, {
+    // Only floor/truncate when decimals is 0 (default), otherwise show actual value
+    const displayValue = decimals === 0 ? Math.floor(birrValue) : birrValue;
+    const formatted = displayValue.toLocaleString(locale, {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
     });
@@ -79,7 +83,8 @@ export function formatCurrencyCompact(santim: number | null | undefined): string
         return '0';
     }
 
-    const birrValue = santimToBirr(santim);
+    // formatCurrencyCompact always uses decimals=0, so floor the value
+    const birrValue = Math.floor(santimToBirr(santim));
     return birrValue.toLocaleString('en-ET');
 }
 
