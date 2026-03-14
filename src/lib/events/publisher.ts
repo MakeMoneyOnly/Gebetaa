@@ -2,10 +2,15 @@
 // Publishes events to Redis Streams for async processing
 import { Redis } from '@upstash/redis';
 
-const redis = new Redis({
-    url: process.env.REDIS_URL!,
-    token: process.env.REDIS_TOKEN!,
-});
+// Use Upstash Redis environment variables
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+// Only create Redis client if credentials are available
+const redis = redisUrl && redisToken ? new Redis({
+    url: redisUrl,
+    token: redisToken,
+}) : null;
 
 export type EventType =
     | 'order.created'
@@ -24,6 +29,12 @@ export interface EventPayload {
 }
 
 export async function publishEvent(type: EventType, payload: EventPayload): Promise<void> {
+    // Skip publishing if Redis is not available (e.g., in test environment)
+    if (!redis) {
+        console.warn('[publisher] Redis not available, skipping event publish');
+        return;
+    }
+
     const streamKey = `events:${type.split('.')[0]}`;
     const event = {
         type,
@@ -36,6 +47,12 @@ export async function publishEvent(type: EventType, payload: EventPayload): Prom
 
 // For backward compatibility - single stream
 export async function publish(event: EventType, data: EventPayload): Promise<void> {
+    // Skip publishing if Redis is not available (e.g., in test environment)
+    if (!redis) {
+        console.warn('[publisher] Redis not available, skipping event publish');
+        return;
+    }
+
     const eventData = {
         type: event,
         data: JSON.stringify(data),
