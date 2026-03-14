@@ -44,7 +44,10 @@ export class OrdersRepository {
             offset?: number;
         } = {}
     ): Promise<OrderRow[]> {
-        let query = getSupabaseClient().from('orders').select('*').eq('restaurant_id', restaurantId);
+        let query = getSupabaseClient()
+            .from('orders')
+            .select('*')
+            .eq('restaurant_id', restaurantId);
 
         if (options.status) {
             query = query.eq('status', options.status);

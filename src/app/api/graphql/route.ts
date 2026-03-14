@@ -12,9 +12,7 @@ import { ordersResolvers } from '@/domains/orders/resolvers';
 
 // Helper to remove federation directives from schema
 function stripFederationDirectives(schema: string): string {
-    return schema
-        .replace(/extend schema @link.*$/gm, '')
-        .replace(/@key\(fields: "[^"]*"\)/g, '');
+    return schema.replace(/extend schema @link.*$/gm, '').replace(/@key\(fields: "[^"]*"\)/g, '');
 }
 
 // Load and parse subgraph schemas, stripping federation directives
@@ -49,13 +47,7 @@ const staffSchema = gql(
 );
 
 // Combined typeDefs
-const typeDefs = [
-    ordersSchema,
-    menuSchema,
-    paymentsSchema,
-    guestsSchema,
-    staffSchema,
-];
+const typeDefs = [ordersSchema, menuSchema, paymentsSchema, guestsSchema, staffSchema];
 
 // Combine all resolvers
 const resolvers = {

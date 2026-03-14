@@ -207,13 +207,13 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let webModule: any;
         let reactModule: any;
-        
+
         try {
             webModule = await import('@powersync/web');
         } catch {
             webModule = null;
         }
-        
+
         try {
             reactModule = await import('@powersync/react');
         } catch {
