@@ -29,6 +29,33 @@ export async function createClient() {
         if (isE2EBypass) {
             console.log('[E2E] Using mock Supabase client for testing');
         }
+        // Helper to create chainable mock methods
+        const createChainableMock = (data: unknown) => ({
+            data,
+            error: null,
+            eq: function () { return this; },
+            neq: function () { return this; },
+            gt: function () { return this; },
+            gte: function () { return this; },
+            lt: function () { return this; },
+            lte: function () { return this; },
+            like: function () { return this; },
+            ilike: function () { return this; },
+            is: function () { return this; },
+            in: function () { return this; },
+            contains: function () { return this; },
+            containedBy: function () { return this; },
+            overlaps: function () { return this; },
+            order: function () { return this; },
+            limit: function () { return this; },
+            range: function () { return this; },
+            single: async () => ({ data, error: null }),
+            maybeSingle: async () => ({ data, error: null }),
+            then: function(resolve: (value: unknown) => void) {
+                return resolve({ data, error: null });
+            },
+        });
+
         return {
             auth: {
                 getUser: async () => ({
@@ -59,24 +86,10 @@ export async function createClient() {
                 }),
             },
             from: () => ({
-                select: () => ({
-                    data: [],
-                    error: null,
-                }),
+                select: () => createChainableMock([]),
                 insert: () => ({ data: null, error: null }),
                 update: () => ({ data: null, error: null }),
                 delete: () => ({ data: null, error: null }),
-                eq: function () {
-                    return this;
-                },
-                single: async () => ({ data: null, error: null }),
-                maybeSingle: async () => ({ data: null, error: null }),
-                limit: function () {
-                    return this;
-                },
-                order: function () {
-                    return this;
-                },
             }),
         } as unknown as ReturnType<typeof createServerClient<Database>>;
     }
