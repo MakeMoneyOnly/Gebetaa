@@ -198,17 +198,24 @@ jobs:
                   path: .next/
 
             - name: Run E2E tests
-              run: pnpm test:e2e
+              run: |
+                echo "=== Debug: Checking environment variables ==="
+                echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:0:20}..."
+                echo "SUPABASE_SECRET_KEY set: ${#SUPABASE_SECRET_KEY} chars"
+                echo "QR_HMAC_SECRET set: ${#QR_HMAC_SECRET} chars"
+                echo "UPSTASH_REDIS_REST_URL set: ${#UPSTASH_REDIS_REST_URL} chars"
+                echo "UPSTASH_REDIS_REST_TOKEN set: ${#UPSTASH_REDIS_REST_TOKEN} chars"
+                pnpm test:e2e
               env:
                   CI: true
-                  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
-                  SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
-                  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL || '' }}
+                  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+                  SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+                  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
                   NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
                   NEXT_PUBLIC_APP_NAME: 'Gebeta'
-                  NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || '' }}
-                  QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET || '0000000000000000000000000000000000000000000000000000000000000000' }}
+                  NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+                  QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET }}
                   UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
                   UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
 
