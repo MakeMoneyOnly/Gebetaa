@@ -33,25 +33,57 @@ export async function createClient() {
         const createChainableMock = (data: unknown) => ({
             data,
             error: null,
-            eq: function () { return this; },
-            neq: function () { return this; },
-            gt: function () { return this; },
-            gte: function () { return this; },
-            lt: function () { return this; },
-            lte: function () { return this; },
-            like: function () { return this; },
-            ilike: function () { return this; },
-            is: function () { return this; },
-            in: function () { return this; },
-            contains: function () { return this; },
-            containedBy: function () { return this; },
-            overlaps: function () { return this; },
-            order: function () { return this; },
-            limit: function () { return this; },
-            range: function () { return this; },
+            eq: function () {
+                return this;
+            },
+            neq: function () {
+                return this;
+            },
+            gt: function () {
+                return this;
+            },
+            gte: function () {
+                return this;
+            },
+            lt: function () {
+                return this;
+            },
+            lte: function () {
+                return this;
+            },
+            like: function () {
+                return this;
+            },
+            ilike: function () {
+                return this;
+            },
+            is: function () {
+                return this;
+            },
+            in: function () {
+                return this;
+            },
+            contains: function () {
+                return this;
+            },
+            containedBy: function () {
+                return this;
+            },
+            overlaps: function () {
+                return this;
+            },
+            order: function () {
+                return this;
+            },
+            limit: function () {
+                return this;
+            },
+            range: function () {
+                return this;
+            },
             single: async () => ({ data, error: null }),
             maybeSingle: async () => ({ data, error: null }),
-            then: function(resolve: (value: unknown) => void) {
+            then: function (resolve: (value: unknown) => void) {
                 return resolve({ data, error: null });
             },
         });
