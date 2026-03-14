@@ -7,10 +7,13 @@ const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
 // Only create Redis client if credentials are available
-const redis = redisUrl && redisToken ? new Redis({
-    url: redisUrl,
-    token: redisToken,
-}) : null;
+const redis =
+    redisUrl && redisToken
+        ? new Redis({
+              url: redisUrl,
+              token: redisToken,
+          })
+        : null;
 
 export type EventType =
     | 'order.created'
