@@ -325,13 +325,14 @@ export async function installMerchantDashboardMocks(page: Page) {
         }
 
         if (method === 'POST') {
-            const body = route.request().postDataJSON() as JsonObject[];
-            const row = body[0] as JsonObject;
+            const rawBody = route.request().postDataJSON() as JsonObject | JsonObject[];
+            // Supabase browser client may send a plain object or an array
+            const row = (Array.isArray(rawBody) ? rawBody[0] : rawBody) as JsonObject | undefined;
             const newCategory: CategoryRecord = {
                 id: `cat-${categories.length + 1}`,
-                restaurant_id: String(row.restaurant_id ?? 'rest-1'),
-                name: String(row.name ?? 'Untitled'),
-                order_index: Number(row.order_index ?? categories.length),
+                restaurant_id: String((row?.restaurant_id as string | undefined) ?? 'rest-1'),
+                name: String((row?.name as string | undefined) ?? 'Untitled'),
+                order_index: Number((row?.order_index as number | undefined) ?? categories.length),
             };
             categories.push(newCategory);
             await respondJson(route, [newCategory]);

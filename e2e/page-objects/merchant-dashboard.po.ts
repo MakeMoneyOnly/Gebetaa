@@ -132,8 +132,12 @@ export class MenuPage {
         await expect(this.page.getByRole('heading', { name: /No categories yet/i })).toBeVisible();
         await this.page.getByRole('button', { name: /Create Category/i }).click();
         await this.page.getByLabel('Category name').fill('QA Specials');
+        await expect(this.page.getByRole('button', { name: /^Create$/ })).toBeVisible();
         await this.page.getByRole('button', { name: /^Create$/ }).click();
-        await expect(this.page.getByText(/sign in to manage categories/i)).toBeVisible();
+        // After category creation, the app shows a success toast and the modal closes.
+        // The new category heading appears in the menu list.
+        await expect(this.page.getByText('Category created.')).toBeVisible({ timeout: 8000 });
+        await expect(this.page.getByRole('heading', { name: 'QA Specials' })).toBeVisible();
     }
 }
 
