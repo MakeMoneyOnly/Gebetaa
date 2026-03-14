@@ -199,13 +199,13 @@ jobs:
 
             - name: Run E2E tests
               run: |
-                echo "=== Debug: Checking environment variables ==="
-                echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:0:20}..."
-                echo "SUPABASE_SECRET_KEY set: ${#SUPABASE_SECRET_KEY} chars"
-                echo "QR_HMAC_SECRET set: ${#QR_HMAC_SECRET} chars"
-                echo "UPSTASH_REDIS_REST_URL set: ${#UPSTASH_REDIS_REST_URL} chars"
-                echo "UPSTASH_REDIS_REST_TOKEN set: ${#UPSTASH_REDIS_REST_TOKEN} chars"
-                pnpm test:e2e
+                  echo "=== Debug: Checking environment variables ==="
+                  echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:0:20}..."
+                  echo "SUPABASE_SECRET_KEY set: ${#SUPABASE_SECRET_KEY} chars"
+                  echo "QR_HMAC_SECRET set: ${#QR_HMAC_SECRET} chars"
+                  echo "UPSTASH_REDIS_REST_URL set: ${#UPSTASH_REDIS_REST_URL} chars"
+                  echo "UPSTASH_REDIS_REST_TOKEN set: ${#UPSTASH_REDIS_REST_TOKEN} chars"
+                  pnpm test:e2e
               env:
                   CI: true
                   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
