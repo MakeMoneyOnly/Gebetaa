@@ -29,8 +29,10 @@ export async function createClient() {
         if (isE2EBypass) {
             console.log('[E2E] Using mock Supabase client for testing');
         }
-        // Helper to create chainable mock methods
-        const createChainableMock = (data: unknown) => ({
+        // Helper to create chainable mock methods.
+        // NOTE: data is the list-level result; maybeSingle returns null (no row found)
+        // unless overridden by a table-specific mock below.
+        const createChainableMock = (data: unknown, singleData: unknown = null) => ({
             data,
             error: null,
             eq: function () {
@@ -72,6 +74,9 @@ export async function createClient() {
             overlaps: function () {
                 return this;
             },
+            or: function () {
+                return this;
+            },
             order: function () {
                 return this;
             },
@@ -81,12 +86,15 @@ export async function createClient() {
             range: function () {
                 return this;
             },
-            single: async () => ({ data, error: null }),
-            maybeSingle: async () => ({ data, error: null }),
+            single: async () => ({ data: singleData, error: null }),
+            maybeSingle: async () => ({ data: singleData, error: null }),
             then: function (resolve: (value: unknown) => void) {
-                return resolve({ data, error: null });
+                return resolve({ data, error: null, count: null });
             },
         });
+
+        // E2E mock restaurant_staff row — satisfies resolveRestaurantId()
+        const e2eStaffRow = { restaurant_id: 'rest-1', role: 'owner', is_active: true };
 
         return {
             auth: {
@@ -117,8 +125,13 @@ export async function createClient() {
                     error: null,
                 }),
             },
-            from: () => ({
-                select: () => createChainableMock([]),
+            from: (table: string) => ({
+                // Return a valid staff row for restaurant_staff lookups so
+                // resolveRestaurantId() returns 'rest-1' instead of null.
+                select: () =>
+                    table === 'restaurant_staff'
+                        ? createChainableMock([e2eStaffRow], e2eStaffRow)
+                        : createChainableMock([], null),
                 insert: () => ({ data: null, error: null }),
                 update: () => ({ data: null, error: null }),
                 delete: () => ({ data: null, error: null }),

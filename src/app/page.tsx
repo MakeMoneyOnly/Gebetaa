@@ -177,6 +177,7 @@ export default function LandingPage() {
                             <input
                                 type="email"
                                 placeholder="Enter your email"
+                                aria-label="Email address"
                                 className="font-geist text-Charcoal ml-4 w-full bg-transparent text-[15px] placeholder:text-[#888] focus:outline-none"
                             />
                             <button className="font-geist rounded-[30px] bg-gradient-to-b from-[#2a2a2a] to-[#121212] px-6 py-3 text-sm font-medium whitespace-nowrap text-white shadow-[inset_-4px_-6px_25px_0px_rgba(201,201,201,0.08),inset_4px_4px_10px_0px_rgba(29,29,29,0.24)] transition-transform hover:scale-[1.02]">
