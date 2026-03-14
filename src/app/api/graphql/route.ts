@@ -5,51 +5,56 @@ import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import gql from 'graphql-tag';
 
 import { ordersResolvers } from '@/domains/orders/resolvers';
 
-// Load subgraph schemas
-const ordersSchema = readFileSync(
-    join(process.cwd(), 'src/domains/orders/schema.graphql'),
-    'utf-8'
+// Helper to remove federation directives from schema
+function stripFederationDirectives(schema: string): string {
+    return schema
+        .replace(/extend schema @link.*$/gm, '')
+        .replace(/@key\(fields: "[^"]*"\)/g, '');
+}
+
+// Load and parse subgraph schemas, stripping federation directives
+const ordersSchema = gql(
+    stripFederationDirectives(
+        readFileSync(join(process.cwd(), 'src/domains/orders/schema.graphql'), 'utf-8')
+    )
 );
 
-const menuSchema = readFileSync(join(process.cwd(), 'src/domains/menu/schema.graphql'), 'utf-8');
-
-const paymentsSchema = readFileSync(
-    join(process.cwd(), 'src/domains/payments/schema.graphql'),
-    'utf-8'
+const menuSchema = gql(
+    stripFederationDirectives(
+        readFileSync(join(process.cwd(), 'src/domains/menu/schema.graphql'), 'utf-8')
+    )
 );
 
-const guestsSchema = readFileSync(
-    join(process.cwd(), 'src/domains/guests/schema.graphql'),
-    'utf-8'
+const paymentsSchema = gql(
+    stripFederationDirectives(
+        readFileSync(join(process.cwd(), 'src/domains/payments/schema.graphql'), 'utf-8')
+    )
 );
 
-const staffSchema = readFileSync(join(process.cwd(), 'src/domains/staff/schema.graphql'), 'utf-8');
+const guestsSchema = gql(
+    stripFederationDirectives(
+        readFileSync(join(process.cwd(), 'src/domains/guests/schema.graphql'), 'utf-8')
+    )
+);
 
-// Combined typeDefs for federated graph
+const staffSchema = gql(
+    stripFederationDirectives(
+        readFileSync(join(process.cwd(), 'src/domains/staff/schema.graphql'), 'utf-8')
+    )
+);
+
+// Combined typeDefs
 const typeDefs = [
     ordersSchema,
     menuSchema,
     paymentsSchema,
     guestsSchema,
     staffSchema,
-    `
-  scalar JSON
-  
-  type Query {
-    _empty: String
-  }
-  
-  type Mutation {
-    _empty: String
-  }
-  
-  type Subscription {
-    _empty: String
-  }
-  `,
 ];
 
 // Combine all resolvers

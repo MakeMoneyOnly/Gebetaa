@@ -201,14 +201,34 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
     }
 
     // Dynamic import when packages are available
-    // For now, try to use the packages if available
+    // Uses @powersync/web for core functionality and @powersync/react for React integration
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { createPowerSyncDatabase: createPS } = require('@powersync/core');
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { PowerSyncOpenSQLiteAdapter } = require('@powersync/react');
+        // Use dynamic import to avoid build errors when packages aren't available
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let webModule: any;
+        let reactModule: any;
+        
+        try {
+            webModule = await import('@powersync/web');
+        } catch {
+            webModule = null;
+        }
+        
+        try {
+            reactModule = await import('@powersync/react');
+        } catch {
+            reactModule = null;
+        }
 
-        powerSyncDb = await createPS({
+        if (!webModule || !reactModule) {
+            console.warn('[PowerSync] Packages not available - running in offline-only mode');
+            return null;
+        }
+
+        const { PowerSyncDatabase } = webModule;
+        const { PowerSyncOpenSQLiteAdapter } = reactModule;
+
+        powerSyncDb = await PowerSyncDatabase.connect({
             schema: powerSyncSchema,
             adapter: new PowerSyncOpenSQLiteAdapter({
                 dbFilename: 'gebeta_offline.db',

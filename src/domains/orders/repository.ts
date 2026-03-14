@@ -1,12 +1,29 @@
 // Orders Domain - Repository Layer
 // Database access layer - Supabase queries only, no business logic
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 
-const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy initialization of Supabase client - only creates when actually needed
+// This allows the module to be imported during build without requiring env vars
+let supabase: SupabaseClient<Database> | null = null;
+
+function getSupabaseClient(): SupabaseClient<Database> {
+    if (!supabase) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            // During build, return a mock client that won't be used
+            // In production, these env vars must be set
+            throw new Error(
+                `Supabase configuration missing. NEXT_PUBLIC_SUPABASE_URL: ${!!supabaseUrl}, SUPABASE_SERVICE_ROLE_KEY: ${!!supabaseKey}`
+            );
+        }
+
+        supabase = createClient<Database>(supabaseUrl, supabaseKey);
+    }
+    return supabase;
+}
 
 export type OrderRow = Database['public']['Tables']['orders']['Row'];
 
@@ -14,7 +31,7 @@ export type OrderItemRow = Database['public']['Tables']['order_items']['Row'];
 
 export class OrdersRepository {
     async findById(id: string): Promise<OrderRow | null> {
-        const { data } = await supabase.from('orders').select('*').eq('id', id).single();
+        const { data } = await getSupabaseClient().from('orders').select('*').eq('id', id).single();
         return data;
     }
 
@@ -27,7 +44,7 @@ export class OrdersRepository {
             offset?: number;
         } = {}
     ): Promise<OrderRow[]> {
-        let query = supabase.from('orders').select('*').eq('restaurant_id', restaurantId);
+        let query = getSupabaseClient().from('orders').select('*').eq('restaurant_id', restaurantId);
 
         if (options.status) {
             query = query.eq('status', options.status);
@@ -45,7 +62,7 @@ export class OrdersRepository {
     }
 
     async findActiveByRestaurant(restaurantId: string): Promise<OrderRow[]> {
-        const { data } = await supabase
+        const { data } = await getSupabaseClient()
             .from('orders')
             .select('*')
             .eq('restaurant_id', restaurantId)
@@ -55,7 +72,7 @@ export class OrdersRepository {
     }
 
     async findByKDSStation(restaurantId: string, station: string): Promise<OrderRow[]> {
-        const { data } = await supabase
+        const { data } = await getSupabaseClient()
             .from('orders')
             .select('*, order_items(*)')
             .eq('restaurant_id', restaurantId)
@@ -78,7 +95,7 @@ export class OrdersRepository {
         staff_id?: string;
         idempotency_key: string;
     }): Promise<OrderRow> {
-        const { data: order, error } = await supabase
+        const { data: order, error } = await getSupabaseClient()
             .from('orders')
             .insert({
                 restaurant_id: data.restaurant_id,
@@ -102,7 +119,7 @@ export class OrdersRepository {
     }
 
     async updateStatus(id: string, status: string): Promise<OrderRow> {
-        const { data: order, error } = await supabase
+        const { data: order, error } = await getSupabaseClient()
             .from('orders')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -114,7 +131,7 @@ export class OrdersRepository {
     }
 
     async cancel(id: string, reason?: string): Promise<OrderRow> {
-        const { data: order, error } = await supabase
+        const { data: order, error } = await getSupabaseClient()
             .from('orders')
             .update({
                 status: 'cancelled',
@@ -131,7 +148,7 @@ export class OrdersRepository {
 
     // Order Items
     async getItems(orderId: string): Promise<OrderItemRow[]> {
-        const { data } = await supabase
+        const { data } = await getSupabaseClient()
             .from('order_items')
             .select('*')
             .eq('order_id', orderId)
@@ -150,7 +167,7 @@ export class OrdersRepository {
             station?: string;
         }[]
     ): Promise<OrderItemRow[]> {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabaseClient()
             .from('order_items')
             .insert(
                 items.map(item => ({
