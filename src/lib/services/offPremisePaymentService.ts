@@ -83,6 +83,7 @@ export async function initializeOffPremisePayment(
             method: 'digital',
             provider: 'chapa',
             status: 'pending',
+            tip_amount: 0,
             metadata: {
                 reference: paymentReference,
                 customer_phone: request.customerPhone,

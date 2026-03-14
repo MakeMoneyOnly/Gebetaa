@@ -4,7 +4,7 @@
 extend schema
     @link(
         url: "https://specs.apollo.dev/federation/v2.0"
-        import: ["@key", "@shareable", "@external", "@extends"]
+        import: ["@key"]
     )
 
 enum StaffRole {
@@ -18,11 +18,11 @@ enum StaffRole {
 
 type Staff @key(fields: "id") {
     id: ID!
-    restaurantId: ID! @external
+    restaurantId: ID!
     userId: ID!
     fullName: String!
     role: StaffRole!
-    pinCode: String # Hashed - only exposed for PIN verification
+    pinCode: String
     isActive: Boolean!
     hireDate: String
     phone: String
@@ -33,19 +33,19 @@ type Staff @key(fields: "id") {
 
 type Shift @key(fields: "id") {
     id: ID!
-    staffId: ID! @external
-    restaurantId: ID! @external
+    staffId: ID!
+    restaurantId: ID!
     startTime: String!
     endTime: String
     breakMinutes: Int!
-    status: String! # SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+    status: String!
     notes: String
 }
 
 type TimeEntry @key(fields: "id") {
     id: ID!
-    staffId: ID! @external
-    restaurantId: ID! @external
+    staffId: ID!
+    restaurantId: ID!
     clockInTime: String!
     clockOutTime: String
     breakMinutes: Int!

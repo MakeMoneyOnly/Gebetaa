@@ -4,8 +4,11 @@
 extend schema
     @link(
         url: "https://specs.apollo.dev/federation/v2.0"
-        import: ["@key", "@shareable", "@external", "@extends"]
+        import: ["@key"]
     )
+
+# JSON Scalar for flexible data
+scalar JSON @specifiedBy(url: "https://specs.apollo.dev/graphqlspec/current/#sec-Scalars")
 
 enum OrderStatus {
     PENDING
@@ -22,15 +25,15 @@ enum OrderType {
     DELIVERY
 }
 
-type Order @key(fields: "id") @extends {
-    id: ID! @external
-    restaurantId: ID! @external
+type Order @key(fields: "id") {
+    id: ID!
+    restaurantId: ID!
     tableId: ID
     orderNumber: String!
     status: OrderStatus!
     type: OrderType!
-    totalPrice: Int! # SANTIM — divide by 100 for ETB display
-    discountAmount: Int! # SANTIM
+    totalPrice: Int!
+    discountAmount: Int!
     notes: String
     guestId: ID
     staffId: ID
@@ -46,8 +49,8 @@ type OrderItem @key(fields: "id") {
     orderId: ID!
     menuItemId: ID!
     quantity: Int!
-    unitPrice: Int! # SANTIM
-    itemTotal: Int! # SANTIM (generated)
+    unitPrice: Int!
+    itemTotal: Int!
     modifiers: JSON
     notes: String
     status: String!
@@ -152,10 +155,4 @@ type Mutation {
     updateOrderStatus(input: UpdateOrderStatusInput!): UpdateOrderResult!
     createGuestOrder(input: CreateGuestOrderInput!): CreateOrderResult!
     cancelOrder(id: ID!, reason: String): CancelOrderResult!
-}
-
-# Subscriptions
-type Subscription {
-    orderStatusChanged(restaurantId: ID!): Order!
-    kdsOrderUpdated(restaurantId: ID!, station: String): Order!
 }

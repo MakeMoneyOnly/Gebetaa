@@ -4,12 +4,12 @@
 extend schema
     @link(
         url: "https://specs.apollo.dev/federation/v2.0"
-        import: ["@key", "@shareable", "@external", "@extends"]
+        import: ["@key"]
     )
 
 type Guest @key(fields: "id") {
     id: ID!
-    restaurantId: ID! @external
+    restaurantId: ID!
     fullName: String
     phone: String
     email: String
@@ -22,8 +22,8 @@ type Guest @key(fields: "id") {
 
 type LoyaltyAccount @key(fields: "id") {
     id: ID!
-    guestId: ID! @external
-    restaurantId: ID! @external
+    guestId: ID!
+    restaurantId: ID!
     pointsBalance: Int!
     tier: String!
     status: String!
@@ -32,8 +32,8 @@ type LoyaltyAccount @key(fields: "id") {
 
 type LoyaltyTransaction @key(fields: "id") {
     id: ID!
-    accountId: ID! @external
-    points: Int! # positive = earn, negative = redeem
+    accountId: ID!
+    points: Int!
     transactionType: String!
     orderId: ID
     createdAt: String!

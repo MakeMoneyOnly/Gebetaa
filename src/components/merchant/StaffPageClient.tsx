@@ -118,12 +118,10 @@ export function StaffPageClient(_props: StaffPageClientProps) {
         fetchRestaurant();
     }, [restaurantId]);
 
-    const onRoleSaveWrapper = async (newRole: string, newZones: string[]) => {
-        if (!selectedStaff) return;
+    const onRoleSaveWrapper = async (staffId: string, role: string) => {
         setRoleSaving(true);
         try {
-            // Use the role as the second parameter - zones will be handled separately if needed
-            await handleRoleUpdate(selectedStaff.id, newRole as any);
+            await handleRoleUpdate(staffId, role as 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar' | 'runner');
             setRoleDrawerOpen(false);
             setSelectedStaff(null);
         } finally {

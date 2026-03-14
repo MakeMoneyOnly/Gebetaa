@@ -4,11 +4,12 @@
 extend schema
     @link(
         url: "https://specs.apollo.dev/federation/v2.0"
-        import: ["@key", "@shareable", "@external", "@extends"]
+        import: ["@key"]
     )
 
 enum PaymentMethod {
     CASH
+    TELEBIRR
     CHAPA
     CBE_BIRR
     AMOLE
@@ -23,10 +24,10 @@ enum PaymentStatus {
 
 type Payment @key(fields: "id") {
     id: ID!
-    restaurantId: ID! @external
-    orderId: ID! @external
-    amount: Int! # SANTIM
-    currencyCode: String! # 'ETB'
+    restaurantId: ID!
+    orderId: ID!
+    amount: Int!
+    currencyCode: String!
     method: PaymentMethod!
     provider: String
     providerTransactionId: String
@@ -50,6 +51,15 @@ type RevenueByMethod {
 }
 
 # Error types
+type TelebirrPaymentResult {
+    success: Boolean!
+    payment: Payment
+    ussdCode: String
+    qrCode: String
+    expiresAt: String
+    error: GebetaError
+}
+
 type ChapaPaymentResult {
     success: Boolean!
     payment: Payment
@@ -76,6 +86,13 @@ type GebetaError {
 }
 
 # Input types
+input InitiateTelebirrInput {
+    orderId: ID!
+    amountSantim: Int!
+    phoneNumber: String
+    idempotencyKey: String!
+}
+
 input InitiateChapaInput {
     orderId: ID!
     amountSantim: Int!
@@ -105,6 +122,7 @@ type Query {
 
 # Mutations
 type Mutation {
+    initiateTelebirrPayment(input: InitiateTelebirrInput!): TelebirrPaymentResult!
     initiateChapaPayment(input: InitiateChapaInput!): ChapaPaymentResult!
     recordCashPayment(input: RecordCashPaymentInput!): PaymentResult!
     processRefund(input: ProcessRefundInput!): RefundResult!

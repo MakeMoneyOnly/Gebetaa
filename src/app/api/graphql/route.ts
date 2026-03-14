@@ -4,7 +4,7 @@ import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { ordersResolvers } from '@/domains/orders/resolvers';
 
@@ -78,7 +78,7 @@ const server = new ApolloServer({
     introspection: true,
 });
 
-const handler = startServerAndCreateNextHandler<NextRequest>(server, {
+const apolloHandler = startServerAndCreateNextHandler<NextRequest>(server, {
     context: async req => {
         // Extract JWT from authorization header
         const authHeader = req.headers.get('authorization');
@@ -96,4 +96,27 @@ const handler = startServerAndCreateNextHandler<NextRequest>(server, {
     },
 });
 
-export { handler as GET, handler as POST };
+// Next.js App Router compatible handler
+export async function GET(request: NextRequest): Promise<NextResponse> {
+    try {
+        return await apolloHandler(request) as NextResponse;
+    } catch (error) {
+        console.error('GraphQL GET error:', error);
+        return NextResponse.json(
+            { error: { message: 'GraphQL endpoint error', code: 'GRAPHQL_ERROR' } },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+    try {
+        return await apolloHandler(request) as NextResponse;
+    } catch (error) {
+        console.error('GraphQL POST error:', error);
+        return NextResponse.json(
+            { error: { message: 'GraphQL endpoint error', code: 'GRAPHQL_ERROR' } },
+            { status: 500 }
+        );
+    }
+}

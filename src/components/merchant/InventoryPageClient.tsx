@@ -19,7 +19,7 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
 
     const [items, setItems] = useState<InventoryItemSummary[]>(initialData?.items ?? []);
     const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>(
-        initialData?.purchase_orders ?? []
+        initialData?.purchaseOrders ?? []
     );
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'items' | 'orders'>('items');
@@ -40,7 +40,7 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
             const result = await response.json();
             if (response.ok) {
                 setItems(result.data?.items ?? []);
-                setPurchaseOrders(result.data?.purchase_orders ?? []);
+                setPurchaseOrders(result.data?.purchaseOrders ?? []);
             }
         } catch (error) {
             console.error('Failed to refresh inventory:', error);
@@ -55,7 +55,7 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
         totalItems: items.length,
         lowStock: lowStockItems.length,
         pendingOrders: purchaseOrders.filter(
-            po => po.status === 'pending' || po.status === 'submitted'
+            po => po.status === 'pending'
         ).length,
     };
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 # Apollo GraphOS Setup Script
-# Run this to publish all subgraph schemas to Apollo GraphOS
+# Publishes all subgraph schemas to Apollo GraphOS
 #
 # Usage:
-#   APOLLO_KEY=your-api-key GRAPH_REF=gebeta-production@current ./scripts/publish-subgraphs.sh
+#   APOLLO_KEY=your-api-key GRAPH_REF=gebeta-production-tj1sjiw@current ./scripts/publish-subgraphs.sh
 #
 # Prerequisites:
 #   1. Install Rover: iwr 'https://rover.apollo.dev/win/latest' | iex
@@ -21,7 +21,7 @@ fi
 
 if [ -z "$GRAPH_REF" ]; then
     echo "Error: GRAPH_REF environment variable not set"
-    echo "Format: graph-name@variant (e.g., gebeta-production@current)"
+    echo "Format: graph-name@variant (e.g., gebeta-production-tj1sjiw@current)"
     exit 1
 fi
 
@@ -37,36 +37,36 @@ rover config auth $APOLLO_KEY
 # Base URL for the GraphQL endpoint (update this for production)
 ROUTING_URL="${ROUTING_URL:-https://gebeta.app/api/graphql}"
 
-# Publish each subgraph
+# Publish each subgraph using subgraph publish command
 echo ""
 echo "Publishing Orders subgraph..."
-rover graph publish $GRAPH_REF \
-    --schema ./src/domains/orders/schema.graphql \
+rover subgraph publish $GRAPH_REF \
     --name orders \
+    --schema ./src/domains/orders/schema.graphql \
     --routing-url $ROUTING_URL
 
 echo "Publishing Menu subgraph..."
-rover graph publish $GRAPH_REF \
-    --schema ./src/domains/menu/schema.graphql \
+rover subgraph publish $GRAPH_REF \
     --name menu \
+    --schema ./src/domains/menu/schema.graphql \
     --routing-url $ROUTING_URL
 
 echo "Publishing Payments subgraph..."
-rover graph publish $GRAPH_REF \
-    --schema ./src/domains/payments/schema.graphql \
+rover subgraph publish $GRAPH_REF \
     --name payments \
+    --schema ./src/domains/payments/schema.graphql \
     --routing-url $ROUTING_URL
 
 echo "Publishing Guests subgraph..."
-rover graph publish $GRAPH_REF \
-    --schema ./src/domains/guests/schema.graphql \
+rover subgraph publish $GRAPH_REF \
     --name guests \
+    --schema ./src/domains/guests/schema.graphql \
     --routing-url $ROUTING_URL
 
 echo "Publishing Staff subgraph..."
-rover graph publish $GRAPH_REF \
-    --schema ./src/domains/staff/schema.graphql \
+rover subgraph publish $GRAPH_REF \
     --name staff \
+    --schema ./src/domains/staff/schema.graphql \
     --routing-url $ROUTING_URL
 
 echo ""

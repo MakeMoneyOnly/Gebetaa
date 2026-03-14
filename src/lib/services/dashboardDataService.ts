@@ -116,6 +116,8 @@ export interface MenuPageData {
 export interface CategoryWithItems {
     id: string;
     name: string;
+    name_am: string | null;
+    section: string | null;
     order_index: number | null;
     items: MenuItemSummary[];
 }
@@ -127,6 +129,7 @@ export interface MenuItemSummary {
     description: string | null;
     is_available: boolean | null;
     category_id: string;
+    image_url?: string | null;
 }
 
 export interface GuestsPageData {
@@ -192,7 +195,7 @@ export interface PaymentSummary {
     id: string;
     amount: number;
     currency: string;
-    payment_method: string;
+    method: string;
     status: string;
     created_at: string;
     order_id: string | null;
@@ -201,28 +204,27 @@ export interface PaymentSummary {
 export interface RefundSummary {
     id: string;
     amount: number;
-    currency: string;
     status: string;
     reason: string | null;
     created_at: string;
-    payment_reference: string | null;
+    provider_reference: string | null;
 }
 
 export interface PayoutSummary {
     id: string;
-    amount: number;
+    net: number;
     currency: string;
     status: string;
     created_at: string;
-    processed_at: string | null;
+    paid_at: string | null;
 }
 
 export interface ReconciliationSummary {
     id: string;
-    date: string;
-    expected: number;
-    actual: number;
-    delta: number;
+    created_at: string;
+    expected_amount: number;
+    settled_amount: number;
+    delta_amount: number;
     status: string;
 }
 
@@ -255,7 +257,7 @@ export interface ExternalOrderSummary {
     normalized_status: string;
     total_amount: number;
     currency: string;
-    acked_at: string | null;
+    acknowledged_at: string | null;
     created_at: string;
 }
 
@@ -268,6 +270,38 @@ export interface OnlineOrderingSettings {
     service_hours: { start: string; end: string };
     order_throttling_enabled: boolean;
     throttle_limit_per_15m: number;
+}
+
+export interface InventoryPageData {
+    items: InventoryItemSummary[];
+    purchaseOrders: PurchaseOrderSummary[];
+    lowStockItems: InventoryItemSummary[];
+    totalItems: number;
+    totalValue: number;
+    restaurant_id: string;
+}
+
+export interface InventoryItemSummary {
+    id: string;
+    name: string;
+    category: string;
+    current_stock: number;
+    reorder_level: number;
+    uom: string;
+    cost_per_unit: number;
+    sku: string | null;
+    last_restocked: string | null;
+}
+
+export interface PurchaseOrderSummary {
+    id: string;
+    po_number: string | null;
+    supplier_name: string;
+    status: 'pending' | 'submitted' | 'approved' | 'received' | 'cancelled';
+    total_amount: number;
+    currency: string;
+    created_at: string;
+    expected_delivery: string | null;
 }
 
 // ============================================================================
@@ -825,27 +859,27 @@ export async function getFinancePageData(): Promise<FinancePageData | null> {
     const [paymentsRes, refundsRes, payoutsRes, reconciliationRes] = await Promise.all([
         supabase
             .from('payments')
-            .select('id, amount, currency, payment_method, status, created_at, order_id')
+            .select('id, amount, currency, method, status, created_at, order_id')
             .eq('restaurant_id', restaurantId)
             .order('created_at', { ascending: false })
             .limit(200),
         supabase
             .from('refunds')
-            .select('id, amount, currency, status, reason, created_at, payment_reference')
+            .select('id, amount, status, reason, created_at, provider_reference')
             .eq('restaurant_id', restaurantId)
             .order('created_at', { ascending: false })
             .limit(200),
         supabase
             .from('payouts')
-            .select('id, amount, currency, status, created_at, processed_at')
+            .select('id, net, currency, status, created_at, paid_at')
             .eq('restaurant_id', restaurantId)
             .order('created_at', { ascending: false })
             .limit(200),
         supabase
             .from('reconciliation_entries')
-            .select('id, date, expected, actual, delta, status')
+            .select('id, created_at, expected_amount, settled_amount, delta_amount, status')
             .eq('restaurant_id', restaurantId)
-            .order('date', { ascending: false })
+            .order('created_at', { ascending: false })
             .limit(200),
     ]);
 
@@ -854,7 +888,7 @@ export async function getFinancePageData(): Promise<FinancePageData | null> {
         0
     );
     const refundsTotal = (refundsRes.data ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
-    const payoutsNet = (payoutsRes.data ?? []).reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
+    const payoutsNet = (payoutsRes.data ?? []).reduce((sum, p) => sum + Number(p.net ?? 0), 0);
 
     return {
         payments: (paymentsRes.data ?? []) as PaymentSummary[],
@@ -889,7 +923,7 @@ export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
         supabase
             .from('external_orders')
             .select(
-                'id, provider, provider_order_id, normalized_status, total_amount, currency, acked_at, created_at'
+                'id, provider, provider_order_id, normalized_status, total_amount, currency, acknowledged_at, created_at'
             )
             .eq('restaurant_id', restaurantId)
             .order('created_at', { ascending: false })
@@ -908,7 +942,7 @@ export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
 
     const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const externalOrders24h = orders.filter(o => o.created_at >= since24h).length;
-    const unackedOrders = orders.filter(o => !o.acked_at).length;
+    const unackedOrders = orders.filter(o => !o.acknowledged_at).length;
 
     const defaultSettings: OnlineOrderingSettings = {
         enabled: true,
@@ -921,6 +955,10 @@ export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
         throttle_limit_per_15m: 40,
     };
 
+    const settingsData = settingsRes.data && typeof settingsRes.data === 'object' 
+        ? settingsRes.data as Record<string, unknown>
+        : {};
+
     return {
         summary: {
             delivery_partners: partners.length,
@@ -931,7 +969,7 @@ export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
         },
         partners,
         orders,
-        settings: { ...defaultSettings, ...(settingsRes.data ?? {}) } as OnlineOrderingSettings,
+        settings: { ...defaultSettings, ...settingsData } as OnlineOrderingSettings,
         restaurant_id: restaurantId,
     };
 }

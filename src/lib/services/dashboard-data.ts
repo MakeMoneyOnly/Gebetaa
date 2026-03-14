@@ -139,13 +139,13 @@ async function getRestaurantId(): Promise<string | null> {
  * Calculate average ticket time in minutes from orders.
  */
 function calculateAvgTicketTime(
-    orders: Array<{ created_at: string; completed_at: string | null }>
+    orders: Array<{ created_at: string | null; completed_at: string | null }>
 ): number {
-    const completedOrders = orders.filter(o => o.completed_at);
+    const completedOrders = orders.filter(o => o.created_at && o.completed_at);
     if (completedOrders.length === 0) return 0;
 
     const totalMinutes = completedOrders.reduce((sum, order) => {
-        const created = new Date(order.created_at).getTime();
+        const created = new Date(order.created_at!).getTime();
         const completed = new Date(order.completed_at!).getTime();
         return sum + (completed - created) / (1000 * 60);
     }, 0);
@@ -259,9 +259,9 @@ export async function getCommandCenterData(
 
         // Add orders in flight to attention queue
         for (const order of activeOrders) {
-            const ageMinutes = order.created_at
-                ? Math.round((Date.now() - new Date(order.created_at).getTime()) / (1000 * 60))
-                : 0;
+            if (!order.created_at || !order.status) continue;
+            
+            const ageMinutes = Math.round((Date.now() - new Date(order.created_at).getTime()) / (1000 * 60));
 
             let severity: 'high' | 'medium' | 'low' = 'low';
             if (ageMinutes > 30) severity = 'high';
@@ -280,6 +280,8 @@ export async function getCommandCenterData(
 
         // Add service requests to attention queue
         for (const request of serviceRequests) {
+            if (!request.status) continue;
+            
             attentionQueue.push({
                 id: request.id,
                 type: 'request',
@@ -462,9 +464,29 @@ export async function getOrdersPageData(
         ]);
 
         return {
-            orders: ordersResult.data ?? [],
-            service_requests: serviceRequestsResult.data ?? [],
-            staff: staffResult.data ?? [],
+            orders: (ordersResult.data ?? []).map(o => ({
+                id: o.id,
+                table_number: o.table_number ?? null,
+                status: o.status ?? 'pending',
+                created_at: o.created_at ?? new Date().toISOString(),
+                total_price: o.total_price ?? 0,
+                order_number: o.order_number ?? null,
+                notes: o.notes ?? null,
+            })),
+            service_requests: (serviceRequestsResult.data ?? []).map(sr => ({
+                id: sr.id,
+                table_number: sr.table_number ?? null,
+                status: sr.status ?? 'pending',
+                created_at: sr.created_at ?? new Date().toISOString(),
+                request_type: sr.request_type,
+                notes: sr.notes ?? null,
+            })),
+            staff: (staffResult.data ?? []).map(s => ({
+                id: s.id,
+                user_id: s.user_id ?? '',
+                role: s.role ?? null,
+                is_active: s.is_active ?? false,
+            })),
         };
     } catch (error) {
         console.error('Error fetching orders page data:', error);
@@ -536,6 +558,8 @@ export async function getAnalyticsPageData(
         // Build trends data
         const trendsMap = new Map<string, { revenue: number; orders: number }>();
         for (const order of completedOrders) {
+            if (!order.created_at) continue;
+            
             const date = new Date(order.created_at);
             const label = date.toLocaleDateString('en-US', { weekday: 'short' });
             const existing = trendsMap.get(label) ?? { revenue: 0, orders: 0 };

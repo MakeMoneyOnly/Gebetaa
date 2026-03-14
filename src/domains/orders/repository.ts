@@ -8,36 +8,9 @@ const supabase = createClient<Database>(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export interface OrderRow {
-    id: string;
-    restaurant_id: string;
-    table_id: string | null;
-    order_number: string;
-    status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'served' | 'cancelled';
-    type: 'dine_in' | 'takeaway' | 'delivery';
-    total_price: number; // in santim
-    discount_amount: number; // in santim
-    notes: string | null;
-    guest_id: string | null;
-    staff_id: string;
-    idempotency_key: string;
-    created_at: string;
-    updated_at: string;
-}
+export type OrderRow = Database['public']['Tables']['orders']['Row'];
 
-export interface OrderItemRow {
-    id: string;
-    restaurant_id: string;
-    order_id: string;
-    menu_item_id: string;
-    quantity: number;
-    unit_price: number; // in santim
-    item_total: number; // in santim
-    modifiers: Record<string, unknown> | null;
-    notes: string | null;
-    status: string;
-    kds_station: string | null;
-}
+export type OrderItemRow = Database['public']['Tables']['order_items']['Row'];
 
 export class OrdersRepository {
     async findById(id: string): Promise<OrderRow | null> {
@@ -49,7 +22,7 @@ export class OrdersRepository {
         restaurantId: string,
         options: {
             status?: string;
-            tableId?: string;
+            tableNumber?: string;
             limit?: number;
             offset?: number;
         } = {}
@@ -59,8 +32,8 @@ export class OrdersRepository {
         if (options.status) {
             query = query.eq('status', options.status);
         }
-        if (options.tableId) {
-            query = query.eq('table_id', options.tableId);
+        if (options.tableNumber) {
+            query = query.eq('table_number', options.tableNumber);
         }
 
         query = query
@@ -89,35 +62,36 @@ export class OrdersRepository {
             .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
             .order('created_at', { ascending: false });
         return (data ?? []).filter(order =>
-            order.order_items?.some((item: OrderItemRow) => item.kds_station === station)
+            order.order_items?.some((item) => item.station === station)
         );
     }
 
     async create(data: {
         restaurant_id: string;
-        table_id?: string;
+        table_number?: string;
         order_number: string;
-        type: 'dine_in' | 'takeaway' | 'delivery';
+        order_type?: string;
         total_price: number;
         discount_amount?: number;
         notes?: string;
-        guest_id?: string;
-        staff_id: string;
+        guest_fingerprint?: string;
+        staff_id?: string;
         idempotency_key: string;
     }): Promise<OrderRow> {
         const { data: order, error } = await supabase
             .from('orders')
             .insert({
                 restaurant_id: data.restaurant_id,
-                table_id: data.table_id ?? null,
+                table_number: data.table_number ?? '',
                 order_number: data.order_number,
                 status: 'pending',
-                type: data.type,
+                order_type: data.order_type ?? 'dine_in',
                 total_price: data.total_price,
                 discount_amount: data.discount_amount ?? 0,
                 notes: data.notes ?? null,
-                guest_id: data.guest_id ?? null,
-                staff_id: data.staff_id,
+                guest_fingerprint: data.guest_fingerprint ?? null,
+                items: [],
+                fire_mode: 'full',
                 idempotency_key: data.idempotency_key,
             })
             .select()
@@ -127,7 +101,7 @@ export class OrdersRepository {
         return order!;
     }
 
-    async updateStatus(id: string, status: OrderRow['status']): Promise<OrderRow> {
+    async updateStatus(id: string, status: string): Promise<OrderRow> {
         const { data: order, error } = await supabase
             .from('orders')
             .update({ status, updated_at: new Date().toISOString() })
@@ -167,31 +141,29 @@ export class OrdersRepository {
 
     async createItems(
         items: {
-            restaurant_id: string;
             order_id: string;
-            menu_item_id: string;
+            item_id: string;
             quantity: number;
-            unit_price: number;
-            item_total: number;
-            modifiers?: Record<string, unknown>;
-            notes?: string;
-            kds_station?: string;
+            price: number;
+            modifiers?: Record<string, unknown> | null;
+            notes?: string | null;
+            station?: string;
         }[]
     ): Promise<OrderItemRow[]> {
         const { data, error } = await supabase
             .from('order_items')
             .insert(
                 items.map(item => ({
-                    restaurant_id: item.restaurant_id,
                     order_id: item.order_id,
-                    menu_item_id: item.menu_item_id,
+                    item_id: item.item_id,
                     quantity: item.quantity,
-                    unit_price: item.unit_price,
-                    item_total: item.item_total,
-                    modifiers: item.modifiers ?? null,
+                    price: item.price,
+                    modifiers: item.modifiers ? JSON.parse(JSON.stringify(item.modifiers)) : null,
                     notes: item.notes ?? null,
                     status: 'pending',
-                    kds_station: item.kds_station ?? null,
+                    station: item.station ?? null,
+                    course: 'main',
+                    name: '',
                 }))
             )
             .select();

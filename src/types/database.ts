@@ -1786,6 +1786,7 @@ export type Database = {
             restaurants: {
                 Row: {
                     brand_color: string | null;
+                    zones: string[] | null;
                     chapa_settlement_account_name: string | null;
                     chapa_settlement_account_number_masked: string | null;
                     chapa_settlement_bank_code: string | null;
@@ -1823,6 +1824,7 @@ export type Database = {
                 };
                 Insert: {
                     brand_color?: string | null;
+                    zones?: string[] | null;
                     chapa_settlement_account_name?: string | null;
                     chapa_settlement_account_number_masked?: string | null;
                     chapa_settlement_bank_code?: string | null;
@@ -1860,6 +1862,7 @@ export type Database = {
                 };
                 Update: {
                     brand_color?: string | null;
+                    zones?: string[] | null;
                     chapa_settlement_account_name?: string | null;
                     chapa_settlement_account_number_masked?: string | null;
                     chapa_settlement_bank_code?: string | null;
@@ -2049,6 +2052,67 @@ export type Database = {
                         columns: ['staff_id'];
                         isOneToOne: false;
                         referencedRelation: 'restaurant_staff_with_users';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            time_entries: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    staff_id: string;
+                    shift_id: string;
+                    clock_in: string;
+                    clock_out: string | null;
+                    break_minutes: number | null;
+                    total_hours: number | null;
+                    created_at: string | null;
+                    updated_at: string | null;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    staff_id: string;
+                    shift_id: string;
+                    clock_in: string;
+                    clock_out?: string | null;
+                    break_minutes?: number | null;
+                    total_hours?: number | null;
+                    created_at?: string | null;
+                    updated_at?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    staff_id?: string;
+                    shift_id?: string;
+                    clock_in?: string;
+                    clock_out?: string | null;
+                    break_minutes?: number | null;
+                    total_hours?: number | null;
+                    created_at?: string | null;
+                    updated_at?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'time_entries_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'time_entries_staff_id_fkey';
+                        columns: ['staff_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurant_staff';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'time_entries_shift_id_fkey';
+                        columns: ['shift_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'shifts';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -2704,3 +2768,42 @@ export const Constants = {
         Enums: {},
     },
 } as const;
+
+// Re-export commonly used table types
+export type Order = Tables<'orders'>;
+export type MenuItem = Tables<'menu_items'>;
+export type Category = Tables<'categories'>;
+export type ServiceRequest = Tables<'service_requests'>;
+export type Restaurant = Tables<'restaurants'>;
+export type OrderItem = Tables<'order_items'>;
+export type Guest = Tables<'guests'>;
+export type Table = Tables<'tables'>;
+export type RestaurantStaff = Tables<'restaurant_staff'>;
+export type Shift = Tables<'shifts'>;
+export type Payment = Tables<'payments'>;
+export type Refund = Tables<'refunds'>;
+export type Payout = Tables<'payouts'>;
+
+// Category with items type (join type)
+export type CategoryWithItems = Omit<Category, 'created_at' | 'restaurant_id' | 'updated_at'> & {
+    items: MenuItem[];
+};
+
+// Restaurant with menu type (join type)
+export type RestaurantWithMenu = Restaurant & {
+    categories: CategoryWithItems[];
+};
+
+// Time entries table type
+export type TimeEntry = {
+    id: string;
+    restaurant_id: string;
+    staff_id: string;
+    shift_id: string;
+    clock_in: string;
+    clock_out: string | null;
+    break_minutes: number | null;
+    total_hours: number | null;
+    created_at: string | null;
+    updated_at: string | null;
+};

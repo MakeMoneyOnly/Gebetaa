@@ -14,18 +14,13 @@ import {
     addKdsActionToQueue,
     clearSyncedKdsActions,
 } from '@/lib/kds/syncAdapter';
-
-// Keep old imports for backward compatibility during transition
-// TODO: Remove after full migration to PowerSync
-
-const _enqueueKdsAction = 0;
-
-const _getOfflineKdsQueue = 0;
-const _incrementKdsActionAttempts = 0;
-
-const _markKdsQueueSynced = 0;
-
-const _removeQueuedKdsAction = 0;
+import {
+    getOfflineKdsQueue,
+    enqueueKdsAction,
+    removeQueuedKdsAction,
+    incrementKdsActionAttempts,
+    markKdsQueueSynced,
+} from '@/lib/kds/offlineQueue';
 
 type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee';
 type KdsItemAction = 'start' | 'hold' | 'ready';

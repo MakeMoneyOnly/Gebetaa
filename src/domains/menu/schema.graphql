@@ -4,23 +4,26 @@
 extend schema
     @link(
         url: "https://specs.apollo.dev/federation/v2.0"
-        import: ["@key", "@shareable", "@external", "@extends"]
+        import: ["@key"]
     )
+
+# JSON Scalar for flexible data
+scalar JSON @specifiedBy(url: "https://specs.apollo.dev/graphqlspec/current/#sec-Scalars")
 
 type MenuItem @key(fields: "id") {
     id: ID!
-    restaurantId: ID! @external
+    restaurantId: ID!
     categoryId: ID!
     name: String!
     nameAm: String
     description: String
     descriptionAm: String
-    price: Int! # SANTIM
+    price: Int!
     imageUrl: String
     isAvailable: Boolean!
     isFeatured: Boolean!
     modifierGroups: [ModifierGroup!]!
-    category: Category @provides(fields: "id")
+    category: Category
 }
 
 type ModifierGroup @key(fields: "id") {
@@ -38,7 +41,7 @@ type ModifierOption @key(fields: "id") {
     id: ID!
     name: String!
     nameAm: String
-    priceAdjustment: Int! # SANTIM (can be negative)
+    priceAdjustment: Int!
     isAvailable: Boolean!
 }
 
@@ -50,7 +53,7 @@ type Category @key(fields: "id") {
     imageUrl: String
     sortOrder: Int!
     kdsStation: String
-    items: [MenuItem!]! @external
+    items: [MenuItem!]!
 }
 
 # Error types

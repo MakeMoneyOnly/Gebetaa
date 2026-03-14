@@ -81,12 +81,12 @@ $env:APOLLO_KEY = "your-apollo-key"
 $env:GRAPH_REF = "gebeta-production@current"
 $env:ROUTING_URL = "https://gebeta.app/api/graphql"
 
-# Run each command:
-rover graph publish $env:GRAPH_REF --schema ./src/domains/orders/schema.graphql --name orders --routing-url $env:ROUTING_URL
-rover graph publish $env:GRAPH_REF --schema ./src/domains/menu/schema.graphql --name menu --routing-url $env:ROUTING_URL
-rover graph publish $env:GRAPH_REF --schema ./src/domains/payments/schema.graphql --name payments --routing-url $env:ROUTING_URL
-rover graph publish $env:GRAPH_REF --schema ./src/domains/guests/schema.graphql --name guests --routing-url $env:ROUTING_URL
-rover graph publish $env:GRAPH_REF --schema ./src/domains/staff/schema.graphql --name staff --routing-url $env:ROUTING_URL
+# Run each command (note: Rover syntax may vary by version):
+# For newer versions, use the subgraph publish format:
+rover subgraph publish gebeta-production@current --schema ./src/domains/orders/schema.graphql --routing-url https://gebeta.app/api/graphql
+
+# OR use the legacy format:
+rover graph publish gebeta-production@current --schema ./src/domains/orders/schema.graphql
 ```
 
 Or use the script:

@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Plus, Edit2, Trash2, Loader2, UtensilsCrossed, ArrowUp, ArrowDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { CategoryWithItems, MenuItem } from '@/types/database';
 import { MenuItemModal } from '@/features/merchant/components/MenuItemModal';
 import { toast } from 'react-hot-toast';
 import {
@@ -13,7 +12,7 @@ import {
     MenuGridEditor,
 } from '@/components/merchant/MenuGridEditor';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
-import type { MenuPageData } from '@/lib/services/dashboardDataService';
+import type { MenuPageData, CategoryWithItems, MenuItemSummary } from '@/lib/services/dashboardDataService';
 
 interface MenuPageClientProps {
     initialData: MenuPageData | null;
@@ -28,15 +27,15 @@ type ComparableMenuItem = {
     id: string;
     category_id: string;
     name: string;
-    price: number;
+    price: number | null;
     description: string | null;
-    is_available: boolean;
+    is_available: boolean | null;
 };
 
 type ComparableCategory = {
     id: string;
     name: string;
-    order_index: number;
+    order_index: number | null;
     items: ComparableMenuItem[];
 };
 
@@ -127,8 +126,8 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
     const [categories, setCategories] = useState<CategoryWithItems[]>(
         initialData?.categories ?? []
     );
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const [editingItem, setEditingItem] = useState<MenuItemSummary | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoryMode, setCategoryMode] = useState<'create' | 'edit'>('create');
@@ -329,7 +328,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
         setCategoryMode('edit');
         setCategoryName(category.name);
         setCategoryNameError(null);
-        setSelectedCategory(category.id);
+        setSelectedCategoryId(category.id);
         setIsCategoryModalOpen(true);
     };
 
@@ -337,7 +336,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
         setIsCategoryModalOpen(false);
         setCategoryName('');
         setCategoryNameError(null);
-        setSelectedCategory(null);
+        setSelectedCategoryId(null);
     };
 
     const handleCategorySubmit = async (e: React.FormEvent) => {
@@ -362,7 +361,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                 const { error } = await supabase
                     .from('categories')
                     .update({ name: categoryName })
-                    .eq('id', selectedCategory);
+                    .eq('id', selectedCategoryId);
 
                 if (error) throw error;
                 toast.success('Category updated.');
@@ -636,16 +635,16 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                             category={category}
                             readOnly={false}
                             onAddItem={selected => {
-                                setSelectedCategory(selected);
+                                setSelectedCategoryId(selected.id);
                                 setEditingItem(null);
                                 setIsModalOpen(true);
                             }}
                             onOpenAdvancedEdit={(selected, item) => {
-                                setSelectedCategory(selected);
+                                setSelectedCategoryId(selected.id);
                                 setEditingItem(item);
                                 setIsModalOpen(true);
                             }}
-                            onSaveInline={handleInlineItemSave}
+                            onSaveInline={(item, patch) => handleInlineItemSave(item.id, patch)}
                             onBulkAvailabilityUpdate={handleBulkAvailabilityUpdate}
                             onBulkPriceUpdate={handleBulkPriceUpdate}
                         />
@@ -676,9 +675,10 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                 onClose={() => {
                     setIsModalOpen(false);
                     setEditingItem(null);
-                    setSelectedCategory(null);
+                    setSelectedCategoryId(null);
                 }}
-                category={selectedCategory}
+                category={selectedCategoryId}
+                categoryName={categories.find(c => c.id === selectedCategoryId)?.name}
                 itemToEdit={editingItem}
                 onSuccess={() => {
                     fetchMenu();

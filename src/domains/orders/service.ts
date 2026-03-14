@@ -78,26 +78,26 @@ export class OrdersService {
             totalPrice += itemTotal;
 
             return {
-                restaurant_id: input.restaurantId,
-                menu_item_id: item.menuItemId,
+                item_id: item.menuItemId,
                 quantity: item.quantity,
-                unit_price: unitPrice,
-                item_total: itemTotal,
+                price: itemTotal,
                 modifiers: item.modifiers,
                 notes: item.notes,
+                name: '',
+                course: 'main',
+                status: 'pending',
             };
         });
 
         // Create order
         const order = await ordersRepository.create({
             restaurant_id: input.restaurantId,
-            table_id: input.tableId,
+            table_number: input.tableId ?? '',
             order_number: generateOrderNumber(),
-            type: input.type,
+            order_type: input.type,
             total_price: totalPrice,
             notes: input.notes,
-            staff_id: input.staffId,
-            guest_id: input.guestId,
+            guest_fingerprint: input.guestId,
             idempotency_key: input.idempotencyKey,
         });
 
@@ -120,13 +120,16 @@ export class OrdersService {
     }
 
     async updateOrderStatus(input: UpdateOrderStatusInput): Promise<OrderRow> {
+        if (!input.status) {
+            throw new Error('Status is required');
+        }
         const order = await ordersRepository.updateStatus(input.id, input.status);
 
         // Publish status changed event
         await publishEvent('order.status_changed', {
             orderId: order.id,
             restaurantId: order.restaurant_id,
-            status: order.status,
+            status: order.status ?? 'unknown',
             staffId: input.staffId,
         });
 
@@ -168,7 +171,11 @@ export class OrdersService {
             offset?: number;
         } = {}
     ): Promise<OrderRow[]> {
-        return ordersRepository.findByRestaurant(restaurantId, options);
+        return ordersRepository.findByRestaurant(restaurantId, {
+            ...options,
+            tableNumber: options.tableId,
+            status: options.status ?? undefined,
+        });
     }
 
     async getActiveOrders(restaurantId: string): Promise<OrderRow[]> {
