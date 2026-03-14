@@ -12,7 +12,11 @@ import {
     MenuGridEditor,
 } from '@/components/merchant/MenuGridEditor';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
-import type { MenuPageData, CategoryWithItems, MenuItemSummary } from '@/lib/services/dashboardDataService';
+import type {
+    MenuPageData,
+    CategoryWithItems,
+    MenuItemSummary,
+} from '@/lib/services/dashboardDataService';
 
 interface MenuPageClientProps {
     initialData: MenuPageData | null;

@@ -62,7 +62,7 @@ export class OrdersRepository {
             .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
             .order('created_at', { ascending: false });
         return (data ?? []).filter(order =>
-            order.order_items?.some((item) => item.station === station)
+            order.order_items?.some(item => item.station === station)
         );
     }
 

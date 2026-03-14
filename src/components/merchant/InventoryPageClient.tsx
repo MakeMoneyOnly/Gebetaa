@@ -54,9 +54,7 @@ export function InventoryPageClient({ initialData }: InventoryPageClientProps) {
     const stats = {
         totalItems: items.length,
         lowStock: lowStockItems.length,
-        pendingOrders: purchaseOrders.filter(
-            po => po.status === 'pending'
-        ).length,
+        pendingOrders: purchaseOrders.filter(po => po.status === 'pending').length,
     };
 
     return (

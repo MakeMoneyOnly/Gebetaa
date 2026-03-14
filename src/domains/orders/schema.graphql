@@ -1,11 +1,7 @@
 # Orders Subgraph Schema
 # GraphQL Federation 2 subgraph for Orders domain
 
-extend schema
-    @link(
-        url: "https://specs.apollo.dev/federation/v2.0"
-        import: ["@key"]
-    )
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
 
 # JSON Scalar for flexible data
 scalar JSON @specifiedBy(url: "https://specs.apollo.dev/graphqlspec/current/#sec-Scalars")

@@ -121,7 +121,10 @@ export function StaffPageClient(_props: StaffPageClientProps) {
     const onRoleSaveWrapper = async (staffId: string, role: string) => {
         setRoleSaving(true);
         try {
-            await handleRoleUpdate(staffId, role as 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar' | 'runner');
+            await handleRoleUpdate(
+                staffId,
+                role as 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar' | 'runner'
+            );
             setRoleDrawerOpen(false);
             setSelectedStaff(null);
         } finally {

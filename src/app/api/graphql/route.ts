@@ -99,7 +99,7 @@ const apolloHandler = startServerAndCreateNextHandler<NextRequest>(server, {
 // Next.js App Router compatible handler
 export async function GET(request: NextRequest): Promise<NextResponse> {
     try {
-        return await apolloHandler(request) as NextResponse;
+        return (await apolloHandler(request)) as NextResponse;
     } catch (error) {
         console.error('GraphQL GET error:', error);
         return NextResponse.json(
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
-        return await apolloHandler(request) as NextResponse;
+        return (await apolloHandler(request)) as NextResponse;
     } catch (error) {
         console.error('GraphQL POST error:', error);
         return NextResponse.json(

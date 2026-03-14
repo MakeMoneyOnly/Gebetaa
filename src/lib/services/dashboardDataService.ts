@@ -955,9 +955,10 @@ export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
         throttle_limit_per_15m: 40,
     };
 
-    const settingsData = settingsRes.data && typeof settingsRes.data === 'object' 
-        ? settingsRes.data as Record<string, unknown>
-        : {};
+    const settingsData =
+        settingsRes.data && typeof settingsRes.data === 'object'
+            ? (settingsRes.data as Record<string, unknown>)
+            : {};
 
     return {
         summary: {

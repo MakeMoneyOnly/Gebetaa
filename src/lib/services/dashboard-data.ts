@@ -260,8 +260,10 @@ export async function getCommandCenterData(
         // Add orders in flight to attention queue
         for (const order of activeOrders) {
             if (!order.created_at || !order.status) continue;
-            
-            const ageMinutes = Math.round((Date.now() - new Date(order.created_at).getTime()) / (1000 * 60));
+
+            const ageMinutes = Math.round(
+                (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60)
+            );
 
             let severity: 'high' | 'medium' | 'low' = 'low';
             if (ageMinutes > 30) severity = 'high';
@@ -281,7 +283,7 @@ export async function getCommandCenterData(
         // Add service requests to attention queue
         for (const request of serviceRequests) {
             if (!request.status) continue;
-            
+
             attentionQueue.push({
                 id: request.id,
                 type: 'request',
@@ -559,7 +561,7 @@ export async function getAnalyticsPageData(
         const trendsMap = new Map<string, { revenue: number; orders: number }>();
         for (const order of completedOrders) {
             if (!order.created_at) continue;
-            
+
             const date = new Date(order.created_at);
             const label = date.toLocaleDateString('en-US', { weekday: 'short' });
             const existing = trendsMap.get(label) ?? { revenue: 0, orders: 0 };

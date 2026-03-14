@@ -1,11 +1,7 @@
 # Staff Subgraph Schema
 # GraphQL Federation 2 subgraph for Staff domain
 
-extend schema
-    @link(
-        url: "https://specs.apollo.dev/federation/v2.0"
-        import: ["@key"]
-    )
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
 
 enum StaffRole {
     OWNER
