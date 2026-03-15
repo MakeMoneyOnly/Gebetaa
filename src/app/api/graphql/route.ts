@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Disabled - GraphQL federation is handled by Apollo Router
 // The subgraph schemas are in graphql/subgraphs/ and published to Apollo GraphOS
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
         {
             error: {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(_request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
         {
             error: {

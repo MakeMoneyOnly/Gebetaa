@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import { useStaff, StaffMember, ROLE_BADGE } from '@/hooks/useStaff';
 import { useRole } from '@/hooks/useRole';
@@ -13,7 +13,6 @@ import { Users, Tablet, Plus, MoreHorizontal, UserCheck, Trash2 } from 'lucide-r
 import { cn } from '@/lib/utils';
 
 interface StaffPageClientProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialData?: any;
 }
 
@@ -244,7 +243,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                         className="group relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-gray-50 text-xl font-bold text-gray-700 ring-4 ring-white">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-50 text-xl font-bold text-gray-700 ring-4 ring-white">
                                                 {(member.name || member.email || 'US')
                                                     .slice(0, 2)
                                                     .toUpperCase()}
@@ -391,7 +390,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                         className="group relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-gray-900 text-white shadow-lg ring-4 ring-white">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-900 text-white shadow-lg ring-4 ring-white">
                                                 <Tablet className="h-6 w-6" />
                                             </div>
                                             <div

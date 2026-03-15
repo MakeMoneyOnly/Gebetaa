@@ -12,7 +12,6 @@ import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import { useRole } from '@/hooks/useRole';
 
 interface ChannelsPageClientProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialData?: any;
 }
 
@@ -69,7 +68,7 @@ export function ChannelsPageClient(_props: ChannelsPageClientProps) {
     const [settings, setSettings] = useState<OnlineOrderingSettings>(defaultSettings);
     const [settingsSaving, setSettingsSaving] = useState(false);
 
-    const { restaurantId } = useRole(null);
+    const { restaurantId: _restaurantId } = useRole(null);
     const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
 
     const [settingsError, setSettingsError] = useState<string | null>(null);

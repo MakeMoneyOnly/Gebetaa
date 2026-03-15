@@ -1,6 +1,6 @@
 {
     "permissions": {
-        "allow": ["mcp__playwright"],
+        "allow": ["mcp__playwright", "Bash(pnpm type-check:*)"],
         "deny": []
     }
 }

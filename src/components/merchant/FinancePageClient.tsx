@@ -23,7 +23,6 @@ import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import { getP2Copy } from '@/lib/i18n/p2';
 
 interface FinancePageClientProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialData?: any;
 }
 

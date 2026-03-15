@@ -63,6 +63,10 @@ const envSchema = z.object({
 
     // Redis
     REDIS_URL: z.string().optional(),
+
+    // Telegram Alerts (CRIT-08)
+    TELEGRAM_BOT_TOKEN: z.string().optional(),
+    TELEGRAM_ALERT_CHAT_ID: z.string().optional(),
 });
 
 /**

@@ -1,8 +1,18 @@
 /**
  * Health Check API Endpoint
  *
- * Addresses COMPREHENSIVE_CODEBASE_AUDIT_REPORT Section 7.5
- * Provides health status for monitoring and observability
+ * Addresses CRIT-08 from ENTERPRISE_MASTER_BLUEPRINT Section 13
+ * Provides comprehensive health status for monitoring and observability.
+ *
+ * Monitors:
+ * - Database connectivity (Supabase)
+ * - Redis connectivity (Upstash)
+ * - QStash availability (job queue)
+ * - Environment configuration
+ *
+ * Used by Better Uptime for monitoring with Telegram alerting on non-200.
+ *
+ * @see docs/1. Engineering Foundation/0. ENTERPRISE_MASTER_BLUEPRINT.md - Sprint 1.7
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,16 +32,20 @@ interface HealthStatus {
             latency?: number;
             error?: string;
         };
+        redis: {
+            status: 'up' | 'down' | 'not_configured';
+            latency?: number;
+            error?: string;
+        };
+        qstash: {
+            status: 'up' | 'down' | 'not_configured';
+            latency?: number;
+            error?: string;
+        };
         environment: {
             status: 'up' | 'down';
             configured: string[];
             missing: string[];
-        };
-        services: {
-            redis?: {
-                status: 'up' | 'down' | 'not_configured';
-                latency?: number;
-            };
         };
     };
     region?: string;
@@ -61,9 +75,12 @@ const OPTIONAL_ENV_VARS = [
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
     'QSTASH_TOKEN',
+    'QSTASH_CURRENT_SIGNING_KEY',
     'CHAPA_SECRET_KEY',
     'CHAPA_WEBHOOK_SECRET',
     'SENTRY_AUTH_TOKEN',
+    'TELEGRAM_BOT_TOKEN',
+    'TELEGRAM_ALERT_CHAT_ID',
 ];
 
 /**
@@ -92,6 +109,125 @@ async function checkDatabase(): Promise<{
             };
         }
 
+        return {
+            status: 'up',
+            latency,
+        };
+    } catch (error) {
+        return {
+            status: 'down',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        };
+    }
+}
+
+/**
+ * Check Redis connectivity via Upstash REST API
+ */
+async function checkRedis(): Promise<{
+    status: 'up' | 'down' | 'not_configured';
+    latency?: number;
+    error?: string;
+}> {
+    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+    if (!redisUrl || !redisToken) {
+        // Fallback to legacy Redis URL
+        const legacyRedisUrl = process.env.REDIS_URL;
+        if (!legacyRedisUrl) {
+            return { status: 'not_configured' };
+        }
+        // Legacy Redis doesn't support HTTP ping, just check URL exists
+        return { status: 'up' };
+    }
+
+    try {
+        const start = Date.now();
+
+        // Use Upstash REST API to ping Redis
+        // @see https://upstash.com/docs/redis/features/restapi
+        const response = await fetch(`${redisUrl}/ping`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${redisToken}`,
+            },
+        });
+
+        const latency = Date.now() - start;
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return {
+                status: 'down',
+                latency,
+                error: `Redis ping failed: ${response.status} ${errorText}`,
+            };
+        }
+
+        const result = await response.text();
+        if (result !== 'PONG' && result !== '"PONG"' && !result.includes('PONG')) {
+            return {
+                status: 'down',
+                latency,
+                error: `Unexpected Redis response: ${result}`,
+            };
+        }
+
+        return {
+            status: 'up',
+            latency,
+        };
+    } catch (error) {
+        return {
+            status: 'down',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        };
+    }
+}
+
+/**
+ * Check QStash availability
+ * QStash is critical for background jobs: payment retries, ERCA submissions, EOD reports
+ */
+async function checkQStash(): Promise<{
+    status: 'up' | 'down' | 'not_configured';
+    latency?: number;
+    error?: string;
+}> {
+    const qstashToken = process.env.QSTASH_TOKEN;
+
+    if (!qstashToken) {
+        return { status: 'not_configured' };
+    }
+
+    try {
+        const start = Date.now();
+
+        // Query QStash API to check queue status
+        // @see https://upstash.com/docs/qstash/api/overview
+        const response = await fetch('https://qstash.upstash.io/v2/messages', {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${qstashToken}`,
+            },
+        });
+
+        const latency = Date.now() - start;
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            // 401 = invalid token
+            // 403 = token doesn't have access
+            // 5xx = QStash service issue
+            return {
+                status: 'down',
+                latency,
+                error: `QStash check failed: ${response.status} ${errorText}`,
+            };
+        }
+
+        // Response is OK, QStash is available
         return {
             status: 'up',
             latency,
@@ -139,48 +275,55 @@ function checkEnvironment(): {
 }
 
 /**
- * Check Redis connectivity (if configured)
- */
-async function checkRedis(): Promise<{
-    status: 'up' | 'down' | 'not_configured';
-    latency?: number;
-}> {
-    const redisUrl = process.env.REDIS_URL;
-
-    if (!redisUrl) {
-        return { status: 'not_configured' };
-    }
-
-    try {
-        // Note: In a real implementation, you'd use a Redis client
-        // For now, we just check if the URL is set
-        // This can be enhanced with actual Redis ping
-        return { status: 'up' };
-    } catch {
-        return {
-            status: 'down',
-        };
-    }
-}
-
-/**
  * GET /api/health
  * Returns comprehensive health status
+ *
+ * @returns {HealthStatus} Health check response with 200 or 503 status
+ *
+ * Better Uptime configuration:
+ * - Poll this endpoint every 60 seconds
+ * - Alert via Telegram on non-200 response
+ * - Set timeout to 30 seconds
+ *
+ * Status codes:
+ * - 200: Healthy or Degraded (service is running)
+ * - 503: Unhealthy (critical dependency down)
  */
-
 export async function GET(_request: NextRequest): Promise<NextResponse<HealthStatus>> {
     // Run checks in parallel for efficiency
-    const [databaseCheck, redisCheck] = await Promise.all([checkDatabase(), checkRedis()]);
+    const [databaseCheck, redisCheck, qstashCheck] = await Promise.all([
+        checkDatabase(),
+        checkRedis(),
+        checkQStash(),
+    ]);
 
     const environmentCheck = checkEnvironment();
 
     // Determine overall status
+    // Unhealthy: Database is down (critical dependency)
+    // Degraded: Non-critical services (Redis, QStash) are down but database is up
+    // Healthy: All services up
     let status: 'healthy' | 'unhealthy' | 'degraded' = 'healthy';
 
     if (databaseCheck.status === 'down' || environmentCheck.status === 'down') {
         status = 'unhealthy';
-    } else if (redisCheck.status === 'down') {
-        status = 'degraded';
+    } else if (
+        redisCheck.status === 'down' ||
+        qstashCheck.status === 'down' ||
+        redisCheck.status === 'not_configured' ||
+        qstashCheck.status === 'not_configured'
+    ) {
+        // Degraded if non-critical services are down or not configured
+        // In production, we expect these to be configured
+        const isProduction = process.env.NODE_ENV === 'production';
+        if (
+            isProduction &&
+            (redisCheck.status === 'not_configured' || qstashCheck.status === 'not_configured')
+        ) {
+            status = 'unhealthy'; // Production must have all services
+        } else {
+            status = 'degraded';
+        }
     }
 
     const healthStatus: HealthStatus = {
@@ -190,15 +333,15 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
         uptime: Math.floor((Date.now() - startTime) / 1000),
         checks: {
             database: databaseCheck,
+            redis: redisCheck,
+            qstash: qstashCheck,
             environment: environmentCheck,
-            services: {
-                redis: redisCheck,
-            },
         },
         region: process.env.VERCEL_REGION || process.env.AWS_REGION,
     };
 
     // Return appropriate status code
+    // Better Uptime expects non-200 for unhealthy states
     const statusCode = status === 'healthy' ? 200 : status === 'degraded' ? 200 : 503;
 
     return NextResponse.json(healthStatus, {
@@ -206,6 +349,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
         headers: {
             'Cache-Control': 'no-store, no-cache, must-revalidate',
             'X-Health-Status': status,
+            'X-Response-Time': `${Date.now() - startTime}ms`,
         },
     });
 }
@@ -226,8 +370,8 @@ export async function HEAD(): Promise<Response> {
 }
 
 /**
+ * OPTIONS /api/health
  * Liveness probe endpoint
- * GET /api/health/live
  * Simple check to confirm the server is responding
  */
 export async function OPTIONS(): Promise<Response> {
