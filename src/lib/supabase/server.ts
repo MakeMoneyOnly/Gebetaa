@@ -145,7 +145,13 @@ export async function createClient() {
             hosted_checkout_fee_percentage: 0.03,
         };
 
-        const updateChainable = { data: null, error: null, eq: function () { return this; } };
+        const updateChainable = {
+            data: null,
+            error: null,
+            eq: function () {
+                return this;
+            },
+        };
 
         return {
             auth: {
@@ -185,8 +191,8 @@ export async function createClient() {
                     table === 'restaurant_staff'
                         ? createChainableMock([e2eStaffRow], e2eStaffRow)
                         : table === 'restaurants'
-                        ? createChainableMock([e2eRestaurantRow], e2eRestaurantRow)
-                        : createChainableMock([], null),
+                          ? createChainableMock([e2eRestaurantRow], e2eRestaurantRow)
+                          : createChainableMock([], null),
                 insert: () => ({ data: null, error: null }),
                 update: () => updateChainable,
                 delete: () => ({ data: null, error: null }),
