@@ -261,6 +261,34 @@ export async function installMerchantDashboardMocks(page: Page) {
         escalation_minutes: 15,
     };
 
+    const paymentSettings = {
+        provider: 'chapa',
+        provider_available: true,
+        settlement_bank_code: 'NBE',
+        settlement_bank_name: 'National Bank of Ethiopia',
+        settlement_account_name: 'Saba Grill Restaurant',
+        settlement_account_number_masked: '****1234',
+        settlement_status: 'active',
+        subaccount_id: 'CHAPA_SUB_123',
+        last_error: null,
+        provisioned_at: '2024-01-15T10:00:00Z',
+        hosted_checkout_fee_percentage: 0.03,
+    };
+
+    // Mock restaurant data to prevent null settings errors
+    const restaurantData = {
+        id: 'rest-1',
+        name: 'Saba Grill',
+        slug: 'saba-grill',
+        settings: {
+            channels: {
+                online_ordering: {
+                    enabled: true,
+                },
+            },
+        },
+    };
+
     const categories: CategoryRecord[] = [
         {
             id: 'cat-1',
@@ -639,6 +667,21 @@ export async function installMerchantDashboardMocks(page: Page) {
             return;
         }
         await respondJson(route, { data: notificationSettings });
+    });
+
+    await page.route('**/api/settings/payments', async route => {
+        if (route.request().method() === 'PATCH') {
+            const patch = route.request().postDataJSON() as JsonObject;
+            Object.assign(paymentSettings, patch);
+            await respondJson(route, { data: paymentSettings });
+            return;
+        }
+        await respondJson(route, { data: paymentSettings });
+    });
+
+    // Mock restaurant endpoint to provide restaurant data with settings
+    await page.route('**/api/restaurants*', async route => {
+        await respondJson(route, { data: restaurantData });
     });
 
     await page.route('**/api/inventory/items?**', async route => {
