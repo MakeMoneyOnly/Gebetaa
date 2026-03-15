@@ -1,5 +1,5 @@
 // GraphQL API Route
-// Note: This endpoint is disabled in development. 
+// Note: This endpoint is disabled in development.
 // For production, use Apollo Router (see router/ directory).
 // Federation schemas are in graphql/subgraphs/ and published via CI.
 
@@ -9,12 +9,12 @@ import { NextRequest, NextResponse } from 'next/server';
 // The subgraph schemas are in graphql/subgraphs/ and published to Apollo GraphOS
 export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
-        { 
-            error: { 
-                message: 'GraphQL API is disabled. Use Apollo Router for production.', 
+        {
+            error: {
+                message: 'GraphQL API is disabled. Use Apollo Router for production.',
                 code: 'GRAPHQL_DISABLED',
-                docs: 'See router/ directory for Apollo Router configuration'
-            } 
+                docs: 'See router/ directory for Apollo Router configuration',
+            },
         },
         { status: 503 }
     );
@@ -22,12 +22,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
-        { 
-            error: { 
-                message: 'GraphQL API is disabled. Use Apollo Router for production.', 
+        {
+            error: {
+                message: 'GraphQL API is disabled. Use Apollo Router for production.',
                 code: 'GRAPHQL_DISABLED',
-                docs: 'See router/ directory for Apollo Router configuration'
-            } 
+                docs: 'See router/ directory for Apollo Router configuration',
+            },
         },
         { status: 503 }
     );
