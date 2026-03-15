@@ -1,7 +1,7 @@
 # Orders Subgraph Schema
 # GraphQL Federation 2 subgraph for Orders domain
 
-extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
 # JSON Scalar for flexible data
 scalar JSON @specifiedBy(url: "https://specs.apollo.dev/graphqlspec/current/#sec-Scalars")
@@ -64,18 +64,18 @@ type OrderEdge {
     node: Order!
 }
 
-type PageInfo {
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-    startCursor: String
-    endCursor: String
+type PageInfo @shareable {
+    hasNextPage: Boolean! @shareable
+    hasPreviousPage: Boolean! @shareable
+    startCursor: String @shareable
+    endCursor: String @shareable
 }
 
 # Error types
-type GebetaError {
-    code: String!
-    message: String!
-    messageAm: String
+type GebetaError @key(fields: "code") @shareable {
+    code: String! @shareable
+    message: String! @shareable
+    messageAm: String @shareable
 }
 
 type CreateOrderResult {

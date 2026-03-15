@@ -1,7 +1,7 @@
 # Staff Subgraph Schema
 # GraphQL Federation 2 subgraph for Staff domain
 
-extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
 enum StaffRole {
     OWNER
@@ -60,30 +60,19 @@ type StaffEdge {
     node: Staff!
 }
 
-type PageInfo {
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-    startCursor: String
-    endCursor: String
+# Shared types from Orders subgraph
+extend type PageInfo @shareable {
+    hasNextPage: Boolean! @shareable
+    hasPreviousPage: Boolean! @shareable
+    startCursor: String @shareable
+    endCursor: String @shareable
 }
 
-# Error types
-type StaffResult {
-    success: Boolean!
-    staff: Staff
-    error: GebetaError
-}
-
-type PinVerificationResult {
-    success: Boolean!
-    staff: Staff
-    error: GebetaError
-}
-
-type GebetaError {
-    code: String!
-    message: String!
-    messageAm: String
+# Error types from Orders subgraph
+extend type GebetaError @shareable {
+    code: String! @shareable
+    message: String! @shareable
+    messageAm: String @shareable
 }
 
 # Input types

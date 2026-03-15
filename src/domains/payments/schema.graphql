@@ -1,7 +1,7 @@
 # Payments Subgraph Schema
 # GraphQL Federation 2 subgraph for Payments domain
 
-extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
 enum PaymentMethod {
     CASH
@@ -46,39 +46,11 @@ type RevenueByMethod {
     count: Int!
 }
 
-# Error types
-type TelebirrPaymentResult {
-    success: Boolean!
-    payment: Payment
-    ussdCode: String
-    qrCode: String
-    expiresAt: String
-    error: GebetaError
-}
-
-type ChapaPaymentResult {
-    success: Boolean!
-    payment: Payment
-    checkoutUrl: String
-    error: GebetaError
-}
-
-type PaymentResult {
-    success: Boolean!
-    payment: Payment
-    error: GebetaError
-}
-
-type RefundResult {
-    success: Boolean!
-    refund: Payment
-    error: GebetaError
-}
-
-type GebetaError {
-    code: String!
-    message: String!
-    messageAm: String
+# Error types from Orders subgraph
+extend type GebetaError @shareable {
+    code: String! @shareable
+    message: String! @shareable
+    messageAm: String @shareable
 }
 
 # Input types
