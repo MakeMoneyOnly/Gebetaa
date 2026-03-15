@@ -44,7 +44,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Install Rover
-              run: npm install -g @apollo/rover@latest && rover version
+              uses: apollographql-gh-actions/install-rover@v1
 
             - name: Generate GraphQL Schema
               run: |
