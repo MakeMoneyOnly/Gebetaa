@@ -9,7 +9,7 @@ on:
             - main
             - develop
         paths:
-            - 'src/domains/**/*.graphql'
+            - 'graphql/subgraphs/**/*.graphql'
 
 jobs:
     publish-subgraphs:
@@ -31,7 +31,7 @@ jobs:
               run: |
                   rover subgraph publish gebeta-production-tj1sjiw@current \
                       --name orders \
-                      --schema ./src/domains/orders/schema.graphql \
+                      --schema ./graphql/subgraphs/orders.graphql \
                       --routing-url https://gebeta.app/api/graphql
 
             - name: Publish Menu Subgraph
@@ -40,7 +40,7 @@ jobs:
               run: |
                   rover subgraph publish gebeta-production-tj1sjiw@current \
                       --name menu \
-                      --schema ./src/domains/menu/schema.graphql \
+                      --schema ./graphql/subgraphs/menu.graphql \
                       --routing-url https://gebeta.app/api/graphql
 
             - name: Publish Payments Subgraph
@@ -49,7 +49,7 @@ jobs:
               run: |
                   rover subgraph publish gebeta-production-tj1sjiw@current \
                       --name payments \
-                      --schema ./src/domains/payments/schema.graphql \
+                      --schema ./graphql/subgraphs/payments.graphql \
                       --routing-url https://gebeta.app/api/graphql
 
             - name: Publish Guests Subgraph
@@ -58,7 +58,7 @@ jobs:
               run: |
                   rover subgraph publish gebeta-production-tj1sjiw@current \
                       --name guests \
-                      --schema ./src/domains/guests/schema.graphql \
+                      --schema ./graphql/subgraphs/guests.graphql \
                       --routing-url https://gebeta.app/api/graphql
 
             - name: Publish Staff Subgraph
@@ -67,5 +67,5 @@ jobs:
               run: |
                   rover subgraph publish gebeta-production-tj1sjiw@current \
                       --name staff \
-                      --schema ./src/domains/staff/schema.graphql \
+                      --schema ./graphql/subgraphs/staff.graphql \
                       --routing-url https://gebeta.app/api/graphql

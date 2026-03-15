@@ -95,3 +95,31 @@ type Mutation {
     recordCashPayment(input: RecordCashPaymentInput!): PaymentResult!
     processRefund(input: ProcessRefundInput!): RefundResult!
 }
+
+type TelebirrPaymentResult {
+    success: Boolean!
+    payment: Payment
+    ussdCode: String
+    qrCode: String
+    expiresAt: String
+    error: GebetaError
+}
+
+type ChapaPaymentResult {
+    success: Boolean!
+    payment: Payment
+    checkoutUrl: String
+    error: GebetaError
+}
+
+type PaymentResult {
+    success: Boolean!
+    payment: Payment
+    error: GebetaError
+}
+
+type RefundResult {
+    success: Boolean!
+    refund: Payment
+    error: GebetaError
+}

@@ -98,3 +98,9 @@ type Mutation {
     markItemAvailability(id: ID!, available: Boolean!): MenuItemResult!
     updateMenuItemPrice(id: ID!, price: Int!): MenuItemResult!
 }
+
+type MenuItemResult {
+    success: Boolean!
+    menuItem: MenuItem
+    error: GebetaError
+}

@@ -118,3 +118,15 @@ type Mutation {
     clockIn(staffId: ID!): StaffResult!
     clockOut(staffId: ID!): StaffResult!
 }
+
+type StaffResult {
+    success: Boolean!
+    staff: Staff
+    error: GebetaError
+}
+
+type PinVerificationResult {
+    success: Boolean!
+    staff: Staff
+    error: GebetaError
+}

@@ -103,3 +103,16 @@ input CreateGuestInput {
     phone: String!
     email: String
 }
+
+type LoyaltyResult {
+    success: Boolean!
+    account: LoyaltyAccount
+    transaction: LoyaltyTransaction
+    error: GebetaError
+}
+
+type GuestResult {
+    success: Boolean!
+    guest: Guest
+    error: GebetaError
+}
