@@ -55,12 +55,12 @@ export async function GET() {
         .eq('id', context.restaurantId)
         .single();
 
-    if (error) {
+    if (error || !data) {
         return apiError(
             'Failed to fetch online ordering settings',
             500,
             'ONLINE_ORDERING_SETTINGS_FETCH_FAILED',
-            error.message
+            error?.message ?? 'Restaurant not found'
         );
     }
 
@@ -97,12 +97,12 @@ export async function PATCH(request: Request) {
         .eq('id', context.restaurantId)
         .single();
 
-    if (fetchError) {
+    if (fetchError || !restaurant) {
         return apiError(
             'Failed to fetch current settings',
             500,
             'SETTINGS_FETCH_FAILED',
-            fetchError.message
+            fetchError?.message ?? 'Restaurant not found'
         );
     }
 

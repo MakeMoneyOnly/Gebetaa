@@ -41,12 +41,12 @@ export async function GET() {
             .maybeSingle(),
     ]);
 
-    if (restaurantRes.error) {
+    if (restaurantRes.error || !restaurantRes.data) {
         return apiError(
             'Failed to fetch dashboard preset settings',
             500,
             'DASHBOARD_PRESET_FETCH_FAILED',
-            restaurantRes.error.message
+            restaurantRes.error?.message ?? 'Restaurant not found'
         );
     }
 
@@ -87,12 +87,12 @@ export async function PATCH(request: Request) {
         .eq('id', context.restaurantId)
         .single();
 
-    if (fetchError) {
+    if (fetchError || !restaurant) {
         return apiError(
             'Failed to fetch current dashboard settings',
             500,
             'DASHBOARD_PRESET_FETCH_FAILED',
-            fetchError.message
+            fetchError?.message ?? 'Restaurant not found'
         );
     }
 

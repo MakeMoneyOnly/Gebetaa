@@ -139,12 +139,12 @@ export async function PATCH(request: Request) {
         .eq('id', context.restaurantId)
         .single();
 
-    if (fetchError) {
+    if (fetchError || !restaurant) {
         return apiError(
             'Failed to load current KDS settings',
             500,
             'KDS_SETTINGS_FETCH_FAILED',
-            fetchError.message
+            fetchError?.message ?? 'Restaurant not found'
         );
     }
 

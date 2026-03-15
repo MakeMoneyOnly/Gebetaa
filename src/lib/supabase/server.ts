@@ -96,6 +96,57 @@ export async function createClient() {
         // E2E mock restaurant_staff row — satisfies resolveRestaurantId()
         const e2eStaffRow = { restaurant_id: 'rest-1', role: 'owner', is_active: true };
 
+        // E2E mock restaurant row — contains all fields accessed by settings/dashboard routes
+        // so that .single() calls on the restaurants table never return null.
+        const e2eRestaurantRow = {
+            id: 'rest-1',
+            name: 'Saba Grill',
+            slug: 'saba-grill',
+            // JSONB settings blob covering security, notifications, dashboard, channels, etc.
+            settings: {
+                security: {
+                    require_mfa: false,
+                    session_timeout_minutes: 120,
+                    allowed_ip_ranges: [],
+                    alert_on_suspicious_login: true,
+                },
+                notifications: {
+                    email_enabled: true,
+                    sms_enabled: false,
+                    in_app_enabled: true,
+                    escalation_enabled: true,
+                    escalation_minutes: 15,
+                },
+                channels: {
+                    online_ordering: {
+                        enabled: true,
+                        accepts_scheduled_orders: true,
+                        auto_accept_orders: false,
+                        prep_time_minutes: 30,
+                        max_daily_orders: 300,
+                        service_hours: { start: '08:00', end: '22:00' },
+                        order_throttling_enabled: false,
+                        throttle_limit_per_15m: 40,
+                    },
+                },
+                dashboard_preset: null,
+                zones: [],
+                kds: {},
+            },
+            // Chapa payment fields (used by the Settings page server component)
+            chapa_settlement_bank_code: '',
+            chapa_settlement_bank_name: '',
+            chapa_settlement_account_name: '',
+            chapa_settlement_account_number_masked: '',
+            chapa_subaccount_status: 'not_configured',
+            chapa_subaccount_id: null,
+            chapa_subaccount_last_error: null,
+            chapa_subaccount_provisioned_at: null,
+            hosted_checkout_fee_percentage: 0.03,
+        };
+
+        const updateChainable = { data: null, error: null, eq: function () { return this; } };
+
         return {
             auth: {
                 getUser: async () => ({
@@ -128,12 +179,16 @@ export async function createClient() {
             from: (table: string) => ({
                 // Return a valid staff row for restaurant_staff lookups so
                 // resolveRestaurantId() returns 'rest-1' instead of null.
+                // Return a valid restaurant row for restaurants lookups so routes
+                // that access data.settings don't crash with a null dereference.
                 select: () =>
                     table === 'restaurant_staff'
                         ? createChainableMock([e2eStaffRow], e2eStaffRow)
+                        : table === 'restaurants'
+                        ? createChainableMock([e2eRestaurantRow], e2eRestaurantRow)
                         : createChainableMock([], null),
                 insert: () => ({ data: null, error: null }),
-                update: () => ({ data: null, error: null }),
+                update: () => updateChainable,
                 delete: () => ({ data: null, error: null }),
             }),
         } as unknown as ReturnType<typeof createServerClient<Database>>;
