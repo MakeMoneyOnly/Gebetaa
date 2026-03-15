@@ -1,7 +1,7 @@
 # Guests & Loyalty Subgraph Schema
 # GraphQL Federation 2 subgraph for Guests domain
 
-extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
 type Guest @key(fields: "id") {
     id: ID!
@@ -46,31 +46,19 @@ type GuestEdge {
     node: Guest!
 }
 
-type PageInfo {
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-    startCursor: String
-    endCursor: String
+# Shared types from Orders subgraph
+extend type PageInfo @shareable {
+    hasNextPage: Boolean! @shareable
+    hasPreviousPage: Boolean! @shareable
+    startCursor: String @shareable
+    endCursor: String @shareable
 }
 
-# Error types
-type LoyaltyResult {
-    success: Boolean!
-    account: LoyaltyAccount
-    transaction: LoyaltyTransaction
-    error: GebetaError
-}
-
-type GuestResult {
-    success: Boolean!
-    guest: Guest
-    error: GebetaError
-}
-
-type GebetaError {
-    code: String!
-    message: String!
-    messageAm: String
+# Error types from Orders subgraph
+extend type GebetaError @shareable {
+    code: String! @shareable
+    message: String! @shareable
+    messageAm: String @shareable
 }
 
 # Input types
@@ -114,4 +102,17 @@ input CreateGuestInput {
     fullName: String
     phone: String!
     email: String
+}
+
+type LoyaltyResult {
+    success: Boolean!
+    account: LoyaltyAccount
+    transaction: LoyaltyTransaction
+    error: GebetaError
+}
+
+type GuestResult {
+    success: Boolean!
+    guest: Guest
+    error: GebetaError
 }

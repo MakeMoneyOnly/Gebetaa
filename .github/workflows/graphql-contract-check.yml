@@ -7,7 +7,7 @@ name: GraphQL Contract Check
 on:
     pull_request:
         paths:
-            - 'src/domains/**/*.graphql'
+            - 'graphql/subgraphs/**/*.graphql'
             - 'src/app/api/graphql/**'
             - 'codegen.yml'
     push:
@@ -15,7 +15,7 @@ on:
             - main
             - develop
         paths:
-            - 'src/domains/**/*.graphql'
+            - 'graphql/subgraphs/**/*.graphql'
             - 'src/app/api/graphql/**'
             - 'codegen.yml'
 
@@ -43,17 +43,17 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            - name: Install Apollo CLI
-              run: npm install -g @apollo/apollo-service@latest
+            - name: Install Rover
+              run: npm install -g @apollo/rover@latest && rover version
 
             - name: Generate GraphQL Schema
               run: |
                   # Combine all subgraph schemas into a single schema for validation
-                  cat src/domains/orders/schema.graphql > schema.graphql
-                  cat src/domains/menu/schema.graphql >> schema.graphql
-                  cat src/domains/payments/schema.graphql >> schema.graphql
-                  cat src/domains/guests/schema.graphql >> schema.graphql
-                  cat src/domains/staff/schema.graphql >> schema.graphql
+                  cat graphql/subgraphs/orders.graphql > schema.graphql
+                  cat graphql/subgraphs/menu.graphql >> schema.graphql
+                  cat graphql/subgraphs/payments.graphql >> schema.graphql
+                  cat graphql/subgraphs/guests.graphql >> schema.graphql
+                  cat graphql/subgraphs/staff.graphql >> schema.graphql
 
             - name: Check for breaking changes
               run: |

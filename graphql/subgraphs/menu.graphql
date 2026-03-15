@@ -1,7 +1,7 @@
 # Menu Subgraph Schema
 # GraphQL Federation 2 subgraph for Menu domain
 
-extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key"])
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
 type MenuItem @key(fields: "id") {
     id: ID!
@@ -49,17 +49,11 @@ type Category @key(fields: "id") {
     items: [MenuItem!]!
 }
 
-# Error types
-type MenuItemResult {
-    success: Boolean!
-    menuItem: MenuItem
-    error: GebetaError
-}
-
-type GebetaError {
-    code: String!
-    message: String!
-    messageAm: String
+# Error types from Orders subgraph
+extend type GebetaError @shareable {
+    code: String! @shareable
+    message: String! @shareable
+    messageAm: String @shareable
 }
 
 # Input types
@@ -103,4 +97,10 @@ type Mutation {
     updateMenuItem(id: ID!, input: UpdateMenuItemInput!): MenuItemResult!
     markItemAvailability(id: ID!, available: Boolean!): MenuItemResult!
     updateMenuItemPrice(id: ID!, price: Int!): MenuItemResult!
+}
+
+type MenuItemResult {
+    success: Boolean!
+    menuItem: MenuItem
+    error: GebetaError
 }
