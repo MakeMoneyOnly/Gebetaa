@@ -66,7 +66,7 @@ jobs:
             - name: Upload coverage report
               uses: actions/upload-artifact@v4
               with:
-                  name: coverage-report
+                  name: coverage-report-${{ github.run_id }}-${{ github.run_attempt }}
                   path: coverage/
                   retention-days: 7
 
@@ -161,7 +161,7 @@ jobs:
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
               with:
-                  name: build
+                  name: build-${{ github.run_id }}-${{ github.run_attempt }}
                   path: .next/
                   retention-days: 7
                   if-no-files-found: error
@@ -224,7 +224,7 @@ jobs:
               uses: actions/upload-artifact@v4
               if: failure()
               with:
-                  name: playwright-report
+                  name: playwright-report-${{ github.run_id }}-${{ github.run_attempt }}
                   path: playwright-report/
                   retention-days: 7
 

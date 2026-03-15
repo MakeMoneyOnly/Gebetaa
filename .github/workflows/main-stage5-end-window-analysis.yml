@@ -64,5 +64,5 @@ jobs:
               if: steps.readiness.outputs.run_analysis == 'true'
               uses: actions/upload-artifact@v4
               with:
-                  name: stage5-analysis
+                  name: stage5-analysis-${{ github.run_id }}-${{ github.run_attempt }}
                   path: artifacts/stage5-analysis.txt

@@ -52,7 +52,7 @@ jobs:
               uses: actions/upload-artifact@v4
               if: always()
               with:
-                  name: lighthouse-results
+                  name: lighthouse-results-${{ github.run_id }}-${{ github.run_attempt }}
                   path: .lighthouseci/
                   retention-days: 7
                   include-hidden-files: true
