@@ -5,7 +5,7 @@
  * Implements CSRF token generation and validation for Server Actions
  */
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -231,6 +231,182 @@ export async function clearCsrfToken(): Promise<void> {
     cookieStore.delete(CSRF_TOKEN_NAME);
 }
 
+/**
+ * CSRF Origin Validation for Server Actions
+ *
+ * Implements origin/referer header verification as per security audit requirements.
+ * This provides defense-in-depth against CSRF attacks for Server Actions.
+ */
+
+/**
+ * Get the expected origin from environment
+ * Falls back to common development origins
+ */
+export function getExpectedOrigin(): string {
+    // Production: use the explicit environment variable
+    if (process.env.NEXT_PUBLIC_APP_URL) {
+        return process.env.NEXT_PUBLIC_APP_URL;
+    }
+
+    // Development fallbacks
+    return 'http://localhost:3000';
+}
+
+/**
+ * Extract origin from request headers
+ * Checks both origin and referer headers
+ */
+export async function getRequestOrigin(): Promise<{
+    origin: string | null;
+    referer: string | null;
+}> {
+    const headersList = await headers();
+    const origin = headersList.get('origin');
+    const referer = headersList.get('referer');
+    return { origin, referer };
+}
+
+/**
+ * Check if the origin is valid (same-origin or explicitly allowed)
+ *
+ * @param origin - The origin string from request headers
+ * @returns true if origin is valid
+ */
+export function isValidOrigin(origin: string | null): boolean {
+    if (!origin) return false;
+
+    const expectedOrigin = getExpectedOrigin();
+
+    // Parse origins for comparison
+    let requestOrigin: URL;
+    try {
+        requestOrigin = new URL(origin);
+    } catch {
+        // Invalid URL - reject
+        return false;
+    }
+
+    let expectedUrl: URL;
+    try {
+        expectedUrl = new URL(expectedOrigin);
+    } catch {
+        // Invalid expected origin - reject
+        return false;
+    }
+
+    // Same-origin check
+    if (requestOrigin.origin === expectedUrl.origin) {
+        return true;
+    }
+
+    // Check allowed origins (for multi-site deployments)
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+
+    for (const allowed of allowedOrigins) {
+        try {
+            const allowedUrl = new URL(allowed);
+            if (requestOrigin.origin === allowedUrl.origin) {
+                return true;
+            }
+        } catch {
+            // Skip invalid origins in config
+            continue;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Validate the origin of a Server Action request
+ *
+ * This function verifies that the request originates from an expected origin
+ * to prevent cross-site request forgery attacks.
+ *
+ * @throws Error if origin validation fails
+ */
+export async function verifyOrigin(): Promise<void> {
+    const { origin, referer } = await getRequestOrigin();
+
+    // Check origin header first (preferred)
+    if (origin) {
+        if (isValidOrigin(origin)) {
+            return; // Valid origin
+        }
+    }
+
+    // Fall back to referer check (less reliable)
+    if (referer) {
+        // Extract origin from referer
+        let refererOrigin: string;
+        try {
+            const refererUrl = new URL(referer);
+            refererOrigin = refererUrl.origin;
+        } catch {
+            throw new Error('Invalid referer header');
+        }
+
+        if (isValidOrigin(refererOrigin)) {
+            return; // Valid referer
+        }
+    }
+
+    // No valid origin found
+    throw new Error(
+        'CSRF validation failed: Invalid origin. ' +
+            `Expected: ${getExpectedOrigin()}, ` +
+            `Received origin: ${origin || 'none'}, ` +
+            `Received referer: ${referer || 'none'}`
+    );
+}
+
+/**
+ * Validate origin with structured response
+ * Provides detailed validation information
+ */
+export async function validateOrigin(): Promise<{
+    valid: boolean;
+    error?: string;
+    details?: {
+        origin: string | null;
+        referer: string | null;
+        expected: string;
+    };
+}> {
+    const { origin, referer } = await getRequestOrigin();
+    const expected = getExpectedOrigin();
+
+    // Check origin header
+    if (origin && isValidOrigin(origin)) {
+        return { valid: true, details: { origin, referer, expected } };
+    }
+
+    // Check referer
+    if (referer) {
+        let refererOrigin: string;
+        try {
+            const refererUrl = new URL(referer);
+            refererOrigin = refererUrl.origin;
+        } catch {
+            return {
+                valid: false,
+                error: 'Invalid referer URL format',
+                details: { origin, referer, expected },
+            };
+        }
+
+        if (isValidOrigin(refererOrigin)) {
+            return { valid: true, details: { origin, referer, expected } };
+        }
+    }
+
+    return {
+        valid: false,
+        error: 'Origin validation failed - request from unknown origin',
+        details: { origin, referer, expected },
+    };
+}
+
 const csrfExports = {
     generateCsrfToken,
     setCsrfToken,
@@ -239,6 +415,11 @@ const csrfExports = {
     getCsrfInput,
     regenerateCsrfToken,
     clearCsrfToken,
+    verifyOrigin,
+    validateOrigin,
+    isValidOrigin,
+    getExpectedOrigin,
+    getRequestOrigin,
 };
 
 export default csrfExports;

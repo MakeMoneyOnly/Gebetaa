@@ -15,7 +15,7 @@ export {
     clearCsrfToken,
 } from './csrf';
 
-// Rate Limiting
+// Rate Limiting (Database-backed)
 export {
     rateLimiters,
     createRateLimitMiddleware,
@@ -27,6 +27,21 @@ export {
     RATE_LIMIT_CONFIGS,
     type RateLimitConfig,
 } from './rateLimiter';
+
+// Rate Limiting (Redis-backed - sliding window)
+export {
+    redisRateLimiters,
+    createRedisRateLimitMiddleware,
+    withRedisRateLimit,
+    checkRedisRateLimit,
+    getRedisRateLimiterClient,
+    getClientIp,
+    getAuthenticatedUserId,
+    checkServerActionRateLimit,
+    REDIS_RATE_LIMIT_CONFIGS,
+    type RedisRateLimitConfig,
+    type RedisRateLimitResult,
+} from './rateLimiterRedis';
 
 // HMAC Signing
 export {
