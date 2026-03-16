@@ -3,6 +3,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import { redisRateLimiters } from '@/lib/security';
 
 const GuestIdSchema = z.string().uuid();
 
@@ -59,6 +60,12 @@ export async function PATCH(
     request: Request,
     routeContext: { params: Promise<{ guestId: string }> }
 ) {
+    // Apply rate limiting for guest mutations
+    const rateLimitResponse = await redisRateLimiters.guestCreate(request as any);
+    if (rateLimitResponse) {
+        return rateLimitResponse;
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;

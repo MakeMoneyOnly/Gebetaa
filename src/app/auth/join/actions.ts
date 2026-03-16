@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { verifyOrigin } from '@/lib/security/csrf';
 
 // Role-based redirect map
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -25,6 +26,9 @@ export async function provisionDevice(data: {
     password: string; // Used to create the auth user
     deviceName: string;
 }): Promise<ProvisionResult> {
+    // CSRF Protection - verify origin before processing
+    await verifyOrigin();
+
     const supabase = await createClient();
     const adminClient = createServiceRoleClient(); // Needed for admin Ops
 

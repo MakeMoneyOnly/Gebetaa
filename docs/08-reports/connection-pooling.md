@@ -27,38 +27,40 @@ This document describes the connection pooling implementation for Supabase using
 
 Add the following to your `.env.local`:
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `NEXT_PUBLIC_SUPABASE_POOLER_ENABLED` | Enable/disable connection pooling | `false` | No |
-| `SUPABASE_POOL_MODE` | Pool mode: `transaction` or `session` | `transaction` | No |
-| `SUPABASE_POOL_SIZE` | Connections per pool instance (1-50) | `10` | No |
-| `SUPABASE_POOL_MAX_CLIENTS` | Max clients in pool (1-100) | `20` | No |
-| `SUPABASE_POOL_CONNECTION_TIMEOUT` | Connection timeout in seconds (1-300) | `30` | No |
-| `SUPABASE_POOL_IDLE_TIMEOUT` | Idle timeout in seconds (60-3600) | `1800` | No |
-| `SUPABASE_POOLER_URL` | Direct pooler connection string | Auto-constructed | No |
+| Variable                              | Description                           | Default          | Required |
+| ------------------------------------- | ------------------------------------- | ---------------- | -------- |
+| `NEXT_PUBLIC_SUPABASE_POOLER_ENABLED` | Enable/disable connection pooling     | `false`          | No       |
+| `SUPABASE_POOL_MODE`                  | Pool mode: `transaction` or `session` | `transaction`    | No       |
+| `SUPABASE_POOL_SIZE`                  | Connections per pool instance (1-50)  | `10`             | No       |
+| `SUPABASE_POOL_MAX_CLIENTS`           | Max clients in pool (1-100)           | `20`             | No       |
+| `SUPABASE_POOL_CONNECTION_TIMEOUT`    | Connection timeout in seconds (1-300) | `30`             | No       |
+| `SUPABASE_POOL_IDLE_TIMEOUT`          | Idle timeout in seconds (60-3600)     | `1800`           | No       |
+| `SUPABASE_POOLER_URL`                 | Direct pooler connection string       | Auto-constructed | No       |
 
 ### Pool Mode Options
 
 #### Transaction Mode (Recommended)
+
 - Connections are borrowed for a single query/transaction
 - Best for most web applications
 - Supports prepared statements with limitations
 
 #### Session Mode
+
 - Connections persist for the full client session
 - Use only when you need:
-  - PostgreSQL session features (e.g., `LISTEN`/`NOTIFY`)
-  - Temporary tables
-  - Prepared statements with global state
+    - PostgreSQL session features (e.g., `LISTEN`/`NOTIFY`)
+    - Temporary tables
+    - Prepared statements with global state
 
 ### Sizing Guidelines
 
 | Expected Concurrent Users | Recommended Pool Size |
-|--------------------------|----------------------|
-| < 50                     | 5-10                 |
-| 50-100                   | 10-20                |
-| 100-500                  | 20-30                |
-| > 500                    | 30-50                |
+| ------------------------- | --------------------- |
+| < 50                      | 5-10                  |
+| 50-100                    | 10-20                 |
+| 100-500                   | 20-30                 |
+| > 500                     | 30-50                 |
 
 **Note**: Each Vercel function instance gets its own pool. Start conservative and monitor.
 
@@ -85,20 +87,21 @@ Connection pool configuration is included in the health check response:
 
 ```json
 {
-  "status": "healthy",
-  "checks": {
-    "supabase": {
-      "status": "pass",
-      "latencyMs": 45,
-      "poolEnabled": true,
-      "poolMode": "transaction",
-      "poolSize": 10
+    "status": "healthy",
+    "checks": {
+        "supabase": {
+            "status": "pass",
+            "latencyMs": 45,
+            "poolEnabled": true,
+            "poolMode": "transaction",
+            "poolSize": 10
+        }
     }
-  }
 }
 ```
 
 Monitor the `/api/health` endpoint to track:
+
 - `poolEnabled`: Whether pooling is active
 - `poolMode`: Current pool mode (transaction/session)
 - `poolSize`: Configured pool size
@@ -114,15 +117,19 @@ The server client automatically applies pool configuration:
 import { getPoolConfig } from './pool';
 
 return createServerClient<Database>(url, key, {
-  cookies: { /* ... */ },
-  db: getPoolConfig().enabled ? {
-    poolMode: getPoolConfig().mode,
-    poolConfig: {
-      max: getPoolConfig().poolSize,
-      idleTimeoutMillis: getPoolConfig().idleTimeout * 1000,
-      connectionTimeoutMillis: getPoolConfig().connectionTimeout * 1000,
+    cookies: {
+        /* ... */
     },
-  } : undefined,
+    db: getPoolConfig().enabled
+        ? {
+              poolMode: getPoolConfig().mode,
+              poolConfig: {
+                  max: getPoolConfig().poolSize,
+                  idleTimeoutMillis: getPoolConfig().idleTimeout * 1000,
+                  connectionTimeoutMillis: getPoolConfig().connectionTimeout * 1000,
+              },
+          }
+        : undefined,
 });
 ```
 
@@ -145,12 +152,12 @@ The pool configuration module (`src/lib/supabase/pool.ts`) provides:
 
 ### Common Issues
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `pool_timeout` | All connections busy | Increase pool size |
-| `too many connections` | Pool too large for DB | Reduce pool size |
-| `connection refused` | Pooler not enabled | Enable in Supabase dashboard |
-| `authentication failed` | Wrong password | Verify credentials in pooler URL |
+| Error                   | Cause                 | Solution                         |
+| ----------------------- | --------------------- | -------------------------------- |
+| `pool_timeout`          | All connections busy  | Increase pool size               |
+| `too many connections`  | Pool too large for DB | Reduce pool size                 |
+| `connection refused`    | Pooler not enabled    | Enable in Supabase dashboard     |
+| `authentication failed` | Wrong password        | Verify credentials in pooler URL |
 
 ## Best Practices
 

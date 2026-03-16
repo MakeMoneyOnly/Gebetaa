@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-03-15
+
+#### Critical Implementation Strategy Documentation
+
+- Added comprehensive implementation strategy document:
+    - `docs/implementation/CRITICAL_IMPLEMENTATION_STRATEGY.md`
+    - Consolidates all Critical implementations from the Enterprise Master Blueprint
+    - Defines 4 implementation waves with 11 critical streams (CRIT-01 through CRIT-11)
+    - Maps all relevant SKILLS to each implementation
+    - Provides step-by-step implementation guidance with success criteria
+    - References specific sections from all Engineering Foundation documents
+- Implementation waves:
+    - Wave 1 (Week 1-2): Payment Webhooks, Santim Migration, Event Bus, Observability
+    - Wave 2 (Week 3-7): Amharic i18n, Offline Sync, Multi-Tenant Security
+    - Wave 3 (Week 8-15): GraphQL Federation, Full Observability
+    - Wave 4 (Week 16+): POS Parity, KDS Parity, Guest/Notification Reliability
+- Breaking changes: None. This update adds planning documentation only.
+
 ### Added - 2026-03-07
 
 #### Critical Implementation Roadmap

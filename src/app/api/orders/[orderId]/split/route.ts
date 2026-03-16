@@ -9,6 +9,7 @@ import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { resolveIdempotencyKey } from '@/lib/api/idempotency';
 import type { Json } from '@/types/database';
+import { redisRateLimiters } from '@/lib/security';
 
 const SplitMethodSchema = z.enum(['even', 'items', 'custom']);
 
@@ -195,6 +196,12 @@ type ComputedSplit = {
 };
 
 export async function POST(request: Request, context: { params: Promise<{ orderId: string }> }) {
+    // Apply rate limiting for order split (mutation endpoint)
+    const rateLimitResponse = await redisRateLimiters.mutation(request as any);
+    if (rateLimitResponse) {
+        return rateLimitResponse;
+    }
+
     const auth = await getAuthenticatedUser();
     let actorUserId: string | null = null;
     let restaurantId: string;

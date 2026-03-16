@@ -3,8 +3,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { revalidatePath } from 'next/cache';
+import { verifyOrigin } from '@/lib/security/csrf';
 
 export async function acceptInvite(code: string) {
+    // CSRF Protection - verify origin before processing
+    await verifyOrigin();
+
     const supabase = await createClient();
     const {
         data: { user },

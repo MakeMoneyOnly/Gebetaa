@@ -5,6 +5,19 @@ const withPWA = require('next-pwa')({
     register: true,
     skipWaiting: true,
     disable: process.env.NODE_ENV === 'development',
+    // Enable offline fallback
+    fallbacks: {
+        image: '/offline', // Will use offline page
+        document: '/offline', // Offline page for navigation failures
+        // App shell fallback for critical routes
+        app: '/offline',
+    },
+    // Additional PWA settings
+    reloadOnOnline: true,
+    swcMinify: true,
+    // Handle navigation requests when offline
+    navigateFallback: '/offline',
+    navigateFallbackAllowlist: [/^\/(?!api).*/],
     runtimeCaching: [
         {
             // Cache the restaurant and menu data for offline browsing
@@ -17,9 +30,45 @@ const withPWA = require('next-pwa')({
                     maxAgeSeconds: 24 * 60 * 60, // 24 hours
                 },
                 networkTimeoutSeconds: 5,
+                cacheableResponse: {
+                    statuses: [0, 200],
+                },
             },
         },
         {
+            // GraphQL API caching - NetworkFirst with cache fallback
+            urlPattern: /^https:\/\/.*\/api\/graphql.*/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'graphql-api',
+                expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 60 * 60, // 1 hour
+                },
+                networkTimeoutSeconds: 10,
+                cacheableResponse: {
+                    statuses: [0, 200],
+                },
+            },
+        },
+        {
+            // Orders API - NetworkFirst with longer cache for offline
+            urlPattern: /^https:\/\/.*\/api\/orders.*/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'orders-api',
+                expiration: {
+                    maxEntries: 200,
+                    maxAgeSeconds: 12 * 60 * 60, // 12 hours
+                },
+                networkTimeoutSeconds: 5,
+                cacheableResponse: {
+                    statuses: [0, 200],
+                },
+            },
+        },
+        {
+            // Menu images - CacheFirst for long-term caching
             urlPattern:
                 /^https:\/\/.*(?:unsplash\.com|supabase\.co)\/.*(?:png|jpg|jpeg|webp|svg|gif|avif).*$/i,
             handler: 'CacheFirst',
@@ -44,14 +93,34 @@ const withPWA = require('next-pwa')({
                     maxEntries: 10,
                     maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
                 },
+                cacheableResponse: {
+                    statuses: [0, 200],
+                },
             },
         },
-        // Use Cache-First for local static assets
+        // Use StaleWhileRevalidate for local static assets
         {
             urlPattern: /\.(?:js|css|woff2?|png|jpg|jpeg|webp|svg|gif)$/i,
             handler: 'StaleWhileRevalidate',
             options: {
                 cacheName: 'static-assets',
+                expiration: {
+                    maxEntries: 500,
+                    maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+                },
+            },
+        },
+        // Prefetch critical pages for offline access
+        {
+            urlPattern: /^https?:\/\/(?:localhost|.*\.vercel\.app)\/$/i,
+            handler: 'NetworkFirst',
+            options: {
+                cacheName: 'app-shell',
+                expiration: {
+                    maxEntries: 20,
+                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                },
+                networkTimeoutSeconds: 5,
             },
         },
         // Fallback to NetworkFirst for everything else
@@ -65,6 +134,9 @@ const withPWA = require('next-pwa')({
                     maxAgeSeconds: 24 * 60 * 60, // 24 hours
                 },
                 networkTimeoutSeconds: 10,
+                cacheableResponse: {
+                    statuses: [0, 200],
+                },
             },
         },
     ],

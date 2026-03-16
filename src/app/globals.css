@@ -236,3 +236,112 @@ body {
         border-color: rgb(239 68 68);
     }
 }
+
+/* ── Accessibility: Focus Indicators ─────────────────────────────────────── */
+/*
+ * WCAG 2.1 AA Compliance: Visible Focus Indicators
+ * All interactive elements must have clearly visible focus states
+ */
+
+/* High-contrast focus ring for all interactive elements */
+*:focus-visible {
+    outline: 3px solid var(--color-brand-crimson);
+    outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users, keep for keyboard */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Enhanced focus ring with custom styling */
+.focus-ring {
+    position: relative;
+}
+
+.focus-ring:focus-visible {
+    outline: none;
+}
+
+.focus-ring:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid var(--color-brand-crimson);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Focus styles for links */
+a:focus-visible {
+    outline: 3px solid var(--color-brand-crimson);
+    outline-offset: 3px;
+    border-radius: 2px;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+}
+
+/* Focus styles for buttons */
+button:focus-visible {
+    outline: 3px solid var(--color-brand-crimson);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px rgba(168, 24, 24, 0.2);
+}
+
+/* Focus styles for form inputs */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 3px solid var(--color-brand-crimson);
+    outline-offset: 0;
+    box-shadow: 0 0 0 4px rgba(168, 24, 24, 0.15);
+}
+
+/* Focus styles for checkboxes and radio buttons */
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible {
+    outline: 3px solid var(--color-brand-crimson);
+    outline-offset: 3px;
+}
+
+/* Focus styles for custom interactive elements */
+[role='button']:focus-visible,
+[role='tab']:focus-visible,
+[role='menuitem']:focus-visible {
+    outline: 3px solid var(--color-brand-crimson);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px rgba(168, 24, 24, 0.2);
+}
+
+/* Skip link focus animation */
+.skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 3px solid white;
+    outline-offset: 2px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    *:focus-visible {
+        outline: 4px solid currentColor;
+        outline-offset: 3px;
+    }
+
+    button:focus-visible,
+    [role='button']:focus-visible {
+        outline-width: 4px;
+        box-shadow: none;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -67,6 +67,11 @@ const envSchema = z.object({
     // Telegram Alerts (CRIT-08)
     TELEGRAM_BOT_TOKEN: z.string().optional(),
     TELEGRAM_ALERT_CHAT_ID: z.string().optional(),
+
+    // Staging-specific rate limiting
+    RATE_LIMIT_MAX_REQUESTS: z.coerce.number().min(1).default(100),
+    RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().min(1).default(60),
+    RATE_LIMIT_AUTH_MAX_REQUESTS: z.coerce.number().min(1).default(10),
 });
 
 /**
@@ -92,6 +97,49 @@ const serverEnvSchema = z.object({
  * Parsed and validated environment configuration
  */
 export type Env = z.infer<typeof envSchema>;
+
+/**
+ * Rate limit configuration based on environment
+ */
+export interface EnvironmentRateLimitConfig {
+    maxRequests: number;
+    windowSeconds: number;
+    authMaxRequests: number;
+}
+
+/**
+ * Get rate limit configuration based on current environment
+ * Staging has more permissive limits for testing
+ */
+export function getRateLimitConfig(): EnvironmentRateLimitConfig {
+    const env = getEnv();
+    const isStagingEnv = env.NODE_ENV === 'staging';
+    const isDevEnv = env.NODE_ENV === 'development';
+
+    // Staging and development have more permissive rate limits
+    if (isStagingEnv) {
+        return {
+            maxRequests: env.RATE_LIMIT_MAX_REQUESTS || 200,
+            windowSeconds: env.RATE_LIMIT_WINDOW_SECONDS || 60,
+            authMaxRequests: env.RATE_LIMIT_AUTH_MAX_REQUESTS || 20,
+        };
+    }
+
+    if (isDevEnv) {
+        return {
+            maxRequests: env.RATE_LIMIT_MAX_REQUESTS || 500,
+            windowSeconds: env.RATE_LIMIT_WINDOW_SECONDS || 60,
+            authMaxRequests: env.RATE_LIMIT_AUTH_MAX_REQUESTS || 50,
+        };
+    }
+
+    // Production has stricter rate limits
+    return {
+        maxRequests: env.RATE_LIMIT_MAX_REQUESTS || 100,
+        windowSeconds: env.RATE_LIMIT_WINDOW_SECONDS || 60,
+        authMaxRequests: env.RATE_LIMIT_AUTH_MAX_REQUESTS || 10,
+    };
+}
 
 /**
  * Parse and validate environment variables
@@ -200,6 +248,13 @@ export function isFeatureEnabled(
  */
 export function isProduction(): boolean {
     return getEnv().NODE_ENV === 'production';
+}
+
+/**
+ * Check if running in staging
+ */
+export function isStaging(): boolean {
+    return getEnv().NODE_ENV === 'staging';
 }
 
 /**

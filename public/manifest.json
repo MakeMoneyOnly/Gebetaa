@@ -1,21 +1,70 @@
 {
-    "name": "Gebeta",
+    "name": "Gebeta - Restaurant Operating System",
     "short_name": "Gebeta",
-    "description": "Digital menu system for restaurants",
+    "description": "Toast for Addis Ababa - Restaurant Operating System for Ethiopia. Manage orders, menus, KDS, and payments offline-first.",
     "start_url": "/",
     "display": "standalone",
+    "orientation": "any",
     "background_color": "#0a0a0a",
-    "theme_color": "#0a0a0a",
+    "theme_color": "#A81818",
+    "scope": "/",
+    "lang": "en",
+    "categories": ["business", "food", "productivity"],
+    "prefer_related_applications": false,
     "icons": [
+        {
+            "src": "/icons/icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any"
+        },
         {
             "src": "/icons/icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "/icons/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
         },
         {
             "src": "/icons/icon-512-maskable.png",
@@ -23,5 +72,53 @@
             "type": "image/png",
             "purpose": "maskable"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshot-dashboard.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Merchant Dashboard"
+        },
+        {
+            "src": "/screenshot-menu.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Digital Menu"
+        },
+        {
+            "src": "/screenshot-kds.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Kitchen Display System"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "New Order",
+            "short_name": "New Order",
+            "description": "Create a new order",
+            "url": "/?quick-action=new-order",
+            "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "Kitchen Display",
+            "short_name": "KDS",
+            "description": "Open Kitchen Display System",
+            "url": "/kds",
+            "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "Menu Management",
+            "short_name": "Menu",
+            "description": "Manage menu items",
+            "url": "/merchant/menu",
+            "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false
 }

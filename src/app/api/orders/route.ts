@@ -117,6 +117,7 @@ import { createGebetaEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { prepareOrderDiscount } from '@/lib/discounts/service';
+import { redisRateLimiters } from '@/lib/security';
 
 const OrdersQuerySchema = z.object({
     status: z.string().optional(),
@@ -301,6 +302,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    // Apply rate limiting for order creation
+    const rateLimitResponse = await redisRateLimiters.orderCreate(request);
+    if (rateLimitResponse) {
+        return rateLimitResponse;
+    }
+
     try {
         const body = await request.json();
         const parsed = CreateOrderRequestSchema.safeParse(body);

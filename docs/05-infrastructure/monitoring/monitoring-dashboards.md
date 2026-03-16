@@ -34,6 +34,7 @@ API Requests → Audit Logs → Metrics Aggregation → Dashboards
 **Data Source**: `audit_logs` table with `action = 'api_metric_recorded'`
 
 **Metrics Tracked**:
+
 - Request count per endpoint
 - Error count and error rate (%)
 - P50, P95, P99 latency
@@ -46,7 +47,8 @@ API Requests → Audit Logs → Metrics Aggregation → Dashboards
 | `/api/orders` | GET | 400ms | <1% |
 | `/api/orders/:id/status` | PATCH | 300ms | <0.5% |
 
-**Access**: 
+**Access**:
+
 - UI: `src/app/(dashboard)/merchant/analytics/page.tsx`
 - API: `GET /api/analytics/api-metrics?range=today|week|month`
 
@@ -57,6 +59,7 @@ API Requests → Audit Logs → Metrics Aggregation → Dashboards
 **Data Source**: Sentry telemetry
 
 **Metrics Tracked**:
+
 - Page load times (LCP, FCP)
 - Client-side JavaScript errors
 - Session replay data
@@ -69,12 +72,14 @@ API Requests → Audit Logs → Metrics Aggregation → Dashboards
 **Purpose**: Track query performance and connection pool usage.
 
 **Metrics Tracked**:
+
 - Query latency (P50, P95, P99)
 - Connection pool utilization
 - Slow queries
 - Deadlocks and conflicts
 
 **Alert Thresholds**:
+
 - Warning: Connection pool > 60%
 - Critical: Connection pool > 80%
 - Warning: Query latency P95 > 300ms
@@ -87,12 +92,14 @@ API Requests → Audit Logs → Metrics Aggregation → Dashboards
 **Data Source**: `audit_logs` table with custom metric actions
 
 **Metrics Tracked**:
+
 - Orders: total, completed, cancelled
 - Payments: total, completed, failed, total amount
 - Sessions: total, active, closed
 - Active restaurants (unique)
 
 **Access**:
+
 - API: `GET /api/metrics?range=hour|day|week|month`
 
 ## API Endpoints
@@ -101,7 +108,8 @@ API Requests → Audit Logs → Metrics Aggregation → Dashboards
 
 System-level aggregated metrics for dashboard consumption.
 
-**Authentication**: 
+**Authentication**:
+
 - `x-metrics-api-key` header (recommended for internal services)
 - `x-hmac-signature` + `x-timestamp` headers (for authenticated requests)
 
@@ -111,43 +119,44 @@ System-level aggregated metrics for dashboard consumption.
 | range | string | Time range: hour, day, week, month |
 
 **Response**:
+
 ```json
 {
-  "data": {
-    "period": {
-      "range": "day",
-      "since": "2026-03-16T00:00:00.000Z",
-      "until": "2026-03-16T12:00:00.000Z"
-    },
-    "generated_at": "2026-03-16T12:00:00.000Z",
-    "api": {
-      "requests": 1500,
-      "errors": 15,
-      "avgLatency": 250,
-      "p95Latency": 480,
-      "p99Latency": 890,
-      "errorRate": 1.0
-    },
-    "orders": {
-      "total": 450,
-      "completed": 420,
-      "cancelled": 30
-    },
-    "payments": {
-      "total": 380,
-      "completed": 365,
-      "failed": 15,
-      "totalAmount": 125000
-    },
-    "sessions": {
-      "total": 120,
-      "active": 45,
-      "closed": 75
-    },
-    "business": {
-      "active_restaurants": 25
+    "data": {
+        "period": {
+            "range": "day",
+            "since": "2026-03-16T00:00:00.000Z",
+            "until": "2026-03-16T12:00:00.000Z"
+        },
+        "generated_at": "2026-03-16T12:00:00.000Z",
+        "api": {
+            "requests": 1500,
+            "errors": 15,
+            "avgLatency": 250,
+            "p95Latency": 480,
+            "p99Latency": 890,
+            "errorRate": 1.0
+        },
+        "orders": {
+            "total": 450,
+            "completed": 420,
+            "cancelled": 30
+        },
+        "payments": {
+            "total": 380,
+            "completed": 365,
+            "failed": 15,
+            "totalAmount": 125000
+        },
+        "sessions": {
+            "total": 120,
+            "active": 45,
+            "closed": 75
+        },
+        "business": {
+            "active_restaurants": 25
+        }
     }
-  }
 }
 ```
 
@@ -171,15 +180,18 @@ Restaurant-scoped API metrics with SLO tracking.
 Alert rules are defined in `src/lib/monitoring/alerting-rules.ts`:
 
 **API Alerts**:
+
 - P95 latency above 1s (warning) / 2s (critical)
 - Error rate above 1% (warning) / 5% (critical)
 - Availability below 99% (critical)
 
 **Business Alerts**:
+
 - Payment failure rate above 2% (warning) / 5% (critical)
 - Order cancellation rate above 10% (warning)
 
 **Infrastructure Alerts**:
+
 - Database connection pool above 60% (warning) / 80% (critical)
 - Database query latency P95 above 500ms (critical)
 - Error spike above 50 in 5 minutes (critical)
@@ -189,10 +201,12 @@ Alert rules are defined in `src/lib/monitoring/alerting-rules.ts`:
 Alerts are sent via Telegram when configured:
 
 **Environment Variables**:
+
 - `TELEGRAM_BOT_TOKEN` - Bot API token
 - `TELEGRAM_ALERT_CHAT_ID` - Target chat ID
 
 **Alert Levels**:
+
 - 🔴 Critical - Immediate action required
 - 🟡 Warning - Attention needed
 - ℹ️ Info - Informational
@@ -201,20 +215,20 @@ Alerts are sent via Telegram when configured:
 
 ### Monitoring Module (`src/lib/monitoring/`)
 
-| File | Description |
-|------|-------------|
-| `index.ts` | Main exports |
-| `metrics.ts` | Custom metrics tracking functions |
-| `alerts.ts` | Telegram alert system |
-| `alerting-rules.ts` | Alert rule definitions |
-| `sentry-context.ts` | Sentry context utilities |
-| `payment-webhook-monitor.ts` | Payment webhook monitoring |
+| File                         | Description                       |
+| ---------------------------- | --------------------------------- |
+| `index.ts`                   | Main exports                      |
+| `metrics.ts`                 | Custom metrics tracking functions |
+| `alerts.ts`                  | Telegram alert system             |
+| `alerting-rules.ts`          | Alert rule definitions            |
+| `sentry-context.ts`          | Sentry context utilities          |
+| `payment-webhook-monitor.ts` | Payment webhook monitoring        |
 
 ### API Routes (`src/app/api/`)
 
-| Endpoint | Description |
-|----------|-------------|
-| `/api/metrics` | System-level metrics |
+| Endpoint                     | Description                   |
+| ---------------------------- | ----------------------------- |
+| `/api/metrics`               | System-level metrics          |
 | `/api/analytics/api-metrics` | Restaurant-scoped API metrics |
 
 ## Usage Examples
@@ -272,19 +286,19 @@ await Alerts.apiLatencyHigh('/api/orders', 2100);
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SENTRY_DSN` | Yes | Sentry DSN for error tracking |
-| `TELEGRAM_BOT_TOKEN` | No | Telegram bot token for alerts |
-| `TELEGRAM_ALERT_CHAT_ID` | No | Telegram chat ID for alerts |
-| `METRICS_API_KEY` | No | API key for /api/metrics |
+| Variable                 | Required | Description                   |
+| ------------------------ | -------- | ----------------------------- |
+| `NEXT_PUBLIC_SENTRY_DSN` | Yes      | Sentry DSN for error tracking |
+| `TELEGRAM_BOT_TOKEN`     | No       | Telegram bot token for alerts |
+| `TELEGRAM_ALERT_CHAT_ID` | No       | Telegram chat ID for alerts   |
+| `METRICS_API_KEY`        | No       | API key for /api/metrics      |
 
 ## Sentry Integration
 
 ### Configuration Files
 
 - `sentry.client.config.ts` - Browser SDK
-- `sentry.server.config.ts` - Server SDK  
+- `sentry.server.config.ts` - Server SDK
 - `sentry.edge.config.ts` - Edge Runtime SDK
 
 ### Features Enabled
@@ -297,6 +311,7 @@ await Alerts.apiLatencyHigh('/api/orders', 2100);
 ### Custom Tags
 
 Errors are automatically tagged with:
+
 - `restaurant_id` - Restaurant identifier
 - `restaurant_name` - Restaurant name
 - `device_type` - POS, KDS, Guest, or Dashboard

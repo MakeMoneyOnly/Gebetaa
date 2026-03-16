@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
+import { getPoolConfig, isPoolEnabled } from './pool';
 
 export async function createClient() {
     const cookieStore = await cookies();
@@ -217,5 +218,17 @@ export async function createClient() {
                 }
             },
         },
+        // Connection pool configuration for Supavisor
+        db: getPoolConfig().enabled
+            ? {
+                  schema: 'public',
+                  poolMode: getPoolConfig().mode as 'transaction' | 'session',
+                  poolConfig: {
+                      max: getPoolConfig().poolSize,
+                      idleTimeoutMillis: getPoolConfig().idleTimeout * 1000,
+                      connectionTimeoutMillis: getPoolConfig().connectionTimeout * 1000,
+                  },
+              }
+            : undefined,
     });
 }

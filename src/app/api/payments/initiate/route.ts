@@ -6,6 +6,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { parseJsonBody } from '@/lib/api/validation';
 import { createPaymentAdapterRegistry } from '@/lib/payments/adapters';
 import type { PaymentProviderName } from '@/lib/payments/types';
+import { redisRateLimiters } from '@/lib/security';
 
 type RestaurantPaymentConfig = {
     chapa_subaccount_id: string | null;
@@ -31,6 +32,12 @@ function canUseChapaSubaccount(status: string, subaccountId: string) {
 }
 
 export async function POST(request: Request) {
+    // Apply rate limiting for payment processing
+    const rateLimitResponse = await redisRateLimiters.payment(request as any);
+    if (rateLimitResponse) {
+        return rateLimitResponse;
+    }
+
     const auth = await getAuthenticatedUser();
     if (!auth.ok) {
         return auth.response;

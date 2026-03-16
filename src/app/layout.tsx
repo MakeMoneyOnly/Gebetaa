@@ -13,6 +13,8 @@ import { LenisRoot } from '@/components/providers/LenisRoot';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from 'react-hot-toast';
 import { ServiceWorkerCleanup } from '@/components/providers/ServiceWorkerCleanup';
+import { OfflineIndicator } from '@/components/providers/OfflineIndicator';
+import { SkipLink } from '@/components/ui/SkipLink';
 
 // Force dynamic rendering to prevent build-time errors with environment variables
 export const dynamic = 'force-dynamic';
@@ -67,13 +69,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className={`${inter.variable} ${manrope.variable} ${plusJakartaSans.variable} ${playfair.variable} ${jetbrainsMono.variable} ${geist.variable} ${instrumentSerif.variable} text-Charcoal bg-Cream overscroll-none antialiased`}
             >
                 <ServiceWorkerCleanup />
+                <SkipLink href="#main-content">Skip to main content</SkipLink>
+                <OfflineIndicator position="top" showSyncStatus={true} />
                 <LenisRoot>
                     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
                         <div className="fixed top-6 right-6 z-[100] hidden md:flex">
                             {/* Theme Switcher Logic */}
                         </div>
                         <div className="pointer-events-none fixed inset-0 z-[9999] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
-                        {children}
+                        <main id="main-content" tabIndex={-1}>
+                            {children}
+                        </main>
                         <Toaster
                             position="top-center"
                             toastOptions={{

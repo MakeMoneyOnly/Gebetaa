@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { checkServerActionRateLimit, redisRateLimiters } from '@/lib/security';
+import { verifyOrigin } from '@/lib/security/csrf';
 
 const loginSchema = z.object({
     email: z.string().email(),
@@ -24,6 +26,15 @@ const signupSchema = z.object({
 });
 
 export async function login(prevState: unknown, formData: FormData) {
+    // CSRF Protection - verify origin before processing
+    await verifyOrigin();
+
+    // Check rate limit for auth actions (login)
+    const rateLimit = await checkServerActionRateLimit('auth');
+    if (!rateLimit.allowed) {
+        return { error: `Too many login attempts. Please wait ${rateLimit.retryAfter} seconds.` };
+    }
+
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
@@ -52,6 +63,15 @@ export async function login(prevState: unknown, formData: FormData) {
 }
 
 export async function signup(prevState: unknown, formData: FormData) {
+    // CSRF Protection - verify origin before processing
+    await verifyOrigin();
+
+    // Check rate limit for auth actions (signup)
+    const rateLimit = await checkServerActionRateLimit('auth');
+    if (!rateLimit.allowed) {
+        return { error: `Too many signup attempts. Please wait ${rateLimit.retryAfter} seconds.` };
+    }
+
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const restaurantName = (formData.get('restaurant_name') as string | null) ?? '';

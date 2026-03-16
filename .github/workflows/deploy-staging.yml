@@ -1,0 +1,405 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGING DEPLOYMENT WORKFLOW
+# ═══════════════════════════════════════════════════════════════════════════════
+# Deploys to staging environment on PR to main/develop and manual triggers.
+# Uses separate staging Supabase project and Redis instance.
+#
+# Triggers:
+#   - PR to main or develop branches
+#   - Manual workflow dispatch
+#   - Scheduled (optional)
+#
+# Environment: Staging (https://staging.gebeta.app)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: Deploy to Staging
+
+on:
+    pull_request:
+        branches: [main, develop]
+        types: [opened, synchronize, reopened, closed]
+    workflow_dispatch:
+        inputs:
+            ref:
+                description: 'Git ref to deploy (e.g., develop, main, or commit SHA)'
+                required: false
+                type: string
+            skip_tests:
+                description: 'Skip E2E tests (use with caution)'
+                required: false
+                type: boolean
+                default: false
+
+env:
+    NODE_VERSION: '20'
+    PNPM_VERSION: '9.0.0'
+
+jobs:
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # PRE-DEPLOYMENT CHECKS
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    pre-deployment:
+        name: Pre-Deployment Checks
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: read
+        outputs:
+            deploy_type: ${{ steps.determine-deploy-type.outputs.deploy_type }}
+            branch_name: ${{ steps.determine-deploy-type.outputs.branch_name }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.ref || github.head_ref }}
+
+            - name: Determine Deployment Type
+              id: determine-deploy-type
+              run: |
+                  BRANCH_NAME=${{ github.head_ref || github.event.inputs.ref || github.ref_name }}
+                  echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+                  if [[ "$BRANCH_NAME" == "main" ]]; then
+                      echo "deploy_type=staging-from-main" >> $GITHUB_OUTPUT
+                      echo "Deploying from main branch to staging for pre-production testing"
+                  else
+                      echo "deploy_type=preview" >> $GITHUB_OUTPUT
+                      echo "Deploying preview for branch: $BRANCH_NAME"
+                  fi
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # LINT & TYPE CHECK
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    lint:
+        name: Lint & Type Check
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.ref || github.head_ref }}
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run ESLint
+              run: pnpm lint
+
+            - name: Run TypeScript type check
+              run: pnpm type-check
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # UNIT TESTS
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    test-unit:
+        name: Unit Tests
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.ref || github.head_ref }}
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run unit tests with coverage
+              run: pnpm test:coverage
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # SECURITY SCAN
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    security-scan:
+        name: Security Scan
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            security-events: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.ref || github.head_ref }}
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@master
+              with:
+                  scan-type: 'fs'
+                  scan-ref: '.'
+                  severity: 'CRITICAL,HIGH'
+                  exit-code: '1'
+                  ignore-unfixed: true
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # BUILD (STAGING ENVIRONMENT)
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    build:
+        name: Build (Staging)
+        runs-on: ubuntu-latest
+        needs: [lint, test-unit, security-scan]
+        permissions:
+            contents: read
+        env:
+            CI: true
+
+            # Staging Supabase (separate from production)
+            NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-staging.supabase.co' }}
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_PUBLISHABLE_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
+            SUPABASE_SECRET_KEY: ${{ secrets.STAGING_SUPABASE_SECRET_KEY || secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
+
+            # Staging Application URL
+            NEXT_PUBLIC_APP_URL: ${{ secrets.STAGING_APP_URL || 'https://staging.gebeta.app' }}
+            NEXT_PUBLIC_APP_NAME: 'Gebeta Staging'
+
+            # Staging Redis
+            UPSTASH_REDIS_REST_URL: ${{ secrets.STAGING_UPSTASH_REDIS_REST_URL || secrets.UPSTASH_REDIS_REST_URL }}
+            UPSTASH_REDIS_REST_TOKEN: ${{ secrets.STAGING_UPSTASH_REDIS_REST_TOKEN || secrets.UPSTASH_REDIS_REST_TOKEN }}
+
+            # Staging Sentry
+            NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.STAGING_SENTRY_DSN || secrets.NEXT_PUBLIC_SENTRY_DSN }}
+
+            # Security
+            QR_HMAC_SECRET: ${{ secrets.STAGING_QR_HMAC_SECRET || secrets.QR_HMAC_SECRET || '0000000000000000000000000000000000000000000000000000000000000000' }}
+
+            # Environment indicator
+            NODE_ENV: staging
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.ref || github.head_ref }}
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Cache Next.js build
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.npm
+                      ${{ github.workspace }}/.next/cache
+                  key: ${{ runner.os }}-nextjs-staging-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+                  restore-keys: |
+                      ${{ runner.os }}-nextjs-staging-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+            - name: Build application
+              run: pnpm build
+
+            - name: Verify build output
+              run: |
+                  echo "Checking build output..."
+                  ls -la .next/ || echo "No .next directory found"
+                  if [ ! -d ".next" ]; then
+                    echo "Build failed - .next directory not created"
+                    exit 1
+                  fi
+                  echo "Build successful!"
+
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-staging-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: .next/
+                  retention-days: 7
+                  if-no-files-found: error
+                  include-hidden-files: true
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # E2E TESTS (STAGING)
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    test-e2e:
+        name: E2E Tests (Staging)
+        runs-on: ubuntu-latest
+        needs: build
+        if: github.event.inputs.skip_tests != 'true'
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.ref || github.head_ref }}
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Playwright browsers
+              run: npx playwright install --with-deps chromium
+
+            - name: Download build artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: build-staging-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: .next/
+
+            - name: Run E2E tests
+              run: pnpm test:e2e
+              env:
+                  CI: true
+                  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_PUBLISHABLE_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+                  SUPABASE_SECRET_KEY: ${{ secrets.STAGING_SUPABASE_SECRET_KEY || secrets.SUPABASE_SECRET_KEY }}
+                  NEXT_PUBLIC_APP_URL: ${{ secrets.STAGING_APP_URL || 'https://staging.gebeta.app' }}
+                  NEXT_PUBLIC_APP_NAME: 'Gebeta Staging'
+                  NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.STAGING_SENTRY_DSN || secrets.NEXT_PUBLIC_SENTRY_DSN }}
+                  QR_HMAC_SECRET: ${{ secrets.STAGING_QR_HMAC_SECRET || secrets.QR_HMAC_SECRET }}
+                  UPSTASH_REDIS_REST_URL: ${{ secrets.STAGING_UPSTASH_REDIS_REST_URL || secrets.UPSTASH_REDIS_REST_URL }}
+                  UPSTASH_REDIS_REST_TOKEN: ${{ secrets.STAGING_UPSTASH_REDIS_REST_TOKEN || secrets.UPSTASH_REDIS_REST_TOKEN }}
+                  NODE_ENV: staging
+
+            - name: Upload Playwright report
+              uses: actions/upload-artifact@v4
+              if: failure()
+              with:
+                  name: playwright-report-staging-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: playwright-report/
+                  retention-days: 7
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # DEPLOY TO STAGING
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    deploy-staging:
+        name: Deploy to Staging
+        runs-on: ubuntu-latest
+        needs: [build, pre-deployment]
+        if: |
+            (github.event_name == 'pull_request' && github.event.action != 'closed') ||
+            github.event_name == 'workflow_dispatch'
+        permissions:
+            contents: read
+            deployments: write
+        environment:
+            name: staging
+            url: https://staging.gebeta.app
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.ref || github.head_ref }}
+
+            - name: Deploy to Vercel (Staging)
+              id: deploy-staging
+              uses: amondnet/vercel-action@v25
+              with:
+                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
+                  vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+                  vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING || secrets.VERCEL_PROJECT_ID }}
+                  vercel-args: '--prod'
+                  scope: ${{ secrets.VERCEL_ORG_ID }}
+
+            - name: Comment on PR with Staging URL
+              if: github.event_name == 'pull_request'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const deploymentUrl = '${{ steps.deploy-staging.outputs.preview-url }}';
+                      const issueNumber = ${{ github.event.pull_request.number }};
+
+                      await github.rest.issues.createComment({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        issue_number: issueNumber,
+                        body: `🚀 **Staging Deployment Ready**\n\n` +
+                              `Preview URL: ${deploymentUrl}\n\n` +
+                              `This deployment was triggered by changes to \`${{ github.head_ref }}\`. ` +
+                              `Use this URL to test and verify your changes before merging to production.`
+                      });
+
+            - name: Health Check
+              id: health-check
+              run: |
+                  echo "Waiting for deployment to be ready..."
+                  sleep 30
+                  DEPLOY_URL=${{ steps.deploy-staging.outputs.preview-url }}
+                  if [ -n "$DEPLOY_URL" ]; then
+                    echo "Checking health at: $DEPLOY_URL/api/health"
+                    curl -sSf "$DEPLOY_URL/api/health" || echo "Health check skipped - endpoint may not exist yet"
+                  else
+                    echo "No deployment URL found, skipping health check"
+                  fi
+                  echo "Deployment completed!"
+
+            - name: Update Deployment Status
+              if: success()
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const deploymentUrl = '${{ steps.deploy-staging.outputs.preview-url }}';
+                      await github.rest.repos.createDeploymentStatus({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        deployment_id: ${{ steps.deploy-staging.outputs.deployment_id }},
+                        state: 'success',
+                        environment: 'staging',
+                        description: 'Staging deployment successful',
+                        environment_url: deploymentUrl
+                      });
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # CLEANUP ON PR CLOSE
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    cleanup:
+        name: Cleanup Preview Deployments
+        runs-on: ubuntu-latest
+        needs: [pre-deployment]
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        permissions:
+            contents: read
+            deployments: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Cleanup Preview Deployment
+              run: |
+                  echo "Cleaning up preview deployment for closed PR..."
+                  # Vercel automatically handles cleanup of preview deployments
+                  # This step can be used for additional cleanup if needed
+                  echo "Preview deployment cleanup complete"

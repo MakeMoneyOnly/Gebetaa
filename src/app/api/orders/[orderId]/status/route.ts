@@ -7,6 +7,7 @@ import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { sendOrderStatusSms } from '@/lib/notifications/sms';
 import { createGebetaEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
+import { redisRateLimiters, REDIS_RATE_LIMIT_CONFIGS } from '@/lib/security';
 
 const UpdateOrderStatusSchema = z.object({
     status: z.enum([
@@ -40,6 +41,12 @@ export async function PATCH(
     request: NextRequest,
     context: { params: Promise<{ orderId: string }> }
 ) {
+    // Apply rate limiting for order status updates (mutation endpoint)
+    const rateLimitResponse = await redisRateLimiters.mutation(request);
+    if (rateLimitResponse) {
+        return rateLimitResponse;
+    }
+
     const startedAt = Date.now();
     let responseStatus = 500;
     let restaurantIdForMetrics: string | null = null;

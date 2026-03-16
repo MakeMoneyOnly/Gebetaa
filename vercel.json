@@ -1,8 +1,41 @@
 {
-    "version": 2,
+    "$schema": "https://openapi.vercel.sh/vercel.json",
     "framework": "nextjs",
     "buildCommand": "pnpm build",
     "installCommand": "pnpm install",
-    "devCommand": "pnpm dev",
-    "outputDirectory": ".next"
+    "regions": ["arn1"],
+    "env": {
+        "NODE_ENV": "staging"
+    },
+    "regions": ["iad1"],
+    "github": {
+        "enabled": true,
+        "autoJobCancelation": true
+    },
+    "headers": [
+        {
+            "source": "/api/(.*)",
+            "headers": [
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET, POST, PUT, DELETE, OPTIONS"
+                },
+                {
+                    "key": "Access-Control-Allow-Headers",
+                    "value": "Content-Type, Authorization"
+                }
+            ]
+        }
+    ],
+    "regions": ["iad1"],
+    "projects": [
+        {
+            "projectId": "@vercel/project-id",
+            "teamId": "@vercel/team-id"
+        }
+    ]
 }

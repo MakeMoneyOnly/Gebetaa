@@ -10,11 +10,22 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'glass' | 'ghost' | 'danger';
     size?: 'sm' | 'md' | 'lg' | 'icon';
     isLoading?: boolean;
+    /** Accessible label for screen readers when icon-only button */
+    ariaLabel?: string;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     (
-        { className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props },
+        {
+            className,
+            variant = 'primary',
+            size = 'md',
+            isLoading,
+            children,
+            disabled,
+            ariaLabel,
+            ...props
+        },
         ref
     ) => {
         const baseStyles =
@@ -36,15 +47,23 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             icon: 'h-10 w-10 p-2',
         };
 
+        // Determine if button should have aria-label
+        const hasAriaLabel = ariaLabel || (size === 'icon' && typeof children === 'undefined');
+
         return (
             <button
                 ref={ref}
                 className={cn(baseStyles, variants[variant], sizes[size], className)}
                 disabled={disabled || isLoading}
+                aria-busy={isLoading}
+                aria-label={hasAriaLabel ? ariaLabel : undefined}
                 {...props}
             >
                 {isLoading ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
+                    <div
+                        className="absolute inset-0 flex items-center justify-center"
+                        aria-hidden="true"
+                    >
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                     </div>
                 ) : null}

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getPoolConfig } from './pool';
 
 export function createServiceRoleClient() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,5 +33,17 @@ export function createServiceRoleClient() {
             autoRefreshToken: false,
             persistSession: false,
         },
+        // Connection pool configuration for Supavisor
+        db: getPoolConfig().enabled
+            ? {
+                  schema: 'public',
+                  poolMode: getPoolConfig().mode as 'transaction' | 'session',
+                  poolConfig: {
+                      max: getPoolConfig().poolSize,
+                      idleTimeoutMillis: getPoolConfig().idleTimeout * 1000,
+                      connectionTimeoutMillis: getPoolConfig().connectionTimeout * 1000,
+                  },
+              }
+            : undefined,
     });
 }

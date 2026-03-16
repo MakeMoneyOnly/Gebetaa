@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { InviteAcceptButton } from './InviteAcceptButton';
+import { verifyOrigin } from '@/lib/security/csrf';
 
 export default async function InvitePage(props: { searchParams: Promise<{ code: string }> }) {
     const searchParams = await props.searchParams;
@@ -110,6 +111,7 @@ export default async function InvitePage(props: { searchParams: Promise<{ code: 
                             <form
                                 action={async () => {
                                     'use server';
+                                    await verifyOrigin();
                                     const supabase = await createClient();
                                     await supabase.auth.signOut();
                                     redirect(`/auth/login?next=/auth/invite?code=${code}`);
