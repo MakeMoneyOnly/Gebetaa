@@ -8,11 +8,9 @@ import {
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 
-const CourseTypeSchema = z.enum(['appetizer', 'main', 'dessert', 'beverage', 'side']);
-
-const UpdateCourseFireSchema = z.object({
-    fire_mode: z.enum(['auto', 'manual']),
-    current_course: CourseTypeSchema.nullish(),
+const CourseFireModeSchema = z.object({
+    fire_mode: z.enum(['auto', 'manual']).optional(),
+    current_course: z.enum(['appetizer', 'main', 'dessert', 'beverage', 'side']).optional(),
 });
 
 export async function PATCH(request: Request, context: { params: Promise<{ orderId: string }> }) {
@@ -38,70 +36,75 @@ export async function PATCH(request: Request, context: { params: Promise<{ order
         db = deviceContext.admin;
     }
 
-    const parsed = await parseJsonBody(request, UpdateCourseFireSchema);
-    if (!parsed.success) return parsed.response;
+    const parsed = await parseJsonBody(request, CourseFireModeSchema);
+    if (!parsed.success) {
+        return parsed.response;
+    }
 
     const { orderId } = await context.params;
-    const { fire_mode: fireMode, current_course: currentCourseInput } = parsed.data;
-    const currentCourse = fireMode === 'manual' ? (currentCourseInput ?? 'appetizer') : null;
 
-    const { data: existingOrder, error: existingOrderError } = await db
+    // Get current order to check status
+    const { data: order, error: orderError } = await db
         .from('orders')
-        .select('id, restaurant_id, fire_mode, current_course')
+        .select('id, status, fire_mode, current_course')
         .eq('restaurant_id', restaurantId)
         .eq('id', orderId)
         .maybeSingle();
 
-    if (existingOrderError) {
-        return apiError(
-            'Failed to load order',
-            500,
-            'ORDER_FETCH_FAILED',
-            existingOrderError.message
-        );
+    if (orderError) {
+        return apiError('Failed to load order', 500, 'ORDER_FETCH_FAILED', orderError.message);
     }
-    if (!existingOrder) {
+
+    if (!order) {
         return apiError('Order not found', 404, 'ORDER_NOT_FOUND');
+    }
+
+    // Build update payload
+    const updatePayload: Record<string, any> = {};
+
+    if (parsed.data.fire_mode !== undefined) {
+        updatePayload.fire_mode = parsed.data.fire_mode;
+    }
+
+    if (parsed.data.current_course !== undefined) {
+        updatePayload.current_course = parsed.data.current_course;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+        return apiError('No valid fields to update', 400, 'NO_FIELDS_TO_UPDATE');
     }
 
     const { data: updatedOrder, error: updateError } = await db
         .from('orders')
-        .update({
-            fire_mode: fireMode,
-            current_course: currentCourse,
-            updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
+        .eq('restaurant_id', restaurantId)
         .eq('id', orderId)
         .select('id, fire_mode, current_course')
         .single();
 
-    if (updateError || !updatedOrder) {
-        return apiError(
-            'Failed to update order course firing',
-            500,
-            'ORDER_COURSE_FIRING_UPDATE_FAILED',
-            updateError?.message
-        );
+    if (updateError) {
+        return apiError('Failed to update order', 500, 'ORDER_UPDATE_FAILED', updateError.message);
     }
 
     await writeAuditLog(db, {
         restaurant_id: restaurantId,
         user_id: actorUserId,
-        action: 'order_course_firing_updated',
+        action: 'order_course_fire_updated',
         entity_type: 'order',
         entity_id: orderId,
-        old_value: {
-            fire_mode: existingOrder.fire_mode,
-            current_course: existingOrder.current_course,
-        },
-        new_value: {
-            fire_mode: updatedOrder.fire_mode,
-            current_course: updatedOrder.current_course,
-        },
         metadata: {
-            source: actorUserId ? 'merchant_dashboard' : 'device_api',
+            previous_fire_mode: order.fire_mode,
+            new_fire_mode: updatedOrder.fire_mode,
+            previous_course: order.current_course,
+            new_course: updatedOrder.current_course,
         },
     });
 
-    return apiSuccess({ order: updatedOrder });
+    return apiSuccess({
+        order: {
+            id: updatedOrder.id,
+            fire_mode: updatedOrder.fire_mode,
+            current_course: updatedOrder.current_course,
+        },
+    });
 }
