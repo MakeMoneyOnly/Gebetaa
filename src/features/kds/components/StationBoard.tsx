@@ -1,7 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChefHat, RefreshCw, Maximize2, AlertCircle, LayoutList } from 'lucide-react';
+import {
+    ChefHat,
+    RefreshCw,
+    Maximize2,
+    AlertCircle,
+    LayoutList,
+    Grid3X3,
+    List,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { useRole } from '@/hooks/useRole';
 import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
@@ -23,6 +31,7 @@ import {
 } from '@/lib/kds/offlineQueue';
 
 type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee';
+type ViewMode = 'grid' | 'list';
 type KdsItemAction = 'start' | 'hold' | 'ready';
 type CourseType = 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
 type AlertPolicy = {
@@ -288,6 +297,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
     const [alertPolicy, setAlertPolicy] = useState<AlertPolicy>(DEFAULT_ALERT_POLICY);
     const [selectedItemKey, setSelectedItemKey] = useState<string | null>(null);
     const [showPrepSummary, setShowPrepSummary] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [slaMinutes] = useState(30);
     // Tracks whether we have ever successfully completed a fetch.
     // Loading screen is only shown before the first successful load.
@@ -954,6 +964,25 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                         Prep List
                     </button>
                     <button
+                        onClick={() => setViewMode(v => (v === 'grid' ? 'list' : 'grid'))}
+                        className={`flex h-11 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition ${
+                            viewMode === 'list'
+                                ? 'border-gray-900 bg-gray-900 text-white'
+                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-100'
+                        }`}
+                        title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+                    >
+                        {viewMode === 'grid' ? (
+                            <>
+                                <List className="h-4 w-4" /> List
+                            </>
+                        ) : (
+                            <>
+                                <Grid3X3 className="h-4 w-4" /> Grid
+                            </>
+                        )}
+                    </button>
+                    <button
                         onClick={() => void fetchQueue(true)}
                         className="flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-100"
                         title="Refresh queue"
@@ -1032,18 +1061,38 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                 data-lenis-prevent-wheel
                 className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-8 pb-8"
             >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                <div
+                    className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'grid-cols-1'}`}
+                >
                     {stationOrders.map(order => {
                         const urgency = urgencyStyles(order.elapsedMinutes, slaMinutes);
+                        // Combine source color with urgency styles
+                        const sourceBorder = order.sourceColor ? `border-l-4` : '';
+                        const sourceBorderColor = order.sourceColor
+                            ? { borderLeftColor: order.sourceColor }
+                            : {};
                         return (
                             <section
                                 key={order.id}
-                                className={`w-full min-w-0 rounded-[2rem] border shadow-sm ${urgency.card}`}
+                                className={`w-full min-w-0 rounded-[2rem] border shadow-sm ${urgency.card} ${sourceBorder}`}
+                                style={sourceBorderColor}
                             >
                                 <header className={`border-b px-4 py-3 ${urgency.header}`}>
-                                    <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                                        Order #{order.orderNumber}
-                                    </p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                                            Order #{order.orderNumber}
+                                        </p>
+                                        {order.sourceLabel && (
+                                            <span
+                                                className="rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase"
+                                                style={{
+                                                    backgroundColor: order.sourceColor || '#6B7280',
+                                                }}
+                                            >
+                                                {order.sourceLabel}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-4xl leading-tight font-black tracking-tight text-gray-900">
                                         {order.tableNumber
                                             ? `Table ${order.tableNumber}`

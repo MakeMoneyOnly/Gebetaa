@@ -760,13 +760,27 @@ export function ExpeditorBoard() {
                         return (
                             <article
                                 key={order.id}
-                                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+                                className="rounded-2xl border-l-4 border-gray-200 bg-white p-4 shadow-sm"
+                                style={{ borderLeftColor: order.sourceColor || undefined }}
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-                                            Order #{order.orderNumber}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                                                Order #{order.orderNumber}
+                                            </p>
+                                            {order.sourceLabel && (
+                                                <span
+                                                    className="rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase"
+                                                    style={{
+                                                        backgroundColor:
+                                                            order.sourceColor || '#6B7280',
+                                                    }}
+                                                >
+                                                    {order.sourceLabel}
+                                                </span>
+                                            )}
+                                        </div>
                                         <h2 className="text-xl font-bold text-gray-900">
                                             {order.tableNumber
                                                 ? `Table ${order.tableNumber}`
