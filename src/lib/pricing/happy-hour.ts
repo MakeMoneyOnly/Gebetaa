@@ -4,28 +4,7 @@ import type { Database } from '@/types/database';
 /**
  * Happy hour schedule type definition
  */
-interface HappyHourSchedule {
-    id: string;
-    restaurant_id: string;
-    name: string;
-    name_am: string | null;
-    description: string | null;
-    description_am: string | null;
-    is_active: boolean;
-    schedule_days: string[];
-    schedule_start_time: string;
-    schedule_end_time: string;
-    discount_percentage: number | null;
-    discount_fixed_amount: number | null;
-    applies_to: string;
-    target_category_id: string | null;
-    target_menu_item_ids: string[];
-    priority: number;
-    requires_manager_pin: boolean;
-    created_by: string | null;
-    created_at: string;
-    updated_at: string;
-}
+export type HappyHourSchedule = Database['public']['Tables']['happy_hour_schedules']['Row'];
 
 /**
  * Get the day of week abbreviation for the current day
@@ -61,13 +40,13 @@ export async function getActiveHappyHour(
     const now = new Date();
 
     // Get all active happy hours for this restaurant
-    const { data: schedules, error } = await (supabase
-        .from('happy_hour_schedules' as any)
+    const { data: schedules, error } = await supabase
+        .from('happy_hour_schedules')
         .select('*')
         .eq('restaurant_id', restaurantId)
         .eq('is_active', true)
         .order('priority', { ascending: false })
-        .limit(10) as any);
+        .limit(10);
 
     if (error || !schedules) {
         console.error('Failed to fetch happy hour schedules:', error);
