@@ -17,6 +17,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getPoolConfig, isPoolEnabled } from '@/lib/supabase/pool';
 
 /**
  * Health check response interface
@@ -28,22 +29,30 @@ interface HealthStatus {
     uptime: number;
     checks: {
         database: {
-            status: 'up' | 'down';
-            latency?: number;
-            error?: string;
+            status: 'pass' | 'fail';
+            latencyMs?: number;
+            message?: string;
         };
         redis: {
-            status: 'up' | 'down' | 'not_configured';
-            latency?: number;
-            error?: string;
+            status: 'pass' | 'fail' | 'not_configured';
+            latencyMs?: number;
+            message?: string;
+        };
+        supabase: {
+            status: 'pass' | 'fail';
+            latencyMs?: number;
+            message?: string;
+            poolEnabled?: boolean;
+            poolMode?: string;
+            poolSize?: number;
         };
         qstash: {
-            status: 'up' | 'down' | 'not_configured';
-            latency?: number;
-            error?: string;
+            status: 'pass' | 'fail' | 'not_configured';
+            latencyMs?: number;
+            message?: string;
         };
         environment: {
-            status: 'up' | 'down';
+            status: 'pass' | 'fail';
             configured: string[];
             missing: string[];
         };
@@ -81,15 +90,23 @@ const OPTIONAL_ENV_VARS = [
     'SENTRY_AUTH_TOKEN',
     'TELEGRAM_BOT_TOKEN',
     'TELEGRAM_ALERT_CHAT_ID',
+    // Connection pool env vars
+    'NEXT_PUBLIC_SUPABASE_POOLER_ENABLED',
+    'SUPABASE_POOL_MODE',
+    'SUPABASE_POOL_SIZE',
+    'SUPABASE_POOL_MAX_CLIENTS',
+    'SUPABASE_POOL_CONNECTION_TIMEOUT',
+    'SUPABASE_POOL_IDLE_TIMEOUT',
+    'SUPABASE_POOLER_URL',
 ];
 
 /**
  * Check database connectivity
  */
 async function checkDatabase(): Promise<{
-    status: 'up' | 'down';
-    latency?: number;
-    error?: string;
+    status: 'pass' | 'fail';
+    latencyMs?: number;
+    message?: string;
 }> {
     try {
         const start = Date.now();
@@ -98,36 +115,61 @@ async function checkDatabase(): Promise<{
         // Simple query to check connectivity
         const { error } = await supabase.from('restaurants').select('id').limit(1);
 
-        const latency = Date.now() - start;
+        const latencyMs = Date.now() - start;
 
         if (error && error.code !== 'PGRST116') {
             // PGRST116 = no rows found, which is fine
             return {
-                status: 'down',
-                latency,
-                error: error.message,
+                status: 'fail',
+                latencyMs,
+                message: error.message,
             };
         }
 
         return {
-            status: 'up',
-            latency,
+            status: 'pass',
+            latencyMs,
+            message: 'Database connected',
         };
     } catch (error) {
         return {
-            status: 'down',
-            error: error instanceof Error ? error.message : 'Unknown error',
+            status: 'fail',
+            message: error instanceof Error ? error.message : 'Unknown error',
         };
     }
 }
 
 /**
- * Check Redis connectivity via Upstash REST API
+ * Check Supabase connectivity (alias for database check)
+ * This is a separate check as per requirements
  */
+async function checkSupabase(): Promise<{
+    status: 'pass' | 'fail';
+    latencyMs?: number;
+    message?: string;
+    poolEnabled?: boolean;
+    poolMode?: string;
+    poolSize?: number;
+}> {
+    // Supabase uses the same connection as database
+    const dbCheck = await checkDatabase();
+
+    // Get pool configuration
+    const poolConfig = getPoolConfig();
+
+    return {
+        status: dbCheck.status,
+        latencyMs: dbCheck.latencyMs,
+        message: dbCheck.message,
+        poolEnabled: poolConfig.enabled,
+        poolMode: poolConfig.mode,
+        poolSize: poolConfig.poolSize,
+    };
+}
 async function checkRedis(): Promise<{
-    status: 'up' | 'down' | 'not_configured';
-    latency?: number;
-    error?: string;
+    status: 'pass' | 'fail' | 'not_configured';
+    latencyMs?: number;
+    message?: string;
 }> {
     const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
     const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -136,10 +178,10 @@ async function checkRedis(): Promise<{
         // Fallback to legacy Redis URL
         const legacyRedisUrl = process.env.REDIS_URL;
         if (!legacyRedisUrl) {
-            return { status: 'not_configured' };
+            return { status: 'not_configured', message: 'Redis not configured' };
         }
         // Legacy Redis doesn't support HTTP ping, just check URL exists
-        return { status: 'up' };
+        return { status: 'pass', message: 'Redis configured (legacy URL)' };
     }
 
     try {
@@ -154,34 +196,35 @@ async function checkRedis(): Promise<{
             },
         });
 
-        const latency = Date.now() - start;
+        const latencyMs = Date.now() - start;
 
         if (!response.ok) {
             const errorText = await response.text();
             return {
-                status: 'down',
-                latency,
-                error: `Redis ping failed: ${response.status} ${errorText}`,
+                status: 'fail',
+                latencyMs,
+                message: `Redis ping failed: ${response.status} ${errorText}`,
             };
         }
 
         const result = await response.text();
         if (result !== 'PONG' && result !== '"PONG"' && !result.includes('PONG')) {
             return {
-                status: 'down',
-                latency,
-                error: `Unexpected Redis response: ${result}`,
+                status: 'fail',
+                latencyMs,
+                message: `Unexpected Redis response: ${result}`,
             };
         }
 
         return {
-            status: 'up',
-            latency,
+            status: 'pass',
+            latencyMs,
+            message: 'Redis connected',
         };
     } catch (error) {
         return {
-            status: 'down',
-            error: error instanceof Error ? error.message : 'Unknown error',
+            status: 'fail',
+            message: error instanceof Error ? error.message : 'Unknown error',
         };
     }
 }
@@ -191,14 +234,14 @@ async function checkRedis(): Promise<{
  * QStash is critical for background jobs: payment retries, ERCA submissions, EOD reports
  */
 async function checkQStash(): Promise<{
-    status: 'up' | 'down' | 'not_configured';
-    latency?: number;
-    error?: string;
+    status: 'pass' | 'fail' | 'not_configured';
+    latencyMs?: number;
+    message?: string;
 }> {
     const qstashToken = process.env.QSTASH_TOKEN;
 
     if (!qstashToken) {
-        return { status: 'not_configured' };
+        return { status: 'not_configured', message: 'QStash not configured' };
     }
 
     try {
@@ -213,7 +256,7 @@ async function checkQStash(): Promise<{
             },
         });
 
-        const latency = Date.now() - start;
+        const latencyMs = Date.now() - start;
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -221,21 +264,22 @@ async function checkQStash(): Promise<{
             // 403 = token doesn't have access
             // 5xx = QStash service issue
             return {
-                status: 'down',
-                latency,
-                error: `QStash check failed: ${response.status} ${errorText}`,
+                status: 'fail',
+                latencyMs,
+                message: `QStash check failed: ${response.status} ${errorText}`,
             };
         }
 
         // Response is OK, QStash is available
         return {
-            status: 'up',
-            latency,
+            status: 'pass',
+            latencyMs,
+            message: 'QStash connected',
         };
     } catch (error) {
         return {
-            status: 'down',
-            error: error instanceof Error ? error.message : 'Unknown error',
+            status: 'fail',
+            message: error instanceof Error ? error.message : 'Unknown error',
         };
     }
 }
@@ -244,7 +288,7 @@ async function checkQStash(): Promise<{
  * Check environment variables configuration
  */
 function checkEnvironment(): {
-    status: 'up' | 'down';
+    status: 'pass' | 'fail';
     configured: string[];
     missing: string[];
 } {
@@ -268,7 +312,7 @@ function checkEnvironment(): {
     }
 
     return {
-        status: missing.length > 0 ? 'down' : 'up',
+        status: missing.length > 0 ? 'fail' : 'pass',
         configured,
         missing,
     };
@@ -291,10 +335,11 @@ function checkEnvironment(): {
  */
 export async function GET(_request: NextRequest): Promise<NextResponse<HealthStatus>> {
     // Run checks in parallel for efficiency
-    const [databaseCheck, redisCheck, qstashCheck] = await Promise.all([
+    const [databaseCheck, redisCheck, qstashCheck, supabaseCheck] = await Promise.all([
         checkDatabase(),
         checkRedis(),
         checkQStash(),
+        checkSupabase(),
     ]);
 
     const environmentCheck = checkEnvironment();
@@ -305,11 +350,11 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
     // Healthy: All services up
     let status: 'healthy' | 'unhealthy' | 'degraded' = 'healthy';
 
-    if (databaseCheck.status === 'down' || environmentCheck.status === 'down') {
+    if (databaseCheck.status === 'fail' || environmentCheck.status === 'fail') {
         status = 'unhealthy';
     } else if (
-        redisCheck.status === 'down' ||
-        qstashCheck.status === 'down' ||
+        redisCheck.status === 'fail' ||
+        qstashCheck.status === 'fail' ||
         redisCheck.status === 'not_configured' ||
         qstashCheck.status === 'not_configured'
     ) {
@@ -334,6 +379,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
         checks: {
             database: databaseCheck,
             redis: redisCheck,
+            supabase: supabaseCheck,
             qstash: qstashCheck,
             environment: environmentCheck,
         },
@@ -362,7 +408,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
 export async function HEAD(): Promise<Response> {
     const dbCheck = await checkDatabase();
 
-    if (dbCheck.status === 'up') {
+    if (dbCheck.status === 'pass') {
         return new Response(null, { status: 200 });
     }
 

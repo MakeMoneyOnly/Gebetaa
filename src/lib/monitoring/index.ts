@@ -37,3 +37,37 @@ export {
     type AlertLevel,
     type AlertContext,
 } from './alerts';
+
+// Custom metrics tracking
+export {
+    tracePerformance,
+    tracePerformanceSync,
+    trackApiMetric,
+    trackOrderMetric,
+    trackPaymentMetric,
+    trackSessionMetric,
+    trackDbMetric,
+    incrementCounter,
+    setGauge,
+    recordDistribution,
+    METRIC_ACTIONS,
+    type ApiMetricParams,
+    type OrderMetricParams,
+    type PaymentMetricParams,
+    type SessionMetricParams,
+    type DbMetricParams,
+} from './metrics';
+
+// Alerting rules
+export {
+    API_ALERT_RULES,
+    BUSINESS_ALERT_RULES,
+    INFRA_ALERT_RULES,
+    SLO_TARGETS,
+    getAllAlertRules,
+    getEnabledAlertRules,
+    getAlertRulesBySeverity,
+    evaluateAlertRule,
+    type AlertRule,
+    type SloTarget,
+} from './alerting-rules';
