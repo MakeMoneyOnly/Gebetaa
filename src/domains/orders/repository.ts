@@ -160,6 +160,7 @@ export class OrdersRepository {
     }
 
     async createItems(
+        restaurant_id: string,
         items: {
             order_id: string;
             item_id: string;
@@ -168,12 +169,14 @@ export class OrdersRepository {
             modifiers?: Record<string, unknown> | null;
             notes?: string | null;
             station?: string;
+            name?: string;
         }[]
     ): Promise<OrderItemRow[]> {
         const { data, error } = await getSupabaseClient()
             .from('order_items')
             .insert(
                 items.map(item => ({
+                    restaurant_id,
                     order_id: item.order_id,
                     item_id: item.item_id,
                     quantity: item.quantity,
@@ -183,7 +186,7 @@ export class OrdersRepository {
                     status: 'pending',
                     station: item.station ?? null,
                     course: 'main',
-                    name: '',
+                    name: item.name || 'Item',
                 }))
             )
             .select();

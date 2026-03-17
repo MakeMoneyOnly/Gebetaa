@@ -103,6 +103,7 @@ export class OrdersService {
 
         // Create order items
         await ordersRepository.createItems(
+            input.restaurantId,
             orderItems.map(item => ({
                 ...item,
                 order_id: order.id,
