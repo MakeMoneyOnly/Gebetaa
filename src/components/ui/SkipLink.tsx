@@ -10,6 +10,8 @@
  * ```
  */
 
+'use client';
+
 import { forwardRef, AnchorHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 

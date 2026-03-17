@@ -206,7 +206,7 @@ export async function createClient() {
             getAll() {
                 return cookieStore.getAll();
             },
-            setAll(cookiesToSet) {
+            setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
                 try {
                     cookiesToSet.forEach(({ name, value, options }) =>
                         cookieStore.set(name, value, options)
@@ -218,17 +218,9 @@ export async function createClient() {
                 }
             },
         },
-        // Connection pool configuration for Supavisor
-        db: getPoolConfig().enabled
-            ? {
-                  schema: 'public',
-                  poolMode: getPoolConfig().mode as 'transaction' | 'session',
-                  poolConfig: {
-                      max: getPoolConfig().poolSize,
-                      idleTimeoutMillis: getPoolConfig().idleTimeout * 1000,
-                      connectionTimeoutMillis: getPoolConfig().connectionTimeout * 1000,
-                  },
-              }
-            : undefined,
+        // Supabase client configuration
+        db: {
+            schema: 'public',
+        },
     });
 }

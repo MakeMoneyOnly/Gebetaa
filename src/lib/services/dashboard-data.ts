@@ -333,15 +333,13 @@ export async function getTablesPageData(): Promise<TablesPageData | null> {
     }
 
     try {
-        // Fetch tables and zones in parallel
-        const [tablesResult, zonesResult, sessionsResult] = await Promise.all([
+        // Fetch tables and sessions in parallel
+        const [tablesResult, sessionsResult] = await Promise.all([
             supabase
                 .from('tables')
                 .select('id, table_number, status, qr_code_url, active_order_id, zone, capacity')
                 .eq('restaurant_id', restaurantId)
                 .order('table_number', { ascending: true }),
-
-            supabase.from('restaurants').select('zones').eq('id', restaurantId).single(),
 
             supabase
                 .from('table_sessions')
@@ -362,7 +360,9 @@ export async function getTablesPageData(): Promise<TablesPageData | null> {
             capacity: table.capacity ?? 4,
         }));
 
-        const zones: string[] = (zonesResult.data?.zones as string[]) ?? [];
+        const zones: string[] = Array.from(
+            new Set(tables.map(t => t.zone).filter((z): z is string => !!z))
+        );
 
         // Build occupancy timeline buckets
         const bucketsMap = new Map<string, { opens: number; closes: number }>();

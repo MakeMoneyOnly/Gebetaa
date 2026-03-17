@@ -2752,6 +2752,80 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            time_entries: {
+                Row: {
+                    clock_in_at: string;
+                    clock_out_at: string | null;
+                    created_at: string;
+                    created_by: string | null;
+                    id: string;
+                    metadata: Json;
+                    restaurant_id: string;
+                    shift_id: string | null;
+                    source: string;
+                    staff_id: string;
+                    status: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    clock_in_at: string;
+                    clock_out_at?: string | null;
+                    created_at?: string;
+                    created_by?: string | null;
+                    id?: string;
+                    metadata?: Json;
+                    restaurant_id: string;
+                    shift_id?: string | null;
+                    source?: string;
+                    staff_id: string;
+                    status?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    clock_in_at?: string;
+                    clock_out_at?: string | null;
+                    created_at?: string;
+                    created_by?: string | null;
+                    id?: string;
+                    metadata?: Json;
+                    restaurant_id?: string;
+                    shift_id?: string | null;
+                    source?: string;
+                    staff_id?: string;
+                    status?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'time_entries_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'time_entries_shift_id_fkey';
+                        columns: ['shift_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'shifts';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'time_entries_staff_id_fkey';
+                        columns: ['staff_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurant_staff';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'time_entries_staff_id_fkey';
+                        columns: ['staff_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurant_staff_with_users';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             tip_allocations: {
                 Row: {
                     created_at: string;
@@ -3229,3 +3303,60 @@ export const Constants = {
         Enums: {},
     },
 } as const;
+
+// Convenience types
+export type Restaurant = Database['public']['Tables']['restaurants']['Row'];
+export type Category = Database['public']['Tables']['categories']['Row'];
+export type MenuItem = Database['public']['Tables']['menu_items']['Row'];
+export type Order = Database['public']['Tables']['orders']['Row'];
+export type Station = Database['public']['Tables']['stations']['Row'];
+export type AgencyUser = Database['public']['Tables']['agency_users']['Row'];
+export type ServiceRequest = Database['public']['Tables']['service_requests']['Row'];
+export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
+
+// Restaurant settings type
+export interface RestaurantSettings {
+    telegram_bot_token?: string;
+    telegram_chat_id?: string;
+    telegram_kitchen_chat_id?: string;
+    telegram_bar_chat_id?: string;
+    branding?: {
+        primary_color?: string;
+        secondary_color?: string;
+    };
+    enable_ordering?: boolean;
+    qr_base_url?: string;
+}
+
+// Extended types with relations
+export interface CategoryWithItems extends Category {
+    items: MenuItem[];
+}
+
+export interface RestaurantWithMenu extends Restaurant {
+    categories: CategoryWithItems[];
+    stations?: Station[];
+}
+
+// Cart item type
+export interface CartItem {
+    id: string;
+    name: string;
+    name_am?: string | null;
+    price: number;
+    quantity: number;
+    notes?: string;
+    image_url?: string | null;
+    station: 'kitchen' | 'bar' | 'dessert' | 'coffee';
+    modifiers?: string;
+}
+
+// Order item type (in JSON)
+export interface OrderItem {
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    notes?: string;
+    station?: string;
+}

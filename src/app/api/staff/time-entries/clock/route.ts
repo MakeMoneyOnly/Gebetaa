@@ -59,11 +59,11 @@ export async function POST(request: Request) {
 
     const { data: openEntry, error: openEntryError } = await context.supabase
         .from('time_entries')
-        .select('id, shift_id, staff_id, clock_in, clock_out')
+        .select('id, shift_id, staff_id, clock_in_at, clock_out_at')
         .eq('restaurant_id', context.restaurantId)
         .eq('staff_id', parsed.data.staff_id)
-        .is('clock_out', null)
-        .order('clock_in', { ascending: false })
+        .is('clock_out_at', null)
+        .order('clock_in_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -86,8 +86,8 @@ export async function POST(request: Request) {
             .insert({
                 restaurant_id: context.restaurantId,
                 staff_id: parsed.data.staff_id,
-                shift_id: parsed.data.shift_id ?? '',
-                clock_in: occurredAt,
+                shift_id: parsed.data.shift_id || null,
+                clock_in_at: occurredAt,
             })
             .select('*')
             .single();
@@ -138,7 +138,8 @@ export async function POST(request: Request) {
     const { data: updated, error: updateError } = await context.supabase
         .from('time_entries')
         .update({
-            clock_out: occurredAt,
+            clock_out_at: occurredAt,
+            status: 'closed',
         })
         .eq('id', openEntry.id)
         .eq('restaurant_id', context.restaurantId)

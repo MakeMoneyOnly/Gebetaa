@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
+import type { Database, Tables } from '@/types/database';
 
 /**
  * Happy hour schedule type definition
  */
-export type HappyHourSchedule = Database['public']['Tables']['happy_hour_schedules']['Row'];
+export type HappyHourSchedule = Tables<'happy_hour_schedules'>;
 
 /**
  * Get the day of week abbreviation for the current day
@@ -53,10 +53,9 @@ export async function getActiveHappyHour(
         return null;
     }
 
-    // Find the first matching schedule
     for (const schedule of schedules) {
-        const days = schedule.schedule_days as string[];
-        if (!days.includes(currentDay)) {
+        const days = schedule.schedule_days;
+        if (!days || !days.includes(currentDay)) {
             continue;
         }
 

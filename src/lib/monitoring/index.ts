@@ -71,3 +71,24 @@ export {
     type AlertRule,
     type SloTarget,
 } from './alerting-rules';
+
+// Notification metrics and observability
+export {
+    recordNotificationSent,
+    recordNotificationFailed,
+    recordRetryAttempt,
+    getNotificationMetrics,
+    getDeliveryReport,
+    setNotificationContext,
+    clearNotificationContext,
+    withNotificationMetrics,
+    closeMetricsRedis,
+    NOTIFICATION_EVENTS,
+    type NotificationChannel,
+    type ChannelMetrics,
+    type NotificationMetrics,
+    type MetricParams,
+    type DateRange,
+    type DeliveryReportEntry,
+    type DeliveryReport,
+} from './notification-metrics';

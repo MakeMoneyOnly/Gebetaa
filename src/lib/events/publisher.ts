@@ -25,7 +25,13 @@ export type EventType =
     | 'menu.updated'
     | 'loyalty.points_earned'
     | 'table.opened'
-    | 'table.closed';
+    | 'table.closed'
+    | 'table.waitlist.notify'
+    | 'reservation.reminder'
+    | 'notification.queued'
+    | 'notification.sent'
+    | 'notification.failed'
+    | 'notification.retry_scheduled';
 
 export interface EventPayload {
     [key: string]: unknown;

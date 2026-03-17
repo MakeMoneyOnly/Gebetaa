@@ -61,7 +61,7 @@ export function OfflineIndicator({
     lastSyncAt: initialLastSyncAt = null,
 }: OfflineIndicatorProps) {
     const [status, setStatus] = useState<NetworkStatus>({
-        isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+        isOnline: true,
         isSyncing: initialIsSyncing,
         pendingCount: initialPendingCount,
         lastSyncAt: initialLastSyncAt,
@@ -72,6 +72,16 @@ export function OfflineIndicator({
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
+        const checkServerReachable = async () => {
+            try {
+                // Ping the health route to confirm if server is actually reachable
+                const res = await fetch('/api/health', { method: 'HEAD', cache: 'no-store' });
+                return res.ok;
+            } catch {
+                return false;
+            }
+        };
+
         const handleOnline = () => {
             setStatus(prev => ({ ...prev, isOnline: true, syncError: null }));
             // Trigger sync when back online
@@ -80,18 +90,30 @@ export function OfflineIndicator({
             }
         };
 
-        const handleOffline = () => {
-            setStatus(prev => ({ ...prev, isOnline: false }));
+        const handleOffline = async () => {
+            // navigator.onLine may be false on local networks without global internet
+            const isReachable = await checkServerReachable();
+            if (isReachable) {
+                setStatus(prev => ({ ...prev, isOnline: true, syncError: null }));
+            } else {
+                setStatus(prev => ({ ...prev, isOnline: false }));
+            }
         };
 
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
         // Set initial state
-        setStatus(prev => ({
-            ...prev,
-            isOnline: navigator.onLine,
-        }));
+        const initializeStatus = async () => {
+            if (navigator.onLine) {
+                setStatus(prev => ({ ...prev, isOnline: true }));
+            } else {
+                const isReachable = await checkServerReachable();
+                setStatus(prev => ({ ...prev, isOnline: isReachable }));
+            }
+        };
+
+        initializeStatus();
 
         return () => {
             window.removeEventListener('online', handleOnline);
@@ -241,10 +263,31 @@ export function useNetworkStatus() {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        setIsOnline(navigator.onLine);
+        const checkServerReachable = async () => {
+            try {
+                const res = await fetch('/api/health', { method: 'HEAD', cache: 'no-store' });
+                return res.ok;
+            } catch {
+                return false;
+            }
+        };
+
+        const initializeStatus = async () => {
+            if (navigator.onLine) {
+                setIsOnline(true);
+            } else {
+                const isReachable = await checkServerReachable();
+                setIsOnline(isReachable);
+            }
+        };
+
+        initializeStatus();
 
         const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
+        const handleOffline = async () => {
+            const isReachable = await checkServerReachable();
+            setIsOnline(isReachable);
+        };
 
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
