@@ -1,0 +1,29 @@
+# Apollo Federation Supergraph Configuration
+# Defines subgraph endpoints for local composition and development
+# For production, Apollo GraphOS handles composition automatically
+
+subgraphs:
+    orders:
+        routing_url: ${NEXT_PUBLIC_APP_URL}/api/subgraphs/orders
+        schema:
+            file: ./subgraphs/orders.graphql
+
+    menu:
+        routing_url: ${NEXT_PUBLIC_APP_URL}/api/subgraphs/menu
+        schema:
+            file: ./subgraphs/menu.graphql
+
+    payments:
+        routing_url: ${NEXT_PUBLIC_APP_URL}/api/subgraphs/payments
+        schema:
+            file: ./subgraphs/payments.graphql
+
+    guests:
+        routing_url: ${NEXT_PUBLIC_APP_URL}/api/subgraphs/guests
+        schema:
+            file: ./subgraphs/guests.graphql
+
+    staff:
+        routing_url: ${NEXT_PUBLIC_APP_URL}/api/subgraphs/staff
+        schema:
+            file: ./subgraphs/staff.graphql

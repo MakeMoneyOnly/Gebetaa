@@ -1,13 +1,20 @@
 # Apollo Router Configuration for GraphOS
-# This router fetches its supergraph from Apollo GraphOS
+# Production-ready configuration with JWT authentication
 #
 # Required Environment Variables:
 #   APOLLO_KEY: Your Apollo GraphOS API key
 #   APOLLO_GRAPH_REF: graph-name@variant (e.g., gebeta-production@current)
+#   SUPABASE_JWT_SECRET: Supabase JWT secret for token verification
+#   NEXT_PUBLIC_APP_URL: Base URL for subgraph endpoints
 
 # GraphOS supergraph configuration
 supergraph:
     listen: 0.0.0.0:4000
+    path: /graphql
+
+# Health check endpoint
+health_check:
+    listen: 0.0.0.0:8088
 
 # Fetch supergraph from GraphOS (using environment variables)
 apollo:
@@ -32,7 +39,29 @@ cors:
         - content-type
         - x-guest-session
         - x-gebeta-request-id
+        - x-restaurant-id
     credentials: true
+
+# Authentication - JWT verification via Supabase
+authentication:
+    router:
+        jwt:
+            jwks:
+                - url: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1/.well-known/jwks.json
+            issuer: ${NEXT_PUBLIC_SUPABASE_URL}
+            audience:
+                - authenticated
+                - anon
+
+# Authorization rules
+authorization:
+    require_authentication:
+        operations:
+            - mutation.*
+            - query.activeOrders
+            - query.orders
+            - query.kdsOrders
+        message: 'Authentication required for this operation'
 
 # Rate limiting
 traffic_shaping:
@@ -40,10 +69,20 @@ traffic_shaping:
         rate_limit:
             capacity: 1000
             interval: 1s
+        timeout: 30s
     subgraphs:
         default:
             rate_limit:
                 capacity: 500
+                interval: 1s
+            timeout: 10s
+        orders:
+            rate_limit:
+                capacity: 300
+                interval: 1s
+        payments:
+            rate_limit:
+                capacity: 100
                 interval: 1s
 
 # Query complexity and depth limits
@@ -53,19 +92,66 @@ limits:
     max_tokens: 10000
     max_query_size: 524288 # 512KB
 
-# Include subgraph errors in response
+# Include subgraph errors in response (disable in production)
 include_subgraph_errors:
-    all: true
+    all: ${INCLUDE_SUBGRAPH_ERRORS:-false}
 
 # Request/Response headers
 headers:
     all:
         request:
             - propagate:
+                  named: 'authorization'
+            - propagate:
                   named: 'x-gebeta-request-id'
             - propagate:
                   named: 'x-guest-session'
+            - propagate:
+                  named: 'x-restaurant-id'
+            # Extract user info from JWT and pass to subgraphs
+            - insert:
+                  name: 'x-user-id'
+                  from_request_header:
+                      named: 'authorization'
+                      claim: 'sub'
+            - insert:
+                  name: 'x-user-role'
+                  from_request_header:
+                      named: 'authorization'
+                      claim: 'role'
+            - insert:
+                  name: 'x-restaurant-id'
+                  from_request_header:
+                      named: 'authorization'
+                      claim: 'restaurant_id'
         response:
             - set:
                   named: 'x-gebeta-router-version'
                   value: '2.1.0'
+
+# Telemetry and observability
+telemetry:
+    tracing:
+        trace_config:
+            service_name: 'gebeta-router'
+            service_namespace: 'gebeta'
+        otlp:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4317}
+            protocol: grpc
+    metrics:
+        prometheus:
+            enabled: true
+            listen: 0.0.0.0:9090
+            path: /metrics
+
+# Logging
+logging:
+    level: ${LOG_LEVEL:-info}
+    format: json
+
+# Entity caching (optional, requires Redis)
+# entities:
+#     cache:
+#         redis:
+#             urls:
+#                 - ${REDIS_URL}

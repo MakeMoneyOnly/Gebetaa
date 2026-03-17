@@ -26,13 +26,6 @@ generates:
             enumsAsTypes: true
             defaultScalarType: 'unknown'
 
-    # GraphQL schema JSON (for Apollo Router)
-    src/types/schema.graphql.json:
-        plugins:
-            - 'introspection'
-        config:
-            minify: true
-
 hooks:
     afterAllFileWrite:
         - pnpm prettier --write
