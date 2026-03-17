@@ -3,11 +3,10 @@
     "framework": "nextjs",
     "buildCommand": "pnpm build",
     "installCommand": "pnpm install",
-    "regions": ["arn1"],
+    "regions": ["iad1"],
     "env": {
         "NODE_ENV": "staging"
     },
-    "regions": ["iad1"],
     "github": {
         "enabled": true,
         "autoJobCancelation": true
@@ -36,6 +35,12 @@
         {
             "projectId": "@vercel/project-id",
             "teamId": "@vercel/team-id"
+        }
+    ],
+    "crons": [
+        {
+            "path": "/api/jobs/cron/stale-device-check",
+            "schedule": "*/5 * * * *"
         }
     ]
 }

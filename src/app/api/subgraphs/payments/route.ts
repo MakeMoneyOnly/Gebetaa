@@ -9,6 +9,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { paymentsResolvers } from '@/domains/payments/resolvers';
 import type { GraphQLContext } from '@/lib/graphql/context';
+import { createDataLoaders } from '@/lib/graphql/dataloaders';
 
 // Load the payments subgraph schema
 const paymentsSchema = readFileSync(
@@ -26,6 +27,9 @@ const server = new ApolloServer<GraphQLContext>({
 // Handler for the payments subgraph
 const handler = startServerAndCreateNextHandler<NextRequest, GraphQLContext>(server, {
     context: async (req: NextRequest): Promise<GraphQLContext> => {
+        // Create fresh DataLoaders for this request (prevents cache leakage)
+        const dataLoaders = createDataLoaders();
+
         const userId = req.headers.get('x-user-id');
         const userRole = req.headers.get('x-user-role');
         const restaurantId = req.headers.get('x-restaurant-id');
@@ -37,6 +41,7 @@ const handler = startServerAndCreateNextHandler<NextRequest, GraphQLContext>(ser
                 token: authHeader?.replace('Bearer ', '') || null,
                 guestSession,
                 user: null,
+                dataLoaders,
             };
         }
 
@@ -49,6 +54,7 @@ const handler = startServerAndCreateNextHandler<NextRequest, GraphQLContext>(ser
                     restaurantId,
                     role: userRole || undefined,
                 },
+                dataLoaders,
             };
         }
 
@@ -56,6 +62,7 @@ const handler = startServerAndCreateNextHandler<NextRequest, GraphQLContext>(ser
             token: null,
             guestSession: null,
             user: null,
+            dataLoaders,
         };
     },
 });

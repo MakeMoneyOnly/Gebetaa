@@ -13,9 +13,9 @@
 | CRIT-01 | ✅ DONE | Payment webhooks (Chapa), HMAC verification, event publishing                                       |
 | CRIT-02 | ✅ DONE | Santim monetary handling, ETB formatting                                                            |
 | CRIT-03 | ✅ DONE | Event bus with Redis Streams, publishers, consumers, contract tests                                 |
-| CRIT-05 | ✅ DONE | PowerSync offline infrastructure, KDS sync, order sync, printer fallback                            |
+| CRIT-05 | ✅ DONE | PowerSync offline infrastructure, KDS sync, order sync, printer fallback, stale-device alerts with Vercel Crons, unit tests |
 | CRIT-06 | ✅ DONE | Multi-tenant security, RLS, idempotency keys                                                        |
-| CRIT-07 | ✅ DONE | GraphQL Federation, Apollo Router, subgraph routes, JWT auth, CI workflows                          |
+| CRIT-07 | ✅ DONE | GraphQL Federation, Apollo Router, subgraph routes, JWT auth, CI workflows, service extraction validation |
 | CRIT-08 | ✅ DONE | Sentry, health endpoints, alerting                                                                  |
 | CRIT-09 | ✅ DONE | Happy hour pricing, tip pooling, course firing                                                      |
 | CRIT-10 | ✅ DONE | KDS components, station boards                                                                      |
@@ -165,8 +165,49 @@ CRIT-11 (Notifications) → Depends on CRIT-03 (Event Bus) ✅ DONE
 
 ---
 
+## Remaining Items by CRIT (from CRITICAL_IMPLEMENTATION_STRATEGY.md)
+
+### CRIT-04: Amharic-First Platform Enablement — ❌ Partial
+
+- [x] Bilingual DB columns exist
+- [ ] English available as fallback
+- [ ] No untranslated hardcoded English in critical workflows
+- [ ] Tablet performance within CWV targets after localization
+
+### CRIT-05: Offline-First Sync Consolidation — ✅ COMPLETE
+
+- [x] POS and KDS sustain 24-hour offline window
+- [x] Reconnects don't duplicate orders/payments/actions
+- [x] Sync conflicts resolve deterministically
+- [x] **Stale-device alerts fire within threshold** (Vercel Cron configured, unit tests added)
+
+### CRIT-07: GraphQL Federation and API Contract — ✅ COMPLETE
+
+- [x] Internal surfaces consume governed GraphQL contract
+- [x] Breaking schema changes prevented before merge (GitHub workflow exists)
+- [x] Router centralizes auth and rate limiting
+- [x] **Service extraction possible without client rewrites** (validation document created)
+
+### CRIT-11: Table, Guest, and Notification Reliability — ✅ COMPLETE
+
+- [x] Guest/host communication reliable during transitions
+- [x] Notification retries don't spam or lose state
+- [x] Delivery-readiness layerable without authz redesign
+
+**Implemented Files:**
+- `src/lib/notifications/retry.ts` - SMS retry with exponential backoff
+- `src/lib/notifications/deduplication.ts` - Notification deduplication
+- `src/lib/notifications/queue.ts` - Queue processor
+- `src/lib/notifications/push.ts` - Push notifications
+- `src/lib/notifications/fallback.ts` - SMS→push fallback
+- `src/lib/waitlist/service.ts` - Waitlist management
+- `src/lib/waitlist/types.ts` - Type definitions
+- `src/lib/guest/session.ts` - HMAC-scoped guest sessions
+- `src/lib/events/consumers/notification-processor.ts` - Event-driven notifications
+
+---
+
 ## Notes
 
-- CRIT-05 (Offline-First) is fully implemented with PowerSync infrastructure
 - The `critical-implementation-roadmap.md` has been deleted as all items are now tracked in this document
-- Only **CRIT-04 (Amharic-First Platform Enablement)** remains to be implemented
+- Source of truth: `docs/08-reports/rollout/CRITICAL_IMPLEMENTATION_STRATEGY.md`

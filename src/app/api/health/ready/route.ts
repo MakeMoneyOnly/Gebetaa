@@ -21,7 +21,7 @@ import { createClient } from '@/lib/supabase/server';
  */
 async function checkDatabaseReadiness(): Promise<{
     ready: boolean;
-    latencyMs?: number;
+    latency_ms?: number;
     message?: string;
 }> {
     try {
@@ -30,19 +30,19 @@ async function checkDatabaseReadiness(): Promise<{
 
         // Simple query to check connectivity
         const { error } = await supabase.from('restaurants').select('id').limit(1);
-        const latencyMs = Date.now() - start;
+        const latency_ms = Date.now() - start;
 
         if (error && error.code !== 'PGRST116') {
             return {
                 ready: false,
-                latencyMs,
+                latency_ms,
                 message: error.message,
             };
         }
 
         return {
             ready: true,
-            latencyMs,
+            latency_ms,
             message: 'Database connected',
         };
     } catch (error) {
@@ -58,7 +58,7 @@ async function checkDatabaseReadiness(): Promise<{
  */
 async function checkRedisReadiness(): Promise<{
     ready: boolean;
-    latencyMs?: number;
+    latency_ms?: number;
     message?: string;
 }> {
     const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
@@ -92,19 +92,19 @@ async function checkRedisReadiness(): Promise<{
             signal: AbortSignal.timeout(3000),
         });
 
-        const latencyMs = Date.now() - start;
+        const latency_ms = Date.now() - start;
 
         if (!response.ok) {
             return {
                 ready: false,
-                latencyMs,
+                latency_ms,
                 message: `Redis ping failed: ${response.status}`,
             };
         }
 
         return {
             ready: true,
-            latencyMs,
+            latency_ms,
             message: 'Redis connected',
         };
     } catch (error) {
@@ -151,16 +151,16 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         checks: {
             database: {
                 status: dbCheck.ready ? 'pass' : 'fail',
-                latencyMs: dbCheck.latencyMs,
+                latency_ms: dbCheck.latency_ms,
                 message: dbCheck.message,
             },
             redis: {
                 status: redisCheck.ready ? 'pass' : 'fail',
-                latencyMs: redisCheck.latencyMs,
+                latency_ms: redisCheck.latency_ms,
                 message: redisCheck.message,
             },
         },
-        responseTimeMs: responseTime,
+        response_time_ms: responseTime,
     };
 
     const statusCode = isReady ? 200 : 503;

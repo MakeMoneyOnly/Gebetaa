@@ -118,12 +118,100 @@ export async function getModifierOptions(
     return data || [];
 }
 
+/**
+ * Batch loader: Get multiple menu items by IDs
+ * Used by DataLoader for N+1 query prevention
+ */
+export async function getMenuItemsByIds(ids: string[]): Promise<Record<string, unknown>[]> {
+    if (ids.length === 0) return [];
+    const supabase = createClient();
+
+    const { data, error } = await supabase.from('menu_items').select('*').in('id', ids);
+
+    if (error) {
+        console.error('[menu/repository] Error fetching menu items by IDs:', error);
+        throw error;
+    }
+
+    return data || [];
+}
+
+/**
+ * Batch loader: Get modifier groups for multiple menu items
+ * Used by DataLoader for N+1 query prevention
+ */
+export async function getModifierGroupsByMenuItemIds(
+    menuItemIds: string[]
+): Promise<Record<string, unknown>[]> {
+    if (menuItemIds.length === 0) return [];
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+        .from('modifier_groups')
+        .select('*')
+        .in('menu_item_id', menuItemIds)
+        .eq('is_active', true);
+
+    if (error) {
+        console.error('[menu/repository] Error fetching modifier groups by menu item IDs:', error);
+        throw error;
+    }
+
+    return data || [];
+}
+
+/**
+ * Batch loader: Get modifier options for multiple groups
+ * Used by DataLoader for N+1 query prevention
+ */
+export async function getModifierOptionsByGroupIds(
+    groupIds: string[]
+): Promise<Record<string, unknown>[]> {
+    if (groupIds.length === 0) return [];
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+        .from('modifier_options')
+        .select('*')
+        .in('modifier_group_id', groupIds)
+        .eq('is_available', true);
+
+    if (error) {
+        console.error('[menu/repository] Error fetching modifier options by group IDs:', error);
+        throw error;
+    }
+
+    return data || [];
+}
+
+/**
+ * Batch loader: Get multiple categories by IDs
+ * Used by DataLoader for N+1 query prevention
+ */
+export async function getCategoriesByIds(ids: string[]): Promise<Record<string, unknown>[]> {
+    if (ids.length === 0) return [];
+    const supabase = createClient();
+
+    const { data, error } = await supabase.from('categories').select('*').in('id', ids);
+
+    if (error) {
+        console.error('[menu/repository] Error fetching categories by IDs:', error);
+        throw error;
+    }
+
+    return data || [];
+}
+
 export const menuRepository = {
     getMenuItems,
     getMenuItem,
     getMenuCategories,
     getModifierGroups,
     getModifierOptions,
+    getMenuItemsByIds,
+    getModifierGroupsByMenuItemIds,
+    getModifierOptionsByGroupIds,
+    getCategoriesByIds,
 };
 
 export default menuRepository;

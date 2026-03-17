@@ -50,8 +50,8 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     const response = {
         alive: true,
         timestamp: new Date().toISOString(),
-        uptimeSeconds: Math.floor((Date.now() - startTime) / 1000),
-        responseTimeMs: responseTime,
+        uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
+        response_time_ms: responseTime,
     };
 
     // Always return 200 for liveness - if the server is responding,

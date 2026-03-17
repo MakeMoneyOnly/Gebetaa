@@ -5,6 +5,8 @@ import { NextRequest } from 'next/server';
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import type { GraphQLContext } from './context';
+import { createDataLoaders } from './dataloaders';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ResolversType = Record<string, any>;
 
@@ -26,6 +28,9 @@ export function createSubgraphHandler(config: SubgraphConfig) {
 
     return startServerAndCreateNextHandler<NextRequest, GraphQLContext>(server, {
         context: async (req: NextRequest): Promise<GraphQLContext> => {
+            // Create fresh DataLoaders for this request (prevents cache leakage)
+            const dataLoaders = createDataLoaders();
+
             // Extract user info from headers (set by Apollo Router)
             const userId = req.headers.get('x-user-id');
             const userRole = req.headers.get('x-user-role');
@@ -38,6 +43,7 @@ export function createSubgraphHandler(config: SubgraphConfig) {
                     token: authHeader?.replace('Bearer ', '') || null,
                     guestSession,
                     user: null,
+                    dataLoaders,
                 };
             }
 
@@ -50,6 +56,7 @@ export function createSubgraphHandler(config: SubgraphConfig) {
                         restaurantId,
                         role: userRole || undefined,
                     },
+                    dataLoaders,
                 };
             }
 
@@ -57,6 +64,7 @@ export function createSubgraphHandler(config: SubgraphConfig) {
                 token: null,
                 guestSession: null,
                 user: null,
+                dataLoaders,
             };
         },
     });

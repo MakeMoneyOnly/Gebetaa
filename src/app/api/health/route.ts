@@ -17,7 +17,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPoolConfig, isPoolEnabled } from '@/lib/supabase/pool';
+import { getPoolConfig } from '@/lib/supabase/pool';
 
 /**
  * Health check response interface
@@ -25,30 +25,37 @@ import { getPoolConfig, isPoolEnabled } from '@/lib/supabase/pool';
 interface HealthStatus {
     status: 'healthy' | 'unhealthy' | 'degraded';
     timestamp: string;
-    version: string;
     uptime: number;
+    version: string;
+    commit?: string;
     checks: {
         database: {
             status: 'pass' | 'fail';
-            latencyMs?: number;
+            latency_ms?: number;
             message?: string;
         };
         redis: {
             status: 'pass' | 'fail' | 'not_configured';
-            latencyMs?: number;
+            latency_ms?: number;
             message?: string;
         };
         supabase: {
             status: 'pass' | 'fail';
-            latencyMs?: number;
+            latency_ms?: number;
             message?: string;
-            poolEnabled?: boolean;
-            poolMode?: string;
-            poolSize?: number;
+            pool_enabled?: boolean;
+            pool_mode?: string;
+            pool_size?: number;
         };
         qstash: {
             status: 'pass' | 'fail' | 'not_configured';
-            latencyMs?: number;
+            latency_ms?: number;
+            message?: string;
+        };
+        memory: {
+            status: 'pass' | 'fail';
+            used_mb?: number;
+            limit_mb?: number;
             message?: string;
         };
         environment: {
@@ -105,7 +112,7 @@ const OPTIONAL_ENV_VARS = [
  */
 async function checkDatabase(): Promise<{
     status: 'pass' | 'fail';
-    latencyMs?: number;
+    latency_ms?: number;
     message?: string;
 }> {
     try {
@@ -115,20 +122,20 @@ async function checkDatabase(): Promise<{
         // Simple query to check connectivity
         const { error } = await supabase.from('restaurants').select('id').limit(1);
 
-        const latencyMs = Date.now() - start;
+        const latency_ms = Date.now() - start;
 
         if (error && error.code !== 'PGRST116') {
             // PGRST116 = no rows found, which is fine
             return {
                 status: 'fail',
-                latencyMs,
+                latency_ms,
                 message: error.message,
             };
         }
 
         return {
             status: 'pass',
-            latencyMs,
+            latency_ms,
             message: 'Database connected',
         };
     } catch (error) {
@@ -145,11 +152,11 @@ async function checkDatabase(): Promise<{
  */
 async function checkSupabase(): Promise<{
     status: 'pass' | 'fail';
-    latencyMs?: number;
+    latency_ms?: number;
     message?: string;
-    poolEnabled?: boolean;
-    poolMode?: string;
-    poolSize?: number;
+    pool_enabled?: boolean;
+    pool_mode?: string;
+    pool_size?: number;
 }> {
     // Supabase uses the same connection as database
     const dbCheck = await checkDatabase();
@@ -159,16 +166,16 @@ async function checkSupabase(): Promise<{
 
     return {
         status: dbCheck.status,
-        latencyMs: dbCheck.latencyMs,
+        latency_ms: dbCheck.latency_ms,
         message: dbCheck.message,
-        poolEnabled: poolConfig.enabled,
-        poolMode: poolConfig.mode,
-        poolSize: poolConfig.poolSize,
+        pool_enabled: poolConfig.enabled,
+        pool_mode: poolConfig.mode,
+        pool_size: poolConfig.poolSize,
     };
 }
 async function checkRedis(): Promise<{
     status: 'pass' | 'fail' | 'not_configured';
-    latencyMs?: number;
+    latency_ms?: number;
     message?: string;
 }> {
     const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
@@ -196,13 +203,13 @@ async function checkRedis(): Promise<{
             },
         });
 
-        const latencyMs = Date.now() - start;
+        const latency_ms = Date.now() - start;
 
         if (!response.ok) {
             const errorText = await response.text();
             return {
                 status: 'fail',
-                latencyMs,
+                latency_ms,
                 message: `Redis ping failed: ${response.status} ${errorText}`,
             };
         }
@@ -211,14 +218,14 @@ async function checkRedis(): Promise<{
         if (result !== 'PONG' && result !== '"PONG"' && !result.includes('PONG')) {
             return {
                 status: 'fail',
-                latencyMs,
+                latency_ms,
                 message: `Unexpected Redis response: ${result}`,
             };
         }
 
         return {
             status: 'pass',
-            latencyMs,
+            latency_ms,
             message: 'Redis connected',
         };
     } catch (error) {
@@ -235,7 +242,7 @@ async function checkRedis(): Promise<{
  */
 async function checkQStash(): Promise<{
     status: 'pass' | 'fail' | 'not_configured';
-    latencyMs?: number;
+    latency_ms?: number;
     message?: string;
 }> {
     const qstashToken = process.env.QSTASH_TOKEN;
@@ -256,7 +263,7 @@ async function checkQStash(): Promise<{
             },
         });
 
-        const latencyMs = Date.now() - start;
+        const latency_ms = Date.now() - start;
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -265,7 +272,7 @@ async function checkQStash(): Promise<{
             // 5xx = QStash service issue
             return {
                 status: 'fail',
-                latencyMs,
+                latency_ms,
                 message: `QStash check failed: ${response.status} ${errorText}`,
             };
         }
@@ -273,7 +280,7 @@ async function checkQStash(): Promise<{
         // Response is OK, QStash is available
         return {
             status: 'pass',
-            latencyMs,
+            latency_ms,
             message: 'QStash connected',
         };
     } catch (error) {
@@ -319,6 +326,60 @@ function checkEnvironment(): {
 }
 
 /**
+ * Check memory usage
+ * In serverless environments, memory usage is per-request
+ * but we can still check the process memory footprint
+ */
+function checkMemory(): {
+    status: 'pass' | 'fail';
+    used_mb?: number;
+    limit_mb?: number;
+    message?: string;
+} {
+    // In Node.js/Next.js serverless, we can check memory usage
+    // Note: In serverless, memory limit is set at deployment time
+    const memoryUsage = process.memoryUsage();
+    
+    // Convert bytes to MB
+    const used_mb = Math.round(memoryUsage.heapUsed / (1024 * 1024));
+    const limit_mb = process.env.VERCEL_MEMORY_LIMIT 
+        ? parseInt(process.env.VERCEL_MEMORY_LIMIT, 10) / (1024 * 1024)
+        : Math.round(memoryUsage.heapTotal / (1024 * 1024));
+    
+    // Default limit for Vercel is 1024MB (1GB) for Pro
+    const defaultLimit = 1024;
+    const effectiveLimit = limit_mb || defaultLimit;
+    
+    // Check if memory usage is within acceptable limits (80% threshold)
+    const usagePercent = (used_mb / effectiveLimit) * 100;
+    
+    if (usagePercent > 90) {
+        return {
+            status: 'fail',
+            used_mb,
+            limit_mb: effectiveLimit,
+            message: `Memory usage critical: ${usagePercent.toFixed(1)}%`,
+        };
+    }
+    
+    if (usagePercent > 80) {
+        return {
+            status: 'pass',
+            used_mb,
+            limit_mb: effectiveLimit,
+            message: `Memory usage high: ${usagePercent.toFixed(1)}%`,
+        };
+    }
+    
+    return {
+        status: 'pass',
+        used_mb,
+        limit_mb: effectiveLimit,
+        message: `Memory usage normal: ${usagePercent.toFixed(1)}%`,
+    };
+}
+
+/**
  * GET /api/health
  * Returns comprehensive health status
  *
@@ -343,6 +404,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
     ]);
 
     const environmentCheck = checkEnvironment();
+    const memoryCheck = checkMemory();
 
     // Determine overall status
     // Unhealthy: Database is down (critical dependency)
@@ -351,6 +413,8 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
     let status: 'healthy' | 'unhealthy' | 'degraded' = 'healthy';
 
     if (databaseCheck.status === 'fail' || environmentCheck.status === 'fail') {
+        status = 'unhealthy';
+    } else if (memoryCheck.status === 'fail') {
         status = 'unhealthy';
     } else if (
         redisCheck.status === 'fail' ||
@@ -375,12 +439,14 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
         status,
         timestamp: new Date().toISOString(),
         version: process.env.npm_package_version || '0.1.0',
+        commit: process.env.VERCEL_GIT_COMMIT_SHA || undefined,
         uptime: Math.floor((Date.now() - startTime) / 1000),
         checks: {
             database: databaseCheck,
             redis: redisCheck,
             supabase: supabaseCheck,
             qstash: qstashCheck,
+            memory: memoryCheck,
             environment: environmentCheck,
         },
         region: process.env.VERCEL_REGION || process.env.AWS_REGION,

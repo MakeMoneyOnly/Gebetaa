@@ -317,6 +317,143 @@ Errors are automatically tagged with:
 - `device_type` - POS, KDS, Guest, or Dashboard
 - `route` - Request path
 
+---
+
+## Grafana Dashboard Configuration
+
+### Overview
+
+The platform includes a comprehensive Grafana dashboard for production monitoring. The dashboard provides real-time visibility into API performance, database metrics, infrastructure health, and business KPIs.
+
+### Dashboard Features
+
+The Grafana dashboard includes the following panels:
+
+#### API Performance Overview
+- **API P95 Latency** - Current P95 response time in milliseconds
+- **API Error Rate (5xx)** - Percentage of 5xx errors
+- **API Requests/sec** - Request throughput
+- **DB Connection Pool %** - Database connection utilization
+- **API Latency by Endpoint** - P50/P95/P99 latency trends by route
+- **API Requests by Status** - Request count by HTTP status code
+
+#### Database Performance
+- **Database Query Latency** - P50/P95/P99 query execution time
+- **Database Active Connections** - Active, idle, and idle-in-transaction connections
+
+#### Infrastructure Metrics
+- **Container Memory Usage** - Memory utilization percentage
+- **Container CPU Usage** - CPU utilization percentage
+
+#### Business Metrics
+- **Total Orders (24h)** - Order count for the last 24 hours
+- **Payment Failure Rate** - Percentage of failed payments
+- **Active Sessions** - Currently active table sessions
+- **Active Restaurants** - Number of restaurants with activity
+
+### Importing the Dashboard
+
+1. **Prerequisites**:
+   - Grafana 10.0+ installed or Grafana Cloud account
+   - Prometheus data source configured
+
+2. **Import Steps**:
+   ```bash
+   # Option 1: Via Grafana UI
+   # 1. Navigate to Dashboards → Import
+   # 2. Upload the dashboard JSON file: docs/05-infrastructure/monitoring/grafana-dashboard.json
+   # 3. Select your Prometheus data source
+   # 4. Click Import
+   ```
+
+3. **Environment Variables Required**:
+   | Variable | Description |
+   |----------|-------------|
+   | `GRAFANA_URL` | Grafana instance URL |
+   | `GRAFANA_API_KEY` | API key with admin permissions |
+
+### Prometheus Metrics Setup
+
+For the dashboard to work, you need to expose Prometheus metrics from your application:
+
+```bash
+# Install prom-client
+npm install prom-client
+```
+
+Create a metrics endpoint in your application:
+
+```typescript
+// src/app/api/metrics/prometheus/route.ts
+import { Registry, collectDefaultMetrics, Counter, Histogram } from 'prom-client';
+
+const register = new Registry();
+collectDefaultMetrics({ register });
+
+// Custom metrics
+const httpRequestsTotal = new Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status'],
+  registers: [register],
+});
+
+const httpRequestDuration = new Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status'],
+  buckets: [0.1, 0.5, 1, 2, 5],
+  registers: [register],
+});
+
+export async function GET() {
+  return new Response(await register.metrics(), {
+    headers: { 'Content-Type': 'register.contentType' },
+  });
+}
+```
+
+### Alternative: Datadog Integration
+
+If using Datadog instead of Grafana:
+
+1. Install the Datadog agent:
+   ```bash
+   npm install datadog-lambda-js
+   ```
+
+2. Configure in `next.config.ts`:
+   ```typescript
+   // next.config.ts
+   const withDatadog = require('@dd/browser-sdk');
+   
+   module.exports = withDatadog({
+     // ... config
+   });
+   ```
+
+3. Set environment variables:
+   ```bash
+   DATADOG_API_KEY=your-api-key
+   DATADOG_SITE=datadoghq.eu
+   ```
+
+### Alert Rules for Grafana
+
+Configure the following alert rules in Grafana:
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| API High Latency | P95 > 1s for 5m | Warning |
+| API Critical Latency | P95 > 2s for 5m | Critical |
+| High Error Rate | Error rate > 1% for 5m | Warning |
+| Critical Error Rate | Error rate > 5% for 5m | Critical |
+| DB Connection Pool | Pool > 80% | Critical |
+| High Memory | Memory > 90% | Critical |
+| High CPU | CPU > 90% | Critical |
+
+---
+
 ## Dashboard Access
 
 ### Merchant Dashboard
@@ -334,3 +471,7 @@ Access at: https://sentry.io/organizations/gebeta
 curl -H "x-metrics-api-key: your-api-key" \
   "https://your-domain.com/api/metrics?range=day"
 ```
+
+### Grafana Dashboard
+
+After importing, access at: `https://your-grafana.com/d/gebeta-prod-overview`

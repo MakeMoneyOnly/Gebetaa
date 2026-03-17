@@ -111,6 +111,9 @@ export async function signup(prevState: unknown, formData: FormData) {
 }
 
 export async function logout() {
+    // CSRF Protection - verify origin before processing
+    await verifyOrigin();
+
     const supabase = await createClient();
     await supabase.auth.signOut();
     revalidatePath('/', 'layout');

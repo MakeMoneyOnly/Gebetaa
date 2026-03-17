@@ -2,6 +2,10 @@
     "name": "gebeta-menu",
     "version": "0.1.0",
     "private": true,
+    "engines": {
+        "node": ">=20.0.0",
+        "pnpm": ">=9.0.0"
+    },
     "scripts": {
         "dev": "next dev",
         "build": "next build",
@@ -19,7 +23,14 @@
         "prepare": "husky",
         "codegen": "graphql-codegen --config codegen.yml",
         "security:precommit": "node scripts/security/precommit-security.mjs",
-        "bundle:analyze": "next experimental-analyze"
+        "bundle:analyze": "next experimental-analyze",
+        "security:audit": "pnpm audit --audit-level=high",
+        "security:audit:fix": "pnpm audit --fix",
+        "security:outdated": "pnpm outdated",
+        "security:deprecated": "node scripts/security/check-deprecated.mjs",
+        "security:overrides:check": "node scripts/security/check-unused-overrides.mjs",
+        "deps:update": "pnpm update --interactive --latest",
+        "deps:clean": "pnpm store prune"
     },
     "dependencies": {
         "@apollo/server": "^4.11.0",
@@ -37,6 +48,7 @@
         "@upstash/qstash": "^2.9.0",
         "@upstash/redis": "^1.37.0",
         "clsx": "^2.1.1",
+        "dataloader": "^2.2.3",
         "date-fns": "^4.1.0",
         "dexie": "^4.2.1",
         "framer-motion": "^12.35.2",
@@ -110,7 +122,18 @@
             "qs@<=6.14.1": "^6.14.2",
             "serialize-javascript@<=7.0.2": "^7.0.3",
             "immutable": "^4.3.8",
-            "dompurify": "^3.2.7"
+            "dompurify": "^3.2.7",
+            "flatted@<3.4.0": "^3.4.0",
+            "undici@>=7.0.0 <7.24.0": "^7.24.0"
+        },
+        "allowBuilds": [
+            "@apollo/server",
+            "@sentry/nextjs",
+            "esbuild",
+            "swc"
+        ],
+        "auditConfig": {
+            "ignoreGhsas": []
         }
     }
 }

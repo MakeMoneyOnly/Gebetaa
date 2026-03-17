@@ -194,6 +194,27 @@ export class OrdersRepository {
         if (error) throw new Error(error.message);
         return data ?? [];
     }
+
+    /**
+     * Batch loader: Get order items for multiple orders
+     * Used by DataLoader for N+1 query prevention
+     */
+    async getItemsByOrderIds(orderIds: string[]): Promise<OrderItemRow[]> {
+        if (orderIds.length === 0) return [];
+
+        const { data, error } = await getSupabaseClient()
+            .from('order_items')
+            .select('*')
+            .in('order_id', orderIds)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('[orders/repository] Error fetching order items by order IDs:', error);
+            throw new Error(error.message);
+        }
+
+        return data ?? [];
+    }
 }
 
 export const ordersRepository = new OrdersRepository();

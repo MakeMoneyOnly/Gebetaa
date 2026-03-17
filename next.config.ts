@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const withPWA = require('next-pwa')({
     dest: 'public',
@@ -223,13 +224,8 @@ const nextConfig: NextConfig = {
                         key: 'Referrer-Policy',
                         value: 'origin-when-cross-origin',
                     },
-                    {
-                        key: 'Content-Security-Policy',
-                        value:
-                            process.env.NODE_ENV === 'production'
-                                ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data: https://images.unsplash.com https://plus.unsplash.com https://*.supabase.co https://grainy-gradients.vercel.app https://i.pravatar.cc https://api.dicebear.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-                                : "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data: https://images.unsplash.com https://plus.unsplash.com https://*.supabase.co https://grainy-gradients.vercel.app https://i.pravatar.cc https://api.dicebear.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live;",
-                    },
+                    // Note: CSP is handled in middleware.ts for consistency
+                    // and to avoid duplicate header issues
                     {
                         key: 'Permissions-Policy',
                         value: 'camera=(), microphone=(), geolocation=()',
@@ -240,4 +236,6 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default withPWA(nextConfig);
+export default withBundleAnalyzer({
+    enabled: process.env.ANALYZE === 'true',
+})(withPWA(nextConfig));

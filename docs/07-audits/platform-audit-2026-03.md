@@ -342,7 +342,7 @@ if (!signatureCheck.valid) {
 | No staging environment         | Medium   | Add staging deployment            |
 | Missing health check endpoints | High     | Add `/api/health` detailed checks |
 | No rollback automation         | Medium   | Add one-click rollback            |
-| Missing monitoring dashboards  | High     | Add Grafana/Datadog               |
+| Missing monitoring dashboards  | High     | [x] Add Grafana/Datadog               |
 
 ### 8.3 DevOps Score: **B+**
 
