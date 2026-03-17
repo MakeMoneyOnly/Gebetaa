@@ -49,6 +49,12 @@ export {
     verifyQRSignature,
     generateSignedQRCode,
     verifySignedQRCode,
+    // Session-specific HMAC
+    generateHmacSecret,
+    signPayload,
+    verifySignature,
+    signWithMasterSecret,
+    verifyMasterSignature,
 } from './hmac';
 
 // Guest Context

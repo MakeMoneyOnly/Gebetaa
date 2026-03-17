@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual, randomBytes } from 'crypto';
 
 /**
  * HMAC Utilities for QR Code Signing
@@ -146,4 +146,96 @@ export function verifySignedQRCode(
     }
 
     return { valid: true };
+}
+
+// ============================================================
+// Session-specific HMAC Utilities
+// Used for guest session token signing and verification
+// ============================================================
+
+/**
+ * Generate a secure HMAC secret for session signing
+ * Uses crypto.randomBytes(32) for cryptographic randomness
+ * @returns Base64-encoded secure random string
+ */
+export function generateHmacSecret(): string {
+    return randomBytes(32).toString('base64');
+}
+
+/**
+ * Sign a payload using HMAC-SHA256
+ * @param payload - The data to sign
+ * @param secret - The HMAC secret (base64-encoded)
+ * @returns Base64-encoded signature
+ */
+export function signPayload(payload: string, secret: string): string {
+    const secretBuffer = Buffer.from(secret, 'base64');
+    return createHmac('sha256', secretBuffer).update(payload, 'utf8').digest('base64');
+}
+
+/**
+ * Verify a signature using HMAC-SHA256 with timing-safe comparison
+ * @param payload - The original payload
+ * @param signature - The signature to verify (base64-encoded)
+ * @param secret - The HMAC secret (base64-encoded)
+ * @returns boolean indicating if signature is valid
+ */
+export function verifySignature(payload: string, signature: string, secret: string): boolean {
+    try {
+        const expectedSignature = signPayload(payload, secret);
+        const expectedBuffer = Buffer.from(expectedSignature, 'base64');
+        const providedBuffer = Buffer.from(signature, 'base64');
+
+        // Use timing-safe comparison to prevent timing attacks
+        return (
+            expectedBuffer.length === providedBuffer.length &&
+            timingSafeEqual(expectedBuffer, providedBuffer)
+        );
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Get the master HMAC secret for guest session validation
+ * Uses HMAC_SECRET env var as additional security layer
+ * @returns The master HMAC secret or throws if not configured
+ */
+function getMasterHmacSecret(): string {
+    const secret = process.env.HMAC_SECRET;
+    if (!secret) {
+        if (process.env.NEXT_PHASE === 'phase-production-build') {
+            console.warn(
+                'HMAC_SECRET is missing during build. This is acceptable - secret will be injected at runtime.'
+            );
+            return 'build_placeholder_not_used_at_runtime';
+        }
+        throw new Error(
+            'HMAC_SECRET environment variable is required for guest session signing. ' +
+                'Generate a secure key: openssl rand -hex 32'
+        );
+    }
+    return secret;
+}
+
+const MASTER_HMAC_SECRET: string = getMasterHmacSecret();
+
+/**
+ * Sign a session token with the master HMAC secret
+ * Used for additional validation layer beyond per-session secrets
+ * @param payload - The session data to sign
+ * @returns Base64-encoded master signature
+ */
+export function signWithMasterSecret(payload: string): string {
+    return signPayload(payload, MASTER_HMAC_SECRET);
+}
+
+/**
+ * Verify a session token signature against the master HMAC secret
+ * @param payload - The original payload
+ * @param signature - The signature to verify
+ * @returns boolean indicating if signature is valid
+ */
+export function verifyMasterSignature(payload: string, signature: string): boolean {
+    return verifySignature(payload, signature, MASTER_HMAC_SECRET);
 }
