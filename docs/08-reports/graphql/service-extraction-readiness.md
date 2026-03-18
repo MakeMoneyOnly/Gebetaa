@@ -10,13 +10,13 @@ This document validates that Gebeta's GraphQL Federation architecture allows sub
 
 All subgraphs are currently implemented as Next.js API routes within the monolith:
 
-| Subgraph | Route | Schema File | Resolver |
-|----------|-------|-------------|----------|
-| Orders | `/api/subgraphs/orders` | `graphql/subgraphs/orders.graphql` | `src/domains/orders/resolvers.ts` |
-| Menu | `/api/subgraphs/menu` | `graphql/subgraphs/menu.graphql` | `src/domains/menu/resolvers.ts` |
+| Subgraph | Route                     | Schema File                          | Resolver                            |
+| -------- | ------------------------- | ------------------------------------ | ----------------------------------- |
+| Orders   | `/api/subgraphs/orders`   | `graphql/subgraphs/orders.graphql`   | `src/domains/orders/resolvers.ts`   |
+| Menu     | `/api/subgraphs/menu`     | `graphql/subgraphs/menu.graphql`     | `src/domains/menu/resolvers.ts`     |
 | Payments | `/api/subgraphs/payments` | `graphql/subgraphs/payments.graphql` | `src/domains/payments/resolvers.ts` |
-| Guests | `/api/subgraphs/guests` | `graphql/subgraphs/guests.graphql` | `src/domains/guests/resolvers.ts` |
-| Staff | `/api/subgraphs/staff` | `graphql/subgraphs/staff.graphql` | `src/domains/staff/resolvers.ts` |
+| Guests   | `/api/subgraphs/guests`   | `graphql/subgraphs/guests.graphql`   | `src/domains/guests/resolvers.ts`   |
+| Staff    | `/api/subgraphs/staff`    | `graphql/subgraphs/staff.graphql`    | `src/domains/staff/resolvers.ts`    |
 
 ### Federation 2 Compliance
 
@@ -25,17 +25,18 @@ All subgraphs follow Apollo Federation 2 specifications:
 1. **Independent Schemas**: Each subgraph has its own `.graphql` schema file with Federation 2 directives (`@key`, `@external`, `@requires`, `@shareable`)
 
 2. **Standard GraphQL Context**: All subgraphs use the same `GraphQLContext` interface:
-   ```typescript
-   interface GraphQLContext {
-     token: string | null;
-     guestSession: string | null;
-     user: {
-       id: string;
-       restaurantId: string;
-       role?: string;
-     } | null;
-   }
-   ```
+
+    ```typescript
+    interface GraphQLContext {
+        token: string | null;
+        guestSession: string | null;
+        user: {
+            id: string;
+            restaurantId: string;
+            role?: string;
+        } | null;
+    }
+    ```
 
 3. **Apollo Server Integration**: Each subgraph uses `ApolloServer` with standard configuration
 
@@ -58,10 +59,10 @@ Update `router/router.yaml` or `graphql/supergraph.yaml`:
 
 ```yaml
 subgraphs:
-  orders:
-    routing_url: https://orders-service.gebeta.app/graphql
-    schema:
-      file: ./subgraphs/orders.graphql
+    orders:
+        routing_url: https://orders-service.gebeta.app/graphql
+        schema:
+            file: ./subgraphs/orders.graphql
 ```
 
 ### Step 3: No Client Changes Required
@@ -106,6 +107,7 @@ Clients continue to query the same GraphQL endpoint. The Apollo Router handles r
 ### Orders Domain
 
 **Dependencies:**
+
 - Database: `orders`, `order_items`, `payments` tables
 - Internal: None (standalone)
 
@@ -114,6 +116,7 @@ Clients continue to query the same GraphQL endpoint. The Apollo Router handles r
 ### Menu Domain
 
 **Dependencies:**
+
 - Database: `menu_items`, `categories`, `modifier_groups`, `modifier_options` tables
 - Internal: None (standalone)
 
@@ -122,6 +125,7 @@ Clients continue to query the same GraphQL endpoint. The Apollo Router handles r
 ### Payments Domain
 
 **Dependencies:**
+
 - Database: `payments`, `refunds` tables
 - External: Chapa, Telebirr payment gateways
 - Internal: None (standalone)
@@ -131,6 +135,7 @@ Clients continue to query the same GraphQL endpoint. The Apollo Router handles r
 ### Guests Domain
 
 **Dependencies:**
+
 - Database: `guests`, `guest_sessions` tables
 - Internal: None (standalone)
 
@@ -139,6 +144,7 @@ Clients continue to query the same GraphQL endpoint. The Apollo Router handles r
 ### Staff Domain
 
 **Dependencies:**
+
 - Database: `restaurant_staff`, `staff_schedules`, `time_entries` tables
 - Internal: None (standalone)
 
@@ -175,6 +181,7 @@ Follow same pattern for Menu, Guests, and Staff domains.
 The GraphQL Federation architecture is properly structured to allow any subgraph to be extracted into a standalone service without requiring client changes. The Apollo Router serves as the abstraction layer that makes the physical location of subgraphs transparent to clients.
 
 Key enablers:
+
 1. Federation 2 compliant schemas
 2. Independent domain resolvers
 3. Standard GraphQL context propagation

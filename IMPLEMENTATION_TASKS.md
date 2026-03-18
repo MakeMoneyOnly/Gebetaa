@@ -8,18 +8,18 @@
 
 ## ✅ Completed Implementations
 
-| CRIT    | Status  | Notes                                                                                               |
-| ------- | ------- | --------------------------------------------------------------------------------------------------- |
-| CRIT-01 | ✅ DONE | Payment webhooks (Chapa), HMAC verification, event publishing                                       |
-| CRIT-02 | ✅ DONE | Santim monetary handling, ETB formatting                                                            |
-| CRIT-03 | ✅ DONE | Event bus with Redis Streams, publishers, consumers, contract tests                                 |
+| CRIT    | Status  | Notes                                                                                                                       |
+| ------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| CRIT-01 | ✅ DONE | Payment webhooks (Chapa), HMAC verification, event publishing                                                               |
+| CRIT-02 | ✅ DONE | Santim monetary handling, ETB formatting                                                                                    |
+| CRIT-03 | ✅ DONE | Event bus with Redis Streams, publishers, consumers, contract tests                                                         |
 | CRIT-05 | ✅ DONE | PowerSync offline infrastructure, KDS sync, order sync, printer fallback, stale-device alerts with Vercel Crons, unit tests |
-| CRIT-06 | ✅ DONE | Multi-tenant security, RLS, idempotency keys                                                        |
-| CRIT-07 | ✅ DONE | GraphQL Federation, Apollo Router, subgraph routes, JWT auth, CI workflows, service extraction validation |
-| CRIT-08 | ✅ DONE | Sentry, health endpoints, alerting                                                                  |
-| CRIT-09 | ✅ DONE | Happy hour pricing, tip pooling, course firing                                                      |
-| CRIT-10 | ✅ DONE | KDS components, station boards                                                                      |
-| CRIT-11 | ✅ DONE | Notification queue, SMS retry, deduplication, waitlist, HMAC sessions, push fallback, observability |
+| CRIT-06 | ✅ DONE | Multi-tenant security, RLS, idempotency keys                                                                                |
+| CRIT-07 | ✅ DONE | GraphQL Federation, Apollo Router, subgraph routes, JWT auth, CI workflows, service extraction validation                   |
+| CRIT-08 | ✅ DONE | Sentry, health endpoints, alerting                                                                                          |
+| CRIT-09 | ✅ DONE | Happy hour pricing, tip pooling, course firing                                                                              |
+| CRIT-10 | ✅ DONE | KDS components, station boards                                                                                              |
+| CRIT-11 | ✅ DONE | Notification queue, SMS retry, deduplication, waitlist, HMAC sessions, push fallback, observability                         |
 
 ---
 
@@ -195,6 +195,7 @@ CRIT-11 (Notifications) → Depends on CRIT-03 (Event Bus) ✅ DONE
 - [x] Delivery-readiness layerable without authz redesign
 
 **Implemented Files:**
+
 - `src/lib/notifications/retry.ts` - SMS retry with exponential backoff
 - `src/lib/notifications/deduplication.ts` - Notification deduplication
 - `src/lib/notifications/queue.ts` - Queue processor

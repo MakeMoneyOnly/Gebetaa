@@ -11,14 +11,15 @@
 
 This audit identified **15 issues** across the GraphQL implementation:
 
-| Severity | Count |
-|----------|-------|
-| 🔴 Critical | 4 |
-| 🟠 High | 4 |
-| 🟡 Medium | 4 |
-| 🟢 Low | 3 |
+| Severity    | Count |
+| ----------- | ----- |
+| 🔴 Critical | 4     |
+| 🟠 High     | 4     |
+| 🟡 Medium   | 4     |
+| 🟢 Low      | 3     |
 
 **Top Priority Issues:**
+
 1. No DataLoader implementation - guaranteed N+1 query problems
 2. Missing authorization checks in resolvers
 3. Sensitive data exposed in schema (pinCode)
@@ -148,12 +149,20 @@ Update resolvers to use DataLoaders:
 // src/domains/menu/resolvers.ts
 export const menuResolvers = {
     MenuItem: {
-        modifierGroups: async (menuItem: Record<string, unknown>, _args: unknown, context: GraphQLContext) => {
+        modifierGroups: async (
+            menuItem: Record<string, unknown>,
+            _args: unknown,
+            context: GraphQLContext
+        ) => {
             const id = menuItem.id as string;
             if (!id) return [];
             return context.dataLoaders.modifierGroups.load(id);
         },
-        category: async (menuItem: Record<string, unknown>, _args: unknown, context: GraphQLContext) => {
+        category: async (
+            menuItem: Record<string, unknown>,
+            _args: unknown,
+            context: GraphQLContext
+        ) => {
             const categoryId = menuItem.category_id as string;
             if (!categoryId) return null;
             return context.dataLoaders.categories.load(categoryId);
@@ -161,7 +170,11 @@ export const menuResolvers = {
     },
 
     ModifierGroup: {
-        options: async (group: Record<string, unknown>, _args: unknown, context: GraphQLContext) => {
+        options: async (
+            group: Record<string, unknown>,
+            _args: unknown,
+            context: GraphQLContext
+        ) => {
             const id = group.id as string;
             if (!id) return [];
             return context.dataLoaders.modifierOptions.load(id);
@@ -234,23 +247,20 @@ export async function requireRestaurantAccess(
     restaurantId: string
 ): Promise<AuthorizedContext> {
     const authContext = requireAuth(context);
-    
+
     // Verify user has access to this restaurant
-    const { allowed, reason } = await verifyTenantScope(
-        authContext.user.id,
-        restaurantId
-    );
-    
+    const { allowed, reason } = await verifyTenantScope(authContext.user.id, restaurantId);
+
     if (!allowed) {
         throw new GraphQLError(reason || 'Access denied to restaurant', {
-            extensions: { 
-                code: 'FORBIDDEN', 
+            extensions: {
+                code: 'FORBIDDEN',
                 http: { status: 403 },
-                restaurantId 
+                restaurantId,
             },
         });
     }
-    
+
     return authContext;
 }
 
@@ -288,14 +298,14 @@ export const ordersResolvers = {
         order: async (_: unknown, args: { id: string }, context: GraphQLContext) => {
             const authContext = requireAuth(context);
             const order = await ordersService.getOrder(args.id);
-            
+
             // Verify tenant isolation
             if (order && order.restaurant_id !== authContext.user.restaurantId) {
                 throw new GraphQLError('Access denied to this order', {
                     extensions: { code: 'FORBIDDEN', http: { status: 403 } },
                 });
             }
-            
+
             return order;
         },
 
@@ -309,9 +319,13 @@ export const ordersResolvers = {
     },
 
     Mutation: {
-        createOrder: async (_: unknown, args: { input: CreateOrderInput }, context: GraphQLContext) => {
+        createOrder: async (
+            _: unknown,
+            args: { input: CreateOrderInput },
+            context: GraphQLContext
+        ) => {
             const authContext = await requireRestaurantAccess(context, args.input.restaurantId);
-            
+
             const order = await ordersService.createOrder({
                 ...args.input,
                 staffId: authContext.user.id, // Use authenticated user
@@ -343,7 +357,7 @@ type Staff @key(fields: "id") {
     userId: ID!
     fullName: String!
     role: StaffRole!
-    pinCode: String        # ❌ CRITICAL: Sensitive data exposed
+    pinCode: String # ❌ CRITICAL: Sensitive data exposed
     isActive: Boolean!
     hireDate: String
     phone: String
@@ -441,7 +455,7 @@ const complexityRule = createComplexityLimitRule(COMPLEXITY_LIMIT, {
     onCost: (cost: number) => {
         console.log(`Query complexity: ${cost}`);
     },
-    formatErrorMessage: (cost: number) => 
+    formatErrorMessage: (cost: number) =>
         `Query complexity ${cost} exceeds maximum allowed ${COMPLEXITY_LIMIT}`,
 });
 
@@ -450,7 +464,7 @@ export function createSubgraphServer<TContext>(config: SubgraphConfig) {
         typeDefs: config.typeDefs,
         resolvers: config.resolvers,
         introspection: process.env.NODE_ENV !== 'production',
-        
+
         // Add validation rules for security
         validationRules: [
             depthLimit(DEPTH_LIMIT, {
@@ -460,17 +474,17 @@ export function createSubgraphServer<TContext>(config: SubgraphConfig) {
             }),
             complexityRule,
         ],
-        
+
         // Enable CSRF prevention
         csrfPrevention: true,
-        
+
         // Configure error formatting
         formatError: (formattedError, error) => {
             // Log internal errors
             if (formattedError.extensions?.code === 'INTERNAL_SERVER_ERROR') {
                 console.error('GraphQL Internal Error:', error);
             }
-            
+
             // Don't expose internal errors to clients
             if (process.env.NODE_ENV === 'production') {
                 if (!formattedError.extensions?.code) {
@@ -479,7 +493,7 @@ export function createSubgraphServer<TContext>(config: SubgraphConfig) {
                     });
                 }
             }
-            
+
             return formattedError;
         },
     });
@@ -500,7 +514,7 @@ const server = createSubgraphServer<GraphQLContext>({
 
 ---
 
-### 🟠 HIGH-001: Missing Tenant Isolation in __resolveReference
+### 🟠 HIGH-001: Missing Tenant Isolation in \_\_resolveReference
 
 **Severity:** High  
 **Location:** All resolver files with `__resolveReference`  
@@ -529,7 +543,7 @@ Add tenant validation to reference resolvers:
 Order: {
     __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
         const order = await ordersService.getOrder(reference.id);
-        
+
         // Validate tenant isolation
         if (order && context.user?.restaurantId) {
             if (order.restaurant_id !== context.user.restaurantId) {
@@ -537,7 +551,7 @@ Order: {
                 return null;
             }
         }
-        
+
         return order;
     },
 },
@@ -688,13 +702,13 @@ import { CreateOrderInputSchema } from '@/lib/validators/graphql';
 
 createOrder: async (_: unknown, args: { input: unknown }, context: GraphQLContext) => {
     const authContext = requireAuth(context);
-    
+
     // Validate input
     const parsed = CreateOrderInputSchema.safeParse(args.input);
     if (!parsed.success) {
         return createErrorResult('VALIDATION_ERROR', parsed.error.message);
     }
-    
+
     const order = await ordersService.createOrder({
         ...parsed.data,
         staffId: authContext.user.id,
@@ -727,8 +741,8 @@ Add explicit control with logging:
 
 ```typescript
 // src/lib/graphql/config.ts
-const ENABLE_INTROSPECTION = process.env.GRAPHQL_ENABLE_INTROSPECTION === 'true' || 
-    process.env.NODE_ENV !== 'production';
+const ENABLE_INTROSPECTION =
+    process.env.GRAPHQL_ENABLE_INTROSPECTION === 'true' || process.env.NODE_ENV !== 'production';
 
 if (ENABLE_INTROSPECTION && process.env.NODE_ENV === 'production') {
     console.warn('⚠️ GraphQL introspection is ENABLED in production. This should be disabled.');
@@ -771,27 +785,33 @@ const MAX_JSON_SIZE = 10240; // 10KB
 export const JSONScalar = new GraphQLScalarType({
     name: 'JSON',
     description: 'JSON value with size validation',
-    
+
     serialize(value: unknown) {
         return value;
     },
-    
+
     parseValue(value: unknown) {
         // Validate size
         const stringified = JSON.stringify(value);
         if (stringified.length > MAX_JSON_SIZE) {
             throw new GraphQLError(`JSON value exceeds maximum size of ${MAX_JSON_SIZE} bytes`);
         }
-        
+
         // Validate it's a valid JSON-serializable value
-        if (value !== null && typeof value !== 'object' && typeof value !== 'string' && 
-            typeof value !== 'number' && typeof value !== 'boolean' && !Array.isArray(value)) {
+        if (
+            value !== null &&
+            typeof value !== 'object' &&
+            typeof value !== 'string' &&
+            typeof value !== 'number' &&
+            typeof value !== 'boolean' &&
+            !Array.isArray(value)
+        ) {
             throw new GraphQLError('Invalid JSON value');
         }
-        
+
         return value;
     },
-    
+
     parseLiteral(ast) {
         if (ast.kind === Kind.STRING) {
             try {
@@ -800,27 +820,27 @@ export const JSONScalar = new GraphQLScalarType({
                 throw new GraphQLError('Invalid JSON string');
             }
         }
-        
+
         if (ast.kind === Kind.INT) {
             return parseInt(ast.value, 10);
         }
-        
+
         if (ast.kind === Kind.FLOAT) {
             return parseFloat(ast.value);
         }
-        
+
         if (ast.kind === Kind.BOOLEAN) {
             return ast.value;
         }
-        
+
         if (ast.kind === Kind.NULL) {
             return null;
         }
-        
+
         if (ast.kind === Kind.LIST || ast.kind === Kind.OBJECT) {
             return ast;
         }
-        
+
         throw new GraphQLError(`Unexpected literal type: ${ast.kind}`);
     },
 });
@@ -873,7 +893,7 @@ const MAX_PAGE_SIZE = 100;
 
 orders: withRestaurantAccess(async (_: unknown, args) => {
     const limit = Math.min(args.first ?? 20, MAX_PAGE_SIZE);
-    
+
     const orders = await ordersService.getOrders(args.restaurantId, {
         status: args.status ? mapOrderStatus(args.status) : undefined,
         tableId: args.tableId,
@@ -925,14 +945,14 @@ Implement proper reference resolution:
 Category: {
     __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
         const category = await context.dataLoaders.categories.load(reference.id);
-        
+
         // Validate tenant isolation
         if (category && context.user?.restaurantId) {
             if (category.restaurant_id !== context.user.restaurantId) {
                 return null;
             }
         }
-        
+
         return category;
     },
 },
@@ -963,7 +983,7 @@ Use authenticated user from context:
 ```typescript
 createOrder: async (_: unknown, args: { input: CreateOrderInput }, context: GraphQLContext) => {
     const authContext = requireAuth(context);
-    
+
     const order = await ordersService.createOrder({
         ...args.input,
         staffId: authContext.user.id, // Use actual user ID
@@ -1011,20 +1031,30 @@ Types and fields lack descriptions, making the schema harder to use.
 Add descriptions:
 
 ```graphql
-"""Represents a customer order in the restaurant system"""
+"""
+Represents a customer order in the restaurant system
+"""
 type Order @key(fields: "id") {
-    """Unique identifier for the order"""
+    """
+    Unique identifier for the order
+    """
     id: ID!
-    
-    """The restaurant this order belongs to"""
+
+    """
+    The restaurant this order belongs to
+    """
     restaurantId: ID!
-    
-    """Human-readable order number (e.g., '20260317-0001')"""
+
+    """
+    Human-readable order number (e.g., '20260317-0001')
+    """
     orderNumber: String!
-    
-    """Current status of the order"""
+
+    """
+    Current status of the order
+    """
     status: OrderStatus!
-    
+
     # ... etc
 }
 ```
@@ -1043,17 +1073,29 @@ Add operation descriptions:
 
 ```graphql
 type Query {
-    """Retrieve orders for a restaurant with optional filtering"""
+    """
+    Retrieve orders for a restaurant with optional filtering
+    """
     orders(
-        """The restaurant to fetch orders for"""
+        """
+        The restaurant to fetch orders for
+        """
         restaurantId: ID!
-        """Filter by order status"""
+        """
+        Filter by order status
+        """
         status: OrderStatus
-        """Filter by table"""
+        """
+        Filter by table
+        """
         tableId: ID
-        """Number of results to return (max 100)"""
+        """
+        Number of results to return (max 100)
+        """
         first: Int = 20
-        """Pagination cursor"""
+        """
+        Pagination cursor
+        """
         after: String
     ): OrderConnection!
 }
@@ -1107,24 +1149,28 @@ flowchart TD
 ## Implementation Priority
 
 ### Phase 1: Critical Security Fixes (Immediate)
+
 1. Remove `pinCode` from Staff schema
 2. Add authorization checks to all resolvers
 3. Implement DataLoader for N+1 prevention
 4. Add query complexity/depth limiting
 
 ### Phase 2: High Priority (Within Sprint)
+
 1. Add input validation with Zod
 2. Implement proper error handling
 3. Fix federation reference resolvers
 4. Add tenant isolation to reference resolvers
 
 ### Phase 3: Medium Priority (Next Sprint)
+
 1. Add JSON scalar validation
 2. Implement pagination limits
 3. Fix hardcoded staff IDs
 4. Add explicit introspection control
 
 ### Phase 4: Low Priority (Backlog)
+
 1. Add schema documentation
 2. Add deprecation notices
 3. Improve error messages
@@ -1133,50 +1179,50 @@ flowchart TD
 
 ## Files Requiring Changes
 
-| File | Changes Required |
-|------|-----------------|
-| `graphql/subgraphs/staff.graphql` | Remove pinCode field |
-| `graphql/subgraphs/orders.graphql` | Add pagination limits, descriptions |
-| `graphql/subgraphs/menu.graphql` | Add descriptions |
-| `graphql/subgraphs/payments.graphql` | Add descriptions |
-| `graphql/subgraphs/guests.graphql` | Add descriptions |
-| `src/lib/graphql/context.ts` | Add DataLoaders to context |
-| `src/lib/graphql/dataloaders.ts` | **NEW FILE** - DataLoader factory |
-| `src/lib/graphql/authz.ts` | **NEW FILE** - Authorization helpers |
-| `src/lib/graphql/errors.ts` | **NEW FILE** - Error handling |
-| `src/lib/graphql/apollo-config.ts` | **NEW FILE** - Server configuration |
-| `src/lib/graphql/scalars/json.ts` | **NEW FILE** - Custom JSON scalar |
-| `src/lib/validators/graphql.ts` | **NEW FILE** - Input validation schemas |
-| `src/domains/orders/resolvers.ts` | Add auth, DataLoader, validation |
-| `src/domains/menu/resolvers.ts` | Add auth, DataLoader, validation |
-| `src/domains/payments/resolvers.ts` | Implement resolvers with auth |
-| `src/domains/guests/resolvers.ts` | Implement resolvers with auth |
-| `src/domains/staff/resolvers.ts` | Implement resolvers with auth |
-| `src/app/api/subgraphs/*/route.ts` | Use shared Apollo config |
+| File                                 | Changes Required                        |
+| ------------------------------------ | --------------------------------------- |
+| `graphql/subgraphs/staff.graphql`    | Remove pinCode field                    |
+| `graphql/subgraphs/orders.graphql`   | Add pagination limits, descriptions     |
+| `graphql/subgraphs/menu.graphql`     | Add descriptions                        |
+| `graphql/subgraphs/payments.graphql` | Add descriptions                        |
+| `graphql/subgraphs/guests.graphql`   | Add descriptions                        |
+| `src/lib/graphql/context.ts`         | Add DataLoaders to context              |
+| `src/lib/graphql/dataloaders.ts`     | **NEW FILE** - DataLoader factory       |
+| `src/lib/graphql/authz.ts`           | **NEW FILE** - Authorization helpers    |
+| `src/lib/graphql/errors.ts`          | **NEW FILE** - Error handling           |
+| `src/lib/graphql/apollo-config.ts`   | **NEW FILE** - Server configuration     |
+| `src/lib/graphql/scalars/json.ts`    | **NEW FILE** - Custom JSON scalar       |
+| `src/lib/validators/graphql.ts`      | **NEW FILE** - Input validation schemas |
+| `src/domains/orders/resolvers.ts`    | Add auth, DataLoader, validation        |
+| `src/domains/menu/resolvers.ts`      | Add auth, DataLoader, validation        |
+| `src/domains/payments/resolvers.ts`  | Implement resolvers with auth           |
+| `src/domains/guests/resolvers.ts`    | Implement resolvers with auth           |
+| `src/domains/staff/resolvers.ts`     | Implement resolvers with auth           |
+| `src/app/api/subgraphs/*/route.ts`   | Use shared Apollo config                |
 
 ---
 
 ## Testing Recommendations
 
 1. **Unit Tests for DataLoaders**
-   - Test batching behavior
-   - Test caching behavior
-   - Test error handling
+    - Test batching behavior
+    - Test caching behavior
+    - Test error handling
 
 2. **Integration Tests for Authorization**
-   - Test tenant isolation
-   - Test role-based access
-   - Test guest session access
+    - Test tenant isolation
+    - Test role-based access
+    - Test guest session access
 
 3. **Load Tests for Query Complexity**
-   - Test deeply nested queries are rejected
-   - Test high-complexity queries are rejected
-   - Test rate limiting
+    - Test deeply nested queries are rejected
+    - Test high-complexity queries are rejected
+    - Test rate limiting
 
 4. **Security Tests**
-   - Test unauthorized access attempts
-   - Test cross-tenant access attempts
-   - Test injection attempts
+    - Test unauthorized access attempts
+    - Test cross-tenant access attempts
+    - Test injection attempts
 
 ---
 

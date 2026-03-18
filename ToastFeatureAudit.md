@@ -36,23 +36,23 @@ This audit compares Gebeta Restaurant OS against the Toast Platform across all m
 
 ### Toast Standard Features
 
-| Feature                 | Description                                  | Gebeta Status | Gap Analysis                      |
-| ----------------------- | -------------------------------------------- | ------------- | --------------------------------- |
-| **Cloud-based POS**     | Android-based, purpose-built for restaurants | ✅ Complete   | Next.js PWA with offline support  |
-| **Order Management**    | Create, modify, void orders with modifiers   | ✅ Complete   | Full order lifecycle              |
-| **Menu Management**     | Real-time menu updates, 86 items, specials   | ✅ Complete   | Menu editor with categories       |
-| **Quick Keys**          | Customizable grid for fast ordering          | ⚠️ Partial    | Basic grid, needs customization   |
-| **Modifier Management** | Add-ons, substitutions, preparation notes    | ✅ Complete   | Full modifier support             |
-| **Discount Management** | Percentage, fixed amount, item-level         | ⚠️ Partial    | Basic discounts, no comp tracking |
-| **Open Tickets**        | Keep orders open, multiple tickets per table | ✅ Complete   | Table session management          |
-| **Course Firing**       | Automated course pacing (apps → entrees)     | ✅ Complete   | Implemented via fire_mode, current_course fields + course-fire API                         |
-| **Split Check**         | Multiple payments per order                  | ✅ Complete   | Split order endpoint exists                                                |
-| **Tip Management**      | Tip suggestions, tip pooling                 | ⚠️ Partial    | No tip pooling logic              |
-| **Cash Management**     | Cash drawer tracking, payouts                | ⚠️ Partial    | Basic tracking only               |
-| **Refunds**             | Full and partial refunds                     | ✅ Complete   | Refund API exists                 |
-| **Price Overrides**     | Manual price adjustments with reason codes   | ❌ Missing    | Need audit trail                  |
-| **Happy Hour Pricing**  | Time-based pricing rules                     | ✅ Complete   | happy_hour_schedules table + API implemented                              |
-| **Multi-Device Sync**   | Real-time sync across all POS devices        | ✅ Complete   | Supabase Realtime                 |
+| Feature                 | Description                                  | Gebeta Status | Gap Analysis                                                       |
+| ----------------------- | -------------------------------------------- | ------------- | ------------------------------------------------------------------ |
+| **Cloud-based POS**     | Android-based, purpose-built for restaurants | ✅ Complete   | Next.js PWA with offline support                                   |
+| **Order Management**    | Create, modify, void orders with modifiers   | ✅ Complete   | Full order lifecycle                                               |
+| **Menu Management**     | Real-time menu updates, 86 items, specials   | ✅ Complete   | Menu editor with categories                                        |
+| **Quick Keys**          | Customizable grid for fast ordering          | ⚠️ Partial    | Basic grid, needs customization                                    |
+| **Modifier Management** | Add-ons, substitutions, preparation notes    | ✅ Complete   | Full modifier support                                              |
+| **Discount Management** | Percentage, fixed amount, item-level         | ⚠️ Partial    | Basic discounts, no comp tracking                                  |
+| **Open Tickets**        | Keep orders open, multiple tickets per table | ✅ Complete   | Table session management                                           |
+| **Course Firing**       | Automated course pacing (apps → entrees)     | ✅ Complete   | Implemented via fire_mode, current_course fields + course-fire API |
+| **Split Check**         | Multiple payments per order                  | ✅ Complete   | Split order endpoint exists                                        |
+| **Tip Management**      | Tip suggestions, tip pooling                 | ⚠️ Partial    | No tip pooling logic                                               |
+| **Cash Management**     | Cash drawer tracking, payouts                | ⚠️ Partial    | Basic tracking only                                                |
+| **Refunds**             | Full and partial refunds                     | ✅ Complete   | Refund API exists                                                  |
+| **Price Overrides**     | Manual price adjustments with reason codes   | ❌ Missing    | Need audit trail                                                   |
+| **Happy Hour Pricing**  | Time-based pricing rules                     | ✅ Complete   | happy_hour_schedules table + API implemented                       |
+| **Multi-Device Sync**   | Real-time sync across all POS devices        | ✅ Complete   | Supabase Realtime                                                  |
 
 ### Priority Gaps - POS
 
@@ -110,13 +110,13 @@ interface SplitCheckOptions {
 | **Modifier Styling**   | Bold, color-coded (red exclusions, green additions) | ✅ Complete   | Semantic red/green modifier styling implemented              |
 | **Prep Summary**       | Aggregate item counts across tickets                | ✅ Complete   | Toggle sidebar                                               |
 | **Connected Stations** | Multi-station routing per item                      | ✅ Complete   | `connected_stations` + KDS multi-station fan-out implemented |
-| **Printer Fallback**   | Kitchen chit printing backup                        | ✅ Complete   | printer_jobs table + printerFallback.ts implemented                          |
+| **Printer Fallback**   | Kitchen chit printing backup                        | ✅ Complete   | printer_jobs table + printerFallback.ts implemented          |
 | **Grid View**          | Compact multi-ticket with fire timers               | ⚠️ Partial    | No fire timer UI                                             |
-| **Course Firing**      | Automated course pacing                             | ✅ Complete   | Implemented via fire_mode + current_course                                     |
+| **Course Firing**      | Automated course pacing                             | ✅ Complete   | Implemented via fire_mode + current_course                   |
 | **Fire by Prep Time**  | Items fire based on prep duration                   | ❌ Missing    | Optimization feature                                         |
 | **Routing Rules**      | Re-route based on dining option                     | ❌ Missing    | Takeout → Pack station                                       |
 | **Ticket Colors**      | Outline by dining behavior                          | ❌ Missing    | Visual differentiation                                       |
-| **Offline Mode**       | Continue without internet                           | ✅ Complete   | PowerSync + localStorage offline queue implemented                            |
+| **Offline Mode**       | Continue without internet                           | ✅ Complete   | PowerSync + localStorage offline queue implemented           |
 | **Recall**             | Bring back bumped tickets                           | ✅ Complete   | Full recall support                                          |
 
 ### Priority Gaps - KDS
@@ -156,20 +156,20 @@ interface OfflineKDSQueue {
 
 ### Toast Standard Features
 
-| Feature                  | Description                        | Gebeta Status | Gap Analysis                    |
-| ------------------------ | ---------------------------------- | ------------- | ------------------------------- |
-| **Branded Website**      | Restaurant website with menu       | ⚠️ Partial    | Guest menu exists, no full site |
-| **Online Ordering**      | Commission-free ordering           | ✅ Complete   | Guest ordering flow             |
-| **Google Integration**   | Order with Google Search & Maps    | ❌ Missing    | Major discovery channel         |
-| **Mobile App**           | Branded iOS/Android app            | ❌ Missing    | PWA exists, no native app       |
-| **Order & Pay**          | Scan QR, order from table          | ✅ Complete   | Full QR-based ordering          |
-| **Scheduled Orders**     | Pre-order for future pickup        | ⚠️ Partial    | Basic scheduling                |
-| **Delivery Integration** | Toast Delivery Services            | ⚠️ Partial    | Delivery API exists             |
-| **Menu Sync**            | Real-time menu from POS            | ✅ Complete   | Same database                   |
-| **Upsells**              | Suggest add-ons during checkout    | ⚠️ Partial    | Basic recommendations           |
-| **Promotions**           | Coupons, discounts, limited offers | ⚠️ Partial    | Basic discount support          |
-| **Push Notifications**   | Order updates via app/SMS          | ✅ Complete   | Africa'S Talking SMS + FCM Push implemented                                |
-| **Order Tracker**        | Live status for guests             | ⚠️ Partial    | Tracker page exists             |
+| Feature                  | Description                        | Gebeta Status | Gap Analysis                                |
+| ------------------------ | ---------------------------------- | ------------- | ------------------------------------------- |
+| **Branded Website**      | Restaurant website with menu       | ⚠️ Partial    | Guest menu exists, no full site             |
+| **Online Ordering**      | Commission-free ordering           | ✅ Complete   | Guest ordering flow                         |
+| **Google Integration**   | Order with Google Search & Maps    | ❌ Missing    | Major discovery channel                     |
+| **Mobile App**           | Branded iOS/Android app            | ❌ Missing    | PWA exists, no native app                   |
+| **Order & Pay**          | Scan QR, order from table          | ✅ Complete   | Full QR-based ordering                      |
+| **Scheduled Orders**     | Pre-order for future pickup        | ⚠️ Partial    | Basic scheduling                            |
+| **Delivery Integration** | Toast Delivery Services            | ⚠️ Partial    | Delivery API exists                         |
+| **Menu Sync**            | Real-time menu from POS            | ✅ Complete   | Same database                               |
+| **Upsells**              | Suggest add-ons during checkout    | ⚠️ Partial    | Basic recommendations                       |
+| **Promotions**           | Coupons, discounts, limited offers | ⚠️ Partial    | Basic discount support                      |
+| **Push Notifications**   | Order updates via app/SMS          | ✅ Complete   | Africa'S Talking SMS + FCM Push implemented |
+| **Order Tracker**        | Live status for guests             | ⚠️ Partial    | Tracker page exists                         |
 
 ### Priority Gaps - Online Ordering
 
@@ -361,18 +361,18 @@ Dogs (Low Profit, Low Popularity) - Remove or reprice
 
 ### Toast Standard Features
 
-| Feature                  | Description                        | Gebeta Status | Gap Analysis           |
-| ------------------------ | ---------------------------------- | ------------- | ---------------------- |
-| **Employee Management**  | Staff profiles, roles, permissions | ✅ Complete   | Full staff management  |
-| **Scheduling**           | Build and manage schedules         | ⚠️ Partial    | Basic schedule support |
-| **Time Clock**           | Clock in/out with location         | ⚠️ Partial    | Basic time entries     |
-| **Tip Pooling**          | Distribute tips by rules           | ✅ Complete   | tip_pools, tip_pool_shares tables + allocation API implemented            |
-| **Payroll Processing**   | Automated payroll (15 min median)  | ❌ Missing    | Major time saver       |
-| **HR Toolkit**           | Templates, compliance docs         | ❌ Missing    | HR support             |
-| **Onboarding**           | Digital new hire paperwork         | ⚠️ Partial    | Basic invite flow      |
-| **Performance Tracking** | Sales per server, avg check        | ⚠️ Partial    | Basic metrics          |
-| **Break Compliance**     | Track required breaks              | ❌ Missing    | Legal compliance       |
-| **Overtime Calculation** | Auto-calculate OT                  | ❌ Missing    | Payroll accuracy       |
+| Feature                  | Description                        | Gebeta Status | Gap Analysis                                                   |
+| ------------------------ | ---------------------------------- | ------------- | -------------------------------------------------------------- |
+| **Employee Management**  | Staff profiles, roles, permissions | ✅ Complete   | Full staff management                                          |
+| **Scheduling**           | Build and manage schedules         | ⚠️ Partial    | Basic schedule support                                         |
+| **Time Clock**           | Clock in/out with location         | ⚠️ Partial    | Basic time entries                                             |
+| **Tip Pooling**          | Distribute tips by rules           | ✅ Complete   | tip_pools, tip_pool_shares tables + allocation API implemented |
+| **Payroll Processing**   | Automated payroll (15 min median)  | ❌ Missing    | Major time saver                                               |
+| **HR Toolkit**           | Templates, compliance docs         | ❌ Missing    | HR support                                                     |
+| **Onboarding**           | Digital new hire paperwork         | ⚠️ Partial    | Basic invite flow                                              |
+| **Performance Tracking** | Sales per server, avg check        | ⚠️ Partial    | Basic metrics                                                  |
+| **Break Compliance**     | Track required breaks              | ❌ Missing    | Legal compliance                                               |
+| **Overtime Calculation** | Auto-calculate OT                  | ❌ Missing    | Payroll accuracy                                               |
 
 ### Priority Gaps - Team Management
 
@@ -446,10 +446,10 @@ interface TipPoolConfig {
 | **Integrated Processing** | Toast-owned processing    | ⚠️ Partial    | Multiple providers |
 | **Contactless Payments**  | NFC, tap-to-pay           | ❌ Missing    | Modern expectation |
 | **Digital Wallets**       | Apple Pay, Google Pay     | ❌ Missing    | Convenience        |
-| **Telebirr Integration**  | Ethiopian mobile money    | ✅ Complete   | Implemented         |
-| **Chapa Integration**     | Ethiopian payment gateway | ✅ Complete   | Implemented         |
-| **Cash Management**       | Drawer tracking           | ✅ Complete   | Basic tracking      |
-| **Tip on Device**         | Digital tip collection    | ✅ Complete   | Implemented          |
+| **Telebirr Integration**  | Ethiopian mobile money    | ✅ Complete   | Implemented        |
+| **Chapa Integration**     | Ethiopian payment gateway | ✅ Complete   | Implemented        |
+| **Cash Management**       | Drawer tracking           | ✅ Complete   | Basic tracking     |
+| **Tip on Device**         | Digital tip collection    | ✅ Complete   | Implemented        |
 
 ### Priority Gaps - Payments
 
