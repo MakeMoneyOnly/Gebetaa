@@ -3,11 +3,7 @@
 
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from '@/lib/graphql/context';
-import {
-    requireAuth,
-    requireRestaurantAccess,
-    AuthorizedContext,
-} from '@/lib/graphql/authz';
+import { requireAuth, requireRestaurantAccess } from '@/lib/graphql/authz';
 
 export const paymentsResolvers = {
     Query: {
@@ -32,7 +28,7 @@ export const paymentsResolvers = {
             context: GraphQLContext
         ) => {
             // Authorization: Require authentication
-            const authContext = requireAuth(context);
+            const _authContext = requireAuth(context);
 
             // If restaurantId is provided, verify access
             if (args.restaurantId) {

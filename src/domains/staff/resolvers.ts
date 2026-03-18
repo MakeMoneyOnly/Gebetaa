@@ -3,11 +3,7 @@
 
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from '@/lib/graphql/context';
-import {
-    requireAuth,
-    requireRestaurantAccess,
-    AuthorizedContext,
-} from '@/lib/graphql/authz';
+import { requireAuth, requireRestaurantAccess } from '@/lib/graphql/authz';
 
 export const staffResolvers = {
     Query: {
@@ -26,11 +22,7 @@ export const staffResolvers = {
             return null;
         },
 
-        staff: async (
-            _: unknown,
-            args: { restaurantId: string },
-            context: GraphQLContext
-        ) => {
+        staff: async (_: unknown, args: { restaurantId: string }, context: GraphQLContext) => {
             // Authorization: Verify user has access to this restaurant
             await requireRestaurantAccess(context, args.restaurantId);
 
@@ -80,7 +72,7 @@ export const staffResolvers = {
         ) => {
             try {
                 // Authorization: Require authentication
-                const authContext = requireAuth(context);
+                const _authContext = requireAuth(context);
 
                 // TODO: When implemented, fetch staff member and verify tenant isolation
                 // const existingStaff = await staffRepository.getStaffMember(args.id);

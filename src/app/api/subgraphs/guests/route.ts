@@ -3,13 +3,13 @@
 // This is a Federation 2 subgraph
 
 import { NextRequest } from 'next/server';
-import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { guestsResolvers } from '@/domains/guests/resolvers';
 import type { GraphQLContext } from '@/lib/graphql/context';
 import { createDataLoaders } from '@/lib/graphql/dataloaders';
+import { createSubgraphServer } from '@/lib/graphql/apollo-config';
 
 // Load the guests subgraph schema
 const guestsSchema = readFileSync(
@@ -17,11 +17,10 @@ const guestsSchema = readFileSync(
     'utf-8'
 );
 
-// Create Apollo Server for guests subgraph
-const server = new ApolloServer<GraphQLContext>({
+// Create Apollo Server for guests subgraph with shared security configuration
+const server = createSubgraphServer({
     typeDefs: guestsSchema,
     resolvers: guestsResolvers,
-    introspection: process.env.NODE_ENV !== 'production',
 });
 
 // Handler for the guests subgraph

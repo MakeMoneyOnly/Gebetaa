@@ -759,7 +759,7 @@ export type ResolverTypeWrapper<T> = Promise<T> | T;
 export type ResolverWithResolve<TResult, TParent, TContext, TArgs> = {
     resolve: ResolverFn<TResult, TParent, TContext, TArgs>;
 };
-export type Resolver<TResult, TParent = {}, TContext = {}, TArgs = {}> =
+export type Resolver<TResult, TParent = object, TContext = object, TArgs = object> =
     | ResolverFn<TResult, TParent, TContext, TArgs>
     | ResolverWithResolve<TResult, TParent, TContext, TArgs>;
 
@@ -807,20 +807,20 @@ export type SubscriptionObject<TResult, TKey extends string, TParent, TContext, 
 export type SubscriptionResolver<
     TResult,
     TKey extends string,
-    TParent = {},
-    TContext = {},
-    TArgs = {},
+    TParent = object,
+    TContext = object,
+    TArgs = object,
 > =
     | ((...args: any[]) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
     | SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>;
 
-export type TypeResolveFn<TTypes, TParent = {}, TContext = {}> = (
+export type TypeResolveFn<TTypes, TParent = object, TContext = object> = (
     parent: TParent,
     context: TContext,
     info: GraphQLResolveInfo
 ) => Maybe<TTypes> | Promise<Maybe<TTypes>>;
 
-export type IsTypeOfResolverFn<T = {}, TContext = {}> = (
+export type IsTypeOfResolverFn<T = object, TContext = object> = (
     obj: T,
     context: TContext,
     info: GraphQLResolveInfo
@@ -828,7 +828,12 @@ export type IsTypeOfResolverFn<T = {}, TContext = {}> = (
 
 export type NextResolverFn<T> = () => Promise<T>;
 
-export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs = {}> = (
+export type DirectiveResolverFn<
+    TResult = object,
+    TParent = object,
+    TContext = object,
+    TArgs = object,
+> = (
     next: NextResolverFn<TResult>,
     parent: TParent,
     args: TArgs,
@@ -869,7 +874,7 @@ export type ResolversTypes = ResolversObject<{
     MenuItemResult: ResolverTypeWrapper<MenuItemResult>;
     ModifierGroup: ResolverTypeWrapper<ModifierGroup>;
     ModifierOption: ResolverTypeWrapper<ModifierOption>;
-    Mutation: ResolverTypeWrapper<{}>;
+    Mutation: ResolverTypeWrapper<object>;
     Order: ResolverTypeWrapper<Order>;
     OrderConnection: ResolverTypeWrapper<OrderConnection>;
     OrderEdge: ResolverTypeWrapper<OrderEdge>;
@@ -884,7 +889,7 @@ export type ResolversTypes = ResolversObject<{
     PaymentStatus: PaymentStatus;
     PinVerificationResult: ResolverTypeWrapper<PinVerificationResult>;
     ProcessRefundInput: ProcessRefundInput;
-    Query: ResolverTypeWrapper<{}>;
+    Query: ResolverTypeWrapper<object>;
     RecordCashPaymentInput: RecordCashPaymentInput;
     RedeemPointsInput: RedeemPointsInput;
     RefundResult: ResolverTypeWrapper<RefundResult>;
@@ -938,7 +943,7 @@ export type ResolversParentTypes = ResolversObject<{
     MenuItemResult: MenuItemResult;
     ModifierGroup: ModifierGroup;
     ModifierOption: ModifierOption;
-    Mutation: {};
+    Mutation: object;
     Order: Order;
     OrderConnection: OrderConnection;
     OrderEdge: OrderEdge;
@@ -949,7 +954,7 @@ export type ResolversParentTypes = ResolversObject<{
     PaymentResult: PaymentResult;
     PinVerificationResult: PinVerificationResult;
     ProcessRefundInput: ProcessRefundInput;
-    Query: {};
+    Query: object;
     RecordCashPaymentInput: RecordCashPaymentInput;
     RedeemPointsInput: RedeemPointsInput;
     RefundResult: RefundResult;

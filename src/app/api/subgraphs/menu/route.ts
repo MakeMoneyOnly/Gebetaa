@@ -3,13 +3,13 @@
 // This is a Federation 2 subgraph
 
 import { NextRequest } from 'next/server';
-import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { menuResolvers } from '@/domains/menu/resolvers';
 import type { GraphQLContext } from '@/lib/graphql/context';
 import { createDataLoaders } from '@/lib/graphql/dataloaders';
+import { createSubgraphServer } from '@/lib/graphql/apollo-config';
 
 // Load the menu subgraph schema
 const menuSchema = readFileSync(
@@ -17,11 +17,10 @@ const menuSchema = readFileSync(
     'utf-8'
 );
 
-// Create Apollo Server for menu subgraph
-const server = new ApolloServer<GraphQLContext>({
+// Create Apollo Server for menu subgraph with shared security configuration
+const server = createSubgraphServer({
     typeDefs: menuSchema,
     resolvers: menuResolvers,
-    introspection: process.env.NODE_ENV !== 'production',
 });
 
 // Handler for the menu subgraph

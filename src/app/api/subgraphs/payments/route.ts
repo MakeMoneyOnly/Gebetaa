@@ -3,13 +3,13 @@
 // This is a Federation 2 subgraph
 
 import { NextRequest } from 'next/server';
-import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { paymentsResolvers } from '@/domains/payments/resolvers';
 import type { GraphQLContext } from '@/lib/graphql/context';
 import { createDataLoaders } from '@/lib/graphql/dataloaders';
+import { createSubgraphServer } from '@/lib/graphql/apollo-config';
 
 // Load the payments subgraph schema
 const paymentsSchema = readFileSync(
@@ -17,11 +17,10 @@ const paymentsSchema = readFileSync(
     'utf-8'
 );
 
-// Create Apollo Server for payments subgraph
-const server = new ApolloServer<GraphQLContext>({
+// Create Apollo Server for payments subgraph with shared security configuration
+const server = createSubgraphServer({
     typeDefs: paymentsSchema,
     resolvers: paymentsResolvers,
-    introspection: process.env.NODE_ENV !== 'production',
 });
 
 // Handler for the payments subgraph

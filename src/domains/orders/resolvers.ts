@@ -3,12 +3,7 @@
 import { GraphQLError } from 'graphql';
 import { ordersService, CreateOrderInput, UpdateOrderStatusInput } from './service';
 import { GraphQLContext } from '@/lib/graphql/context';
-import {
-    requireAuth,
-    requireRestaurantAccess,
-    verifyTenantIsolation,
-    AuthorizedContext,
-} from '@/lib/graphql/authz';
+import { requireAuth, requireRestaurantAccess, verifyTenantIsolation } from '@/lib/graphql/authz';
 
 const mapOrderStatus = (
     status: string
@@ -83,7 +78,7 @@ export const ordersResolvers = {
             context: GraphQLContext
         ) => {
             // Authorization: Verify user has access to this restaurant
-            const authContext = await requireRestaurantAccess(context, args.restaurantId);
+            const _authContext = await requireRestaurantAccess(context, args.restaurantId);
 
             const orders = await ordersService.getOrders(args.restaurantId, {
                 status: args.status ? mapOrderStatus(args.status) : undefined,
@@ -325,7 +320,7 @@ export const ordersResolvers = {
     },
 
     Order: {
-        __resolveReference(reference: { id: string }, context: GraphQLContext) {
+        __resolveReference(reference: { id: string }, _context: GraphQLContext) {
             // Note: For federation, we should also verify tenant isolation here
             // But __resolveReference doesn't have access to the parent context easily
             // This is a known limitation - tenant isolation should be verified at the gateway level

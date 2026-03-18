@@ -3,13 +3,13 @@
 // This is a Federation 2 subgraph
 
 import { NextRequest } from 'next/server';
-import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { ordersResolvers } from '@/domains/orders/resolvers';
 import type { GraphQLContext } from '@/lib/graphql/context';
 import { createDataLoaders } from '@/lib/graphql/dataloaders';
+import { createSubgraphServer } from '@/lib/graphql/apollo-config';
 
 // Load the orders subgraph schema
 const ordersSchema = readFileSync(
@@ -17,11 +17,10 @@ const ordersSchema = readFileSync(
     'utf-8'
 );
 
-// Create Apollo Server for orders subgraph
-const server = new ApolloServer<GraphQLContext>({
+// Create Apollo Server for orders subgraph with shared security configuration
+const server = createSubgraphServer({
     typeDefs: ordersSchema,
     resolvers: ordersResolvers,
-    introspection: process.env.NODE_ENV !== 'production',
 });
 
 // Handler for the orders subgraph

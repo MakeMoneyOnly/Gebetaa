@@ -4,12 +4,7 @@
 import { GraphQLError } from 'graphql';
 import { menuRepository } from './repository';
 import { GraphQLContext } from '@/lib/graphql/context';
-import {
-    requireAuth,
-    requireRestaurantAccess,
-    verifyTenantIsolation,
-    AuthorizedContext,
-} from '@/lib/graphql/authz';
+import { requireAuth, requireRestaurantAccess, verifyTenantIsolation } from '@/lib/graphql/authz';
 
 export const menuResolvers = {
     Query: {
@@ -45,18 +40,14 @@ export const menuResolvers = {
             return menuItem;
         },
 
-        categories: async (
-            _: unknown,
-            args: { restaurantId: string },
-            context: GraphQLContext
-        ) => {
+        categories: async (_: unknown, args: { restaurantId: string }, context: GraphQLContext) => {
             // Authorization: Verify user has access to this restaurant
             await requireRestaurantAccess(context, args.restaurantId);
 
             return menuRepository.getMenuCategories(args.restaurantId);
         },
 
-        category: async (_: unknown, args: { id: string }, context: GraphQLContext) => {
+        category: async (_: unknown, args: { id: string }, _context: GraphQLContext) => {
             // For now, return null - would need a getCategory method
             // This is a placeholder for federation reference resolution
             console.log('[menu/resolvers] category query called with id:', args.id);
@@ -263,7 +254,7 @@ export const menuResolvers = {
     },
 
     MenuItem: {
-        __resolveReference(reference: { id: string }, context: GraphQLContext) {
+        __resolveReference(reference: { id: string }, _context: GraphQLContext) {
             // Note: For federation, tenant isolation should be verified at the gateway level
             // or the reference should include restaurant context
             return menuRepository.getMenuItem(reference.id);
