@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Content-Security-Policy configuration for P0 security requirements.
- * 
+ *
  * CSP Directives:
  * - default-src 'self': Restrict all resources to same origin by default
  * - script-src 'self' 'unsafe-inline' 'unsafe-eval': Allow inline scripts and eval for Next.js SSR
@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
         // Rate limit exceeded - return rate limit response with security headers
         const isProduction = process.env.NODE_ENV === 'production';
         const csp = buildCSP(isProduction);
-        
+
         rateLimitResponse.headers.set('Content-Security-Policy', csp);
         rateLimitResponse.headers.set('X-Content-Type-Options', 'nosniff');
         rateLimitResponse.headers.set('X-Frame-Options', 'DENY');
@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
             'Strict-Transport-Security',
             'max-age=63072000; includeSubDomains; preload'
         );
-        
+
         return rateLimitResponse;
     }
 

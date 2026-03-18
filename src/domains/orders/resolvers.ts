@@ -320,11 +320,20 @@ export const ordersResolvers = {
     },
 
     Order: {
-        __resolveReference(reference: { id: string }, _context: GraphQLContext) {
-            // Note: For federation, we should also verify tenant isolation here
-            // But __resolveReference doesn't have access to the parent context easily
-            // This is a known limitation - tenant isolation should be verified at the gateway level
-            return ordersService.getOrder(reference.id);
+        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+            const order = await ordersService.getOrder(reference.id);
+
+            // Validate tenant isolation
+            if (order && context.user?.restaurantId) {
+                if (order.restaurant_id !== context.user.restaurantId) {
+                    console.error(
+                        `Tenant isolation violation: User ${context.user.id} attempted to access order ${reference.id}`
+                    );
+                    return null;
+                }
+            }
+
+            return order;
         },
         items: async (order: { id: string }) => {
             return ordersService.getOrderItems(order.id);

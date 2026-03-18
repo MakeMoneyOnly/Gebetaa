@@ -254,10 +254,20 @@ export const menuResolvers = {
     },
 
     MenuItem: {
-        __resolveReference(reference: { id: string }, _context: GraphQLContext) {
-            // Note: For federation, tenant isolation should be verified at the gateway level
-            // or the reference should include restaurant context
-            return menuRepository.getMenuItem(reference.id);
+        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+            const menuItem = await menuRepository.getMenuItem(reference.id);
+
+            // Validate tenant isolation
+            if (menuItem && context.user?.restaurantId) {
+                if (menuItem.restaurant_id !== context.user.restaurantId) {
+                    console.error(
+                        `Tenant isolation violation: User ${context.user.id} attempted to access menu item ${reference.id}`
+                    );
+                    return null;
+                }
+            }
+
+            return menuItem;
         },
         category: async (_menuItem: Record<string, unknown>) => {
             // Category resolution would need getCategory method
@@ -271,8 +281,16 @@ export const menuResolvers = {
     },
 
     Category: {
-        __resolveReference(_reference: { id: string }) {
+        __resolveReference: async (_reference: { id: string }, _context: GraphQLContext) => {
             // Would need getCategory method
+            // When implemented, should validate tenant isolation:
+            // const category = await menuRepository.getCategory(_reference.id);
+            // if (category && _context.user?.restaurantId) {
+            //     if (category.restaurant_id !== _context.user.restaurantId) {
+            //         console.error(`Tenant isolation violation: User ${_context.user.id} attempted to access category ${_reference.id}`);
+            //         return null;
+            //     }
+            // }
             return null;
         },
         items: async (_category: Record<string, unknown>) => {
@@ -282,8 +300,16 @@ export const menuResolvers = {
     },
 
     ModifierGroup: {
-        __resolveReference(_reference: { id: string }) {
+        __resolveReference: async (_reference: { id: string }, _context: GraphQLContext) => {
             // Would need getModifierGroup method
+            // When implemented, should validate tenant isolation:
+            // const modifierGroup = await menuRepository.getModifierGroup(_reference.id);
+            // if (modifierGroup && _context.user?.restaurantId) {
+            //     if (modifierGroup.restaurant_id !== _context.user.restaurantId) {
+            //         console.error(`Tenant isolation violation: User ${_context.user.id} attempted to access modifier group ${_reference.id}`);
+            //         return null;
+            //     }
+            // }
             return null;
         },
         options: async (group: Record<string, unknown>) => {
@@ -294,8 +320,9 @@ export const menuResolvers = {
     },
 
     ModifierOption: {
-        __resolveReference(_reference: { id: string }) {
+        __resolveReference: async (_reference: { id: string }, _context: GraphQLContext) => {
             // Would need getModifierOption method
+            // When implemented, should validate tenant isolation via parent modifier group
             return null;
         },
     },

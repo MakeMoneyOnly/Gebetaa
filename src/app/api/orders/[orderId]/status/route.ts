@@ -7,7 +7,7 @@ import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { sendOrderStatusSms } from '@/lib/notifications/sms';
 import { createGebetaEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
-import { redisRateLimiters, REDIS_RATE_LIMIT_CONFIGS } from '@/lib/security';
+import { redisRateLimiters } from '@/lib/security';
 
 const UpdateOrderStatusSchema = z.object({
     status: z.enum([
