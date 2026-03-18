@@ -7,7 +7,7 @@ interface TipPoolShare {
     percentage: number;
 }
 
-interface TipPool {
+interface _TipPool {
     id: string;
     restaurant_id: string;
     name: string;

@@ -17,7 +17,7 @@ const CreateTipPoolSchema = z.object({
     allocation_mode: z.enum(['shift', 'daily', 'weekly']).default('shift'),
 });
 
-const UpdateTipPoolSchema = CreateTipPoolSchema.partial();
+const _UpdateTipPoolSchema = CreateTipPoolSchema.partial();
 
 const TipPoolShareSchema = z.object({
     role: z.enum([
