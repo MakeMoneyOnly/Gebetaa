@@ -410,7 +410,6 @@ export function incrementCounter(
     // Use Sentry.addEventProcessor to track metrics via events
     // For Sentry SDK v10+, we use the metrics API if available
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sentryWithMetrics = Sentry as any;
         if (sentryWithMetrics.metrics?.increment) {
             sentryWithMetrics.metrics.increment(name, value);
@@ -433,7 +432,6 @@ export function incrementCounter(
  */
 export function setGauge(name: string, value: number, tags?: Record<string, string>): void {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sentryWithMetrics = Sentry as any;
         if (sentryWithMetrics.metrics?.gauge) {
             sentryWithMetrics.metrics.gauge(name, value);
@@ -459,7 +457,6 @@ export function recordDistribution(
     tags?: Record<string, string>
 ): void {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sentryWithMetrics = Sentry as any;
         if (sentryWithMetrics.metrics?.distribution) {
             sentryWithMetrics.metrics.distribution(name, value);

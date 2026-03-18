@@ -308,7 +308,7 @@ export async function GET(request: NextRequest) {
         };
 
         return NextResponse.json(response);
-    } catch (error) {
+    } catch (_error) {
         return NextResponse.json(
             {
                 error: {

@@ -16,7 +16,6 @@
 import * as Sentry from '@sentry/nextjs';
 import { Redis } from '@upstash/redis';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import type { Database, Json } from '@/types/database';
 
 // =========================================================
 // Types and Interfaces
@@ -196,7 +195,7 @@ export async function closeMetricsRedis(): Promise<void> {
 /**
  * Increment a counter in Redis
  */
-async function incrementCounter(key: string, amount: number = 1): Promise<void> {
+async function _incrementCounter(key: string, amount: number = 1): Promise<void> {
     const redis = getRedisClient();
     if (redis) {
         try {
@@ -212,7 +211,7 @@ async function incrementCounter(key: string, amount: number = 1): Promise<void> 
 /**
  * Add to latency sum in Redis (for calculating average)
  */
-async function addLatency(key: string, latencyMs: number): Promise<void> {
+async function _addLatency(key: string, latencyMs: number): Promise<void> {
     const redis = getRedisClient();
     if (redis) {
         try {
@@ -661,7 +660,7 @@ export async function getDeliveryReport(
     const redis = getRedisClient();
     const useRedis = redis !== null;
 
-    let byChannel: DeliveryReport['byChannel'] = {
+    const byChannel: DeliveryReport['byChannel'] = {
         sms: { sent: 0, failed: 0, retries: 0, avgLatencyMs: 0 },
         push: { sent: 0, failed: 0, retries: 0, avgLatencyMs: 0 },
         email: { sent: 0, failed: 0, retries: 0, avgLatencyMs: 0 },
