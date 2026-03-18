@@ -8,7 +8,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 
 // Rate limit configuration types
 export interface RateLimitConfig {
@@ -285,7 +284,7 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
     const clientIP = getClientIP(request);
     const path = request.nextUrl.pathname;
-    const method = request.method;
+    const _method = request.method;
 
     // Create unique key: prefix:ip:path
     const key = `${config.keyPrefix || 'rl'}:${clientIP}:${path}`;

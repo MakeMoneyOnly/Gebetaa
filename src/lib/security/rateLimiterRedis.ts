@@ -136,7 +136,7 @@ export function getClientIp(request: NextRequest): string {
 /**
  * Get authenticated user ID from request (for user-based rate limiting)
  */
-export async function getAuthenticatedUserId(request: NextRequest): Promise<string | null> {
+export async function getAuthenticatedUserId(_request: NextRequest): Promise<string | null> {
     try {
         const supabase = await createClient();
         const {

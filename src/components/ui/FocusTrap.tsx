@@ -17,7 +17,7 @@
 'use client';
 
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { forwardRef, HTMLAttributes, useCallback } from 'react';
+import { forwardRef, HTMLAttributes, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface FocusTrapProps extends HTMLAttributes<HTMLDivElement> {
@@ -51,19 +51,23 @@ export const FocusTrap = forwardRef<HTMLDivElement, FocusTrapProps>(
             onClose?.();
         }, [onClose]);
 
-        const { containerRef, isActive } = useFocusTrap({
+        // Create our own ref that can be safely modified
+        const localContainerRef = useRef<HTMLDivElement | null>(null);
+
+        useFocusTrap({
             active,
             onDeactivate: onClose ? handleDeactivate : undefined,
             returnFocusOnDeactivate,
             autoFocus,
             initialFocus,
+            containerRef: localContainerRef,
         });
 
         // Merge the external ref with internal ref
         const mergedRef = useCallback(
             (element: HTMLDivElement | null) => {
                 // Set internal ref
-                (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+                localContainerRef.current = element;
                 // Set external ref if provided
                 if (typeof ref === 'function') {
                     ref(element);
@@ -71,7 +75,7 @@ export const FocusTrap = forwardRef<HTMLDivElement, FocusTrapProps>(
                     ref.current = element;
                 }
             },
-            [containerRef, ref]
+            [ref]
         );
 
         return (

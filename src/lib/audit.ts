@@ -153,7 +153,10 @@ export async function logServiceRoleAudit(
  */
 export function withServiceRoleAudit(
     supabase: SupabaseClient<Database>,
-    defaultParams: Omit<ServiceRoleAuditParams, 'action' | 'description' | 'success' | 'resourceId'>
+    _defaultParams: Omit<
+        ServiceRoleAuditParams,
+        'action' | 'description' | 'success' | 'resourceId'
+    >
 ) {
     return supabase;
 }

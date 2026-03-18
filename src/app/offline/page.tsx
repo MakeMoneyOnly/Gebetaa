@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { WifiOff, Home, Utensils, ArrowLeft, RefreshCw } from 'lucide-react';
+import { WifiOff, Home, Utensils, RefreshCw } from 'lucide-react';
 
 export const metadata: Metadata = {
     title: 'Offline - Gebeta',

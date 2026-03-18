@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { getPoolConfig } from './pool';
 import { logServiceRoleAudit, type ServiceRoleAuditParams } from '@/lib/audit';
 
 /**

@@ -32,6 +32,8 @@ interface UseFocusTrapOptions {
     autoFocus?: boolean;
     /** Initial focus element selector or element */
     initialFocus?: string | HTMLElement | null;
+    /** Optional external ref to use for the container */
+    containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 interface UseFocusTrapReturn {
@@ -80,9 +82,11 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
         returnFocusOnDeactivate = true,
         autoFocus = true,
         initialFocus,
+        containerRef: externalContainerRef,
     } = options;
 
-    const containerRef = useRef<HTMLDivElement>(null);
+    const internalContainerRef = useRef<HTMLDivElement>(null);
+    const containerRef = externalContainerRef || internalContainerRef;
     const triggerRef = useRef<HTMLElement | null>(null);
     const [isActive, setIsActive] = useState(active);
 
@@ -140,7 +144,7 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
                 }
             }
         },
-        [isActive]
+        [isActive, containerRef]
     );
 
     /**
@@ -191,7 +195,7 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('keydown', handleEscape);
         };
-    }, [isActive, autoFocus, initialFocus, handleKeyDown, handleEscape]);
+    }, [isActive, autoFocus, initialFocus, handleKeyDown, handleEscape, containerRef]);
 
     /**
      * Sync with external active state

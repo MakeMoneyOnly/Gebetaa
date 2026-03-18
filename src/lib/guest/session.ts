@@ -12,13 +12,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import {
-    generateHmacSecret,
-    signPayload,
-    verifySignature,
-    signWithMasterSecret,
-    verifyMasterSignature,
-} from '@/lib/security/hmac';
+import { generateHmacSecret, signPayload, verifySignature } from '@/lib/security/hmac';
 import { logger } from '@/lib/logger';
 
 // Type definitions matching the database schema
