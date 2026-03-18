@@ -4,11 +4,16 @@ on:
     push:
         branches: [main, develop]
     pull_request:
-        branches: [main]
+        branches: [main, develop]
+
+# Prevent duplicate runs on the same branch
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 env:
-    NODE_VERSION: '20'
-    PNPM_VERSION: '9.0.0'
+    NODE_VERSION: '22'
+    PNPM_VERSION: '10'
 
 jobs:
     # ============================================
@@ -17,6 +22,7 @@ jobs:
     lint:
         name: Lint & Type Check
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         permissions:
             contents: read
         steps:
@@ -175,6 +181,79 @@ jobs:
                   retention-days: 7
                   if-no-files-found: error
                   include-hidden-files: true
+
+    # ============================================
+    # BUNDLE ANALYSIS
+    # ============================================
+    bundle-analysis:
+        name: Bundle Analysis
+        runs-on: ubuntu-latest
+        needs: [lint, test-unit]
+        permissions:
+            contents: read
+        env:
+            CI: true
+            ANALYZE: true
+            NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
+            SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
+            SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL || '' }}
+            NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
+            NEXT_PUBLIC_APP_NAME: 'Gebeta'
+            NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || '' }}
+            QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET || '0000000000000000000000000000000000000000000000000000000000000000' }}
+            UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+            UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Analyze bundle
+              run: pnpm build:analyze
+
+            - name: Upload bundle analysis report
+              uses: actions/upload-artifact@v4
+              with:
+                  name: bundle-analysis-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: .next/analyze/
+                  retention-days: 30
+                  if-no-files-found: warn
+
+            - name: Check bundle size thresholds
+              run: |
+                  echo "=== Bundle Size Report ==="
+                  if [ -d ".next/analyze" ]; then
+                    find .next/analyze -name "*.html" -o -name "*.json" | while read f; do
+                      echo "File: $f"
+                      cat "$f" 2>/dev/null || true
+                    done
+                    
+                    # Check for large bundles (> 500KB warning, > 1MB critical)
+                    find .next/static -type f -name "*.js" | while read f; do
+                      size=$(stat -c%s "$f" 2>/dev/null || stat -f%z "$f" 2>/dev/null)
+                      size_kb=$((size / 1024))
+                      if [ "$size_kb" -gt 1000 ]; then
+                        echo "❌ CRITICAL: $(basename $f) is ${size_kb}KB (>1MB)"
+                        exit 1
+                      elif [ "$size_kb" -gt 500 ]; then
+                        echo "⚠️  WARNING: $(basename $f) is ${size_kb}KB (>500KB)"
+                      else
+                        echo "✓ $(basename $f): ${size_kb}KB"
+                      fi
+                    done
+                  else
+                    echo "Bundle analysis directory not found - may be first build"
+                  fi
 
     # ============================================
     # E2E TESTS

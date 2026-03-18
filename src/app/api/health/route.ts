@@ -339,20 +339,20 @@ function checkMemory(): {
     // In Node.js/Next.js serverless, we can check memory usage
     // Note: In serverless, memory limit is set at deployment time
     const memoryUsage = process.memoryUsage();
-    
+
     // Convert bytes to MB
     const used_mb = Math.round(memoryUsage.heapUsed / (1024 * 1024));
-    const limit_mb = process.env.VERCEL_MEMORY_LIMIT 
+    const limit_mb = process.env.VERCEL_MEMORY_LIMIT
         ? parseInt(process.env.VERCEL_MEMORY_LIMIT, 10) / (1024 * 1024)
         : Math.round(memoryUsage.heapTotal / (1024 * 1024));
-    
+
     // Default limit for Vercel is 1024MB (1GB) for Pro
     const defaultLimit = 1024;
     const effectiveLimit = limit_mb || defaultLimit;
-    
+
     // Check if memory usage is within acceptable limits (80% threshold)
     const usagePercent = (used_mb / effectiveLimit) * 100;
-    
+
     if (usagePercent > 90) {
         return {
             status: 'fail',
@@ -361,7 +361,7 @@ function checkMemory(): {
             message: `Memory usage critical: ${usagePercent.toFixed(1)}%`,
         };
     }
-    
+
     if (usagePercent > 80) {
         return {
             status: 'pass',
@@ -370,7 +370,7 @@ function checkMemory(): {
             message: `Memory usage high: ${usagePercent.toFixed(1)}%`,
         };
     }
-    
+
     return {
         status: 'pass',
         used_mb,

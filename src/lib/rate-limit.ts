@@ -1,9 +1,9 @@
 /**
  * Rate Limiting Utility
- * 
+ *
  * Provides in-memory rate limiting with Redis support for future upgrades.
  * Implements sliding window algorithm for accurate rate limiting.
- * 
+ *
  * P0 Security Requirement: Rate limiting on all mutation endpoints
  */
 
@@ -32,14 +32,14 @@ export const RATE_LIMITS = {
         windowSeconds: 60,
         keyPrefix: 'mut',
     } as RateLimitConfig,
-    
+
     // Auth endpoints: 5 requests per 60 seconds (stricter for security)
     auth: {
         limit: 5,
         windowSeconds: 60,
         keyPrefix: 'auth',
     } as RateLimitConfig,
-    
+
     // Read endpoints: 60 requests per 60 seconds (generous for queries)
     reads: {
         limit: 60,
@@ -55,79 +55,79 @@ const ENDPOINT_CATEGORIES: { pattern: RegExp; config: RateLimitConfig }[] = [
     { pattern: /^\/api\/staff\/verify-pin/, config: RATE_LIMITS.auth },
     { pattern: /^\/api\/staff\/add-pin/, config: RATE_LIMITS.auth },
     { pattern: /^\/api\/staff\/invite/, config: RATE_LIMITS.auth },
-    
+
     // Orders - mutation endpoints
     { pattern: /^\/api\/orders(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Payments - mutation endpoints (critical for financial transactions)
     { pattern: /^\/api\/payments(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Table sessions - mutation endpoints
     { pattern: /^\/api\/table-sessions(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Waitlist - mutation endpoints
     { pattern: /^\/api\/waitlist(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Staff management - mutations
     { pattern: /^\/api\/staff(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // KDS actions - mutations
     { pattern: /^\/api\/kds\/items\/.*\/action/, config: RATE_LIMITS.mutations },
-    
+
     // Service requests - mutations
     { pattern: /^\/api\/service-requests(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Settings mutations
     { pattern: /^\/api\/settings(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Onboarding - mutations
     { pattern: /^\/api\/onboarding(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Webhooks - mutations (but need to be accessible)
     { pattern: /^\/api\/webhooks(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Finance mutations
     { pattern: /^\/api\/finance(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Gift cards - mutations
     { pattern: /^\/api\/gift-cards(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Discounts - mutations
     { pattern: /^\/api\/discounts(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Tip pools - mutations
     { pattern: /^\/api\/tip-pools(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Jobs - mutations
     { pattern: /^\/api\/jobs(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Support tickets - mutations
     { pattern: /^\/api\/support\/tickets(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Menu mutations
     { pattern: /^\/api\/menu(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Loyalty programs - mutations
     { pattern: /^\/api\/loyalty\/programs(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Notifications - mutations
     { pattern: /^\/api\/notifications(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Restaurants - mutations
     { pattern: /^\/api\/restaurants(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Tables - mutations
     { pattern: /^\/api\/tables(\/|$)/, config: RATE_LIMITS.mutations },
-    
+
     // Analytics - typically read, but some mutations
     { pattern: /^\/api\/analytics(\/|$)/, config: RATE_LIMITS.reads },
-    
+
     // Metrics - read only
     { pattern: /^\/api\/metrics(\/|$)/, config: RATE_LIMITS.reads },
-    
+
     // Subgraphs - read only (GraphQL queries)
     { pattern: /^\/api\/subgraphs(\/|$)/, config: RATE_LIMITS.reads },
-    
+
     // Docs - read only
     { pattern: /^\/api\/docs(\/|$)/, config: RATE_LIMITS.reads },
 ];
@@ -148,10 +148,10 @@ class InMemoryRateLimitStore {
         const now = Date.now();
         const windowStart = Math.floor(now / (windowSeconds * 1000)) * (windowSeconds * 1000);
         const fullKey = `${key}:${windowStart}`;
-        
+
         const entry = this.store.get(fullKey);
         const currentCount = entry ? entry.count : 0;
-        
+
         // Update or create entry
         this.store.set(fullKey, {
             count: currentCount + 1,
@@ -180,7 +180,7 @@ class InMemoryRateLimitStore {
         const now = Date.now();
         const windowStart = Math.floor(now / (windowSeconds * 1000)) * (windowSeconds * 1000);
         const fullKey = `${key}:${windowStart}`;
-        
+
         const entry = this.store.get(fullKey);
         return entry ? entry.count : 0;
     }
@@ -190,7 +190,7 @@ class InMemoryRateLimitStore {
      */
     private cleanup(): void {
         const now = Date.now();
-        const threshold = now - (60 * 60 * 1000); // Keep 1 hour of history
+        const threshold = now - 60 * 60 * 1000; // Keep 1 hour of history
 
         for (const [key, entry] of this.store.entries()) {
             if (entry.windowStart < threshold) {
@@ -240,9 +240,11 @@ function getClientIP(request: NextRequest): string {
     }
 
     // Fallback to a default value (in production, this should be handled by the server)
-    return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-           request.headers.get('x-real-ip') || 
-           '127.0.0.1';
+    return (
+        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        request.headers.get('x-real-ip') ||
+        '127.0.0.1'
+    );
 }
 
 /**
@@ -251,7 +253,7 @@ function getClientIP(request: NextRequest): string {
 function getRateLimitConfig(path: string, method: string): RateLimitConfig | null {
     // Only apply rate limiting to mutation methods
     const isMutation = ['POST', 'PATCH', 'PUT', 'DELETE'].includes(method.toUpperCase());
-    
+
     if (!isMutation) {
         // For now, don't rate limit read operations at middleware level
         // They can be added later if needed
@@ -284,19 +286,20 @@ export async function checkRateLimit(
     const clientIP = getClientIP(request);
     const path = request.nextUrl.pathname;
     const method = request.method;
-    
+
     // Create unique key: prefix:ip:path
     const key = `${config.keyPrefix || 'rl'}:${clientIP}:${path}`;
-    
+
     const store = getRateLimitStore();
     const currentCount = store.get(key, config.windowSeconds);
-    
+
     // Check if limit exceeded
     if (currentCount >= config.limit) {
         const now = Date.now();
-        const windowStart = Math.floor(now / (config.windowSeconds * 1000)) * (config.windowSeconds * 1000);
+        const windowStart =
+            Math.floor(now / (config.windowSeconds * 1000)) * (config.windowSeconds * 1000);
         const reset = Math.ceil((windowStart + config.windowSeconds * 1000) / 1000);
-        
+
         return {
             success: false,
             limit: config.limit,
@@ -307,10 +310,10 @@ export async function checkRateLimit(
 
     // Increment counter
     const result = await store.increment(key, config.windowSeconds);
-    
+
     // Calculate remaining
     const remaining = Math.max(0, config.limit - currentCount - 1);
-    
+
     return {
         success: true,
         limit: config.limit,
@@ -323,15 +326,13 @@ export async function checkRateLimit(
  * Rate limit middleware handler
  * Returns NextResponse with rate limit headers if rate limited, otherwise null
  */
-export async function rateLimitMiddleware(
-    request: NextRequest
-): Promise<NextResponse | null> {
+export async function rateLimitMiddleware(request: NextRequest): Promise<NextResponse | null> {
     const path = request.nextUrl.pathname;
     const method = request.method;
-    
+
     // Get rate limit config for this endpoint
     const config = getRateLimitConfig(path, method);
-    
+
     if (!config) {
         // No rate limiting needed for this endpoint
         return null;
@@ -339,15 +340,15 @@ export async function rateLimitMiddleware(
 
     // Check rate limit
     const result = await checkRateLimit(request, config);
-    
+
     // Create response (will be modified by caller)
     const response = NextResponse.next();
-    
+
     // Add rate limit headers
     response.headers.set('X-RateLimit-Limit', result.limit.toString());
     response.headers.set('X-RateLimit-Remaining', result.remaining.toString());
     response.headers.set('X-RateLimit-Reset', result.reset.toString());
-    
+
     // If rate limited, return 429
     if (!result.success) {
         return NextResponse.json(
@@ -369,7 +370,7 @@ export async function rateLimitMiddleware(
             }
         );
     }
-    
+
     return null; // Continue to next middleware/handler
 }
 
@@ -383,7 +384,7 @@ export function withRateLimit<T extends (...args: unknown[]) => unknown>(
 ): T {
     return (async (request: NextRequest, ...args: unknown[]) => {
         const result = await checkRateLimit(request, config);
-        
+
         if (!result.success) {
             return NextResponse.json(
                 {
@@ -404,16 +405,16 @@ export function withRateLimit<T extends (...args: unknown[]) => unknown>(
                 }
             );
         }
-        
+
         // Add rate limit headers to successful response
-        const response = await handler(request, ...args) as NextResponse | Response | undefined;
+        const response = (await handler(request, ...args)) as NextResponse | Response | undefined;
         if (response && typeof response === 'object' && 'headers' in response) {
             const headersObj = response.headers as Headers;
             headersObj.set('X-RateLimit-Limit', result.limit.toString());
             headersObj.set('X-RateLimit-Remaining', result.remaining.toString());
             headersObj.set('X-RateLimit-Reset', result.reset.toString());
         }
-        
+
         return response;
     }) as T;
 }
@@ -428,6 +429,6 @@ export async function getRedisClient(): Promise<unknown> {
     // 1. Check for REDIS_URL environment variable
     // 2. Create Redis client
     // 3. Use Redis for storing rate limit counters
-    
+
     return null;
 }

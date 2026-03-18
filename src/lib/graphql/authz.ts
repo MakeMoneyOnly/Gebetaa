@@ -78,7 +78,7 @@ export async function requireRestaurantAccess(
  */
 export function withRestaurantAccess<TArgs extends { restaurantId: string }, TResult>(
     resolver: (parent: unknown, args: TArgs, context: AuthorizedContext) => Promise<TResult>
-) {
+): (parent: unknown, args: TArgs, context: GraphQLContext) => Promise<TResult> {
     return async (parent: unknown, args: TArgs, context: GraphQLContext) => {
         const authContext = await requireRestaurantAccess(context, args.restaurantId);
         return resolver(parent, args, authContext);
@@ -113,10 +113,7 @@ export function verifyTenantIsolation(
  * @param allowedRoles - Array of roles that are allowed
  * @throws GraphQLError with FORBIDDEN code if user doesn't have required role
  */
-export function requireRole(
-    context: AuthorizedContext,
-    allowedRoles: string[]
-): void {
+export function requireRole(context: AuthorizedContext, allowedRoles: string[]): void {
     const userRole = context.user.role;
     if (!userRole || !allowedRoles.includes(userRole)) {
         throw new GraphQLError('Insufficient permissions', {

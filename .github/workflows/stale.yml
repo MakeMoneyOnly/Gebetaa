@@ -1,0 +1,101 @@
+# Stale Issue and PR Management
+# Automatically marks and closes stale issues and pull requests
+# Based on github-workflow-automation SKILL best practices
+
+name: Stale Management
+
+on:
+    schedule:
+        - cron: '0 0 * * *' # Daily at midnight UTC
+    workflow_dispatch:
+
+permissions:
+    issues: write
+    pull-requests: write
+
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: false
+
+jobs:
+    stale:
+        name: Manage Stale Issues & PRs
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/stale@v9
+              with:
+                  # Issue settings
+                  stale-issue-message: |
+                      This issue has been automatically marked as stale because it has not had 
+                      recent activity for 60 days. It will be closed in 14 days if no further activity occurs.
+
+                      **If this issue is still relevant:**
+                      - Add a comment with an update
+                      - Remove the `stale` label
+
+                      Thank you for your contributions! 🙏
+
+                  close-issue-message: |
+                      This issue has been automatically closed due to inactivity. 
+                      If you believe this issue is still relevant, please:
+                      1. Reopen the issue
+                      2. Provide an update on the current status
+
+                      We appreciate your understanding and contributions.
+
+                  days-before-issue-stale: 60
+                  days-before-issue-close: 14
+
+                  # PR settings
+                  stale-pr-message: |
+                      This pull request has been automatically marked as stale because it has not had 
+                      recent activity for 30 days. It will be closed in 7 days if no further activity occurs.
+
+                      **If this PR is still being worked on:**
+                      - Add a comment with the current status
+                      - Rebase onto the latest main branch if needed
+                      - Remove the `stale` label
+
+                      Thank you for your contributions! 🙏
+
+                  close-pr-message: |
+                      This pull request has been automatically closed due to inactivity.
+                      If you would like to continue this work, please:
+                      1. Reopen the PR
+                      2. Rebase onto the latest main branch
+                      3. Address any merge conflicts
+
+                      We appreciate your contributions!
+
+                  days-before-pr-stale: 30
+                  days-before-pr-close: 7
+
+                  # Labels
+                  stale-issue-label: 'stale'
+                  stale-pr-label: 'stale'
+
+                  # Exempt labels - issues/PRs with these labels won't be marked stale
+                  exempt-issue-labels: 'pinned,security,in-progress,blocked,enhancement,bug'
+                  exempt-pr-labels: 'pinned,security,in-progress,blocked'
+
+                  # Exempt draft PRs
+                  exempt-draft-pr: true
+
+                  # Exempt issues with assignees
+                  exempt-assignees: true
+
+                  # Exempt issues/PRs with milestones
+                  exempt-milestones: true
+
+                  # Operations per run (to avoid rate limiting)
+                  operations-per-run: 100
+
+                  # Remove stale label on activity
+                  remove-stale-when-updated: true
+
+                  # Order to process (oldest first)
+                  ascending: true
+
+                  # Enable statistics
+                  enable-statistics: true

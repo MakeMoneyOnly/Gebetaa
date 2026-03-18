@@ -4,10 +4,10 @@ import { logServiceRoleAudit, type ServiceRoleAuditParams } from '@/lib/audit';
 
 /**
  * Creates an audited service role client that automatically logs all database operations.
- * 
+ *
  * This wrapper intercepts database operations and logs them to the audit_logs table
  * for security compliance (P0 requirement).
- * 
+ *
  * @param source - The source of the operation (API route, function, cron job, etc.)
  * @param defaultParams - Default audit parameters
  * @returns Wrapped Supabase client with automatic audit logging
@@ -17,22 +17,24 @@ export function createAuditedServiceRoleClient(
     defaultParams?: Partial<Omit<ServiceRoleAuditParams, 'action' | 'description' | 'success'>>
 ) {
     const supabase = createServiceRoleClient();
-    
+
     // Return a proxy that wraps operations with audit logging
     return new Proxy(supabase, {
         get(target, prop) {
             const originalProperty = target[prop as keyof typeof target];
-            
+
             if (typeof originalProperty === 'function') {
                 // Return a wrapped function that logs operations
                 return async (...args: unknown[]) => {
                     const operation = prop as string;
                     const startTime = Date.now();
-                    
+
                     try {
                         // Execute the original operation
-                        const result = await (originalProperty as (...args: unknown[]) => Promise<unknown>).apply(target, args);
-                        
+                        const result = await (
+                            originalProperty as (...args: unknown[]) => Promise<unknown>
+                        ).apply(target, args);
+
                         // Log successful operation
                         const duration = Date.now() - startTime;
                         const successMetadata: Record<string, unknown> = {
@@ -43,7 +45,7 @@ export function createAuditedServiceRoleClient(
                         if (defaultParams?.metadata && typeof defaultParams.metadata === 'object') {
                             Object.assign(successMetadata, defaultParams.metadata);
                         }
-                        
+
                         await logServiceRoleAudit({
                             action: operation.toUpperCase(),
                             description: `Service role ${operation} operation completed successfully`,
@@ -56,7 +58,7 @@ export function createAuditedServiceRoleClient(
                             restaurantId: defaultParams?.restaurantId,
                             ipAddress: defaultParams?.ipAddress,
                         });
-                        
+
                         return result;
                     } catch (error) {
                         // Log failed operation
@@ -70,7 +72,7 @@ export function createAuditedServiceRoleClient(
                         if (defaultParams?.metadata && typeof defaultParams.metadata === 'object') {
                             Object.assign(failedMetadata, defaultParams.metadata);
                         }
-                        
+
                         await logServiceRoleAudit({
                             action: operation.toUpperCase(),
                             description: `Service role ${operation} operation failed`,
@@ -83,12 +85,12 @@ export function createAuditedServiceRoleClient(
                             restaurantId: defaultParams?.restaurantId,
                             ipAddress: defaultParams?.ipAddress,
                         });
-                        
+
                         throw error;
                     }
                 };
             }
-            
+
             return originalProperty;
         },
     });
@@ -130,7 +132,7 @@ function extractResourceId(args: unknown[]): string | undefined {
  */
 function summarizeArgs(args: unknown[]): string {
     if (!Array.isArray(args) || args.length === 0) return '[]';
-    
+
     try {
         const summary = args.map((arg, index) => {
             if (index === 0) {
@@ -142,16 +144,16 @@ function summarizeArgs(args: unknown[]): string {
                 const obj = arg as Record<string, unknown>;
                 const safeKeys = ['id', 'ids', 'restaurant_id', 'order_id', 'status'];
                 const summarized: Record<string, unknown> = {};
-                
+
                 for (const key of safeKeys) {
                     if (key in obj) summarized[key] = obj[key];
                 }
-                
+
                 return Object.keys(summarized).length > 0 ? JSON.stringify(summarized) : '{...}';
             }
             return String(arg).substring(0, 100);
         });
-        
+
         return JSON.stringify(summary);
     } catch {
         return '[args]';

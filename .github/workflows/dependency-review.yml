@@ -1,0 +1,247 @@
+name: Dependency Review
+
+on:
+    pull_request:
+        branches: [main, develop]
+        paths:
+            - 'package.json'
+            - 'pnpm-lock.yaml'
+    push:
+        branches: [main]
+        paths:
+            - 'package.json'
+            - 'pnpm-lock.yaml'
+    schedule:
+        # Run weekly on Monday at 6:00 AM UTC
+        - cron: '0 6 * * 1'
+    workflow_dispatch:
+
+env:
+    NODE_VERSION: '20'
+    PNPM_VERSION: '9.0.0'
+
+jobs:
+    # ============================================
+    # SECURITY AUDIT
+    # ============================================
+    security-audit:
+        name: Security Audit
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            security-events: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run pnpm audit
+              id: audit
+              run: |
+                  echo "## Security Audit Results" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  pnpm audit --audit-level=high 2>&1 | tee audit-output.txt || true
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  cat audit-output.txt >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+
+                  # Check for vulnerabilities
+                  if grep -q "vulnerabilities found" audit-output.txt; then
+                    vuln_count=$(grep -o "[0-9]* vulnerabilities found" audit-output.txt | head -1 | cut -d' ' -f1)
+                    echo "vuln_count=$vuln_count" >> $GITHUB_OUTPUT
+                    if [ "$vuln_count" -gt 0 ]; then
+                      echo "" >> $GITHUB_STEP_SUMMARY
+                      echo "⚠️ **$vuln_count vulnerabilities found. Please review and fix.**" >> $GITHUB_STEP_SUMMARY
+                    fi
+                  else
+                    echo "vuln_count=0" >> $GITHUB_OUTPUT
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "✅ No vulnerabilities found." >> $GITHUB_STEP_SUMMARY
+                  fi
+
+            - name: Check for deprecated dependencies
+              run: |
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "## Deprecated Dependencies Check" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  node scripts/security/check-deprecated.mjs 2>&1 | tee deprecated-output.txt || true
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  cat deprecated-output.txt >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+
+            - name: Upload audit results
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: security-audit-${{ github.run_id }}
+                  path: |
+                      audit-output.txt
+                      deprecated-output.txt
+                  retention-days: 30
+
+    # ============================================
+    # DEPENDENCY REVIEW (PR only)
+    # ============================================
+    dependency-review:
+        name: Dependency Review
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+        permissions:
+            contents: read
+            pull-requests: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/dependency-review-action@v4
+              with:
+                  fail-on-severity: high
+                  allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD
+                  deny-licenses: GPL-3.0, AGPL-3.0, LGPL-3.0
+                  comment-summary-in-pr: always
+
+    # ============================================
+    # LICENSE CHECK
+    # ============================================
+    license-check:
+        name: License Compliance
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Check licenses
+              id: license-check
+              run: |
+                  echo "## License Compliance Check" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+
+                  # Get all licenses
+                  pnpm list --depth=Infinity --json 2>/dev/null | node -e "
+                    const fs = require('fs');
+                    const data = JSON.parse(fs.readFileSync('/dev/stdin', 'utf8'));
+                    const licenses = new Map();
+
+                    function extractLicenses(deps) {
+                      if (!deps) return;
+                      for (const [name, info] of Object.entries(deps)) {
+                        const license = info.license || 'Unknown';
+                        if (!licenses.has(license)) {
+                          licenses.set(license, []);
+                        }
+                        licenses.get(license).push(name);
+                        if (info.dependencies) {
+                          extractLicenses(info.dependencies);
+                        }
+                      }
+                    }
+
+                    if (Array.isArray(data)) {
+                      for (const pkg of data) {
+                        extractLicenses(pkg.dependencies);
+                      }
+                    } else {
+                      extractLicenses(data.dependencies);
+                    }
+
+                    console.log('### License Summary');
+                    console.log('');
+                    console.log('| License | Count | Packages |');
+                    console.log('|---------|-------|----------|');
+                    for (const [license, packages] of licenses) {
+                      const display = packages.length > 5 ? packages.slice(0, 5).join(', ') + '...' : packages.join(', ');
+                      console.log('| ' + license + ' | ' + packages.length + ' | ' + display + ' |');
+                    }
+                  " 2>&1 | tee license-output.txt || true
+
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  cat license-output.txt >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+
+    # ============================================
+    # OUTDATED DEPENDENCIES
+    # ============================================
+    outdated-check:
+        name: Outdated Dependencies
+        runs-on: ubuntu-latest
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        permissions:
+            contents: read
+            issues: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Check outdated dependencies
+              id: outdated
+              run: |
+                  echo "## Outdated Dependencies Report" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "Generated on: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+
+                  pnpm outdated 2>&1 | tee outdated-output.txt || true
+
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  cat outdated-output.txt >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+
+            - name: Create issue if outdated
+              uses: actions/github-script@v7
+              if: steps.outdated.outcome == 'failure'
+              with:
+                  script: |
+                      const fs = require('fs');
+                      const outdated = fs.readFileSync('outdated-output.txt', 'utf8');
+
+                      // Check if issue already exists
+                      const issues = await github.rest.issues.listForRepo({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        state: 'open',
+                        labels: 'dependencies,outdated'
+                      });
+
+                      if (issues.data.length === 0) {
+                        await github.rest.issues.create({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          title: '📦 Weekly Dependency Update Report',
+                          body: `## Outdated Dependencies\n\n\`\`\`\n${outdated}\n\`\`\`\n\n**Action Required:**\n- Review outdated dependencies\n- Run \`pnpm deps:update\` to update interactively\n- Test changes thoroughly\n\n*This issue was automatically created by the dependency review workflow.*`,
+                          labels: ['dependencies', 'outdated', 'automated']
+                        });
+                      }
+
+            - name: Upload outdated report
+              uses: actions/upload-artifact@v4
+              with:
+                  name: outdated-report-${{ github.run_id }}
+                  path: outdated-output.txt
+                  retention-days: 30

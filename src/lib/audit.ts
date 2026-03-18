@@ -1,10 +1,10 @@
 /**
  * Service Role Audit Logging Utility
- * 
+ *
  * This module provides audit logging specifically for service role key usage.
  * All operations that use the Supabase service role key must be audited for
  * security compliance (P0 requirement).
- * 
+ *
  * Key design decisions:
  * - Uses regular Supabase client (not service role) to avoid infinite loops
  * - Fails silently - audit failures should not break main operations
@@ -44,7 +44,7 @@ export interface ServiceRoleAuditParams {
 /**
  * Creates a regular (non-service-role) Supabase client for audit logging.
  * This avoids infinite loops when logging service role operations.
- * 
+ *
  * Uses anonymous key which has RLS-based access to audit_logs.
  */
 function createAuditClient(): SupabaseClient<Database> {
@@ -67,25 +67,27 @@ function createAuditClient(): SupabaseClient<Database> {
 
 /**
  * Write an audit log entry for service role usage.
- * 
+ *
  * This function is designed to fail silently - if audit logging fails,
  * it will log an error but not throw, ensuring the main operation is not affected.
- * 
+ *
  * @param params - Audit parameters
  * @returns Promise that resolves to { error } - error will be null on success
  */
-export async function logServiceRoleAudit(params: ServiceRoleAuditParams): Promise<{ error: Error | null }> {
-    const { 
-        action, 
-        description, 
-        source, 
-        resourceType, 
-        resourceId, 
-        userId, 
-        restaurantId, 
-        success, 
+export async function logServiceRoleAudit(
+    params: ServiceRoleAuditParams
+): Promise<{ error: Error | null }> {
+    const {
+        action,
+        description,
+        source,
+        resourceType,
+        resourceId,
+        userId,
+        restaurantId,
+        success,
         metadata,
-        ipAddress 
+        ipAddress,
     } = params;
 
     try {
@@ -97,7 +99,7 @@ export async function logServiceRoleAudit(params: ServiceRoleAuditParams): Promi
             _audit_description: description,
             _audit_timestamp: new Date().toISOString(),
         };
-        
+
         // Safely spread metadata if it's an object
         if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
             Object.assign(auditMetadata, metadata);
@@ -130,21 +132,21 @@ export async function logServiceRoleAudit(params: ServiceRoleAuditParams): Promi
 
 /**
  * Create a wrapper function that automatically logs service role operations.
- * 
+ *
  * Usage:
  * ```typescript
  * const auditedServiceRole = withServiceRoleAudit(createServiceRoleClient(), {
  *   source: 'api/orders/route.ts',
  *   resourceType: 'orders'
  * });
- * 
+ *
  * // Now every operation will be automatically audited
  * await auditedServiceRole.from('orders').insert({...})
  * ```
- * 
+ *
  * Note: This is a simplified wrapper. For full automatic auditing, consider
  * using a proxy or modifying the service-role.ts directly.
- * 
+ *
  * @param supabase - The service role Supabase client
  * @param defaultParams - Default audit parameters
  * @returns Wrapped client that logs operations

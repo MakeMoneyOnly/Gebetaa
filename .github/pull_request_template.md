@@ -1,62 +1,88 @@
-## Summary
+<!-- 
+  Gebeta Restaurant OS - Pull Request Template
+  Based on github-workflow-automation SKILL best practices
+-->
 
-Describe the change and why it is needed.
+## Description
 
-## Task Mapping
+<!-- Provide a clear and concise description of the changes -->
 
-- Tasks.md IDs:
-- AUDIT.md section(s):
+## Type of Change
 
-## Change Type
+<!-- Mark the relevant option with an 'x' -->
 
-- [ ] Feature
-- [ ] Bug fix
-- [ ] Refactor
-- [ ] Docs
-- [ ] Breaking change
+- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
+- [ ] ✨ New feature (non-breaking change which adds functionality)
+- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] 📚 Documentation update
+- [ ] 🔧 Configuration change
+- [ ] ♻️ Refactoring (no functional changes)
+- [ ] 🧹 Chore (maintenance, dependencies, etc.)
 
-## Scope
+## Related Issues
 
-- Affected areas:
-- Out of scope:
+<!-- Link to related issues using 'Fixes #123' or 'Relates to #123' -->
 
-## Data and API Impact
+Fixes #
 
-- [ ] No schema changes
-- [ ] Schema migration included
-- [ ] API contract added/changed
-- [ ] Backward compatibility considered
+## Changes Made
 
-If changed, list impacted endpoints/tables:
+<!-- List the key changes made in this PR -->
 
-## Security Checklist
+-
+-
+-
 
-- [ ] Authn/authz verified on all new/changed protected endpoints
-- [ ] Input validation added/updated
-- [ ] Idempotency handled for write endpoints
-- [ ] Audit logging added for sensitive mutations
-- [ ] No secrets or tokens in code/logs
+## Testing
 
-## Test Evidence
+<!-- Describe the tests you ran to verify your changes -->
 
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] E2E/manual test notes
+- [ ] Unit tests pass (`pnpm test`)
+- [ ] E2E tests pass (`pnpm test:e2e`)
+- [ ] Linting passes (`pnpm lint`)
+- [ ] Type check passes (`pnpm type-check`)
+- [ ] Build succeeds (`pnpm build`)
 
-Commands run:
+### Test Coverage
 
-## UX and Accessibility
+<!-- If applicable, mention any new test coverage added -->
 
-- [ ] Loading, empty, and error states covered
-- [ ] Responsive behavior checked (desktop/mobile)
-- [ ] Accessibility impact considered
+## Screenshots (if applicable)
 
-## Release and Rollback
+<!-- Add screenshots to help explain your changes -->
 
-- [ ] Feature flag strategy documented (if applicable)
-- [ ] Rollback plan documented
-- [ ] Monitoring/alerts identified
+## Checklist
 
-## Reviewer Focus Areas
+<!-- Mark completed items with an 'x' -->
 
-List specific files/risks reviewers should focus on.
+- [ ] My code follows the style guidelines of this project
+- [ ] I have performed a self-review of my own code
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] New and existing unit tests pass locally with my changes
+- [ ] Any dependent changes have been merged and published
+
+## Security Considerations
+
+<!-- If this PR involves security-sensitive changes, describe how they were addressed -->
+
+- [ ] No security-sensitive changes
+- [ ] Security review completed (describe below)
+
+## Additional Notes
+
+<!-- Add any additional notes or context about the PR here -->
+
+---
+
+<!-- For maintainers: Review checklist -->
+<!--
+- [ ] Code review completed
+- [ ] Architecture review (if applicable)
+- [ ] Security review (if applicable)
+- [ ] Performance impact assessed
+- [ ] Documentation updated
+- [ ] Tests adequate
+-->

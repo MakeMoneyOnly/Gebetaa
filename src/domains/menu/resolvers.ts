@@ -1,7 +1,15 @@
 // Menu Domain - Resolvers Layer
 // Thin layer — maps GraphQL fields to repository calls
 
+import { GraphQLError } from 'graphql';
 import { menuRepository } from './repository';
+import { GraphQLContext } from '@/lib/graphql/context';
+import {
+    requireAuth,
+    requireRestaurantAccess,
+    verifyTenantIsolation,
+    AuthorizedContext,
+} from '@/lib/graphql/authz';
 
 export const menuResolvers = {
     Query: {
@@ -11,30 +19,58 @@ export const menuResolvers = {
                 restaurantId: string;
                 categoryId?: string;
                 availableOnly?: boolean;
-            }
+            },
+            context: GraphQLContext
         ) => {
+            // Authorization: Verify user has access to this restaurant
+            await requireRestaurantAccess(context, args.restaurantId);
+
             return menuRepository.getMenuItems(args.restaurantId, {
                 categoryId: args.categoryId,
                 availableOnly: args.availableOnly,
             });
         },
 
-        menuItem: async (_: unknown, args: { id: string }) => {
-            return menuRepository.getMenuItem(args.id);
+        menuItem: async (_: unknown, args: { id: string }, context: GraphQLContext) => {
+            const authContext = requireAuth(context);
+            const menuItem = await menuRepository.getMenuItem(args.id);
+
+            // Verify tenant isolation - user can only access menu items from their restaurant
+            if (menuItem && menuItem.restaurant_id !== authContext.user.restaurantId) {
+                throw new GraphQLError('Access denied to this menu item', {
+                    extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+                });
+            }
+
+            return menuItem;
         },
 
-        categories: async (_: unknown, args: { restaurantId: string }) => {
+        categories: async (
+            _: unknown,
+            args: { restaurantId: string },
+            context: GraphQLContext
+        ) => {
+            // Authorization: Verify user has access to this restaurant
+            await requireRestaurantAccess(context, args.restaurantId);
+
             return menuRepository.getMenuCategories(args.restaurantId);
         },
 
-        category: async (_: unknown, args: { id: string }) => {
+        category: async (_: unknown, args: { id: string }, context: GraphQLContext) => {
             // For now, return null - would need a getCategory method
             // This is a placeholder for federation reference resolution
             console.log('[menu/resolvers] category query called with id:', args.id);
             return null;
         },
 
-        searchMenu: async (_: unknown, args: { restaurantId: string; query: string }) => {
+        searchMenu: async (
+            _: unknown,
+            args: { restaurantId: string; query: string },
+            context: GraphQLContext
+        ) => {
+            // Authorization: Verify user has access to this restaurant
+            await requireRestaurantAccess(context, args.restaurantId);
+
             // Use getMenuItems with client-side filtering for now
             // In production, this would use full-text search
             const items = await menuRepository.getMenuItems(args.restaurantId);
@@ -48,60 +84,188 @@ export const menuResolvers = {
     },
 
     Mutation: {
-        createMenuItem: async (_: unknown, _args: { input: Record<string, unknown> }) => {
-            // Mutation not implemented in repository yet
-            return {
-                success: false,
-                menuItem: null,
-                error: {
-                    code: 'NOT_IMPLEMENTED',
-                    message: 'createMenuItem mutation not implemented',
-                },
-            };
+        createMenuItem: async (
+            _: unknown,
+            args: { input: { restaurantId: string; [key: string]: unknown } },
+            context: GraphQLContext
+        ) => {
+            try {
+                // Authorization: Verify user has access to this restaurant
+                await requireRestaurantAccess(context, args.input.restaurantId);
+
+                // Mutation not implemented in repository yet
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'NOT_IMPLEMENTED',
+                        message: 'createMenuItem mutation not implemented',
+                    },
+                };
+            } catch (error) {
+                if (error instanceof GraphQLError) {
+                    throw error;
+                }
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'INTERNAL_ERROR',
+                        message: error instanceof Error ? error.message : 'Internal error',
+                    },
+                };
+            }
         },
 
         updateMenuItem: async (
             _: unknown,
-            _args: { id: string; input: Record<string, unknown> }
+            args: { id: string; input: Record<string, unknown> },
+            context: GraphQLContext
         ) => {
-            // Mutation not implemented in repository yet
-            return {
-                success: false,
-                menuItem: null,
-                error: {
-                    code: 'NOT_IMPLEMENTED',
-                    message: 'updateMenuItem mutation not implemented',
-                },
-            };
+            try {
+                const authContext = requireAuth(context);
+
+                // Fetch the menu item to verify tenant isolation
+                const existingItem = await menuRepository.getMenuItem(args.id);
+                if (!existingItem) {
+                    return {
+                        success: false,
+                        menuItem: null,
+                        error: {
+                            code: 'MENU_ITEM_NOT_FOUND',
+                            message: 'Menu item not found',
+                        },
+                    };
+                }
+
+                // Verify tenant isolation
+                verifyTenantIsolation(authContext, existingItem.restaurant_id as string);
+
+                // Mutation not implemented in repository yet
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'NOT_IMPLEMENTED',
+                        message: 'updateMenuItem mutation not implemented',
+                    },
+                };
+            } catch (error) {
+                if (error instanceof GraphQLError) {
+                    throw error;
+                }
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'INTERNAL_ERROR',
+                        message: error instanceof Error ? error.message : 'Internal error',
+                    },
+                };
+            }
         },
 
-        markItemAvailability: async (_: unknown, _args: { id: string; available: boolean }) => {
-            // Mutation not implemented in repository yet
-            return {
-                success: false,
-                menuItem: null,
-                error: {
-                    code: 'NOT_IMPLEMENTED',
-                    message: 'markItemAvailability mutation not implemented',
-                },
-            };
+        markItemAvailability: async (
+            _: unknown,
+            args: { id: string; available: boolean },
+            context: GraphQLContext
+        ) => {
+            try {
+                const authContext = requireAuth(context);
+
+                // Fetch the menu item to verify tenant isolation
+                const existingItem = await menuRepository.getMenuItem(args.id);
+                if (!existingItem) {
+                    return {
+                        success: false,
+                        menuItem: null,
+                        error: {
+                            code: 'MENU_ITEM_NOT_FOUND',
+                            message: 'Menu item not found',
+                        },
+                    };
+                }
+
+                // Verify tenant isolation
+                verifyTenantIsolation(authContext, existingItem.restaurant_id as string);
+
+                // Mutation not implemented in repository yet
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'NOT_IMPLEMENTED',
+                        message: 'markItemAvailability mutation not implemented',
+                    },
+                };
+            } catch (error) {
+                if (error instanceof GraphQLError) {
+                    throw error;
+                }
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'INTERNAL_ERROR',
+                        message: error instanceof Error ? error.message : 'Internal error',
+                    },
+                };
+            }
         },
 
-        updateMenuItemPrice: async (_: unknown, _args: { id: string; price: number }) => {
-            // Mutation not implemented in repository yet
-            return {
-                success: false,
-                menuItem: null,
-                error: {
-                    code: 'NOT_IMPLEMENTED',
-                    message: 'updateMenuItemPrice mutation not implemented',
-                },
-            };
+        updateMenuItemPrice: async (
+            _: unknown,
+            args: { id: string; price: number },
+            context: GraphQLContext
+        ) => {
+            try {
+                const authContext = requireAuth(context);
+
+                // Fetch the menu item to verify tenant isolation
+                const existingItem = await menuRepository.getMenuItem(args.id);
+                if (!existingItem) {
+                    return {
+                        success: false,
+                        menuItem: null,
+                        error: {
+                            code: 'MENU_ITEM_NOT_FOUND',
+                            message: 'Menu item not found',
+                        },
+                    };
+                }
+
+                // Verify tenant isolation
+                verifyTenantIsolation(authContext, existingItem.restaurant_id as string);
+
+                // Mutation not implemented in repository yet
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'NOT_IMPLEMENTED',
+                        message: 'updateMenuItemPrice mutation not implemented',
+                    },
+                };
+            } catch (error) {
+                if (error instanceof GraphQLError) {
+                    throw error;
+                }
+                return {
+                    success: false,
+                    menuItem: null,
+                    error: {
+                        code: 'INTERNAL_ERROR',
+                        message: error instanceof Error ? error.message : 'Internal error',
+                    },
+                };
+            }
         },
     },
 
     MenuItem: {
-        __resolveReference(reference: { id: string }) {
+        __resolveReference(reference: { id: string }, context: GraphQLContext) {
+            // Note: For federation, tenant isolation should be verified at the gateway level
+            // or the reference should include restaurant context
             return menuRepository.getMenuItem(reference.id);
         },
         category: async (_menuItem: Record<string, unknown>) => {

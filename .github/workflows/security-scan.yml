@@ -1,0 +1,200 @@
+# Comprehensive Security Scanning
+# CodeQL, dependency review, secret scanning, and SARIF upload
+# Based on security-best-practices and api-security-best-practices SKILLs
+
+name: Security Scan
+
+on:
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main, develop]
+    schedule:
+        - cron: '0 6 * * 1' # Weekly on Monday at 6 AM UTC
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    security-events: write
+    actions: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CODEQL - Static Analysis
+    # ═══════════════════════════════════════════════════════════════════════════
+    codeql:
+        name: CodeQL Analysis
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        strategy:
+            fail-fast: false
+            matrix:
+                language: [javascript-typescript]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Initialize CodeQL
+              uses: github/codeql-action/init@v3
+              with:
+                  languages: ${{ matrix.language }}
+                  queries: security-extended,security-and-quality
+
+            - name: Autobuild
+              uses: github/codeql-action/autobuild@v3
+
+            - name: Perform CodeQL Analysis
+              uses: github/codeql-action/analyze@v3
+              with:
+                  category: '/language:${{ matrix.language }}'
+                  upload: true
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # DEPENDENCY REVIEW - Check for vulnerable dependencies
+    # ═══════════════════════════════════════════════════════════════════════════
+    dependency-review:
+        name: Dependency Review
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        if: github.event_name == 'pull_request'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Dependency Review
+              uses: actions/dependency-review-action@v4
+              with:
+                  fail-on-severity: high
+                  allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD
+                  deny-licenses: GPL-3.0, AGPL-3.0
+                  comment-summary-in-pr: true
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # SECRET SCANNING - Detect leaked secrets
+    # ═══════════════════════════════════════════════════════════════════════════
+    secret-scan:
+        name: Secret Scanning
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Trivy Secret Scan
+              uses: aquasecurity/trivy-action@master
+              with:
+                  scan-type: fs
+                  scan-ref: .
+                  scanners: secret
+                  format: sarif
+                  output: trivy-secrets.sarif
+                  severity: HIGH,CRITICAL
+                  exit-code: 1
+
+            - name: Upload Trivy Secret Results
+              uses: github/codeql-action/upload-sarif@v3
+              if: always()
+              with:
+                  sarif_file: trivy-secrets.sarif
+                  category: trivy-secrets
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # SBOM - Software Bill of Materials
+    # ═══════════════════════════════════════════════════════════════════════════
+    sbom:
+        name: Generate SBOM
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Generate SBOM
+              uses: anchore/sbom-action@v0
+              with:
+                  format: spdx-json
+                  output-file: sbom.spdx.json
+                  artifact-name: gebeta-sbom
+
+            - name: Upload SBOM Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: sbom
+                  path: sbom.spdx.json
+                  retention-days: 30
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # TRIVY - Container/Filesystem Vulnerability Scanning
+    # ═══════════════════════════════════════════════════════════════════════════
+    trivy:
+        name: Trivy Vulnerability Scan
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@master
+              with:
+                  scan-type: fs
+                  scan-ref: .
+                  scanners: vuln
+                  format: sarif
+                  output: trivy-vuln.sarif
+                  severity: HIGH,CRITICAL
+                  ignore-unfixed: true
+                  exit-code: 0 # Don't fail on vulnerabilities (handled separately)
+
+            - name: Upload Trivy Results to GitHub Security
+              uses: github/codeql-action/upload-sarif@v3
+              if: always()
+              with:
+                  sarif_file: trivy-vuln.sarif
+                  category: trivy-vulnerabilities
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # SECURITY SUMMARY - Aggregate results
+    # ═══════════════════════════════════════════════════════════════════════════
+    security-summary:
+        name: Security Summary
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        needs: [codeql, secret-scan, trivy]
+        if: always()
+        steps:
+            - name: Check Security Results
+              run: |
+                  echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Scan | Status |" >> $GITHUB_STEP_SUMMARY
+                  echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+                  echo "| CodeQL | ${{ needs.codeql.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Secret Scan | ${{ needs.secret-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Trivy Vuln | ${{ needs.trivy.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "View detailed results in the Security tab." >> $GITHUB_STEP_SUMMARY
+
+            - name: Fail if critical scans failed
+              if: needs.codeql.result == 'failure' || needs.secret-scan.result == 'failure'
+              run: exit 1

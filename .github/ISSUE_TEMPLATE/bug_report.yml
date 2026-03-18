@@ -1,0 +1,133 @@
+name: 🐛 Bug Report
+description: Report a bug to help us improve
+title: '[BUG] '
+labels: ['bug', 'needs-triage']
+assignees: []
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for taking the time to fill out this bug report! 
+              Please fill out the sections below to help us fix the issue.
+
+    - type: checkboxes
+      id: search
+      attributes:
+          label: Preliminary Check
+          description: Please confirm you've done these checks before submitting
+          options:
+              - label: I have searched the existing issues and this is not a duplicate
+                required: true
+              - label: I have read the [documentation](../docs) and this is not addressed there
+                required: false
+
+    - type: textarea
+      id: description
+      attributes:
+          label: Bug Description
+          description: A clear and concise description of what the bug is
+          placeholder: 'When I do X, Y happens instead of Z...'
+      validations:
+          required: true
+
+    - type: textarea
+      id: steps
+      attributes:
+          label: Steps to Reproduce
+          description: Steps to reproduce the behavior
+          placeholder: |
+              1. Go to '...'
+              2. Click on '...'
+              3. Scroll down to '...'
+              4. See error
+      validations:
+          required: true
+
+    - type: textarea
+      id: expected
+      attributes:
+          label: Expected Behavior
+          description: A clear and concise description of what you expected to happen
+          placeholder: 'I expected X to happen...'
+      validations:
+          required: true
+
+    - type: textarea
+      id: actual
+      attributes:
+          label: Actual Behavior
+          description: A clear and concise description of what actually happened
+          placeholder: 'Instead, Y happened...'
+      validations:
+          required: true
+
+    - type: dropdown
+      id: severity
+      attributes:
+          label: Severity
+          description: How severe is this bug?
+          options:
+              - Low - Minor inconvenience
+              - Medium - Affects functionality but workaround exists
+              - High - Major functionality broken
+              - Critical - System unusable/data loss
+          default: 1
+      validations:
+          required: true
+
+    - type: dropdown
+      id: area
+      attributes:
+          label: Affected Area
+          description: Which part of the system is affected?
+          options:
+              - Guest Ordering
+              - Merchant Dashboard
+              - Kitchen Display System (KDS)
+              - Payments
+              - Authentication
+              - API
+              - Database
+              - Infrastructure
+              - Other
+          default: 8
+      validations:
+          required: true
+
+    - type: textarea
+      id: environment
+      attributes:
+          label: Environment
+          description: Please provide environment details
+          placeholder: |
+              - OS: [e.g. Windows 11, macOS 14]
+              - Browser: [e.g. Chrome 120, Safari 17]
+              - Node version: [e.g. 22.0.0]
+              - Device: [e.g. Desktop, iPhone 15, Samsung Galaxy S24]
+          value: |
+              - OS:
+              - Browser:
+              - Node version:
+              - Device:
+      validations:
+          required: true
+
+    - type: textarea
+      id: logs
+      attributes:
+          label: Logs & Screenshots
+          description: |
+              Please add any relevant log output or screenshots.
+              **Be careful not to include sensitive information like API keys or passwords!**
+          placeholder: 'Paste logs here or drag & drop screenshots...'
+      validations:
+          required: false
+
+    - type: textarea
+      id: additional
+      attributes:
+          label: Additional Context
+          description: Add any other context about the problem here
+          placeholder: 'Any other information that might be helpful...'
+      validations:
+          required: false

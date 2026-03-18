@@ -54,47 +54,53 @@ export function createDataLoaders(): DataLoaders {
          */
         menuItems: new DataLoader<string, MenuItem | null>(async (ids: readonly string[]) => {
             const items = await menuRepository.getMenuItemsByIds([...ids]);
-            const itemMap = new Map(items.map((item) => [item.id as string, item]));
-            return ids.map((id) => itemMap.get(id) || null);
+            const itemMap = new Map(items.map(item => [item.id as string, item]));
+            return ids.map(id => itemMap.get(id) || null);
         }),
 
         /**
          * Modifier Groups loader - batches requests for modifier groups by menu item ID
          * Returns an array of modifier groups for each menu item (empty if none)
          */
-        modifierGroups: new DataLoader<string, ModifierGroup[]>(async (menuItemIds: readonly string[]) => {
-            const groups = await menuRepository.getModifierGroupsByMenuItemIds([...menuItemIds]);
+        modifierGroups: new DataLoader<string, ModifierGroup[]>(
+            async (menuItemIds: readonly string[]) => {
+                const groups = await menuRepository.getModifierGroupsByMenuItemIds([
+                    ...menuItemIds,
+                ]);
 
-            // Group by menu_item_id
-            const groupsByMenuItem = new Map<string, ModifierGroup[]>();
-            for (const group of groups) {
-                const menuItemId = group.menu_item_id as string;
-                const existing = groupsByMenuItem.get(menuItemId) || [];
-                existing.push(group);
-                groupsByMenuItem.set(menuItemId, existing);
+                // Group by menu_item_id
+                const groupsByMenuItem = new Map<string, ModifierGroup[]>();
+                for (const group of groups) {
+                    const menuItemId = group.menu_item_id as string;
+                    const existing = groupsByMenuItem.get(menuItemId) || [];
+                    existing.push(group);
+                    groupsByMenuItem.set(menuItemId, existing);
+                }
+
+                return menuItemIds.map(id => groupsByMenuItem.get(id) || []);
             }
-
-            return menuItemIds.map((id) => groupsByMenuItem.get(id) || []);
-        }),
+        ),
 
         /**
          * Modifier Options loader - batches requests for options by modifier group ID
          * Returns an array of options for each group (empty if none)
          */
-        modifierOptions: new DataLoader<string, ModifierOption[]>(async (groupIds: readonly string[]) => {
-            const options = await menuRepository.getModifierOptionsByGroupIds([...groupIds]);
+        modifierOptions: new DataLoader<string, ModifierOption[]>(
+            async (groupIds: readonly string[]) => {
+                const options = await menuRepository.getModifierOptionsByGroupIds([...groupIds]);
 
-            // Group by modifier_group_id
-            const optionsByGroup = new Map<string, ModifierOption[]>();
-            for (const option of options) {
-                const groupId = option.modifier_group_id as string;
-                const existing = optionsByGroup.get(groupId) || [];
-                existing.push(option);
-                optionsByGroup.set(groupId, existing);
+                // Group by modifier_group_id
+                const optionsByGroup = new Map<string, ModifierOption[]>();
+                for (const option of options) {
+                    const groupId = option.modifier_group_id as string;
+                    const existing = optionsByGroup.get(groupId) || [];
+                    existing.push(option);
+                    optionsByGroup.set(groupId, existing);
+                }
+
+                return groupIds.map(id => optionsByGroup.get(id) || []);
             }
-
-            return groupIds.map((id) => optionsByGroup.get(id) || []);
-        }),
+        ),
 
         /**
          * Order Items loader - batches requests for order items by order ID
@@ -111,7 +117,7 @@ export function createDataLoaders(): DataLoaders {
                 itemsByOrder.set(item.order_id, existing);
             }
 
-            return orderIds.map((id) => itemsByOrder.get(id) || []);
+            return orderIds.map(id => itemsByOrder.get(id) || []);
         }),
 
         /**
@@ -120,8 +126,8 @@ export function createDataLoaders(): DataLoaders {
          */
         categories: new DataLoader<string, Category | null>(async (ids: readonly string[]) => {
             const categories = await menuRepository.getCategoriesByIds([...ids]);
-            const categoryMap = new Map(categories.map((cat) => [cat.id as string, cat]));
-            return ids.map((id) => categoryMap.get(id) || null);
+            const categoryMap = new Map(categories.map(cat => [cat.id as string, cat]));
+            return ids.map(id => categoryMap.get(id) || null);
         }),
     };
 }
