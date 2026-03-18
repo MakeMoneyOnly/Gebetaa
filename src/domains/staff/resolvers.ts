@@ -108,9 +108,16 @@ export const staffResolvers = {
     },
 
     StaffMember: {
-        __resolveReference(_reference: { id: string }, _context: GraphQLContext) {
+        __resolveReference: async (_reference: { id: string }, _context: GraphQLContext) => {
             // TODO: Implement with staff repository
-            // Note: For federation, tenant isolation should be verified at the gateway level
+            // When implemented, should validate tenant isolation:
+            // const staffMember = await staffRepository.getStaffMember(_reference.id);
+            // if (staffMember && _context.user?.restaurantId) {
+            //     if (staffMember.restaurant_id !== _context.user.restaurantId) {
+            //         console.error(`Tenant isolation violation: User ${_context.user.id} attempted to access staff member ${_reference.id}`);
+            //         return null;
+            //     }
+            // }
             return null;
         },
     },
