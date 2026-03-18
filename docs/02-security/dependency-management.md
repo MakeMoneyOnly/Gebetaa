@@ -93,6 +93,7 @@ pnpm security:deprecated
 ```
 
 This script:
+
 1. Checks `package.json` for known deprecated packages
 2. Scans the dependency tree for deprecated transitive dependencies
 3. Reports findings with remediation suggestions
@@ -102,39 +103,42 @@ This script:
 #### For Direct Dependencies
 
 1. **Update to a non-deprecated version**:
-   ```bash
-   pnpm update <package-name>
-   ```
+
+    ```bash
+    pnpm update <package-name>
+    ```
 
 2. **Find a replacement** if the package is fully deprecated:
-   ```bash
-   # Example: replacing deprecated 'request' with 'axios'
-   pnpm remove request
-   pnpm add axios
-   ```
+    ```bash
+    # Example: replacing deprecated 'request' with 'axios'
+    pnpm remove request
+    pnpm add axios
+    ```
 
 #### For Transitive Dependencies
 
 1. **Check which package depends on it**:
-   ```bash
-   pnpm why <package-name>
-   ```
+
+    ```bash
+    pnpm why <package-name>
+    ```
 
 2. **Update the parent package** if possible:
-   ```bash
-   pnpm update <parent-package>
-   ```
+
+    ```bash
+    pnpm update <parent-package>
+    ```
 
 3. **Add an override** if the parent package won't update:
-   ```json
-   {
-     "pnpm": {
-       "overrides": {
-         "deprecated-package": "^replacement-version"
-       }
-     }
-   }
-   ```
+    ```json
+    {
+        "pnpm": {
+            "overrides": {
+                "deprecated-package": "^replacement-version"
+            }
+        }
+    }
+    ```
 
 ---
 
@@ -150,40 +154,43 @@ pnpm security:audit
 
 ### Severity Levels
 
-| Level | Action Required |
-|-------|-----------------|
-| Critical | Fix immediately; block deployment |
-| High | Fix within 24 hours; warn in CI |
+| Level    | Action Required                     |
+| -------- | ----------------------------------- |
+| Critical | Fix immediately; block deployment   |
+| High     | Fix within 24 hours; warn in CI     |
 | Moderate | Fix within 1 week; track in backlog |
-| Low | Fix during regular maintenance |
+| Low      | Fix during regular maintenance      |
 
 ### Remediation Steps
 
 1. **Try automatic fix**:
-   ```bash
-   pnpm security:audit:fix
-   ```
+
+    ```bash
+    pnpm security:audit:fix
+    ```
 
 2. **Update the vulnerable package**:
-   ```bash
-   pnpm update <package-name>
-   ```
+
+    ```bash
+    pnpm update <package-name>
+    ```
 
 3. **For transitive vulnerabilities**, add an override:
-   ```json
-   {
-     "pnpm": {
-       "overrides": {
-         "vulnerable-package@<vulnerable-range>": "^patched-version"
-       }
-     }
-   }
-   ```
+
+    ```json
+    {
+        "pnpm": {
+            "overrides": {
+                "vulnerable-package@<vulnerable-range>": "^patched-version"
+            }
+        }
+    }
+    ```
 
 4. **Verify the fix**:
-   ```bash
-   pnpm audit
-   ```
+    ```bash
+    pnpm audit
+    ```
 
 ### Example: Fixing a Transitive Vulnerability
 
@@ -230,19 +237,19 @@ $ pnpm audit
 
 ```json
 {
-  "pnpm": {
-    "overrides": {
-      // Simple: all versions of 'package'
-      "package-name": "^2.0.0",
+    "pnpm": {
+        "overrides": {
+            // Simple: all versions of 'package'
+            "package-name": "^2.0.0",
 
-      // Version-specific: only vulnerable versions
-      "package-name@<1.0.0": "^1.0.0",
-      "package-name@>=2.0.0 <2.5.0": "^2.5.0",
+            // Version-specific: only vulnerable versions
+            "package-name@<1.0.0": "^1.0.0",
+            "package-name@>=2.0.0 <2.5.0": "^2.5.0",
 
-      // Scoped packages
-      "@scope/package": "^3.0.0"
+            // Scoped packages
+            "@scope/package": "^3.0.0"
+        }
     }
-  }
 }
 ```
 
@@ -269,21 +276,21 @@ This identifies overrides that no longer apply to any installed package.
 Our CI pipeline includes:
 
 1. **Security Audit** (`pnpm audit --audit-level=high`)
-   - Runs on every PR and push
-   - Fails on high/critical vulnerabilities
+    - Runs on every PR and push
+    - Fails on high/critical vulnerabilities
 
 2. **Dependency Review** (GitHub Actions)
-   - Reviews new dependencies in PRs
-   - Checks license compliance
-   - Identifies known vulnerabilities
+    - Reviews new dependencies in PRs
+    - Checks license compliance
+    - Identifies known vulnerabilities
 
 3. **Deprecated Check** (custom script)
-   - Scans for deprecated packages
-   - Reports warnings in CI output
+    - Scans for deprecated packages
+    - Reports warnings in CI output
 
 4. **Weekly Outdated Check**
-   - Creates GitHub issue with outdated packages
-   - Runs every Monday at 6:00 AM UTC
+    - Creates GitHub issue with outdated packages
+    - Runs every Monday at 6:00 AM UTC
 
 ### Workflow Files
 
@@ -319,36 +326,38 @@ pnpm deps:clean
 ### Adding New Dependencies
 
 1. **Research the package**:
-   - Check maintenance status
-   - Review security history
-   - Verify license compatibility
+    - Check maintenance status
+    - Review security history
+    - Verify license compatibility
 
 2. **Install with version pinning**:
-   ```bash
-   pnpm add package@^1.2.3
-   ```
+
+    ```bash
+    pnpm add package@^1.2.3
+    ```
 
 3. **Verify installation**:
-   ```bash
-   pnpm why package
-   pnpm audit
-   ```
+    ```bash
+    pnpm why package
+    pnpm audit
+    ```
 
 ### Updating Dependencies
 
 1. **Regular updates** (weekly/bi-weekly):
-   ```bash
-   pnpm deps:update
-   ```
+
+    ```bash
+    pnpm deps:update
+    ```
 
 2. **Major version updates**:
-   - Review changelog for breaking changes
-   - Update in a separate branch
-   - Run full test suite
+    - Review changelog for breaking changes
+    - Update in a separate branch
+    - Run full test suite
 
 3. **Security updates**:
-   - Prioritize over feature work
-   - Apply immediately for critical/high severity
+    - Prioritize over feature work
+    - Apply immediately for critical/high severity
 
 ### Dependency Audit Checklist
 
@@ -384,26 +393,25 @@ pnpm v10+ blocks postinstall scripts by default. To allow:
 
 ```json
 {
-  "pnpm": {
-    "allowBuilds": [
-      "package-that-needs-build-script"
-    ]
-  }
+    "pnpm": {
+        "allowBuilds": ["package-that-needs-build-script"]
+    }
 }
 ```
 
 #### Peer dependency warnings
 
 1. Install missing peers explicitly:
-   ```bash
-   pnpm add peer-package
-   ```
+
+    ```bash
+    pnpm add peer-package
+    ```
 
 2. Or disable strict mode temporarily (not recommended):
-   ```ini
-   # .npmrc
-   strict-peer-dependencies=false
-   ```
+    ```ini
+    # .npmrc
+    strict-peer-dependencies=false
+    ```
 
 ### Getting Help
 
@@ -415,16 +423,16 @@ pnpm v10+ blocks postinstall scripts by default. To allow:
 
 ## Appendix: Security Tools Reference
 
-| Tool | Purpose | Command |
-|------|---------|---------|
-| `pnpm audit` | Security vulnerability scan | `pnpm security:audit` |
-| `pnpm outdated` | Check for updates | `pnpm security:outdated` |
-| `check-deprecated.mjs` | Find deprecated packages | `pnpm security:deprecated` |
-| `check-unused-overrides.mjs` | Find unused overrides | `pnpm security:overrides:check` |
-| Trivy | Container/filesystem scan | CI automated |
-| Dependency Review Action | PR dependency check | CI automated |
+| Tool                         | Purpose                     | Command                         |
+| ---------------------------- | --------------------------- | ------------------------------- |
+| `pnpm audit`                 | Security vulnerability scan | `pnpm security:audit`           |
+| `pnpm outdated`              | Check for updates           | `pnpm security:outdated`        |
+| `check-deprecated.mjs`       | Find deprecated packages    | `pnpm security:deprecated`      |
+| `check-unused-overrides.mjs` | Find unused overrides       | `pnpm security:overrides:check` |
+| Trivy                        | Container/filesystem scan   | CI automated                    |
+| Dependency Review Action     | PR dependency check         | CI automated                    |
 
 ---
 
-*Last updated: March 2026*
-*Document owner: Engineering Team*
+_Last updated: March 2026_
+_Document owner: Engineering Team_

@@ -81,7 +81,7 @@ function getDeprecatedPackagesFromLockfile() {
         }
 
         return deprecated;
-    } catch (error) {
+    } catch (_error) {
         // If pnpm list fails, try alternative method
         return getDeprecatedFromPnpmWhy();
     }
@@ -108,7 +108,7 @@ function getDeprecatedFromPnpmWhy() {
         }
 
         return deprecated;
-    } catch (error) {
+    } catch (_error) {
         return [];
     }
 }
@@ -163,15 +163,15 @@ function checkPackageJsonForDeprecated() {
 function main() {
     log('\n📦 Gebeta Restaurant OS - Deprecated Dependencies Check\n', 'cyan');
 
-    let hasWarnings = false;
-    let hasErrors = false;
+    let _hasWarnings = false;
+    let _hasErrors = false;
 
     // Check package.json for known deprecated packages
     log('Checking package.json for known deprecated packages...', 'cyan');
     const { deprecated: directDeprecated } = checkPackageJsonForDeprecated();
 
     if (directDeprecated.length > 0) {
-        hasWarnings = true;
+        _hasWarnings = true;
         log('\n⚠️  Deprecated packages found in package.json:\n', 'yellow');
         for (const pkg of directDeprecated) {
             log(`  • ${pkg.name}@${pkg.version}`, 'yellow');
@@ -187,7 +187,7 @@ function main() {
     const transitiveDeprecated = getDeprecatedPackagesFromLockfile();
 
     if (transitiveDeprecated.length > 0) {
-        hasWarnings = true;
+        _hasWarnings = true;
         log('\n⚠️  Deprecated transitive dependencies found:\n', 'yellow');
         for (const pkg of transitiveDeprecated.slice(0, 20)) {
             // Limit output

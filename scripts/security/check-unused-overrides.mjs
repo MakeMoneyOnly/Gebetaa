@@ -40,7 +40,7 @@ function getPackageJson() {
     return JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 }
 
-function getInstalledVersions(packageName) {
+function _getInstalledVersions(packageName) {
     try {
         const output = execSync(`pnpm list ${packageName} --depth=Infinity --json 2>/dev/null`, {
             encoding: 'utf-8',
@@ -71,7 +71,7 @@ function getInstalledVersions(packageName) {
         }
 
         return Array.from(versions);
-    } catch (error) {
+    } catch (_error) {
         return [];
     }
 }
@@ -88,8 +88,8 @@ function parseOverrideKey(key) {
     return { packageName: key, versionRange: '*' };
 }
 
-function checkOverrideInUse(overrideKey, overrideValue) {
-    const { packageName, versionRange } = parseOverrideKey(overrideKey);
+function checkOverrideInUse(overrideKey, _overrideValue) {
+    const { packageName, versionRange: _versionRange } = parseOverrideKey(overrideKey);
 
     // Check if the package exists in the dependency tree
     try {
@@ -101,7 +101,7 @@ function checkOverrideInUse(overrideKey, overrideValue) {
         if (output.includes(packageName)) {
             return { inUse: true, reason: 'Package found in dependency tree' };
         }
-    } catch (error) {
+    } catch (_error) {
         // pnpm why failed - package might not be installed
     }
 
