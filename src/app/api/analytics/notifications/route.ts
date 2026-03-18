@@ -10,11 +10,7 @@
 
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
-import {
-    getNotificationMetrics,
-    getDeliveryReport,
-    type DateRange,
-} from '@/lib/monitoring/notification-metrics';
+import { getNotificationMetrics, type DateRange } from '@/lib/monitoring/notification-metrics';
 
 /**
  * Range options for date filtering
@@ -24,7 +20,7 @@ type RangeOption = 'today' | 'week' | 'month' | 'custom';
 /**
  * Parse date range from query parameters
  */
-function getDateRange(url: URL): DateRange {
+function _getDateRange(url: URL): DateRange {
     const range = url.searchParams.get('range') as RangeOption | null;
     const now = new Date();
     const endDate = new Date(now);
@@ -55,7 +51,10 @@ function getDateRange(url: URL): DateRange {
 
             if (startParam && endParam) {
                 startDate = new Date(startParam);
-                endDate = new Date(endParam);
+                const customEndDate = new Date(endParam);
+                customEndDate.setHours(23, 59, 59, 999);
+                // Use the endDate object but modify it
+                endDate.setTime(customEndDate.getTime());
             } else {
                 // Default to week if custom is specified but dates are missing
                 startDate = new Date(now);

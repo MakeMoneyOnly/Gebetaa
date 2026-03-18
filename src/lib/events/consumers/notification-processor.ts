@@ -11,11 +11,7 @@
  */
 
 import type { GebetaEvent } from '@/lib/events/contracts';
-import {
-    enqueueNotification,
-    type EnqueueParams,
-    type QueueNotificationType,
-} from '@/lib/notifications/queue';
+import { enqueueNotification } from '@/lib/notifications/queue';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { writeAuditLog } from '@/lib/api/audit';
 
@@ -324,7 +320,7 @@ export async function processNotificationEvent(event: GebetaEvent): Promise<{
 /**
  * Write audit log for notification processing
  */
-async function logNotificationProcessing(
+async function _logNotificationProcessing(
     restaurantId: string,
     eventId: string,
     eventName: string,

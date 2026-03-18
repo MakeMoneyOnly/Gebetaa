@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
  * Health check endpoint for the cron job.
  * Returns queue statistics.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
     try {
         // Get queue stats
         const stats = await getQueueStats();

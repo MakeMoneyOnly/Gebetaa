@@ -10,8 +10,6 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import { createClient } from '@/lib/supabase/server';
 import {
     registerDeviceToken,
     unsubscribeDevice,
