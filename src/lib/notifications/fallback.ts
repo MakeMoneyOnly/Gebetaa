@@ -13,13 +13,7 @@
 
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { sendSms, type SmsSendResult } from './sms';
-import {
-    sendPushNotification,
-    getGuestPushTokens,
-    registerDeviceToken,
-    type PushParams,
-    type FallbackResult,
-} from './push';
+import { sendPushNotification, getGuestPushTokens } from './push';
 import { enqueueNotification, type NotificationChannel } from './queue';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -440,7 +434,7 @@ export async function queuePushFallback(
  */
 export async function processSmsFailuresForPush(limit: number = 50): Promise<number> {
     const supabase = createServiceRoleClient();
-    const now = new Date().toISOString();
+    const _now = new Date().toISOString();
 
     // Find failed SMS notifications that haven't been retried via push
     const { data: failedSms, error } = await (supabase as any)

@@ -13,12 +13,7 @@
 
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { sendSms, type SmsSendResult } from './sms';
-import {
-    isDuplicate,
-    recordNotification,
-    getDedupeKey,
-    type NotificationType,
-} from './deduplication';
+import { isDuplicate, recordNotification, type NotificationType } from './deduplication';
 import { calculateNextRetry, shouldRetry, RETRY_CONFIG } from './retry';
 import { publishEvent, type EventType, type EventPayload } from '@/lib/events/publisher';
 import { createHash } from 'crypto';
@@ -553,7 +548,7 @@ export async function getQueueStats(restaurantId?: string): Promise<{
         query = query.eq('restaurant_id', restaurantId);
     }
 
-    const { count, error } = await query;
+    const { count: _count, error } = await query;
 
     if (error) {
         console.error('[queue] Failed to get queue stats:', error);

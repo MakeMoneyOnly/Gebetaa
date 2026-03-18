@@ -375,14 +375,14 @@ async function sendWithFcm(params: PushParams): Promise<PushResult> {
 /**
  * Encode a string to base64url format for VAPID
  */
-function urlBase64Encode(str: string): string {
+function _urlBase64Encode(str: string): string {
     return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
  * Decode a base64url string for VAPID
  */
-function urlBase64Decode(str: string): string {
+function _urlBase64Decode(str: string): string {
     const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
     const padding = '='.repeat((4 - (base64.length % 4)) % 4);
     return atob(base64 + padding);
@@ -406,14 +406,10 @@ async function sendWithWebPush(params: PushParams): Promise<PushResult> {
     try {
         // Parse the subscription endpoint and extract keys if it's a WebPushSubscription
         let endpoint: string;
-        let p256dh: string;
-        let auth: string;
 
         try {
             const subscription = JSON.parse(params.token) as WebPushSubscription;
             endpoint = subscription.endpoint;
-            p256dh = subscription.keys.p256dh;
-            auth = subscription.keys.auth;
         } catch {
             // If not JSON, treat as direct endpoint URL
             endpoint = params.token;
@@ -426,7 +422,7 @@ async function sendWithWebPush(params: PushParams): Promise<PushResult> {
         }
 
         // Create the push message payload
-        const payload = JSON.stringify({
+        const _payload = JSON.stringify({
             notification: {
                 title: params.title,
                 body: params.body,

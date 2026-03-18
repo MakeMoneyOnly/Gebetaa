@@ -225,7 +225,7 @@ describe('Notification Deduplication Service', () => {
 // =========================================================
 
 describe('Deduplication with Redis (Mocked)', () => {
-    const mockRedis = {
+    const _mockRedis = {
         set: vi.fn(),
         get: vi.fn(),
         ttl: vi.fn(),
