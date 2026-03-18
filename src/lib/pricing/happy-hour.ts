@@ -37,7 +37,7 @@ export async function getActiveHappyHour(
     restaurantId: string
 ): Promise<HappyHourSchedule | null> {
     const currentDay = getCurrentDayAbbrev();
-    const now = new Date();
+    const _now = new Date();
 
     // Get all active happy hours for this restaurant
     const { data: schedules, error } = await supabase

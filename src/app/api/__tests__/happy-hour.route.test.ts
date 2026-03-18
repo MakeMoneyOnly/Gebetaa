@@ -30,7 +30,7 @@ function setAuthAndContextOk(supabase: any = {}) {
     } as any);
 }
 
-function makeHappyHourSupabase() {
+function _makeHappyHourSupabase() {
     const happyHourChain: any = {
         select: vi.fn(() => Promise.resolve({ data: [], error: null })),
         insert: vi.fn(() => Promise.resolve({ data: { id: 'hh-1' }, error: null })),

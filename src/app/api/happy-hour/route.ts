@@ -29,7 +29,7 @@ const CreateHappyHourSchema = z.object({
     requires_manager_pin: z.boolean().optional().default(false),
 });
 
-const UpdateHappyHourSchema = CreateHappyHourSchema.partial();
+const _UpdateHappyHourSchema = CreateHappyHourSchema.partial();
 
 export async function GET() {
     const auth = await getAuthenticatedUser();
