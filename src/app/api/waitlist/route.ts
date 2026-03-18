@@ -55,7 +55,7 @@ export async function GET(request: Request) {
 
         const entries = await getWaitlist(context.restaurantId, status ?? undefined);
 
-        let responseData: Record<string, unknown> = { entries };
+        const responseData: Record<string, unknown> = { entries };
 
         // Optionally include statistics
         if (includeStats) {

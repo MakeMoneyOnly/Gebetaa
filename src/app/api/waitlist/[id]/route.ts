@@ -17,11 +17,9 @@ import {
     getWaitlistEntry,
     updateStatus,
     removeFromWaitlist,
-    notifyGuest,
     getPosition,
     estimateWaitTime,
 } from '@/lib/waitlist/service';
-import type { WaitlistStatus } from '@/lib/waitlist/types';
 
 /**
  * Schema for updating waitlist status

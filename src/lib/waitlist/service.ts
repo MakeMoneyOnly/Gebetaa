@@ -121,7 +121,7 @@ export async function addToWaitlist(params: AddWaitlistParams): Promise<Waitlist
     const supabase = createServiceRoleClient();
     const db = supabase as any;
 
-    const { restaurantId, guestName, guestPhone, guestCount, notes, createdBy } = params;
+    const { restaurantId, guestName, guestPhone, guestCount, notes } = params;
 
     // Validate guest count
     if (
@@ -396,7 +396,7 @@ export async function updateStatus(params: UpdateWaitlistStatusParams): Promise<
     const supabase = createServiceRoleClient();
     const db = supabase as any;
 
-    const { waitlistId, status, updatedBy } = params;
+    const { waitlistId, status } = params;
 
     // Get the entry to check current status
     const entry = await getWaitlistEntry(waitlistId);
