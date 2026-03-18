@@ -85,9 +85,16 @@ export const paymentsResolvers = {
     },
 
     Payment: {
-        __resolveReference(_reference: { id: string }, _context: GraphQLContext) {
+        __resolveReference: async (_reference: { id: string }, _context: GraphQLContext) => {
             // TODO: Implement with payments repository
-            // Note: For federation, tenant isolation should be verified at the gateway level
+            // When implemented, should validate tenant isolation:
+            // const payment = await paymentsRepository.getPayment(_reference.id);
+            // if (payment && _context.user?.restaurantId) {
+            //     if (payment.restaurant_id !== _context.user.restaurantId) {
+            //         console.error(`Tenant isolation violation: User ${_context.user.id} attempted to access payment ${_reference.id}`);
+            //         return null;
+            //     }
+            // }
             return null;
         },
     },
