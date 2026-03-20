@@ -8,17 +8,29 @@ Represents the possible staff roles in a restaurant.
 Roles determine permissions and access levels within the system.
 """
 enum StaffRole {
-    """Restaurant owner with full access to all features"""
+    """
+    Restaurant owner with full access to all features
+    """
     OWNER
-    """Administrator with full management capabilities"""
+    """
+    Administrator with full management capabilities
+    """
     ADMIN
-    """Manager with staff and menu management permissions"""
+    """
+    Manager with staff and menu management permissions
+    """
     MANAGER
-    """Kitchen staff with KDS and order management access"""
+    """
+    Kitchen staff with KDS and order management access
+    """
     KITCHEN
-    """Bar staff with drink preparation access"""
+    """
+    Bar staff with drink preparation access
+    """
     BAR
-    """Waiter with order taking and table management access"""
+    """
+    Waiter with order taking and table management access
+    """
     WAITER
 }
 
@@ -28,27 +40,49 @@ Staff members can be assigned roles and have time tracking.
 PIN codes are never exposed via API - use verifyPin mutation for authentication.
 """
 type Staff @key(fields: "id") {
-    """Unique identifier for the staff member"""
+    """
+    Unique identifier for the staff member
+    """
     id: ID!
-    """The restaurant this staff member belongs to"""
+    """
+    The restaurant this staff member belongs to
+    """
     restaurantId: ID!
-    """Reference to the user account associated with this staff member"""
+    """
+    Reference to the user account associated with this staff member
+    """
     userId: ID!
-    """Full name of the staff member"""
+    """
+    Full name of the staff member
+    """
     fullName: String!
-    """Role assigned to this staff member"""
+    """
+    Role assigned to this staff member
+    """
     role: StaffRole!
-    """Whether this staff member is currently active"""
+    """
+    Whether this staff member is currently active
+    """
     isActive: Boolean!
-    """Date when the staff member was hired (ISO 8601 format)"""
+    """
+    Date when the staff member was hired (ISO 8601 format)
+    """
     hireDate: String
-    """Phone number of the staff member"""
+    """
+    Phone number of the staff member
+    """
     phone: String
-    """Email address of the staff member"""
+    """
+    Email address of the staff member
+    """
     email: String
-    """Timestamp when the staff record was created (ISO 8601 format)"""
+    """
+    Timestamp when the staff record was created (ISO 8601 format)
+    """
     createdAt: String!
-    """Timestamp when the staff record was last updated (ISO 8601 format)"""
+    """
+    Timestamp when the staff record was last updated (ISO 8601 format)
+    """
     updatedAt: String!
 }
 
@@ -57,21 +91,37 @@ Represents a work shift for a staff member.
 Shifts track scheduled work periods and can be used for payroll calculations.
 """
 type Shift @key(fields: "id") {
-    """Unique identifier for the shift"""
+    """
+    Unique identifier for the shift
+    """
     id: ID!
-    """The staff member this shift belongs to"""
+    """
+    The staff member this shift belongs to
+    """
     staffId: ID!
-    """The restaurant this shift belongs to"""
+    """
+    The restaurant this shift belongs to
+    """
     restaurantId: ID!
-    """Start time of the shift (ISO 8601 format)"""
+    """
+    Start time of the shift (ISO 8601 format)
+    """
     startTime: String!
-    """End time of the shift (ISO 8601 format, null if shift is ongoing)"""
+    """
+    End time of the shift (ISO 8601 format, null if shift is ongoing)
+    """
     endTime: String
-    """Total break time in minutes during this shift"""
+    """
+    Total break time in minutes during this shift
+    """
     breakMinutes: Int!
-    """Current status of the shift (e.g., 'scheduled', 'in_progress', 'completed')"""
+    """
+    Current status of the shift (e.g., 'scheduled', 'in_progress', 'completed')
+    """
     status: String!
-    """Notes about this shift"""
+    """
+    Notes about this shift
+    """
     notes: String
 }
 
@@ -80,21 +130,37 @@ Represents a time entry for clock in/out tracking.
 Used for payroll and attendance tracking.
 """
 type TimeEntry @key(fields: "id") {
-    """Unique identifier for the time entry"""
+    """
+    Unique identifier for the time entry
+    """
     id: ID!
-    """The staff member this time entry belongs to"""
+    """
+    The staff member this time entry belongs to
+    """
     staffId: ID!
-    """The restaurant this time entry belongs to"""
+    """
+    The restaurant this time entry belongs to
+    """
     restaurantId: ID!
-    """Timestamp when the staff member clocked in (ISO 8601 format)"""
+    """
+    Timestamp when the staff member clocked in (ISO 8601 format)
+    """
     clockInTime: String!
-    """Timestamp when the staff member clocked out (ISO 8601 format, null if still clocked in)"""
+    """
+    Timestamp when the staff member clocked out (ISO 8601 format, null if still clocked in)
+    """
     clockOutTime: String
-    """Total break time in minutes during this entry"""
+    """
+    Total break time in minutes during this entry
+    """
     breakMinutes: Int!
-    """Total hours worked (calculated from clock in/out times minus breaks)"""
+    """
+    Total hours worked (calculated from clock in/out times minus breaks)
+    """
     totalHours: Float
-    """Date of the time entry (ISO 8601 date format)"""
+    """
+    Date of the time entry (ISO 8601 date format)
+    """
     date: String!
 }
 
@@ -102,9 +168,13 @@ type TimeEntry @key(fields: "id") {
 Pagination connection for staff members with cursor-based pagination.
 """
 type StaffConnection {
-    """List of staff edges in the current page"""
+    """
+    List of staff edges in the current page
+    """
     edges: [StaffEdge!]!
-    """Pagination information for navigating results"""
+    """
+    Pagination information for navigating results
+    """
     pageInfo: PageInfo!
 }
 
@@ -112,37 +182,47 @@ type StaffConnection {
 An edge in the staff connection containing a cursor and the staff node.
 """
 type StaffEdge {
-    """Cursor for pagination, use as 'after' parameter"""
+    """
+    Cursor for pagination, use as 'after' parameter
+    """
     cursor: String!
-    """The staff member at this edge"""
+    """
+    The staff member at this edge
+    """
     node: Staff!
 }
 
-"""
-Pagination information for cursor-based pagination.
-Shared across all connection types in the schema.
-"""
 extend type PageInfo @shareable {
-    """Whether there are more results after the current page"""
+    """
+    Whether there are more results after the current page
+    """
     hasNextPage: Boolean! @shareable
-    """Whether there are more results before the current page"""
+    """
+    Whether there are more results before the current page
+    """
     hasPreviousPage: Boolean! @shareable
-    """Cursor for the first item in the current page"""
+    """
+    Cursor for the first item in the current page
+    """
     startCursor: String @shareable
-    """Cursor for the last item in the current page"""
+    """
+    Cursor for the last item in the current page
+    """
     endCursor: String @shareable
 }
 
-"""
-Standard error type for Gebeta GraphQL operations.
-Provides error codes and messages in both English and Amharic.
-"""
 extend type GebetaError @shareable {
-    """Error code for programmatic error handling"""
+    """
+    Error code for programmatic error handling
+    """
     code: String! @shareable
-    """Human-readable error message in English"""
+    """
+    Human-readable error message in English
+    """
     message: String! @shareable
-    """Human-readable error message in Amharic (optional)"""
+    """
+    Human-readable error message in Amharic (optional)
+    """
     messageAm: String @shareable
 }
 
@@ -150,19 +230,33 @@ extend type GebetaError @shareable {
 Input type for creating a new staff member.
 """
 input CreateStaffInput {
-    """The restaurant to add the staff member to"""
+    """
+    The restaurant to add the staff member to
+    """
     restaurantId: ID!
-    """The user account to associate with this staff member"""
+    """
+    The user account to associate with this staff member
+    """
     userId: ID!
-    """Full name of the staff member"""
+    """
+    Full name of the staff member
+    """
     fullName: String!
-    """Role to assign to the staff member"""
+    """
+    Role to assign to the staff member
+    """
     role: StaffRole!
-    """Phone number of the staff member"""
+    """
+    Phone number of the staff member
+    """
     phone: String
-    """Email address of the staff member"""
+    """
+    Email address of the staff member
+    """
     email: String
-    """PIN code for quick authentication (stored securely, never returned)"""
+    """
+    PIN code for quick authentication (stored securely, never returned)
+    """
     pinCode: String
 }
 
@@ -171,15 +265,25 @@ Input type for updating an existing staff member.
 All fields are optional - only provided fields will be updated.
 """
 input UpdateStaffInput {
-    """Updated full name"""
+    """
+    Updated full name
+    """
     fullName: String
-    """Updated role"""
+    """
+    Updated role
+    """
     role: StaffRole
-    """Updated active status"""
+    """
+    Updated active status
+    """
     isActive: Boolean
-    """Updated phone number"""
+    """
+    Updated phone number
+    """
     phone: String
-    """Updated email address"""
+    """
+    Updated email address
+    """
     email: String
 }
 
@@ -188,9 +292,13 @@ Input type for PIN verification.
 Used for quick staff authentication at POS terminals.
 """
 input VerifyPinInput {
-    """The restaurant to verify against"""
+    """
+    The restaurant to verify against
+    """
     restaurantId: ID!
-    """The PIN code to verify"""
+    """
+    The PIN code to verify
+    """
     pinCode: String!
 }
 
@@ -201,13 +309,21 @@ type Query {
     Returns staff members sorted by creation date (newest first).
     """
     staff(
-        """The restaurant to fetch staff for"""
+        """
+        The restaurant to fetch staff for
+        """
         restaurantId: ID!
-        """Number of results to return (max 100, default 20)"""
+        """
+        Number of results to return (max 100, default 20)
+        """
         first: Int = 20
-        """Pagination cursor for fetching the next page"""
+        """
+        Pagination cursor for fetching the next page
+        """
         after: String
-        """Filter by staff role"""
+        """
+        Filter by staff role
+        """
         role: StaffRole
     ): StaffConnection!
 
@@ -216,7 +332,9 @@ type Query {
     Returns null if the staff member does not exist.
     """
     staffMember(
-        """The unique identifier of the staff member"""
+        """
+        The unique identifier of the staff member
+        """
         id: ID!
     ): Staff
 
@@ -225,7 +343,9 @@ type Query {
     Useful for looking up staff info from authenticated user context.
     """
     staffByUserId(
-        """The user ID to look up"""
+        """
+        The user ID to look up
+        """
         userId: ID!
     ): Staff
 
@@ -234,13 +354,21 @@ type Query {
     Can be filtered by staff member and date range.
     """
     shifts(
-        """The restaurant to fetch shifts for"""
+        """
+        The restaurant to fetch shifts for
+        """
         restaurantId: ID!
-        """Filter by staff member ID"""
+        """
+        Filter by staff member ID
+        """
         staffId: ID
-        """Filter shifts starting from this date (ISO 8601 format)"""
+        """
+        Filter shifts starting from this date (ISO 8601 format)
+        """
         startDate: String
-        """Filter shifts ending before this date (ISO 8601 format)"""
+        """
+        Filter shifts ending before this date (ISO 8601 format)
+        """
         endDate: String
     ): [Shift!]!
 
@@ -249,13 +377,21 @@ type Query {
     Used for payroll and attendance tracking.
     """
     timeEntries(
-        """The restaurant to fetch time entries for"""
+        """
+        The restaurant to fetch time entries for
+        """
         restaurantId: ID!
-        """Filter by staff member ID"""
+        """
+        Filter by staff member ID
+        """
         staffId: ID
-        """Filter entries starting from this date (ISO 8601 format)"""
+        """
+        Filter entries starting from this date (ISO 8601 format)
+        """
         startDate: String
-        """Filter entries ending before this date (ISO 8601 format)"""
+        """
+        Filter entries ending before this date (ISO 8601 format)
+        """
         endDate: String
     ): [TimeEntry!]!
 
@@ -264,7 +400,9 @@ type Query {
     Useful for seeing who is currently working.
     """
     clockedInStaff(
-        """The restaurant to fetch clocked-in staff for"""
+        """
+        The restaurant to fetch clocked-in staff for
+        """
         restaurantId: ID!
     ): [Staff!]!
 }
@@ -277,7 +415,9 @@ type Mutation {
     PIN code is hashed before storage.
     """
     createStaff(
-        """Staff creation input"""
+        """
+        Staff creation input
+        """
         input: CreateStaffInput!
     ): StaffResult!
 
@@ -287,9 +427,13 @@ type Mutation {
     Requires manager or admin role.
     """
     updateStaff(
-        """ID of the staff member to update"""
+        """
+        ID of the staff member to update
+        """
         id: ID!
-        """Staff update input"""
+        """
+        Staff update input
+        """
         input: UpdateStaffInput!
     ): StaffResult!
 
@@ -299,7 +443,9 @@ type Mutation {
     Requires manager or admin role.
     """
     deactivateStaff(
-        """ID of the staff member to deactivate"""
+        """
+        ID of the staff member to deactivate
+        """
         id: ID!
     ): StaffResult!
 
@@ -309,7 +455,9 @@ type Mutation {
     Returns staff info if PIN is valid.
     """
     verifyPin(
-        """PIN verification input"""
+        """
+        PIN verification input
+        """
         input: VerifyPinInput!
     ): PinVerificationResult!
 
@@ -318,7 +466,9 @@ type Mutation {
     Creates a new time entry with clockInTime set to now.
     """
     clockIn(
-        """ID of the staff member to clock in"""
+        """
+        ID of the staff member to clock in
+        """
         staffId: ID!
     ): StaffResult!
 
@@ -327,7 +477,9 @@ type Mutation {
     Updates the current time entry with clockOutTime set to now.
     """
     clockOut(
-        """ID of the staff member to clock out"""
+        """
+        ID of the staff member to clock out
+        """
         staffId: ID!
     ): StaffResult!
 }
@@ -337,11 +489,17 @@ Result type for staff mutations.
 Returns either the affected staff member or an error.
 """
 type StaffResult {
-    """Whether the operation was successful"""
+    """
+    Whether the operation was successful
+    """
     success: Boolean!
-    """The affected staff member if successful"""
+    """
+    The affected staff member if successful
+    """
     staff: Staff
-    """Error details if the operation failed"""
+    """
+    Error details if the operation failed
+    """
     error: GebetaError
 }
 
@@ -350,10 +508,16 @@ Result type for PIN verification.
 Returns staff info if PIN is valid, or an error if invalid.
 """
 type PinVerificationResult {
-    """Whether the PIN verification was successful"""
+    """
+    Whether the PIN verification was successful
+    """
     success: Boolean!
-    """The staff member if PIN is valid"""
+    """
+    The staff member if PIN is valid
+    """
     staff: Staff
-    """Error details if verification failed"""
+    """
+    Error details if verification failed
+    """
     error: GebetaError
 }
