@@ -1,5 +1,10 @@
 import { updateSession } from '@/lib/supabase/middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limit';
+import {
+    detectApiVersion,
+    getVersionedHeaders,
+    hasExplicitVersionHeader,
+} from '@/lib/api/versioning';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -93,6 +98,24 @@ export async function middleware(request: NextRequest) {
         'Strict-Transport-Security',
         'max-age=63072000; includeSubDomains; preload'
     );
+
+    // Add API versioning headers for API routes
+    const requestPath = request.nextUrl.pathname;
+    if (requestPath.startsWith('/api/')) {
+        const version = detectApiVersion(request);
+        const versionHeaders = getVersionedHeaders(version);
+
+        // Add version headers to all API responses
+        for (const [key, value] of Object.entries(versionHeaders)) {
+            supabaseResponse.headers.set(key, value);
+        }
+
+        // Add Content-Type based on Accept header or default to v1
+        const acceptHeader = request.headers.get('accept');
+        if (acceptHeader?.includes('application/vnd.gebeta')) {
+            supabaseResponse.headers.set('Content-Type', acceptHeader);
+        }
+    }
 
     return supabaseResponse;
 }

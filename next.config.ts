@@ -188,6 +188,19 @@ const nextConfig: NextConfig = {
         dangerouslyAllowSVG: true,
         contentDispositionType: 'inline',
     },
+
+    // API Versioning: Rewrite /api/v1/* to /api/* for versioned API endpoints
+    // This allows clients to use /api/v1/orders instead of /api/orders
+    async rewrites() {
+        return [
+            {
+                // Rewrite /api/v1/* to /api/*
+                source: '/api/v1/:path*',
+                destination: '/api/:path*',
+            },
+        ];
+    },
+
     async headers() {
         return [
             {

@@ -33,9 +33,11 @@ export default defineConfig({
                 // Config and build-time scripts
                 'src/lib/config/**',
                 'src/scripts/**',
-                // These files require database/Supabase/Redis - tested via integration/e2e
-                'src/lib/audit.ts',
-                'src/lib/supabase/service-role.ts',
+                // These files now have integration tests - no longer excluded
+                // 'src/lib/audit.ts', // Now tested via src/lib/__tests__/audit.integration.test.ts
+                // 'src/lib/supabase/service-role.ts', // Now tested via src/lib/supabase/__tests__/service-role.integration.test.ts
+                // 'src/lib/services/orderService.ts', // Now tested via src/lib/services/__tests__/orderService.integration.test.ts
+                // Remaining files still require database/Supabase/Redis - tested via integration/e2e
                 'src/lib/api/audit.ts',
                 'src/lib/api/metrics.ts',
                 'src/lib/api/schemaFallback.ts',
@@ -56,7 +58,6 @@ export default defineConfig({
                 'src/lib/kds/printer.ts',
                 'src/lib/monitoring/alerts.ts',
                 'src/lib/payments/payment-event-consumer.ts',
-                'src/lib/services/orderService.ts',
                 'src/lib/devices/config.ts',
             ],
             // Thresholds apply only to testable (non-excluded) units
