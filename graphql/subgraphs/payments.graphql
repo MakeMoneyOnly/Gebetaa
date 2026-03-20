@@ -3,123 +3,300 @@
 
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
+"""
+Represents the available payment methods in the system.
+Supports both digital wallets popular in Ethiopia and traditional cash.
+"""
 enum PaymentMethod {
+    """Cash payment"""
     CASH
+    """Telebirr mobile money payment"""
     TELEBIRR
+    """Chapa payment gateway (cards and bank transfers)"""
     CHAPA
+    """CBE Birr mobile money payment"""
     CBE_BIRR
+    """Amole mobile money payment"""
     AMOLE
 }
 
+"""
+Represents the possible statuses of a payment transaction.
+"""
 enum PaymentStatus {
+    """Payment has been initiated but not yet confirmed"""
     PENDING
+    """Payment has been successfully captured"""
     CAPTURED
+    """Payment failed or was declined"""
     FAILED
+    """Payment was refunded"""
     REFUNDED
 }
 
+"""
+Represents a payment transaction in the system.
+Tracks all payment attempts, captures, and refunds.
+"""
 type Payment @key(fields: "id") {
+    """Unique identifier for the payment"""
     id: ID!
+    """The restaurant this payment belongs to"""
     restaurantId: ID!
+    """The order this payment is associated with"""
     orderId: ID!
+    """Payment amount in santim (1 ETB = 100 santim)"""
     amount: Int!
+    """Currency code (e.g., 'ETB')"""
     currencyCode: String!
+    """Payment method used"""
     method: PaymentMethod!
+    """Payment provider (e.g., 'telebirr', 'chapa')"""
     provider: String
+    """Transaction ID from the payment provider"""
     providerTransactionId: String
+    """Current status of the payment"""
     status: PaymentStatus!
+    """Timestamp when payment was captured (ISO 8601 format)"""
     capturedAt: String
+    """Unique key for idempotent payment processing"""
     idempotencyKey: String!
+    """Timestamp when the payment was created (ISO 8601 format)"""
     createdAt: String!
 }
 
+"""
+Represents a daily revenue report for a restaurant.
+Aggregates payment data for financial reporting and analytics.
+"""
 type DailyRevenueReport {
+    """Date of the report (ISO 8601 date format)"""
     date: String!
+    """Total revenue for the day in santim"""
     totalRevenueSantim: Int!
+    """Total number of orders with payments"""
     orderCount: Int!
+    """Revenue breakdown by payment method"""
     byMethod: [RevenueByMethod!]!
 }
 
+"""
+Represents revenue breakdown by payment method.
+Used in daily revenue reports for analytics.
+"""
 type RevenueByMethod {
+    """Payment method"""
     method: PaymentMethod!
+    """Total revenue in santim for this method"""
     totalSantim: Int!
+    """Number of transactions for this method"""
     count: Int!
 }
 
-# Error types from Orders subgraph
+"""
+Standard error type for Gebeta GraphQL operations.
+Provides error codes and messages in both English and Amharic.
+"""
 extend type GebetaError @shareable {
+    """Error code for programmatic error handling"""
     code: String! @shareable
+    """Human-readable error message in English"""
     message: String! @shareable
+    """Human-readable error message in Amharic (optional)"""
     messageAm: String @shareable
 }
 
-# Input types
+"""
+Input type for initiating a Telebirr payment.
+Telebirr is a popular mobile money service in Ethiopia.
+"""
 input InitiateTelebirrInput {
+    """The order to create the payment for"""
     orderId: ID!
+    """Payment amount in santim (1 ETB = 100 santim)"""
     amountSantim: Int!
+    """Phone number for Telebirr (optional, may use registered number)"""
     phoneNumber: String
+    """Unique key for idempotent payment initiation"""
     idempotencyKey: String!
 }
 
+"""
+Input type for initiating a Chapa payment.
+Chapa supports card payments and bank transfers.
+"""
 input InitiateChapaInput {
+    """The order to create the payment for"""
     orderId: ID!
+    """Payment amount in santim (1 ETB = 100 santim)"""
     amountSantim: Int!
+    """Customer email for receipt (optional)"""
     customerEmail: String
+    """Customer name for receipt (optional)"""
     customerName: String
+    """Unique key for idempotent payment initiation"""
     idempotencyKey: String!
 }
 
+"""
+Input type for recording a cash payment.
+Used when payment is received in cash at the counter.
+"""
 input RecordCashPaymentInput {
+    """The order to record the payment for"""
     orderId: ID!
+    """Payment amount in santim (1 ETB = 100 santim)"""
     amountSantim: Int!
+    """Unique key for idempotent payment recording"""
     idempotencyKey: String!
 }
 
+"""
+Input type for processing a refund.
+Refunds create a new payment record with REFUNDED status.
+"""
 input ProcessRefundInput {
+    """The payment to refund"""
     paymentId: ID!
+    """Refund amount in santim (can be partial)"""
     amountSantim: Int!
+    """Reason for the refund (optional but recommended for audit)"""
     reason: String
 }
 
 # Queries
 type Query {
-    payments(restaurantId: ID!, orderId: ID): [Payment!]!
-    payment(id: ID!): Payment
-    dailyRevenue(restaurantId: ID!, date: String!): DailyRevenueReport!
+    """
+    Retrieve payments for a restaurant with optional filtering.
+    Can be filtered by order to see all payment attempts for a specific order.
+    """
+    payments(
+        """The restaurant to fetch payments for"""
+        restaurantId: ID!
+        """Filter by order ID to see payments for a specific order"""
+        orderId: ID
+    ): [Payment!]!
+
+    """
+    Retrieve a single payment by its ID.
+    Returns null if the payment does not exist.
+    """
+    payment(
+        """The unique identifier of the payment"""
+        id: ID!
+    ): Payment
+
+    """
+    Retrieve daily revenue report for a restaurant.
+    Aggregates all payments for the specified date.
+    """
+    dailyRevenue(
+        """The restaurant to fetch revenue for"""
+        restaurantId: ID!
+        """Date to fetch revenue for (ISO 8601 date format, e.g., '2024-03-17')"""
+        date: String!
+    ): DailyRevenueReport!
 }
 
 # Mutations
 type Mutation {
-    initiateTelebirrPayment(input: InitiateTelebirrInput!): TelebirrPaymentResult!
-    initiateChapaPayment(input: InitiateChapaInput!): ChapaPaymentResult!
-    recordCashPayment(input: RecordCashPaymentInput!): PaymentResult!
-    processRefund(input: ProcessRefundInput!): RefundResult!
+    """
+    Initiate a Telebirr payment.
+    Returns USSD code and/or QR code for the customer to complete payment.
+    Payment status will be PENDING until confirmed by Telebirr webhook.
+    """
+    initiateTelebirrPayment(
+        """Telebirr payment initiation input"""
+        input: InitiateTelebirrInput!
+    ): TelebirrPaymentResult!
+
+    """
+    Initiate a Chapa payment.
+    Returns a checkout URL where the customer can complete payment.
+    Payment status will be PENDING until confirmed by Chapa webhook.
+    """
+    initiateChapaPayment(
+        """Chapa payment initiation input"""
+        input: InitiateChapaInput!
+    ): ChapaPaymentResult!
+
+    """
+    Record a cash payment.
+    Immediately marks the payment as CAPTURED.
+    Used for cash payments received at the counter.
+    """
+    recordCashPayment(
+        """Cash payment recording input"""
+        input: RecordCashPaymentInput!
+    ): PaymentResult!
+
+    """
+    Process a refund for a payment.
+    Creates a new payment record with REFUNDED status.
+    Supports partial refunds.
+    """
+    processRefund(
+        """Refund processing input"""
+        input: ProcessRefundInput!
+    ): RefundResult!
 }
 
+"""
+Result type for Telebirr payment initiation.
+Returns payment details and codes for customer to complete payment.
+"""
 type TelebirrPaymentResult {
+    """Whether the payment was initiated successfully"""
     success: Boolean!
+    """The payment record if successful"""
     payment: Payment
+    """USSD code for customer to dial to complete payment"""
     ussdCode: String
+    """QR code data for customer to scan"""
     qrCode: String
+    """Expiration time for the payment request (ISO 8601 format)"""
     expiresAt: String
+    """Error details if initiation failed"""
     error: GebetaError
 }
 
+"""
+Result type for Chapa payment initiation.
+Returns checkout URL for customer to complete payment.
+"""
 type ChapaPaymentResult {
+    """Whether the payment was initiated successfully"""
     success: Boolean!
+    """The payment record if successful"""
     payment: Payment
+    """URL where customer can complete payment"""
     checkoutUrl: String
+    """Error details if initiation failed"""
     error: GebetaError
 }
 
+"""
+Result type for payment operations.
+Returns the affected payment or an error.
+"""
 type PaymentResult {
+    """Whether the operation was successful"""
     success: Boolean!
+    """The affected payment if successful"""
     payment: Payment
+    """Error details if the operation failed"""
     error: GebetaError
 }
 
+"""
+Result type for refund operations.
+Returns the refund payment record or an error.
+"""
 type RefundResult {
+    """Whether the refund was processed successfully"""
     success: Boolean!
+    """The refund payment record if successful"""
     refund: Payment
+    """Error details if the refund failed"""
     error: GebetaError
 }

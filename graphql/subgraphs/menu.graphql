@@ -3,104 +3,277 @@
 
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
+"""
+Represents a menu item available for ordering at a restaurant.
+Contains pricing, availability, and customization options.
+"""
 type MenuItem @key(fields: "id") {
+    """Unique identifier for the menu item"""
     id: ID!
+    """The restaurant this menu item belongs to"""
     restaurantId: ID!
+    """The category this menu item belongs to"""
     categoryId: ID!
+    """Name of the menu item in English"""
     name: String!
+    """Name of the menu item in Amharic (optional)"""
     nameAm: String
+    """Description of the menu item in English"""
     description: String
+    """Description of the menu item in Amharic (optional)"""
     descriptionAm: String
+    """Price of the menu item in santim (1 ETB = 100 santim)"""
     price: Int!
+    """URL to the menu item image"""
     imageUrl: String
+    """Whether the menu item is currently available for ordering"""
     isAvailable: Boolean!
+    """Whether the menu item is featured/promoted"""
     isFeatured: Boolean!
+    """Modifier groups available for customizing this menu item"""
     modifierGroups: [ModifierGroup!]!
+    """The category this menu item belongs to"""
     category: Category
 }
 
+"""
+Represents a group of modifiers that can be applied to a menu item.
+Examples: Size options, add-ons, cooking preferences.
+"""
 type ModifierGroup @key(fields: "id") {
+    """Unique identifier for the modifier group"""
     id: ID!
+    """Name of the modifier group in English (e.g., 'Size', 'Add-ons')"""
     name: String!
+    """Name of the modifier group in Amharic"""
     nameAm: String
+    """Whether at least one option must be selected"""
     required: Boolean!
+    """Whether multiple options can be selected"""
     multiSelect: Boolean!
+    """Minimum number of options that must be selected"""
     minSelect: Int!
+    """Maximum number of options that can be selected"""
     maxSelect: Int
+    """Available options in this modifier group"""
     options: [ModifierOption!]!
 }
 
+"""
+Represents a single modifier option within a modifier group.
+Each option has a price adjustment that affects the item's total price.
+"""
 type ModifierOption @key(fields: "id") {
+    """Unique identifier for the modifier option"""
     id: ID!
+    """Name of the option in English (e.g., 'Large', 'Extra Cheese')"""
     name: String!
+    """Name of the option in Amharic"""
     nameAm: String
+    """Price adjustment in santim (positive adds to price, negative subtracts)"""
     priceAdjustment: Int!
+    """Whether this option is currently available"""
     isAvailable: Boolean!
 }
 
+"""
+Represents a category of menu items for organization and navigation.
+Categories help customers browse the menu by type (e.g., Appetizers, Main Courses).
+"""
 type Category @key(fields: "id") {
+    """Unique identifier for the category"""
     id: ID!
+    """The restaurant this category belongs to"""
     restaurantId: ID!
+    """Name of the category in English"""
     name: String!
+    """Name of the category in Amharic"""
     nameAm: String
+    """URL to the category image"""
     imageUrl: String
+    """Sort order for display (lower numbers appear first)"""
     sortOrder: Int!
+    """KDS station this category's items are routed to"""
     kdsStation: String
+    """Menu items in this category"""
     items: [MenuItem!]!
 }
 
-# Error types from Orders subgraph
+"""
+Standard error type for Gebeta GraphQL operations.
+Provides error codes and messages in both English and Amharic.
+"""
 extend type GebetaError @shareable {
+    """Error code for programmatic error handling"""
     code: String! @shareable
+    """Human-readable error message in English"""
     message: String! @shareable
+    """Human-readable error message in Amharic (optional)"""
     messageAm: String @shareable
 }
 
-# Input types
+"""
+Input type for creating a new menu item.
+"""
 input CreateMenuItemInput {
+    """The restaurant to create the menu item for"""
     restaurantId: ID!
+    """The category to place the menu item in"""
     categoryId: ID!
+    """Name of the menu item in English"""
     name: String!
+    """Name of the menu item in Amharic"""
     nameAm: String
+    """Description of the menu item in English"""
     description: String
+    """Description of the menu item in Amharic"""
     descriptionAm: String
+    """Price in santim (1 ETB = 100 santim)"""
     price: Int!
+    """URL to the menu item image"""
     imageUrl: String
+    """Whether the item should be featured/promoted"""
     isFeatured: Boolean = false
+    """IDs of modifier groups to associate with this item"""
     modifierGroupIds: [ID!]
 }
 
+"""
+Input type for updating an existing menu item.
+All fields are optional - only provided fields will be updated.
+"""
 input UpdateMenuItemInput {
+    """Updated name in English"""
     name: String
+    """Updated name in Amharic"""
     nameAm: String
+    """Updated description in English"""
     description: String
+    """Updated description in Amharic"""
     descriptionAm: String
+    """Updated price in santim"""
     price: Int
+    """Updated image URL"""
     imageUrl: String
+    """Updated availability status"""
     isAvailable: Boolean
+    """Updated featured status"""
     isFeatured: Boolean
+    """Updated list of modifier group IDs"""
     modifierGroupIds: [ID!]
 }
 
 # Queries
 type Query {
-    menuItems(restaurantId: ID!, categoryId: ID, availableOnly: Boolean): [MenuItem!]!
-    menuItem(id: ID!): MenuItem
-    categories(restaurantId: ID!): [Category!]!
-    category(id: ID!): Category
-    searchMenu(restaurantId: ID!, query: String!): [MenuItem!]!
+    """
+    Retrieve menu items for a restaurant with optional filtering.
+    Returns all menu items or filtered by category and/or availability.
+    """
+    menuItems(
+        """The restaurant to fetch menu items for"""
+        restaurantId: ID!
+        """Filter by category ID"""
+        categoryId: ID
+        """Only return available items when true"""
+        availableOnly: Boolean
+    ): [MenuItem!]!
+
+    """
+    Retrieve a single menu item by its ID.
+    Returns null if the menu item does not exist.
+    """
+    menuItem(
+        """The unique identifier of the menu item"""
+        id: ID!
+    ): MenuItem
+
+    """
+    Retrieve all categories for a restaurant.
+    Returns categories sorted by sortOrder.
+    """
+    categories(
+        """The restaurant to fetch categories for"""
+        restaurantId: ID!
+    ): [Category!]!
+
+    """
+    Retrieve a single category by its ID.
+    Returns null if the category does not exist.
+    """
+    category(
+        """The unique identifier of the category"""
+        id: ID!
+    ): Category
+
+    """
+    Search menu items by name or description.
+    Performs case-insensitive search across both English and Amharic fields.
+    """
+    searchMenu(
+        """The restaurant to search within"""
+        restaurantId: ID!
+        """Search query string"""
+        query: String!
+    ): [MenuItem!]!
 }
 
 # Mutations
 type Mutation {
-    createMenuItem(input: CreateMenuItemInput!): MenuItemResult!
-    updateMenuItem(id: ID!, input: UpdateMenuItemInput!): MenuItemResult!
-    markItemAvailability(id: ID!, available: Boolean!): MenuItemResult!
-    updateMenuItemPrice(id: ID!, price: Int!): MenuItemResult!
+    """
+    Create a new menu item.
+    Requires manager or admin role.
+    """
+    createMenuItem(
+        """Menu item creation input"""
+        input: CreateMenuItemInput!
+    ): MenuItemResult!
+
+    """
+    Update an existing menu item.
+    Only provided fields will be updated.
+    Requires manager or admin role.
+    """
+    updateMenuItem(
+        """ID of the menu item to update"""
+        id: ID!
+        """Menu item update input"""
+        input: UpdateMenuItemInput!
+    ): MenuItemResult!
+
+    """
+    Mark a menu item as available or unavailable.
+    Quick toggle for 86'ing items without full update.
+    Requires staff, manager, or admin role.
+    """
+    markItemAvailability(
+        """ID of the menu item to update"""
+        id: ID!
+        """Whether the item is available"""
+        available: Boolean!
+    ): MenuItemResult!
+
+    """
+    Update the price of a menu item.
+    Requires manager or admin role.
+    Price changes are logged for audit purposes.
+    """
+    updateMenuItemPrice(
+        """ID of the menu item to update"""
+        id: ID!
+        """New price in santim (1 ETB = 100 santim)"""
+        price: Int!
+    ): MenuItemResult!
 }
 
+"""
+Result type for menu item mutations.
+Returns either the affected menu item or an error.
+"""
 type MenuItemResult {
+    """Whether the operation was successful"""
     success: Boolean!
+    """The affected menu item if successful"""
     menuItem: MenuItem
+    """Error details if the operation failed"""
     error: GebetaError
 }

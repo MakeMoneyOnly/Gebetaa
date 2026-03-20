@@ -3,152 +3,524 @@
 
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
-# JSON Scalar for flexible data
+"""
+JSON scalar type for flexible data structures like modifiers and custom fields.
+Follows the GraphQL specification for custom scalars.
+"""
 scalar JSON @specifiedBy(url: "https://specs.apollo.dev/graphqlspec/current/#sec-Scalars")
 
+"""
+Represents the possible statuses of an order in its lifecycle.
+"""
 enum OrderStatus {
+    """
+    Order has been created but not yet confirmed by staff
+    """
     PENDING
+    """
+    Order has been confirmed and is awaiting preparation
+    """
     CONFIRMED
+    """
+    Order is being prepared in the kitchen
+    """
     PREPARING
+    """
+    Order is ready for pickup or serving
+    """
     READY
+    """
+    Order has been served to the customer
+    """
     SERVED
+    """
+    Order has been cancelled
+    """
     CANCELLED
 }
 
+"""
+Represents the type of order, determining fulfillment workflow.
+"""
 enum OrderType {
+    """
+    Customer is dining at the restaurant
+    """
     DINE_IN
+    """
+    Customer will pick up the order to go
+    """
     TAKEAWAY
+    """
+    Order will be delivered to customer's location
+    """
     DELIVERY
 }
 
+"""
+Represents a customer order in the restaurant system.
+This is the core entity for order management and kitchen operations.
+"""
 type Order @key(fields: "id") {
+    """
+    Unique identifier for the order
+    """
     id: ID!
+    """
+    The restaurant this order belongs to
+    """
     restaurantId: ID!
+    """
+    The table this order is associated with (null for takeaway/delivery)
+    """
     tableId: ID
+    """
+    Human-readable order number (e.g., '20260317-0001')
+    """
     orderNumber: String!
+    """
+    Current status of the order in its lifecycle
+    """
     status: OrderStatus!
+    """
+    Type of order determining fulfillment workflow
+    """
     type: OrderType!
+    """
+    Total price of the order in santim (1 ETB = 100 santim)
+    """
     totalPrice: Int!
+    """
+    Total discount applied to the order in santim
+    """
     discountAmount: Int!
+    """
+    Special instructions or notes for the order
+    """
     notes: String
-    guestId: ID
+    """
+    ID of the guest who placed this order (deprecated - use guest field)
+    """
+    guestId: ID @deprecated(reason: "Use guest field for full guest data when available")
+    """
+    ID of the staff member who created or is responsible for this order
+    """
     staffId: ID
+    """
+    Unique key for idempotent order creation
+    """
     idempotencyKey: String!
+    """
+    List of items included in this order
+    """
     items: [OrderItem!]!
+    """
+    Timestamp when the order was created (ISO 8601 format)
+    """
     createdAt: String!
+    """
+    Timestamp when the order was last updated (ISO 8601 format)
+    """
     updatedAt: String!
 }
 
+"""
+Represents a single item within an order.
+Contains pricing, quantity, and customization details.
+"""
 type OrderItem @key(fields: "id") {
+    """
+    Unique identifier for the order item
+    """
     id: ID!
+    """
+    The restaurant this order item belongs to
+    """
     restaurantId: ID!
+    """
+    The order this item belongs to
+    """
     orderId: ID!
+    """
+    Reference to the menu item being ordered
+    """
     menuItemId: ID!
+    """
+    Quantity of this menu item ordered
+    """
     quantity: Int!
+    """
+    Unit price at time of ordering in santim
+    """
     unitPrice: Int!
+    """
+    Total price for this line item (quantity * unitPrice + modifiers) in santim
+    """
     itemTotal: Int!
+    """
+    JSON object containing selected modifiers and customizations
+    """
     modifiers: JSON
+    """
+    Special instructions for this item (e.g., 'no onions')
+    """
     notes: String
+    """
+    Current status of this item (e.g., 'pending', 'preparing', 'ready')
+    """
     status: String!
+    """
+    KDS station this item is assigned to for preparation
+    """
     kdsStation: String
 }
 
-# Pagination
+"""
+Pagination connection for orders with cursor-based pagination.
+"""
 type OrderConnection {
+    """
+    List of order edges in the current page
+    """
     edges: [OrderEdge!]!
+    """
+    Pagination information for navigating results
+    """
     pageInfo: PageInfo!
 }
 
+"""
+An edge in the order connection containing a cursor and the order node.
+"""
 type OrderEdge {
+    """
+    Cursor for pagination, use as 'after' parameter
+    """
     cursor: String!
+    """
+    The order at this edge
+    """
     node: Order!
 }
 
+"""
+Pagination information for cursor-based pagination.
+Shared across all connection types in the schema.
+"""
 type PageInfo @shareable {
+    """
+    Whether there are more results after the current page
+    """
     hasNextPage: Boolean! @shareable
+    """
+    Whether there are more results before the current page
+    """
     hasPreviousPage: Boolean! @shareable
+    """
+    Cursor for the first item in the current page
+    """
     startCursor: String @shareable
+    """
+    Cursor for the last item in the current page
+    """
     endCursor: String @shareable
 }
 
-# Error types
+"""
+Standard error type for Gebeta GraphQL operations.
+Provides error codes and messages in both English and Amharic.
+"""
 type GebetaError @key(fields: "code") @shareable {
+    """
+    Error code for programmatic error handling
+    """
     code: String! @shareable
+    """
+    Human-readable error message in English
+    """
     message: String! @shareable
+    """
+    Human-readable error message in Amharic (optional)
+    """
     messageAm: String @shareable
 }
 
+"""
+Result type for createOrder mutation.
+Returns either the created order or an error.
+"""
 type CreateOrderResult {
+    """
+    Whether the operation was successful
+    """
     success: Boolean!
+    """
+    The created order if successful
+    """
     order: Order
+    """
+    Error details if the operation failed
+    """
     error: GebetaError
 }
 
+"""
+Result type for updateOrderStatus mutation.
+Returns either the updated order or an error.
+"""
 type UpdateOrderResult {
+    """
+    Whether the operation was successful
+    """
     success: Boolean!
+    """
+    The updated order if successful
+    """
     order: Order
+    """
+    Error details if the operation failed
+    """
     error: GebetaError
 }
 
+"""
+Result type for cancelOrder mutation.
+Returns either the cancelled order or an error.
+"""
 type CancelOrderResult {
+    """
+    Whether the operation was successful
+    """
     success: Boolean!
+    """
+    The cancelled order if successful
+    """
     order: Order
+    """
+    Error details if the operation failed
+    """
     error: GebetaError
 }
 
-# Input types
+"""
+Input type for creating a new order.
+All required fields must be provided for order creation.
+"""
 input CreateOrderInput {
+    """
+    The restaurant to create the order for
+    """
     restaurantId: ID!
+    """
+    The table for dine-in orders (optional for takeaway/delivery)
+    """
     tableId: ID
+    """
+    The type of order (dine-in, takeaway, or delivery)
+    """
     type: OrderType!
+    """
+    List of items to include in the order
+    """
     items: [OrderItemInput!]!
+    """
+    Special instructions for the entire order
+    """
     notes: String
+    """
+    Unique key for idempotent order creation (prevents duplicates)
+    """
     idempotencyKey: String!
 }
 
+"""
+Input type for creating an order item.
+"""
 input OrderItemInput {
+    """
+    Reference to the menu item being ordered
+    """
     menuItemId: ID!
+    """
+    Quantity of this menu item
+    """
     quantity: Int!
+    """
+    Selected modifiers as JSON object
+    """
     modifiers: JSON
+    """
+    Special instructions for this item
+    """
     notes: String
+    """
+    Unique key for idempotent item creation
+    """
     idempotencyKey: String!
 }
 
+"""
+Input type for updating an order's status.
+"""
 input UpdateOrderStatusInput {
+    """
+    ID of the order to update
+    """
     id: ID!
+    """
+    New status for the order
+    """
     status: OrderStatus!
 }
 
+"""
+Input type for creating an order from a guest session.
+Used for guest-initiated orders via QR code or table session.
+"""
 input CreateGuestOrderInput {
+    """
+    The restaurant to create the order for
+    """
     restaurantId: ID!
+    """
+    The table for the guest order
+    """
     tableId: ID
+    """
+    The guest session ID for authentication
+    """
     guestSessionId: ID!
+    """
+    List of items to include in the order
+    """
     items: [OrderItemInput!]!
+    """
+    Special instructions for the entire order
+    """
     notes: String
+    """
+    Unique key for idempotent order creation
+    """
     idempotencyKey: String!
 }
 
 # Queries
 type Query {
+    """
+    Retrieve orders for a restaurant with optional filtering and pagination.
+    Returns orders in reverse chronological order by default.
+    """
     orders(
+        """
+        The restaurant to fetch orders for
+        """
         restaurantId: ID!
+        """
+        Filter by order status
+        """
         status: OrderStatus
+        """
+        Filter by table ID
+        """
         tableId: ID
+        """
+        Number of results to return (max 100, default 20)
+        """
         first: Int = 20
+        """
+        Pagination cursor for fetching the next page
+        """
         after: String
     ): OrderConnection!
 
-    order(id: ID!): Order
+    """
+    Retrieve a single order by its ID.
+    Returns null if the order does not exist.
+    """
+    order(
+        """
+        The unique identifier of the order
+        """
+        id: ID!
+    ): Order
 
-    activeOrders(restaurantId: ID!): [Order!]!
+    """
+    Retrieve all active (non-terminal) orders for a restaurant.
+    Active orders are orders that are not CANCELLED or SERVED.
+    Useful for kitchen and staff dashboards.
+    """
+    activeOrders(
+        """
+        The restaurant to fetch active orders for
+        """
+        restaurantId: ID!
+    ): [Order!]!
 
-    kdsOrders(restaurantId: ID!, station: String!): [Order!]!
+    """
+    Retrieve orders for a specific KDS (Kitchen Display System) station.
+    Filters orders to only include items assigned to the specified station.
+    """
+    kdsOrders(
+        """
+        The restaurant to fetch orders for
+        """
+        restaurantId: ID!
+        """
+        The KDS station to filter orders by
+        """
+        station: String!
+    ): [Order!]!
 }
 
 # Mutations
 type Mutation {
-    createOrder(input: CreateOrderInput!): CreateOrderResult!
-    updateOrderStatus(input: UpdateOrderStatusInput!): UpdateOrderResult!
-    createGuestOrder(input: CreateGuestOrderInput!): CreateOrderResult!
-    cancelOrder(id: ID!, reason: String): CancelOrderResult!
+    """
+    Create a new order for a restaurant.
+    Requires authentication via staff context.
+    Use idempotencyKey to prevent duplicate orders from network retries.
+    """
+    createOrder(
+        """
+        Order creation input
+        """
+        input: CreateOrderInput!
+    ): CreateOrderResult!
+
+    """
+    Update the status of an existing order.
+    Validates status transitions according to order lifecycle rules.
+    """
+    updateOrderStatus(
+        """
+        Status update input
+        """
+        input: UpdateOrderStatusInput!
+    ): UpdateOrderResult!
+
+    """
+    Create an order from a guest session.
+    Validates guest session authentication before order creation.
+    """
+    createGuestOrder(
+        """
+        Guest order creation input
+        """
+        input: CreateGuestOrderInput!
+    ): CreateOrderResult!
+
+    """
+    Cancel an existing order.
+    Only orders in PENDING or CONFIRMED status can be cancelled.
+    A reason should be provided for audit purposes.
+    """
+    cancelOrder(
+        """
+        ID of the order to cancel
+        """
+        id: ID!
+        """
+        Reason for cancellation (recommended for audit trail)
+        """
+        reason: String
+    ): CancelOrderResult!
 }

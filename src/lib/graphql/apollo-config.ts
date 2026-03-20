@@ -5,6 +5,7 @@
 import { ApolloServer } from '@apollo/server';
 import { GraphQLError, ValidationContext, ASTVisitor } from 'graphql';
 import type { GraphQLContext } from './context';
+import { graphqlConfig } from './config';
 
 export interface SubgraphConfig {
     typeDefs: string;
@@ -21,6 +22,8 @@ interface ASTNode {
     name?: { value: string };
     selectionSet?: { selections: ASTNode[] };
     definitions?: ASTNode[];
+    operation?: string;
+    arguments?: unknown[];
     [key: string]: unknown;
 }
 
@@ -66,17 +69,98 @@ function depthLimitRule(maxDepth: number): (context: ValidationContext) => ASTVi
 
 /**
  * Complexity limit validation rule to prevent expensive queries
- * Uses a simple heuristic where each field adds 1 complexity point
+ * Uses field-level complexity weights:
+ * - Base query fields: 1 point
+ * - Mutation fields: 10 points (mutations are more expensive)
+ * - Connection/list fields with arguments: 5 points (potential for large datasets)
+ * - Nested/object fields: 2 points
  */
 function complexityLimitRule(maxComplexity: number): (context: ValidationContext) => ASTVisitor {
     return (context: ValidationContext) => {
         let totalComplexity = 0;
+        let isMutation = false;
+
+        // Fields that are considered expensive (connections, lists with pagination)
+        const expensiveFieldNames = [
+            'orders',
+            'items',
+            'menuItems',
+            'products',
+            'transactions',
+            'payments',
+            'sessions',
+            'guests',
+            'staff',
+            'notifications',
+            'connections',
+            'edges',
+            'nodes',
+            'list',
+            'all',
+            'search',
+            'query',
+        ];
+
+        // Fields that are mutations
+        const mutationFieldNames = [
+            'createOrder',
+            'updateOrder',
+            'cancelOrder',
+            'deleteOrder',
+            'createPayment',
+            'updatePayment',
+            'refundPayment',
+            'createSession',
+            'closeSession',
+            'createGuest',
+            'updateGuest',
+            'createStaff',
+            'updateStaff',
+            'deleteStaff',
+            'createMenuItem',
+            'updateMenuItem',
+            'deleteMenuItem',
+            'toggleHappyHour',
+            'applyDiscount',
+            'splitBill',
+            'assignTable',
+        ];
 
         return {
+            OperationDefinition(node: ASTNode) {
+                // Track if this operation is a mutation
+                isMutation = node.operation === 'mutation';
+            },
             Field(node: ASTNode): ASTNode | undefined {
-                // Simple heuristic: each field adds 1 complexity
-                // Mutations and nested fields could add more in a more sophisticated implementation
-                totalComplexity += 1;
+                const fieldName = node.name?.value?.toLowerCase() || '';
+
+                // Determine complexity weight based on field type
+                let fieldWeight = 1; // Default base weight for simple query fields
+
+                // Mutations are 10x more expensive than queries
+                if (isMutation) {
+                    fieldWeight = 10;
+                }
+                // Check if this is a known mutation field
+                else if (mutationFieldNames.some(name => fieldName.includes(name.toLowerCase()))) {
+                    fieldWeight = 10;
+                }
+                // Check if this is an expensive field (potential large dataset)
+                else if (expensiveFieldNames.some(name => fieldName.includes(name))) {
+                    // If the field has arguments (like pagination), it's more expensive
+                    const args = node.arguments as unknown[] | undefined;
+                    if (args && args.length > 0) {
+                        fieldWeight = 5;
+                    } else {
+                        fieldWeight = 3;
+                    }
+                }
+                // Check if field returns an object type (nested query)
+                else if (node.selectionSet) {
+                    fieldWeight = 2;
+                }
+
+                totalComplexity += fieldWeight;
                 return undefined;
             },
             Document: {
@@ -107,7 +191,7 @@ export function createSubgraphServer(config: SubgraphConfig): ApolloServer<Graph
     return new ApolloServer<GraphQLContext>({
         typeDefs: config.typeDefs,
         resolvers: config.resolvers,
-        introspection: process.env.NODE_ENV !== 'production',
+        introspection: graphqlConfig.introspection,
 
         // Add validation rules for security
         validationRules: [depthLimitRule(DEPTH_LIMIT), complexityLimitRule(COMPLEXITY_LIMIT)],

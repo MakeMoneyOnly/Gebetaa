@@ -6,6 +6,7 @@ import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import type { GraphQLContext } from './context';
 import { createDataLoaders } from './dataloaders';
+import { graphqlConfig } from './config';
 
 export type ResolversType = Record<string, any>;
 
@@ -22,7 +23,7 @@ export function createSubgraphHandler(config: SubgraphConfig) {
     const server = new ApolloServer<GraphQLContext>({
         typeDefs: config.typeDefs,
         resolvers: config.resolvers,
-        introspection: process.env.NODE_ENV !== 'production',
+        introspection: graphqlConfig.introspection,
     });
 
     return startServerAndCreateNextHandler<NextRequest, GraphQLContext>(server, {

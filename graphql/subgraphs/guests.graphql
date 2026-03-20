@@ -3,116 +3,290 @@
 
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
+"""
+Represents a guest/customer in the restaurant system.
+Guests can be created from orders or through explicit registration.
+Tracks visit history and lifetime value for analytics and loyalty.
+"""
 type Guest @key(fields: "id") {
+    """Unique identifier for the guest"""
     id: ID!
+    """The restaurant this guest profile belongs to"""
     restaurantId: ID!
+    """Full name of the guest"""
     fullName: String
+    """Phone number of the guest"""
     phone: String
+    """Email address of the guest"""
     email: String
+    """Total number of visits to the restaurant"""
     visitCount: Int!
+    """Total lifetime spending in santim (1 ETB = 100 santim)"""
     lifetimeValueSantim: Int!
+    """Date of first visit (ISO 8601 format)"""
     firstVisitAt: String!
+    """Date of most recent visit (ISO 8601 format)"""
     lastVisitAt: String!
+    """Loyalty account associated with this guest (if enrolled)"""
     loyaltyAccount: LoyaltyAccount
 }
 
+"""
+Represents a loyalty account for a guest.
+Tracks points balance, tier status, and transaction history.
+"""
 type LoyaltyAccount @key(fields: "id") {
+    """Unique identifier for the loyalty account"""
     id: ID!
+    """The guest this loyalty account belongs to"""
     guestId: ID!
+    """The restaurant this loyalty account belongs to"""
     restaurantId: ID!
+    """Current points balance"""
     pointsBalance: Int!
+    """Current loyalty tier (e.g., 'bronze', 'silver', 'gold', 'platinum')"""
     tier: String!
+    """Account status (e.g., 'active', 'suspended', 'closed')"""
     status: String!
+    """Transaction history for this account"""
     transactions: [LoyaltyTransaction!]!
 }
 
+"""
+Represents a loyalty transaction (points earned or redeemed).
+Tracks all point movements for audit and history purposes.
+"""
 type LoyaltyTransaction @key(fields: "id") {
+    """Unique identifier for the transaction"""
     id: ID!
+    """The loyalty account this transaction belongs to"""
     accountId: ID!
+    """Points amount (positive for earned, negative for redeemed)"""
     points: Int!
+    """Type of transaction (e.g., 'earned', 'redeemed', 'adjusted', 'expired')"""
     transactionType: String!
+    """Associated order ID (if transaction was from an order)"""
     orderId: ID
+    """Timestamp when the transaction occurred (ISO 8601 format)"""
     createdAt: String!
 }
 
-# Pagination
+"""
+Pagination connection for guests with cursor-based pagination.
+"""
 type GuestConnection {
+    """List of guest edges in the current page"""
     edges: [GuestEdge!]!
+    """Pagination information for navigating results"""
     pageInfo: PageInfo!
 }
 
+"""
+An edge in the guest connection containing a cursor and the guest node.
+"""
 type GuestEdge {
+    """Cursor for pagination, use as 'after' parameter"""
     cursor: String!
+    """The guest at this edge"""
     node: Guest!
 }
 
-# Shared types from Orders subgraph
+"""
+Pagination information for cursor-based pagination.
+Shared across all connection types in the schema.
+"""
 extend type PageInfo @shareable {
+    """Whether there are more results after the current page"""
     hasNextPage: Boolean! @shareable
+    """Whether there are more results before the current page"""
     hasPreviousPage: Boolean! @shareable
+    """Cursor for the first item in the current page"""
     startCursor: String @shareable
+    """Cursor for the last item in the current page"""
     endCursor: String @shareable
 }
 
-# Error types from Orders subgraph
+"""
+Standard error type for Gebeta GraphQL operations.
+Provides error codes and messages in both English and Amharic.
+"""
 extend type GebetaError @shareable {
+    """Error code for programmatic error handling"""
     code: String! @shareable
+    """Human-readable error message in English"""
     message: String! @shareable
+    """Human-readable error message in Amharic (optional)"""
     messageAm: String @shareable
 }
 
-# Input types
+"""
+Input type for enrolling a guest in the loyalty program.
+"""
 input EnrollLoyaltyInput {
+    """The guest to enroll"""
     guestId: ID!
+    """The restaurant to enroll the guest in"""
     restaurantId: ID!
+    """Phone number for loyalty account (required for verification)"""
     phone: String!
+    """Full name of the guest (optional, for display purposes)"""
     fullName: String
 }
 
+"""
+Input type for redeeming loyalty points.
+Points are converted to a discount on the specified order.
+"""
 input RedeemPointsInput {
+    """The loyalty account to redeem points from"""
     accountId: ID!
+    """Number of points to redeem"""
     points: Int!
+    """The order to apply the redemption to"""
     orderId: ID!
 }
 
+"""
+Input type for adjusting loyalty points manually.
+Used for corrections, bonuses, or administrative changes.
+"""
 input AdjustPointsInput {
+    """The loyalty account to adjust"""
     accountId: ID!
+    """Points to add (positive) or subtract (negative)"""
     points: Int!
+    """Reason for the adjustment (required for audit trail)"""
     reason: String!
+}
+
+"""
+Input type for creating a new guest profile.
+"""
+input CreateGuestInput {
+    """The restaurant to create the guest for"""
+    restaurantId: ID!
+    """Full name of the guest"""
+    fullName: String
+    """Phone number of the guest (required for identification)"""
+    phone: String!
+    """Email address of the guest"""
+    email: String
 }
 
 # Queries
 type Query {
-    guests(restaurantId: ID!, first: Int = 20, after: String, search: String): GuestConnection!
-    guest(id: ID!): Guest
-    loyaltyAccount(guestId: ID!, restaurantId: ID!): LoyaltyAccount
-    loyaltyTransactions(accountId: ID!, first: Int = 20): [LoyaltyTransaction!]!
+    """
+    Retrieve guests for a restaurant with optional filtering and pagination.
+    Returns guests sorted by last visit date (most recent first).
+    """
+    guests(
+        """The restaurant to fetch guests for"""
+        restaurantId: ID!
+        """Number of results to return (max 100, default 20)"""
+        first: Int = 20
+        """Pagination cursor for fetching the next page"""
+        after: String
+        """Search query to filter by name, phone, or email"""
+        search: String
+    ): GuestConnection!
+
+    """
+    Retrieve a single guest by their ID.
+    Returns null if the guest does not exist.
+    """
+    guest(
+        """The unique identifier of the guest"""
+        id: ID!
+    ): Guest
+
+    """
+    Retrieve the loyalty account for a guest.
+    Returns null if the guest is not enrolled in the loyalty program.
+    """
+    loyaltyAccount(
+        """The guest to fetch the loyalty account for"""
+        guestId: ID!
+        """The restaurant context"""
+        restaurantId: ID!
+    ): LoyaltyAccount
+
+    """
+    Retrieve loyalty transactions for an account.
+    Returns transactions sorted by creation date (newest first).
+    """
+    loyaltyTransactions(
+        """The loyalty account to fetch transactions for"""
+        accountId: ID!
+        """Number of results to return (max 100, default 20)"""
+        first: Int = 20
+    ): [LoyaltyTransaction!]!
 }
 
 # Mutations
 type Mutation {
-    enrollLoyalty(input: EnrollLoyaltyInput!): LoyaltyResult!
-    redeemPoints(input: RedeemPointsInput!): LoyaltyResult!
-    adjustPoints(input: AdjustPointsInput!): LoyaltyResult!
-    createGuest(input: CreateGuestInput!): GuestResult!
+    """
+    Enroll a guest in the loyalty program.
+    Creates a new loyalty account linked to the guest.
+    Phone number is required for verification purposes.
+    """
+    enrollLoyalty(
+        """Loyalty enrollment input"""
+        input: EnrollLoyaltyInput!
+    ): LoyaltyResult!
+
+    """
+    Redeem loyalty points for a discount on an order.
+    Points are deducted from the account balance and applied as a discount.
+    """
+    redeemPoints(
+        """Points redemption input"""
+        input: RedeemPointsInput!
+    ): LoyaltyResult!
+
+    """
+    Adjust loyalty points manually.
+    Used for corrections, bonuses, or administrative changes.
+    A reason is required for audit trail purposes.
+    """
+    adjustPoints(
+        """Points adjustment input"""
+        input: AdjustPointsInput!
+    ): LoyaltyResult!
+
+    """
+    Create a new guest profile.
+    Phone number is required for guest identification.
+    """
+    createGuest(
+        """Guest creation input"""
+        input: CreateGuestInput!
+    ): GuestResult!
 }
 
-input CreateGuestInput {
-    restaurantId: ID!
-    fullName: String
-    phone: String!
-    email: String
-}
-
+"""
+Result type for loyalty mutations.
+Returns the affected account and/or transaction, or an error.
+"""
 type LoyaltyResult {
+    """Whether the operation was successful"""
     success: Boolean!
+    """The affected loyalty account if successful"""
     account: LoyaltyAccount
+    """The transaction record if applicable"""
     transaction: LoyaltyTransaction
+    """Error details if the operation failed"""
     error: GebetaError
 }
 
+"""
+Result type for guest mutations.
+Returns the affected guest or an error.
+"""
 type GuestResult {
+    """Whether the operation was successful"""
     success: Boolean!
+    """The affected guest if successful"""
     guest: Guest
+    """Error details if the operation failed"""
     error: GebetaError
 }
