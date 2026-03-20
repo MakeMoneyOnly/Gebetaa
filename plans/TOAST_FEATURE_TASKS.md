@@ -128,13 +128,13 @@ This document tracks feature implementation status compared to Toast Platform, a
 
 ### 2. Reporting
 
-| Feature          | Progress | Notes               |
-| ---------------- | -------- | ------------------- |
-| Labor Reports    | 60%      | Basic time tracking |
-| Menu Performance | 70%      | Basic analytics     |
-| Guest Analytics  | 70%      | Basic guest data    |
-| Export Options   | 70%      | Basic export        |
-| Comparison Views | 70%      | Basic comparisons   |
+| Feature          | Progress | Notes                                        |
+| ---------------- | -------- | -------------------------------------------- |
+| Labor Reports    | 60%      | Basic time tracking                          |
+| Menu Performance | 85%      | Menu Engineering API implemented, UI pending |
+| Guest Analytics  | 70%      | Basic guest data                             |
+| Export Options   | 75%      | CSV export added for menu engineering        |
+| Comparison Views | 70%      | Basic comparisons                            |
 
 ---
 
@@ -155,30 +155,30 @@ This document tracks feature implementation status compared to Toast Platform, a
 
 ### P0 - Critical (Immediate Action)
 
-| Feature                 | Description                  | Implementation Approach                   |
-| ----------------------- | ---------------------------- | ----------------------------------------- |
-| SMS Order Notifications | Order status updates via SMS | Use existing Africa's Talking integration |
+| Feature                 | Description                  | Status      | Implementation                                                             |
+| ----------------------- | ---------------------------- | ----------- | -------------------------------------------------------------------------- |
+| SMS Order Notifications | Order status updates via SMS | ✅ Complete | `/api/orders/:id/notify-status` endpoint with Africa's Talking integration |
 
 ### P1 - High Priority
 
-| Feature             | Description               | Implementation Approach                  |
-| ------------------- | ------------------------- | ---------------------------------------- |
-| Visit-Based Rewards | Rewards after N visits    | Add to existing loyalty system           |
-| Tiered Loyalty      | Bronze/Silver/Gold levels | Add tier logic to loyalty                |
-| Birthday Rewards    | Automated birthday offers | Add trigger automation                   |
-| Email Campaigns     | Automated email marketing | Add email service integration            |
-| SMS Marketing       | Text message campaigns    | Already have SMS infrastructure - expand |
-| Custom Reports      | Build your own reports    | Report builder UI                        |
-| Scheduled Reports   | Auto-email reports        | Cron + email delivery                    |
-| Menu Engineering    | Star/Dog/Puzzle matrix    | Profit + popularity calculation          |
+| Feature             | Description               | Status         | Implementation                                               |
+| ------------------- | ------------------------- | -------------- | ------------------------------------------------------------ |
+| Visit-Based Rewards | Rewards after N visits    | ✅ Complete    | `loyaltyService.ts`, `guest_visits` table                    |
+| Tiered Loyalty      | Bronze/Silver/Gold levels | ✅ Complete    | `loyaltyService.ts`, tier column on `loyalty_accounts`       |
+| Birthday Rewards    | Automated birthday offers | ✅ Complete    | `loyaltyService.ts`, `guest_rewards` table                   |
+| Email Campaigns     | Automated email marketing | ❌ Not Started | Add email service integration                                |
+| SMS Marketing       | Text message campaigns    | ❌ Not Started | Expand SMS infrastructure                                    |
+| Custom Reports      | Build your own reports    | ❌ Not Started | Report builder UI                                            |
+| Scheduled Reports   | Auto-email reports        | ❌ Not Started | Cron + email delivery                                        |
+| Menu Engineering    | Star/Dog/Puzzle matrix    | ✅ Complete    | `menuEngineeringService.ts`, `/api/reports/menu-engineering` |
 
 ### P2 - Medium Priority
 
-| Feature             | Description              | Implementation Approach       |
-| ------------------- | ------------------------ | ----------------------------- |
-| Delivery Zones      | Geographic boundaries    | Add zone management           |
-| Upsell Intelligence | Smart recommendations    | Rule-based engine (see below) |
-| Guest Menu Pages    | Mobile menu enhancements | See below                     |
+| Feature             | Description              | Status      | Implementation                                                |
+| ------------------- | ------------------------ | ----------- | ------------------------------------------------------------- |
+| Delivery Zones      | Geographic boundaries    | ✅ Complete | `deliveryZonesService.ts`, `delivery_zones` table             |
+| Upsell Intelligence | Smart recommendations    | ✅ Complete | `/api/menu/items/:id/upsell`, `upsell_analytics` table        |
+| Guest Menu Pages    | Mobile menu enhancements | ✅ Complete | `/[slug]/info` page with Location, Hours, Contact, About tabs |
 
 ---
 

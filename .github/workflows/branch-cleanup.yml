@@ -40,10 +40,10 @@ jobs:
               run: |
                   HEAD_REF="${{ github.event.pull_request.head.ref }}"
                   BASE_REF="${{ github.event.pull_request.base.ref }}"
-                  
+
                   echo "head_branch=$HEAD_REF" >> $GITHUB_OUTPUT
                   echo "base_branch=$BASE_REF" >> $GITHUB_OUTPUT
-                  
+
                   # Don't delete protected branches
                   PROTECTED_BRANCHES="main|master|develop|staging|production"
                   if [[ "$HEAD_REF" =~ ^($PROTECTED_BRANCHES)$ ]]; then
@@ -57,10 +57,10 @@ jobs:
               run: |
                   BRANCH="${{ steps.branch.outputs.head_branch }}"
                   echo "Deleting merged branch: $BRANCH"
-                  
+
                   # Delete remote branch
                   git push origin --delete "$BRANCH" || echo "Branch already deleted or doesn't exist"
-                  
+
                   echo "✅ Branch '$BRANCH' has been deleted after merge into '${{ steps.branch.outputs.base_branch }}'"
 
             - name: Skip protected branch
@@ -88,14 +88,14 @@ jobs:
               run: |
                   # Get branches older than 30 days with no activity
                   STALE_DATE=$(date -d "30 days ago" +%Y-%m-%d)
-                  
+
                   echo "Finding branches with no activity since: $STALE_DATE"
-                  
+
                   # Get all remote branches except protected ones
                   BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:short)' refs/remotes/origin | grep -v -E 'origin/(main|master|develop|staging|production)$' || true)
-                  
+
                   STALE_BRANCHES=""
-                  
+
                   while IFS= read -r line; do
                     if [ -z "$line" ]; then continue; fi
                     
@@ -112,7 +112,7 @@ jobs:
                       fi
                     fi
                   done <<< "$BRANCHES"
-                  
+
                   echo "stale_branches=$STALE_BRANCHES" >> $GITHUB_OUTPUT
                   echo "Stale branches found:$STALE_BRANCHES"
               env:
@@ -125,7 +125,7 @@ jobs:
                     echo "Deleting stale branch: $BRANCH"
                     git push origin --delete "${BRANCH#origin/}" || echo "Could not delete $BRANCH"
                   done
-                  
+
                   echo "✅ Stale branch cleanup completed"
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

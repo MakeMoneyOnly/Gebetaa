@@ -41,7 +41,7 @@ jobs:
               run: |
                   # Get list of changed files
                   CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- 'graphql/subgraphs/*.graphql' || echo "")
-                  
+
                   SUBGRAPHS=""
                   if echo "$CHANGED_FILES" | grep -q "orders.graphql"; then
                     SUBGRAPHS="$SUBGRAPHS orders"
@@ -58,12 +58,12 @@ jobs:
                   if echo "$CHANGED_FILES" | grep -q "staff.graphql"; then
                     SUBGRAPHS="$SUBGRAPHS staff"
                   fi
-                  
+
                   # If no specific changes detected, publish all
                   if [ -z "$SUBGRAPHS" ]; then
                     SUBGRAPHS="orders menu payments guests staff"
                   fi
-                  
+
                   echo "subgraphs=$SUBGRAPHS" >> $GITHUB_OUTPUT
                   echo "Subgraphs to publish: $SUBGRAPHS"
 

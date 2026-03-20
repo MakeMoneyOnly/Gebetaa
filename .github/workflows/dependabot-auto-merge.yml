@@ -44,10 +44,10 @@ jobs:
               run: |
                   UPDATE_TYPE="${{ steps.metadata.outputs.update-type }}"
                   DEPENDENCY_TYPE="${{ steps.metadata.outputs.dependency-type }}"
-                  
+
                   echo "Update type: $UPDATE_TYPE"
                   echo "Dependency type: $DEPENDENCY_TYPE"
-                  
+
                   # Auto-merge patch updates
                   if [[ "$UPDATE_TYPE" == "version-update:semver-patch" ]]; then
                     echo "auto_merge=true" >> $GITHUB_OUTPUT
@@ -71,7 +71,7 @@ jobs:
                   PR_NUMBER="${{ github.event.pull_request.number }}"
                   echo "Enabling auto-merge for PR #$PR_NUMBER"
                   echo "Reason: ${{ steps.check.outputs.reason }}"
-                  
+
                   gh pr merge --auto --squash "$PR_NUMBER"
                   gh pr edit "$PR_NUMBER" --body "$(gh pr view "$PR_NUMBER" --json body --jq '.body')
 

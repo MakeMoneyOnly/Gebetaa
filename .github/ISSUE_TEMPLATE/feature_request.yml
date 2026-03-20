@@ -39,7 +39,7 @@ body:
           description: |
               Describe the solution you'd like to see.
               A clear and concise description of what you want to happen.
-          placeholder: "I would like to be able to..."
+          placeholder: 'I would like to be able to...'
       validations:
           required: true
 

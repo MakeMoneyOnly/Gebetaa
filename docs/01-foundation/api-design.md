@@ -679,4 +679,58 @@ type Order {
 
 ---
 
+### REST API Versioning
+
+The Gebeta REST API supports two versioning strategies:
+
+#### 1. URL Path Versioning (Preferred)
+
+```http
+# v1 (current version)
+GET /api/v1/orders
+GET /api/v1/menu
+POST /api/v1/orders
+
+# Backward compatible: /api/* still works
+GET /api/orders
+GET /api/menu
+```
+
+#### 2. Header-Based Versioning
+
+Clients can also specify version via the `Accept` header:
+
+```http
+# Explicit version
+Accept: application/vnd.gebeta.v1+json
+
+# Default (latest v1)
+Accept: application/json
+```
+
+**Version Response Headers:**
+
+All API responses include version information:
+
+```http
+API-Version: v1
+Content-Type: application/vnd.gebeta.v1+json
+X-API-Version: v1
+```
+
+**Version Detection Priority:**
+
+1. Accept header (`application/vnd.gebeta.v{version}+json`)
+2. URL path (`/api/v{version}/`)
+3. Default to v1
+
+**Migration Path:**
+
+- Existing `/api/*` endpoints remain functional (backward compatible)
+- New clients should use `/api/v1/*` for explicit versioning
+- Version headers help with debugging and analytics
+- Future versions (v2, etc.) will follow the same pattern
+
+---
+
 _Gebeta API Design Guide v1.0 · March 2026_
