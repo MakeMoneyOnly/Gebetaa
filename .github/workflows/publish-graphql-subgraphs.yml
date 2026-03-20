@@ -1,5 +1,6 @@
 # GraphQL Subgraph Publishing Workflow
 # Publishes subgraph schemas to Apollo GraphOS on push to main
+# Based on github-workflow-automation SKILL best practices
 
 name: Publish GraphQL Subgraphs
 
@@ -11,11 +12,23 @@ on:
         paths:
             - 'graphql/subgraphs/**/*.graphql'
 
+permissions:
+    contents: read
+    id-token: write
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    APOLLO_GRAPH_ID: gebeta-production-tj1sjiw
+    ROUTING_URL: https://gebeta.app/api/graphql
+
 jobs:
     publish-subgraphs:
+        name: Publish Subgraphs
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
+        timeout-minutes: 15
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -23,47 +36,91 @@ jobs:
             - name: Install Rover
               uses: apollographql-gh-actions/install-rover@v1
 
+            - name: Detect changed subgraphs
+              id: changes
+              run: |
+                  # Get list of changed files
+                  CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- 'graphql/subgraphs/*.graphql' || echo "")
+                  
+                  SUBGRAPHS=""
+                  if echo "$CHANGED_FILES" | grep -q "orders.graphql"; then
+                    SUBGRAPHS="$SUBGRAPHS orders"
+                  fi
+                  if echo "$CHANGED_FILES" | grep -q "menu.graphql"; then
+                    SUBGRAPHS="$SUBGRAPHS menu"
+                  fi
+                  if echo "$CHANGED_FILES" | grep -q "payments.graphql"; then
+                    SUBGRAPHS="$SUBGRAPHS payments"
+                  fi
+                  if echo "$CHANGED_FILES" | grep -q "guests.graphql"; then
+                    SUBGRAPHS="$SUBGRAPHS guests"
+                  fi
+                  if echo "$CHANGED_FILES" | grep -q "staff.graphql"; then
+                    SUBGRAPHS="$SUBGRAPHS staff"
+                  fi
+                  
+                  # If no specific changes detected, publish all
+                  if [ -z "$SUBGRAPHS" ]; then
+                    SUBGRAPHS="orders menu payments guests staff"
+                  fi
+                  
+                  echo "subgraphs=$SUBGRAPHS" >> $GITHUB_OUTPUT
+                  echo "Subgraphs to publish: $SUBGRAPHS"
+
             - name: Publish Orders Subgraph
+              if: contains(steps.changes.outputs.subgraphs, 'orders')
               env:
                   APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
               run: |
-                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                  rover subgraph publish ${{ env.APOLLO_GRAPH_ID }}@current \
                       --name orders \
                       --schema ./graphql/subgraphs/orders.graphql \
-                      --routing-url https://gebeta.app/api/graphql
+                      --routing-url ${{ env.ROUTING_URL }}
 
             - name: Publish Menu Subgraph
+              if: contains(steps.changes.outputs.subgraphs, 'menu')
               env:
                   APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
               run: |
-                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                  rover subgraph publish ${{ env.APOLLO_GRAPH_ID }}@current \
                       --name menu \
                       --schema ./graphql/subgraphs/menu.graphql \
-                      --routing-url https://gebeta.app/api/graphql
+                      --routing-url ${{ env.ROUTING_URL }}
 
             - name: Publish Payments Subgraph
+              if: contains(steps.changes.outputs.subgraphs, 'payments')
               env:
                   APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
               run: |
-                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                  rover subgraph publish ${{ env.APOLLO_GRAPH_ID }}@current \
                       --name payments \
                       --schema ./graphql/subgraphs/payments.graphql \
-                      --routing-url https://gebeta.app/api/graphql
+                      --routing-url ${{ env.ROUTING_URL }}
 
             - name: Publish Guests Subgraph
+              if: contains(steps.changes.outputs.subgraphs, 'guests')
               env:
                   APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
               run: |
-                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                  rover subgraph publish ${{ env.APOLLO_GRAPH_ID }}@current \
                       --name guests \
                       --schema ./graphql/subgraphs/guests.graphql \
-                      --routing-url https://gebeta.app/api/graphql
+                      --routing-url ${{ env.ROUTING_URL }}
 
             - name: Publish Staff Subgraph
+              if: contains(steps.changes.outputs.subgraphs, 'staff')
               env:
                   APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
               run: |
-                  rover subgraph publish gebeta-production-tj1sjiw@current \
+                  rover subgraph publish ${{ env.APOLLO_GRAPH_ID }}@current \
                       --name staff \
                       --schema ./graphql/subgraphs/staff.graphql \
-                      --routing-url https://gebeta.app/api/graphql
+                      --routing-url ${{ env.ROUTING_URL }}
+
+            - name: Summary
+              run: |
+                  echo "## 🚀 GraphQL Subgraphs Published" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Graph ID:** ${{ env.APOLLO_GRAPH_ID }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Variant:** current" >> $GITHUB_STEP_SUMMARY
+                  echo "**Subgraphs:** ${{ steps.changes.outputs.subgraphs }}" >> $GITHUB_STEP_SUMMARY

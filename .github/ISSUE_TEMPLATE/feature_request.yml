@@ -1,0 +1,134 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: '[FEATURE] '
+labels: ['enhancement', 'needs-triage']
+assignees: []
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for taking the time to suggest a new feature! 
+              Please fill out the sections below to help us understand your request.
+
+    - type: checkboxes
+      id: search
+      attributes:
+          label: Preliminary Check
+          description: Please confirm you've done these checks before submitting
+          options:
+              - label: I have searched the existing issues and this is not a duplicate
+                required: true
+              - label: I have checked the [roadmap](../docs/03-product/roadmap.md) and this is not already planned
+                required: false
+
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem Statement
+          description: |
+              Is your feature request related to a problem? Please describe.
+              A clear and concise description of what the problem is.
+          placeholder: "I'm always frustrated when..."
+      validations:
+          required: true
+
+    - type: textarea
+      id: solution
+      attributes:
+          label: Proposed Solution
+          description: |
+              Describe the solution you'd like to see.
+              A clear and concise description of what you want to happen.
+          placeholder: "I would like to be able to..."
+      validations:
+          required: true
+
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Alternatives Considered
+          description: |
+              Describe any alternative solutions or features you've considered.
+          placeholder: "I considered X, but it doesn't work because..."
+      validations:
+          required: false
+
+    - type: dropdown
+      id: area
+      attributes:
+          label: Affected Area
+          description: Which part of the system would this feature affect?
+          options:
+              - Guest Ordering
+              - Merchant Dashboard
+              - Kitchen Display System (KDS)
+              - Payments
+              - Authentication
+              - API
+              - Database
+              - Infrastructure
+              - Documentation
+              - Other
+          default: 9
+      validations:
+          required: true
+
+    - type: dropdown
+      id: priority
+      attributes:
+          label: Priority
+          description: How important is this feature to you?
+          options:
+              - Low - Nice to have
+              - Medium - Would improve workflow
+              - High - Critical for operations
+              - Critical - Blocking our use of the platform
+          default: 0
+      validations:
+          required: true
+
+    - type: dropdown
+      id: toast-parity
+      attributes:
+          label: Toast Parity
+          description: |
+              Is this feature something Toast POS has that we should implement?
+              This helps us prioritize features for "Toast for Addis Ababa"
+          options:
+              - Not applicable - This is a new feature not in Toast
+              - Yes - Toast has this feature
+              - Unsure - I don't know if Toast has this
+          default: 0
+      validations:
+          required: false
+
+    - type: textarea
+      id: mockups
+      attributes:
+          label: Mockups & Examples
+          description: |
+              Add any mockups, screenshots, or examples from other systems.
+              Drag and drop images here.
+          placeholder: 'Attach mockups or screenshots...'
+      validations:
+          required: false
+
+    - type: textarea
+      id: additional
+      attributes:
+          label: Additional Context
+          description: Add any other context about the feature request here
+          placeholder: 'Any other information that might be helpful...'
+      validations:
+          required: false
+
+    - type: checkboxes
+      id: willing-to-contribute
+      attributes:
+          label: Contribution
+          description: Would you be willing to contribute this feature?
+          options:
+              - label: I would be willing to submit a PR for this feature
+                required: false
+              - label: I can help with testing this feature
+                required: false

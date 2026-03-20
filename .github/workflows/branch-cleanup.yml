@@ -1,0 +1,157 @@
+# Branch Cleanup Workflow
+# Automatically deletes merged branches and cleans up stale branches
+# Based on github-workflow-automation SKILL best practices
+
+name: Branch Cleanup
+
+on:
+    pull_request:
+        types: [closed]
+    schedule:
+        - cron: '0 0 * * 0' # Weekly on Sunday at midnight UTC
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    pull-requests: write
+
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: true
+
+jobs:
+    # ═══════════════════════════════════════════════════════════════════════════
+    # DELETE MERGED BRANCHES
+    # ═══════════════════════════════════════════════════════════════════════════
+    delete-merged:
+        name: Delete Merged Branch
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Get branch info
+              id: branch
+              run: |
+                  HEAD_REF="${{ github.event.pull_request.head.ref }}"
+                  BASE_REF="${{ github.event.pull_request.base.ref }}"
+                  
+                  echo "head_branch=$HEAD_REF" >> $GITHUB_OUTPUT
+                  echo "base_branch=$BASE_REF" >> $GITHUB_OUTPUT
+                  
+                  # Don't delete protected branches
+                  PROTECTED_BRANCHES="main|master|develop|staging|production"
+                  if [[ "$HEAD_REF" =~ ^($PROTECTED_BRANCHES)$ ]]; then
+                    echo "protected=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "protected=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Delete merged branch
+              if: steps.branch.outputs.protected != 'true'
+              run: |
+                  BRANCH="${{ steps.branch.outputs.head_branch }}"
+                  echo "Deleting merged branch: $BRANCH"
+                  
+                  # Delete remote branch
+                  git push origin --delete "$BRANCH" || echo "Branch already deleted or doesn't exist"
+                  
+                  echo "✅ Branch '$BRANCH' has been deleted after merge into '${{ steps.branch.outputs.base_branch }}'"
+
+            - name: Skip protected branch
+              if: steps.branch.outputs.protected == 'true'
+              run: |
+                  echo "⚠️ Branch '${{ steps.branch.outputs.head_branch }}' is protected and will not be deleted"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CLEANUP STALE BRANCHES
+    # ═══════════════════════════════════════════════════════════════════════════
+    cleanup-stale:
+        name: Cleanup Stale Branches
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Find stale branches
+              id: stale
+              run: |
+                  # Get branches older than 30 days with no activity
+                  STALE_DATE=$(date -d "30 days ago" +%Y-%m-%d)
+                  
+                  echo "Finding branches with no activity since: $STALE_DATE"
+                  
+                  # Get all remote branches except protected ones
+                  BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:short)' refs/remotes/origin | grep -v -E 'origin/(main|master|develop|staging|production)$' || true)
+                  
+                  STALE_BRANCHES=""
+                  
+                  while IFS= read -r line; do
+                    if [ -z "$line" ]; then continue; fi
+                    
+                    BRANCH=$(echo "$line" | awk '{print $1}')
+                    DATE=$(echo "$line" | awk '{print $2}')
+                    
+                    # Check if branch is older than stale date
+                    if [[ "$DATE" < "$STALE_DATE" ]]; then
+                      # Check if branch has open PRs
+                      PR_COUNT=$(gh pr list --head "${BRANCH#origin/}" --state open --json number --jq 'length' 2>/dev/null || echo "0")
+                      
+                      if [ "$PR_COUNT" -eq 0 ]; then
+                        STALE_BRANCHES="$STALE_BRANCHES $BRANCH"
+                      fi
+                    fi
+                  done <<< "$BRANCHES"
+                  
+                  echo "stale_branches=$STALE_BRANCHES" >> $GITHUB_OUTPUT
+                  echo "Stale branches found:$STALE_BRANCHES"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Delete stale branches
+              if: steps.stale.outputs.stale_branches != ''
+              run: |
+                  for BRANCH in ${{ steps.stale.outputs.stale_branches }}; do
+                    echo "Deleting stale branch: $BRANCH"
+                    git push origin --delete "${BRANCH#origin/}" || echo "Could not delete $BRANCH"
+                  done
+                  
+                  echo "✅ Stale branch cleanup completed"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: No stale branches
+              if: steps.stale.outputs.stale_branches == ''
+              run: |
+                  echo "✅ No stale branches found"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # REPORT CLEANUP RESULTS
+    # ═══════════════════════════════════════════════════════════════════════════
+    report:
+        name: Report Results
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        needs: [cleanup-stale]
+        if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        steps:
+            - name: Create summary
+              run: |
+                  echo "## 🧹 Branch Cleanup Report" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### Actions Completed:" >> $GITHUB_STEP_SUMMARY
+                  echo "- ✅ Checked for stale branches (older than 30 days)" >> $GITHUB_STEP_SUMMARY
+                  echo "- ✅ Skipped branches with open PRs" >> $GITHUB_STEP_SUMMARY
+                  echo "- ✅ Protected branches preserved (main, master, develop, staging, production)" >> $GITHUB_STEP_SUMMARY

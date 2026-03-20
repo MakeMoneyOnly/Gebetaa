@@ -1,6 +1,7 @@
 # GraphQL Contract Check CI Workflow
 # Validates GraphQL schema changes don't introduce breaking changes
 # Uses Apollo CLI to detect breaking changes before merging
+# Based on github-workflow-automation SKILL best practices
 
 name: GraphQL Contract Check
 
@@ -19,25 +20,38 @@ on:
             - 'src/app/api/graphql/**'
             - 'codegen.yml'
 
+permissions:
+    contents: read
+    pull-requests: write
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    NODE_VERSION: '22'
+    PNPM_VERSION: '10'
+
 jobs:
     schema-check:
+        name: Schema Validation
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            pull-requests: write
+        timeout-minutes: 15
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@v3
+              uses: pnpm/action-setup@v4
               with:
-                  version: '9.0.0'
+                  version: ${{ env.PNPM_VERSION }}
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '20'
+                  node-version: ${{ env.NODE_VERSION }}
                   cache: 'pnpm'
 
             - name: Install dependencies

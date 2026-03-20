@@ -1,3 +1,7 @@
+# Lighthouse CI Workflow
+# Automated performance auditing with Lighthouse
+# Based on github-workflow-automation SKILL best practices
+
 name: Lighthouse CI
 
 on:
@@ -6,26 +10,37 @@ on:
     push:
         branches: [main]
 
+permissions:
+    contents: read
+    pull-requests: write
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 env:
-    NODE_VERSION: '20'
-    PNPM_VERSION: '9.0.0'
+    NODE_VERSION: '22'
+    PNPM_VERSION: '10'
 
 jobs:
     lighthouse:
         name: Lighthouse Audit
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
+        timeout-minutes: 20
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-            - uses: pnpm/action-setup@v3
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
               with:
                   version: ${{ env.PNPM_VERSION }}
 
-            - uses: actions/setup-node@v4
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
               with:
                   node-version: ${{ env.NODE_VERSION }}
+                  cache: 'pnpm'
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile

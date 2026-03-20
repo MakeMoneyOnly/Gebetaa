@@ -1,0 +1,136 @@
+# Dependabot Auto-Merge Workflow
+# Automatically merges approved Dependabot PRs for patch and minor updates
+# Based on github-workflow-automation SKILL best practices
+
+name: Dependabot Auto-Merge
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened]
+    pull_request_review:
+        types: [submitted]
+
+permissions:
+    contents: write
+    pull-requests: write
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
+jobs:
+    # ═══════════════════════════════════════════════════════════════════════════
+    # AUTO-MERGE DEPENDABOT PRS
+    # ═══════════════════════════════════════════════════════════════════════════
+    auto-merge:
+        name: Auto-Merge Dependabot PRs
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        if: github.actor == 'dependabot[bot]'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Fetch Dependabot metadata
+              id: metadata
+              uses: dependabot/fetch-metadata@v2
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Check update type
+              id: check
+              run: |
+                  UPDATE_TYPE="${{ steps.metadata.outputs.update-type }}"
+                  DEPENDENCY_TYPE="${{ steps.metadata.outputs.dependency-type }}"
+                  
+                  echo "Update type: $UPDATE_TYPE"
+                  echo "Dependency type: $DEPENDENCY_TYPE"
+                  
+                  # Auto-merge patch updates
+                  if [[ "$UPDATE_TYPE" == "version-update:semver-patch" ]]; then
+                    echo "auto_merge=true" >> $GITHUB_OUTPUT
+                    echo "reason=Patch update - safe to auto-merge" >> $GITHUB_OUTPUT
+                  # Auto-merge minor updates for dev dependencies
+                  elif [[ "$UPDATE_TYPE" == "version-update:semver-minor" && "$DEPENDENCY_TYPE" == "direct:development" ]]; then
+                    echo "auto_merge=true" >> $GITHUB_OUTPUT
+                    echo "reason=Minor update for dev dependency - safe to auto-merge" >> $GITHUB_OUTPUT
+                  # Auto-merge minor updates for production dependencies (with caution)
+                  elif [[ "$UPDATE_TYPE" == "version-update:semver-minor" && "$DEPENDENCY_TYPE" == "direct:production" ]]; then
+                    echo "auto_merge=review" >> $GITHUB_OUTPUT
+                    echo "reason=Minor update for production dependency - requires review" >> $GITHUB_OUTPUT
+                  else
+                    echo "auto_merge=false" >> $GITHUB_OUTPUT
+                    echo "reason=Major update or unknown type - manual review required" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Enable auto-merge for safe updates
+              if: steps.check.outputs.auto_merge == 'true'
+              run: |
+                  PR_NUMBER="${{ github.event.pull_request.number }}"
+                  echo "Enabling auto-merge for PR #$PR_NUMBER"
+                  echo "Reason: ${{ steps.check.outputs.reason }}"
+                  
+                  gh pr merge --auto --squash "$PR_NUMBER"
+                  gh pr edit "$PR_NUMBER" --body "$(gh pr view "$PR_NUMBER" --json body --jq '.body')
+
+                  ---
+
+                  **🤖 Auto-merge enabled**
+                  Reason: ${{ steps.check.outputs.reason }}
+                  This PR will be automatically merged once CI passes."
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Add label for review-required updates
+              if: steps.check.outputs.auto_merge == 'review'
+              run: |
+                  PR_NUMBER="${{ github.event.pull_request.number }}"
+                  gh pr edit "$PR_NUMBER" --add-label "needs-review"
+                  gh pr comment "$PR_NUMBER" --body "⚠️ This is a minor update for a production dependency. Please review before merging."
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # RUN CI FOR DEPENDABOT PRS
+    # ═══════════════════════════════════════════════════════════════════════════
+    ci-check:
+        name: CI Check
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        if: github.actor == 'dependabot[bot]'
+        needs: auto-merge
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: '10'
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: 'pnpm'
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run linter
+              run: pnpm lint
+
+            - name: Run type check
+              run: pnpm type-check
+
+            - name: Run unit tests
+              run: pnpm test:coverage
+
+            - name: Build application
+              run: pnpm build
+              env:
+                  CI: true
+                  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+                  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}

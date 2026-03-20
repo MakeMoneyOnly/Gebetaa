@@ -1,8 +1,12 @@
-name: Main Stage5 End Window Analysis
+# Stage 5 End Window Analysis Workflow
+# Runs weekly analysis of index usage snapshots for optimization insights
+# Based on github-workflow-automation SKILL best practices
+
+name: Stage5 End Window Analysis
 
 on:
     schedule:
-        - cron: '0 6 * * 0'
+        - cron: '0 6 * * 0' # Weekly on Sunday at 6 AM UTC
     workflow_dispatch:
         inputs:
             force_run:
@@ -13,12 +17,17 @@ on:
 permissions:
     contents: read
 
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: true
+
 jobs:
     run_analysis:
+        name: Run Analysis
         runs-on: ubuntu-latest
         timeout-minutes: 20
         steps:
-            - name: Checkout
+            - name: Checkout repository
               uses: actions/checkout@v4
 
             - name: Install PostgreSQL client
