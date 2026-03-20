@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 export async function mockDashboardAuth(page: Page) {
     await page.setExtraHTTPHeaders({
         'x-e2e-bypass-auth': '1',
+        'x-e2e-bypass-secret': 'e2e-test-secret',
     });
 
     await page.addInitScript(() => {

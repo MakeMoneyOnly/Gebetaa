@@ -67,6 +67,7 @@ async function respondJson(route: Route, body: JsonObject | unknown[], status = 
 export async function mockMerchantDashboardAuth(page: Page) {
     await page.setExtraHTTPHeaders({
         'x-e2e-bypass-auth': '1',
+        'x-e2e-bypass-secret': 'e2e-test-secret',
     });
 
     await page.addInitScript(() => {

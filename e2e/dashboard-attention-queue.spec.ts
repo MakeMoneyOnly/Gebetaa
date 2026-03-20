@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 async function mockDashboardAuth(page: import('@playwright/test').Page) {
     await page.setExtraHTTPHeaders({
         'x-e2e-bypass-auth': '1',
+        'x-e2e-bypass-secret': 'e2e-test-secret',
     });
 
     await page.addInitScript(() => {

@@ -42,6 +42,8 @@ export default defineConfig({
             ),
             UPSTASH_REDIS_REST_URL: getEnv('UPSTASH_REDIS_REST_URL'),
             UPSTASH_REDIS_REST_TOKEN: getEnv('UPSTASH_REDIS_REST_TOKEN'),
+            E2E_TEST_MODE: getEnv('E2E_TEST_MODE', 'true'),
+            E2E_BYPASS_SECRET: getEnv('E2E_BYPASS_SECRET', 'e2e-test-secret'),
         },
     },
     projects: isCI
