@@ -103,14 +103,14 @@ function WaiterPosContent() {
 
     useEffect(() => {
         try {
-            const raw = localStorage.getItem('gebata_device_info');
+            const raw = sessionStorage.getItem('gebata_device_info');
             if (raw) {
                 const info = JSON.parse(raw);
                 if (info?.restaurant_id) setDeviceRestaurantId(info.restaurant_id);
                 if (info) setStaffContext(info);
             }
             // Also load staff login context if present
-            const ctx = localStorage.getItem('gebata_waiter_context');
+            const ctx = sessionStorage.getItem('gebata_waiter_context');
             if (ctx) setStaffContext(JSON.parse(ctx));
         } catch (e) {
             console.error('Failed to parse device/staff context', e);
@@ -169,7 +169,7 @@ function WaiterPosContent() {
     // Device token for authenticated API calls (set after pairing, no auth session needed)
     const [deviceToken, setDeviceToken] = useState<string | null>(null);
     useEffect(() => {
-        const token = localStorage.getItem('gebata_device_token');
+        const token = sessionStorage.getItem('gebata_device_token');
         if (token) setDeviceToken(token);
     }, []);
 

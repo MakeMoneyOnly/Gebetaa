@@ -4,6 +4,24 @@
  * Provides centralized exports for all API utilities
  */
 
+// Versioning
+export {
+    API_VERSION,
+    API_VERSION_HEADER,
+    API_DEFAULT_HEADER,
+    SUPPORTED_API_VERSIONS,
+    detectApiVersion,
+    parseVersionFromHeader,
+    hasExplicitVersionHeader,
+    getVersionedHeaders,
+    getDeprecationHeaders,
+    getApiVersionInfo,
+    processApiVersion,
+    isSupportedVersion,
+    getLatestVersion,
+} from './versioning';
+export type { SupportedApiVersion, ApiVersionInfo, VersionMiddlewareResult } from './versioning';
+
 // Response Helpers
 export { apiSuccess, apiError } from './response';
 

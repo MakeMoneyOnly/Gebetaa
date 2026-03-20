@@ -111,8 +111,8 @@ export default function TerminalPage() {
 
     useEffect(() => {
         try {
-            const token = localStorage.getItem('gebata_device_token');
-            const rawInfo = localStorage.getItem('gebata_device_info');
+            const token = sessionStorage.getItem('gebata_device_token');
+            const rawInfo = sessionStorage.getItem('gebata_device_info');
             if (token) setDeviceToken(token);
             if (rawInfo) setDeviceInfo(JSON.parse(rawInfo));
         } catch (error) {

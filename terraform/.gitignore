@@ -1,0 +1,49 @@
+# =============================================================================
+# Terraform .gitignore
+# =============================================================================
+
+# Local Terraform configuration
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+
+# Crash log
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files except .tfvars.example
+*.tfvars
+!example.tfvars
+*.tfvars.json
+
+# Ignore override files as they should be in your repository
+# Uncomment if you need them:
+# override.tf
+# override.tf.json
+# _override.tf
+# _override.tf.json
+
+# Include override files you do want to track
+# .terraform/
+.terraform.lock.hcl
+*.lock.hcl
+
+# Module directory
+.terraform/
+.terraform.lock.hcl
+
+# Log files
+*.log
+
+# Local execution data
+localhost/
+credentials.json
+*.credentials
+
+# Backup files
+*.backup
+
+# Environment-specific files
+# .env.terraform
+# .env.*.local

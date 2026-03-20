@@ -7,7 +7,19 @@ export async function updateSession(request: NextRequest) {
     });
 
     // E2E test bypass: allows Playwright specs to exercise protected routes with mocked APIs.
-    if (request.headers.get('x-e2e-bypass-auth') === '1') {
+    // Security: Only allow bypass in non-production environments with explicit test mode enabled and secret verification
+    // Requires BOTH x-e2e-bypass-auth='1' header AND x-e2e-bypass-secret header matching E2E_BYPASS_SECRET
+    const e2eBypassAuth = request.headers.get('x-e2e-bypass-auth');
+    const e2eBypassSecret = request.headers.get('x-e2e-bypass-secret');
+    const bypassSecret = process.env.E2E_BYPASS_SECRET;
+
+    if (
+        process.env.NODE_ENV !== 'production' &&
+        process.env.E2E_TEST_MODE === 'true' &&
+        e2eBypassAuth === '1' &&
+        e2eBypassSecret !== undefined &&
+        e2eBypassSecret === bypassSecret
+    ) {
         // Set mock auth cookies for E2E tests
         supabaseResponse.cookies.set('sb-access-token', 'e2e-mock-access-token', {
             httpOnly: true,

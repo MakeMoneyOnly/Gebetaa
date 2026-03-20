@@ -49,8 +49,9 @@ function WaiterPinContent() {
                 throw new Error(data.error || 'Invalid PIN');
             }
 
-            // Save the staff context to localStorage so the POS knows who is ringing things up
-            localStorage.setItem('gebata_waiter_context', JSON.stringify(data.staff));
+            // Save the staff context to sessionStorage so the POS knows who is ringing things up
+            // sessionStorage is cleared when the tab/browser is closed, providing better XSS protection
+            sessionStorage.setItem('gebata_waiter_context', JSON.stringify(data.staff));
 
             toast.success(`Welcome, ${data.staff.name || 'Waitstaff'}`);
             router.push(`/waiter?restaurantId=${restaurantId}`);

@@ -76,9 +76,10 @@ export default function DeviceSetupPage() {
                 setStatus('success');
                 setDeviceInfo(result.data);
 
-                // Store device session in localStorage so the device app knows who it is
-                localStorage.setItem('gebata_device_token', result.data.device_token);
-                localStorage.setItem('gebata_device_info', JSON.stringify(result.data));
+                // Store device session in sessionStorage so the device app knows who it is
+                // sessionStorage is cleared when the tab/browser is closed, providing better XSS protection
+                sessionStorage.setItem('gebata_device_token', result.data.device_token);
+                sessionStorage.setItem('gebata_device_info', JSON.stringify(result.data));
 
                 // Redirect after a short delay
                 setTimeout(() => {
