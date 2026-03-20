@@ -196,6 +196,26 @@ export class OrdersRepository {
     }
 
     /**
+     * Get a single order item by ID
+     * Used by federation reference resolver
+     */
+    async getItemById(id: string): Promise<OrderItemRow | null> {
+        const { data, error } = await getSupabaseClient()
+            .from('order_items')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return null;
+            console.error('[orders/repository] Error fetching order item:', error);
+            throw new Error(error.message);
+        }
+
+        return data;
+    }
+
+    /**
      * Batch loader: Get order items for multiple orders
      * Used by DataLoader for N+1 query prevention
      */

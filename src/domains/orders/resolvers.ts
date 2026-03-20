@@ -1,9 +1,28 @@
 // Orders Domain - Resolvers Layer
 // Thin layer — maps GraphQL fields to service calls
 import { GraphQLError } from 'graphql';
-import { ordersService, CreateOrderInput, UpdateOrderStatusInput } from './service';
+import {
+    ordersService,
+    CreateOrderInput as ServiceCreateOrderInput,
+    UpdateOrderStatusInput as ServiceUpdateOrderStatusInput,
+} from './service';
+import { ordersRepository } from './repository';
 import { GraphQLContext } from '@/lib/graphql/context';
 import { requireAuth, requireRestaurantAccess, verifyTenantIsolation } from '@/lib/graphql/authz';
+import {
+    createErrorResult,
+    handleResolverError,
+    NOT_FOUND_ERROR,
+    ErrorCode,
+} from '@/lib/graphql/errors';
+import {
+    validateInput,
+    CreateOrderInputSchema,
+    UpdateOrderStatusInputSchema,
+    CancelOrderInputSchema,
+} from '@/lib/validators/graphql';
+import { JSONScalar } from '@/lib/graphql/scalars';
+import { enforcePaginationLimit, PAGINATION } from '@/lib/graphql/constants';
 
 const mapOrderStatus = (
     status: string
@@ -65,6 +84,7 @@ const mapOrderToResponse = (order: {
 });
 
 export const ordersResolvers = {
+    JSON: JSONScalar,
     Query: {
         orders: async (
             _: unknown,
@@ -80,10 +100,13 @@ export const ordersResolvers = {
             // Authorization: Verify user has access to this restaurant
             const _authContext = await requireRestaurantAccess(context, args.restaurantId);
 
+            // Enforce pagination limits to prevent unbounded result sets
+            const limit = enforcePaginationLimit(args.first);
+
             const orders = await ordersService.getOrders(args.restaurantId, {
                 status: args.status ? mapOrderStatus(args.status) : undefined,
                 tableId: args.tableId,
-                limit: args.first,
+                limit,
                 offset: args.after ? parseInt(args.after, 10) : 0,
             });
 
@@ -93,7 +116,7 @@ export const ordersResolvers = {
                     node: order,
                 })),
                 pageInfo: {
-                    hasNextPage: orders.length === (args.first ?? 20),
+                    hasNextPage: orders.length === limit,
                     hasPreviousPage: !!args.after,
                     startCursor: orders[0] ? Buffer.from(orders[0].id).toString('base64') : null,
                     endCursor: orders[orders.length - 1]
@@ -139,19 +162,28 @@ export const ordersResolvers = {
     },
 
     Mutation: {
-        createOrder: async (
-            _: unknown,
-            args: { input: CreateOrderInput },
-            context: GraphQLContext
-        ) => {
+        createOrder: async (_: unknown, args: { input: unknown }, context: GraphQLContext) => {
             try {
+                // Validate input
+                const validation = validateInput(CreateOrderInputSchema, args.input);
+                if (!validation.success) {
+                    return {
+                        ...createErrorResult('VALIDATION_ERROR', validation.error),
+                        order: null,
+                    };
+                }
+
                 // Verify user has access to the restaurant
-                const authContext = await requireRestaurantAccess(context, args.input.restaurantId);
+                const authContext = await requireRestaurantAccess(
+                    context,
+                    validation.data.restaurantId
+                );
 
                 const order = await ordersService.createOrder({
-                    ...args.input,
+                    ...validation.data,
+                    type: _mapOrderType(validation.data.type),
                     staffId: authContext.user.id, // Use authenticated user's ID
-                });
+                } as unknown as ServiceCreateOrderInput);
 
                 return {
                     success: true,
@@ -164,46 +196,46 @@ export const ordersResolvers = {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     order: null,
-                    error: {
-                        code: 'CREATE_ORDER_FAILED',
-                        message: error instanceof Error ? error.message : 'Failed to create order',
-                    },
                 };
             }
         },
 
         updateOrderStatus: async (
             _: unknown,
-            args: { input: UpdateOrderStatusInput },
+            args: { input: unknown },
             context: GraphQLContext
         ) => {
             try {
+                // Validate input
+                const validation = validateInput(UpdateOrderStatusInputSchema, args.input);
+                if (!validation.success) {
+                    return {
+                        ...createErrorResult('VALIDATION_ERROR', validation.error),
+                        order: null,
+                    };
+                }
+
                 const authContext = requireAuth(context);
 
                 // First fetch the order to verify tenant isolation
-                const existingOrder = await ordersService.getOrder(args.input.id);
+                const existingOrder = await ordersService.getOrder(validation.data.id);
                 if (!existingOrder) {
                     return {
-                        success: false,
+                        ...NOT_FOUND_ERROR,
                         order: null,
-                        error: {
-                            code: 'ORDER_NOT_FOUND',
-                            message: 'Order not found',
-                        },
                     };
                 }
 
                 // Verify tenant isolation
                 verifyTenantIsolation(authContext, existingOrder.restaurant_id);
 
-                const status = args.input.status ?? 'pending';
                 const order = await ordersService.updateOrderStatus({
-                    id: args.input.id,
-                    status: mapOrderStatus(status),
+                    id: validation.data.id,
+                    status: mapOrderStatus(validation.data.status),
                     staffId: authContext.user.id, // Use authenticated user's ID
-                });
+                } as ServiceUpdateOrderStatusInput);
 
                 return {
                     success: true,
@@ -216,15 +248,8 @@ export const ordersResolvers = {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     order: null,
-                    error: {
-                        code: 'UPDATE_ORDER_FAILED',
-                        message:
-                            error instanceof Error
-                                ? error.message
-                                : 'Failed to update order status',
-                    },
                 };
             }
         },
@@ -235,18 +260,23 @@ export const ordersResolvers = {
             context: GraphQLContext
         ) => {
             try {
+                // Validate input
+                const validation = validateInput(CancelOrderInputSchema, args);
+                if (!validation.success) {
+                    return {
+                        ...createErrorResult('VALIDATION_ERROR', validation.error),
+                        order: null,
+                    };
+                }
+
                 const authContext = requireAuth(context);
 
                 // First fetch the order to verify tenant isolation
-                const existingOrder = await ordersService.getOrder(args.id);
+                const existingOrder = await ordersService.getOrder(validation.data.id);
                 if (!existingOrder) {
                     return {
-                        success: false,
+                        ...NOT_FOUND_ERROR,
                         order: null,
-                        error: {
-                            code: 'ORDER_NOT_FOUND',
-                            message: 'Order not found',
-                        },
                     };
                 }
 
@@ -254,8 +284,8 @@ export const ordersResolvers = {
                 verifyTenantIsolation(authContext, existingOrder.restaurant_id);
 
                 const order = await ordersService.cancelOrder({
-                    id: args.id,
-                    reason: args.reason,
+                    id: validation.data.id,
+                    reason: validation.data.reason,
                     staffId: authContext.user.id, // Use authenticated user's ID
                 });
 
@@ -270,31 +300,39 @@ export const ordersResolvers = {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     order: null,
-                    error: {
-                        code: 'CANCEL_ORDER_FAILED',
-                        message: error instanceof Error ? error.message : 'Failed to cancel order',
-                    },
                 };
             }
         },
 
-        createGuestOrder: async (
-            _: unknown,
-            args: { input: CreateOrderInput & { guestSessionId: string } },
-            context: GraphQLContext
-        ) => {
+        createGuestOrder: async (_: unknown, args: { input: unknown }, context: GraphQLContext) => {
             try {
+                // Validate input using CreateOrderInputSchema (guest orders have same base structure)
+                const validation = validateInput(CreateOrderInputSchema, args.input);
+                if (!validation.success) {
+                    return {
+                        ...createErrorResult('VALIDATION_ERROR', validation.error),
+                        order: null,
+                    };
+                }
+
                 // Guest orders require restaurant access validation
                 // The guest session should be validated separately
-                const authContext = await requireRestaurantAccess(context, args.input.restaurantId);
+                const authContext = await requireRestaurantAccess(
+                    context,
+                    validation.data.restaurantId
+                );
+
+                // Extract guest-specific fields from the input
+                const guestInput = args.input as { guestId?: string; guestSessionId?: string };
 
                 const order = await ordersService.createOrder({
-                    ...args.input,
-                    guestId: args.input.guestId || args.input.guestSessionId,
+                    ...validation.data,
+                    type: _mapOrderType(validation.data.type),
+                    guestId: guestInput.guestId || guestInput.guestSessionId,
                     staffId: authContext.user.id, // Use authenticated user's ID
-                });
+                } as unknown as ServiceCreateOrderInput);
 
                 return {
                     success: true,
@@ -307,13 +345,8 @@ export const ordersResolvers = {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     order: null,
-                    error: {
-                        code: 'CREATE_GUEST_ORDER_FAILED',
-                        message:
-                            error instanceof Error ? error.message : 'Failed to create guest order',
-                    },
                 };
             }
         },
@@ -341,9 +374,20 @@ export const ordersResolvers = {
     },
 
     OrderItem: {
-        __resolveReference(_reference: { id: string }) {
-            // Would fetch from repository
-            return null;
+        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+            const orderItem = await ordersRepository.getItemById(reference.id);
+
+            // Validate tenant isolation via parent order
+            if (orderItem && context.user?.restaurantId) {
+                if (orderItem.restaurant_id !== context.user.restaurantId) {
+                    console.error(
+                        `Tenant isolation violation: User ${context.user.id} attempted to access order item ${reference.id}`
+                    );
+                    return null;
+                }
+            }
+
+            return orderItem;
         },
     },
 };

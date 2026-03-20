@@ -16,6 +16,7 @@ export async function getMenuItems(
     options?: {
         categoryId?: string;
         availableOnly?: boolean;
+        limit?: number;
     }
 ): Promise<Record<string, unknown>[]> {
     const supabase = createClient();
@@ -28,6 +29,11 @@ export async function getMenuItems(
 
     if (options?.availableOnly) {
         query = query.eq('is_available', true);
+    }
+
+    // Apply limit to prevent unbounded result sets
+    if (options?.limit) {
+        query = query.limit(options.limit);
     }
 
     const { data, error } = await query;

@@ -5,8 +5,22 @@ import { GraphQLError } from 'graphql';
 import { menuRepository } from './repository';
 import { GraphQLContext } from '@/lib/graphql/context';
 import { requireAuth, requireRestaurantAccess, verifyTenantIsolation } from '@/lib/graphql/authz';
+import {
+    createErrorResult,
+    handleResolverError,
+    NOT_IMPLEMENTED_ERROR,
+    NOT_FOUND_ERROR,
+} from '@/lib/graphql/errors';
+import {
+    validateInput,
+    CreateMenuItemInputSchema,
+    UpdateMenuItemInputSchema,
+} from '@/lib/validators/graphql';
+import { JSONScalar } from '@/lib/graphql/scalars';
+import { PAGINATION } from '@/lib/graphql/constants';
 
 export const menuResolvers = {
+    JSON: JSONScalar,
     Query: {
         menuItems: async (
             _: unknown,
@@ -20,9 +34,12 @@ export const menuResolvers = {
             // Authorization: Verify user has access to this restaurant
             await requireRestaurantAccess(context, args.restaurantId);
 
+            // Enforce maximum limit to prevent unbounded result sets
+            // Note: Schema doesn't have pagination params, but we limit at repository level
             return menuRepository.getMenuItems(args.restaurantId, {
                 categoryId: args.categoryId,
                 availableOnly: args.availableOnly,
+                limit: PAGINATION.MAX_PAGE_SIZE,
             });
         },
 
@@ -75,57 +92,62 @@ export const menuResolvers = {
     },
 
     Mutation: {
-        createMenuItem: async (
-            _: unknown,
-            args: { input: { restaurantId: string; [key: string]: unknown } },
-            context: GraphQLContext
-        ) => {
+        createMenuItem: async (_: unknown, args: { input: unknown }, context: GraphQLContext) => {
             try {
+                // Validate input
+                const validation = validateInput(CreateMenuItemInputSchema, args.input);
+                if (!validation.success) {
+                    return {
+                        ...createErrorResult('VALIDATION_ERROR', validation.error),
+                        menuItem: null,
+                    };
+                }
+
                 // Authorization: Verify user has access to this restaurant
-                await requireRestaurantAccess(context, args.input.restaurantId);
+                await requireRestaurantAccess(context, validation.data.restaurantId);
 
                 // Mutation not implemented in repository yet
                 return {
-                    success: false,
+                    ...NOT_IMPLEMENTED_ERROR,
                     menuItem: null,
-                    error: {
-                        code: 'NOT_IMPLEMENTED',
-                        message: 'createMenuItem mutation not implemented',
-                    },
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     menuItem: null,
-                    error: {
-                        code: 'INTERNAL_ERROR',
-                        message: error instanceof Error ? error.message : 'Internal error',
-                    },
                 };
             }
         },
 
         updateMenuItem: async (
             _: unknown,
-            args: { id: string; input: Record<string, unknown> },
+            args: { id: string; input: unknown },
             context: GraphQLContext
         ) => {
             try {
+                // Validate input (include id in validation)
+                const validation = validateInput(UpdateMenuItemInputSchema, {
+                    id: args.id,
+                    ...(args.input as object),
+                });
+                if (!validation.success) {
+                    return {
+                        ...createErrorResult('VALIDATION_ERROR', validation.error),
+                        menuItem: null,
+                    };
+                }
+
                 const authContext = requireAuth(context);
 
                 // Fetch the menu item to verify tenant isolation
-                const existingItem = await menuRepository.getMenuItem(args.id);
+                const existingItem = await menuRepository.getMenuItem(validation.data.id);
                 if (!existingItem) {
                     return {
-                        success: false,
+                        ...NOT_FOUND_ERROR,
                         menuItem: null,
-                        error: {
-                            code: 'MENU_ITEM_NOT_FOUND',
-                            message: 'Menu item not found',
-                        },
                     };
                 }
 
@@ -134,24 +156,16 @@ export const menuResolvers = {
 
                 // Mutation not implemented in repository yet
                 return {
-                    success: false,
+                    ...NOT_IMPLEMENTED_ERROR,
                     menuItem: null,
-                    error: {
-                        code: 'NOT_IMPLEMENTED',
-                        message: 'updateMenuItem mutation not implemented',
-                    },
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     menuItem: null,
-                    error: {
-                        code: 'INTERNAL_ERROR',
-                        message: error instanceof Error ? error.message : 'Internal error',
-                    },
                 };
             }
         },
@@ -168,12 +182,8 @@ export const menuResolvers = {
                 const existingItem = await menuRepository.getMenuItem(args.id);
                 if (!existingItem) {
                     return {
-                        success: false,
+                        ...NOT_FOUND_ERROR,
                         menuItem: null,
-                        error: {
-                            code: 'MENU_ITEM_NOT_FOUND',
-                            message: 'Menu item not found',
-                        },
                     };
                 }
 
@@ -182,24 +192,16 @@ export const menuResolvers = {
 
                 // Mutation not implemented in repository yet
                 return {
-                    success: false,
+                    ...NOT_IMPLEMENTED_ERROR,
                     menuItem: null,
-                    error: {
-                        code: 'NOT_IMPLEMENTED',
-                        message: 'markItemAvailability mutation not implemented',
-                    },
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     menuItem: null,
-                    error: {
-                        code: 'INTERNAL_ERROR',
-                        message: error instanceof Error ? error.message : 'Internal error',
-                    },
                 };
             }
         },
@@ -216,12 +218,8 @@ export const menuResolvers = {
                 const existingItem = await menuRepository.getMenuItem(args.id);
                 if (!existingItem) {
                     return {
-                        success: false,
+                        ...NOT_FOUND_ERROR,
                         menuItem: null,
-                        error: {
-                            code: 'MENU_ITEM_NOT_FOUND',
-                            message: 'Menu item not found',
-                        },
                     };
                 }
 
@@ -230,24 +228,16 @@ export const menuResolvers = {
 
                 // Mutation not implemented in repository yet
                 return {
-                    success: false,
+                    ...NOT_IMPLEMENTED_ERROR,
                     menuItem: null,
-                    error: {
-                        code: 'NOT_IMPLEMENTED',
-                        message: 'updateMenuItemPrice mutation not implemented',
-                    },
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     menuItem: null,
-                    error: {
-                        code: 'INTERNAL_ERROR',
-                        message: error instanceof Error ? error.message : 'Internal error',
-                    },
                 };
             }
         },

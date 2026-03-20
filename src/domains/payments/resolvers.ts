@@ -4,6 +4,12 @@
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from '@/lib/graphql/context';
 import { requireAuth, requireRestaurantAccess } from '@/lib/graphql/authz';
+import {
+    createErrorResult,
+    handleResolverError,
+    NOT_IMPLEMENTED_ERROR,
+} from '@/lib/graphql/errors';
+import { validateInput, InitiatePaymentInputSchema } from '@/lib/validators/graphql';
 
 export const paymentsResolvers = {
     Query: {
@@ -50,51 +56,62 @@ export const paymentsResolvers = {
     },
 
     Mutation: {
-        initiatePayment: async (
-            _: unknown,
-            args: { input: { restaurantId: string; orderId: string; [key: string]: unknown } },
-            context: GraphQLContext
-        ) => {
+        initiatePayment: async (_: unknown, args: { input: unknown }, context: GraphQLContext) => {
             try {
-                // Authorization: Verify user has access to this restaurant
-                await requireRestaurantAccess(context, args.input.restaurantId);
+                // Validate input
+                const validation = validateInput(InitiatePaymentInputSchema, args.input);
+                if (!validation.success) {
+                    return {
+                        ...createErrorResult('VALIDATION_ERROR', validation.error),
+                        payment: null,
+                    };
+                }
+
+                // Note: restaurantId is not in the schema - it should be derived from the order
+                // For now, we need to get the restaurantId from the order for authorization
+                // This would require fetching the order first
+                // TODO: When implementing, fetch order and verify restaurant access
+                // const order = await ordersService.getOrder(validation.data.orderId);
+                // await requireRestaurantAccess(context, order.restaurant_id);
 
                 // TODO: Implement with payments repository
                 return {
-                    success: false,
+                    ...NOT_IMPLEMENTED_ERROR,
                     payment: null,
-                    error: {
-                        code: 'NOT_IMPLEMENTED',
-                        message: 'initiatePayment mutation not implemented',
-                    },
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
                     throw error;
                 }
                 return {
-                    success: false,
+                    ...handleResolverError(error),
                     payment: null,
-                    error: {
-                        code: 'INTERNAL_ERROR',
-                        message: error instanceof Error ? error.message : 'Internal error',
-                    },
                 };
             }
         },
     },
 
     Payment: {
-        __resolveReference: async (_reference: { id: string }, _context: GraphQLContext) => {
-            // TODO: Implement with payments repository
-            // When implemented, should validate tenant isolation:
-            // const payment = await paymentsRepository.getPayment(_reference.id);
-            // if (payment && _context.user?.restaurantId) {
-            //     if (payment.restaurant_id !== _context.user.restaurantId) {
-            //         console.error(`Tenant isolation violation: User ${_context.user.id} attempted to access payment ${_reference.id}`);
+        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+            // TODO: Implement with payments repository when available
+            // The implementation should:
+            // 1. Fetch payment from repository
+            // 2. Validate tenant isolation
+            //
+            // Example implementation:
+            // const payment = await paymentsRepository.getPayment(reference.id);
+            // if (payment && context.user?.restaurantId) {
+            //     if (payment.restaurant_id !== context.user.restaurantId) {
+            //         console.error(
+            //             `Tenant isolation violation: User ${context.user.id} attempted to access payment ${reference.id}`
+            //         );
             //         return null;
             //     }
             // }
+            // return payment;
+
+            // Placeholder: Log the reference for debugging until repository is implemented
+            console.log('[payments/resolvers] __resolveReference called for id:', reference.id);
             return null;
         },
     },
