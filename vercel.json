@@ -33,7 +33,7 @@
     "crons": [
         {
             "path": "/api/jobs/cron/stale-device-check",
-            "schedule": "*/5 * * * *"
+            "schedule": "0 0 * * *"
         }
     ]
 }
