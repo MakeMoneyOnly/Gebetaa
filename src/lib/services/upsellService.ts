@@ -347,7 +347,9 @@ export async function getPersonalizedRecommendations(
         }
 
         // Create a map for counts
-        const countMap = new Map<string, number>(filteredItems.map((oi: any) => [oi.menu_item_id, oi.count]));
+        const countMap = new Map<string, number>(
+            filteredItems.map((oi: any) => [oi.menu_item_id, oi.count])
+        );
 
         return items.map((item: any) => ({
             id: item.id,

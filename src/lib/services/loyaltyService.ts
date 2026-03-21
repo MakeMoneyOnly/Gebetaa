@@ -205,12 +205,15 @@ export async function recordGuestVisit(params: {
 
     try {
         // Get or create loyalty account
-        let { data: account, error: accountError } = await db
+        const accountResult = await db
             .from('loyalty_accounts')
             .select('*')
             .eq('guest_id', guestId)
             .eq('restaurant_id', restaurantId)
             .maybeSingle();
+
+        let account = accountResult.data;
+        const accountError = accountResult.error;
 
         if (accountError) {
             return {
@@ -689,12 +692,15 @@ export async function awardOrderPoints(params: {
         });
 
         // Get current account
-        let { data: account, error: accountError } = await db
+        const accountResult = await db
             .from('loyalty_accounts')
             .select('*')
             .eq('guest_id', guestId)
             .eq('restaurant_id', restaurantId)
             .maybeSingle();
+
+        let account = accountResult.data;
+        const accountError = accountResult.error;
 
         if (accountError) {
             return {
