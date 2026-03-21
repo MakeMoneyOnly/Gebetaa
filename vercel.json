@@ -30,12 +30,6 @@
             ]
         }
     ],
-    "projects": [
-        {
-            "projectId": "@vercel/project-id",
-            "teamId": "@vercel/team-id"
-        }
-    ],
     "crons": [
         {
             "path": "/api/jobs/cron/stale-device-check",
