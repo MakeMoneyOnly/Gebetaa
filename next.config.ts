@@ -184,6 +184,11 @@ const nextConfig: NextConfig = {
                 hostname: 'i.pravatar.cc',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'api.dicebear.com',
+                pathname: '/**',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'inline',

@@ -32,6 +32,15 @@ const eslintConfig = defineConfig([
                     caughtErrorsIgnorePattern: '^_',
                 },
             ],
+            // Enforce explicit return types for new code, warn for existing code
+            '@typescript-eslint/explicit-function-return-type': [
+                'warn',
+                {
+                    allowExpressions: true,
+                    allowTypedFunctionExpressions: true,
+                    allowHigherOrderFunctions: true,
+                },
+            ],
         },
     },
 ]);

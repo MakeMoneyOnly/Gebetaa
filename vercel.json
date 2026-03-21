@@ -17,7 +17,7 @@
             "headers": [
                 {
                     "key": "Access-Control-Allow-Origin",
-                    "value": "*"
+                    "value": "https://gebeta.app https://staging.gebeta.app http://localhost:3000"
                 },
                 {
                     "key": "Access-Control-Allow-Methods",
@@ -30,7 +30,6 @@
             ]
         }
     ],
-    "regions": ["iad1"],
     "projects": [
         {
             "projectId": "@vercel/project-id",
