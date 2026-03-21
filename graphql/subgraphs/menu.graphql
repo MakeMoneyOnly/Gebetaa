@@ -19,7 +19,7 @@ type MenuItem @key(fields: "id") {
     """
     The category this menu item belongs to
     """
-    categoryId: ID!
+    categoryId: ID! @deprecated(reason: "Use 'category' field for full category data")
     """
     Name of the menu item in English
     """
@@ -167,7 +167,7 @@ type Category @key(fields: "id") {
     items: [MenuItem!]!
 }
 
-extend type GebetaError @shareable {
+type GebetaError @shareable {
     """
     Error code for programmatic error handling
     """

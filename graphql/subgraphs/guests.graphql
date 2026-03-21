@@ -145,7 +145,7 @@ type GuestEdge {
     node: Guest!
 }
 
-extend type PageInfo @shareable {
+type PageInfo @shareable {
     """
     Whether there are more results after the current page
     """
@@ -164,7 +164,7 @@ extend type PageInfo @shareable {
     endCursor: String @shareable
 }
 
-extend type GebetaError @shareable {
+type GebetaError @shareable {
     """
     Error code for programmatic error handling
     """
