@@ -76,7 +76,7 @@ jobs:
             - name: Upload coverage report
               uses: actions/upload-artifact@v4
               with:
-                  name: coverage-report-${{ github.run_id }}-${{ github.run_attempt }}
+                  name: coverage-report-${{ github.sha }}
                   path: coverage/
                   retention-days: 7
 
@@ -176,7 +176,7 @@ jobs:
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
               with:
-                  name: build-${{ github.run_id }}-${{ github.run_attempt }}
+                  name: build-${{ github.sha }}
                   path: .next/
                   retention-days: 7
                   if-no-files-found: error
@@ -224,7 +224,7 @@ jobs:
             - name: Upload bundle analysis report
               uses: actions/upload-artifact@v4
               with:
-                  name: bundle-analysis-${{ github.run_id }}-${{ github.run_attempt }}
+                  name: bundle-analysis-${{ github.sha }}
                   path: .next/analyze/
                   retention-days: 30
                   if-no-files-found: warn
@@ -284,8 +284,19 @@ jobs:
             - name: Download build artifact
               uses: actions/download-artifact@v4
               with:
-                  name: build-${{ github.run_id }}-${{ github.run_attempt }}
+                  name: build-${{ github.sha }}
                   path: .next/
+
+            - name: Verify build artifact
+              run: |
+                  echo "=== Verifying build artifact ==="
+                  if [ -d ".next" ] && [ "$(ls -A .next)" ]; then
+                      echo "Build artifact found and not empty"
+                      ls -la .next/
+                  else
+                      echo "ERROR: Build artifact missing or empty"
+                      exit 1
+                  fi
 
             - name: Run E2E tests
               run: |
@@ -314,9 +325,13 @@ jobs:
               uses: actions/upload-artifact@v4
               if: failure()
               with:
-                  name: playwright-report-${{ github.run_id }}-${{ github.run_attempt }}
-                  path: playwright-report/
+                  name: playwright-report-${{ github.sha }}
+                  path: |
+                      playwright-report/
+                      playwright/test-results/
+                      playwright/traces/
                   retention-days: 7
+                  if-no-files-found: warn
 
     # ============================================
     # DEPLOY TO STAGING
