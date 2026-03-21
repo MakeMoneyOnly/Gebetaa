@@ -175,7 +175,7 @@ describe('service-role integration tests', () => {
             try {
                 await (
                     auditedClient as unknown as {
-                        from: (table: string) => { insert: typeof mockOperation };
+                        from: (table: string) => { insert: typeof _mockOperation };
                     }
                 )
                     .from('orders')

@@ -347,7 +347,7 @@ export async function getPersonalizedRecommendations(
         }
 
         // Create a map for counts
-        const countMap = new Map(filteredItems.map((oi: any) => [oi.menu_item_id, oi.count]));
+        const countMap = new Map<string, number>(filteredItems.map((oi: any) => [oi.menu_item_id, oi.count]));
 
         return items.map((item: any) => ({
             id: item.id,
@@ -356,7 +356,7 @@ export async function getPersonalizedRecommendations(
             image_url: item.image_url,
             category_name: item.categories?.name ?? '',
             reason: 'personalized' as const,
-            reason_text: `You've ordered this ${countMap.get(item.id)} time${countMap.get(item.id) > 1 ? 's' : ''}`,
+            reason_text: `You've ordered this ${countMap.get(item.id) ?? 0} time${(countMap.get(item.id) ?? 0) > 1 ? 's' : ''}`,
             order_count: item.order_count,
         }));
     } catch (error) {

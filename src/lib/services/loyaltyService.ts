@@ -205,7 +205,7 @@ export async function recordGuestVisit(params: {
 
     try {
         // Get or create loyalty account
-        const { data: account, error: accountError } = await db
+        let { data: account, error: accountError } = await db
             .from('loyalty_accounts')
             .select('*')
             .eq('guest_id', guestId)
@@ -689,7 +689,7 @@ export async function awardOrderPoints(params: {
         });
 
         // Get current account
-        const { data: account, error: accountError } = await db
+        let { data: account, error: accountError } = await db
             .from('loyalty_accounts')
             .select('*')
             .eq('guest_id', guestId)

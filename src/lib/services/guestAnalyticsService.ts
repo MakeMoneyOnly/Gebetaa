@@ -531,7 +531,7 @@ function generateInsights(
     }
 
     // VIP segment insight
-    const vipSegment = segments.find(s => s.segment === 'vip');
+    const vipSegment = _segments.find((s: GuestSegment) => s.segment === 'vip');
     if (vipSegment && vipSegment.percentOfTotal < 5) {
         insights.push({
             type: 'info',
@@ -543,7 +543,7 @@ function generateInsights(
     }
 
     // At-risk segment insight
-    const atRiskSegment = segments.find(s => s.segment === 'at_risk');
+    const atRiskSegment = _segments.find((s: GuestSegment) => s.segment === 'at_risk');
     if (atRiskSegment && atRiskSegment.count > 0) {
         insights.push({
             type: 'warning',
