@@ -21,8 +21,6 @@ vi.mock('@supabase/supabase-js', () => ({
     createClient: (...args: unknown[]) => mockCreateClient(...args),
 }));
 
-
-
 // Mock environment variables
 const mockEnv = {
     NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',

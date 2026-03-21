@@ -51,6 +51,7 @@ export function useAbortableEffect(
                 });
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, deps);
 }
 

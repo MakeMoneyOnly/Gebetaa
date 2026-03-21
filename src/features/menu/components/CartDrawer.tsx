@@ -202,6 +202,7 @@ export function CartDrawer({
                 setPlacedOrderId(paymentOrderId);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [paymentOrderId, paymentReturnSuccess]);
 
     useEffect(() => {

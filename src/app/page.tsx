@@ -604,6 +604,7 @@ function TelemetryFeed() {
             }, 1000); // Wait before next line
             return () => clearTimeout(timeout);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentLineIndex, currentCharacterIndex]);
 
     return (
