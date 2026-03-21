@@ -42,7 +42,8 @@ jobs:
               uses: github/codeql-action/init@v3
               with:
                   languages: ${{ matrix.language }}
-                  queries: security-extended,security-and-quality
+                  # Using default setup - queries parameter removed to avoid conflict with GitHub's default CodeQL
+                  # See: https://docs.github.com/en/code-security/code-scanning/troubleshooting-sarif-uploads#error-codeql-analyses-from-advanced-configurations-cannot-be-processed-when-the-default-setup-is-enabled
 
             - name: Autobuild
               uses: github/codeql-action/autobuild@v3
