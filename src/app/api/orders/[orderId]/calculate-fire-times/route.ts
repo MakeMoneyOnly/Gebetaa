@@ -68,7 +68,7 @@ export async function POST(
             );
         }
 
-        const restaurantId = staffEntry.restaurant_id;
+        const _restaurantId = staffEntry.restaurant_id;
 
         // Parse request body
         const body = await request.json().catch(() => ({}));

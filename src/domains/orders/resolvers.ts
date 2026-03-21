@@ -13,7 +13,6 @@ import {
     createErrorResult,
     handleResolverError,
     NOT_FOUND_ERROR,
-    ErrorCode,
 } from '@/lib/graphql/errors';
 import {
     validateInput,
@@ -22,7 +21,7 @@ import {
     CancelOrderInputSchema,
 } from '@/lib/validators/graphql';
 import { JSONScalar } from '@/lib/graphql/scalars';
-import { enforcePaginationLimit, PAGINATION } from '@/lib/graphql/constants';
+import { enforcePaginationLimit } from '@/lib/graphql/constants';
 
 const mapOrderStatus = (
     status: string

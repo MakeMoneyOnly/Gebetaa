@@ -12,7 +12,6 @@ import { cookies } from 'next/headers';
 import {
     createScheduledReport,
     getScheduledReports,
-    executeScheduledReport,
 } from '@/lib/services/scheduledReportsService';
 
 export async function GET(request: NextRequest) {

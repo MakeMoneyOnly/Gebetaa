@@ -408,7 +408,7 @@ async function syncMenuToLocation(
                     } else {
                         changesApplied++;
                     }
-                } catch (e) {
+                } catch (_e) {
                     errors.push(`Category ${category.name}: Unknown error`);
                     changesFailed++;
                 }
@@ -455,7 +455,7 @@ async function syncMenuToLocation(
                     } else {
                         changesApplied++;
                     }
-                } catch (e) {
+                } catch (_e) {
                     errors.push(`Item ${item.name}: Unknown error`);
                     changesFailed++;
                 }
@@ -489,7 +489,7 @@ async function syncMenuToLocation(
                     } else {
                         changesApplied++;
                     }
-                } catch (e) {
+                } catch (_e) {
                     errors.push(`Modifier group ${group.name}: Unknown error`);
                     changesFailed++;
                 }
@@ -522,7 +522,7 @@ async function syncMenuToLocation(
                     } else {
                         changesApplied++;
                     }
-                } catch (e) {
+                } catch (_e) {
                     errors.push(`Modifier option ${option.name}: Unknown error`);
                     changesFailed++;
                 }

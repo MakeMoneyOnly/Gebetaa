@@ -535,8 +535,8 @@ export async function getUpsellAnalytics(
         const { data: items } = await db.from('menu_items').select('id, name').in('id', topItemIds);
 
         const itemNames = new Map<string, string>();
-        for (const i of items ?? []) {
-            itemNames.set(i.id as string, (i.name as string) ?? 'Unknown');
+        for (const i of (items ?? []) as Array<{ id: string; name: string | null }>) {
+            itemNames.set(i.id, i.name ?? 'Unknown');
         }
 
         const topRecommendations: Array<{

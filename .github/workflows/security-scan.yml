@@ -24,35 +24,10 @@ concurrency:
 
 jobs:
     # ═══════════════════════════════════════════════════════════════════════════
-    # CODEQL - Static Analysis
+    # NOTE: CodeQL is handled by GitHub's default setup in repository settings
+    # Remove workflow-based CodeQL to avoid conflict with default setup
+    # See: https://docs.github.com/en/code-security/code-scanning/troubleshooting-sarif-uploads#error-codeql-analyses-from-advanced-configurations-cannot-be-processed-when-the-default-setup-is-enabled
     # ═══════════════════════════════════════════════════════════════════════════
-    codeql:
-        name: CodeQL Analysis
-        runs-on: ubuntu-latest
-        timeout-minutes: 30
-        strategy:
-            fail-fast: false
-            matrix:
-                language: [javascript-typescript]
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Initialize CodeQL
-              uses: github/codeql-action/init@v3
-              with:
-                  languages: ${{ matrix.language }}
-                  # Using default setup - queries parameter removed to avoid conflict with GitHub's default CodeQL
-                  # See: https://docs.github.com/en/code-security/code-scanning/troubleshooting-sarif-uploads#error-codeql-analyses-from-advanced-configurations-cannot-be-processed-when-the-default-setup-is-enabled
-
-            - name: Autobuild
-              uses: github/codeql-action/autobuild@v3
-
-            - name: Perform CodeQL Analysis
-              uses: github/codeql-action/analyze@v3
-              with:
-                  category: '/language:${{ matrix.language }}'
-                  upload: true
 
     # ═══════════════════════════════════════════════════════════════════════════
     # DEPENDENCY REVIEW - Check for vulnerable dependencies
@@ -181,7 +156,7 @@ jobs:
         name: Security Summary
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        needs: [codeql, secret-scan, trivy]
+        needs: [secret-scan, trivy]
         if: always()
         steps:
             - name: Check Security Results
@@ -190,12 +165,12 @@ jobs:
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "| Scan | Status |" >> $GITHUB_STEP_SUMMARY
                   echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-                  echo "| CodeQL | ${{ needs.codeql.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "| CodeQL | (handled by GitHub default) |" >> $GITHUB_STEP_SUMMARY
                   echo "| Secret Scan | ${{ needs.secret-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
                   echo "| Trivy Vuln | ${{ needs.trivy.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "View detailed results in the Security tab." >> $GITHUB_STEP_SUMMARY
 
             - name: Fail if critical scans failed
-              if: needs.codeql.result == 'failure' || needs.secret-scan.result == 'failure'
+              if: needs.secret-scan.result == 'failure'
               run: exit 1

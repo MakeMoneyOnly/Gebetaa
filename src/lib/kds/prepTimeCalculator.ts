@@ -249,7 +249,7 @@ export async function markItemsFired(
     orderItemIds: string[],
     staffId?: string
 ): Promise<{ success: boolean; firedCount: number; errors: string[] }> {
-    const db = supabase as any;
+    const _db = supabase as any;
     const errors: string[] = [];
     let firedCount = 0;
 

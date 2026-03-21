@@ -195,8 +195,6 @@ function calculateStaffSummaryFromOrders(staff: any[], orders: any[]): TimeEntry
     // Count orders (assuming orders are assigned to staff in a real implementation)
     // For now, distribute orders evenly as a proxy
     const ordersPerStaff = Math.ceil(orders.length / Math.max(staff.length, 1));
-    const salesPerStaff =
-        orders.reduce((sum, o) => sum + (o.total_price || 0), 0) / Math.max(staff.length, 1);
 
     const summaries: TimeEntrySummary[] = [];
     const avgHourlyRate = 50; // ETB
@@ -226,7 +224,7 @@ function calculateStaffSummaryFromOrders(staff: any[], orders: any[]): TimeEntry
 
 function calculateDailySummaryFromOrders(
     orders: any[],
-    groupBy: 'day' | 'week' | 'month'
+    _groupBy: 'day' | 'week' | 'month'
 ): DailyLaborSummary[] {
     const avgHourlyRate = 50;
     const dayMap = new Map<string, { orderCount: number; sales: number }>();
@@ -325,7 +323,7 @@ function calculateOverallSummary(
 function generateInsights(
     summary: LaborReportData['summary'],
     staffSummary: TimeEntrySummary[],
-    dailySummary: DailyLaborSummary[]
+    _dailySummary: DailyLaborSummary[]
 ): LaborInsight[] {
     const insights: LaborInsight[] = [];
 

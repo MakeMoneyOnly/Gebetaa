@@ -10,7 +10,6 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Json } from '@/types/database';
 
 // =========================================================
 // Type Definitions
@@ -206,7 +205,7 @@ export async function recordGuestVisit(params: {
 
     try {
         // Get or create loyalty account
-        let { data: account, error: accountError } = await db
+        const { data: account, error: accountError } = await db
             .from('loyalty_accounts')
             .select('*')
             .eq('guest_id', guestId)
@@ -497,7 +496,7 @@ export async function processBirthdayReward(params: {
         }
 
         // Create discount coupon
-        const { data: reward, error: rewardError } = await db
+        const { data: _reward, error: rewardError } = await db
             .from('guest_rewards')
             .insert({
                 restaurant_id: restaurantId,
@@ -690,7 +689,7 @@ export async function awardOrderPoints(params: {
         });
 
         // Get current account
-        let { data: account, error: accountError } = await db
+        const { data: account, error: accountError } = await db
             .from('loyalty_accounts')
             .select('*')
             .eq('guest_id', guestId)

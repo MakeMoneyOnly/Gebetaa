@@ -55,7 +55,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
         const getPageNumbers = () => {
             const pages: (number | string)[] = [];
             const totalNumbers = siblingCount * 2 + 3; // siblings + current + first/last + separators
-            const totalDots = 3;
+            const _totalDots = 3;
 
             if (totalPages <= totalNumbers) {
                 // If total pages is small, show all pages
@@ -141,8 +141,8 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
                         }
 
                         const isActive = page === currentPage;
-                        const isFirst = showEdges && page === 1;
-                        const isLast = showEdges && page === totalPages;
+                        const _isFirst = showEdges && page === 1;
+                        const _isLast = showEdges && page === totalPages;
 
                         // Skip first/last if edges are shown and they're already rendered as edges
                         if (showEdges && (index === 0 || index === pageNumbers.length - 1)) {

@@ -3,23 +3,23 @@
 # CodeQL setup and the advanced configuration in the workflow.
 # See: https://docs.github.com/en/code-security/code-scanning/troubleshooting-sarif-uploads#error-codeql-analyses-from-advanced-configurations-cannot-be-processed-when-the-default-setup-is-enabled
 
-name: "CodeQL Configuration"
+name: 'CodeQL Configuration'
 
 queries:
-  - uses: security-extended
-  - uses: security-and-quality
+    - uses: security-extended
+    - uses: security-and-quality
 
 paths:
-  - src
-  - lib
-  - app
+    - src
+    - lib
+    - app
 
 paths-ignore:
-  - node_modules
-  - "**/*.test.ts"
-  - "**/*.test.tsx"
-  - "**/*.spec.ts"
-  - "**/*.spec.tsx"
-  - "**/*.d.ts"
-  - "**/dist/**"
-  - "**/build/**"
+    - node_modules
+    - '**/*.test.ts'
+    - '**/*.test.tsx'
+    - '**/*.spec.ts'
+    - '**/*.spec.tsx'
+    - '**/*.d.ts'
+    - '**/dist/**'
+    - '**/build/**'

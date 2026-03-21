@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
-import { createClient } from '@/lib/supabase/server';
 
 const ItemIdSchema = z.string().uuid();
 

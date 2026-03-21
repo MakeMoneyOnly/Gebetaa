@@ -56,7 +56,7 @@ export const paymentsResolvers = {
     },
 
     Mutation: {
-        initiatePayment: async (_: unknown, args: { input: unknown }, context: GraphQLContext) => {
+        initiatePayment: async (_: unknown, args: { input: unknown }, _context: GraphQLContext) => {
             try {
                 // Validate input
                 const validation = validateInput(InitiatePaymentInputSchema, args.input);
@@ -92,7 +92,7 @@ export const paymentsResolvers = {
     },
 
     Payment: {
-        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+        __resolveReference: async (reference: { id: string }, _context: GraphQLContext) => {
             // TODO: Implement with payments repository when available
             // The implementation should:
             // 1. Fetch payment from repository

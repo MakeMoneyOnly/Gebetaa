@@ -17,7 +17,6 @@ import {
     createOrder,
     generateGuestFingerprint,
     generateIdempotencyKey,
-    type OrderValidationResult,
 } from '../orderService';
 
 // Mock the queries module

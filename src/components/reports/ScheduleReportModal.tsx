@@ -51,7 +51,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export function ScheduleReportModal({
-    restaurantId,
+    restaurantId: _restaurantId,
     onClose,
     onSuccess,
 }: ScheduleReportModalProps) {

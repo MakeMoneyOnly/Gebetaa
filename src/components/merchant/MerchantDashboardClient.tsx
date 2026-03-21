@@ -31,11 +31,8 @@ import {
     Timer,
     Users,
     Wallet,
-    Star,
-    Utensils,
-    RefreshCw,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { AttentionQueuePanel } from '@/components/merchant/command-center/AttentionQueuePanel';
 import { KdsReliabilityPanel } from '@/components/merchant/KdsReliabilityPanel';

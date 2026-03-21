@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { Drawer } from 'vaul';
+
 import { createClient } from '@/lib/supabase';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Phone, User } from 'lucide-react';

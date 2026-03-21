@@ -1,10 +1,6 @@
 import { updateSession } from '@/lib/supabase/middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limit';
-import {
-    detectApiVersion,
-    getVersionedHeaders,
-    hasExplicitVersionHeader,
-} from '@/lib/api/versioning';
+import { detectApiVersion, getVersionedHeaders } from '@/lib/api/versioning';
 import type { NextRequest } from 'next/server';
 
 /**

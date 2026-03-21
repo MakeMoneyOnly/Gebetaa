@@ -428,7 +428,7 @@ function calculateNextRunTime(
     runAtTime: string,
     dayOfWeek: number | null,
     dayOfMonth: number | null,
-    timezone: string = 'Africa/Addis_Ababa'
+    _timezone: string = 'Africa/Addis_Ababa'
 ): string {
     const now = new Date();
     const [hours, minutes] = runAtTime.split(':').map(Number);
@@ -530,7 +530,7 @@ async function generateReportData(
     reportType: ReportType,
     startDate: Date,
     endDate: Date,
-    filters: Record<string, unknown>
+    _filters: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
     const db = supabase as any;
 
@@ -587,7 +587,7 @@ async function completeExecution(
     });
 }
 
-async function sendReportEmail(db: any, report: ScheduledReport, fileUrl: string): Promise<void> {
+async function sendReportEmail(db: any, report: ScheduledReport, _fileUrl: string): Promise<void> {
     // In production, integrate with Resend/SendGrid
     console.log(`[ScheduledReports] Would send email to ${report.recipient_emails.join(', ')}`);
 }

@@ -25,7 +25,7 @@ interface FireTimeIndicatorProps {
     onFireItem?: (itemId: string) => void;
 }
 
-export function FireTimeIndicator({ orderId, items, onFireItem }: FireTimeIndicatorProps) {
+export function FireTimeIndicator({ orderId: _orderId, items, onFireItem }: FireTimeIndicatorProps) {
     const [now, setNow] = useState(new Date());
 
     // Update every minute

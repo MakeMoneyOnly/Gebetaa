@@ -14,7 +14,7 @@ import {
     CreateStaffInputSchema,
     UpdateStaffInputSchema,
 } from '@/lib/validators/graphql';
-import { enforcePaginationLimit, PAGINATION } from '@/lib/graphql/constants';
+import { enforcePaginationLimit } from '@/lib/graphql/constants';
 
 export const staffResolvers = {
     Query: {
@@ -47,7 +47,7 @@ export const staffResolvers = {
             await requireRestaurantAccess(context, args.restaurantId);
 
             // Enforce pagination limits to prevent unbounded result sets
-            const limit = enforcePaginationLimit(args.first);
+            enforcePaginationLimit(args.first);
 
             // TODO: Implement with staff repository
             // When implemented, pass limit and offset to repository:
@@ -150,7 +150,7 @@ export const staffResolvers = {
     },
 
     StaffMember: {
-        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+        __resolveReference: async (reference: { id: string }, _context: GraphQLContext) => {
             // TODO: Implement with staff repository when available
             // The implementation should:
             // 1. Fetch staff member from repository

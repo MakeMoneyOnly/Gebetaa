@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const restaurantId = searchParams.get('restaurantId');
-        const platform = searchParams.get('platform');
+        const _platform = searchParams.get('platform');
 
         if (!restaurantId) {
             return NextResponse.json(

@@ -11,7 +11,7 @@ import { graphqlConfig } from './config';
 
 export interface SubgraphConfig {
     typeDefs: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     resolvers: any;
 }
 

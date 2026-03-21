@@ -31,7 +31,7 @@ const CHANNELS = [
     { value: 'both', label: 'Email & SMS' },
 ] as const;
 
-export function CampaignBuilder({ restaurantId, onSave, onCancel }: CampaignBuilderProps) {
+export function CampaignBuilder({ restaurantId: _restaurantId, onSave, onCancel }: CampaignBuilderProps) {
     const [step, setStep] = useState(1);
     const [name, setName] = useState('');
     const [campaignType, setCampaignType] = useState<string>('');

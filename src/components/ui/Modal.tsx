@@ -60,7 +60,7 @@ const ModalContent = React.forwardRef<
 });
 ModalContent.displayName = DialogPrimitive.Content.displayName;
 
-interface ModalHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+type ModalHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 
 const ModalHeader = ({ className, ...props }: ModalHeaderProps) => (
     <div
@@ -70,7 +70,7 @@ const ModalHeader = ({ className, ...props }: ModalHeaderProps) => (
 );
 ModalHeader.displayName = 'ModalHeader';
 
-interface ModalFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
+type ModalFooterProps = React.HTMLAttributes<HTMLDivElement>;
 
 const ModalFooter = ({ className, ...props }: ModalFooterProps) => (
     <div
@@ -80,7 +80,7 @@ const ModalFooter = ({ className, ...props }: ModalFooterProps) => (
 );
 ModalFooter.displayName = 'ModalFooter';
 
-interface ModalTitleProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title> {}
+type ModalTitleProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>;
 
 const ModalTitle = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Title>,
@@ -94,9 +94,7 @@ const ModalTitle = React.forwardRef<
 ));
 ModalTitle.displayName = DialogPrimitive.Title.displayName;
 
-interface ModalDescriptionProps extends React.ComponentPropsWithoutRef<
-    typeof DialogPrimitive.Description
-> {}
+type ModalDescriptionProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>;
 
 const ModalDescription = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Description>,

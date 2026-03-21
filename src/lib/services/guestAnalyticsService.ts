@@ -270,8 +270,8 @@ export async function getGuestLifetimeValue(
 function calculateMetrics(
     guests: any[],
     orders: any[],
-    startDate?: string,
-    endDate?: string
+    _startDate?: string,
+    _endDate?: string
 ): GuestMetrics {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -464,7 +464,7 @@ function calculateTopGuests(guests: any[]): TopGuest[] {
     return guestData.sort((a, b) => b.totalSpend - a.totalSpend).slice(0, 10);
 }
 
-function calculateTrends(orders: any[], startDate?: string, endDate?: string): GuestTrend[] {
+function calculateTrends(orders: any[], _startDate?: string, _endDate?: string): GuestTrend[] {
     const trends = new Map<
         string,
         {
@@ -507,8 +507,8 @@ function calculateTrends(orders: any[], startDate?: string, endDate?: string): G
 
 function generateInsights(
     metrics: GuestMetrics,
-    segments: GuestSegment[],
-    trends: GuestTrend[]
+    _segments: GuestSegment[],
+    _trends: GuestTrend[]
 ): GuestInsight[] {
     const insights: GuestInsight[] = [];
 

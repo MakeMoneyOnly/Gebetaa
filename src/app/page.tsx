@@ -604,7 +604,7 @@ function TelemetryFeed() {
             }, 1000); // Wait before next line
             return () => clearTimeout(timeout);
         }
-    }, [currentLineIndex, currentCharacterIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [currentLineIndex, currentCharacterIndex]);
 
     return (
         <div className="font-jetbrains text-Slate-300 h-full w-full pt-6 text-xs">

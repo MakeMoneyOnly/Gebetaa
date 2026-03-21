@@ -21,7 +21,7 @@ vi.mock('@supabase/supabase-js', () => ({
     createClient: (...args: unknown[]) => mockCreateClient(...args),
 }));
 
-import type { ServiceRoleAuditParams } from '@/lib/audit';
+
 
 // Mock environment variables
 const mockEnv = {
@@ -167,11 +167,11 @@ describe('service-role integration tests', () => {
 
         it('should log successful operations with metadata', async () => {
             // Arrange
-            const { logServiceRoleAudit } = await import('@/lib/audit');
+            await import('@/lib/audit');
             const auditedClient = createAuditedServiceRoleClient('test-source');
 
             // Mock the from method to return a successful operation
-            const mockOperation = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            const _mockOperation = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
 
             // Act - invoke through proxy
             try {

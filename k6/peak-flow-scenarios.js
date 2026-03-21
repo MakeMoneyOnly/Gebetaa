@@ -185,7 +185,7 @@ export function testOrderStatusUpdate() {
     orderStatusLatency.add(res.timings.duration);
 
     // Check response (allow 404 for non-existent order, but still measure latency)
-    const success = check(res, {
+    const _success = check(res, {
         'order_status status is 2xx or 404': r => r.status >= 200 && r.status < 500,
         'order_status response time < 300ms': r => r.timings.duration < 300,
     });

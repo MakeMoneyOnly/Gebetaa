@@ -7,7 +7,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database, Json } from '@/types/database';
+import type { Database } from '@/types/database';
 
 // =========================================================
 // Type Definitions
@@ -429,7 +429,7 @@ export async function sendCampaign(
     supabase: SupabaseClient<Database>,
     restaurantId: string,
     campaignId: string,
-    options?: {
+    _options?: {
         testMode?: boolean;
         testEmail?: string;
         userId?: string;
