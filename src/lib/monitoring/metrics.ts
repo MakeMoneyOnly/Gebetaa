@@ -245,7 +245,7 @@ export async function trackOrderMetric(
 export interface PaymentMetricParams {
     restaurantId: string;
     paymentId: string;
-    provider: 'telebirr' | 'chapa' | 'cash';
+    provider: 'chapa' | 'cash';
     event: 'initiated' | 'completed' | 'failed' | 'refunded';
     amount?: number;
     durationMs?: number;

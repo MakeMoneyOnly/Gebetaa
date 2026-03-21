@@ -18,7 +18,10 @@ type Tables = Database['public']['Tables'];
  * @param itemId - The item ID to fetch reviews for
  * @returns Array of reviews ordered by created_at desc
  */
-export async function fetchReviews(supabase: SupabaseClient<Database>, itemId: string) {
+export async function fetchReviews(
+    supabase: SupabaseClient<Database>,
+    itemId: string
+): Promise<{ data: Tables['reviews']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('reviews')
         .select('*')
@@ -39,7 +42,7 @@ export async function fetchOrdersSince(
     supabase: SupabaseClient<Database>,
     restaurantId: string,
     since: string
-) {
+): Promise<{ data: Tables['orders']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('orders')
         .select('*')
@@ -59,7 +62,7 @@ export async function fetchOrdersSince(
 export async function fetchPendingServiceRequests(
     supabase: SupabaseClient<Database>,
     restaurantId: string
-) {
+): Promise<{ data: Tables['service_requests']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('service_requests')
         .select('*')
@@ -76,7 +79,10 @@ export async function fetchPendingServiceRequests(
  * @param categoryId - The category ID
  * @returns Array of menu items in the category
  */
-export async function fetchItemsByCategory(supabase: SupabaseClient<Database>, categoryId: string) {
+export async function fetchItemsByCategory(
+    supabase: SupabaseClient<Database>,
+    categoryId: string
+): Promise<{ data: Tables['menu_items']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('menu_items')
         .select('*')
@@ -93,7 +99,10 @@ export async function fetchItemsByCategory(supabase: SupabaseClient<Database>, c
  * @param slug - The restaurant slug
  * @returns Restaurant data with nested categories and items
  */
-export async function fetchRestaurantWithMenu(supabase: SupabaseClient<Database>, slug: string) {
+export async function fetchRestaurantWithMenu(
+    supabase: SupabaseClient<Database>,
+    slug: string
+): Promise<{ data: Tables['restaurants']['Row'] | null; error: Error | null }> {
     return supabase
         .from('restaurants')
         .select(
@@ -119,7 +128,7 @@ export async function fetchRestaurantWithMenu(supabase: SupabaseClient<Database>
 export async function insertOrder(
     supabase: SupabaseClient<Database>,
     order: Tables['orders']['Insert']
-) {
+): Promise<{ data: Tables['orders']['Row'] | null; error: Error | null }> {
     const { error } = await supabase.from('orders').insert(order);
 
     // Return early if there's an error
@@ -143,7 +152,7 @@ export async function insertOrder(
 export async function insertServiceRequest(
     supabase: SupabaseClient<Database>,
     request: Tables['service_requests']['Insert']
-) {
+): Promise<{ data: Tables['service_requests']['Row'] | null; error: Error | null }> {
     return supabase
         .from('service_requests')
         .insert(request)
@@ -164,7 +173,7 @@ export async function updateOrderStatus(
     supabase: SupabaseClient<Database>,
     orderId: string,
     status: Tables['orders']['Row']['status']
-) {
+): Promise<{ data: Tables['orders']['Row'] | null; error: Error | null }> {
     return supabase
         .from('orders')
         .update({ status, updated_at: new Date().toISOString() })
@@ -184,7 +193,7 @@ export async function updateOrderStatus(
 export async function getOrderByIdempotencyKey(
     supabase: SupabaseClient<Database>,
     idempotencyKey: string
-) {
+): Promise<{ data: Pick<Tables['orders']['Row'], 'id' | 'status'> | null; error: Error | null }> {
     return supabase
         .from('orders')
         .select('id, status')
@@ -203,7 +212,17 @@ export async function getOrderByIdempotencyKey(
 export async function fetchItemsForValidation(
     supabase: SupabaseClient<Database>,
     itemIds: string[]
-) {
+): Promise<{
+    data: Array<{
+        id: string;
+        name: string;
+        price: number;
+        is_available: boolean;
+        station: string;
+        course: string;
+    }> | null;
+    error: Error | null;
+}> {
     const db = supabase as any;
     return db
         .from('menu_items')

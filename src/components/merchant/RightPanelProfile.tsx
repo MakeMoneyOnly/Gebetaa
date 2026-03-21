@@ -30,6 +30,7 @@ export function ProfileSection({
                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${restaurantName}`}
                         alt="Profile"
                         className="h-full w-full rounded-full bg-red-50 object-cover"
+                        suppressHydrationWarning
                     />
                 </div>
                 {loading ? (

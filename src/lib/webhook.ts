@@ -6,6 +6,7 @@
  */
 
 import type { Database } from '@/types/database';
+import { logger } from './logger';
 
 type Order = Database['public']['Tables']['orders']['Row'];
 
@@ -28,13 +29,10 @@ export interface WebhookResult {
 async function logFailedWebhook(orderData: Order, error: unknown): Promise<void> {
     // In production, this would write to a persistent dead letter queue
     // For now, we log with high visibility
-    console.error('[Webhook] CRITICAL: Webhook failed after all retries', {
+    logger.error('[Webhook] CRITICAL: Webhook failed after all retries', error, {
         orderId: orderData.id,
         restaurantId: orderData.restaurant_id,
-        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString(),
-        // Include order data for manual recovery
-        orderData: JSON.stringify(orderData),
     });
 }
 
@@ -65,7 +63,7 @@ export async function forwardToWebhook(
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
         try {
-            console.log(`[Webhook] Attempt ${attempt + 1}/${retries} for order ${orderData.id}`);
+            logger.info(`[Webhook] Attempt ${attempt + 1}/${retries} for order ${orderData.id}`);
 
             const response = await fetch(webhookUrl, {
                 method: 'POST',
@@ -77,7 +75,7 @@ export async function forwardToWebhook(
             clearTimeout(timeoutId);
 
             if (response.ok) {
-                console.log(`[Webhook] Successfully forwarded order ${orderData.id}`);
+                logger.info(`[Webhook] Successfully forwarded order ${orderData.id}`);
                 return { success: true, attempts: attempt + 1 };
             }
 
@@ -89,7 +87,7 @@ export async function forwardToWebhook(
             const isLastAttempt = attempt === retries - 1;
             const errorMessage = err instanceof Error ? err.message : String(err);
 
-            console.error(`[Webhook] Attempt ${attempt + 1} failed:`, errorMessage);
+            logger.error(`[Webhook] Attempt ${attempt + 1} failed`, errorMessage);
 
             if (isLastAttempt) {
                 // Log to dead letter queue for manual processing
@@ -103,7 +101,7 @@ export async function forwardToWebhook(
 
             // Exponential backoff: 1s, 2s, 4s, etc.
             const delayMs = 1000 * Math.pow(2, attempt);
-            console.log(`[Webhook] Retrying in ${delayMs}ms...`);
+            logger.info(`[Webhook] Retrying in ${delayMs}ms...`);
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
     }
@@ -121,12 +119,12 @@ export function forwardToWebhookAsync(orderData: Order, webhookUrl: string, retr
     forwardToWebhook(orderData, webhookUrl, retries)
         .then(result => {
             if (!result.success) {
-                console.error('[Webhook] Async forward failed after retries:', result.error);
+                logger.error('[Webhook] Async forward failed after retries', result.error);
             }
         })
         .catch(err => {
             // This should not happen since forwardToWebhook catches all errors,
             // but we handle it just in case
-            console.error('[Webhook] Unexpected error in async forward:', err);
+            logger.error('[Webhook] Unexpected error in async forward', err);
         });
 }

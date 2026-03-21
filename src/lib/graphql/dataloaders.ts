@@ -36,6 +36,10 @@ export interface DataLoaders {
     orderItems: DataLoader<string, OrderItem[]>;
     /** Load categories by ID - returns null if not found */
     categories: DataLoader<string, Category | null>;
+    /** Load single modifier group by ID - returns null if not found (for federation references) */
+    modifierGroup: DataLoader<string, ModifierGroup | null>;
+    /** Load single modifier option by ID - returns null if not found (for federation references) */
+    modifierOption: DataLoader<string, ModifierOption | null>;
 }
 
 /**
@@ -129,5 +133,29 @@ export function createDataLoaders(): DataLoaders {
             const categoryMap = new Map(categories.map(cat => [cat.id as string, cat]));
             return ids.map(id => categoryMap.get(id) || null);
         }),
+
+        /**
+         * Single Modifier Group loader - batches requests for single modifier groups by ID
+         * Returns the modifier group or null if not found (for federation reference resolution)
+         */
+        modifierGroup: new DataLoader<string, ModifierGroup | null>(
+            async (ids: readonly string[]) => {
+                const groups = await menuRepository.getModifierGroupsByIds([...ids]);
+                const groupMap = new Map(groups.map(group => [group.id as string, group]));
+                return ids.map(id => groupMap.get(id) || null);
+            }
+        ),
+
+        /**
+         * Single Modifier Option loader - batches requests for single modifier options by ID
+         * Returns the modifier option or null if not found (for federation reference resolution)
+         */
+        modifierOption: new DataLoader<string, ModifierOption | null>(
+            async (ids: readonly string[]) => {
+                const options = await menuRepository.getModifierOptionsByIds([...ids]);
+                const optionMap = new Map(options.map(option => [option.id as string, option]));
+                return ids.map(id => optionMap.get(id) || null);
+            }
+        ),
     };
 }

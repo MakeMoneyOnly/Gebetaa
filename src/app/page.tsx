@@ -226,8 +226,8 @@ export default function LandingPage() {
                                 Built for Ethiopia
                             </h4>
                             <p className="font-inter text-Slate">
-                                Telebirr, Chapa, and local payment methods. Amharic and English.
-                                Designed for how Ethiopian restaurants actually work.
+                                Chapa and local payment methods. Amharic and English. Designed for
+                                how Ethiopian restaurants actually work.
                             </p>
                         </div>
 
@@ -574,7 +574,7 @@ function TelemetryFeed() {
             '[14:32:05] Order #1847 received — Table 8',
             '[14:32:07] Kitchen acknowledged — ETA 12min',
             '[14:32:15] Order #1848 received — Delivery',
-            '[14:32:18] Payment confirmed — Telebirr — 450 ETB',
+            '[14:32:18] Payment confirmed — Chapa — 450 ETB',
             '[14:32:22] Order #1847 preparing...',
         ],
         []

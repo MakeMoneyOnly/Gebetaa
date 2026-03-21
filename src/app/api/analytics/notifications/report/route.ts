@@ -22,7 +22,7 @@ type RangeOption = 'today' | 'week' | 'month' | 'custom';
 function getDateRange(url: URL): DateRange {
     const range = url.searchParams.get('range') as RangeOption | null;
     const now = new Date();
-    const endDate = new Date(now);
+    let endDate = new Date(now);
     endDate.setHours(23, 59, 59, 999);
 
     let startDate: Date;

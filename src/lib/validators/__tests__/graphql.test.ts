@@ -635,7 +635,7 @@ describe('GraphQL Input Validation', () => {
         });
 
         it('should accept all valid payment methods', () => {
-            const methods = ['CASH', 'TELEBIRR', 'CHAPA', 'CARD'] as const;
+            const methods = ['CASH', 'CHAPA', 'CARD'] as const;
 
             methods.forEach(method => {
                 const input = {

@@ -9,6 +9,7 @@
 
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from './logger';
 
 // Rate limit configuration types
 export interface RateLimitConfig {
@@ -162,7 +163,7 @@ function getOrCreateRedisClient(): Redis | null {
     const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
     if (!url || !token) {
-        console.warn(
+        logger.warn(
             '[RateLimit] Redis not configured (UPSTASH_REDIS_REST_URL/TOKEN missing), using in-memory fallback'
         );
         return null;
@@ -173,10 +174,10 @@ function getOrCreateRedisClient(): Redis | null {
             url,
             token,
         });
-        console.log('[RateLimit] Redis client initialized for distributed rate limiting');
+        logger.info('[RateLimit] Redis client initialized for distributed rate limiting');
         return redisClient;
     } catch (error) {
-        console.error('[RateLimit] Failed to create Redis client:', error);
+        logger.error('[RateLimit] Failed to create Redis client', error);
         return null;
     }
 }
@@ -352,7 +353,7 @@ async function checkRedisRateLimit(
         };
     } catch (error) {
         // Log error and fall back to in-memory on Redis failure
-        console.error('[RateLimit] Redis error, falling back to in-memory:', error);
+        logger.error('[RateLimit] Redis error, falling back to in-memory', error);
 
         const store = getMemoryStore();
         const currentCount = store.get(key, windowSeconds);

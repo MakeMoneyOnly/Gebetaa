@@ -13,6 +13,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import { logger } from '@/lib/logger';
 import {
     getWaitlistEntry,
     updateStatus,
@@ -75,7 +76,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             estimatedWaitMinutes: estimatedWait,
         });
     } catch (error) {
-        console.error('[waitlist] GET entry Error:', error);
+        logger.error('[waitlist] GET entry Error', error);
         return apiError(
             'Failed to fetch waitlist entry',
             500,
@@ -143,7 +144,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             status: parsed.data.status,
         });
     } catch (error) {
-        console.error('[waitlist] PATCH Error:', error);
+        logger.error('[waitlist] PATCH Error', error);
         return apiError(
             'Failed to update waitlist entry',
             500,
@@ -200,7 +201,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
         return apiSuccess({ message: 'Removed from waitlist' });
     } catch (error) {
-        console.error('[waitlist] DELETE Error:', error);
+        logger.error('[waitlist] DELETE Error', error);
         return apiError(
             'Failed to remove from waitlist',
             500,

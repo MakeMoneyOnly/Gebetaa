@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { Edit2, Image as ImageIcon, Loader2, Plus, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrencyCompact } from '@/lib/utils/monetary';
@@ -317,11 +318,11 @@ export function MenuGridEditor({
 
                             <div className="relative h-40 w-full flex-shrink-0 overflow-hidden rounded-[1.5rem] bg-gray-50">
                                 {item.image_url ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
+                                    <Image
                                         src={item.image_url}
                                         alt={item.name}
-                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        fill
+                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
                                 ) : (
                                     <div className="flex h-full w-full items-center justify-center text-gray-300">

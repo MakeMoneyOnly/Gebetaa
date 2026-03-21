@@ -195,7 +195,7 @@ export const UpdateStaffInputSchema = z.object({
  */
 export const InitiatePaymentInputSchema = z.object({
     orderId: z.string().uuid('Invalid order ID'),
-    method: z.enum(['CASH', 'TELEBIRR', 'CHAPA', 'CARD'], {
+    method: z.enum(['CASH', 'CHAPA', 'CARD'], {
         message: 'Invalid payment method',
     }),
     amount: z.number().positive('Amount must be positive').max(10000000, 'Amount exceeds maximum'),

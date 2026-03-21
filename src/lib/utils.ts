@@ -2,11 +2,11 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { formatETBCurrency } from '@/lib/format/et';
 
-export function cn(...inputs: ClassValue[]) {
+export function cn(...inputs: ClassValue[]): string {
     return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency = 'ETB') {
+export function formatCurrency(amount: number, currency = 'ETB'): string {
     if (currency.toUpperCase() === 'ETB') {
         return formatETBCurrency(amount, {
             locale: 'en',

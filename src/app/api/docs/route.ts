@@ -1050,7 +1050,7 @@ Used by Better Uptime for monitoring with Telegram alerting on non-200.
                         type: 'string',
                         enum: ['pending', 'completed', 'failed', 'refunded'],
                     },
-                    provider: { type: 'string', enum: ['chapa', 'telebirr', 'cash'] },
+                    provider: { type: 'string', enum: ['chapa', 'cash'] },
                     transaction_id: { type: 'string' },
                     created_at: { type: 'string', format: 'date-time' },
                     completed_at: { type: 'string', format: 'date-time' },

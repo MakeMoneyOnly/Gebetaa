@@ -368,8 +368,8 @@ export const ordersResolvers = {
 
             return order;
         },
-        items: async (order: { id: string }) => {
-            return ordersService.getOrderItems(order.id);
+        items: async (order: { id: string }, _args: unknown, context: GraphQLContext) => {
+            return context.dataLoaders.orderItems.load(order.id);
         },
     },
 

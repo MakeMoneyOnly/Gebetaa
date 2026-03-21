@@ -84,7 +84,7 @@ export const db = new OrderDatabase();
  */
 export async function queueOrder(
     order: Omit<PendingOrder, 'id' | 'created_at' | 'status' | 'version' | 'last_modified'>
-) {
+): Promise<number> {
     try {
         const now = new Date().toISOString();
         return await db.pending_orders.add({
@@ -106,7 +106,7 @@ export async function queueOrder(
 export async function updateQueuedOrder(
     id: number,
     updates: Partial<Pick<PendingOrder, 'items' | 'total_price' | 'notes'>>
-) {
+): Promise<number> {
     try {
         const existing = await db.pending_orders.get(id);
         if (!existing) {
@@ -128,35 +128,35 @@ export async function updateQueuedOrder(
 /**
  * Gets all pending orders from the queue
  */
-export async function getPendingOrders() {
+export async function getPendingOrders(): Promise<PendingOrder[]> {
     return await db.pending_orders.toArray();
 }
 
 /**
  * Gets orders that are ready to sync (pending status)
  */
-export async function getOrdersToSync() {
+export async function getOrdersToSync(): Promise<PendingOrder[]> {
     return await db.pending_orders.where('status').equals('pending').toArray();
 }
 
 /**
  * Gets orders with conflicts
  */
-export async function getConflictedOrders() {
+export async function getConflictedOrders(): Promise<PendingOrder[]> {
     return await db.pending_orders.where('status').equals('conflict').toArray();
 }
 
 /**
  * Marks an order as syncing (during sync attempt)
  */
-export async function markOrderSyncing(id: number) {
+export async function markOrderSyncing(id: number): Promise<number> {
     return await db.pending_orders.update(id, { status: 'syncing' });
 }
 
 /**
  * Removes an order from the queue (after successful sync)
  */
-export async function removeQueuedOrder(id: number) {
+export async function removeQueuedOrder(id: number): Promise<void> {
     return await db.pending_orders.delete(id);
 }
 
@@ -261,7 +261,7 @@ export async function getConflictLogs(limit: number = 50): Promise<SyncConflictL
  * Clears all pending orders from the queue
  * USE WITH CAUTION - primarily for testing
  */
-export async function clearAllPendingOrders() {
+export async function clearAllPendingOrders(): Promise<void> {
     return await db.pending_orders.clear();
 }
 
@@ -269,6 +269,6 @@ export async function clearAllPendingOrders() {
  * Clears all conflict logs
  * USE WITH CAUTION - primarily for testing
  */
-export async function clearConflictLogs() {
+export async function clearConflictLogs(): Promise<void> {
     return await db.sync_conflict_logs.clear();
 }

@@ -31,15 +31,15 @@ import {
     Timer,
     Users,
     Wallet,
+    Star,
+    Utensils,
+    RefreshCw,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { AttentionQueuePanel } from '@/components/merchant/command-center/AttentionQueuePanel';
 import { KdsReliabilityPanel } from '@/components/merchant/KdsReliabilityPanel';
 import { AlertRuleBuilderDrawer } from '@/components/merchant/command-center/AlertRuleBuilderDrawer';
-import {
-    DashboardPreset,
-    DashboardPresetSwitcher,
-} from '@/components/merchant/command-center/DashboardPresetSwitcher';
 import {
     AttentionItem,
     CommandCenterRange,
@@ -97,7 +97,6 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
     const [error, setError] = useState<string | null>(null);
     const [timeTick, setTimeTick] = useState(Date.now());
     const [filterOpen, setFilterOpen] = useState(false);
-    const [activePreset, setActivePreset] = useState<DashboardPreset>('owner');
     const [alertRuleDrawerOpen, setAlertRuleDrawerOpen] = useState(false);
 
     const { restaurantName } = useMerchantActivity();
@@ -185,15 +184,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
         return timeTick - new Date(generatedAt).getTime() > STALE_AFTER_MS;
     }, [generatedAt, timeTick]);
 
-    const queueForPreset = useMemo(() => {
-        if (activePreset === 'kitchen_lead') {
-            return queue.filter(item => item.type !== 'alert');
-        }
-        if (activePreset === 'manager') {
-            return queue.filter(item => !(item.type === 'alert' && item.severity === 'low'));
-        }
-        return queue;
-    }, [activePreset, queue]);
+    const queueForPreset = queue;
 
     const activeOrders = queueForPreset
         .filter(item => item.type === 'order')
@@ -299,7 +290,6 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <DashboardPresetSwitcher onPresetResolved={setActivePreset} />
                     <button
                         onClick={() => setAlertRuleDrawerOpen(true)}
                         className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700"
@@ -395,6 +385,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                 />
             </div>
 
+            {/* Income Tracker */}
             <div className="rounded-[2.5rem] bg-white p-8 shadow-sm">
                 <div className="mb-8 flex items-start justify-between">
                     <div className="max-w-xl">
@@ -410,7 +401,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                     </span>
                 </div>
                 <div className="flex h-full flex-col items-center gap-12 xl:flex-row">
-                    <div className="flex h-full w-full flex-col justify-center pl-[35px] xl:w-[20%]">
+                    <div className="flex h-full w-full flex-1 flex-col justify-center pl-[35px]">
                         <span className="block text-[3.5rem] leading-none font-bold tracking-tighter text-slate-900">
                             {metrics.payment_success_rate}%
                         </span>
@@ -418,7 +409,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                             Payment success in current range
                         </p>
                     </div>
-                    <div className="h-full min-h-[350px] w-full flex-1 overflow-hidden">
+                    <div className="h-full min-h-[350px] w-full flex-[4] overflow-hidden">
                         <RevenueChart />
                     </div>
                 </div>

@@ -15,6 +15,7 @@
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 /**
  * Rate limit configuration
@@ -106,7 +107,7 @@ export function getRedisRateLimiterClient(): Redis | null {
     const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
     if (!url || !token) {
-        console.warn('[RateLimiter] Redis not configured, rate limiting will be bypassed');
+        logger.warn('[RateLimiter] Redis not configured, rate limiting will be bypassed');
         return null;
     }
 
@@ -117,7 +118,7 @@ export function getRedisRateLimiterClient(): Redis | null {
         });
         return redisClient;
     } catch (error) {
-        console.error('[RateLimiter] Failed to create Redis client:', error);
+        logger.error('[RateLimiter] Failed to create Redis client', error);
         return null;
     }
 }
@@ -235,7 +236,7 @@ export async function checkRedisRateLimit(
             resetAt: now + config.windowSec * 1000,
         };
     } catch (error) {
-        console.error('[RateLimiter] Redis error:', error);
+        logger.error('[RateLimiter] Redis error', error);
         // Fail open on error - allow request but log
         return {
             allowed: true,
@@ -255,7 +256,7 @@ export async function logRateLimitViolation(
     userAgent: string,
     endpoint: string
 ): Promise<void> {
-    console.warn(
+    logger.warn(
         `[RateLimit] Rate limit exceeded: endpoint=${endpoint}, identifier=${identifier}, ` +
             `ip=${ipAddress}, config=${config.keyPrefix}, maxRequests=${config.maxRequests}, ` +
             `windowSec=${config.windowSec}`

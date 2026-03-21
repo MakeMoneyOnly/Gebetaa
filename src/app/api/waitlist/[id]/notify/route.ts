@@ -9,6 +9,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { writeAuditLog } from '@/lib/api/audit';
 import { getWaitlistEntry, notifyGuest } from '@/lib/waitlist/service';
+import { logger } from '@/lib/logger';
 
 /**
  * Extract waitlist ID from request
@@ -91,7 +92,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             },
         });
     } catch (error) {
-        console.error('[waitlist] notify Error:', error);
+        logger.error('[waitlist] notify Error', error);
         return apiError(
             'Failed to notify guest',
             500,

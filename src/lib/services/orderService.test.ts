@@ -89,6 +89,7 @@ describe('orderService', () => {
                 data: [
                     {
                         id: 'item-1',
+                        name: 'Injera',
                         price: 50,
                         is_available: true,
                         station: 'kitchen',
@@ -108,6 +109,7 @@ describe('orderService', () => {
                 data: [
                     {
                         id: 'item-1',
+                        name: 'Injera',
                         price: 50,
                         is_available: false,
                         station: 'kitchen',
@@ -115,6 +117,7 @@ describe('orderService', () => {
                     },
                     {
                         id: 'item-2',
+                        name: 'Tibs',
                         price: 150,
                         is_available: true,
                         station: 'kitchen',
@@ -134,6 +137,7 @@ describe('orderService', () => {
                 data: [
                     {
                         id: 'item-1',
+                        name: 'Injera',
                         price: 50,
                         is_available: true,
                         station: 'kitchen',
@@ -141,6 +145,7 @@ describe('orderService', () => {
                     },
                     {
                         id: 'item-2',
+                        name: 'Tibs',
                         price: 150,
                         is_available: true,
                         station: 'kitchen',
@@ -160,6 +165,7 @@ describe('orderService', () => {
                 data: [
                     {
                         id: 'item-1',
+                        name: 'Injera',
                         price: 50,
                         is_available: true,
                         station: 'kitchen',
@@ -167,6 +173,7 @@ describe('orderService', () => {
                     },
                     {
                         id: 'item-2',
+                        name: 'Tibs',
                         price: 150,
                         is_available: true,
                         station: 'kitchen',
@@ -191,6 +198,7 @@ describe('orderService', () => {
                 data: [
                     {
                         id: 'item-1',
+                        name: 'Injera',
                         price: 50,
                         is_available: true,
                         station: 'kitchen',
@@ -198,6 +206,7 @@ describe('orderService', () => {
                     },
                     {
                         id: 'item-2',
+                        name: 'Tibs',
                         price: 150,
                         is_available: true,
                         station: 'kitchen',
@@ -219,7 +228,14 @@ describe('orderService', () => {
         it('adds default station and course if missing', async () => {
             vi.mocked(fetchItemsForValidation).mockResolvedValue({
                 data: [
-                    { id: 'item-1', price: 50, is_available: true, station: null, course: null },
+                    {
+                        id: 'item-1',
+                        name: 'Injera',
+                        price: 50,
+                        is_available: true,
+                        station: null as any,
+                        course: null as any,
+                    },
                 ],
                 error: null,
             });

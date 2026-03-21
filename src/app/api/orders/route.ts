@@ -103,6 +103,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { CreateOrderSchema } from '@/lib/validators/order';
 import { apiError, apiSuccess } from '@/lib/api/response';
+import { logger } from '@/lib/logger';
 import {
     checkRateLimit,
     createOrder,
@@ -454,10 +455,9 @@ export async function POST(request: NextRequest) {
                 .maybeSingle();
 
             if (deliveryError) {
-                console.warn(
-                    '[POST /api/orders] campaign delivery lookup failed:',
-                    deliveryError.message
-                );
+                logger.warn('[POST /api/orders] campaign delivery lookup failed', {
+                    error: deliveryError.message,
+                });
             } else if (delivery) {
                 const campaignMatches =
                     !attribution.campaign_id || attribution.campaign_id === delivery.campaign_id;
@@ -470,10 +470,9 @@ export async function POST(request: NextRequest) {
                         .maybeSingle();
 
                     if (campaignError) {
-                        console.warn(
-                            '[POST /api/orders] campaign validation failed:',
-                            campaignError.message
-                        );
+                        logger.warn('[POST /api/orders] campaign validation failed', {
+                            error: campaignError.message,
+                        });
                     } else if (campaign && !delivery.conversion_order_id) {
                         const { error: updateDeliveryError } = await (supabase as any)
                             .from('campaign_deliveries' as any)
@@ -485,10 +484,9 @@ export async function POST(request: NextRequest) {
                             .eq('id', delivery.id);
 
                         if (updateDeliveryError) {
-                            console.warn(
-                                '[POST /api/orders] campaign conversion update failed:',
-                                updateDeliveryError.message
-                            );
+                            logger.warn('[POST /api/orders] campaign conversion update failed', {
+                                error: updateDeliveryError.message,
+                            });
                         } else {
                             campaignAttributionApplied = true;
                         }
@@ -518,7 +516,7 @@ export async function POST(request: NextRequest) {
             },
         });
         if (auditError) {
-            console.warn('[POST /api/orders] audit insert failed:', auditError.message);
+            logger.warn('[POST /api/orders] audit insert failed', { error: auditError.message });
         }
 
         await publishEvent(
@@ -544,7 +542,7 @@ export async function POST(request: NextRequest) {
             { status: 201 }
         );
     } catch (error) {
-        console.error('[POST /api/orders] failed:', error);
+        logger.error('[POST /api/orders] failed', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

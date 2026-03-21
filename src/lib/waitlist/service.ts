@@ -8,6 +8,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { sendSmsWithRetry } from '@/lib/notifications/retry';
 import { checkAndRecord, type NotificationType } from '@/lib/notifications/deduplication';
+import { logger } from '@/lib/logger';
 import type {
     AddWaitlistParams,
     WaitlistEntry,
@@ -55,7 +56,7 @@ async function getNextPosition(supabase: any, restaurantId: string): Promise<num
         .maybeSingle();
 
     if (error) {
-        console.error('[waitlist] Error getting next position:', error);
+        logger.error('[waitlist] Error getting next position', error);
         throw new Error('Failed to calculate waitlist position');
     }
 
@@ -156,7 +157,7 @@ export async function addToWaitlist(params: AddWaitlistParams): Promise<Waitlist
         .single();
 
     if (error || !data) {
-        console.error('[waitlist] Error adding to waitlist:', error);
+        logger.error('[waitlist] Error adding to waitlist', error);
         throw new Error(error?.message ?? 'Failed to add to waitlist');
     }
 
@@ -164,7 +165,7 @@ export async function addToWaitlist(params: AddWaitlistParams): Promise<Waitlist
 
     // Send initial notification (non-blocking)
     sendWaitlistNotification(entry, 'added').catch(err => {
-        console.error('[waitlist] Failed to send initial notification:', err);
+        logger.error('[waitlist] Failed to send initial notification', err);
     });
 
     return entry;
@@ -189,7 +190,7 @@ export async function getWaitlist(
     const { data, error } = await query.order('position', { ascending: true });
 
     if (error) {
-        console.error('[waitlist] Error fetching waitlist:', error);
+        logger.error('[waitlist] Error fetching waitlist', error);
         throw new Error('Failed to fetch waitlist');
     }
 
@@ -210,7 +211,7 @@ export async function getWaitlistEntry(waitlistId: string): Promise<WaitlistEntr
         .maybeSingle();
 
     if (error) {
-        console.error('[waitlist] Error fetching waitlist entry:', error);
+        logger.error('[waitlist] Error fetching waitlist entry', error);
         throw new Error('Failed to fetch waitlist entry');
     }
 
@@ -237,7 +238,7 @@ export async function getWaitlistStats(restaurantId: string): Promise<WaitlistSt
         .order('position', { ascending: false });
 
     if (countError) {
-        console.error('[waitlist] Error fetching waitlist stats:', countError);
+        logger.error('[waitlist] Error fetching waitlist stats', countError);
         throw new Error('Failed to fetch waitlist statistics');
     }
 
@@ -351,7 +352,7 @@ export async function notifyGuest(waitlistId: string): Promise<NotifyResult> {
             providerResponse: result.providerResponse,
         };
     } catch (error) {
-        console.error('[waitlist] Error sending notification:', error);
+        logger.error('[waitlist] Error sending notification', error);
         return {
             success: false,
             waitlistId,
@@ -384,7 +385,7 @@ async function updateStatusInternal(
     const { error } = await supabase.from('table_waitlist').update(updateData).eq('id', waitlistId);
 
     if (error) {
-        console.error('[waitlist] Error updating status:', error);
+        logger.error('[waitlist] Error updating status', error);
         throw new Error('Failed to update waitlist status');
     }
 }
@@ -415,7 +416,7 @@ export async function updateStatus(params: UpdateWaitlistStatusParams): Promise<
     // Send notification for seated status
     if (status === 'seated') {
         sendSeatedNotification(entry).catch(err => {
-            console.error('[waitlist] Failed to send seated notification:', err);
+            logger.error('[waitlist] Failed to send seated notification', err);
         });
     }
 }
@@ -476,7 +477,7 @@ async function sendWaitlistNotification(
             },
         });
     } catch (error) {
-        console.error('[waitlist] Failed to send notification:', error);
+        logger.error('[waitlist] Failed to send notification', error);
     }
 }
 
@@ -506,7 +507,7 @@ export async function removeFromWaitlist(waitlistId: string): Promise<void> {
     const { error } = await db.from('table_waitlist').delete().eq('id', waitlistId);
 
     if (error) {
-        console.error('[waitlist] Error removing from waitlist:', error);
+        logger.error('[waitlist] Error removing from waitlist', error);
         throw new Error('Failed to remove from waitlist');
     }
 
@@ -516,7 +517,7 @@ export async function removeFromWaitlist(waitlistId: string): Promise<void> {
     // Send cancellation notification if the entry was waiting
     if (entry.status === 'waiting') {
         sendCancellationNotification(entry).catch(err => {
-            console.error('[waitlist] Failed to send cancellation notification:', err);
+            logger.error('[waitlist] Failed to send cancellation notification', err);
         });
     }
 }
@@ -543,7 +544,7 @@ async function sendCancellationNotification(entry: WaitlistEntry): Promise<void>
             },
         });
     } catch (error) {
-        console.error('[waitlist] Failed to send cancellation notification:', error);
+        logger.error('[waitlist] Failed to send cancellation notification', error);
     }
 }
 

@@ -82,7 +82,7 @@ function readState(): OfflineKdsQueueState {
     return safeParse(window.localStorage.getItem(STORAGE_KEY));
 }
 
-function writeState(state: OfflineKdsQueueState) {
+function writeState(state: OfflineKdsQueueState): void {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -107,13 +107,13 @@ export function enqueueKdsAction(
     return queued;
 }
 
-export function removeQueuedKdsAction(id: string) {
+export function removeQueuedKdsAction(id: string): void {
     const state = readState();
     state.pendingActions = state.pendingActions.filter(action => action.id !== id);
     writeState(state);
 }
 
-export function incrementKdsActionAttempts(id: string) {
+export function incrementKdsActionAttempts(id: string): void {
     const state = readState();
     state.pendingActions = state.pendingActions.map(action =>
         action.id === id ? { ...action, attempts: action.attempts + 1 } : action
@@ -121,12 +121,12 @@ export function incrementKdsActionAttempts(id: string) {
     writeState(state);
 }
 
-export function markKdsQueueSynced() {
+export function markKdsQueueSynced(): void {
     const state = readState();
     state.lastSync = new Date().toISOString();
     writeState(state);
 }
 
-export function clearOfflineKdsQueue() {
+export function clearOfflineKdsQueue(): void {
     writeState(defaultState());
 }

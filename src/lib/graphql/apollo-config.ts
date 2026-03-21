@@ -4,6 +4,8 @@
 
 import { ApolloServer } from '@apollo/server';
 import { GraphQLError, ValidationContext, ASTVisitor } from 'graphql';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import gql from 'graphql-tag';
 import type { GraphQLContext } from './context';
 import { graphqlConfig } from './config';
 
@@ -181,16 +183,16 @@ function complexityLimitRule(maxComplexity: number): (context: ValidationContext
 
 /**
  * Creates a configured Apollo Server instance for subgraphs
- * with security features enabled:
- * - Query depth limiting (max 10 levels)
- * - Query complexity limiting (max 1000 points)
- * - CSRF prevention
- * - Secure error formatting (no internal errors exposed in production)
+ * with security features enabled
  */
 export function createSubgraphServer(config: SubgraphConfig): ApolloServer<GraphQLContext> {
-    return new ApolloServer<GraphQLContext>({
-        typeDefs: config.typeDefs,
+    const schema = buildSubgraphSchema({
+        typeDefs: gql(config.typeDefs),
         resolvers: config.resolvers,
+    });
+
+    return new ApolloServer<GraphQLContext>({
+        schema,
         introspection: graphqlConfig.introspection,
 
         // Add validation rules for security

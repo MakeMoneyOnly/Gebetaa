@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { FOOD_ITEMS } from '@/lib/constants';
 import { FoodItemSchema } from '@/types/zod-schemas';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
     try {
@@ -9,13 +10,13 @@ export async function GET() {
         const validatedItems = z.array(FoodItemSchema).safeParse(FOOD_ITEMS);
 
         if (!validatedItems.success) {
-            console.error('Data validation failed:', validatedItems.error);
+            logger.error('Data validation failed', validatedItems.error);
             return NextResponse.json({ error: 'Data inconsistency' }, { status: 500 });
         }
 
         return NextResponse.json(validatedItems.data);
     } catch (error) {
-        console.error('API Error:', error);
+        logger.error('API Error', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
         // In a real app, we would save to Supabase here
         return NextResponse.json({ message: 'Item validated successfully', data: validated.data });
     } catch (error) {
-        console.error('POST Error:', error);
+        logger.error('POST Error', error);
         return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
     }
 }

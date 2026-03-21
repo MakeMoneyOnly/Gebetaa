@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { AppError } from './errors';
 import { z } from 'zod';
+import { logger } from './logger';
 
 /**
  * Generate a unique request ID for tracking errors
@@ -18,7 +19,7 @@ export function handleApiError(error: unknown, context: string): NextResponse {
 
     // Log full error server-side for debugging
     if (error instanceof AppError) {
-        console.error(`[${requestId}] ${context}:`, {
+        logger.error(`[${requestId}] ${context}`, error, {
             statusCode: error.statusCode,
             userMessage: error.userMessage,
             internalMessage: error.internalMessage,
@@ -43,7 +44,7 @@ export function handleApiError(error: unknown, context: string): NextResponse {
             message: issue.message,
         }));
 
-        console.error(`[${requestId}] ${context} - Validation Error:`, validationDetails);
+        logger.error(`[${requestId}] ${context} - Validation Error`, validationDetails);
 
         return NextResponse.json(
             {
@@ -58,10 +59,7 @@ export function handleApiError(error: unknown, context: string): NextResponse {
 
     // Handle standard Error objects
     if (error instanceof Error) {
-        console.error(`[${requestId}] ${context}:`, {
-            message: error.message,
-            stack: error.stack,
-        });
+        logger.error(`[${requestId}] ${context}`, error);
 
         return NextResponse.json(
             {
@@ -74,7 +72,7 @@ export function handleApiError(error: unknown, context: string): NextResponse {
     }
 
     // Handle unknown errors
-    console.error(`[${requestId}] ${context} - Unknown error:`, error);
+    logger.error(`[${requestId}] ${context} - Unknown error`, error);
 
     return NextResponse.json(
         {
@@ -93,7 +91,7 @@ export async function safeParseJson(request: Request): Promise<unknown | NextRes
     try {
         return await request.json();
     } catch (error) {
-        console.error('Failed to parse JSON body:', error);
+        logger.error('Failed to parse JSON body', error);
         return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
     }
 }

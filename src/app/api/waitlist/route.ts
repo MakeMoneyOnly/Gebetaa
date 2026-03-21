@@ -11,6 +11,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import { logger } from '@/lib/logger';
 import { addToWaitlist, getWaitlist, getWaitlistStats } from '@/lib/waitlist/service';
 import type { WaitlistStatus } from '@/lib/waitlist/types';
 
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
 
         return apiSuccess(responseData);
     } catch (error) {
-        console.error('[waitlist] GET Error:', error);
+        logger.error('[waitlist] GET Error', error);
         return apiError(
             'Failed to fetch waitlist',
             500,
@@ -121,7 +122,7 @@ export async function POST(request: Request) {
 
         return apiSuccess({ entry }, 201);
     } catch (error) {
-        console.error('[waitlist] POST Error:', error);
+        logger.error('[waitlist] POST Error', error);
 
         // Handle specific error cases
         if (error instanceof Error) {

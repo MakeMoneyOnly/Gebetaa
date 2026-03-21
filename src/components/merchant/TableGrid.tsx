@@ -103,16 +103,16 @@ export function TableGrid({
                             {table.status.replace('_', ' ')}
                         </span>
 
-                        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="flex items-center gap-1 opacity-40 transition-opacity group-hover:opacity-100">
                             <button
                                 onClick={() => onEditTable(table)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all hover:bg-gray-100 hover:text-black"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-500 transition-all hover:bg-gray-100 hover:text-black"
                             >
                                 <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => onDeleteTable(table)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-500 transition-all hover:bg-red-50 hover:text-red-500"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </button>

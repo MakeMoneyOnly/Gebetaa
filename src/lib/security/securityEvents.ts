@@ -7,6 +7,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { Json } from '@/types/database';
+import { logger } from '@/lib/logger';
 
 /**
  * Security event types
@@ -74,7 +75,7 @@ export async function logSecurityEvent(event: SecurityEvent): Promise<void> {
     });
 
     if (error) {
-        console.error('Failed to log security event:', error);
+        logger.error('Failed to log security event', error);
         return;
     }
 
@@ -99,7 +100,7 @@ async function checkAndTriggerAlert(event: SecurityEvent): Promise<boolean> {
         .gte('created_at', windowStart.toISOString());
 
     if (error) {
-        console.error('Failed to count security events:', error);
+        logger.error('Failed to count security events', error);
         return false;
     }
 
@@ -119,7 +120,7 @@ async function triggerAlert(event: SecurityEvent, occurrenceCount?: number): Pro
     Occurrences: ${occurrenceCount || 1}
     Details: ${JSON.stringify(event.metadata)}`;
 
-    console.warn(alertMessage);
+    logger.warn(alertMessage);
 
     const supabase = await createClient();
     await supabase.from('audit_logs').insert({
@@ -156,7 +157,7 @@ export async function detectBruteForce(
         .gte('created_at', windowStart.toISOString());
 
     if (error) {
-        console.error('Failed to check brute force:', error);
+        logger.error('Failed to check brute force', error);
         return false;
     }
 
@@ -195,7 +196,7 @@ export async function checkTenantIsolation(
         .maybeSingle();
 
     if (error) {
-        console.error('Failed to check tenant isolation:', error);
+        logger.error('Failed to check tenant isolation', error);
         return { valid: false, reason: 'Failed to verify access' };
     }
 

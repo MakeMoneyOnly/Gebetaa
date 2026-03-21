@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import {
     Inter,
-    Plus_Jakarta_Sans,
-    Playfair_Display,
-    JetBrains_Mono,
     Manrope,
-    Geist,
+    JetBrains_Mono,
     Instrument_Serif,
+    Playfair_Display,
 } from 'next/font/google';
 import './globals.css';
 import { LenisRoot } from '@/components/providers/LenisRoot';
@@ -16,35 +14,27 @@ import { ServiceWorkerCleanup } from '@/components/providers/ServiceWorkerCleanu
 import { OfflineIndicator } from '@/components/providers/OfflineIndicator';
 import { SkipLink } from '@/components/ui/SkipLink';
 
-// Force dynamic rendering to prevent build-time errors with environment variables
-export const dynamic = 'force-dynamic';
-
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
-const plusJakartaSans = Plus_Jakarta_Sans({
-    subsets: ['latin'],
-    variable: '--font-plus-jakarta',
-    display: 'swap',
-});
-const playfair = Playfair_Display({
-    subsets: ['latin'],
-    variable: '--font-playfair',
-    style: ['normal', 'italic'],
-    display: 'swap',
-});
 const jetbrainsMono = JetBrains_Mono({
     subsets: ['latin'],
     variable: '--font-jetbrains',
     display: 'swap',
 });
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
 const instrumentSerif = Instrument_Serif({
-    subsets: ['latin'],
     weight: '400',
-    style: ['italic'],
+    subsets: ['latin'],
+    style: ['italic', 'normal'],
     variable: '--font-instrument',
     display: 'swap',
 });
+const playfair = Playfair_Display({
+    subsets: ['latin'],
+    style: ['italic', 'normal'],
+    variable: '--font-playfair',
+    display: 'swap',
+});
+const geist = Inter({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
 
 export const metadata: Metadata = {
     title: 'Gebeta - Restaurant Infrastructure',
@@ -55,8 +45,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
     width: 'device-width',
     initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
+    maximumScale: 5,
+    userScalable: true,
     viewportFit: 'cover',
     themeColor: '#A81818',
     interactiveWidget: 'overlays-content',
@@ -66,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en" suppressHydrationWarning>
             <body
-                className={`${inter.variable} ${manrope.variable} ${plusJakartaSans.variable} ${playfair.variable} ${jetbrainsMono.variable} ${geist.variable} ${instrumentSerif.variable} text-Charcoal bg-Cream overscroll-none antialiased`}
+                className={`${inter.variable} ${manrope.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} ${playfair.variable} ${geist.variable} text-Charcoal bg-Cream overscroll-none antialiased`}
             >
                 <ServiceWorkerCleanup />
                 <SkipLink href="#main-content">Skip to main content</SkipLink>

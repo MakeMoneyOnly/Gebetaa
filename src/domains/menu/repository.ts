@@ -208,6 +208,42 @@ export async function getCategoriesByIds(ids: string[]): Promise<Record<string, 
     return data || [];
 }
 
+/**
+ * Batch loader: Get multiple modifier groups by their IDs
+ * Used by DataLoader for federation reference resolution
+ */
+export async function getModifierGroupsByIds(ids: string[]): Promise<Record<string, unknown>[]> {
+    if (ids.length === 0) return [];
+    const supabase = createClient();
+
+    const { data, error } = await supabase.from('modifier_groups').select('*').in('id', ids);
+
+    if (error) {
+        console.error('[menu/repository] Error fetching modifier groups by IDs:', error);
+        throw error;
+    }
+
+    return data || [];
+}
+
+/**
+ * Batch loader: Get multiple modifier options by their IDs
+ * Used by DataLoader for federation reference resolution
+ */
+export async function getModifierOptionsByIds(ids: string[]): Promise<Record<string, unknown>[]> {
+    if (ids.length === 0) return [];
+    const supabase = createClient();
+
+    const { data, error } = await supabase.from('modifier_options').select('*').in('id', ids);
+
+    if (error) {
+        console.error('[menu/repository] Error fetching modifier options by IDs:', error);
+        throw error;
+    }
+
+    return data || [];
+}
+
 export const menuRepository = {
     getMenuItems,
     getMenuItem,
@@ -218,6 +254,8 @@ export const menuRepository = {
     getModifierGroupsByMenuItemIds,
     getModifierOptionsByGroupIds,
     getCategoriesByIds,
+    getModifierGroupsByIds,
+    getModifierOptionsByIds,
 };
 
 export default menuRepository;

@@ -12,14 +12,20 @@
     --color-Coffee: #5d4037;
     --color-Success: #10b981;
 
-    --font-jakarta: var(--font-plus-jakarta), sans-serif;
+    --font-jakarta: var(--font-manrope), sans-serif;
     --font-playfair: var(--font-playfair), serif;
     --font-jetbrains: var(--font-jetbrains), monospace;
     --font-geist: var(--font-geist), sans-serif;
     --font-instrument: var(--font-instrument), serif;
 
-    /* Brand Colors - Premium & Vibrant */
-
+    /* Brand Colors - Premium & Vibrant (Gebeta Dashboard Tokens) */
+    --color-brand-crimson: #a81818;
+    --color-brand-crimson-dark: #8b1313;
+    --color-brand-crimson-light: #fdf2f2;
+    --color-brand-mint: #e0f2e9;
+    --color-brand-mint-dark: #c8e6d5;
+    --color-brand-blue: #1848a8;
+    --color-brand-blue-light: #e8f0fe;
     --color-brand-yellow: #ffc900;
     --color-brand-gold: #d4af37;
 
@@ -198,9 +204,7 @@ body {
   Target the dashboard layout containers. These selectors match the main dashboard wrapper 
   which ensures we only strip borders from dashboard card elements, not form inputs.
 */
-.font-manrope {
-    /* Dashboard base always uses Manrope. Remove default borders from card divs. */
-}
+/* Dashboard base always uses Manrope. Card depth is provided by shadows rather than borders. */
 
 /* Global card surface tokens - shadow replaces border */
 @utility card-shadow {
