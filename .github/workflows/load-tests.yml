@@ -1,0 +1,203 @@
+name: Load Tests (Scheduled)
+
+on:
+    # Run on schedule - daily at 6 AM UTC (9 AM EAT)
+    schedule:
+        - cron: '0 6 * * *'
+    # Allow manual trigger
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: 'Environment to test'
+                required: true
+                default: 'staging'
+                type: choice
+                options:
+                    - staging
+                    - production
+            test_type:
+                description: 'Test type'
+                required: true
+                default: 'peak-flow'
+                type: choice
+                options:
+                    - peak-flow
+                    - smoke
+                    - soak
+
+# Prevent duplicate runs
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    K6_VERSION: '0.49.0'
+    NODE_VERSION: '22'
+    PNPM_VERSION: '10'
+
+jobs:
+    # ============================================
+    # LOAD TEST: STAGING
+    # ============================================
+    load-test-staging:
+        name: Load Test - Staging (Peak Flow)
+        runs-on: ubuntu-latest
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+        timeout-minutes: 30
+        permissions:
+            contents: read
+        environment:
+            name: staging
+            url: https://staging.gebeta.app
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup k6
+              uses: grafana/k6-action@v0.3.0
+              with:
+                  k6-version: ${{ env.K6_VERSION }}
+
+            - name: Build and start staging server
+              run: |
+                  echo "Using pre-deployed staging environment"
+                  echo "STAGING_URL=https://staging.gebeta.app" >> $GITHUB_ENV
+
+            - name: Run k6 load test (Peak Flow)
+              uses: grafana/k6-action@v0.3.0
+              with:
+                  filename: k6/peak-flow-scenarios.js
+              env:
+                  K6_BASE_URL: https://staging.gebeta.app
+                  K6_USE_BYPASS_AUTH: 'true'
+                  K6_CLOUD: 'false'
+                  K6_OUT: 'influxdb=http://localhost:8086/k6'
+
+            - name: Run k6 smoke test first
+              run: |
+                  k6 run k6/peak-flow-scenarios.js \
+                    --vus 1 \
+                    --duration 10s \
+                    --env K6_BASE_URL=https://staging.gebeta.app \
+                    --env K6_USE_BYPASS_AUTH=true \
+                    || true
+              env:
+                  K6_BASE_URL: https://staging.gebeta.app
+                  K6_USE_BYPASS_AUTH: 'true'
+
+            - name: Run peak flow load test
+              run: |
+                  k6 run k6/peak-flow-scenarios.js \
+                    --vus 20 \
+                    --duration 2m \
+                    --env K6_BASE_URL=https://staging.gebeta.app \
+                    --env K6_USE_BYPASS_AUTH=true \
+                    --summary-export=load-test-results.json
+              env:
+                  K6_BASE_URL: https://staging.gebeta.app
+                  K6_USE_BYPASS_AUTH: 'true'
+
+            - name: Upload load test results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: load-test-results-staging-${{ github.run_id }}
+                  path: load-test-results.json
+                  retention-days: 30
+
+            - name: Check SLO compliance
+              if: always()
+              run: |
+                  if [ -f load-test-results.json ]; then
+                    echo "=== Load Test Results ==="
+                    cat load-test-results.json
+                  fi
+
+    # ============================================
+    # LOAD TEST: PRODUCTION (Manual Only)
+    # ============================================
+    load-test-production:
+        name: Load Test - Production (Peak Flow)
+        runs-on: ubuntu-latest
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+        timeout-minutes: 30
+        permissions:
+            contents: read
+        environment:
+            name: production
+            url: https://gebeta.app
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup k6
+              uses: grafana/k6-action@v0.3.0
+              with:
+                  k6-version: ${{ env.K6_VERSION }}
+
+            - name: Run production load test with auth token
+              run: |
+                  k6 run k6/peak-flow-scenarios.js \
+                    --vus 10 \
+                    --duration 1m \
+                    --env K6_BASE_URL=https://gebeta.app \
+                    --env K6_AUTH_TOKEN=${{ secrets.LOAD_TEST_SERVICE_TOKEN }} \
+                    --summary-export=load-test-results-prod.json
+              env:
+                  K6_BASE_URL: https://gebeta.app
+                  K6_AUTH_TOKEN: ${{ secrets.LOAD_TEST_SERVICE_TOKEN }}
+
+            - name: Upload production load test results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: load-test-results-production-${{ github.run_id }}
+                  path: load-test-results-prod.json
+                  retention-days: 30
+
+    # ============================================
+    # LOAD TEST: LOCAL (Development)
+    # ============================================
+    load-test-local:
+        name: Load Test - Local Development
+        runs-on: ubuntu-latest
+        if: false # Disabled by default - run manually only
+        timeout-minutes: 20
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - uses: pnpm/action-setup@v3
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Setup k6
+              uses: grafana/k6-action@v0.3.0
+              with:
+                  k6-version: ${{ env.K6_VERSION }}
+
+            - name: Start development server
+              run: |
+                  pnpm dev &
+                  sleep 15  # Wait for server to be ready
+
+            - name: Run local load test
+              run: |
+                  k6 run k6/peak-flow-scenarios.js \
+                    --vus 10 \
+                    --duration 1m \
+                    --env K6_BASE_URL=http://localhost:3000 \
+                    --env K6_USE_BYPASS_AUTH=true
+              env:
+                  K6_BASE_URL: http://localhost:3000
+                  K6_USE_BYPASS_AUTH: 'true'

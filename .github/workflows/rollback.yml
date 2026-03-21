@@ -1,0 +1,227 @@
+# =============================================================================
+# Rollback Workflow
+# =============================================================================
+# Automated rollback workflow for Vercel deployments.
+# Can be triggered manually via GitHub UI or by automation (e.g., CI failure).
+#
+# Usage:
+#   1. Manual: Go to Actions > Rollback > Run workflow
+#   2. Automation: Call via GitHub API with appropriate inputs
+#
+# Rollback Options:
+#   - By deployment ID: Specify exact deployment to rollback to
+#   - By versions back: Rollback N versions from current
+#   - Previous: Rollback to the previous deployment (default)
+# =============================================================================
+
+name: Rollback
+
+on:
+    # Manual trigger via GitHub UI
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: 'Target environment'
+                required: true
+                default: 'production'
+                type: choice
+                options:
+                    - production
+                    - staging
+            rollback_type:
+                description: 'Rollback type'
+                required: true
+                default: 'previous'
+                type: choice
+                options:
+                    - previous # Rollback to previous deployment
+                    - deployment_id # Rollback to specific deployment ID
+                    - versions_back # Rollback N versions back
+            deployment_id:
+                description: 'Deployment ID (required for deployment_id type)'
+                required: false
+                type: string
+                default: ''
+            versions_back:
+                description: 'Number of versions back (required for versions_back type)'
+                required: false
+                type: number
+                default: 1
+            reason:
+                description: 'Reason for rollback'
+                required: true
+                type: string
+                default: 'Manual rollback'
+
+env:
+    VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+    VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+    rollback:
+        name: Rollback ${{ github.inputs.environment || 'production' }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            deployments: write
+
+        steps:
+            # -------------------------------------------------------------------------
+            # Setup
+            # -------------------------------------------------------------------------
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  ref: main
+                  fetch-depth: 0
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v3
+              with:
+                  version: '10'
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: 'pnpm'
+
+            - name: Install Vercel CLI
+              run: pnpm add -g vercel@latest
+
+            # -------------------------------------------------------------------------
+            # Get Deployment Info
+            # -------------------------------------------------------------------------
+            - name: Get current deployment
+              id: current-deployment
+              run: |
+                  echo "Fetching deployments for ${{ github.inputs.environment }}..."
+
+                  # Determine project name based on environment
+                  if [ "${{ github.inputs.environment }}" = "production" ]; then
+                    PROJECT_NAME="gebeta"
+                  else
+                    PROJECT_NAME="gebeta-${{ github.inputs.environment }}"
+                  fi
+
+                  echo "project_name=$PROJECT_NAME" >> $GITHUB_OUTPUT
+
+                  # Get deployments list
+                  DEPLOYMENTS=$(vercel list $PROJECT_NAME --token=$VERCEL_TOKEN --limit 10 2>&1)
+                  echo "$DEPLOYMENTS"
+
+                  # Get current (latest) deployment ID
+                  CURRENT_DEPLOYMENT=$(echo "$DEPLOYMENTS" | grep -v "Vercel CLI" | grep -v "^$" | head -5 | tail -1 | awk '{print $1}')
+                  echo "Current deployment: $CURRENT_DEPLOYMENT"
+                  echo "current_deployment=$CURRENT_DEPLOYMENT" >> $GITHUB_OUTPUT
+
+            # -------------------------------------------------------------------------
+            # Determine Target Deployment
+            # -------------------------------------------------------------------------
+            - name: Determine rollback target
+              id: rollback-target
+              run: |
+                  PROJECT_NAME="${{ steps.current-deployment.outputs.project_name }}"
+                  ROLLBACK_TYPE="${{ github.inputs.rollback_type }}"
+                  VERSIONS_BACK="${{ github.inputs.versions_back }}"
+                  DEPLOYMENT_ID="${{ github.inputs.deployment_id }}"
+
+                  echo "Rollback type: $ROLLBACK_TYPE"
+
+                  case "$ROLLBACK_TYPE" in
+                      "previous")
+                          echo "Rolling back to previous deployment..."
+                          # Get list and pick the 2nd one (previous to current)
+                          DEPLOYMENTS=$(vercel list $PROJECT_NAME --token=$VERCEL_TOKEN --limit 5 2>&1)
+                          # Skip header lines and get deployment ID
+                          TARGET_DEPLOYMENT=$(echo "$DEPLOYMENTS" | grep -v "Vercel CLI" | grep -v "^$" | grep -v "State" | head -5 | tail -1 | awk '{print $1}')
+                          echo "Target deployment: $TARGET_DEPLOYMENT"
+                          echo "target_deployment=$TARGET_DEPLOYMENT" >> $GITHUB_OUTPUT
+                          ;;
+                      "deployment_id")
+                          if [ -z "$DEPLOYMENT_ID" ]; then
+                              echo "Error: deployment_id is required for deployment_id rollback type"
+                              exit 1
+                          fi
+                          echo "Rolling back to deployment ID: $DEPLOYMENT_ID"
+                          echo "target_deployment=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+                          ;;
+                      "versions_back")
+                          echo "Rolling back $VERSIONS_BACK versions..."
+                          # Get deployment at position (versions_back + 1 accounting for current)
+                          DEPLOYMENTS=$(vercel list $PROJECT_NAME --token=$VERCEL_TOKEN --limit $((VERSIONS_BACK + 2)) 2>&1)
+                          TARGET_DEPLOYMENT=$(echo "$DEPLOYMENTS" | grep -v "Vercel CLI" | grep -v "^$" | grep -v "State" | head -5 | tail -$VERSIONS_BACK | head -1 | awk '{print $1}')
+                          echo "Target deployment: $TARGET_DEPLOYMENT"
+                          echo "target_deployment=$TARGET_DEPLOYMENT" >> $GITHUB_OUTPUT
+                          ;;
+                      *)
+                          echo "Error: Unknown rollback type: $ROLLBACK_TYPE"
+                          exit 1
+                          ;;
+                  esac
+
+            # -------------------------------------------------------------------------
+            # Perform Rollback
+            # -------------------------------------------------------------------------
+            - name: Perform rollback
+              id: rollback
+              run: |
+                  PROJECT_NAME="${{ steps.current-deployment.outputs.project_name }}"
+                  TARGET_DEPLOYMENT="${{ steps.rollback-target.outputs.target_deployment }}"
+
+                  echo "=== Performing Rollback ==="
+                  echo "Project: $PROJECT_NAME"
+                  echo "Target: $TARGET_DEPLOYMENT"
+                  echo "Reason: ${{ github.inputs.reason }}"
+                  echo ""
+
+                  # Execute rollback using Vercel CLI
+                  # The --yes flag confirms the rollback without prompting
+                  ROLLBACK_OUTPUT=$(vercel rollback $PROJECT_NAME $TARGET_DEPLOYMENT --token=$VERCEL_TOKEN --yes 2>&1)
+                  ROLLBACK_EXIT_CODE=$?
+
+                  echo "$ROLLBACK_OUTPUT"
+                  echo ""
+
+                  if [ $ROLLBACK_EXIT_CODE -eq 0 ]; then
+                      echo "✓ Rollback initiated successfully"
+                      echo "rollback_status=success" >> $GITHUB_OUTPUT
+                  else
+                      echo "✗ Rollback failed with exit code: $ROLLBACK_EXIT_CODE"
+                      echo "rollback_status=failed" >> $GITHUB_OUTPUT
+                      exit 1
+                  fi
+
+            # -------------------------------------------------------------------------
+            # Verify Rollback
+            # -------------------------------------------------------------------------
+            - name: Wait for rollback deployment
+              if: steps.rollback.outputs.rollback_status == 'success'
+              run: |
+                  echo "Waiting for rollback deployment to become ready..."
+                  sleep 10
+
+                  PROJECT_NAME="${{ steps.current-deployment.outputs.project_name }}"
+                  DEPLOYMENTS=$(vercel list $PROJECT_NAME --token=$VERCEL_TOKEN --limit 3 2>&1)
+                  echo "Current deployments after rollback:"
+                  echo "$DEPLOYMENTS"
+
+            # -------------------------------------------------------------------------
+            # Summary
+            # -------------------------------------------------------------------------
+            - name: Rollback Summary
+              if: always()
+              run: |
+                  echo "=== Rollback Summary ==="
+                  echo "Environment: ${{ github.inputs.environment }}"
+                  echo "Rollback Type: ${{ github.inputs.rollback_type }}"
+                  echo "Target Deployment: ${{ steps.rollback-target.outputs.target_deployment }}"
+                  echo "Current Deployment (pre-rollback): ${{ steps.current-deployment.outputs.current_deployment }}"
+                  echo "Reason: ${{ github.inputs.reason }}"
+                  echo "Status: ${{ steps.rollback.outputs.rollback_status }}"
+                  echo ""
+                  echo "To verify the rollback:"
+                  echo "  1. Visit the Vercel dashboard"
+                  echo "  2. Check deployment history"
+                  echo "  3. Verify the application is working correctly"
