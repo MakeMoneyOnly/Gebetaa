@@ -14,21 +14,21 @@ export async function updateSession(request: NextRequest) {
     const e2eBypassSecret = request.headers.get('x-e2e-bypass-secret');
     const bypassSecret = process.env.E2E_BYPASS_SECRET;
 
-    // Check if E2E bypass is active via headers OR via existing cookie.
-    // This is needed because subsequent API calls (XHR/fetch) from the browser
-    // don't include the E2E headers - they only have cookies set by the initial request.
-    //
-    // NOTE: We intentionally do NOT gate this on NODE_ENV !== 'production' because
-    // in CI the app is served via `pnpm start` (Next.js production server), so
-    // NODE_ENV is 'production'. Security is enforced by E2E_TEST_MODE === 'true'
-    // (never set in real production deployments) plus the shared secret check.
+    // Check if E2E bypass is active via:
+    // 1. Existing E2E cookie (for subsequent requests)
+    // 2. Headers + env var (for initial request from Playwright)
+    // 3. E2E_TEST_MODE + env var alone (for browser requests in E2E mode)
     const hasE2ECookie = request.cookies.get('sb-access-token')?.value === 'e2e-mock-access-token';
+    const hasEnvBypassSecret = bypassSecret !== undefined && bypassSecret !== '';
     const isE2EBypassActive =
         hasE2ECookie ||
         (process.env.E2E_TEST_MODE === 'true' &&
-            e2eBypassAuth === '1' &&
-            e2eBypassSecret !== undefined &&
-            e2eBypassSecret === bypassSecret);
+            hasEnvBypassSecret &&
+            ((e2eBypassAuth === '1' &&
+                e2eBypassSecret !== undefined &&
+                e2eBypassSecret === bypassSecret) ||
+                // Allow bypass when E2E_TEST_MODE is true and env var is set (for browser client requests)
+                !e2eBypassAuth));
 
     // Debug logging - always run to see what's happening
     console.log('[E2E Debug] Request:', request.nextUrl.pathname);

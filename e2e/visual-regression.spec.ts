@@ -15,7 +15,6 @@ const shouldSkipInCI = process.env.CI === 'true';
 const describeBlock = shouldSkipInCI ? test.describe.skip : test.describe;
 
 describeBlock('Visual Regression Tests', () => {
-
     test.describe('Guest Pages', () => {
         test('landing page visual snapshot', async ({ page }) => {
             await page.goto('/');

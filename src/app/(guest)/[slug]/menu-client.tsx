@@ -692,132 +692,130 @@ export function MenuClientContent() {
             <div className="relative flex min-h-screen flex-col items-center justify-center bg-[url('/splash-bg-opt.webp')] bg-cover bg-center px-6 text-center">
                 <div className="absolute inset-0 bg-black/60" />
                 <div className="relative z-10">
+                    {authState === 'guest' ? (
+                        <div className="flex w-full max-w-sm flex-col gap-3">
+                            <button
+                                onClick={() => {
+                                    setAuthView('login');
+                                }}
+                                className="bg-brand-yellow flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-semibold text-black transition-opacity hover:opacity-90"
+                            >
+                                <User className="h-5 w-5" />
+                                Sign In / Register
+                            </button>
 
+                            {authView === 'login' && (
+                                <div className="mt-4 flex flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone number"
+                                        value={loginPhone}
+                                        onChange={e => setLoginPhone(e.target.value)}
+                                        className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
+                                    />
+                                    <button
+                                        onClick={() => handleSendOtp('login')}
+                                        disabled={authLoading}
+                                        className="bg-brand-yellow w-full rounded-lg py-2 font-semibold text-black disabled:opacity-50"
+                                    >
+                                        {authLoading ? 'Sending...' : 'Send Code'}
+                                    </button>
+                                    {authError && (
+                                        <p className="text-sm text-red-400">{authError}</p>
+                                    )}
+                                    {authMessage && (
+                                        <p className="text-sm text-green-400">{authMessage}</p>
+                                    )}
+                                    <button
+                                        onClick={() => setAuthView('none')}
+                                        className="mt-2 text-center text-sm text-gray-400"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
 
-
-
-                {authState === 'guest' ? (
-                    <div className="flex w-full max-w-sm flex-col gap-3">
-                        <button
-                            onClick={() => {
-                                setAuthView('login');
-                            }}
-                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-4 py-3 font-semibold text-black transition-opacity hover:opacity-90"
-                        >
-                            <User className="h-5 w-5" />
-                            Sign In / Register
-                        </button>
-
-                        {authView === 'login' && (
-                            <div className="mt-4 flex flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
-                                <input
-                                    type="tel"
-                                    placeholder="Phone number"
-                                    value={loginPhone}
-                                    onChange={e => setLoginPhone(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
-                                />
-                                <button
-                                    onClick={() => handleSendOtp('login')}
-                                    disabled={authLoading}
-                                    className="w-full rounded-lg bg-brand-yellow py-2 font-semibold text-black disabled:opacity-50"
-                                >
-                                    {authLoading ? 'Sending...' : 'Send Code'}
-                                </button>
-                                {authError && <p className="text-sm text-red-400">{authError}</p>}
-                                {authMessage && (
-                                    <p className="text-sm text-green-400">{authMessage}</p>
-                                )}
-                                <button
-                                    onClick={() => setAuthView('none')}
-                                    className="mt-2 text-center text-sm text-gray-400"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        )}
-
+                            <button
+                                onClick={() => setShowPreMenuSplash(false)}
+                                className="text-brand-yellow text-sm underline underline-offset-4"
+                            >
+                                Continue as guest
+                            </button>
+                        </div>
+                    ) : (
                         <button
                             onClick={() => setShowPreMenuSplash(false)}
-                            className="text-sm text-brand-yellow underline underline-offset-4"
+                            className="bg-brand-yellow rounded-lg px-8 py-3 font-semibold text-black transition-opacity hover:opacity-90"
                         >
-                            Continue as guest
+                            View Menu
                         </button>
-                    </div>
-                ) : (
-                    <button
-                        onClick={() => setShowPreMenuSplash(false)}
-                        className="rounded-lg bg-brand-yellow px-8 py-3 font-semibold text-black transition-opacity hover:opacity-90"
-                    >
-                        View Menu
-                    </button>
-                )}
+                    )}
 
-                {authView !== 'none' && authView !== 'login' && (
-                    <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
-                        <input
-                            type="text"
-                            placeholder="Your name"
-                            value={signupName}
-                            onChange={e => setSignupName(e.target.value)}
-                            className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
-                        />
-                        <input
-                            type="tel"
-                            placeholder="Phone number"
-                            value={signupPhone}
-                            onChange={e => setSignupPhone(e.target.value)}
-                            className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
-                        />
-                        <button
-                            onClick={() => handleSendOtp('signup')}
-                            disabled={authLoading}
-                            className="w-full rounded-lg bg-brand-yellow py-2 font-semibold text-black disabled:opacity-50"
-                        >
-                            {authLoading ? 'Sending...' : 'Send Code'}
-                        </button>
-                        {authError && <p className="text-sm text-red-400">{authError}</p>}
-                        {authMessage && <p className="text-sm text-green-400">{authMessage}</p>}
-                        <button
-                            onClick={() => setAuthView('none')}
-                            className="mt-2 text-center text-sm text-gray-400"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                )}
+                    {authView !== 'none' && authView !== 'login' && (
+                        <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
+                            <input
+                                type="text"
+                                placeholder="Your name"
+                                value={signupName}
+                                onChange={e => setSignupName(e.target.value)}
+                                className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
+                            />
+                            <input
+                                type="tel"
+                                placeholder="Phone number"
+                                value={signupPhone}
+                                onChange={e => setSignupPhone(e.target.value)}
+                                className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
+                            />
+                            <button
+                                onClick={() => handleSendOtp('signup')}
+                                disabled={authLoading}
+                                className="bg-brand-yellow w-full rounded-lg py-2 font-semibold text-black disabled:opacity-50"
+                            >
+                                {authLoading ? 'Sending...' : 'Send Code'}
+                            </button>
+                            {authError && <p className="text-sm text-red-400">{authError}</p>}
+                            {authMessage && <p className="text-sm text-green-400">{authMessage}</p>}
+                            <button
+                                onClick={() => setAuthView('none')}
+                                className="mt-2 text-center text-sm text-gray-400"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
 
-                {otpFlow !== 'none' && (
-                    <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
-                        <p className="text-sm text-gray-400">
-                            Enter the code sent to {otpTargetPhone}
-                        </p>
-                        <input
-                            type="text"
-                            placeholder="Verification code"
-                            value={otpCode}
-                            onChange={e => setOtpCode(e.target.value)}
-                            className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
-                        />
-                        <button
-                            onClick={handleVerifyOtp}
-                            disabled={authLoading}
-                            className="w-full rounded-lg bg-brand-yellow py-2 font-semibold text-black disabled:opacity-50"
-                        >
-                            {authLoading ? 'Verifying...' : 'Verify'}
-                        </button>
-                        {authError && <p className="text-sm text-red-400">{authError}</p>}
-                        <button
-                            onClick={() => {
-                                setOtpFlow('none');
-                                setAuthError(null);
-                            }}
-                            className="mt-2 text-center text-sm text-gray-400"
-                        >
-                            Change phone number
-                        </button>
-                    </div>
-                )}
+                    {otpFlow !== 'none' && (
+                        <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
+                            <p className="text-sm text-gray-400">
+                                Enter the code sent to {otpTargetPhone}
+                            </p>
+                            <input
+                                type="text"
+                                placeholder="Verification code"
+                                value={otpCode}
+                                onChange={e => setOtpCode(e.target.value)}
+                                className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
+                            />
+                            <button
+                                onClick={handleVerifyOtp}
+                                disabled={authLoading}
+                                className="bg-brand-yellow w-full rounded-lg py-2 font-semibold text-black disabled:opacity-50"
+                            >
+                                {authLoading ? 'Verifying...' : 'Verify'}
+                            </button>
+                            {authError && <p className="text-sm text-red-400">{authError}</p>}
+                            <button
+                                onClick={() => {
+                                    setOtpFlow('none');
+                                    setAuthError(null);
+                                }}
+                                className="mt-2 text-center text-sm text-gray-400"
+                            >
+                                Change phone number
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );

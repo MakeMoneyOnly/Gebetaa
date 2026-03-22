@@ -17,8 +17,10 @@ export async function getAuthenticatedUser() {
 
     // Also check for E2E bypass headers (for initial requests that set cookies)
     // Note: In production this would need proper header validation
-    if (process.env.NODE_ENV !== 'production' &&
-        (e2eCookie === 'e2e-mock-access-token' || process.env.E2E_TEST_MODE === 'true')) {
+    if (
+        process.env.NODE_ENV !== 'production' &&
+        (e2eCookie === 'e2e-mock-access-token' || process.env.E2E_TEST_MODE === 'true')
+    ) {
         // Return mock user for E2E tests
         return {
             ok: true as const,
