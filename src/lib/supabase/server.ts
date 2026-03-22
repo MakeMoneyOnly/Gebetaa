@@ -5,8 +5,16 @@ import type { Database } from '@/types/database';
 export async function createClient() {
     const cookieStore = await cookies();
 
-    // Check for E2E test bypass
-    const isE2EBypass = cookieStore.get('sb-access-token')?.value === 'e2e-mock-access-token';
+    // Check for E2E test bypass - check both cookie AND environment variables
+    const cookieValue = cookieStore.get('sb-access-token')?.value;
+    const isE2EBypass = cookieValue === 'e2e-mock-access-token';
+    const isE2EMode = process.env.E2E_TEST_MODE === 'true';
+    
+    // Debug logging for E2E bypass detection
+    console.log('[E2E Debug createClient] Cookie value:', cookieValue);
+    console.log('[E2E Debug createClient] Is E2E bypass (cookie):', isE2EBypass);
+    console.log('[E2E Debug createClient] E2E_TEST_MODE:', process.env.E2E_TEST_MODE);
+    console.log('[E2E Debug createClient] Is E2E mode active:', isE2EMode);
 
     // Get and clean environment variables
     // Vercel can store values with extra quotes and \r\n when set via CLI/API
@@ -24,8 +32,15 @@ export async function createClient() {
     const supabaseUrl = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL);
     const supabaseKey = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
-    // If environment variables are missing or E2E bypass is active, return a mock client
-    if (!supabaseUrl || !supabaseKey || isE2EBypass) {
+    // If environment variables are missing, are placeholder values, E2E mode is active, or E2E bypass cookie is set, return a mock client
+    // Playwright config sets placeholder values like 'https://placeholder.supabase.co' and 'placeholder-key'
+    // E2E_TEST_MODE is also set to 'true' in playwright config for test execution
+    const isPlaceholderUrl = supabaseUrl?.includes('placeholder');
+    const isPlaceholderKey = supabaseKey === 'placeholder-key';
+    if (!supabaseUrl || !supabaseKey || isE2EBypass || isE2EMode || isPlaceholderUrl || isPlaceholderKey) {
+        if (isE2EMode || isE2EBypass) {
+            console.log('[E2E] Using mock Supabase client - E2E_TEST_MODE:', isE2EMode, 'isE2EBypass:', isE2EBypass);
+        }
         if (isE2EBypass) {
             console.log('[E2E] Using mock Supabase client for testing');
         }

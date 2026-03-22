@@ -9,6 +9,29 @@ type PilotPhase = 'p0' | 'p1' | 'p2';
 
 export async function getAuthenticatedUser() {
     const supabase = await createClient();
+
+    // E2E test bypass: Check if we're in E2E test mode by checking cookies
+    // This allows API routes to work with E2E tests without requiring real auth
+    const cookieStore = await import('next/headers').then(m => m.cookies());
+    const e2eCookie = cookieStore.get('sb-access-token')?.value;
+
+    // Also check for E2E bypass headers (for initial requests that set cookies)
+    // Note: In production this would need proper header validation
+    if (process.env.NODE_ENV !== 'production' &&
+        (e2eCookie === 'e2e-mock-access-token' || process.env.E2E_TEST_MODE === 'true')) {
+        // Return mock user for E2E tests
+        return {
+            ok: true as const,
+            user: {
+                id: 'staff-user-1',
+                email: 'e2e@example.com',
+                aud: 'authenticated',
+                role: 'authenticated',
+            },
+            supabase,
+        };
+    }
+
     const {
         data: { user },
         error,

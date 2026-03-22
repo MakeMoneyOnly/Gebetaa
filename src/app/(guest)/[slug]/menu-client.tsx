@@ -610,7 +610,7 @@ export function MenuClientContent() {
 
     if (loading) {
         return (
-            <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
+            <main className="app-container pb-safe bg-(--background) transition-colors duration-300">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
                     activeTab={activeTab}
@@ -625,7 +625,7 @@ export function MenuClientContent() {
     // Online ordering mode: show error if restaurant not found
     if (isOnlineOrderMode && !guestContext && !contextLoading && contextError) {
         return (
-            <main className="app-container flex min-h-screen items-center justify-center bg-[var(--background)] px-6 text-center">
+            <main className="app-container flex min-h-screen items-center justify-center bg-(--background) px-6 text-center">
                 <div className="max-w-md">
                     <h1 className="font-manrope text-2xl font-black tracking-tight text-black dark:text-white">
                         Restaurant Not Found
@@ -640,7 +640,7 @@ export function MenuClientContent() {
 
     if (!showPreMenuSplash && (contextError || !guestContext)) {
         return (
-            <main className="app-container flex min-h-screen items-center justify-center bg-[var(--background)] px-6 text-center">
+            <main className="app-container flex min-h-screen items-center justify-center bg-(--background) px-6 text-center">
                 <div className="max-w-md">
                     <h1 className="font-manrope text-2xl font-black tracking-tight text-black dark:text-white">
                         Invalid Table QR
@@ -656,7 +656,7 @@ export function MenuClientContent() {
 
     if (contextLoading) {
         return (
-            <div className="flex min-h-screen w-full items-center justify-center bg-[var(--background)]">
+            <div className="flex min-h-screen w-full items-center justify-center bg-(--background)">
                 <MenuSkeleton />
             </div>
         );
@@ -664,7 +664,7 @@ export function MenuClientContent() {
 
     if (contextError) {
         return (
-            <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[var(--background)] px-4 text-center">
+            <div className="flex min-h-screen w-full flex-col items-center justify-center bg-(--background) px-4 text-center">
                 <div className="mb-4 rounded-full bg-red-500/20 p-4">
                     <Phone className="h-8 w-8 text-red-500" />
                 </div>
@@ -676,7 +676,7 @@ export function MenuClientContent() {
 
     if (!guestContext) {
         return (
-            <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[var(--background)] px-4 text-center">
+            <div className="flex min-h-screen w-full flex-col items-center justify-center bg-(--background) px-4 text-center">
                 <div className="mb-4 rounded-full bg-yellow-500/20 p-4">
                     <Phone className="h-8 w-8 text-yellow-500" />
                 </div>
@@ -689,31 +689,12 @@ export function MenuClientContent() {
     // Show pre-menu splash screen for QR customers
     if (showPreMenuSplash && guestContext && !guestContext.is_online_order) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--background)] px-6 text-center">
-                {guestContext.restaurant_logo_url ? (
-                    <Image
-                        src={guestContext.restaurant_logo_url}
-                        alt={guestContext.restaurant_name}
-                        width={120}
-                        height={120}
-                        className="mb-6 rounded-xl object-cover"
-                    />
-                ) : (
-                    <div className="mb-6 flex h-28 w-28 items-center justify-center rounded-xl bg-[var(--primary)]">
-                        <span className="text-4xl font-bold text-white">
-                            {guestContext.restaurant_name.charAt(0)}
-                        </span>
-                    </div>
-                )}
+            <div className="relative flex min-h-screen flex-col items-center justify-center bg-[url('/splash-bg-opt.webp')] bg-cover bg-center px-6 text-center">
+                <div className="absolute inset-0 bg-black/60" />
+                <div className="relative z-10">
 
-                <h1 className="mb-2 text-2xl font-bold text-white">
-                    Welcome to {guestContext.restaurant_name}
-                </h1>
-                <p className="mb-8 text-gray-400">
-                    {guestContext.table_number !== 'Online Order'
-                        ? `Table ${guestContext.table_number}`
-                        : 'Online Ordering'}
-                </p>
+
+
 
                 {authState === 'guest' ? (
                     <div className="flex w-full max-w-sm flex-col gap-3">
@@ -721,25 +702,25 @@ export function MenuClientContent() {
                             onClick={() => {
                                 setAuthView('login');
                             }}
-                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-4 py-3 font-semibold text-black transition-opacity hover:opacity-90"
                         >
                             <User className="h-5 w-5" />
                             Sign In / Register
                         </button>
 
                         {authView === 'login' && (
-                            <div className="mt-4 flex flex-col gap-3 rounded-xl bg-[var(--card)] p-4 text-left">
+                            <div className="mt-4 flex flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
                                 <input
                                     type="tel"
                                     placeholder="Phone number"
                                     value={loginPhone}
                                     onChange={e => setLoginPhone(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-700 bg-[var(--background)] px-3 py-2 text-white placeholder-gray-500"
+                                    className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
                                 />
                                 <button
                                     onClick={() => handleSendOtp('login')}
                                     disabled={authLoading}
-                                    className="w-full rounded-lg bg-[var(--primary)] py-2 font-semibold text-white disabled:opacity-50"
+                                    className="w-full rounded-lg bg-brand-yellow py-2 font-semibold text-black disabled:opacity-50"
                                 >
                                     {authLoading ? 'Sending...' : 'Send Code'}
                                 </button>
@@ -758,7 +739,7 @@ export function MenuClientContent() {
 
                         <button
                             onClick={() => setShowPreMenuSplash(false)}
-                            className="text-sm text-gray-400 underline"
+                            className="text-sm text-brand-yellow underline underline-offset-4"
                         >
                             Continue as guest
                         </button>
@@ -766,32 +747,32 @@ export function MenuClientContent() {
                 ) : (
                     <button
                         onClick={() => setShowPreMenuSplash(false)}
-                        className="rounded-lg bg-[var(--primary)] px-8 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                        className="rounded-lg bg-brand-yellow px-8 py-3 font-semibold text-black transition-opacity hover:opacity-90"
                     >
                         View Menu
                     </button>
                 )}
 
                 {authView !== 'none' && authView !== 'login' && (
-                    <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-[var(--card)] p-4 text-left">
+                    <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
                         <input
                             type="text"
                             placeholder="Your name"
                             value={signupName}
                             onChange={e => setSignupName(e.target.value)}
-                            className="w-full rounded-lg border border-gray-700 bg-[var(--background)] px-3 py-2 text-white placeholder-gray-500"
+                            className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
                         />
                         <input
                             type="tel"
                             placeholder="Phone number"
                             value={signupPhone}
                             onChange={e => setSignupPhone(e.target.value)}
-                            className="w-full rounded-lg border border-gray-700 bg-[var(--background)] px-3 py-2 text-white placeholder-gray-500"
+                            className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
                         />
                         <button
                             onClick={() => handleSendOtp('signup')}
                             disabled={authLoading}
-                            className="w-full rounded-lg bg-[var(--primary)] py-2 font-semibold text-white disabled:opacity-50"
+                            className="w-full rounded-lg bg-brand-yellow py-2 font-semibold text-black disabled:opacity-50"
                         >
                             {authLoading ? 'Sending...' : 'Send Code'}
                         </button>
@@ -807,7 +788,7 @@ export function MenuClientContent() {
                 )}
 
                 {otpFlow !== 'none' && (
-                    <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-[var(--card)] p-4 text-left">
+                    <div className="mt-6 flex w-full max-w-sm flex-col gap-3 rounded-xl bg-(--card) p-4 text-left">
                         <p className="text-sm text-gray-400">
                             Enter the code sent to {otpTargetPhone}
                         </p>
@@ -816,12 +797,12 @@ export function MenuClientContent() {
                             placeholder="Verification code"
                             value={otpCode}
                             onChange={e => setOtpCode(e.target.value)}
-                            className="w-full rounded-lg border border-gray-700 bg-[var(--background)] px-3 py-2 text-white placeholder-gray-500"
+                            className="w-full rounded-lg border border-gray-700 bg-(--background) px-3 py-2 text-white placeholder-gray-500"
                         />
                         <button
                             onClick={handleVerifyOtp}
                             disabled={authLoading}
-                            className="w-full rounded-lg bg-[var(--primary)] py-2 font-semibold text-white disabled:opacity-50"
+                            className="w-full rounded-lg bg-brand-yellow py-2 font-semibold text-black disabled:opacity-50"
                         >
                             {authLoading ? 'Verifying...' : 'Verify'}
                         </button>
@@ -837,12 +818,13 @@ export function MenuClientContent() {
                         </button>
                     </div>
                 )}
+                </div>
             </div>
         );
     }
 
     return (
-        <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
+        <main className="app-container pb-safe bg-(--background) transition-colors duration-300">
             <div className="relative w-full">
                 <GuestHero activeTab={activeTab} onTabChange={setActiveTab} />
                 <CategoryRail
@@ -959,7 +941,7 @@ export default function DynamicMenuPage() {
     return (
         <Suspense
             fallback={
-                <div className="flex min-h-screen w-full bg-[var(--background)] text-white">
+                <div className="flex min-h-screen w-full bg-(--background) text-white">
                     {/* Fallback space matches main structure to avoid jar */}
                 </div>
             }

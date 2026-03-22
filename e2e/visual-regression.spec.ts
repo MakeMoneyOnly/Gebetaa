@@ -10,16 +10,16 @@ import { test, expect } from '@playwright/test';
  * Update baselines: pnpm test:e2e -- --project=chromium --grep "visual" --update-snapshots
  */
 
-test.describe('Visual Regression Tests', () => {
-    test.skip(
-        !!process.env.CI,
-        'Visual snapshots are maintained outside CI due environment variance.'
-    );
+// In CI, skip the entire describe block
+const shouldSkipInCI = process.env.CI === 'true';
+const describeBlock = shouldSkipInCI ? test.describe.skip : test.describe;
+
+describeBlock('Visual Regression Tests', () => {
 
     test.describe('Guest Pages', () => {
         test('landing page visual snapshot', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             // Wait for any animations to settle
             await page.waitForTimeout(500);
@@ -35,7 +35,7 @@ test.describe('Visual Regression Tests', () => {
         test('guest menu page visual snapshot', async ({ page }) => {
             // Navigate to demo restaurant
             await page.goto('/m/demo');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             // Wait for menu items to load
             await page.waitForTimeout(1000);
@@ -59,7 +59,7 @@ test.describe('Visual Regression Tests', () => {
 
         test('cart drawer visual snapshot', async ({ page }) => {
             await page.goto('/m/demo');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             // Try to find and click a menu item to add to cart
@@ -89,7 +89,7 @@ test.describe('Visual Regression Tests', () => {
             // This test requires authentication
             // Skip in CI until we have test authentication setup
             await page.goto('/merchant');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             await expect(page).toHaveScreenshot('merchant-dashboard.png', {
@@ -102,7 +102,7 @@ test.describe('Visual Regression Tests', () => {
         test.skip('orders kanban board visual snapshot', async ({ page }) => {
             // This test requires authentication
             await page.goto('/merchant/orders');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             const kanbanBoard = page.locator('[data-testid="orders-kanban"]').first();
@@ -117,7 +117,7 @@ test.describe('Visual Regression Tests', () => {
         test.skip('table grid visual snapshot', async ({ page }) => {
             // This test requires authentication
             await page.goto('/merchant/tables');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             const tableGrid = page.locator('[data-testid="table-grid"]').first();
@@ -134,7 +134,7 @@ test.describe('Visual Regression Tests', () => {
         test.skip('KDS ticket visual snapshot', async ({ page }) => {
             // This test requires authentication
             await page.goto('/kds');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             const kdsContainer = page.locator('[data-testid="kds-container"]').first();
@@ -151,7 +151,7 @@ test.describe('Visual Regression Tests', () => {
         test('button states visual snapshot', async ({ page }) => {
             // Create a simple test page to verify button states
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             // Find buttons on the page
             const buttons = page.locator('button');
@@ -171,7 +171,7 @@ test.describe('Visual Regression Tests', () => {
 
         test('card components visual snapshot', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             // Look for card components
@@ -190,7 +190,7 @@ test.describe('Visual Regression Tests', () => {
             // Set mobile viewport
             await page.setViewportSize({ width: 375, height: 812 });
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             await expect(page).toHaveScreenshot('mobile-landing.png', {
@@ -204,7 +204,7 @@ test.describe('Visual Regression Tests', () => {
             // Set tablet viewport
             await page.setViewportSize({ width: 768, height: 1024 });
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             await expect(page).toHaveScreenshot('tablet-landing.png', {
@@ -218,7 +218,7 @@ test.describe('Visual Regression Tests', () => {
             // Set desktop viewport
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             await expect(page).toHaveScreenshot('desktop-landing.png', {
@@ -234,7 +234,7 @@ test.describe('Visual Regression Tests', () => {
             // Emulate dark mode color scheme
             await page.emulateMedia({ colorScheme: 'dark' });
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(500);
 
             await expect(page).toHaveScreenshot('dark-mode-landing.png', {

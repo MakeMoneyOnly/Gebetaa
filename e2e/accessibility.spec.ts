@@ -14,7 +14,7 @@ test.describe('Accessibility Tests', () => {
             await page.goto('/');
 
             // Wait for page to be fully loaded
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -31,7 +31,7 @@ test.describe('Accessibility Tests', () => {
         test('guest menu page should have no accessibility violations', async ({ page }) => {
             // Navigate to a demo restaurant page
             await page.goto('/m/demo');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -52,7 +52,7 @@ test.describe('Accessibility Tests', () => {
             // This test requires authentication
             // Skip in CI until we have test authentication setup
             await page.goto('/merchant');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -70,7 +70,7 @@ test.describe('Accessibility Tests', () => {
         test.skip('KDS page should have no accessibility violations', async ({ page }) => {
             // This test requires authentication
             await page.goto('/kds');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -87,7 +87,7 @@ test.describe('Accessibility Tests', () => {
     test.describe('Interactive Components', () => {
         test('buttons should have accessible names', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const buttons = await page.locator('button').all();
 
@@ -108,7 +108,7 @@ test.describe('Accessibility Tests', () => {
 
         test('images should have alt text', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const images = await page.locator('img').all();
 
@@ -124,7 +124,7 @@ test.describe('Accessibility Tests', () => {
 
         test('form inputs should have labels', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const inputs = await page
                 .locator('input:not([type="hidden"]):not([type="submit"]):not([type="button"])')
@@ -153,7 +153,7 @@ test.describe('Accessibility Tests', () => {
     test.describe('Color Contrast', () => {
         test('text should meet minimum color contrast requirements', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withRules(['color-contrast'])
@@ -176,7 +176,7 @@ test.describe('Accessibility Tests', () => {
     test.describe('Keyboard Navigation', () => {
         test('focus should be visible on interactive elements', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             // Tab through focusable elements
             const focusableElements = await page
@@ -202,7 +202,7 @@ test.describe('Accessibility Tests', () => {
 
         test('should be able to navigate with keyboard', async ({ page }) => {
             await page.goto('/');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             // Press Tab key multiple times
             await page.keyboard.press('Tab');

@@ -77,11 +77,32 @@ test.describe('Signed QR to guest order flow', () => {
             });
         });
 
+        // Mock guest session so auth_state='authenticated' is returned immediately,
+        // causing the pre-menu splash screen to auto-dismiss and the menu to load.
+        await page.route('**/api/guest/session**', async route => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    data: {
+                        session_id: 'e2e-guest-session-1',
+                        auth_state: 'authenticated',
+                    },
+                }),
+            });
+        });
+
         await page.goto(`/${slug}?table=${table}&sig=${sig}&exp=${exp}`);
 
+        // The pre-menu splash may be shown. Try the legacy "Skip to Menu" name first,
+        // then fall back to the actual "Continue as guest" button.
+        // (The session mock above should auto-dismiss the splash, but guard here too.)
         const skipToMenuButton = page.getByRole('button', { name: 'Skip to Menu' });
-        if (await skipToMenuButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+        const continueAsGuestButton = page.getByRole('button', { name: /Continue as guest/i });
+        if (await skipToMenuButton.isVisible({ timeout: 3000 }).catch(() => false)) {
             await skipToMenuButton.click();
+        } else if (await continueAsGuestButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+            await continueAsGuestButton.click();
         }
         // Wait for menu items to load after context is established
         await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
