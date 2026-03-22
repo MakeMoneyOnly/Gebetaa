@@ -38,11 +38,18 @@ export async function createClient() {
     const isPlaceholderUrl = supabaseUrl?.includes('placeholder');
     const isPlaceholderKey = supabaseKey === 'placeholder-key';
     const hasRealCredentials = supabaseUrl && supabaseKey && !isPlaceholderUrl && !isPlaceholderKey;
+    const e2eBypassSecret = process.env.E2E_BYPASS_SECRET;
+    const isE2EIntentional = isE2EMode && e2eBypassSecret && e2eBypassSecret !== '';
 
-    // Use mock client only when: no credentials OR placeholder values OR E2E bypass cookie without real credentials
-    // When real credentials are available, always use the real client even in E2E mode
+    // Use mock client when:
+    // 1. No credentials at all
+    // 2. Placeholder values (E2E tests without real backend)
+    // 3. E2E bypass cookie is set but no real credentials (fallback for compatibility)
+    // NOTE: When real credentials are available (like in .env), use the real Supabase client
+    // even in E2E mode - this allows E2E tests to work with the real database
     if (
-        (!supabaseUrl || !supabaseKey) ||
+        !supabaseUrl ||
+        !supabaseKey ||
         isPlaceholderUrl ||
         isPlaceholderKey ||
         (isE2EBypass && !hasRealCredentials)

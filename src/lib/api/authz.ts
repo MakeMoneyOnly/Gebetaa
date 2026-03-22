@@ -22,10 +22,11 @@ export async function getAuthenticatedUser() {
         (e2eCookie === 'e2e-mock-access-token' || process.env.E2E_TEST_MODE === 'true')
     ) {
         // Return mock user for E2E tests
+        // Use existing user from database (owner of Bloomberg restaurant) for real database queries
         return {
             ok: true as const,
             user: {
-                id: 'staff-user-1',
+                id: 'c1b04de8-423d-42c9-b738-74237c147959',
                 email: 'e2e@example.com',
                 aud: 'authenticated',
                 role: 'authenticated',
