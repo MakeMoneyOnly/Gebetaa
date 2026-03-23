@@ -9,7 +9,7 @@
 | Severity | Total | Completed | Remaining |
 | -------- | ----- | --------- | --------- |
 | Critical | 5     | 5         | 0         |
-| High     | 24    | 16        | 8         |
+| High     | 30    | 16        | 14        |
 | Medium   | 29    | 0         | 29        |
 | Low      | 22    | 0         | 22        |
 
@@ -366,6 +366,68 @@
     - `src/hooks/__tests__/useRole.test.ts` - Tests for authentication, role resolution, and loading states
     - `src/hooks/__tests__/useStaff.test.ts` - Tests for staff fetching, invite handling, and active toggle
     - `src/hooks/__tests__/useKDSRealtime.test.ts` - Tests for realtime subscriptions and event callbacks
+- [x] **Status:** ✅ Completed (2026-03-23)
+
+### HIGH-026: Add Zod Validation for External Orders
+
+- [x] **Issue:** External order data is parsed without Zod schema validation.
+- [x] **File:** `src/app/api/delivery/aggregator/orders/route.ts:72-97`
+- [x] **Remediation:** Create a Zod schema for external order validation and apply it before processing.
+- [x] **Fix Applied:** Added comprehensive Zod schema validation in `src/app/api/delivery/aggregator/orders/route.ts`:
+    - `ExternalOrderItemSchema` for validating order items
+    - `CustomerSchema` for customer information
+    - `LocationSchema` for delivery location coordinates
+    - `ExternalOrderSchema` for complete order validation
+    - Proper error responses with detailed validation error messages
+- [x] **Status:** ✅ Completed (2026-03-23)
+
+### HIGH-027: Migrate to Audited Service Role Client
+
+- [x] **Issue:** Multiple files use `createServiceRoleClient()` directly instead of `createAuditedServiceRoleClient()`, reducing audit trail for privileged operations.
+- [x] **Files:** Multiple files across the codebase
+- [x] **Remediation:** Audit all service role client usages and migrate to the audited version for sensitive operations.
+- [x] **Fix Applied:** Migrated to `createAuditedServiceRoleClient()` in:
+    - `src/lib/payments/webhooks.ts` - Payment webhook processing
+    - `src/app/auth/invite/actions.ts` - Staff invite acceptance
+    - `src/app/auth/join/actions.ts` - Device provisioning
+- [x] **Status:** ✅ Completed (2026-03-23)
+
+### HIGH-028: Require Webhook Secrets in Development
+
+- [x] **Issue:** Chapa webhook signature verification returns `true` in development if secret is not configured.
+- [x] **File:** `src/lib/payments/webhooks.ts:122-127`
+- [x] **Remediation:** Require explicit `CHAPA_WEBHOOK_SECRET` even in development, or use a dedicated test secret.
+- [x] **Fix Applied:** Updated `verifyChapaWebhookSignature()` in `src/lib/payments/webhooks.ts`:
+    - Now requires explicit webhook secret configuration
+    - Added support for `CHAPA_WEBHOOK_TEST_SECRET` in development
+    - Logs error when secret is not configured
+    - Returns `false` instead of bypassing verification
+- [x] **Status:** ✅ Completed (2026-03-23)
+
+### HIGH-029: Audit CSRF Coverage on Server Actions
+
+- [x] **Issue:** CSRF protection utilities exist but are not consistently applied across all Server Actions.
+- [x] **File:** `src/lib/security/csrf.ts`
+- [x] **Remediation:** Audit all Server Actions and ensure CSRF protection is applied consistently.
+- [x] **Fix Applied:** Created `docs/implementation/csrf-coverage-audit.md` documenting:
+    - All Server Actions have `verifyOrigin()` protection
+    - `src/app/auth/actions.ts` - login, signup, logout actions protected
+    - `src/app/auth/join/actions.ts` - device provisioning protected
+    - `src/app/auth/invite/actions.ts` - invite acceptance protected
+    - Recommendations for future Server Actions
+- [x] **Status:** ✅ Completed (2026-03-23)
+
+### HIGH-030: Implement Sync Worker API Calls
+
+- [x] **Issue:** Sync worker has placeholder simulation code instead of actual API calls.
+- [x] **File:** `src/lib/sync/syncWorker.ts:79`
+- [x] **Remediation:** Implement actual API calls to server for sync operations.
+- [x] **Fix Applied:** Updated `src/lib/sync/syncWorker.ts` with:
+    - `executeSyncOperation()` function for actual API calls
+    - Endpoint mapping for different entity types
+    - Exponential backoff with jitter (base 1s, max 30s)
+    - Maximum 3 retry attempts
+    - Proper error handling and logging
 - [x] **Status:** ✅ Completed (2026-03-23)
 
 ---
