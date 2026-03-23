@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 
 function sanitizeNextPath(rawNext: string | null): string {
@@ -24,6 +24,7 @@ function getAuthErrorMessage(error: unknown): string {
 function SignUpContent() {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -59,7 +60,29 @@ function SignUpContent() {
 
             if (signUpError) throw signUpError;
 
-            if (data.session) {
+            // Create guest record with phone if provided
+            if (data.user) {
+                const phoneNumber = phone.trim();
+                const emailAddress = email.trim();
+
+                if (phoneNumber || emailAddress) {
+                    // Get restaurant_id from the URL or use default
+                    const restaurantId = searchParams.get('restaurant_id') || null;
+
+                    const { error: guestError } = await supabase.from('guests').insert({
+                        user_id: data.user.id,
+                        name: fullName.trim() || null,
+                        phone: phoneNumber || null,
+                        email: emailAddress,
+                        restaurant_id: restaurantId,
+                        is_verified: false,
+                    });
+
+                    if (guestError) {
+                        console.error('Error creating guest record:', guestError);
+                    }
+                }
+
                 router.push(returnTarget);
                 router.refresh();
                 return;
@@ -142,6 +165,25 @@ function SignUpContent() {
                                     required
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-black/80">
+                                Phone Number (Optional)
+                            </label>
+                            <div className="group relative">
+                                <Phone className="group-focus-within:text-brand-crimson absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/40 transition-colors" />
+                                <input
+                                    type="tel"
+                                    value={phone}
+                                    onChange={e => setPhone(e.target.value)}
+                                    placeholder="+251 912 345 678"
+                                    className="font-manrope focus:border-brand-crimson focus:ring-brand-crimson/5 focus:shadow-brand-crimson/10 w-full rounded-xl border border-black/15 bg-white px-12 py-3.5 text-base font-medium text-black transition-all outline-none placeholder:text-black/30 focus:shadow-lg focus:ring-4"
+                                />
+                            </div>
+                            <p className="text-xs font-medium text-black/50">
+                                For SMS notifications about your orders and exclusive offers
+                            </p>
                         </div>
 
                         <div className="space-y-2">

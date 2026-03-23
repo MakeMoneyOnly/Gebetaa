@@ -6,46 +6,75 @@ export async function updateSession(request: NextRequest) {
         request,
     });
 
+    // =========================================================
+    // CRIT-003: Secure E2E Test Bypass
+    // =========================================================
     // E2E test bypass: allows Playwright specs to exercise protected routes with mocked APIs.
-    // Security: only allowed when E2E_TEST_MODE=true (always unset in real deployments) +
-    // secret header matches E2E_BYPASS_SECRET. No NODE_ENV restriction — CI runs in production mode.
+    //
+    // Security requirements for E2E bypass (ALL must be true):
+    // 1. NODE_ENV must NOT be 'production' (prevents bypass in real deployments)
+    // 2. E2E_TEST_MODE must be 'true' (explicit opt-in)
+    // 3. E2E_BYPASS_SECRET must be configured and match the request
+    //
+    // The bypass can be activated via:
+    // - Headers: x-e2e-bypass-auth=1 and x-e2e-bypass-secret={secret}
+    // - Cookie: sb-access-token=e2e-mock-access-token:{secret}
+    // =========================================================
 
     const e2eBypassAuth = request.headers.get('x-e2e-bypass-auth');
     const e2eBypassSecret = request.headers.get('x-e2e-bypass-secret');
-    const bypassSecret = process.env.E2E_BYPASS_SECRET;
+    const envBypassSecret = process.env.E2E_BYPASS_SECRET;
 
-    // Check if E2E bypass is active via:
-    // 1. Existing E2E cookie (for subsequent requests)
-    // 2. Headers + env var (for initial request from Playwright)
-    // 3. E2E_TEST_MODE + env var alone (for browser requests in E2E mode)
-    const hasE2ECookie = request.cookies.get('sb-access-token')?.value === 'e2e-mock-access-token';
-    const hasEnvBypassSecret = bypassSecret !== undefined && bypassSecret !== '';
+    // CRITICAL: Never allow E2E bypass in production environment
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isE2ETestMode = process.env.E2E_TEST_MODE === 'true';
+    const hasSecretConfigured = envBypassSecret !== undefined && envBypassSecret !== '';
+
+    // Check for secure E2E cookie token
+    const cookieToken = request.cookies.get('sb-access-token')?.value;
+    const expectedCookieToken = hasSecretConfigured
+        ? `e2e-mock-access-token:${envBypassSecret}`
+        : null;
+    const hasValidE2ECookie = cookieToken !== undefined && cookieToken === expectedCookieToken;
+
+    // Check for valid header-based bypass
+    const hasValidHeaderBypass =
+        e2eBypassAuth === '1' &&
+        e2eBypassSecret !== undefined &&
+        e2eBypassSecret !== '' &&
+        e2eBypassSecret === envBypassSecret;
+
+    // E2E bypass is only active when ALL security conditions are met
     const isE2EBypassActive =
-        hasE2ECookie ||
-        (process.env.E2E_TEST_MODE === 'true' &&
-            hasEnvBypassSecret &&
-            ((e2eBypassAuth === '1' &&
-                e2eBypassSecret !== undefined &&
-                e2eBypassSecret === bypassSecret) ||
-                // Allow bypass when E2E_TEST_MODE is true and env var is set (for browser client requests)
-                !e2eBypassAuth));
+        !isProduction &&
+        isE2ETestMode &&
+        hasSecretConfigured &&
+        (hasValidE2ECookie || hasValidHeaderBypass);
 
-    // Debug logging - always run to see what's happening
-    console.log('[E2E Debug] Request:', request.nextUrl.pathname);
-    console.log('[E2E Debug] Has header auth:', !!e2eBypassAuth);
-    console.log('[E2E Debug] Has cookie:', hasE2ECookie);
-    console.log('[E2E Debug] Cookie value:', request.cookies.get('sb-access-token')?.value);
-    console.log('[E2E Debug] E2E active:', isE2EBypassActive);
-    console.log('[E2E Debug] Env E2E_TEST_MODE:', process.env.E2E_TEST_MODE);
+    // Debug logging - only in non-production
+    if (!isProduction) {
+        console.log('[E2E Debug] Request:', request.nextUrl.pathname);
+        console.log('[E2E Debug] Is Production:', isProduction);
+        console.log('[E2E Debug] E2E Test Mode:', isE2ETestMode);
+        console.log('[E2E Debug] Has Secret Configured:', hasSecretConfigured);
+        console.log('[E2E Debug] Has Valid Cookie:', hasValidE2ECookie);
+        console.log('[E2E Debug] Has Valid Headers:', hasValidHeaderBypass);
+        console.log('[E2E Debug] E2E Active:', isE2EBypassActive);
+    }
 
     if (isE2EBypassActive) {
-        // Set mock auth cookies for E2E tests (refresh on each request)
-        supabaseResponse.cookies.set('sb-access-token', 'e2e-mock-access-token', {
-            httpOnly: true,
-            path: '/',
-            sameSite: 'lax',
-            maxAge: 3600,
-        });
+        // Set secure mock auth cookies for E2E tests (refresh on each request)
+        // Token includes the secret for validation on subsequent requests
+        supabaseResponse.cookies.set(
+            'sb-access-token',
+            `e2e-mock-access-token:${envBypassSecret}`,
+            {
+                httpOnly: true,
+                path: '/',
+                sameSite: 'lax',
+                maxAge: 3600,
+            }
+        );
         supabaseResponse.cookies.set('sb-refresh-token', 'e2e-mock-refresh-token', {
             httpOnly: true,
             path: '/',
@@ -70,10 +99,16 @@ export async function updateSession(request: NextRequest) {
     const supabaseUrl = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL);
     const supabaseKey = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
-    // Skip Supabase initialization if environment variables are missing
-    // This is critical for Edge Runtime where env vars might not be available
-    if (!supabaseUrl || !supabaseKey) {
-        console.warn('Supabase environment variables not available in middleware');
+    // Check for placeholder values (used in E2E/testing scenarios)
+    const isPlaceholderUrl = supabaseUrl?.includes('placeholder') || !supabaseUrl;
+    const isPlaceholderKey = supabaseKey === 'placeholder-key' || !supabaseKey;
+    const hasRealCredentials = !isPlaceholderUrl && !isPlaceholderKey;
+
+    // If no real credentials, we can't initialize Supabase - but still need to
+    // pass cookies through for subsequent requests that might have valid session
+    if (!hasRealCredentials) {
+        console.warn('Supabase credentials not available - passing through request without auth');
+        // Pass cookies through without Supabase auth check
         return supabaseResponse;
     }
 

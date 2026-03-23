@@ -253,7 +253,7 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                             key={rule.id}
                             type="button"
                             onClick={() => setDraft(fromRule(rule))}
-                            className="w-full rounded-xl border border-gray-100 bg-white p-3 text-left hover:bg-gray-50"
+                            className="card-shadow hover:card-shadow-lg w-full rounded-2xl bg-white p-4 text-left transition-all"
                         >
                             <div className="flex items-center justify-between gap-2">
                                 <p className="text-sm font-semibold text-gray-900">{rule.name}</p>

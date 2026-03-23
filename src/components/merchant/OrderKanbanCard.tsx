@@ -2,7 +2,7 @@
 
 import { Clock, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrencyCompact } from '@/lib/utils/monetary';
+import { formatETBCurrency } from '@/lib/format/et';
 import { Order } from '@/types/database';
 
 interface OrderKanbanCardProps {
@@ -110,7 +110,7 @@ export function OrderKanbanCard({
                 ) : (
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
                         <DollarSign className="h-3.5 w-3.5 text-gray-400" />
-                        {formatCurrencyCompact(order.total_price)} ETB
+                        {formatETBCurrency(order.total_price)}
                     </div>
                 )}
             </div>

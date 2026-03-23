@@ -10,23 +10,43 @@ type PilotPhase = 'p0' | 'p1' | 'p2';
 export async function getAuthenticatedUser() {
     const supabase = await createClient();
 
-    // E2E test bypass: Check if we're in E2E test mode by checking cookies
-    // This allows API routes to work with E2E tests without requiring real auth
+    // =========================================================
+    // CRIT-003: Secure E2E Test Bypass
+    // =========================================================
+    // E2E test bypass: allows API routes to work with E2E tests without requiring real auth.
+    //
+    // Security requirements for E2E bypass (ALL must be true):
+    // 1. NODE_ENV must NOT be 'production' (prevents bypass in real deployments)
+    // 2. E2E_TEST_MODE must be 'true' (explicit opt-in)
+    // 3. E2E_BYPASS_SECRET must be configured and match the request
+    // =========================================================
+
     const cookieStore = await import('next/headers').then(m => m.cookies());
     const e2eCookie = cookieStore.get('sb-access-token')?.value;
+    const bypassSecret = process.env.E2E_BYPASS_SECRET;
 
-    // Also check for E2E bypass headers (for initial requests that set cookies)
-    // Note: In production this would need proper header validation
-    if (
-        process.env.NODE_ENV !== 'production' &&
-        (e2eCookie === 'e2e-mock-access-token' || process.env.E2E_TEST_MODE === 'true')
-    ) {
+    // CRITICAL: Never allow E2E bypass in production environment
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isE2ETestMode = process.env.E2E_TEST_MODE === 'true';
+    const hasSecretConfigured = bypassSecret !== undefined && bypassSecret !== '';
+
+    // Validate E2E cookie token format: e2e-mock-access-token:{secret}
+    const expectedToken = hasSecretConfigured ? `e2e-mock-access-token:${bypassSecret}` : null;
+    const hasValidE2ECookie = e2eCookie !== undefined && e2eCookie === expectedToken;
+
+    // E2E bypass is only active when ALL security conditions are met
+    const isE2EBypassActive =
+        !isProduction && isE2ETestMode && hasSecretConfigured && hasValidE2ECookie;
+
+    if (isE2EBypassActive) {
         // Return mock user for E2E tests
-        // Use existing user from database (owner of Bloomberg restaurant) for real database queries
+        // Use E2E_USER_ID from env if set, otherwise fall back to Cafe Lucia owner
+        // This allows E2E tests to be configured for different restaurants
+        const e2eUserId = process.env.E2E_USER_ID || 'bcc7f071-ccc5-4911-8cd2-2fa524c0b69c';
         return {
             ok: true as const,
             user: {
-                id: 'c1b04de8-423d-42c9-b738-74237c147959',
+                id: e2eUserId,
                 email: 'e2e@example.com',
                 aud: 'authenticated',
                 role: 'authenticated',
@@ -52,7 +72,11 @@ export async function getAuthorizedRestaurantContext(
     options?: { phase?: PilotPhase }
 ) {
     const phase = options?.phase ?? 'p0';
-    const supabase = await createClient();
+
+    // Use service role client in E2E mode to bypass RLS policies
+    // This allows E2E tests to access data without valid JWT sessions
+    const isE2EMode = process.env.E2E_TEST_MODE === 'true';
+    const supabase = isE2EMode ? createServiceRoleClient() : await createClient();
 
     const { data: staffEntry, error: staffError } = await supabase
         .from('restaurant_staff')

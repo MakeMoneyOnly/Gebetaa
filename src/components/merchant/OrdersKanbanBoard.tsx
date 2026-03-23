@@ -69,10 +69,7 @@ export function OrdersKanbanBoard({
                     column.statuses.includes(order.status ?? '')
                 );
                 return (
-                    <section
-                        key={column.id}
-                        className="rounded-[2rem] bg-white p-4 shadow-sm ring-1 ring-gray-100"
-                    >
+                    <section key={column.id} className="card-shadow rounded-4xl bg-white p-4">
                         {/* Column header */}
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-2">

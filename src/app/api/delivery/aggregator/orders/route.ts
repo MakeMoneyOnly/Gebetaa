@@ -9,8 +9,89 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { receiveExternalOrder, getActivePartners } from '@/lib/delivery/aggregator';
 import { createHmac } from 'crypto';
+import { redisRateLimiters } from '@/lib/security';
+import { z } from 'zod';
+
+/**
+ * HIGH-009: Zod schema for external order validation
+ * Validates incoming orders from delivery platforms
+ */
+const ExternalOrderItemSchema = z
+    .object({
+        name: z.string().min(1).max(200).optional(),
+        item_name: z.string().min(1).max(200).optional(),
+        quantity: z.number().int().min(1).max(100).default(1),
+        price: z.number().min(0).optional(),
+        unit_price: z.number().min(0).optional(),
+        notes: z.string().max(500).optional(),
+        special_instructions: z.string().max(500).optional(),
+    })
+    .refine(data => data.name !== undefined || data.item_name !== undefined, {
+        message: 'Either name or item_name is required',
+    });
+
+const CustomerSchema = z
+    .object({
+        name: z.string().max(200).optional(),
+        phone: z.string().max(50).optional(),
+    })
+    .optional();
+
+const LocationSchema = z
+    .object({
+        lat: z.number().min(-90).max(90).optional(),
+        lng: z.number().min(-180).max(180).optional(),
+    })
+    .optional();
+
+const ExternalOrderSchema = z
+    .object({
+        // Order identifiers - at least one required
+        id: z.string().max(100).optional(),
+        order_id: z.string().max(100).optional(),
+        order_number: z.string().max(100).optional(),
+
+        // Customer info
+        customer: CustomerSchema,
+        customer_name: z.string().max(200).optional(),
+        customer_phone: z.string().max(50).optional(),
+
+        // Delivery details
+        delivery_address: z.string().max(500).optional(),
+        address: z.string().max(500).optional(),
+        location: LocationSchema,
+        delivery_latitude: z.number().min(-90).max(90).optional(),
+        delivery_longitude: z.number().min(-180).max(180).optional(),
+        delivery_notes: z.string().max(500).optional(),
+
+        // Items
+        items: z.array(ExternalOrderItemSchema).min(1).max(100),
+
+        // Pricing (all amounts must be non-negative)
+        subtotal: z.number().min(0).default(0),
+        delivery_fee: z.number().min(0).default(0),
+        platform_fee: z.number().min(0).optional(),
+        service_fee: z.number().min(0).optional(),
+        total: z.number().min(0).optional(),
+        total_amount: z.number().min(0).optional(),
+
+        // Timestamps
+        placed_at: z.string().datetime({ offset: true }).optional(),
+        created_at: z.string().datetime({ offset: true }).optional(),
+    })
+    .refine(data => data.id !== undefined || data.order_id !== undefined, {
+        message: 'Either id or order_id is required',
+    });
+
+type ValidatedExternalOrder = z.infer<typeof ExternalOrderSchema>;
 
 export async function POST(request: NextRequest) {
+    // HIGH-002: Apply rate limiting for webhook endpoint
+    const rateLimitResponse = await redisRateLimiters.mutation(request as any);
+    if (rateLimitResponse) {
+        return rateLimitResponse;
+    }
+
     try {
         // Get platform from header
         const platform = request.headers.get('x-delivery-platform');
@@ -31,12 +112,46 @@ export async function POST(request: NextRequest) {
 
         // Get raw body for signature verification
         const rawBody = await request.text();
-        const orderData = JSON.parse(rawBody);
+
+        // HIGH-009: Parse and validate with Zod schema
+        let orderData: ValidatedExternalOrder;
+        try {
+            const parsed = JSON.parse(rawBody);
+            const validationResult = ExternalOrderSchema.safeParse(parsed);
+
+            if (!validationResult.success) {
+                return NextResponse.json(
+                    {
+                        error: {
+                            code: 'VALIDATION_ERROR',
+                            message: 'Invalid order data',
+                            details: validationResult.error.issues.map(issue => ({
+                                path: issue.path.join('.'),
+                                message: issue.message,
+                            })),
+                        },
+                    },
+                    { status: 400 }
+                );
+            }
+
+            orderData = validationResult.data;
+        } catch (parseError) {
+            return NextResponse.json(
+                {
+                    error: {
+                        code: 'INVALID_JSON',
+                        message: 'Failed to parse request body as JSON',
+                    },
+                },
+                { status: 400 }
+            );
+        }
 
         // Create service client for internal operations
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            process.env.SUPABASE_SECRET_KEY!,
             { auth: { autoRefreshToken: false, persistSession: false } }
         );
 
@@ -69,17 +184,17 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Parse order items from external format
-        const items = (orderData.items || []).map((item: any) => ({
-            name: item.name || item.item_name,
-            quantity: item.quantity || 1,
-            price: item.price || item.unit_price || 0,
+        // HIGH-009: Parse order items from validated external format
+        const items = orderData.items.map(item => ({
+            name: item.name || item.item_name || 'Unknown Item',
+            quantity: item.quantity,
+            price: item.price ?? item.unit_price ?? 0,
             notes: item.notes || item.special_instructions,
         }));
 
         // Receive the external order
         const result = await receiveExternalOrder(supabase, restaurantId, partner.id, {
-            external_order_id: orderData.id || orderData.order_id,
+            external_order_id: orderData.id || orderData.order_id!,
             external_order_number: orderData.order_number,
             raw_order_data: orderData,
             customer_name: orderData.customer?.name || orderData.customer_name,
@@ -87,10 +202,10 @@ export async function POST(request: NextRequest) {
             delivery_address: orderData.delivery_address || orderData.address,
             delivery_latitude: orderData.location?.lat || orderData.delivery_latitude,
             delivery_longitude: orderData.location?.lng || orderData.delivery_longitude,
-            delivery_notes: orderData.delivery_notes || orderData.notes,
+            delivery_notes: orderData.delivery_notes,
             items,
-            subtotal: orderData.subtotal || 0,
-            delivery_fee: orderData.delivery_fee || 0,
+            subtotal: orderData.subtotal,
+            delivery_fee: orderData.delivery_fee,
             platform_fee: orderData.platform_fee || orderData.service_fee || 0,
             total: orderData.total || orderData.total_amount || 0,
             placed_at: orderData.placed_at || orderData.created_at,
@@ -147,7 +262,7 @@ export async function GET(request: NextRequest) {
 
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            process.env.SUPABASE_SECRET_KEY!,
             { auth: { autoRefreshToken: false, persistSession: false } }
         );
 

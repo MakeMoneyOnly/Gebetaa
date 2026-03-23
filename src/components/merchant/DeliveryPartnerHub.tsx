@@ -145,7 +145,7 @@ export function DeliveryPartnerHub({
     }, [orders, providerFilter]);
 
     return (
-        <div className="space-y-6 rounded-[1.5rem] bg-white p-6 shadow-[0px_2px_12px_rgba(0,0,0,0.04)]">
+        <div className="space-y-6 rounded-4xl bg-white p-6 shadow-[0px_2px_12px_rgba(0,0,0,0.04)]">
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900">Delivery Partner Hub</h3>
@@ -226,7 +226,7 @@ export function DeliveryPartnerHub({
                         {partners.map(partner => (
                             <div
                                 key={partner.id}
-                                className="flex items-center justify-between rounded-xl bg-gray-50 p-4 transition-all hover:bg-white hover:shadow-[0_0_0_2px_rgba(0,0,0,0.02)] hover:shadow-sm"
+                                className="flex items-center justify-between rounded-xl bg-gray-50 p-4 transition-all hover:bg-white hover:shadow-sm"
                             >
                                 <div>
                                     <p className="text-sm font-semibold text-gray-900">
@@ -322,8 +322,8 @@ export function DeliveryPartnerHub({
                                             {new Intl.NumberFormat(DASHBOARD_LOCALE, {
                                                 style: 'currency',
                                                 currency: order.currency || 'ETB',
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
+                                                minimumFractionDigits: 0,
+                                                maximumFractionDigits: 0,
                                             }).format(Number(order.total_amount ?? 0))}
                                         </td>
                                         <td className="py-2 text-gray-500">

@@ -58,12 +58,12 @@ export function MenuGridEditor({
     const [bulkPriceError, setBulkPriceError] = useState<string | null>(null);
 
     const editingItem = useMemo(
-        () => category.items.find(item => item.id === editingItemId) ?? null,
+        () => (category.items ?? []).find(item => item.id === editingItemId) ?? null,
         [category.items, editingItemId]
     );
     const selectedCount = selectedIds.length;
     const selectedItems = useMemo(
-        () => category.items.filter(item => selectedIds.includes(item.id)),
+        () => (category.items ?? []).filter(item => selectedIds.includes(item.id)),
         [category.items, selectedIds]
     );
 
@@ -296,7 +296,7 @@ export function MenuGridEditor({
                     </span>
                 </button>
 
-                {category.items.map(item => {
+                {(category.items ?? []).map(item => {
                     const isEditing = item.id === editingItemId;
                     return (
                         <div

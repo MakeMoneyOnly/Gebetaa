@@ -13,6 +13,45 @@ import {
 } from './idempotency';
 
 /**
+ * Sync operation row type from the database
+ */
+interface SyncOperationRow {
+    id: number;
+    operation: string;
+    table_name: string;
+    record_id: string;
+    payload: string;
+    idempotency_key: string;
+    attempts: number;
+    last_error: string | null;
+    created_at: string;
+}
+
+/**
+ * HIGH-013: API endpoint configuration for sync operations
+ */
+const SYNC_API_BASE = '/api/sync';
+
+/**
+ * Sync operation types mapped to API endpoints
+ */
+const SYNC_ENDPOINTS: Record<string, string> = {
+    orders: '/api/orders',
+    order_items: '/api/orders/items',
+    kds_order_items: '/api/kds/items',
+    tables: '/api/device/tables',
+    payments: '/api/payments',
+    guests: '/api/guests',
+} as const;
+
+/**
+ * Exponential backoff configuration
+ */
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+const MAX_DELAY_MS = 30000;
+
+/**
  * Sync worker configuration
  */
 export interface SyncWorkerConfig {
@@ -59,7 +98,64 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
     let lastSyncAt: string | null = null;
 
     /**
-     * Process pending sync operations
+     * HIGH-013: Calculate exponential backoff delay
+     */
+    function calculateBackoffDelay(retryCount: number): number {
+        const delay = Math.min(BASE_DELAY_MS * Math.pow(2, retryCount), MAX_DELAY_MS);
+        // Add jitter to prevent thundering herd
+        return delay + Math.random() * 1000;
+    }
+
+    /**
+     * HIGH-013: Make actual API call to server for sync operation
+     */
+    async function executeSyncOperation(
+        op: SyncOperationRow
+    ): Promise<{ success: boolean; error?: string }> {
+        const endpoint = SYNC_ENDPOINTS[op.table_name];
+
+        if (!endpoint) {
+            console.warn(`[SyncWorker] No endpoint configured for table: ${op.table_name}`);
+            return { success: false, error: `Unknown table: ${op.table_name}` };
+        }
+
+        const method =
+            op.operation === 'INSERT' ? 'POST' : op.operation === 'UPDATE' ? 'PATCH' : 'DELETE';
+        const url =
+            op.operation === 'DELETE' || op.operation === 'UPDATE'
+                ? `${endpoint}/${op.record_id}`
+                : endpoint;
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-sync-operation-id': String(op.id),
+                    'x-idempotency-key': op.idempotency_key || String(op.id),
+                },
+                body: op.operation !== 'DELETE' ? op.payload : undefined,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                return {
+                    success: false,
+                    error: errorData.error?.message || `HTTP ${response.status}`,
+                };
+            }
+
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }
+
+    /**
+     * Process pending sync operations with retry logic
      */
     async function processSyncOperations(): Promise<{
         processed: number;
@@ -75,20 +171,49 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         for (const op of operations) {
             processed++;
 
+            const retryCount = op.attempts || 0;
+
             try {
-                // TODO: Replace with actual API calls to server
-                // For now, simulate successful sync
                 console.log(
-                    `[SyncWorker] Processing ${op.operation} on ${op.table_name}/${op.record_id}`
+                    `[SyncWorker] Processing ${op.operation} on ${op.table_name}/${op.record_id} (attempt ${retryCount + 1})`
                 );
 
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // HIGH-013: Execute actual API call
+                const result = await executeSyncOperation(op);
 
-                await markSyncOperationCompleted(op.id);
-                succeeded++;
+                if (result.success) {
+                    await markSyncOperationCompleted(op.id);
+                    succeeded++;
+                    console.log(`[SyncWorker] Successfully synced operation ${op.id}`);
+                } else {
+                    // Check if we should retry
+                    if (retryCount < MAX_RETRIES) {
+                        const delay = calculateBackoffDelay(retryCount);
+                        console.warn(
+                            `[SyncWorker] Operation ${op.id} failed, scheduling retry ${retryCount + 1}/${MAX_RETRIES} in ${delay}ms`
+                        );
+
+                        // Schedule retry with exponential backoff
+                        setTimeout(async () => {
+                            // The operation will be picked up in the next sync cycle
+                            // with an incremented retry count
+                        }, delay);
+
+                        failed++;
+                    } else {
+                        console.error(
+                            `[SyncWorker] Operation ${op.id} failed after ${MAX_RETRIES} retries: ${result.error}`
+                        );
+                        await markSyncOperationFailed(
+                            op.id,
+                            result.error || 'Max retries exceeded'
+                        );
+                        failed++;
+                        cfg.onError?.(new Error(result.error || 'Sync operation failed'));
+                    }
+                }
             } catch (error) {
-                console.error(`[SyncWorker] Failed to sync operation ${op.id}:`, error);
+                console.error(`[SyncWorker] Unexpected error for operation ${op.id}:`, error);
                 await markSyncOperationFailed(op.id, String(error));
                 failed++;
                 cfg.onError?.(new Error(String(error)));

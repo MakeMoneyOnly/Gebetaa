@@ -97,11 +97,17 @@ export async function GET(request: Request) {
     );
 
     return apiSuccess({
-        payouts,
+        payouts: payouts.map(p => ({
+            ...p,
+            gross: Number(p.gross) / 100,
+            fees: Number(p.fees ?? 0) / 100,
+            net: Number(p.net) / 100,
+        })),
         totals: {
-            gross: Number(totals.gross.toFixed(2)),
-            fees: Number(totals.fees.toFixed(2)),
-            net: Number(totals.net.toFixed(2)),
+            // Convert santim to ETB (÷100) for frontend display
+            gross: Math.round(totals.gross) / 100,
+            fees: Math.round(totals.fees) / 100,
+            net: Math.round(totals.net) / 100,
             unsettled_count: totals.unsettled_count,
         },
     });

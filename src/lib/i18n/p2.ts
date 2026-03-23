@@ -25,7 +25,7 @@ const copy: Record<AppLocale, P2Copy> = {
         guests: {
             title: 'Guests',
             subtitle: 'CRM starter with profiles, tags, and visit history.',
-            growthTitle: 'Revenue Growth Stack (P2)',
+            growthTitle: 'Revenue Growth Stack',
             growthSubtitle: 'Loyalty, gift cards, and campaign operations linked to guests.',
         },
     },
@@ -38,7 +38,7 @@ const copy: Record<AppLocale, P2Copy> = {
         guests: {
             title: 'እንግዶች',
             subtitle: 'የደንበኛ ፕሮፋይል፣ መለያዎች እና የጉብኝት ታሪክ መነሻ።',
-            growthTitle: 'የገቢ እድገት ክፍል (P2)',
+            growthTitle: 'የገቢ እድገት ክፍል',
             growthSubtitle: 'ታማኝነት፣ የስጦታ ካርዶች እና የካምፔን ኦፕርሴሽኖች ከእንግዶች ጋር።',
         },
     },

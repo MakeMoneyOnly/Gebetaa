@@ -14,11 +14,38 @@ interface AuthResult {
 }
 
 /**
- * Check if running in E2E test mode
+ * Check if running in E2E test mode with proper security validation.
+ *
+ * Security requirements for E2E bypass:
+ * 1. NODE_ENV must NOT be 'production'
+ * 2. E2E_TEST_MODE must be 'true'
+ * 3. E2E_BYPASS_SECRET must be configured and match the cookie value
  */
 async function isE2ETestMode(): Promise<boolean> {
+    // CRITICAL: Never allow E2E bypass in production environment
+    if (process.env.NODE_ENV === 'production') {
+        return false;
+    }
+
+    // E2E test mode must be explicitly enabled
+    if (process.env.E2E_TEST_MODE !== 'true') {
+        return false;
+    }
+
+    // E2E_BYPASS_SECRET must be configured
+    const bypassSecret = process.env.E2E_BYPASS_SECRET;
+    if (!bypassSecret || bypassSecret === '') {
+        return false;
+    }
+
+    // Check for secure E2E token that includes the secret
     const cookieStore = await cookies();
-    return cookieStore.get('sb-access-token')?.value === 'e2e-mock-access-token';
+    const accessToken = cookieStore.get('sb-access-token')?.value;
+
+    // Token must be in format: e2e-mock-access-token:{secret}
+    // This ensures the secret is validated on every request
+    const expectedToken = `e2e-mock-access-token:${bypassSecret}`;
+    return accessToken === expectedToken;
 }
 
 /**

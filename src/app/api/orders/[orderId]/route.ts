@@ -92,7 +92,10 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
             );
         }
 
-        return apiSuccess({ order, events: events ?? [] });
+        return apiSuccess({
+            order: { ...order, total_price: Number(order.total_price ?? 0) / 100 },
+            events: events ?? [],
+        });
     } catch (error) {
         return apiError(
             'Internal server error',

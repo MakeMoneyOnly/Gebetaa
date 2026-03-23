@@ -81,7 +81,7 @@ export function PurchaseOrderBoard({
     };
 
     return (
-        <section className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-sm">
+        <section className="card-shadow rounded-4xl bg-white p-5">
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-bold text-gray-900">Purchase Order Board</h3>

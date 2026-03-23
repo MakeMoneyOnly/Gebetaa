@@ -1,6 +1,7 @@
 import { SettingsClient } from './SettingsClient';
 import { createClient } from '@/lib/supabase/server';
 import { listChapaBanks, isChapaConfigured } from '@/lib/services/chapaService';
+import type { PlanLevel } from '@/lib/subscription/plan-types';
 
 type SecuritySettings = {
     require_mfa: boolean;
@@ -29,6 +30,12 @@ type PaymentSettings = {
     last_error: string | null;
     provisioned_at: string | null;
     hosted_checkout_fee_percentage: number;
+};
+
+type PlanSettings = {
+    plan: PlanLevel;
+    plan_expires_at: string | null;
+    plan_tier: number;
 };
 
 type BankOption = {
@@ -64,6 +71,12 @@ const defaultPayments: PaymentSettings = {
     last_error: null,
     provisioned_at: null,
     hosted_checkout_fee_percentage: 0.03,
+};
+
+const defaultPlan: PlanSettings = {
+    plan: 'free',
+    plan_expires_at: null,
+    plan_tier: 0,
 };
 
 async function getPaymentSettings(
@@ -108,6 +121,34 @@ async function getPaymentSettings(
         last_error: data.chapa_subaccount_last_error,
         provisioned_at: data.chapa_subaccount_provisioned_at,
         hosted_checkout_fee_percentage: data.hosted_checkout_fee_percentage ?? 0.03,
+    };
+}
+
+async function getPlanSettings(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    restaurantId: string
+): Promise<PlanSettings> {
+    const { data, error } = await supabase
+        .from('restaurants')
+        .select('plan, plan_expires_at')
+        .eq('id', restaurantId)
+        .single();
+
+    if (error || !data) {
+        console.error('Error fetching plan settings:', error);
+        return defaultPlan;
+    }
+
+    const planTier: Record<string, number> = {
+        free: 0,
+        pro: 1,
+        enterprise: 2,
+    };
+
+    return {
+        plan: (data.plan as PlanLevel) || 'free',
+        plan_expires_at: data.plan_expires_at ?? null,
+        plan_tier: planTier[data.plan] ?? 0,
     };
 }
 
@@ -156,13 +197,14 @@ export default async function SettingsPage() {
     const restaurantId = await getRestaurantId(supabase);
 
     // Fetch all data in parallel
-    const [payments, banksResult] = await Promise.all([
+    const [payments, plan, banksResult] = await Promise.all([
         restaurantId
             ? getPaymentSettings(supabase, restaurantId)
             : Promise.resolve({
                   ...defaultPayments,
                   provider_available: isChapaConfigured(),
               }),
+        restaurantId ? getPlanSettings(supabase, restaurantId) : Promise.resolve(defaultPlan),
         getBanks(),
     ]);
 
@@ -171,6 +213,7 @@ export default async function SettingsPage() {
             security={defaultSecurity}
             notifications={defaultNotifications}
             payments={payments}
+            plan={plan}
             banks={banksResult.banks}
             directoryUnavailable={banksResult.directoryUnavailable}
         />

@@ -9,12 +9,26 @@ export async function createClient() {
     const cookieValue = cookieStore.get('sb-access-token')?.value;
     const isE2EBypass = cookieValue === 'e2e-mock-access-token';
     const isE2EMode = process.env.E2E_TEST_MODE === 'true';
+    const e2eBypassSecret = process.env.E2E_BYPASS_SECRET;
+    const isE2EIntentional = isE2EMode && e2eBypassSecret && e2eBypassSecret !== '';
 
     // Debug logging for E2E bypass detection
     console.log('[E2E Debug createClient] Cookie value:', cookieValue);
     console.log('[E2E Debug createClient] Is E2E bypass (cookie):', isE2EBypass);
     console.log('[E2E Debug createClient] E2E_TEST_MODE:', process.env.E2E_TEST_MODE);
     console.log('[E2E Debug createClient] Is E2E mode active:', isE2EMode);
+    console.log('[E2E Debug createClient] E2E_BYPASS_SECRET set:', !!e2eBypassSecret);
+    console.log('[E2E Debug createClient] Is E2E intentional:', isE2EIntentional);
+
+    // IMPORTANT: E2E_TEST_MODE takes priority over real credentials
+    // When E2E_TEST_MODE=true with a valid E2E_BYPASS_SECRET, always use mock client
+    // This ensures E2E tests work with mocked data regardless of credential presence
+    // Also check for the E2E bypass cookie that middleware sets
+    if (isE2EIntentional || isE2EBypass) {
+        console.log(
+            '[E2E] Using mock Supabase client - E2E_TEST_MODE is active or E2E cookie present'
+        );
+    }
 
     // Get and clean environment variables
     // Vercel can store values with extra quotes and \r\n when set via CLI/API
@@ -35,25 +49,18 @@ export async function createClient() {
     // If environment variables are missing or are placeholder values, return a mock client
     // When real credentials are available (like in .env), use the real Supabase client
     // E2E bypass via cookie is still supported for authenticated sessions in E2E tests
-    const isPlaceholderUrl = supabaseUrl?.includes('placeholder');
-    const isPlaceholderKey = supabaseKey === 'placeholder-key';
+    const isPlaceholderUrl = supabaseUrl?.includes('placeholder') || !supabaseUrl;
+    const isPlaceholderKey = supabaseKey === 'placeholder-key' || !supabaseKey;
     const hasRealCredentials = supabaseUrl && supabaseKey && !isPlaceholderUrl && !isPlaceholderKey;
-    const e2eBypassSecret = process.env.E2E_BYPASS_SECRET;
-    const isE2EIntentional = isE2EMode && e2eBypassSecret && e2eBypassSecret !== '';
 
     // Use mock client when:
-    // 1. No credentials at all
-    // 2. Placeholder values (E2E tests without real backend)
-    // 3. E2E bypass cookie is set but no real credentials (fallback for compatibility)
-    // NOTE: When real credentials are available (like in .env), use the real Supabase client
-    // even in E2E mode - this allows E2E tests to work with the real database
-    if (
-        !supabaseUrl ||
-        !supabaseKey ||
-        isPlaceholderUrl ||
-        isPlaceholderKey ||
-        (isE2EBypass && !hasRealCredentials)
-    ) {
+    // 1. E2E_TEST_MODE is active with valid E2E_BYPASS_SECRET (highest priority)
+    // 2. E2E bypass cookie is set (middleware set this from headers)
+    // 3. No credentials at all
+    // 4. Placeholder values (E2E tests without real backend)
+    // NOTE: E2E_TEST_MODE with valid secret OR E2E bypass cookie takes priority over real credentials
+    // This ensures E2E tests have predictable mocked data
+    if (isE2EIntentional || isE2EBypass || !hasRealCredentials) {
         if (isE2EMode || isE2EBypass) {
             console.log(
                 '[E2E] Using mock Supabase client - E2E_TEST_MODE:',
@@ -181,12 +188,261 @@ export async function createClient() {
             hosted_checkout_fee_percentage: 0.03,
         };
 
+        // E2E mock orders for dashboard attention queue
+        const e2eOrders = [
+            {
+                id: 'order-1',
+                order_number: 'ORD-1001',
+                table_number: 'T1',
+                status: 'pending',
+                created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+                completed_at: null,
+                total_price: 420,
+                notes: 'No onions',
+            },
+            {
+                id: 'order-2',
+                order_number: 'ORD-1002',
+                table_number: 'T3',
+                status: 'preparing',
+                created_at: new Date(Date.now() - 6 * 60 * 1000).toISOString(),
+                completed_at: null,
+                total_price: 315,
+                notes: null,
+            },
+        ];
+
+        // E2E mock service requests
+        const e2eServiceRequests = [
+            {
+                id: 'req-1',
+                table_number: 'T2',
+                status: 'pending',
+                request_type: 'water',
+                notes: 'Sparkling water',
+                created_at: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
+            },
+        ];
+
+        // E2E mock tables
+        const e2eTables = [
+            { id: 'table-1', table_number: 'T1', status: 'occupied', capacity: 4, is_active: true },
+            {
+                id: 'table-2',
+                table_number: 'T2',
+                status: 'available',
+                capacity: 2,
+                is_active: true,
+            },
+            { id: 'table-3', table_number: 'T3', status: 'occupied', capacity: 4, is_active: true },
+        ];
+
+        // E2E mock guests for guests directory
+        const e2eGuests = [
+            {
+                id: 'guest-1',
+                name: 'Selam Guest',
+                phone: '+251911123456',
+                language: 'en',
+                tags: ['vip', 'regular'],
+                is_vip: true,
+                visit_count: 15,
+                lifetime_value: 12500,
+                first_seen_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+                last_seen_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+            },
+            {
+                id: 'guest-2',
+                name: 'Abebe Bekele',
+                phone: '+251922234567',
+                language: 'am',
+                tags: ['regular'],
+                is_vip: false,
+                visit_count: 5,
+                lifetime_value: 3200,
+                first_seen_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+                last_seen_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            },
+        ];
+
+        // E2E mock delivery partners for channels page
+        const e2eDeliveryPartners = [
+            {
+                id: 'partner-1',
+                provider: 'BEU',
+                status: 'active',
+                updated_at: new Date().toISOString(),
+                last_sync_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+            },
+        ];
+
+        // E2E mock external orders for channels page
+        const e2eExternalOrders = [
+            {
+                id: 'ext-order-1',
+                provider: 'BEU',
+                provider_order_id: 'BEU-1001',
+                normalized_status: 'pending',
+                total_amount: 850,
+                currency: 'ETB',
+                acknowledged_at: null,
+                created_at: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+            },
+        ];
+
+        // E2E mock payments for finance page
+        const e2ePayments = [
+            {
+                id: 'pay-1',
+                amount: 1200,
+                currency: 'ETB',
+                method: 'telebirr',
+                status: 'captured',
+                created_at: new Date().toISOString(),
+                order_id: 'order-1',
+            },
+            {
+                id: 'pay-2',
+                amount: 800,
+                currency: 'ETB',
+                method: 'cash',
+                status: 'captured',
+                created_at: new Date().toISOString(),
+                order_id: 'order-2',
+            },
+        ];
+
+        // E2E mock payouts for finance page
+        const e2ePayouts = [
+            {
+                id: 'payout-1',
+                net: 7760,
+                currency: 'ETB',
+                status: 'processing',
+                created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                paid_at: null,
+            },
+        ];
+
+        // E2E mock reconciliation entries for finance page
+        const e2eReconciliation = [
+            {
+                id: 'recon-1',
+                created_at: new Date().toISOString(),
+                expected_amount: 7760,
+                settled_amount: 7600,
+                delta_amount: -160,
+                status: 'exception',
+            },
+        ];
+
+        // E2E mock refunds for finance page
+        const e2eRefunds = [
+            {
+                id: 'refund-1',
+                amount: 120,
+                status: 'pending',
+                reason: 'Item unavailable',
+                created_at: new Date().toISOString(),
+                provider_reference: null,
+            },
+        ];
+
+        // E2E mock categories for menu page
+        const e2eCategories = [
+            {
+                id: 'cat-1',
+                restaurant_id: 'rest-1',
+                name: 'Mains',
+                name_am: 'ዋና ምግቦች',
+                section: null,
+                order_index: 0,
+                items: [
+                    {
+                        id: 'item-1',
+                        category_id: 'cat-1',
+                        name: 'Doro Wot',
+                        price: 45000,
+                        description: 'Spicy chicken stew',
+                        is_available: true,
+                        image_url: null,
+                    },
+                ],
+            },
+        ];
+
+        // E2E mock menu items
+        const e2eMenuItems = [
+            {
+                id: 'item-1',
+                category_id: 'cat-1',
+                name: 'Doro Wot',
+                price: 450,
+                description: 'Spicy chicken stew',
+                is_available: true,
+                image_url: null,
+            },
+        ];
+
+        // E2E mock alert events
+        const e2eAlertEvents = [
+            {
+                id: 'alert-1',
+                entity_type: 'kitchen',
+                entity_id: 'kitchen-1',
+                status: 'open',
+                severity: 'high',
+                created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+                resolved_at: null,
+            },
+        ];
+
         const updateChainable = {
             data: null,
             error: null,
             eq: function () {
                 return this;
             },
+        };
+
+        // Helper to get the right mock data for each table
+        const getTableMockData = (
+            tableName: string
+        ): { listData: unknown[]; singleData: unknown } => {
+            switch (tableName) {
+                case 'restaurant_staff':
+                    return { listData: [e2eStaffRow], singleData: e2eStaffRow };
+                case 'restaurants':
+                    return { listData: [e2eRestaurantRow], singleData: e2eRestaurantRow };
+                case 'orders':
+                    return { listData: e2eOrders, singleData: e2eOrders[0] };
+                case 'service_requests':
+                    return { listData: e2eServiceRequests, singleData: e2eServiceRequests[0] };
+                case 'tables':
+                    return { listData: e2eTables, singleData: e2eTables[0] };
+                case 'guests':
+                    return { listData: e2eGuests, singleData: e2eGuests[0] };
+                case 'delivery_partners':
+                    return { listData: e2eDeliveryPartners, singleData: e2eDeliveryPartners[0] };
+                case 'external_orders':
+                    return { listData: e2eExternalOrders, singleData: e2eExternalOrders[0] };
+                case 'payments':
+                    return { listData: e2ePayments, singleData: e2ePayments[0] };
+                case 'payouts':
+                    return { listData: e2ePayouts, singleData: e2ePayouts[0] };
+                case 'reconciliation_entries':
+                    return { listData: e2eReconciliation, singleData: e2eReconciliation[0] };
+                case 'refunds':
+                    return { listData: e2eRefunds, singleData: e2eRefunds[0] };
+                case 'categories':
+                    return { listData: e2eCategories, singleData: e2eCategories[0] };
+                case 'menu_items':
+                    return { listData: e2eMenuItems, singleData: e2eMenuItems[0] };
+                case 'alert_events':
+                    return { listData: e2eAlertEvents, singleData: e2eAlertEvents[0] };
+                default:
+                    return { listData: [], singleData: null };
+            }
         };
 
         return {
@@ -218,21 +474,16 @@ export async function createClient() {
                     error: null,
                 }),
             },
-            from: (table: string) => ({
-                // Return a valid staff row for restaurant_staff lookups so
-                // resolveRestaurantId() returns 'rest-1' instead of null.
-                // Return a valid restaurant row for restaurants lookups so routes
-                // that access data.settings don't crash with a null dereference.
-                select: () =>
-                    table === 'restaurant_staff'
-                        ? createChainableMock([e2eStaffRow], e2eStaffRow)
-                        : table === 'restaurants'
-                          ? createChainableMock([e2eRestaurantRow], e2eRestaurantRow)
-                          : createChainableMock([], null),
-                insert: () => ({ data: null, error: null }),
-                update: () => updateChainable,
-                delete: () => ({ data: null, error: null }),
-            }),
+            from: (table: string) => {
+                const { listData, singleData } = getTableMockData(table);
+                return {
+                    // Return appropriate mock data for each table
+                    select: () => createChainableMock(listData, singleData),
+                    insert: () => ({ data: null, error: null }),
+                    update: () => updateChainable,
+                    delete: () => ({ data: null, error: null }),
+                };
+            },
         } as unknown as ReturnType<typeof createServerClient<Database>>;
     }
 

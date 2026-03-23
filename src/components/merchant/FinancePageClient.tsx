@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { Landmark } from 'lucide-react';
+import { Landmark, BarChart3, RefreshCcw, FileCheck, Download } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { AccountingExportPanel } from '@/components/merchant/AccountingExportPanel';
 import {
     PaymentMethodBreakdown,
@@ -37,6 +38,9 @@ export function FinancePageClient(_props: FinancePageClientProps) {
     const [refunds, setRefunds] = useState<RefundRow[]>([]);
     const [payouts, setPayouts] = useState<PayoutRow[]>([]);
     const [reconciliationEntries, setReconciliationEntries] = useState<ReconciliationRow[]>([]);
+    const [activeTab, setActiveTab] = useState<'breakdown' | 'refunds' | 'payouts' | 'exports'>(
+        'breakdown'
+    );
     const [creatingRefund, setCreatingRefund] = useState(false);
     const [exporting, setExporting] = useState<DatasetKey | null>(null);
     const [refreshToken, setRefreshToken] = useState(0);
@@ -211,18 +215,13 @@ export function FinancePageClient(_props: FinancePageClientProps) {
     };
 
     return (
-        <div className="min-h-screen space-y-6 pb-20">
-            <div>
-                <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
-                    {copy.finance.title}
-                </h1>
-                <p className="font-medium text-gray-500">{copy.finance.subtitle}</p>
-            </div>
-
-            <div className="rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <Landmark className="h-4 w-4 text-blue-600" />
-                    {copy.finance.operationsCenter}
+        <div className="min-h-screen space-y-8 pb-20">
+            <div className="flex items-start justify-between">
+                <div>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                        {copy.finance.title}
+                    </h1>
+                    <p className="font-medium text-gray-500">{copy.finance.subtitle}</p>
                 </div>
             </div>
 
@@ -234,26 +233,74 @@ export function FinancePageClient(_props: FinancePageClientProps) {
 
             <SettlementSummaryCard loading={loading} totals={settlementTotals} locale={locale} />
 
-            <div className="grid gap-6 xl:grid-cols-2">
-                <PaymentMethodBreakdown loading={loading} payments={payments} locale={locale} />
-                <RefundQueue
-                    loading={loading}
-                    creating={creatingRefund}
-                    refunds={refunds}
-                    payments={payments}
-                    onCreateRefund={handleCreateRefund}
-                    locale={locale}
-                />
-            </div>
+            <section className="space-y-6">
+                <div className="flex flex-col gap-4">
+                    <div className="flex w-fit items-center gap-1 rounded-2xl bg-gray-100/50 p-1">
+                        {[
+                            { id: 'breakdown', label: 'Payment breakdown', icon: BarChart3 },
+                            { id: 'refunds', label: 'Refund queue', icon: RefreshCcw },
+                            { id: 'payouts', label: 'Payout reconciliation', icon: FileCheck },
+                            { id: 'exports', label: 'Accounting exports', icon: Download },
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={cn(
+                                    'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
+                                    activeTab === tab.id
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-500 hover:bg-white/50 hover:text-gray-700'
+                                )}
+                            >
+                                <tab.icon className="h-4 w-4" />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-            <PayoutReconciliationTable
-                loading={loading}
-                payouts={payouts}
-                reconciliationEntries={reconciliationEntries}
-                locale={locale}
-            />
+                <div className="min-h-[500px] transition-all duration-300">
+                    {activeTab === 'breakdown' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2">
+                            <PaymentMethodBreakdown
+                                loading={loading}
+                                payments={payments}
+                                locale={locale}
+                            />
+                        </div>
+                    )}
 
-            <AccountingExportPanel exporting={exporting} onExport={handleExport} />
+                    {activeTab === 'refunds' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2">
+                            <RefundQueue
+                                loading={loading}
+                                creating={creatingRefund}
+                                refunds={refunds}
+                                payments={payments}
+                                onCreateRefund={handleCreateRefund}
+                                locale={locale}
+                            />
+                        </div>
+                    )}
+
+                    {activeTab === 'payouts' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2">
+                            <PayoutReconciliationTable
+                                loading={loading}
+                                payouts={payouts}
+                                reconciliationEntries={reconciliationEntries}
+                                locale={locale}
+                            />
+                        </div>
+                    )}
+
+                    {activeTab === 'exports' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2">
+                            <AccountingExportPanel exporting={exporting} onExport={handleExport} />
+                        </div>
+                    )}
+                </div>
+            </section>
         </div>
     );
 }

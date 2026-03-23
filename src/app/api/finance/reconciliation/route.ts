@@ -1,7 +1,9 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseQuery } from '@/lib/api/validation';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 const ReconciliationQuerySchema = z.object({
     status: z.enum(['matched', 'exception', 'investigating', 'resolved']).optional(),
@@ -102,5 +104,116 @@ export async function GET(request: Request) {
             resolved_count: summary.resolved_count,
             open_count: summary.open_count,
         },
+    });
+}
+
+// POST handler for triggering manual reconciliation
+const TriggerReconciliationSchema = z.object({
+    reconciliation_date: z.string().optional(), // YYYY-MM-DD format
+    run_daily: z.boolean().optional().default(false),
+    run_payout_matching: z.boolean().optional().default(false),
+});
+
+export async function POST(request: NextRequest) {
+    const auth = await getAuthenticatedUser();
+    if (!auth.ok) {
+        return auth.response;
+    }
+
+    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
+    if (!context.ok) {
+        return context.response;
+    }
+
+    const body = await request.json().catch(() => null);
+    const parsed = TriggerReconciliationSchema.safeParse(body);
+
+    if (!parsed.success) {
+        return apiError(
+            'Invalid reconciliation request',
+            400,
+            'INVALID_REQUEST',
+            parsed.error.flatten().toString()
+        );
+    }
+
+    const { reconciliation_date, run_daily, run_payout_matching } = parsed.data;
+    const targetDate =
+        reconciliation_date || new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const admin = createServiceRoleClient();
+    const results: { daily: any; payout_matching: any } = { daily: null, payout_matching: null };
+
+    // Run daily reconciliation if requested
+    if (run_daily) {
+        try {
+            const { data, error } = await admin.rpc('reconcile_daily_payments', {
+                p_restaurant_id: context.restaurantId,
+                p_reconciliation_date: targetDate,
+            });
+
+            results.daily = { success: !error, error: error?.message, data };
+        } catch (err) {
+            results.daily = {
+                success: false,
+                error: err instanceof Error ? err.message : 'Unknown error',
+            };
+        }
+    }
+
+    // Run payout matching if requested
+    if (run_payout_matching) {
+        try {
+            const { data, error } = await admin.rpc('match_payments_to_payouts', {
+                p_restaurant_id: context.restaurantId,
+                p_payout_id: null,
+            });
+
+            results.payout_matching = { success: !error, error: error?.message, data };
+        } catch (err) {
+            results.payout_matching = {
+                success: false,
+                error: err instanceof Error ? err.message : 'Unknown error',
+            };
+        }
+    }
+
+    // If no specific action requested, run both
+    if (!run_daily && !run_payout_matching) {
+        try {
+            const { data: dailyData, error: dailyError } = await admin.rpc(
+                'reconcile_daily_payments',
+                {
+                    p_restaurant_id: context.restaurantId,
+                    p_reconciliation_date: targetDate,
+                }
+            );
+            results.daily = { success: !dailyError, error: dailyError?.message, data: dailyData };
+
+            const { data: payoutData, error: payoutError } = await admin.rpc(
+                'match_payments_to_payouts',
+                {
+                    p_restaurant_id: context.restaurantId,
+                    p_payout_id: null,
+                }
+            );
+            results.payout_matching = {
+                success: !payoutError,
+                error: payoutError?.message,
+                data: payoutData,
+            };
+        } catch (err) {
+            return apiError(
+                'Reconciliation failed',
+                500,
+                'RECONCILIATION_FAILED',
+                err instanceof Error ? err.message : 'Unknown error'
+            );
+        }
+    }
+
+    return apiSuccess({
+        reconciliation_date: targetDate,
+        restaurant_id: context.restaurantId,
+        results,
     });
 }

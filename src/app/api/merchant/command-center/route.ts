@@ -175,7 +175,8 @@ export async function GET(request: NextRequest) {
             t => t.is_active !== false && t.status !== 'available'
         ).length;
         const openRequests = requests.filter(r => (r.status ?? 'pending') === 'pending').length;
-        const grossSales = orders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0);
+        const grossSalesSantim = orders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0);
+        const grossSales = grossSalesSantim / 100;
         const avgOrderValue = orders.length > 0 ? Math.round(grossSales / orders.length) : 0;
         const uniqueTablesToday = new Set(orders.map(o => o.table_number).filter(Boolean)).size;
 

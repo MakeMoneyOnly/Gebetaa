@@ -272,42 +272,6 @@ export interface OnlineOrderingSettings {
     throttle_limit_per_15m: number;
 }
 
-export interface InventoryPageData {
-    items: InventoryItemSummary[];
-    purchaseOrders: PurchaseOrderSummary[];
-    lowStockItems: InventoryItemSummary[];
-    totalItems: number;
-    totalValue: number;
-    restaurant_id: string;
-}
-
-export interface InventoryItemSummary {
-    id: string;
-    name: string;
-    category: string;
-    current_stock: number;
-    reorder_level: number;
-    uom: string;
-    cost_per_unit: number;
-    sku: string | null;
-    last_restocked: string | null;
-}
-
-export interface PurchaseOrderSummary {
-    id: string;
-    po_number: string | null;
-    supplier_name: string;
-    status: 'pending' | 'submitted' | 'approved' | 'received' | 'cancelled';
-    total_amount: number;
-    currency: string;
-    created_at: string;
-    expected_delivery: string | null;
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
 function isInFlightStatus(status: string | null) {
     return ['pending', 'acknowledged', 'preparing', 'ready'].includes(status ?? '');
 }

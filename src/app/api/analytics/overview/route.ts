@@ -1,27 +1,10 @@
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
-
-function getRangeStart(range: string | null) {
-    const now = new Date();
-    if (range === 'week') {
-        const d = new Date(now);
-        d.setDate(now.getDate() - 7);
-        return d.toISOString();
-    }
-    if (range === 'month') {
-        const d = new Date(now);
-        d.setMonth(now.getMonth() - 1);
-        return d.toISOString();
-    }
-    if (range === 'year') {
-        const d = new Date(now);
-        d.setFullYear(now.getFullYear() - 1);
-        return d.toISOString();
-    }
-    const d = new Date(now);
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString();
-}
+import {
+    getAnalyticsOverview,
+    getRangeStart,
+    type AnalyticsRange,
+} from '@/lib/services/timescaleAnalyticsService';
 
 export async function GET(request: Request) {
     const auth = await getAuthenticatedUser();
@@ -35,32 +18,52 @@ export async function GET(request: Request) {
     }
 
     const url = new URL(request.url);
-    const range = url.searchParams.get('range');
-    const since = getRangeStart(range);
+    const rangeParam = (url.searchParams.get('range') as AnalyticsRange) || 'today';
+    const since = getRangeStart(rangeParam);
 
     // Calculate previous period start
     const sinceDate = new Date(since);
     const prevDate = new Date(sinceDate);
-    if (range === 'week') prevDate.setDate(prevDate.getDate() - 7);
-    else if (range === 'month') prevDate.setMonth(prevDate.getMonth() - 1);
-    else if (range === 'year') prevDate.setFullYear(prevDate.getFullYear() - 1);
+    if (rangeParam === 'week') prevDate.setDate(prevDate.getDate() - 7);
+    else if (rangeParam === 'month') prevDate.setMonth(prevDate.getMonth() - 1);
+    else if (rangeParam === 'year') prevDate.setFullYear(prevDate.getFullYear() - 1);
     else prevDate.setDate(prevDate.getDate() - 1); // Default is today (1 day)
 
     const prevSince = prevDate.toISOString();
 
+    // Try to get TimescaleDB analytics first (faster for large datasets)
+    let timeseriesMetrics: ReturnType<typeof getAnalyticsOverview> | null = null;
+    try {
+        timeseriesMetrics = await getAnalyticsOverview(
+            context.supabase,
+            context.restaurantId,
+            rangeParam
+        );
+    } catch (error) {
+        console.warn('[analytics/overview] TimescaleDB not available, using direct queries', error);
+    }
+
+    // If TimescaleDB has data, use it; otherwise fall back to direct queries
+    const useTimeseries = timeseriesMetrics && timeseriesMetrics.total_orders > 0;
+
     const [ordersRes, prevOrdersRes, requestsRes, tablesRes, reviewsRes] = await Promise.all([
-        context.supabase
-            .from('orders')
-            .select('id, status, total_price, created_at, order_items(name, quantity, price)')
-            .eq('restaurant_id', context.restaurantId)
-            .gte('created_at', since),
-        context.supabase
-            .from('orders')
-            .select('id', { count: 'exact', head: true })
-            .eq('restaurant_id', context.restaurantId)
-            .in('status', ['served', 'completed'])
-            .gte('created_at', prevSince)
-            .lt('created_at', since),
+        // Only fetch orders if not using timeseries
+        useTimeseries
+            ? Promise.resolve({ data: [], error: null })
+            : context.supabase
+                  .from('orders')
+                  .select('id, status, total_price, created_at, order_items(name, quantity, price)')
+                  .eq('restaurant_id', context.restaurantId)
+                  .gte('created_at', since),
+        useTimeseries
+            ? Promise.resolve({ count: timeseriesMetrics?.previous_completed_orders || 0 })
+            : context.supabase
+                  .from('orders')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('restaurant_id', context.restaurantId)
+                  .in('status', ['served', 'completed'])
+                  .gte('created_at', prevSince)
+                  .lt('created_at', since),
         context.supabase
             .from('service_requests')
             .select('id, status, created_at')
@@ -107,7 +110,9 @@ export async function GET(request: Request) {
     const tables = tablesRes.data ?? [];
     const reviews = reviewsRes.data ?? [];
 
-    const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total_price ?? 0), 0);
+    // total_price is stored in santim — divide by 100 to get ETB
+    const totalRevenue =
+        orders.reduce((sum, order) => sum + Number(order.total_price ?? 0), 0) / 100;
     const totalOrders = orders.length;
     const completedOrders = orders.filter(order =>
         ['served', 'completed'].includes(order.status ?? '')
@@ -153,7 +158,7 @@ export async function GET(request: Request) {
                 itemSales[name] = { count: 0, revenue: 0 };
             }
             itemSales[name].count += qty;
-            itemSales[name].revenue += price * qty;
+            itemSales[name].revenue += (price / 100) * qty;
         });
     });
 
@@ -189,7 +194,7 @@ export async function GET(request: Request) {
         }
 
         if (trendBuckets[key]) {
-            trendBuckets[key].revenue += Number(order.total_price ?? 0);
+            trendBuckets[key].revenue += Number(order.total_price ?? 0) / 100;
             trendBuckets[key].orders += 1;
         }
     });

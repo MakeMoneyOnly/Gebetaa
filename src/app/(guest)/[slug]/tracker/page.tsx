@@ -21,6 +21,7 @@ import {
     ArrowLeft,
     RefreshCw,
 } from 'lucide-react';
+import { formatETBCurrency } from '@/lib/format/et';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -292,6 +293,8 @@ function TrackerContent() {
                                 Order #{order.order_number}{' '}
                                 <span className="mx-1 font-normal text-slate-300">/</span> Table{' '}
                                 {order.table_number}
+                                <span className="mx-1 font-normal text-slate-300">·</span>{' '}
+                                {formatETBCurrency(order.total_price)}
                             </p>
                         )}
                     </div>
@@ -307,9 +310,9 @@ function TrackerContent() {
             <div className="mx-auto max-w-lg space-y-6 px-4 py-8">
                 {/* ── Order Progress Card ──────────────────────────────────── */}
                 <div
-                    className={`overflow-hidden rounded-[2rem] border shadow-sm transition-all ${
-                        allReady ? 'border-emerald-200/60 bg-white' : 'border-slate-200/60 bg-white'
-                    }`}
+                    className={`card-shadow overflow-hidden rounded-4xl transition-all ${
+                        allReady ? 'ring-2 ring-emerald-500/10' : ''
+                    } bg-white`}
                 >
                     <div className="p-6 md:p-8">
                         {/* Overall progress bar */}
@@ -419,7 +422,7 @@ function TrackerContent() {
                                 return (
                                     <div
                                         key={item.id}
-                                        className="group flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all hover:shadow-md md:p-5"
+                                        className="group card-shadow hover:card-shadow-lg flex flex-col gap-3 rounded-3xl bg-white p-5 text-left transition-all"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-center gap-3">
@@ -481,7 +484,7 @@ function TrackerContent() {
                             })}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white/50 p-10 text-center">
+                        <div className="flex flex-col items-center justify-center rounded-4xl border border-dashed border-slate-200 bg-white/50 p-10 text-center">
                             <ChefHat className="mb-3 h-10 w-10 text-slate-300" />
                             <p className="text-base font-bold text-slate-900">
                                 Retrieving items...
@@ -495,7 +498,7 @@ function TrackerContent() {
 
                 {/* ── All Ready Banner ─────────────────────────────────────── */}
                 {allReady && (
-                    <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-6 text-center shadow-sm md:p-8">
+                    <div className="card-shadow rounded-4xl border border-emerald-100 bg-emerald-50 p-6 text-center md:p-8">
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                             <PackageCheck className="h-8 w-8 text-emerald-600" />
                         </div>

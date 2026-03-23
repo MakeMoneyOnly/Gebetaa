@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { createAuditedServiceRoleClient } from '@/lib/supabase/service-role';
 import { revalidatePath } from 'next/cache';
 import { verifyOrigin } from '@/lib/security/csrf';
 
@@ -56,7 +56,11 @@ export async function acceptInvite(code: string) {
         return { error: 'You are already a staff member of this restaurant.' };
     }
 
-    const adminClient = createServiceRoleClient();
+    // HIGH-010: Use audited service role client for staff insertion
+    const adminClient = createAuditedServiceRoleClient('invite-actions', {
+        userId: user.id,
+        restaurantId: invite.restaurant_id,
+    });
     const { error: insertError } = await adminClient.from('restaurant_staff').insert({
         restaurant_id: invite.restaurant_id,
         user_id: user.id,

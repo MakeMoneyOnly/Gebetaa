@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { createAuditedServiceRoleClient } from '@/lib/supabase/service-role';
 import { verifyOrigin } from '@/lib/security/csrf';
 
 // Role-based redirect map
@@ -30,7 +30,8 @@ export async function provisionDevice(data: {
     await verifyOrigin();
 
     const supabase = await createClient();
-    const adminClient = createServiceRoleClient(); // Needed for admin Ops
+    // HIGH-010: Use audited service role client for device provisioning
+    const adminClient = createAuditedServiceRoleClient('device-provisioning');
 
     try {
         // 1. Verify Invite Code

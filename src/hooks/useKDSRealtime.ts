@@ -4,6 +4,33 @@ import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+/**
+ * HIGH-015: Reconnection configuration
+ */
+const RECONNECT_CONFIG = {
+    /** Maximum number of reconnection attempts */
+    maxRetries: 5,
+    /** Base delay in milliseconds for exponential backoff */
+    baseDelayMs: 1000,
+    /** Maximum delay in milliseconds */
+    maxDelayMs: 30000,
+    /** Jitter factor to prevent thundering herd (0-1) */
+    jitterFactor: 0.3,
+};
+
+/**
+ * Calculate exponential backoff delay with jitter
+ */
+function calculateReconnectDelay(retryCount: number): number {
+    const delay = Math.min(
+        RECONNECT_CONFIG.baseDelayMs * Math.pow(2, retryCount),
+        RECONNECT_CONFIG.maxDelayMs
+    );
+    // Add jitter
+    const jitter = delay * RECONNECT_CONFIG.jitterFactor * Math.random();
+    return delay + jitter;
+}
+
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed';
 type ExternalOrderStatus =
     | 'pending'
@@ -56,6 +83,13 @@ export function useKDSRealtime({
     const supabase = useMemo(() => createClient(), []);
     const mountedRef = useRef(false);
     const [isConnected, setIsConnected] = useState(false);
+
+    // HIGH-015: Reconnection state
+    const retryCountRef = useRef(0);
+    const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [reconnectionStatus, setReconnectionStatus] = useState<
+        'idle' | 'reconnecting' | 'failed'
+    >('idle');
 
     const handleOrdersChange = useCallback(
         (payload: RealtimePayload) => {
@@ -137,12 +171,51 @@ export function useKDSRealtime({
         [restaurantId, onNewOrder, onOrderUpdate, onOrderDelete]
     );
 
-    useEffect(() => {
-        if (!enabled || !restaurantId) return;
+    /**
+     * HIGH-015: Attempt to reconnect with exponential backoff
+     */
+    const attemptReconnect = useCallback(() => {
+        if (!mountedRef.current) return;
 
-        mountedRef.current = true;
+        const currentRetry = retryCountRef.current;
 
-        // Create a single channel for all subscriptions
+        if (currentRetry >= RECONNECT_CONFIG.maxRetries) {
+            console.error(
+                `[KDS Realtime] Max reconnection attempts (${RECONNECT_CONFIG.maxRetries}) reached`
+            );
+            setReconnectionStatus('failed');
+            return;
+        }
+
+        const delay = calculateReconnectDelay(currentRetry);
+        console.log(
+            `[KDS Realtime] Scheduling reconnect attempt ${currentRetry + 1}/${RECONNECT_CONFIG.maxRetries} in ${Math.round(delay)}ms`
+        );
+
+        setReconnectionStatus('reconnecting');
+
+        reconnectTimeoutRef.current = setTimeout(() => {
+            if (!mountedRef.current) return;
+
+            retryCountRef.current++;
+
+            // Unsubscribe existing channel if any
+            if (channelRef.current) {
+                channelRef.current.unsubscribe();
+                channelRef.current = null;
+            }
+
+            // Trigger reconnection by setting up a new subscription
+            setupChannel();
+        }, delay);
+    }, []);
+
+    /**
+     * HIGH-015: Setup channel with reconnection handling
+     */
+    const setupChannel = useCallback(() => {
+        if (!mountedRef.current || !restaurantId) return;
+
         const channel = supabase
             .channel(`kds-orders-${restaurantId}`)
             .on(
@@ -172,29 +245,56 @@ export function useKDSRealtime({
             .subscribe(status => {
                 console.log(`[KDS Realtime] Subscription status: ${status}`);
                 if (!mountedRef.current) return;
+
                 if (status === 'SUBSCRIBED') {
                     setIsConnected(true);
+                    setReconnectionStatus('idle');
+                    retryCountRef.current = 0; // Reset retry count on successful connection
                     return;
                 }
+
                 if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
                     setIsConnected(false);
+                    // HIGH-015: Attempt reconnection with exponential backoff
+                    attemptReconnect();
                 }
             });
 
         channelRef.current = channel;
+    }, [restaurantId, supabase, handleOrdersChange, handleExternalOrdersChange, attemptReconnect]);
 
+    useEffect(() => {
+        if (!enabled || !restaurantId) return;
+
+        mountedRef.current = true;
+        retryCountRef.current = 0;
+        setReconnectionStatus('idle');
+
+        // Initial channel setup
+        setupChannel();
+
+        // HIGH-015: Cleanup function
         return () => {
             mountedRef.current = false;
+
+            // Clear any pending reconnect timeout
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+                reconnectTimeoutRef.current = null;
+            }
+
             if (channelRef.current) {
                 channelRef.current.unsubscribe();
                 channelRef.current = null;
             }
             setIsConnected(false);
+            setReconnectionStatus('idle');
         };
-    }, [enabled, restaurantId, supabase, handleOrdersChange, handleExternalOrdersChange]);
+    }, [enabled, restaurantId, setupChannel]);
 
     return {
         isConnected,
+        reconnectionStatus,
     };
 }
 

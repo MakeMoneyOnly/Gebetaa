@@ -29,7 +29,7 @@ export function LiveKPICard({
 }: LiveKPICardProps) {
     if (loading) {
         return (
-            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="card-shadow rounded-4xl bg-white p-5">
                 <div className="mb-4 flex items-center justify-between">
                     <Skeleton className="h-9 w-9 rounded-xl" />
                     <Skeleton className="h-5 w-20 rounded-full" />
@@ -41,7 +41,7 @@ export function LiveKPICard({
     }
 
     return (
-        <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="card-shadow rounded-4xl bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
                 <div className={`rounded-xl border px-2.5 py-2 ${toneStyles[tone]}`}>
                     <Icon className="h-4 w-4" />

@@ -19,6 +19,7 @@
 
 import { type ComponentType, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { formatETBCurrency } from '@/lib/format/et';
 import {
     CalendarCheck,
     CheckCircle,
@@ -33,6 +34,7 @@ import {
     Wallet,
 } from 'lucide-react';
 
+import { MetricCard } from '@/components/merchant/MetricCard';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { AttentionQueuePanel } from '@/components/merchant/command-center/AttentionQueuePanel';
 import { KdsReliabilityPanel } from '@/components/merchant/KdsReliabilityPanel';
@@ -383,7 +385,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
             </div>
 
             {/* Income Tracker */}
-            <div className="rounded-[2.5rem] bg-white p-8 shadow-sm">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
                 <div className="mb-8 flex items-start justify-between">
                     <div className="max-w-xl">
                         <h2 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
@@ -394,7 +396,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                         </p>
                     </div>
                     <span className="text-sm font-semibold text-gray-500">
-                        Gross ETB {metrics.gross_sales_today}
+                        Gross {formatETBCurrency(metrics.gross_sales_today, { compact: false })}
                     </span>
                 </div>
                 <div className="flex h-full flex-col items-center gap-12 xl:flex-row">
@@ -480,76 +482,6 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                 open={alertRuleDrawerOpen}
                 onClose={() => setAlertRuleDrawerOpen(false)}
             />
-        </div>
-    );
-}
-
-function MetricCard({
-    icon: Icon,
-    chip,
-    value,
-    label,
-    subLabel,
-    tone,
-    progress,
-    targetLabel,
-    currentLabel,
-}: {
-    icon: ComponentType<{ className?: string }>;
-    chip: string;
-    value: string | number;
-    label: string;
-    subLabel: string;
-    tone: 'blue' | 'rose' | 'green' | 'purple';
-    progress: number;
-    targetLabel: string;
-    currentLabel: string;
-}) {
-    const toneMap = {
-        blue: 'bg-blue-500',
-        rose: 'bg-rose-500',
-        green: 'bg-green-600',
-        purple: 'bg-purple-500',
-    };
-
-    return (
-        <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
-            <div className="mb-2 flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm">
-                    <Icon className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-600 uppercase">
-                        {chip}
-                    </span>
-                    <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
-                        {value}
-                    </h3>
-                </div>
-            </div>
-            <div className="absolute right-5 bottom-5 left-5">
-                <div className="mb-3">
-                    <h3 className="mb-1 text-lg leading-none font-bold text-gray-900">{label}</h3>
-                    <p className="text-xs font-medium text-gray-400">{subLabel}</p>
-                </div>
-                <div className="flex items-center justify-between gap-1">
-                    {Array.from({ length: 20 }).map((_, i) => {
-                        const isActive = i < progress;
-                        const opacity = isActive ? 0.3 + 0.7 * (i / Math.max(progress, 1)) : 1;
-                        return (
-                            <div
-                                key={i}
-                                style={{ opacity: isActive ? opacity : 1 }}
-                                className={`h-[11px] w-[11px] rounded-full ${isActive ? toneMap[tone] : 'bg-gray-100'}`}
-                            />
-                        );
-                    })}
-                </div>
-                <div className="mt-2 flex justify-between text-[10px] font-medium text-gray-400">
-                    <span>{targetLabel}</span>
-                    <span>{currentLabel}</span>
-                </div>
-            </div>
         </div>
     );
 }

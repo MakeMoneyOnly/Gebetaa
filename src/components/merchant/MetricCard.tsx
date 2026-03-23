@@ -32,16 +32,24 @@ export function MetricCard({
     };
 
     const isETB = typeof value === 'string' && value.includes('ETB');
-    const displayValue = isETB ? value.toString().replace('ETB', '').trim() : value;
+    let displayValue = value;
+    if (isETB && typeof value === 'string') {
+        displayValue = value.replace('ETB', '').trim();
+    } else if (typeof value === 'number') {
+        displayValue = new Intl.NumberFormat('en', {
+            notation: 'compact',
+            compactDisplay: 'short',
+        }).format(value);
+    }
 
     return (
-        <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+        <div className="group card-shadow hover:card-shadow-lg relative flex h-[180px] flex-col justify-between overflow-hidden rounded-4xl bg-white p-5 transition-all">
             <div className="mb-2 flex items-start justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm">
                     <Icon className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-600 uppercase">
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-600">
                         {chip}
                     </span>
                     <div className="mt-[14px] flex flex-col items-end">

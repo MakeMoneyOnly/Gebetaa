@@ -105,12 +105,13 @@ export async function GET(request: Request) {
     );
 
     return apiSuccess({
-        refunds,
+        refunds: refunds.map(r => ({ ...r, amount: Number(r.amount) / 100 })),
         totals: {
-            total_amount: Number(totals.total_amount.toFixed(2)),
-            pending_amount: Number(totals.pending_amount.toFixed(2)),
+            // Convert santim to ETB (÷100) for frontend display
+            total_amount: Math.round(totals.total_amount) / 100,
+            pending_amount: Math.round(totals.pending_amount) / 100,
             pending_count: totals.pending_count,
-            processed_amount: Number(totals.processed_amount.toFixed(2)),
+            processed_amount: Math.round(totals.processed_amount) / 100,
             processed_count: totals.processed_count,
         },
     });

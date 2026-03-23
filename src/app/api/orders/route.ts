@@ -277,7 +277,7 @@ export async function GET(request: NextRequest) {
 
         responseStatus = 200;
         return apiSuccess({
-            orders: data ?? [],
+            orders: data?.map(o => ({ ...o, total_price: Number(o.total_price ?? 0) / 100 })) ?? [],
             total: data?.length ?? 0,
         });
     } catch (error) {

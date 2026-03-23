@@ -19,8 +19,9 @@ const eslintConfig = defineConfig([
     ]),
     {
         rules: {
-            // Existing codebase has broad legacy usage; keep lint actionable for CI gating.
-            '@typescript-eslint/no-explicit-any': 'off',
+            // HIGH-007: Re-enabled as 'warn' to gradually reduce `any` usage
+            // Existing codebase has broad legacy usage; warn to make lint actionable for CI gating.
+            '@typescript-eslint/no-explicit-any': 'warn',
             'react/no-unescaped-entities': 'off',
             'react-hooks/set-state-in-effect': 'off',
             // Allow underscore-prefixed variables (intentionally unused function params)

@@ -44,7 +44,7 @@ export function AttentionQueuePanel({
     onOpenSettings,
 }: AttentionQueuePanelProps) {
     return (
-        <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+        <section className="card-shadow rounded-4xl bg-white p-6">
             <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Siren className="h-4 w-4 text-rose-500" />
@@ -100,7 +100,7 @@ export function AttentionQueuePanel({
                     {items.slice(0, 8).map(item => (
                         <article
                             key={`${item.type}-${item.id}`}
-                            className="rounded-2xl border border-gray-100 p-4"
+                            className="card-shadow hover:card-shadow-lg rounded-3xl bg-white p-4 transition-all"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">

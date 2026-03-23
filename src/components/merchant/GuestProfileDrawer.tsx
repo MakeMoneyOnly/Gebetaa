@@ -2,6 +2,7 @@
 
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Loader2, Save, Star, X } from 'lucide-react';
+import { formatETBCurrency } from '@/lib/format/et';
 
 type GuestDetail = {
     id: string;
@@ -151,12 +152,7 @@ export function GuestProfileDrawer({
                                     Lifetime Value
                                 </p>
                                 <p className="mt-1 text-lg font-bold text-gray-900">
-                                    {new Intl.NumberFormat(DASHBOARD_LOCALE, {
-                                        style: 'currency',
-                                        currency: 'ETB',
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    }).format(Number(guest.lifetime_value ?? 0))}
+                                    {formatETBCurrency(Number(guest.lifetime_value ?? 0))}
                                 </p>
                             </div>
                             <div>
@@ -291,12 +287,7 @@ export function GuestProfileDrawer({
                                                     {visit.channel}
                                                 </span>
                                                 <span className="text-xs font-semibold text-gray-800">
-                                                    {new Intl.NumberFormat(DASHBOARD_LOCALE, {
-                                                        style: 'currency',
-                                                        currency: 'ETB',
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 2,
-                                                    }).format(Number(visit.spend ?? 0))}
+                                                    {formatETBCurrency(Number(visit.spend ?? 0))}
                                                 </span>
                                             </div>
                                             <p className="mt-1 text-xs text-gray-500">

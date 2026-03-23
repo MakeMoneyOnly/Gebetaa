@@ -71,11 +71,12 @@ export async function GET(request: Request) {
     );
 
     return apiSuccess({
-        exceptions: rows,
+        exceptions: rows.map(r => ({ ...r, delta_amount: Number(r.delta_amount) / 100 })),
         summary: {
             exception_count: summary.exception_count,
             investigating_count: summary.investigating_count,
-            total_delta: Number(summary.total_delta.toFixed(2)),
+            // Convert santim to ETB (÷100) for frontend display
+            total_delta: Math.round(summary.total_delta) / 100,
         },
     });
 }

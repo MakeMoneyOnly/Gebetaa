@@ -64,26 +64,55 @@ export class OrdersRepository {
         return data ?? [];
     }
 
-    async findActiveByRestaurant(restaurantId: string): Promise<OrderRow[]> {
+    /**
+     * HIGH-004: Find active orders with pagination to prevent unbounded result sets
+     * @param restaurantId - Restaurant ID to filter by
+     * @param options - Pagination options with limit (default 50, max 200) and offset
+     */
+    async findActiveByRestaurant(
+        restaurantId: string,
+        options: { limit?: number; offset?: number } = {}
+    ): Promise<OrderRow[]> {
+        const limit = Math.min(options.limit ?? 50, 200); // Default 50, max 200
+        const offset = options.offset ?? 0;
+
         const { data } = await getSupabaseClient()
             .from('orders')
             .select('*')
             .eq('restaurant_id', restaurantId)
             .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
         return data ?? [];
     }
 
-    async findByKDSStation(restaurantId: string, station: string): Promise<OrderRow[]> {
+    /**
+     * HIGH-005: Find orders by KDS station using database-level filtering
+     * Fixes N+1 query pattern by filtering at database level instead of in-memory
+     * @param restaurantId - Restaurant ID to filter by
+     * @param station - KDS station to filter orders by
+     * @param options - Pagination options
+     */
+    async findByKDSStation(
+        restaurantId: string,
+        station: string,
+        options: { limit?: number; offset?: number } = {}
+    ): Promise<OrderRow[]> {
+        const limit = Math.min(options.limit ?? 50, 200);
+        const offset = options.offset ?? 0;
+
+        // Use a subquery to filter orders that have order_items with the specified station
+        // This moves filtering to the database level instead of in-memory
         const { data } = await getSupabaseClient()
             .from('orders')
-            .select('*, order_items(*)')
+            .select('*, order_items!inner(*)')
             .eq('restaurant_id', restaurantId)
             .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
-            .order('created_at', { ascending: false });
-        return (data ?? []).filter(order =>
-            order.order_items?.some(item => item.station === station)
-        );
+            .eq('order_items.station', station)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        return data ?? [];
     }
 
     async create(data: {

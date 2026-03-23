@@ -6,15 +6,31 @@ export function formatETBCurrency(
         locale?: AppLocale;
         maximumFractionDigits?: number;
         minimumFractionDigits?: number;
+        compact?: boolean;
     }
 ): string {
     const locale = options?.locale ?? 'en';
-    return new Intl.NumberFormat(resolveIntlLocale(locale), {
+    const formattingOptions: Intl.NumberFormatOptions = {
         style: 'currency',
         currency: 'ETB',
-        maximumFractionDigits: options?.maximumFractionDigits ?? 2,
+        // Default to 0 fraction digits based on Ethiopian conventions
+        maximumFractionDigits: options?.maximumFractionDigits ?? 0,
         minimumFractionDigits: options?.minimumFractionDigits ?? 0,
-    }).format(amount);
+    };
+
+    if (options?.compact) {
+        // Compact notation for currency can be tricky in some locales.
+        // We use 'en' as a reliable base for the 'K', 'M' symbols.
+        const numFormatter = new Intl.NumberFormat('en', {
+            notation: 'compact',
+            compactDisplay: 'short',
+            maximumFractionDigits: 1,
+        });
+        const formattedNumber = numFormatter.format(amount);
+        return `ETB ${formattedNumber}`;
+    }
+
+    return new Intl.NumberFormat(resolveIntlLocale(locale), formattingOptions).format(amount);
 }
 
 export function formatLocalizedDate(iso: string, locale: AppLocale): string {

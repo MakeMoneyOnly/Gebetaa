@@ -126,11 +126,16 @@ export async function GET(request: Request) {
     );
 
     return apiSuccess({
-        payments,
+        payments: payments.map(p => ({
+            ...p,
+            amount: Number(p.amount) / 100,
+            tip_amount: Number(p.tip_amount ?? 0) / 100,
+        })),
         totals: {
-            gross: Number(totals.gross.toFixed(2)),
-            tips: Number(totals.tips.toFixed(2)),
-            net: Number(totals.net.toFixed(2)),
+            // Convert santim to ETB (÷100) for frontend display
+            gross: Math.round(totals.gross) / 100,
+            tips: Math.round(totals.tips) / 100,
+            net: Math.round(totals.net) / 100,
             captured_count: totals.captured_count,
             failed_count: totals.failed_count,
         },

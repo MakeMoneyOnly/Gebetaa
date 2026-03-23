@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Search, Star, User } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Search, Star, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type GuestDirectoryRow = {
@@ -52,8 +52,8 @@ function formatCurrency(value: number): string {
     return new Intl.NumberFormat(DASHBOARD_LOCALE, {
         style: 'currency',
         currency: 'ETB',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     }).format(value);
 }
 
@@ -84,9 +84,23 @@ export function GuestDirectory({
             .map(([tag]) => tag);
     }, [guests]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const guestsPerPage = 10;
+
+    const paginatedGuests = useMemo(() => {
+        const startIndex = (currentPage - 1) * guestsPerPage;
+        return guests.slice(startIndex, startIndex + guestsPerPage);
+    }, [guests, currentPage]);
+
+    const totalPages = Math.ceil(guests.length / guestsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [query, segment, tagFilter, guests]);
+
     return (
         <div className="space-y-6">
-            <div className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="card-shadow mb-6 rounded-4xl bg-white p-5">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="relative w-full lg:max-w-md">
                         <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -161,7 +175,7 @@ export function GuestDirectory({
                     {Array.from({ length: 6 }).map((_, index) => (
                         <div
                             key={index}
-                            className="min-h-[180px] animate-pulse rounded-[2rem] bg-white p-5 shadow-sm"
+                            className="card-shadow min-h-[180px] animate-pulse rounded-4xl bg-white p-5"
                         >
                             <div className="h-4 w-28 rounded bg-gray-100" />
                             <div className="mt-3 h-3 w-20 rounded bg-gray-100" />
@@ -170,7 +184,7 @@ export function GuestDirectory({
                     ))}
                 </div>
             ) : guests.length === 0 ? (
-                <div className="rounded-[2rem] border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
+                <div className="rounded-4xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
                     <p className="text-base font-semibold text-gray-700">No guests found.</p>
                     <p className="mt-1 text-sm text-gray-500">
                         Adjust search and segment filters to continue.
@@ -178,13 +192,13 @@ export function GuestDirectory({
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {guests.map(guest => (
+                    {paginatedGuests.map(guest => (
                         <button
                             key={guest.id}
                             type="button"
                             onClick={() => onOpenGuest(guest.id)}
                             aria-label={`Open guest profile for ${guest.name?.trim() || `Guest ${guest.id.slice(0, 8)}`}`}
-                            className="rounded-[2rem] border border-gray-100 bg-white p-5 text-left shadow-sm transition-all hover:shadow-lg"
+                            className="card-shadow hover:card-shadow-lg rounded-4xl bg-white p-5 text-left transition-all"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-700">
@@ -227,6 +241,41 @@ export function GuestDirectory({
                             )}
                         </button>
                     ))}
+                </div>
+            )}
+
+            {guests.length > 0 && totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-6">
+                    <p className="text-sm text-gray-500">
+                        Showing{' '}
+                        <span className="font-medium text-gray-900">
+                            {(currentPage - 1) * guestsPerPage + 1}
+                        </span>{' '}
+                        to{' '}
+                        <span className="font-medium text-gray-900">
+                            {Math.min(currentPage * guestsPerPage, guests.length)}
+                        </span>{' '}
+                        of <span className="font-medium text-gray-900">{guests.length}</span>{' '}
+                        results
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

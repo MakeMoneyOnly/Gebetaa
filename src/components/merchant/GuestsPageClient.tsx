@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Users, Crown, Repeat, Wallet } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 import {
     CampaignBuilder,
     type CampaignRow,
@@ -76,6 +77,9 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
     const [redeemingGiftCardId, setRedeemingGiftCardId] = useState<string | null>(null);
     const [creatingCampaign, setCreatingCampaign] = useState(false);
     const [launchingCampaignId, setLaunchingCampaignId] = useState<string | null>(null);
+    const [activeGrowthTab, setActiveGrowthTab] = useState<'loyalty' | 'gift-cards' | 'campaigns'>(
+        'loyalty'
+    );
 
     // Mark as loaded on mount
     useEffect(() => {
@@ -257,27 +261,35 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
     };
 
     const handleCreateLoyaltyProgram = async (payload: {
+        id?: string;
         name: string;
         status: LoyaltyProgramRow['status'];
+        points_rule_json?: Record<string, unknown>;
     }) => {
         try {
             setCreatingLoyalty(true);
-            const response = await fetch('/api/loyalty/programs', {
-                method: 'POST',
+            const isUpdate = !!payload.id;
+            const url = isUpdate ? `/api/loyalty/programs/${payload.id}` : '/api/loyalty/programs';
+            const method = isUpdate ? 'PATCH' : 'POST';
+
+            const response = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result?.error ?? 'Failed to create loyalty program.');
+                throw new Error(
+                    result?.error ?? `Failed to ${isUpdate ? 'update' : 'create'} loyalty program.`
+                );
             }
-            toast.success('Loyalty program created.');
+            toast.success(`Loyalty program ${isUpdate ? 'updated' : 'created'}.`);
             setRefreshToken(value => value + 1);
         } catch (createError) {
             toast.error(
                 createError instanceof Error
                     ? createError.message
-                    : 'Failed to create loyalty program.'
+                    : `Failed to ${!!payload.id ? 'update' : 'create'} loyalty program.`
             );
         } finally {
             setCreatingLoyalty(false);
@@ -285,6 +297,7 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
     };
 
     const handleCreateGiftCard = async (payload: {
+        code?: string;
         initial_balance: number;
         currency: string;
         expires_at?: string;
@@ -335,27 +348,37 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
     };
 
     const handleCreateCampaign = async (payload: {
+        id?: string;
         name: string;
         channel: CampaignRow['channel'];
         segment_id?: string;
         scheduled_at?: string;
+        template_json?: { content: string };
     }) => {
         try {
             setCreatingCampaign(true);
-            const response = await fetch('/api/campaigns', {
-                method: 'POST',
+            const isUpdate = !!payload.id;
+            const url = isUpdate ? `/api/campaigns/${payload.id}` : '/api/campaigns';
+            const method = isUpdate ? 'PATCH' : 'POST';
+
+            const response = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
             const result = await response.json();
             if (!response.ok) {
-                throw new Error(result?.error ?? 'Failed to create campaign.');
+                throw new Error(
+                    result?.error ?? `Failed to ${isUpdate ? 'update' : 'create'} campaign.`
+                );
             }
-            toast.success('Campaign created.');
+            toast.success(`Campaign ${isUpdate ? 'updated' : 'created'}.`);
             setRefreshToken(value => value + 1);
         } catch (createError) {
             toast.error(
-                createError instanceof Error ? createError.message : 'Failed to create campaign.'
+                createError instanceof Error
+                    ? createError.message
+                    : `Failed to ${!!payload.id ? 'update' : 'create'} campaign.`
             );
         } finally {
             setCreatingCampaign(false);
@@ -385,6 +408,90 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
         }
     };
 
+    // Management Handlers
+    const handleDeleteLoyalty = async (id: string) => {
+        try {
+            const res = await fetch(`/api/loyalty/programs/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to delete program');
+            }
+            toast.success('Program removed');
+            setRefreshToken(v => v + 1);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to remove program');
+        }
+    };
+
+    const handleStatusChangeLoyalty = async (id: string, status: LoyaltyProgramRow['status']) => {
+        try {
+            const res = await fetch(`/api/loyalty/programs/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to update status');
+            }
+            toast.success(`Program ${status}`);
+            setRefreshToken(v => v + 1);
+        } catch (error: any) {
+            toast.error(error.message || `Failed to ${status} program`);
+        }
+    };
+
+    const handleDeleteGiftCard = async (id: string) => {
+        try {
+            const res = await fetch(`/api/gift-cards/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to delete gift card');
+            }
+            toast.success('Gift card deleted');
+            setRefreshToken(v => v + 1);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to delete gift card');
+        }
+    };
+
+    const handleArchiveGiftCard = async (id: string) => {
+        try {
+            const res = await fetch(`/api/gift-cards/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'archived' }),
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to archive gift card');
+            }
+            toast.success('Gift card archived');
+            setRefreshToken(v => v + 1);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to archive gift card');
+        }
+    };
+
+    const handleDeleteCampaign = async (id: string) => {
+        try {
+            const res = await fetch(`/api/campaigns/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to delete campaign');
+            }
+            toast.success('Campaign removed');
+            setRefreshToken(v => v + 1);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to remove campaign');
+        }
+    };
+
+    const handleEdit = (type: string, id: string) => {
+        toast.success(`Opening edit mode for ${type}...`);
+        // Implementation for opening edit modals would go here
+    };
+
     const stats = useMemo(() => {
         const totalGuests = guests.length;
         const vipCount = guests.filter(guest => guest.is_vip).length;
@@ -409,7 +516,7 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                     icon={Users}
                     chip="TOTAL"
                     value={stats.totalGuests}
-                    label="Guests In Segment"
+                    label="Guests in segment"
                     subLabel="Total customer profiles"
                     tone="blue"
                     progress={Math.min(20, Math.max(1, Math.round((stats.totalGuests / 100) * 20)))}
@@ -420,7 +527,7 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                     icon={Crown}
                     chip="VIP"
                     value={stats.vipCount}
-                    label="VIP Guests"
+                    label="VIP guests"
                     subLabel="High value customers"
                     tone="purple"
                     progress={Math.min(
@@ -434,8 +541,8 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                     icon={Repeat}
                     chip="RETURNING"
                     value={stats.returningCount}
-                    label="Repeat Guests"
-                    subLabel="Loyal Customers"
+                    label="Repeat guests"
+                    subLabel="Loyal customers"
                     tone="rose"
                     progress={Math.min(
                         20,
@@ -452,17 +559,99 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                     chip="LTV"
                     value={formatETBCurrency(stats.ltvTotal, {
                         locale,
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
+                        compact: true,
                     })}
-                    label="Lifetime Value"
-                    subLabel="Total Spend"
+                    label="Lifetime value"
+                    subLabel="Total spend"
                     tone="green"
                     progress={20}
                     targetLabel="Target: -"
                     currentLabel="Lifetime"
                 />
             </div>
+
+            <section className="space-y-6">
+                <div className="flex flex-col gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight text-black">
+                            Growth operations
+                        </h2>
+                        <p className="text-sm font-medium text-gray-500">
+                            Manage loyalty, gift cards, and marketing campaigns.
+                        </p>
+                    </div>
+
+                    <div className="flex w-fit items-center gap-1 rounded-2xl bg-gray-100/50 p-1">
+                        {[
+                            { id: 'loyalty', label: 'Loyalty program', icon: Crown },
+                            { id: 'gift-cards', label: 'Gift cards', icon: Wallet },
+                            { id: 'campaigns', label: 'Campaigns', icon: Repeat },
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveGrowthTab(tab.id as any)}
+                                className={cn(
+                                    'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
+                                    activeGrowthTab === tab.id
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-500 hover:bg-white/50 hover:text-gray-700'
+                                )}
+                            >
+                                <tab.icon className="h-4 w-4" />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {growthError ? (
+                    <p role="alert" className="text-sm font-semibold text-amber-700">
+                        {growthError}
+                    </p>
+                ) : null}
+
+                <div className="min-h-[400px]">
+                    {activeGrowthTab === 'loyalty' && (
+                        <LoyaltyProgramBuilder
+                            programs={loyaltyPrograms}
+                            loading={growthLoading}
+                            creating={creatingLoyalty}
+                            onCreate={handleCreateLoyaltyProgram}
+                            onDelete={handleDeleteLoyalty}
+                            onStatusChange={handleStatusChangeLoyalty}
+                            onEdit={id => handleEdit('loyalty', id)}
+                            locale={locale}
+                        />
+                    )}
+                    {activeGrowthTab === 'gift-cards' && (
+                        <GiftCardManager
+                            cards={giftCards}
+                            guests={guests}
+                            loading={growthLoading}
+                            creating={creatingGiftCard}
+                            redeemingId={redeemingGiftCardId}
+                            onCreate={handleCreateGiftCard}
+                            onRedeem={handleRedeemGiftCard}
+                            onArchive={handleArchiveGiftCard}
+                            onDelete={handleDeleteGiftCard}
+                            locale={locale}
+                        />
+                    )}
+                    {activeGrowthTab === 'campaigns' && (
+                        <CampaignBuilder
+                            campaigns={campaigns}
+                            segments={segments}
+                            loading={growthLoading}
+                            creating={creatingCampaign}
+                            launchingId={launchingCampaignId}
+                            onCreate={handleCreateCampaign}
+                            onLaunch={handleLaunchCampaign}
+                            onDelete={handleDeleteCampaign}
+                            onEdit={id => handleEdit('campaign', id)}
+                        />
+                    )}
+                </div>
+            </section>
 
             <GuestDirectory
                 guests={guests}
@@ -476,47 +665,6 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                 onTagFilterChange={setTagFilter}
                 onOpenGuest={openGuest}
             />
-
-            <section className="space-y-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-black">{copy.guests.growthTitle}</h2>
-                    <p className="text-sm text-gray-500">{copy.guests.growthSubtitle}</p>
-                </div>
-
-                {growthError ? (
-                    <p role="alert" className="text-sm font-semibold text-amber-700">
-                        {growthError}
-                    </p>
-                ) : null}
-
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-                    <LoyaltyProgramBuilder
-                        programs={loyaltyPrograms}
-                        loading={growthLoading}
-                        creating={creatingLoyalty}
-                        onCreate={handleCreateLoyaltyProgram}
-                        locale={locale}
-                    />
-                    <GiftCardManager
-                        cards={giftCards}
-                        loading={growthLoading}
-                        creating={creatingGiftCard}
-                        redeemingId={redeemingGiftCardId}
-                        onCreate={handleCreateGiftCard}
-                        onRedeem={handleRedeemGiftCard}
-                        locale={locale}
-                    />
-                    <CampaignBuilder
-                        campaigns={campaigns}
-                        segments={segments}
-                        loading={growthLoading}
-                        creating={creatingCampaign}
-                        launchingId={launchingCampaignId}
-                        onCreate={handleCreateCampaign}
-                        onLaunch={handleLaunchCampaign}
-                    />
-                </div>
-            </section>
 
             <GuestProfileDrawer
                 open={selectedGuestId !== null}

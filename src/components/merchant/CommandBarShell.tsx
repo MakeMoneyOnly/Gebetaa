@@ -28,11 +28,6 @@ export function CommandBarShell() {
             },
             { id: 'staff', label: 'Go to Staff', run: () => router.push('/merchant/staff') },
             {
-                id: 'inventory',
-                label: 'Go to Inventory & Cost',
-                run: () => router.push('/merchant/inventory'),
-            },
-            {
                 id: 'finance',
                 label: 'Go to Finance & Reconciliation',
                 run: () => router.push('/merchant/finance'),

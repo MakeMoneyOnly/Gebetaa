@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
             table_number: order.table_number,
             status: order.status,
             created_at: order.created_at,
-            total_price: order.total_price,
+            total_price: Number(order.total_price ?? 0) / 100,
         },
         items: kdsItems ?? [],
     });

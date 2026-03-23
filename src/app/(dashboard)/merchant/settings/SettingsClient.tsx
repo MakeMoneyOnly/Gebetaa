@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Bell, CreditCard, Loader2, Lock, Save, Shield } from 'lucide-react';
+import { Bell, CreditCard, Loader2, Lock, Save, Shield, Sparkles, Crown, Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { PaymentAccountsSettingsPanel } from '@/components/merchant/PaymentAccountsSettingsPanel';
+import { PlanPricing, FeatureDescriptions, getNextPlan } from '@/lib/subscription/plan-types';
+import type { PlanLevel } from '@/lib/subscription/plan-types';
 
 type SecuritySettings = {
     require_mfa: boolean;
@@ -34,6 +36,12 @@ type PaymentSettings = {
     hosted_checkout_fee_percentage: number;
 };
 
+type PlanSettings = {
+    plan: PlanLevel;
+    plan_expires_at: string | null;
+    plan_tier: number;
+};
+
 type BankOption = {
     id: string;
     name: string;
@@ -44,6 +52,7 @@ type SettingsClientProps = {
     security: SecuritySettings;
     notifications: NotificationSettings;
     payments: PaymentSettings;
+    plan: PlanSettings;
     banks: BankOption[];
     directoryUnavailable: boolean;
 };
@@ -52,10 +61,11 @@ export function SettingsClient({
     security: initialSecurity,
     notifications: initialNotifications,
     payments: initialPayments,
+    plan: initialPlan,
     banks: initialBanks,
     directoryUnavailable: initialDirectoryUnavailable,
 }: SettingsClientProps) {
-    const [activeTab, setActiveTab] = useState<'security' | 'notifications' | 'payments'>(
+    const [activeTab, setActiveTab] = useState<'security' | 'notifications' | 'payments' | 'plan'>(
         'security'
     );
     const [saving, setSaving] = useState(false);
@@ -67,6 +77,9 @@ export function SettingsClient({
 
     // Lift payment settings state so it survives PaymentAccountsSettingsPanel unmount/remount on tab switch
     const [currentPayments, setCurrentPayments] = useState<PaymentSettings>(initialPayments);
+
+    // Plan state
+    const [currentPlan, setCurrentPlan] = useState<PlanSettings>(initialPlan);
 
     // Re-fetch persisted payment settings from the server
     const refreshPayments = useCallback(async () => {
@@ -177,6 +190,13 @@ export function SettingsClient({
                 >
                     <CreditCard className="h-4 w-4" />
                     Payment Accounts
+                </button>
+                <button
+                    onClick={() => setActiveTab('plan')}
+                    className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${activeTab === 'plan' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                    <Sparkles className="h-4 w-4" />
+                    Plan
                 </button>
             </div>
 
@@ -362,6 +382,161 @@ export function SettingsClient({
                     initialDirectoryUnavailable={initialDirectoryUnavailable}
                     onSettingsSaved={updated => setCurrentPayments(updated)}
                 />
+            )}
+
+            {activeTab === 'plan' && (
+                <div className="max-w-3xl space-y-6">
+                    {/* Current Plan Display */}
+                    <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                        <h2 className="mb-4 text-xl font-bold text-gray-900">Current Plan</h2>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div
+                                    className={`flex h-16 w-16 items-center justify-center rounded-2xl ${currentPlan.plan === 'free' ? 'bg-gray-100' : currentPlan.plan === 'pro' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-amber-500 to-orange-600'}`}
+                                >
+                                    {currentPlan.plan === 'free' ? (
+                                        <Star className="h-8 w-8 text-gray-400" />
+                                    ) : currentPlan.plan === 'pro' ? (
+                                        <Crown className="h-8 w-8 text-white" />
+                                    ) : (
+                                        <Crown className="h-8 w-8 text-white" />
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-gray-900 capitalize">
+                                        {currentPlan.plan}
+                                        {currentPlan.plan === 'enterprise' && ' 🏢'}
+                                        {currentPlan.plan === 'pro' && ' ⚡'}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                        {PlanPricing[currentPlan.plan].monthly === 0
+                                            ? 'Free forever'
+                                            : `ETB ${PlanPricing[currentPlan.plan].monthly.toLocaleString()}/month`}
+                                    </p>
+                                    {currentPlan.plan_expires_at && (
+                                        <p className="text-sm text-amber-600">
+                                            Renews on{' '}
+                                            {new Date(
+                                                currentPlan.plan_expires_at
+                                            ).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                            {currentPlan.plan !== 'enterprise' && (
+                                <button
+                                    className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e]"
+                                    onClick={() => {
+                                        const nextPlan = getNextPlan(currentPlan.plan);
+                                        if (nextPlan) {
+                                            window.location.href = `/merchant/upgrade?plan=${nextPlan}`;
+                                        }
+                                    }}
+                                >
+                                    <Sparkles className="h-4 w-4" />
+                                    Upgrade to {getNextPlan(currentPlan.plan)}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Plan Comparison */}
+                    <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                        <h2 className="mb-4 text-xl font-bold text-gray-900">Available Plans</h2>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            {/* Free Plan */}
+                            <div
+                                className={`rounded-xl border-2 p-4 ${currentPlan.plan === 'free' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}
+                            >
+                                <div className="mb-2 flex items-center gap-2">
+                                    <Star className="h-5 w-5 text-gray-400" />
+                                    <span className="font-bold text-gray-900">Free</span>
+                                </div>
+                                <p className="mb-3 text-2xl font-bold text-gray-900">ETB 0</p>
+                                <ul className="space-y-2 text-sm text-gray-600">
+                                    <li>✓ Basic Menu</li>
+                                    <li>✓ Orders & Tables</li>
+                                    <li>✓ QR Ordering</li>
+                                    <li>✓ Staff Management</li>
+                                </ul>
+                            </div>
+
+                            {/* Pro Plan */}
+                            <div
+                                className={`rounded-xl border-2 p-4 ${currentPlan.plan === 'pro' ? 'border-purple-500 bg-purple-50' : currentPlan.plan_tier < 1 ? 'border-purple-200 hover:border-purple-400' : 'border-gray-200'}`}
+                            >
+                                <div className="mb-2 flex items-center gap-2">
+                                    <Crown className="h-5 w-5 text-purple-600" />
+                                    <span className="font-bold text-gray-900">Pro</span>
+                                    {currentPlan.plan === 'pro' && (
+                                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                                            Current
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="mb-3 text-2xl font-bold text-gray-900">
+                                    ETB 2,999<span className="text-sm font-normal">/mo</span>
+                                </p>
+                                <ul className="space-y-2 text-sm text-gray-600">
+                                    <li>✓ Everything in Free</li>
+                                    <li>✓ Analytics Dashboard</li>
+                                    <li>✓ Inventory Management</li>
+                                    <li>✓ Guest Directory</li>
+                                    <li>✓ Loyalty & Gift Cards</li>
+                                    <li>✓ Delivery Integration</li>
+                                </ul>
+                            </div>
+
+                            {/* Enterprise Plan */}
+                            <div
+                                className={`rounded-xl border-2 p-4 ${currentPlan.plan === 'enterprise' ? 'border-purple-500 bg-purple-50' : currentPlan.plan_tier < 2 ? 'border-amber-200 hover:border-amber-400' : 'border-gray-200'}`}
+                            >
+                                <div className="mb-2 flex items-center gap-2">
+                                    <Crown className="h-5 w-5 text-amber-600" />
+                                    <span className="font-bold text-gray-900">Enterprise</span>
+                                    {currentPlan.plan === 'enterprise' && (
+                                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                                            Current
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="mb-3 text-2xl font-bold text-gray-900">
+                                    ETB 9,999<span className="text-sm font-normal">/mo</span>
+                                </p>
+                                <ul className="space-y-2 text-sm text-gray-600">
+                                    <li>✓ Everything in Pro</li>
+                                    <li>✓ Multi-Location</li>
+                                    <li>✓ API Access</li>
+                                    <li>✓ Custom Integrations</li>
+                                    <li>✓ Priority Support</li>
+                                    <li>✓ Dedicated Account Manager</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Pro Features Info */}
+                    {currentPlan.plan === 'free' && (
+                        <div className="rounded-[2rem] border border-purple-100 bg-purple-50 p-6">
+                            <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-purple-900">
+                                <Sparkles className="h-5 w-5" />
+                                Unlock PRO Features
+                            </h3>
+                            <p className="mb-4 text-purple-700">
+                                Upgrade to Pro to access powerful features like analytics, inventory
+                                management, guest directory, loyalty programs, and more.
+                            </p>
+                            <button
+                                className="inline-flex h-11 items-center gap-2 rounded-xl bg-purple-600 px-4 text-sm font-semibold text-white hover:bg-purple-700"
+                                onClick={() => {
+                                    window.location.href = '/merchant/upgrade?plan=pro';
+                                }}
+                            >
+                                Upgrade to Pro - ETB 2,999/month
+                            </button>
+                        </div>
+                    )}
+                </div>
             )}
         </div>
     );

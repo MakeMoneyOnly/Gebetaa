@@ -1,6 +1,9 @@
 // Orders Domain - Service Layer
 // Business logic — pure TypeScript, no framework coupling
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ordersRepository, OrderRow, OrderItemRow } from './repository';
+import { Database } from '@/types/database';
+import { GebetaGraphQLError } from '@/lib/graphql/errors';
 import { publishEvent } from '@/lib/events/publisher';
 
 export interface CreateOrderInput {
@@ -59,6 +62,78 @@ function calculateItemTotal(
     return total;
 }
 
+// Lazy initialization of Supabase client
+let supabase: SupabaseClient<Database> | null = null;
+
+function getSupabaseClient(): SupabaseClient<Database> {
+    if (!supabase) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            throw new Error(
+                `Supabase configuration missing. NEXT_PUBLIC_SUPABASE_URL: ${!!supabaseUrl}, SUPABASE_SECRET_KEY: ${!!supabaseKey}`
+            );
+        }
+
+        supabase = createClient<Database>(supabaseUrl, supabaseKey);
+    }
+    return supabase;
+}
+
+// Type for the validation result from the RPC function
+interface ModifierValidationResult {
+    is_valid: boolean;
+    missing_groups: string[];
+    error_message: string | null;
+    error_message_am: string | null;
+}
+
+/**
+ * Validate required modifiers for a menu item
+ * Returns validation result with error message if invalid
+ */
+async function validateRequiredModifiers(
+    menuItemId: string,
+    selectedModifierIds: string[]
+): Promise<{
+    isValid: boolean;
+    missingGroups?: string[];
+    errorMessage?: string;
+    errorMessageAm?: string;
+}> {
+    try {
+        const supabase = getSupabaseClient();
+        // Use 'as any' to bypass TypeScript strict type checking for new RPC functions
+        // The function will be created by the migration
+        const { data, error } = await (supabase.rpc as any)('validate_required_modifiers', {
+            p_menu_item_id: menuItemId,
+            p_selected_modifier_ids: selectedModifierIds,
+        });
+
+        if (error) {
+            console.error('[OrdersService] Modifier validation error:', error);
+            // If validation function fails, allow the order (fail-open for safety)
+            return { isValid: true };
+        }
+
+        if (data && Array.isArray(data) && data.length > 0) {
+            const result = data[0];
+            return {
+                isValid: result.is_valid,
+                missingGroups: result.missing_groups,
+                errorMessage: result.error_message ?? undefined,
+                errorMessageAm: result.error_message_am ?? undefined,
+            };
+        }
+    } catch (err) {
+        console.error('[OrdersService] Modifier validation exception:', err);
+        // Fail-open for safety
+    }
+
+    return { isValid: true };
+}
+
 export class OrdersService {
     async createOrder(input: CreateOrderInput): Promise<OrderRow> {
         // Check for idempotency - prevent duplicate orders
@@ -67,6 +142,39 @@ export class OrdersService {
         const idempotent = existing.find(o => o.idempotency_key === input.idempotencyKey);
         if (idempotent) {
             return idempotent;
+        }
+
+        // Validate required modifiers for all items before processing order
+        for (const item of input.items) {
+            // Extract selected modifier IDs from the modifiers object
+            const selectedModifierIds: string[] = [];
+            if (item.modifiers && typeof item.modifiers === 'object') {
+                Object.values(item.modifiers).forEach((modifier: unknown) => {
+                    if (modifier && typeof modifier === 'object' && 'id' in modifier) {
+                        const mod = modifier as { id: string };
+                        if (mod.id) {
+                            selectedModifierIds.push(mod.id);
+                        }
+                    }
+                });
+            }
+
+            const validation = await validateRequiredModifiers(
+                item.menuItemId,
+                selectedModifierIds
+            );
+            if (!validation.isValid) {
+                // Use GebetaGraphQLError for proper error handling
+                const graphQLError = new GebetaGraphQLError(
+                    validation.errorMessage || 'Required modifiers not selected',
+                    'BAD_USER_INPUT',
+                    {
+                        missingGroups: validation.missingGroups,
+                        errorMessageAm: validation.errorMessageAm,
+                    }
+                );
+                throw graphQLError;
+            }
         }
 
         // Calculate totals

@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp, ArrowUpDown, Clock, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCurrencyCompact } from '@/lib/utils/monetary';
+import { formatETBCurrency } from '@/lib/format/et';
 import { Order } from '@/types/database';
 
 type SortKey = 'created_at' | 'table_number' | 'status' | 'total_price';
@@ -73,7 +73,7 @@ export function OrdersQueueTable({
             .every(order => selectedOrderIds.includes(order.id));
 
     return (
-        <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-gray-100">
+        <div className="card-shadow overflow-hidden rounded-4xl bg-white">
             <div className="overflow-x-auto">
                 <table className="min-w-full text-left">
                     <thead className="border-b border-gray-100 bg-gray-50/60">
@@ -215,7 +215,7 @@ export function OrdersQueueTable({
                                         ) : (
                                             <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-900">
                                                 <DollarSign className="h-3.5 w-3.5 text-gray-400" />
-                                                {formatCurrencyCompact(order.total_price)} ETB
+                                                {formatETBCurrency(order.total_price)}
                                             </div>
                                         )}
                                     </td>

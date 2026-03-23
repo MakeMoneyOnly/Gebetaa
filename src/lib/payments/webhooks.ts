@@ -2,7 +2,10 @@ import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
 import type { PaymentEventStatus, PaymentLifecycleEventPayload } from '@/lib/events/contracts';
 import { createPaymentLifecycleEvent } from '@/lib/events/contracts';
 import { enqueueInternalJob, publishEvent } from '@/lib/events/runtime';
-import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import {
+    createServiceRoleClient,
+    createAuditedServiceRoleClient,
+} from '@/lib/supabase/service-role';
 
 type PaymentProvider = 'chapa';
 
@@ -121,8 +124,19 @@ export function verifyChapaWebhookSignature(
     providedSignature: string | null
 ): boolean {
     const secret = process.env.CHAPA_WEBHOOK_SECRET;
+
+    // HIGH-011: Require explicit webhook secret even in development
+    // If no secret is configured, fail verification
     if (!secret) {
-        return process.env.NODE_ENV !== 'production';
+        console.error(
+            '[Chapa Webhook] CHAPA_WEBHOOK_SECRET is not configured. Webhook verification failed.'
+        );
+        // In development, allow a dedicated test secret to be used
+        const testSecret = process.env.CHAPA_WEBHOOK_TEST_SECRET;
+        if (testSecret && process.env.NODE_ENV !== 'production') {
+            return compareSignature(testSecret, providedSignature, rawBody);
+        }
+        return false;
     }
 
     return compareSignature(secret, providedSignature, rawBody);
@@ -168,7 +182,10 @@ async function resolvePaymentContext(
     providerTransactionId: string,
     metadata: Record<string, unknown>
 ): Promise<PaymentContext> {
-    const admin = createServiceRoleClient();
+    // HIGH-010: Use audited service role client for sensitive payment operations
+    const admin = createAuditedServiceRoleClient('payment-webhooks', {
+        metadata: { provider, providerTransactionId },
+    });
     const metadataPaymentSessionId =
         typeof metadata.payment_session_id === 'string' &&
         metadata.payment_session_id.trim().length > 0

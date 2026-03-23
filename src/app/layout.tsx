@@ -63,10 +63,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <OfflineIndicator position="top" showSyncStatus={true} />
                 <LenisRoot>
                     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-                        <div className="fixed top-6 right-6 z-[100] hidden md:flex">
+                        <div className="fixed top-6 right-6 z-50 hidden md:flex">
                             {/* Theme Switcher Logic */}
                         </div>
-                        <div className="pointer-events-none fixed inset-0 z-[9999] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                        <div className="pointer-events-none fixed inset-0 z-9999 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
                         <main id="main-content" tabIndex={-1}>
                             {children}
                         </main>

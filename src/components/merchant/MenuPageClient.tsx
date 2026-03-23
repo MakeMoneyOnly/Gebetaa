@@ -43,12 +43,15 @@ type ComparableCategory = {
     items: ComparableMenuItem[];
 };
 
-const buildComparableSnapshot = (input: CategoryWithItems[]): ComparableCategory[] => {
+const buildComparableSnapshot = (
+    input: CategoryWithItems[] | null | undefined
+): ComparableCategory[] => {
+    if (!Array.isArray(input)) return [];
     return input.map(category => ({
         id: category.id,
         name: category.name,
         order_index: category.order_index ?? 0,
-        items: category.items.map(item => ({
+        items: (category.items ?? []).map(item => ({
             id: item.id,
             category_id: item.category_id,
             name: item.name,
@@ -92,10 +95,14 @@ const computeMenuDiff = (
     }
 
     const baselineItems = new Map(
-        baseline.flatMap(category => category.items.map(item => [item.id, item] as const))
+        (baseline ?? []).flatMap(category =>
+            (category.items ?? []).map(item => [item.id, item] as const)
+        )
     );
     const currentItems = new Map(
-        current.flatMap(category => category.items.map(item => [item.id, item] as const))
+        (current ?? []).flatMap(category =>
+            (category.items ?? []).map(item => [item.id, item] as const)
+        )
     );
 
     for (const item of currentItems.values()) {
@@ -195,7 +202,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
             id: cat.id,
             name: cat.name,
             order_index: cat.order_index ?? 0,
-            items: (cat.menu_items ?? []).map((item: any) => ({
+            items: (cat.menu_items ?? cat.items ?? []).map((item: any) => ({
                 id: item.id,
                 name: item.name,
                 price: item.price,
@@ -223,16 +230,29 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
         setHasUnsavedChanges(currentSnapshot !== publishedSnapshot);
     }, [categories, publishedSnapshot]);
 
+    const getSnapshotData = (snapshot: string | null): CategoryWithItems[] => {
+        if (!snapshot) return [];
+        try {
+            const parsed = JSON.parse(snapshot);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            console.error('Failed to parse menu snapshot:', e);
+            return [];
+        }
+    };
+
     const diffEntries = computeMenuDiff(
-        buildComparableSnapshot(publishedSnapshot ? JSON.parse(publishedSnapshot) : []),
+        buildComparableSnapshot(getSnapshotData(publishedSnapshot)),
         buildComparableSnapshot(categories)
     );
 
     const handleInlineItemSave = async (itemId: string, updates: InlineMenuItemPatch) => {
         setCategories(prev =>
-            prev.map(cat => ({
+            (prev ?? []).map(cat => ({
                 ...cat,
-                items: cat.items.map(item => (item.id === itemId ? { ...item, ...updates } : item)),
+                items: (cat.items ?? []).map(item =>
+                    item.id === itemId ? { ...item, ...updates } : item
+                ),
             }))
         );
 
@@ -248,9 +268,9 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
     const handleBulkAvailabilityUpdate = async (itemIds: string[], isAvailable: boolean) => {
         const previousCategories = [...categories];
         setCategories(prev =>
-            prev.map(cat => ({
+            (prev ?? []).map(cat => ({
                 ...cat,
-                items: cat.items.map(item =>
+                items: (cat.items ?? []).map(item =>
                     itemIds.includes(item.id) ? { ...item, is_available: isAvailable } : item
                 ),
             }))
@@ -274,9 +294,9 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
         const previousCategories = [...categories];
 
         setCategories(prev =>
-            prev.map(cat => ({
+            (prev ?? []).map(cat => ({
                 ...cat,
-                items: cat.items.map(item => {
+                items: (cat.items ?? []).map(item => {
                     const update = updates.find(u => u.id === item.id);
                     return update ? { ...item, price: update.price } : item;
                 }),
@@ -440,7 +460,10 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
 
         try {
             // Restore to previous published state
-            const previousPublished = JSON.parse(previousPublishedSnapshot) as CategoryWithItems[];
+            const previousPublished = getSnapshotData(previousPublishedSnapshot);
+            if (previousPublished.length === 0) {
+                throw new Error('Invalid or empty rollback snapshot.');
+            }
 
             setCategories(previousPublished);
 
@@ -456,7 +479,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                         .eq('id', category.id);
 
                     await Promise.all(
-                        category.items.map(async item => {
+                        (category.items ?? []).map(async item => {
                             await supabase
                                 .from('menu_items')
                                 .update({
@@ -597,7 +620,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                                     {category.name}
                                 </h2>
                                 <span className="rounded-full bg-gray-50 px-3 py-1 text-sm font-bold text-gray-400">
-                                    {category.items.length} items
+                                    {(category.items ?? []).length} items
                                 </span>
                             </div>
                             <div className="flex gap-2">
@@ -764,7 +787,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                             </span>{' '}
                             and its{' '}
                             <span className="font-semibold text-gray-900">
-                                {categoryToDelete.items.length}
+                                {(categoryToDelete.items ?? []).length}
                             </span>{' '}
                             item(s)?
                         </p>
