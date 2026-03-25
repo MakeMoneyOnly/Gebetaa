@@ -67,7 +67,9 @@ include_subgraph_errors:
 subgraphs:
     gebeta:
         routing_url: https://gebeta-app.vercel.app/api/graphql
-        introspection: true
+        # Introspection disabled for security in production
+        # Set APOLLO_ROUTER_INTROSPECTION=true to enable in development
+        introspection: ${APOLLO_ROUTER_INTROSPECTION:-false}
 
 # Telemetry - Optional for production monitoring
 # Enable in production with proper APM integration

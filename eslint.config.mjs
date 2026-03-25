@@ -33,9 +33,15 @@ const eslintConfig = defineConfig([
                     caughtErrorsIgnorePattern: '^_',
                 },
             ],
+            // LOW-008: Detect unused imports to reduce bundle size
+            // Warns on imports that are never used in the file
+            '@typescript-eslint/no-unused-imports': 'warn',
             // DISABLED: Requires explicit return types on ALL functions - too strict for this codebase
             // Would require adding return types to 900+ functions across hundreds of files
             '@typescript-eslint/explicit-function-return-type': 'off',
+            // MED-011: Warn on console statements to encourage structured logging
+            // Use src/lib/logger.ts instead of console.* for production code
+            'no-console': ['warn', { allow: ['warn', 'error'] }],
         },
     },
 ]);
