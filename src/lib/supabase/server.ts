@@ -137,7 +137,13 @@ export async function createClient() {
         });
 
         // E2E mock restaurant_staff row — satisfies resolveRestaurantId()
-        const e2eStaffRow = { restaurant_id: 'rest-1', role: 'owner', is_active: true };
+        // Must include user_id to match the query: .eq('user_id', user.id)
+        const e2eStaffRow = {
+            user_id: 'staff-user-1',
+            restaurant_id: 'rest-1',
+            role: 'owner',
+            is_active: true,
+        };
 
         // E2E mock restaurant row — contains all fields accessed by settings/dashboard routes
         // so that .single() calls on the restaurants table never return null.

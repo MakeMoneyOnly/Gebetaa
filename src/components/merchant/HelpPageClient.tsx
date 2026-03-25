@@ -133,7 +133,7 @@ export function HelpPageClient({ initialArticles, initialTickets }: HelpPageClie
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="rounded-4xl bg-white p-6 shadow-lg shadow-gray-200/50">
                     <div className="mb-4 flex items-center gap-2">
                         <BookOpen className="h-5 w-5 text-orange-600" />
                         <h2 className="text-xl font-bold text-gray-900">Knowledge Base</h2>
@@ -168,7 +168,7 @@ export function HelpPageClient({ initialArticles, initialTickets }: HelpPageClie
                             {articles.map(article => (
                                 <div
                                     key={article.id}
-                                    className="rounded-xl border border-gray-100 p-3"
+                                    className="rounded-xl bg-gray-50 p-3 shadow-sm transition-shadow hover:shadow-md"
                                 >
                                     <p className="text-sm font-semibold text-gray-900">
                                         {article.title}
@@ -180,7 +180,7 @@ export function HelpPageClient({ initialArticles, initialTickets }: HelpPageClie
                     )}
                 </div>
 
-                <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="rounded-4xl bg-white p-6 shadow-lg shadow-gray-200/50">
                     <h2 className="mb-4 text-xl font-bold text-gray-900">Create Support Ticket</h2>
                     <form onSubmit={handleTicketSubmit} className="space-y-3">
                         <input
@@ -225,7 +225,7 @@ export function HelpPageClient({ initialArticles, initialTickets }: HelpPageClie
                 </div>
             </div>
 
-            <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-4xl bg-white p-6 shadow-lg shadow-gray-200/50">
                 <h2 className="mb-4 text-xl font-bold text-gray-900">Ticket History Timeline</h2>
                 {ticketsLoading && (
                     <div className="inline-flex items-center gap-2 text-sm text-gray-500">
@@ -239,7 +239,10 @@ export function HelpPageClient({ initialArticles, initialTickets }: HelpPageClie
                             <p className="text-sm text-gray-500">No support tickets yet.</p>
                         )}
                         {tickets.map(ticket => (
-                            <div key={ticket.id} className="rounded-xl border border-gray-100 p-4">
+                            <div
+                                key={ticket.id}
+                                className="rounded-xl bg-gray-50 p-4 shadow-sm transition-shadow hover:shadow-md"
+                            >
                                 <div className="flex items-center justify-between gap-2">
                                     <p className="text-sm font-semibold text-gray-900">
                                         {ticket.subject}

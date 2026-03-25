@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
-import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
+import {
+    getAuthenticatedUser,
+    getAuthorizedRestaurantContext,
+    enforceTenantScope,
+} from '@/lib/api/authz';
 import { parseJsonBody, parseQuery } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 
@@ -37,12 +41,28 @@ export async function GET(request: Request) {
         return auth.response;
     }
 
-    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
-    if (!context.ok) {
-        return context.response;
+    const url = new URL(request.url);
+    const requestedRestaurantId = url.searchParams.get('restaurant_id');
+
+    // If restaurant_id is provided, validate access. Otherwise default to user's primary restaurant.
+    let restaurantId: string;
+    let supabase = auth.supabase;
+
+    if (requestedRestaurantId) {
+        const scope = await enforceTenantScope(auth.user.id, requestedRestaurantId);
+        if (!scope.allowed) {
+            return apiError(scope.reason ?? 'Forbidden', 403, 'FORBIDDEN');
+        }
+        restaurantId = requestedRestaurantId;
+    } else {
+        const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
+        if (!context.ok) {
+            return context.response;
+        }
+        restaurantId = context.restaurantId;
+        supabase = context.supabase;
     }
 
-    const url = new URL(request.url);
     const parsed = parseQuery(
         {
             sla_minutes: url.searchParams.get('sla_minutes') ?? undefined,
@@ -56,18 +76,19 @@ export async function GET(request: Request) {
 
     const now = Date.now();
     const heartbeatWindowStart = new Date(now - 10 * 60_000).toISOString();
-    const healthyWindowStart = new Date(now - 90_000).toISOString();
+    // HIGH-015: Increased healthy window to 3 minutes (180s) to be more resilient to network hiccups
+    const healthyWindowThreshold = now - 180_000;
 
     const [ordersRes, heartbeatRes] = await Promise.all([
-        context.supabase
+        supabase
             .from('orders')
             .select('id, created_at, status')
-            .eq('restaurant_id', context.restaurantId)
+            .eq('restaurant_id', restaurantId)
             .in('status', [...ACTIVE_KDS_STATUSES]),
-        context.supabase
+        supabase
             .from('audit_logs')
             .select('created_at, metadata')
-            .eq('restaurant_id', context.restaurantId)
+            .eq('restaurant_id', restaurantId)
             .eq('action', HEARTBEAT_ACTION)
             .gte('created_at', heartbeatWindowStart)
             .order('created_at', { ascending: false })
@@ -106,9 +127,11 @@ export async function GET(request: Request) {
         metadata: unknown;
     }>;
 
+    // SEC-002: Use numeric timestamp comparison instead of string ISO comparison for reliability
     const connectedRecent = heartbeatRows.some(row => {
         if (!row.created_at) return false;
-        if (row.created_at < healthyWindowStart) return false;
+        const rowTime = new Date(row.created_at).getTime();
+        if (rowTime < healthyWindowThreshold) return false;
         const metadata = asObject(row.metadata);
         return metadata?.realtime_connected === true;
     });
@@ -126,6 +149,7 @@ export async function GET(request: Request) {
 
     return apiSuccess({
         generated_at: new Date(now).toISOString(),
+        restaurant_id: restaurantId,
         queue_lag: {
             active_tickets: queueAges.length,
             avg_minutes:
@@ -162,9 +186,25 @@ export async function POST(request: Request) {
         return auth.response;
     }
 
-    const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
-    if (!context.ok) {
-        return context.response;
+    const url = new URL(request.url);
+    const requestedRestaurantId = url.searchParams.get('restaurant_id');
+
+    let restaurantId: string;
+    let supabase = auth.supabase;
+
+    if (requestedRestaurantId) {
+        const scope = await enforceTenantScope(auth.user.id, requestedRestaurantId);
+        if (!scope.allowed) {
+            return apiError(scope.reason ?? 'Forbidden', 403, 'FORBIDDEN');
+        }
+        restaurantId = requestedRestaurantId;
+    } else {
+        const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });
+        if (!context.ok) {
+            return context.response;
+        }
+        restaurantId = context.restaurantId;
+        supabase = context.supabase;
     }
 
     const parsed = await parseJsonBody(request, KdsHeartbeatSchema);
@@ -172,19 +212,29 @@ export async function POST(request: Request) {
         return parsed.response;
     }
 
-    await writeAuditLog(context.supabase, {
-        restaurant_id: context.restaurantId,
+    // FIX: entity_id in audit_logs is a UUID column in the database.
+    // Passing 'kitchen' or 'bar' as a string was causing a cast error (22P02)
+    // and preventing the heartbeat from being saved.
+    const { error: logError } = await writeAuditLog(supabase, {
+        restaurant_id: restaurantId,
         user_id: auth.user.id,
         action: HEARTBEAT_ACTION,
         entity_type: 'kds_realtime',
-        entity_id: parsed.data.station ?? 'unknown_station',
+        entity_id: null, // Don't pass station name as UUID
         metadata: {
             source: 'kds_web',
+            station: parsed.data.station, // Keep station in metadata
             ...parsed.data,
         },
     });
 
+    if (logError) {
+        console.error('[KDS Telemetry] Failed to write heartbeat log:', logError);
+        return apiError('Failed to record telemetry heartbeat', 500, 'KDS_TELEMETRY_RECORD_FAILED');
+    }
+
     return apiSuccess({
         received: true,
+        restaurant_id: restaurantId,
     });
 }

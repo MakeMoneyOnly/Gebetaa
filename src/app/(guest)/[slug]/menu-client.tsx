@@ -455,7 +455,8 @@ export function MenuClientContent() {
         void fetchMenu();
     }, [guestContext?.restaurant_id, showPreMenuSplash, supabase]);
 
-    // Handle authentication state changes (token refresh, sign out)
+    // MED-017: Handle authentication state changes (token refresh, sign out)
+    // Session refresh handling for authenticated guest features
     useEffect(() => {
         const {
             data: { subscription },
@@ -463,12 +464,19 @@ export function MenuClientContent() {
             if (event === 'TOKEN_REFRESHED') {
                 // Handle token refresh - session is renewed
                 const sessionData = session as { access_token?: string } | null;
-                console.log('Token refreshed:', sessionData?.access_token ? 'valid' : 'invalid');
+                // Session successfully refreshed - no action needed, user stays logged in
+                if (process.env.NODE_ENV === 'development') {
+                    console.debug('[Guest Auth] Token refreshed successfully');
+                }
             }
             if (event === 'SIGNED_OUT') {
-                // Handle sign out - clear local state and redirect
+                // Handle sign out - clear local state
                 setAuthState('guest');
                 setGuestSessionId(null);
+            }
+            if (event === 'SIGNED_IN') {
+                // Handle sign in - update auth state
+                setAuthState('authenticated');
             }
         });
 

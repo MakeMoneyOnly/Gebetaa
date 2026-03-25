@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
+import { ORDER_LIST_COLUMNS, columnsToString } from '@/lib/constants/query-columns';
 
 export async function GET(request: Request) {
     try {
@@ -71,38 +72,40 @@ export async function GET(request: Request) {
             return pilotGateResponse;
         }
 
-        // Fetch orders
-        const { data: orders, error: orderError } = await supabase
-            .from('orders')
-            .select('*')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(20);
+        // MED-004: Use Promise.all for parallel queries
+        // Fetch orders, service requests, and restaurant info in parallel
+        const [ordersResult, requestsResult, restaurantResult] = await Promise.all([
+            // Fetch orders
+            supabase
+                .from('orders')
+                .select(columnsToString(ORDER_LIST_COLUMNS))
+                .eq('restaurant_id', restaurantId)
+                .order('created_at', { ascending: false })
+                .limit(20),
+            // Fetch service requests
+            supabase
+                .from('service_requests')
+                .select('id, restaurant_id, table_number, request_type, status, created_at, notes')
+                .eq('restaurant_id', restaurantId)
+                .order('created_at', { ascending: false })
+                .limit(20),
+            // Get restaurant info
+            supabase.from('restaurants').select('name, slug').eq('id', restaurantId).single(),
+        ]);
+
+        const { data: orders, error: orderError } = ordersResult;
+        const { data: requests, error: requestError } = requestsResult;
+        const { data: restaurant } = restaurantResult;
 
         console.log('[API] Orders fetch:', {
             count: orders?.length || 0,
             error: orderError?.message,
         });
 
-        // Fetch service requests
-        const { data: requests, error: requestError } = await supabase
-            .from('service_requests')
-            .select('*')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(20);
-
         console.log('[API] Requests fetch:', {
             count: requests?.length || 0,
             error: requestError?.message,
         });
-
-        // Get restaurant info
-        const { data: restaurant } = await supabase
-            .from('restaurants')
-            .select('name, slug')
-            .eq('id', restaurantId)
-            .single();
 
         console.log('[API] Restaurant info:', restaurant);
 

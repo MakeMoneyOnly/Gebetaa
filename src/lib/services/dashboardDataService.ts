@@ -18,6 +18,12 @@ import { createClient } from '@/lib/supabase/server';
 // Types
 // ============================================================================
 
+export interface ChartPoint {
+    label: string;
+    income: number;
+    previous: number;
+}
+
 export interface CommandCenterData {
     restaurant_id: string;
     metrics: {
@@ -27,11 +33,13 @@ export interface CommandCenterData {
         open_requests: number;
         payment_success_rate: number;
         gross_sales_today: number;
+        gross_sales_previous: number;
         total_orders_today: number;
         avg_order_value_etb: number;
         unique_tables_today: number;
     };
     attention_queue: AttentionItem[];
+    chart_data: ChartPoint[];
     alert_summary: {
         open_alerts: number;
     };
@@ -302,6 +310,29 @@ function resolveSince(range: string | null): { range: string; sinceIso: string }
     };
 }
 
+function resolvePreviousRange(range: string | null): { sinceIso: string; untilIso: string } {
+    const now = new Date();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    if (range === 'week') {
+        const until = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const since = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        return { sinceIso: since.toISOString(), untilIso: until.toISOString() };
+    }
+
+    if (range === 'month') {
+        const until = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const since = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+        return { sinceIso: since.toISOString(), untilIso: until.toISOString() };
+    }
+
+    // Default: Yesterday
+    const until = new Date(startOfToday.getTime());
+    const since = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+    return { sinceIso: since.toISOString(), untilIso: until.toISOString() };
+}
+
 function resolvePriority(item: AttentionItem) {
     if (item.type === 'alert') {
         if (item.severity === 'critical') return 400;
@@ -385,7 +416,7 @@ export async function getCommandCenterData(
     const { range: resolvedRange, sinceIso } = resolveSince(range);
 
     // Parallel data fetching for performance
-    const [ordersRes, requestsRes, tablesRes, alertsRes] = await Promise.all([
+    const [ordersRes, requestsRes, tablesRes, alertsRes, prevOrdersRes] = await Promise.all([
         supabase
             .from('orders')
             .select('id, order_number, status, table_number, created_at, completed_at, total_price')
@@ -409,6 +440,13 @@ export async function getCommandCenterData(
             .gte('created_at', sinceIso)
             .order('created_at', { ascending: false })
             .limit(50),
+        // Fetch previous period gross sales
+        supabase
+            .from('orders')
+            .select('total_price, created_at')
+            .eq('restaurant_id', restaurantId)
+            .gte('created_at', resolvePreviousRange(range).sinceIso)
+            .lt('created_at', resolvePreviousRange(range).untilIso),
     ]);
 
     // Handle errors gracefully - return partial data if possible
@@ -416,6 +454,7 @@ export async function getCommandCenterData(
     const requests = requestsRes.data ?? [];
     const tables = tablesRes.data ?? [];
     const alerts = alertsRes.data ?? [];
+    const previousOrders = prevOrdersRes.data ?? [];
 
     // Calculate metrics
     const ordersInFlight = orders.filter(o => isInFlightStatus(o.status)).length;
@@ -424,7 +463,10 @@ export async function getCommandCenterData(
         t => t.is_active !== false && t.status !== 'available'
     ).length;
     const openRequests = requests.filter(r => (r.status ?? 'pending') === 'pending').length;
-    const grossSales = orders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0);
+    const grossSalesSantim = orders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0);
+    const grossSales = grossSalesSantim / 100;
+    const grossSalesPrevious =
+        previousOrders.reduce((sum: number, o: any) => sum + Number(o.total_price ?? 0), 0) / 100;
     const avgOrderValue = orders.length > 0 ? Math.round(grossSales / orders.length) : 0;
     const uniqueTablesToday = new Set(orders.map(o => o.table_number).filter(Boolean)).size;
 
@@ -496,6 +538,39 @@ export async function getCommandCenterData(
         }
     );
 
+    // Build chart data (last 7 days by default for 'today'/'week', last 30 for 'month')
+    const chartPoints: ChartPoint[] = [];
+    const daysToTrack = range === 'month' ? 30 : 7;
+    const now = new Date();
+
+    for (let i = daysToTrack - 1; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const dateStr = d.toISOString().split('T')[0];
+
+        // Current period value for this day
+        const dayIncome =
+            orders
+                .filter(o => o.created_at?.startsWith(dateStr))
+                .reduce((sum, o) => sum + Number(o.total_price ?? 0), 0) / 100;
+
+        // Previous period value for this equivalent day
+        const prevDate = new Date(
+            d.getTime() - (range === 'month' ? 30 : range === 'week' ? 7 : 1) * 24 * 60 * 60 * 1000
+        );
+        const prevDateStr = prevDate.toISOString().split('T')[0];
+        const prevIncome =
+            previousOrders
+                .filter(o => o.created_at?.startsWith(prevDateStr))
+                .reduce((sum, o) => sum + Number(o.total_price ?? 0), 0) / 100;
+
+        chartPoints.push({
+            label,
+            income: Math.floor(dayIncome),
+            previous: Math.floor(prevIncome),
+        });
+    }
+
     return {
         restaurant_id: restaurantId,
         metrics: {
@@ -505,11 +580,13 @@ export async function getCommandCenterData(
             open_requests: openRequests,
             payment_success_rate: paymentSuccessRate,
             gross_sales_today: grossSales,
+            gross_sales_previous: grossSalesPrevious,
             total_orders_today: orders.length,
             avg_order_value_etb: avgOrderValue,
             unique_tables_today: uniqueTablesToday,
         },
         attention_queue: attentionQueue,
+        chart_data: chartPoints,
         alert_summary: {
             open_alerts: alerts.length,
         },

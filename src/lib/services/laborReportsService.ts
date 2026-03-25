@@ -3,6 +3,8 @@
  *
  * Provides comprehensive labor analytics and reporting for restaurant operations.
  * Includes time tracking, labor cost analysis, and scheduling insights.
+ *
+ * LOW-002: Configurable hourly rates per restaurant and role
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -12,11 +14,115 @@ import type { Database } from '@/types/database';
 // Types
 // ============================================================================
 
+/**
+ * Hourly rate configuration for labor cost calculations
+ * LOW-002: Made configurable per restaurant and role
+ */
+export interface HourlyRateConfig {
+    /** Default hourly rate for the restaurant (in ETB) */
+    defaultRate: number;
+    /** Role-specific hourly rates (override default) */
+    roleRates?: Record<string, number>;
+    /** Staff-specific hourly rates (override role and default) */
+    staffRates?: Record<string, number>;
+}
+
+/**
+ * Default hourly rates by role in ETB
+ * These are fallback values when restaurant hasn't configured custom rates
+ */
+export const DEFAULT_ROLE_HOURLY_RATES: Record<string, number> = {
+    manager: 75,
+    chef: 60,
+    cook: 45,
+    waiter: 35,
+    waitress: 35,
+    bartender: 40,
+    cashier: 40,
+    host: 35,
+    hostess: 35,
+    dishwasher: 30,
+    cleaner: 30,
+    delivery: 40,
+    default: 50,
+};
+
+/**
+ * Fetch hourly rate configuration for a restaurant
+ * Uses the restaurants table's settings column for labor configuration
+ */
+export async function getHourlyRateConfig(
+    supabase: SupabaseClient<Database>,
+    restaurantId: string
+): Promise<HourlyRateConfig> {
+    try {
+        // Try to fetch restaurant-specific rate configuration from restaurants table
+        const { data: restaurant, error } = await supabase
+            .from('restaurants')
+            .select('settings')
+            .eq('id', restaurantId)
+            .single();
+
+        if (error || !restaurant?.settings) {
+            // Return default configuration
+            return {
+                defaultRate: DEFAULT_ROLE_HOURLY_RATES.default,
+                roleRates: DEFAULT_ROLE_HOURLY_RATES,
+            };
+        }
+
+        // Extract labor settings from restaurant settings JSONB column
+        const settings = restaurant.settings as Record<string, unknown>;
+        const laborSettings = (settings?.labor as Record<string, unknown>) || {};
+
+        return {
+            defaultRate:
+                (laborSettings.defaultHourlyRate as number) ?? DEFAULT_ROLE_HOURLY_RATES.default,
+            roleRates: {
+                ...DEFAULT_ROLE_HOURLY_RATES,
+                ...(laborSettings.roleHourlyRates as Record<string, number>),
+            },
+            staffRates: laborSettings.staffHourlyRates as Record<string, number>,
+        };
+    } catch {
+        // Return default configuration on error
+        return {
+            defaultRate: DEFAULT_ROLE_HOURLY_RATES.default,
+            roleRates: DEFAULT_ROLE_HOURLY_RATES,
+        };
+    }
+}
+
+/**
+ * Get hourly rate for a specific staff member
+ */
+export function getStaffHourlyRate(
+    staffId: string,
+    role: string,
+    config: HourlyRateConfig
+): number {
+    // 1. Check staff-specific rate (highest priority)
+    if (config.staffRates?.[staffId] !== undefined) {
+        return config.staffRates[staffId];
+    }
+
+    // 2. Check role-specific rate
+    const normalizedRole = role.toLowerCase();
+    if (config.roleRates?.[normalizedRole] !== undefined) {
+        return config.roleRates[normalizedRole];
+    }
+
+    // 3. Fall back to default rate
+    return config.defaultRate;
+}
+
 export interface LaborReportParams {
     restaurantId: string;
     startDate: string;
     endDate: string;
     groupBy?: 'day' | 'week' | 'month';
+    /** Optional hourly rate configuration override */
+    hourlyRateConfig?: HourlyRateConfig;
 }
 
 export interface TimeEntrySummary {
@@ -135,18 +241,20 @@ export async function generateLaborReport(
 
 /**
  * Get labor cost percentage for a date range
+ * LOW-002: Now uses configurable hourly rates
  */
 export async function getLaborCostPercentage(
     supabase: SupabaseClient<Database>,
     restaurantId: string,
     startDate: string,
-    endDate: string
+    endDate: string,
+    hourlyRateConfig?: HourlyRateConfig
 ): Promise<{ data: number | null; error: Error | null }> {
     try {
-        // Get staff count
+        // Get staff with roles for rate calculation
         const { data: staff, error: staffError } = await supabase
             .from('restaurant_staff')
-            .select('id')
+            .select('id, role')
             .eq('restaurant_id', restaurantId);
 
         if (staffError) throw staffError;
@@ -162,13 +270,21 @@ export async function getLaborCostPercentage(
 
         if (ordersError) throw ordersError;
 
-        // Calculate estimated labor cost
-        const avgHourlyRate = 50; // ETB
+        // Fetch hourly rate configuration if not provided
+        const rateConfig = hourlyRateConfig ?? (await getHourlyRateConfig(supabase, restaurantId));
+
+        // Calculate estimated labor cost using configurable rates
         const avgHoursPerDay = 8;
         const daysInPeriod = Math.ceil(
             (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)
         );
-        const totalLaborCost = (staff?.length || 0) * avgHourlyRate * avgHoursPerDay * daysInPeriod;
+
+        // Calculate total labor cost based on individual staff rates
+        const totalLaborCost = (staff || []).reduce((total, s) => {
+            const rate = getStaffHourlyRate(s.id, s.role || 'default', rateConfig);
+            return total + rate * avgHoursPerDay * daysInPeriod;
+        }, 0);
+
         const totalSales = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
 
         if (totalSales === 0) return { data: 0, error: null };

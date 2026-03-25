@@ -50,7 +50,7 @@ export function CommandCenterHeader({
                     <select
                         value={range}
                         onChange={event => onRangeChange(event.target.value as CommandCenterRange)}
-                        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 capitalize outline-none focus:border-gray-400"
+                        className="focus:ring-brand-crimson h-10 rounded-xl bg-white px-3 text-sm font-semibold text-gray-700 capitalize shadow-sm outline-none focus:ring-2"
                     >
                         {RANGE_OPTIONS.map(option => (
                             <option key={option} value={option}>
@@ -93,7 +93,7 @@ export function CommandCenterHeader({
                     Last sync: {toReadableTime(syncGeneratedAt)} via {syncSource ?? 'unknown'}
                 </span>
                 {error && (
-                    <details className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs text-rose-700">
+                    <details className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs text-rose-700 shadow-sm">
                         <summary className="cursor-pointer font-semibold">Diagnostics</summary>
                         <p className="pt-1 text-xs">{error}</p>
                     </details>

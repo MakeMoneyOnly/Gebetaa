@@ -1,11 +1,11 @@
 import React from 'react';
 import { LoginForm } from '@/features/auth/components/LoginForm';
-import { Metadata } from 'next';
+import { generateAuthMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'Login | Gebeta',
-    description: 'Staff login for Gebeta Restaurant Platform',
-};
+export const metadata = generateAuthMetadata(
+    'Login',
+    "Staff login for Gebeta Restaurant Platform - Ethiopia's leading restaurant operating system"
+);
 
 export default function LoginPage() {
     return (

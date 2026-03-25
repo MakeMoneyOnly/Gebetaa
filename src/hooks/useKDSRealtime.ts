@@ -19,6 +19,16 @@ const RECONNECT_CONFIG = {
 };
 
 /**
+ * MED-003: Message deduplication configuration
+ */
+const DEDUP_CONFIG = {
+    /** Time window in milliseconds for deduplication (5 seconds) */
+    dedupWindowMs: 5000,
+    /** Maximum number of message IDs to track */
+    maxTrackedMessages: 1000,
+};
+
+/**
  * Calculate exponential backoff delay with jitter
  */
 function calculateReconnectDelay(retryCount: number): number {
@@ -29,6 +39,90 @@ function calculateReconnectDelay(retryCount: number): number {
     // Add jitter
     const jitter = delay * RECONNECT_CONFIG.jitterFactor * Math.random();
     return delay + jitter;
+}
+
+/**
+ * MED-003: Generate a unique message ID from realtime payload
+ * Uses table, event type, and record ID to create a deterministic identifier
+ */
+function generateMessageId(
+    table: string,
+    eventType: 'INSERT' | 'UPDATE' | 'DELETE',
+    recordId: string
+): string {
+    return `${table}:${eventType}:${recordId}`;
+}
+
+/**
+ * MED-003: Message deduplication tracker
+ * Tracks processed message IDs within a time window to prevent duplicate processing
+ */
+class MessageDeduplicator {
+    private processedMessages: Map<string, number> = new Map();
+    private cleanupInterval: ReturnType<typeof setInterval> | null = null;
+
+    constructor() {
+        // Periodically clean up old entries
+        this.cleanupInterval = setInterval(() => this.cleanup(), DEDUP_CONFIG.dedupWindowMs);
+    }
+
+    /**
+     * Check if a message has already been processed
+     * Returns true if the message is a duplicate (should be skipped)
+     */
+    isDuplicate(messageId: string): boolean {
+        const now = Date.now();
+        const lastProcessed = this.processedMessages.get(messageId);
+
+        if (lastProcessed !== undefined) {
+            // Check if within deduplication window
+            if (now - lastProcessed < DEDUP_CONFIG.dedupWindowMs) {
+                return true; // Duplicate detected
+            }
+        }
+
+        // Mark as processed
+        this.processedMessages.set(messageId, now);
+
+        // Enforce max tracked messages limit
+        if (this.processedMessages.size > DEDUP_CONFIG.maxTrackedMessages) {
+            this.cleanup();
+        }
+
+        return false;
+    }
+
+    /**
+     * Clean up old entries outside the deduplication window
+     */
+    private cleanup(): void {
+        const now = Date.now();
+        const cutoff = now - DEDUP_CONFIG.dedupWindowMs;
+
+        for (const [id, timestamp] of this.processedMessages.entries()) {
+            if (timestamp < cutoff) {
+                this.processedMessages.delete(id);
+            }
+        }
+    }
+
+    /**
+     * Clear all tracked messages
+     */
+    clear(): void {
+        this.processedMessages.clear();
+    }
+
+    /**
+     * Destroy the deduplicator and clean up resources
+     */
+    destroy(): void {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+            this.cleanupInterval = null;
+        }
+        this.processedMessages.clear();
+    }
 }
 
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed';
@@ -91,9 +185,31 @@ export function useKDSRealtime({
         'idle' | 'reconnecting' | 'failed'
     >('idle');
 
+    // MED-003: Message deduplicator instance
+    const deduplicatorRef = useRef<MessageDeduplicator | null>(null);
+
+    // Initialize deduplicator on mount
+    useEffect(() => {
+        deduplicatorRef.current = new MessageDeduplicator();
+        return () => {
+            deduplicatorRef.current?.destroy();
+            deduplicatorRef.current = null;
+        };
+    }, []);
+
     const handleOrdersChange = useCallback(
         (payload: RealtimePayload) => {
             if (!mountedRef.current) return;
+
+            // MED-003: Check for duplicate messages
+            const recordId = (payload.new?.id || payload.old?.id) as string;
+            if (recordId && deduplicatorRef.current) {
+                const messageId = generateMessageId(payload.table, payload.eventType, recordId);
+                if (deduplicatorRef.current.isDuplicate(messageId)) {
+                    console.log(`[KDS Realtime] Skipping duplicate message: ${messageId}`);
+                    return;
+                }
+            }
 
             const order = payload.new;
 
@@ -132,6 +248,16 @@ export function useKDSRealtime({
     const handleExternalOrdersChange = useCallback(
         (payload: RealtimePayload) => {
             if (!mountedRef.current) return;
+
+            // MED-003: Check for duplicate messages
+            const recordId = (payload.new?.id || payload.old?.id) as string;
+            if (recordId && deduplicatorRef.current) {
+                const messageId = generateMessageId(payload.table, payload.eventType, recordId);
+                if (deduplicatorRef.current.isDuplicate(messageId)) {
+                    console.log(`[KDS Realtime] Skipping duplicate message: ${messageId}`);
+                    return;
+                }
+            }
 
             const order = payload.new;
 

@@ -536,7 +536,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                 <div className="space-y-12">
                     {[1, 2].map(category => (
                         <div key={category} className="space-y-6">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                            <div className="flex items-center justify-between pb-4">
                                 <Skeleton className="h-8 w-40 rounded-lg" />
                                 <div className="flex gap-2">
                                     <Skeleton className="h-9 w-9 rounded-lg" />
@@ -582,7 +582,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 text-sm font-bold text-black transition-colors hover:bg-gray-50">
+                    <button className="flex h-12 items-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-black shadow-sm transition-shadow hover:shadow-md">
                         Reorder
                     </button>
                     <button
@@ -595,7 +595,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                     <button
                         onClick={handleRollbackLatestPublish}
                         disabled={!previousPublishedSnapshot || isRollbacking}
-                        className="flex h-12 items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 text-sm font-bold text-black transition-colors hover:bg-gray-50 disabled:opacity-50"
+                        className="flex h-12 items-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-black shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
                     >
                         {isRollbacking ? 'Rolling back...' : 'Rollback'}
                     </button>
@@ -614,7 +614,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                 {categories.map(category => (
                     <div key={category.id} className="space-y-6">
                         {/* Category Header */}
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                        <div className="flex items-center justify-between pb-4">
                             <div className="flex items-baseline gap-4">
                                 <h2 className="text-2xl font-bold tracking-tight text-gray-900">
                                     {category.name}
@@ -679,7 +679,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                 ))}
 
                 {categories.length === 0 && !loading && (
-                    <div className="flex flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center rounded-[2.5rem] bg-gray-50 py-20 text-center shadow-inner">
                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
                             <UtensilsCrossed className="h-8 w-8 text-gray-400" />
                         </div>
@@ -756,7 +756,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                                     type="button"
                                     onClick={() => closeCategoryModal()}
                                     disabled={categorySubmitting}
-                                    className="h-10 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                    className="h-10 rounded-xl bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>

@@ -44,6 +44,29 @@ function resolveSince(range: string | null) {
     };
 }
 
+function resolvePreviousRange(range: string | null): { sinceIso: string; untilIso: string } {
+    const now = new Date();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    if (range === 'week') {
+        const until = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const since = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        return { sinceIso: since.toISOString(), untilIso: until.toISOString() };
+    }
+
+    if (range === 'month') {
+        const until = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const since = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+        return { sinceIso: since.toISOString(), untilIso: until.toISOString() };
+    }
+
+    // Default: Yesterday
+    const until = new Date(startOfToday.getTime());
+    const since = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+    return { sinceIso: since.toISOString(), untilIso: until.toISOString() };
+}
+
 function resolvePriority(item: AttentionItem) {
     if (item.type === 'alert') {
         if (item.severity === 'critical') return 400;
@@ -114,7 +137,7 @@ export async function GET(request: NextRequest) {
         const rangeParam = request.nextUrl.searchParams.get('range');
         const { range, sinceIso } = resolveSince(rangeParam);
 
-        const [ordersRes, requestsRes, tablesRes, alertsRes] = await Promise.all([
+        const [ordersRes, requestsRes, tablesRes, alertsRes, prevOrdersRes] = await Promise.all([
             supabase
                 .from('orders')
                 .select(
@@ -143,6 +166,12 @@ export async function GET(request: NextRequest) {
                 .gte('created_at', sinceIso)
                 .order('created_at', { ascending: false })
                 .limit(50),
+            supabase
+                .from('orders')
+                .select('total_price, created_at')
+                .eq('restaurant_id', restaurantId)
+                .gte('created_at', resolvePreviousRange(rangeParam).sinceIso)
+                .lt('created_at', resolvePreviousRange(rangeParam).untilIso),
         ]);
 
         if (ordersRes.error) {
@@ -166,6 +195,7 @@ export async function GET(request: NextRequest) {
         const requests = requestsRes.data ?? [];
         const tables = tablesRes.data ?? [];
         const alerts = alertsRes.data ?? [];
+        const prevOrders = prevOrdersRes.data ?? [];
 
         const ordersInFlight = orders.filter(o => isInFlightStatus(o.status)).length;
         const completedOrders = orders.filter(
@@ -177,6 +207,8 @@ export async function GET(request: NextRequest) {
         const openRequests = requests.filter(r => (r.status ?? 'pending') === 'pending').length;
         const grossSalesSantim = orders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0);
         const grossSales = grossSalesSantim / 100;
+        const grossSalesPrevious =
+            prevOrders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0) / 100;
         const avgOrderValue = orders.length > 0 ? Math.round(grossSales / orders.length) : 0;
         const uniqueTablesToday = new Set(orders.map(o => o.table_number).filter(Boolean)).size;
 
@@ -247,6 +279,42 @@ export async function GET(request: NextRequest) {
             }
         );
 
+        // Build chart data
+        const chartPoints: any[] = [];
+        const daysToTrack = rangeParam === 'month' ? 30 : 7;
+        const now = new Date();
+
+        for (let i = daysToTrack - 1; i >= 0; i--) {
+            const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+            const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const dateStr = d.toISOString().split('T')[0];
+
+            const dayIncome =
+                orders
+                    .filter(o => o.created_at?.startsWith(dateStr))
+                    .reduce((sum, o) => sum + Number(o.total_price ?? 0), 0) / 100;
+
+            const prevDate = new Date(
+                d.getTime() -
+                    (rangeParam === 'month' ? 30 : rangeParam === 'week' ? 7 : 1) *
+                        24 *
+                        60 *
+                        60 *
+                        1000
+            );
+            const prevDateStr = prevDate.toISOString().split('T')[0];
+            const prevIncome =
+                prevOrders
+                    .filter(o => o.created_at?.startsWith(prevDateStr))
+                    .reduce((sum, o) => sum + Number(o.total_price ?? 0), 0) / 100;
+
+            chartPoints.push({
+                label,
+                income: Math.floor(dayIncome),
+                previous: Math.floor(prevIncome),
+            });
+        }
+
         responseStatus = 200;
         return apiSuccess({
             restaurant_id: restaurantId,
@@ -257,11 +325,13 @@ export async function GET(request: NextRequest) {
                 open_requests: openRequests,
                 payment_success_rate: paymentSuccessRate,
                 gross_sales_today: grossSales,
+                gross_sales_previous: grossSalesPrevious,
                 total_orders_today: orders.length,
                 avg_order_value_etb: avgOrderValue,
                 unique_tables_today: uniqueTablesToday,
             },
             attention_queue: attentionQueue,
+            chart_data: chartPoints,
             alert_summary: {
                 open_alerts: alerts.length,
             },

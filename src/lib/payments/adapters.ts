@@ -1,4 +1,5 @@
 import { ChapaProvider } from './chapa';
+import { TelebirrProvider } from './telebirr';
 import {
     PaymentInitiateInput,
     PaymentInitiateWithFallbackResponse,
@@ -14,6 +15,7 @@ export class PaymentAdapterRegistry {
     constructor(params?: { providers?: PaymentProvider[] }) {
         const providerList = params?.providers ?? [
             new ChapaProvider(process.env.CHAPA_SECRET_KEY ?? ''),
+            new TelebirrProvider(process.env.TELEBIRR_APP_ID, process.env.TELEBIRR_APP_KEY),
         ];
 
         this.providers = providerList.reduce<Record<string, PaymentProvider>>((acc, provider) => {

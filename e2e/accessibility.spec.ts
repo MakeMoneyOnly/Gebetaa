@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mockDashboardAuth } from './fixtures/dashboard-auth';
 
 /**
  * Accessibility Tests using axe-core
@@ -46,13 +47,53 @@ test.describe('Accessibility Tests', () => {
     });
 
     test.describe('Merchant Dashboard', () => {
-        test.skip('merchant dashboard should have no accessibility violations', async ({
-            page,
-        }) => {
-            // This test requires authentication
-            // Skip in CI until we have test authentication setup
+        test.beforeEach(async ({ page }) => {
+            // Setup authentication mock for all merchant dashboard tests
+            await mockDashboardAuth(page);
+        });
+
+        test('merchant dashboard should have no accessibility violations', async ({ page }) => {
+            // Navigate to merchant dashboard
             await page.goto('/merchant');
-            await page.waitForLoadState('domcontentloaded');
+
+            // Wait for the page to be fully loaded
+            await page.waitForLoadState('networkidle');
+
+            // Wait for main content to be visible
+            await page.waitForSelector('#main-content', { timeout: 10000 });
+
+            const accessibilityScanResults = await new AxeBuilder({ page })
+                .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+                .exclude('#sidebar-navigation') // Exclude sidebar if it has known issues
+                .analyze();
+
+            const criticalViolations = accessibilityScanResults.violations.filter(
+                v => v.impact === 'critical' || v.impact === 'serious'
+            );
+
+            expect(criticalViolations).toEqual([]);
+        });
+
+        test('merchant orders page should have no accessibility violations', async ({ page }) => {
+            await page.goto('/merchant/orders');
+            await page.waitForLoadState('networkidle');
+            await page.waitForSelector('#main-content', { timeout: 10000 });
+
+            const accessibilityScanResults = await new AxeBuilder({ page })
+                .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+                .analyze();
+
+            const criticalViolations = accessibilityScanResults.violations.filter(
+                v => v.impact === 'critical' || v.impact === 'serious'
+            );
+
+            expect(criticalViolations).toEqual([]);
+        });
+
+        test('merchant menu page should have no accessibility violations', async ({ page }) => {
+            await page.goto('/merchant/menu');
+            await page.waitForLoadState('networkidle');
+            await page.waitForSelector('#main-content', { timeout: 10000 });
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -67,10 +108,14 @@ test.describe('Accessibility Tests', () => {
     });
 
     test.describe('KDS (Kitchen Display System)', () => {
-        test.skip('KDS page should have no accessibility violations', async ({ page }) => {
-            // This test requires authentication
+        test.beforeEach(async ({ page }) => {
+            // Setup authentication mock for all KDS tests
+            await mockDashboardAuth(page);
+        });
+
+        test('KDS page should have no accessibility violations', async ({ page }) => {
             await page.goto('/kds');
-            await page.waitForLoadState('domcontentloaded');
+            await page.waitForLoadState('networkidle');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -81,6 +126,62 @@ test.describe('Accessibility Tests', () => {
             );
 
             expect(criticalViolations).toEqual([]);
+        });
+
+        test('KDS page should have proper heading structure', async ({ page }) => {
+            await page.goto('/kds');
+            await page.waitForLoadState('networkidle');
+
+            // Check for proper heading hierarchy
+            const h1Count = await page.locator('h1').count();
+            expect(h1Count).toBeGreaterThanOrEqual(1);
+
+            // Verify headings are in logical order
+            const headings = await page.locator('h1, h2, h3, h4, h5, h6').all();
+            let lastLevel = 0;
+
+            for (const heading of headings) {
+                const tagName = await heading.evaluate(el => el.tagName.toLowerCase());
+                const level = parseInt(tagName.replace('h', ''), 10);
+
+                // Headings should not skip levels (e.g., h1 -> h3)
+                expect(level).toBeLessThanOrEqual(lastLevel + 1);
+                lastLevel = level;
+            }
+        });
+
+        test('KDS page should have sufficient color contrast', async ({ page }) => {
+            await page.goto('/kds');
+            await page.waitForLoadState('networkidle');
+
+            const accessibilityScanResults = await new AxeBuilder({ page })
+                .withRules(['color-contrast'])
+                .analyze();
+
+            const contrastViolations = accessibilityScanResults.violations.filter(
+                v => v.id === 'color-contrast'
+            );
+
+            // MED-014: Fail on serious/critical contrast violations for WCAG AA compliance
+            // Serious and critical violations indicate contrast ratios below 3:1
+            // which fail WCAG 2.1 AA requirements
+            const criticalContrastIssues = contrastViolations.filter(
+                v => v.impact === 'critical' || v.impact === 'serious'
+            );
+
+            // Log contrast violations for debugging
+            if (contrastViolations.length > 0) {
+                console.log('Color contrast violations found:');
+                contrastViolations.forEach(v => {
+                    console.log(`  - ${v.impact}: ${v.description}`);
+                    v.nodes.forEach(node => {
+                        console.log(`    Target: ${node.target}`);
+                    });
+                });
+            }
+
+            // Fail the test if there are serious or critical contrast issues
+            expect(criticalContrastIssues).toEqual([]);
         });
     });
 

@@ -81,18 +81,18 @@ export function InviteStaffModal({
                         value={label}
                         onChange={event => setLabel(event.target.value)}
                         placeholder="Label (e.g. Kitchen Tablet, Waiter Phone)"
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        className="w-full rounded-xl bg-gray-50/50 px-3 py-2 text-sm shadow-inner outline-none focus:bg-white focus:shadow-md"
                     />
                     <input
                         value={email}
                         onChange={event => setEmail(event.target.value)}
                         placeholder="Email (optional, for person-specific invite)"
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        className="w-full rounded-xl bg-gray-50/50 px-3 py-2 text-sm shadow-inner outline-none focus:bg-white focus:shadow-md"
                     />
                     <select
                         value={role}
                         onChange={event => setRole(event.target.value as StaffRole)}
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+                        className="w-full rounded-xl bg-gray-50/50 px-3 py-2 text-sm shadow-inner outline-none focus:bg-white focus:shadow-md"
                     >
                         {ROLE_OPTIONS.map(roleOption => (
                             <option key={roleOption} value={roleOption}>
@@ -100,7 +100,7 @@ export function InviteStaffModal({
                             </option>
                         ))}
                     </select>
-                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+                    <div className="rounded-xl bg-blue-50 p-3 shadow-sm">
                         <p className="text-xs font-semibold text-blue-700">Target Module</p>
                         <p className="mt-1 text-xs text-blue-900">
                             After setup this key redirects to{' '}
@@ -109,7 +109,7 @@ export function InviteStaffModal({
                     </div>
                     {error && <p className="text-xs text-red-600">{error}</p>}
                     {inviteUrl && (
-                        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                        <div className="rounded-xl bg-emerald-50 p-3 shadow-sm">
                             <p className="text-xs font-semibold text-emerald-700">
                                 Provisioning URL
                             </p>
@@ -121,7 +121,7 @@ export function InviteStaffModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="h-10 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                            className="h-10 rounded-xl bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md"
                         >
                             Cancel
                         </button>

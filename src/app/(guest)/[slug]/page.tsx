@@ -3,6 +3,7 @@ import { CartProvider } from '@/context/CartContext';
 import { createClient } from '@/lib/supabase/server';
 import { MenuClientContent } from './menu-client';
 import type { Metadata } from 'next';
+import { generateRestaurantMetadata } from '@/lib/seo';
 
 /**
  * Dynamic metadata for SEO - fetches restaurant information based on slug
@@ -30,26 +31,13 @@ export async function generateMetadata({
             };
         }
 
-        return {
-            title: `${restaurant.name} Menu | Gebeta`,
-            description:
-                restaurant.description ||
-                `Order delicious food from ${restaurant.name}'s menu on Gebeta - Ethiopia's leading restaurant platform`,
-            openGraph: {
-                title: `${restaurant.name} Menu | Gebeta`,
-                description:
-                    restaurant.description ||
-                    `Browse ${restaurant.name}'s full menu and order online`,
-                type: 'website',
-                images: restaurant.logo_url ? [{ url: restaurant.logo_url }] : [],
-            },
-            twitter: {
-                card: 'summary',
-                title: `${restaurant.name} Menu | Gebeta`,
-                description: restaurant.description || `Order from ${restaurant.name} on Gebeta`,
-                images: restaurant.logo_url ? [restaurant.logo_url] : [],
-            },
-        };
+        return generateRestaurantMetadata({
+            name: restaurant.name,
+            description: restaurant.description,
+            logoUrl: restaurant.logo_url,
+            slug: restaurant.slug,
+            path: 'menu',
+        });
     } catch (error) {
         console.error('Error generating metadata:', error);
         return {

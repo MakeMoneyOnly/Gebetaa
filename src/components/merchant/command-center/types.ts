@@ -7,6 +7,7 @@ export interface CommandCenterMetrics {
     open_requests: number;
     payment_success_rate: number;
     gross_sales_today: number;
+    gross_sales_previous: number;
     total_orders_today: number;
     avg_order_value_etb: number;
     unique_tables_today: number;

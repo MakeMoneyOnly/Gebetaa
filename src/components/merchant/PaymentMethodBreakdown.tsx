@@ -14,6 +14,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Calendar,
+    X,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import type { AppLocale } from '@/lib/i18n/locale';
@@ -33,17 +34,18 @@ export type PaymentRow = {
 
 type PaymentMethodBreakdownProps = {
     loading: boolean;
-    payments: PaymentRow[];
+    payments: PaymentRow[] | null;
     locale: AppLocale;
 };
 
 export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMethodBreakdownProps) {
     const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [partnersRange, setPartnersRange] = useState<'today' | 'week' | 'month' | 'all'>('today');
+    const [partnersRange, setPartnersRange] = useState<'today' | 'week' | 'month' | 'all'>('all');
     const [partnersFilterOpen, setPartnersFilterOpen] = useState(false);
-    const [ledgerRange, setLedgerRange] = useState<'today' | 'week' | 'month' | 'all'>('today');
+    const [ledgerRange, setLedgerRange] = useState<'today' | 'week' | 'month' | 'all'>('all');
     const [ledgerFilterOpen, setLedgerFilterOpen] = useState(false);
+    const [selectedTxn, setSelectedTxn] = useState<PaymentRow | null>(null);
     const itemsPerPage = 10;
 
     // Helper for date filtering
@@ -67,9 +69,14 @@ export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMet
     // Derived data based on selected range for the analysis section
     // We use partnersRange for the top-level analysis and partners cards
     const effectivePayments = useMemo(() => {
-        if (payments.length > 0) return payments;
+        // If we have any real payments, use them exclusively
+        if (payments && payments.length > 0) return payments;
 
-        // Mock demo data for unseeded/fresh restaurants to show architecture
+        // If we are currently loading or the initial load guard is active,
+        // return an empty array instead of flashing mock data
+        if (loading || payments === null) return [];
+
+        // Mock demo data for unseeded/fresh restaurants ONLY when strictly no data exists
         const now = new Date();
         const justToday = new Date().toISOString();
         const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
@@ -122,7 +129,7 @@ export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMet
                 tip_amount: 200,
             },
         ] as PaymentRow[];
-    }, [payments]);
+    }, [payments, loading]);
 
     const filteredPaymentsForAnalysis = useMemo(() => {
         return effectivePayments.filter(p => isWithinRange(p.created_at, partnersRange));
@@ -511,7 +518,6 @@ export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMet
                                 <tr className="text-[11px] font-bold text-gray-400">
                                     <th className="border-b border-gray-50 px-6 py-4">Reference</th>
                                     <th className="border-b border-gray-50 px-6 py-4">Timestamp</th>
-                                    <th className="border-b border-gray-50 px-6 py-4">Provider</th>
                                     <th className="border-b border-gray-50 px-6 py-4 text-right">
                                         Tip
                                     </th>
@@ -537,10 +543,11 @@ export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMet
                                     paginatedTransactions.map(txn => (
                                         <tr
                                             key={txn.id}
-                                            className="group transition-colors hover:bg-gray-50/50"
+                                            onClick={() => setSelectedTxn(txn)}
+                                            className="group cursor-pointer transition-colors hover:bg-gray-50/50"
                                         >
                                             <td className="px-6 py-5">
-                                                <span className="font-mono text-xs font-bold text-gray-900">
+                                                <span className="text-[13px] font-bold tracking-tight text-gray-900">
                                                     {txn.id.slice(0, 16).toUpperCase()}
                                                 </span>
                                             </td>
@@ -550,12 +557,6 @@ export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMet
                                                         [],
                                                         { hour: '2-digit', minute: '2-digit' }
                                                     )}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-5">
-                                                <span className="inline-flex items-center gap-2 text-xs font-bold text-gray-900 capitalize">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                                    {txn.provider}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-right">
@@ -593,8 +594,8 @@ export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMet
                         </table>
                     </div>
 
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
+                    {/* Pagination Controls - Always show if we have many total transactions to hint at pagination */}
+                    {filteredTransactions.length > itemsPerPage && (
                         <div className="flex items-center justify-between border-t border-gray-50 px-6 py-4">
                             <div className="text-xs font-bold text-gray-400">
                                 Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
@@ -635,6 +636,117 @@ export function PaymentMethodBreakdown({ loading, payments, locale }: PaymentMet
                     )}
                 </div>
             </div>
+
+            {/* Transaction Detail Modal */}
+            {selectedTxn && (
+                <div className="animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="animate-in zoom-in-95 slide-in-from-bottom-5 relative w-full max-w-lg overflow-hidden rounded-[40px] bg-white p-8 shadow-2xl transition-all duration-300">
+                        <header className="mb-8 flex items-start justify-between">
+                            <div>
+                                <div className="mb-2 flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100 text-gray-900">
+                                        <History className="h-5 w-5" />
+                                    </div>
+                                    <h2 className="text-2xl font-black tracking-tight text-gray-900">
+                                        Transaction Details
+                                    </h2>
+                                </div>
+                                <p className="text-xs font-bold text-gray-400">
+                                    Ref: {selectedTxn.id}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedTxn(null)}
+                                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </header>
+
+                        <div className="grid grid-cols-2 gap-6 border-b border-gray-50 pb-8">
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400">
+                                    Amount
+                                </label>
+                                <p className="text-2xl font-black text-gray-900">
+                                    {formatETBCurrency(selectedTxn.amount, {
+                                        locale,
+                                        compact: false,
+                                    })}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <label className="text-[10px] font-black text-gray-400">
+                                    Status
+                                </label>
+                                <div>
+                                    <span
+                                        className={cn(
+                                            'inline-flex items-center rounded-lg px-3 py-1 text-xs font-black capitalize',
+                                            selectedTxn.status === 'captured'
+                                                ? 'bg-emerald-100 text-emerald-700'
+                                                : 'bg-amber-100 text-amber-700'
+                                        )}
+                                    >
+                                        {selectedTxn.status}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-y-6 py-8">
+                            <div>
+                                <label className="mb-1 block text-[10px] font-black text-gray-400">
+                                    Payment method
+                                </label>
+                                <span className="flex items-center gap-2 text-sm font-bold text-gray-900 capitalize">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-gray-900" />
+                                    {selectedTxn.method}
+                                </span>
+                            </div>
+                            <div className="text-right">
+                                <label className="mb-1 block text-[10px] font-black text-gray-400">
+                                    Provider
+                                </label>
+                                <span className="text-sm font-bold text-gray-900 capitalize">
+                                    {selectedTxn.provider}
+                                </span>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-[10px] font-black text-gray-400">
+                                    Timestamp
+                                </label>
+                                <span className="text-sm font-bold text-gray-900">
+                                    {new Date(selectedTxn.created_at).toLocaleString([], {
+                                        dateStyle: 'medium',
+                                        timeStyle: 'short',
+                                    })}
+                                </span>
+                            </div>
+                            <div className="text-right">
+                                <label className="mb-1 block text-[10px] font-black text-gray-400">
+                                    Tip amount
+                                </label>
+                                <span className="text-sm font-bold text-emerald-600">
+                                    {formatETBCurrency(selectedTxn.tip_amount, {
+                                        locale,
+                                        compact: false,
+                                    })}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="mt-4">
+                            <button
+                                onClick={() => setSelectedTxn(null)}
+                                className="h-14 w-full rounded-2xl bg-gray-900 text-sm font-bold text-white shadow-xl shadow-gray-200 transition-all hover:bg-black active:scale-[0.98]"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

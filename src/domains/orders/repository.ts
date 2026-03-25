@@ -2,6 +2,14 @@
 // Database access layer - Supabase queries only, no business logic
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
+import {
+    ORDER_LIST_COLUMNS,
+    ORDER_DETAIL_COLUMNS,
+    ORDER_KDS_COLUMNS,
+    ORDER_ITEM_LIST_COLUMNS,
+    ORDER_ITEM_KDS_COLUMNS,
+    columnsToString,
+} from '@/lib/constants/query-columns';
 
 // Lazy initialization of Supabase client - only creates when actually needed
 // This allows the module to be imported during build without requiring env vars
@@ -31,7 +39,12 @@ export type OrderItemRow = Database['public']['Tables']['order_items']['Row'];
 
 export class OrdersRepository {
     async findById(id: string): Promise<OrderRow | null> {
-        const { data } = await getSupabaseClient().from('orders').select('*').eq('id', id).single();
+        // MED-001: Use explicit columns for order detail
+        const { data } = await getSupabaseClient()
+            .from('orders')
+            .select(columnsToString(ORDER_DETAIL_COLUMNS))
+            .eq('id', id)
+            .single();
         return data;
     }
 
@@ -44,9 +57,10 @@ export class OrdersRepository {
             offset?: number;
         } = {}
     ): Promise<OrderRow[]> {
+        // MED-001: Use explicit columns for order list
         let query = getSupabaseClient()
             .from('orders')
-            .select('*')
+            .select(columnsToString(ORDER_LIST_COLUMNS))
             .eq('restaurant_id', restaurantId);
 
         if (options.status) {
@@ -76,9 +90,10 @@ export class OrdersRepository {
         const limit = Math.min(options.limit ?? 50, 200); // Default 50, max 200
         const offset = options.offset ?? 0;
 
+        // MED-001: Use explicit columns for active orders
         const { data } = await getSupabaseClient()
             .from('orders')
-            .select('*')
+            .select(columnsToString(ORDER_LIST_COLUMNS))
             .eq('restaurant_id', restaurantId)
             .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
             .order('created_at', { ascending: false })
@@ -101,11 +116,14 @@ export class OrdersRepository {
         const limit = Math.min(options.limit ?? 50, 200);
         const offset = options.offset ?? 0;
 
+        // MED-001: Use explicit columns for KDS orders
         // Use a subquery to filter orders that have order_items with the specified station
         // This moves filtering to the database level instead of in-memory
         const { data } = await getSupabaseClient()
             .from('orders')
-            .select('*, order_items!inner(*)')
+            .select(
+                `${columnsToString(ORDER_KDS_COLUMNS)}, order_items!inner(${columnsToString(ORDER_ITEM_KDS_COLUMNS)})`
+            )
             .eq('restaurant_id', restaurantId)
             .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
             .eq('order_items.station', station)
@@ -180,9 +198,10 @@ export class OrdersRepository {
 
     // Order Items
     async getItems(orderId: string): Promise<OrderItemRow[]> {
+        // MED-001: Use explicit columns for order items
         const { data } = await getSupabaseClient()
             .from('order_items')
-            .select('*')
+            .select(columnsToString(ORDER_ITEM_LIST_COLUMNS) as '*')
             .eq('order_id', orderId)
             .order('created_at', { ascending: true });
         return data ?? [];
@@ -229,9 +248,10 @@ export class OrdersRepository {
      * Used by federation reference resolver
      */
     async getItemById(id: string): Promise<OrderItemRow | null> {
+        // MED-001: Use explicit columns for order item
         const { data, error } = await getSupabaseClient()
             .from('order_items')
-            .select('*')
+            .select(columnsToString(ORDER_ITEM_LIST_COLUMNS) as '*')
             .eq('id', id)
             .single();
 
@@ -251,9 +271,10 @@ export class OrdersRepository {
     async getItemsByOrderIds(orderIds: string[]): Promise<OrderItemRow[]> {
         if (orderIds.length === 0) return [];
 
+        // MED-001: Use explicit columns for order items batch
         const { data, error } = await getSupabaseClient()
             .from('order_items')
-            .select('*')
+            .select(columnsToString(ORDER_ITEM_LIST_COLUMNS) as '*')
             .in('order_id', orderIds)
             .order('created_at', { ascending: true });
 

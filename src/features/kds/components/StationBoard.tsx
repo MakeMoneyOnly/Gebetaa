@@ -839,7 +839,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                 breached_tickets: breachedCount,
             };
             try {
-                await fetch('/api/kds/telemetry', {
+                await fetch(`/api/kds/telemetry?restaurant_id=${restaurantId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),

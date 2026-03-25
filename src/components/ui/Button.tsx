@@ -6,11 +6,28 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+/**
+ * Button Component
+ *
+ * WCAG 2.1 AA Compliant touch targets:
+ * - Minimum touch target size: 44x44px (WCAG 2.1 Guideline 2.5.5)
+ * - All sizes meet or exceed the minimum touch target requirement
+ *
+ * Size variants:
+ * - sm: 44px height (minimum compliant)
+ * - md: 48px height (comfortable)
+ * - lg: 56px height (prominent)
+ * - icon: 44x44px (minimum compliant for icon-only)
+ */
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'glass' | 'ghost' | 'danger';
     size?: 'sm' | 'md' | 'lg' | 'icon';
     isLoading?: boolean;
-    /** Accessible label for screen readers when icon-only button */
+    /**
+     * Accessible label for screen readers.
+     * MED-016: REQUIRED for icon-only buttons (size="icon") for WCAG compliance.
+     * Icon-only buttons must have a meaningful label describing their action.
+     */
     ariaLabel?: string;
 }
 
@@ -40,15 +57,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             danger: 'bg-red-100 text-red-600 hover:bg-red-200',
         };
 
+        // WCAG 2.1 AA: Minimum touch target is 44x44px
+        // All sizes meet or exceed this requirement
         const sizes = {
-            sm: 'h-8 px-3 text-xs',
-            md: 'h-10 px-4 text-sm',
-            lg: 'h-12 px-6 text-base',
-            icon: 'h-10 w-10 p-2',
+            sm: 'h-11 min-h-11 px-3 text-xs', // 44px - minimum compliant
+            md: 'h-12 min-h-12 px-4 text-sm', // 48px - comfortable default
+            lg: 'h-14 min-h-14 px-6 text-base', // 56px - prominent
+            icon: 'h-11 w-11 min-h-11 min-w-11 p-2', // 44x44px - minimum compliant
         };
 
-        // Determine if button should have aria-label
-        const hasAriaLabel = ariaLabel || (size === 'icon' && typeof children === 'undefined');
+        // MED-016: Enforce aria-label for icon-only buttons
+        // Icon-only buttons MUST have an aria-label for accessibility
+        if (size === 'icon' && !ariaLabel) {
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(
+                    'Button: ariaLabel is required for icon-only buttons (size="icon") for accessibility. ' +
+                        'Please provide an ariaLabel prop describing the button action.'
+                );
+            }
+        }
 
         return (
             <button
@@ -56,7 +83,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 className={cn(baseStyles, variants[variant], sizes[size], className)}
                 disabled={disabled || isLoading}
                 aria-busy={isLoading}
-                aria-label={hasAriaLabel ? ariaLabel : undefined}
+                aria-label={ariaLabel}
                 {...props}
             >
                 {isLoading ? (

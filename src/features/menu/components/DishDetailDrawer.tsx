@@ -111,7 +111,7 @@ export function DishDetailDrawer({
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm" />
-                <Drawer.Content className="bg-background fixed right-0 bottom-0 left-0 z-[9999] mt-24 flex h-[92dvh] flex-col overflow-hidden rounded-t-[32px] border-t border-black/5 transition-colors duration-300 outline-none dark:border-white/10">
+                <Drawer.Content className="bg-background fixed right-0 bottom-0 left-0 z-[9999] mt-24 flex h-[92dvh] flex-col overflow-hidden rounded-t-[32px] shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.3)] transition-colors duration-300 outline-none">
                     <div className="no-scrollbar relative w-full flex-1 overflow-y-auto">
                         {/* Drag Handle */}
                         <div className="absolute top-3 left-1/2 z-20 h-1.5 w-12 -translate-x-1/2 rounded-full bg-black/20 backdrop-blur-md dark:bg-white/20" />
@@ -135,7 +135,7 @@ export function DishDetailDrawer({
                                 </h2>
                                 <div className="flex flex-col items-end">
                                     <span className="text-brand-crimson text-2xl font-black">
-                                        {formatCurrencyCompact(item.price * quantity)} ETB
+                                        {formatCurrencyCompact(item.price * quantity)}
                                     </span>
                                     <span className="text-xs font-bold text-black/40 dark:text-white/40">
                                         ETB
@@ -170,7 +170,7 @@ export function DishDetailDrawer({
                                     {ingredients.map((ing, i) => (
                                         <div
                                             key={i}
-                                            className="bg-brand-crimson/5 flex items-center gap-1.5 rounded-xl border border-black/5 px-3 py-2 text-sm font-bold text-black/70 dark:border-white/5 dark:bg-white/5 dark:text-white/70"
+                                            className="bg-brand-crimson/5 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-black/70 shadow-sm dark:bg-white/5 dark:text-white/70"
                                         >
                                             <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
                                             {ing}
@@ -205,7 +205,7 @@ export function DishDetailDrawer({
                                             <span className="font-medium text-black dark:text-white">
                                                 {extra}
                                             </span>
-                                            <div className="h-6 w-6 rounded-full border-2 border-black/20 dark:border-white/20"></div>
+                                            <div className="h-6 w-6 rounded-full bg-black/10 shadow-inner dark:bg-white/10"></div>
                                         </div>
                                     ))}
                                 </div>

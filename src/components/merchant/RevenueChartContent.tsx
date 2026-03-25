@@ -13,7 +13,7 @@ import {
 import { formatCurrencyCompact } from '@/lib/utils/monetary';
 
 interface ChartDataPoint {
-    day: string;
+    label: string;
     income: number;
     previous: number;
 }
@@ -61,7 +61,7 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                     labelStyle={{ color: '#94A3B8', marginBottom: '8px' }}
                 />
                 <XAxis
-                    dataKey="day"
+                    dataKey="label"
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#64748B', fontSize: 12, fontWeight: 600 }}

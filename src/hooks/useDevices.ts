@@ -17,14 +17,17 @@ export type HardwareDevice = {
     created_at: string;
 };
 
-export function useDevices() {
-    const [devices, setDevices] = useState<HardwareDevice[]>([]);
-    const [loading, setLoading] = useState(true);
+export function useDevices(initialData?: HardwareDevice[]) {
+    const [devices, setDevices] = useState<HardwareDevice[]>(initialData ?? []);
+    const [loading, setLoading] = useState(!initialData);
     const [error, setError] = useState<string | null>(null);
 
     const fetchDevices = useCallback(async () => {
         try {
-            setLoading(true);
+            // Only set loading to true if we don't have data yet
+            if (devices.length === 0) {
+                setLoading(true);
+            }
             setError(null);
             const response = await fetch('/api/devices', { method: 'GET' });
 
@@ -40,14 +43,15 @@ export function useDevices() {
             }
 
             const payload = await response.json();
-            setDevices((payload?.data?.devices ?? []) as HardwareDevice[]);
+            const freshDevices = (payload?.data?.devices ?? []) as HardwareDevice[];
+            setDevices(freshDevices);
         } catch (fetchError) {
             console.error(fetchError);
             setError(fetchError instanceof Error ? fetchError.message : 'Failed to fetch devices.');
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [devices.length]);
 
     useEffect(() => {
         void fetchDevices();

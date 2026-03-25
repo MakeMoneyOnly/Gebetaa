@@ -29,26 +29,20 @@ export const SkipLink = forwardRef<HTMLAnchorElement, SkipLinkProps>(
                 ref={ref}
                 href={href}
                 className={cn(
-                    // Base styles - hidden by default
-                    'absolute top-0 left-0 z-[9999] -translate-y-full px-4 py-3',
+                    // Base styles - visually hidden but accessible
+                    'absolute top-0 left-0 z-[9999] px-4 py-3',
                     'bg-brand-crimson font-semibold text-white',
                     'transition-transform duration-200 ease-out',
+                    // CSS-based visual hiding - keeps element in tab order
+                    '-translate-y-full',
                     // Focus styles - visible on focus
                     'focus:ring-brand-crimson/50 focus:translate-y-0 focus:ring-4 focus:outline-none',
                     // Ensure it appears above everything
                     'pointer-events-auto',
                     className
                 )}
-                // Prevent tab order until focused
-                tabIndex={-1}
-                onFocus={e => {
-                    // When focused, bring into normal tab order
-                    e.currentTarget.tabIndex = 0;
-                }}
-                onBlur={e => {
-                    // Return to hidden state when blurred
-                    e.currentTarget.tabIndex = -1;
-                }}
+                // MED-015: Use standard tabIndex={0} for consistent tab order
+                // Visual hiding is handled purely by CSS transform
                 {...props}
             >
                 {children}

@@ -757,7 +757,7 @@ export function CartDrawer({
                                     </span>
                                     <div className="flex items-end gap-1">
                                         <span className="text-3xl font-black text-black dark:text-white">
-                                            {formatCurrencyCompact(discountPreview.total)} ETB
+                                            {formatCurrencyCompact(discountPreview.total)}
                                         </span>
                                         <span className="mb-1 text-sm font-bold text-black/40 dark:text-white/40">
                                             ETB

@@ -11,14 +11,12 @@ import { ProvisionDeviceModal } from '@/components/merchant/ProvisionDeviceModal
 import { MetricCard } from '@/components/merchant/MetricCard';
 import { Users, Tablet, Plus, MoreHorizontal, UserCheck, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface StaffPageClientProps {
-    initialData?: any;
-}
+import { Skeleton } from '@/components/ui/Skeleton';
+import { StaffPageData } from '@/lib/services/dashboardDataService';
 
 type SubTab = 'staff' | 'devices';
 
-export function StaffPageClient(_props: StaffPageClientProps) {
+export function StaffPageClient({ initialData }: { initialData?: StaffPageData | null }) {
     const {
         staff,
         loading: staffDataLoading,
@@ -27,7 +25,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
         handleActiveToggle,
         handleAddPinStaff,
         handleDeleteStaff,
-    } = useStaff();
+    } = useStaff(initialData?.staff as any);
 
     const { restaurantId } = useRole(null);
     const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
@@ -41,7 +39,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
         loading: devicesDataLoading,
         handleProvisionDevice,
         handleDeleteDevice,
-    } = useDevices();
+    } = useDevices(initialData?.devices as any);
 
     const { loading: pageLoading, markLoaded } = usePageLoadGuard('staff');
 
@@ -138,19 +136,30 @@ export function StaffPageClient(_props: StaffPageClientProps) {
         <div className="min-h-screen space-y-8 pb-20">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">Staff</h1>
+                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-black">
+                        Access & Devices
+                    </h1>
                     <p className="font-medium text-gray-500">
                         Manage your team and hardware terminals.
                     </p>
                 </div>
 
-                <button
-                    onClick={() => setAddStaffOpen(true)}
-                    className="bg-brand-crimson flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Staff
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setAddDeviceOpen(true)}
+                        className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-gray-700 shadow-md transition-shadow hover:shadow-lg"
+                    >
+                        <Tablet className="h-4 w-4 text-gray-400" />
+                        Add Device
+                    </button>
+                    <button
+                        onClick={() => setAddStaffOpen(true)}
+                        className="bg-brand-crimson flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Staff
+                    </button>
+                </div>
             </div>
 
             {/* Metrics */}
@@ -159,8 +168,8 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                     icon={Users}
                     chip="TOTAL"
                     value={totalStaff}
-                    label="Staff Accounts"
-                    subLabel="Total identities provisioned"
+                    label="Staff PINs"
+                    subLabel="Total identities with PIN access"
                     tone="purple"
                     progress={Math.min(20, totalStaff)}
                     targetLabel="Target: -"
@@ -171,7 +180,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                     chip="ACTIVE"
                     value={activeStaff}
                     label="Enabled Accounts"
-                    subLabel="Profiles currently active"
+                    subLabel="Active PIN codes"
                     tone="blue"
                     progress={Math.min(20, Math.round((activeStaff / (totalStaff || 1)) * 20))}
                     targetLabel={`Total: ${totalStaff}`}
@@ -204,7 +213,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
             {/* Tabs & Content */}
             <div className="space-y-6">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex w-full overflow-hidden rounded-2xl bg-gray-100 p-1 md:w-max">
+                    <div className="flex w-full overflow-hidden rounded-2xl bg-gray-200/40 p-1 shadow-inner md:w-max">
                         <button
                             onClick={() => setActiveTab('staff')}
                             className={cn(
@@ -214,7 +223,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                     : 'text-gray-500 hover:text-gray-700'
                             )}
                         >
-                            Staff & PINs
+                            Staff PINs
                         </button>
                         <button
                             onClick={() => setActiveTab('devices')}
@@ -225,13 +234,51 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                     : 'text-gray-500 hover:text-gray-700'
                             )}
                         >
-                            Hardware Devices
+                            Hardware Terminals
                         </button>
                     </div>
                 </div>
 
-                {displayLoading ? (
-                    <div className="py-12 text-center text-gray-400">Loading records...</div>
+                {displayLoading && staff.length === 0 ? (
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <div
+                                key={i}
+                                className="flex flex-col gap-5 rounded-[2.5rem] bg-white p-6 shadow-sm"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-50 shadow-sm">
+                                        <Skeleton className="h-14 w-14 rounded-3xl" />
+                                    </div>
+                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <Skeleton className="h-7 w-3/4 rounded-lg" />
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-5 w-16 rounded-lg" />
+                                        <Skeleton className="h-5 w-16 rounded-lg" />
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
+                                    <div className="flex justify-between pb-2">
+                                        <Skeleton className="h-3 w-1/4 rounded" />
+                                        <Skeleton className="h-4 w-1/3 rounded" />
+                                    </div>
+                                    <div className="flex justify-between pt-2">
+                                        <Skeleton className="h-3 w-1/4 rounded" />
+                                        <Skeleton className="h-4 w-1/3 rounded" />
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto flex flex-col gap-2 pt-2">
+                                    <Skeleton className="h-10 w-full rounded-xl" />
+                                    <Skeleton className="h-8 w-full rounded-xl" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 ) : (
                     <>
                         {/* STAFF TAB */}
@@ -243,7 +290,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                         className="group relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-50 text-xl font-bold text-gray-700 ring-4 ring-white">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-50 text-xl font-bold text-gray-700 shadow-sm">
                                                 {(member.name || member.email || 'US')
                                                     .slice(0, 2)
                                                     .toUpperCase()}
@@ -261,12 +308,12 @@ export function StaffPageClient(_props: StaffPageClientProps) {
 
                                         <div>
                                             <h3 className="text-xl font-bold tracking-tight text-gray-900">
-                                                {member.name || member.email || 'Unnamed Staff'}
+                                                {member?.name || member?.email || 'Unnamed Staff'}
                                             </h3>
                                             <div className="mt-2 flex items-center gap-2">
                                                 <span
                                                     className={cn(
-                                                        'rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase',
+                                                        'rounded-lg border px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase',
                                                         ROLE_BADGE[member.role] ??
                                                             'bg-gray-100 text-gray-600'
                                                     )}
@@ -276,30 +323,35 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                                 <span
                                                     className={cn(
                                                         'rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase',
-                                                        member.is_active === false
-                                                            ? 'bg-gray-100 text-gray-600'
-                                                            : 'bg-emerald-50 text-emerald-700'
+                                                        member?.is_active === false
+                                                            ? 'border border-gray-100 bg-gray-50 text-gray-400'
+                                                            : 'border border-gray-900 bg-gray-900 text-white'
                                                     )}
                                                 >
-                                                    {member.is_active === false
+                                                    {member?.is_active === false
                                                         ? 'inactive'
                                                         : 'active'}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="rounded-2xl bg-gray-50 p-4">
-                                            <div className="flex justify-between border-b border-gray-200 pb-2">
+                                        <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
+                                            <div className="flex justify-between pb-2">
                                                 <span className="text-xs font-bold text-gray-400">
                                                     Login PIN
                                                 </span>
                                                 {member.pin_code ? (
-                                                    <span className="font-mono text-sm font-bold tracking-widest text-black">
-                                                        ••••
-                                                    </span>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="font-mono text-base font-black tracking-[0.2em] text-black">
+                                                            {member.pin_code}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold text-emerald-600">
+                                                            POS Login PIN
+                                                        </span>
+                                                    </div>
                                                 ) : (
-                                                    <span className="text-sm font-bold text-black">
-                                                        Uses Email
+                                                    <span className="text-sm font-bold text-gray-400">
+                                                        No PIN Set
                                                     </span>
                                                 )}
                                             </div>
@@ -390,7 +442,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                         className="group relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-900 text-white shadow-lg ring-4 ring-white">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-900 text-white shadow-xl">
                                                 <Tablet className="h-6 w-6" />
                                             </div>
                                             <div
@@ -415,12 +467,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                         </div>
 
                                         <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
-                                            <div
-                                                className="mb-2 flex justify-between pb-2"
-                                                style={{
-                                                    borderBottom: '1px solid rgba(0,0,0,0.06)',
-                                                }}
-                                            >
+                                            <div className="mb-2 flex justify-between pb-2">
                                                 <span className="text-xs font-bold text-gray-400">
                                                     Status
                                                 </span>
@@ -437,12 +484,7 @@ export function StaffPageClient(_props: StaffPageClientProps) {
                                                         : 'Pending Pair'}
                                                 </span>
                                             </div>
-                                            <div
-                                                className="mb-2 flex justify-between py-2"
-                                                style={{
-                                                    borderBottom: '1px solid rgba(0,0,0,0.06)',
-                                                }}
-                                            >
+                                            <div className="mb-2 flex justify-between py-2">
                                                 <span className="text-xs font-bold text-gray-400">
                                                     Setup Code
                                                 </span>

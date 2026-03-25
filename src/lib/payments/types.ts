@@ -1,6 +1,6 @@
 export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled';
 
-export type PaymentProviderName = 'chapa' | 'internal';
+export type PaymentProviderName = 'chapa' | 'telebirr' | 'internal';
 
 export type PaymentProviderHealthStatus = 'healthy' | 'degraded' | 'unavailable';
 

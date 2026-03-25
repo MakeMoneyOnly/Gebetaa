@@ -173,7 +173,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
     };
 
     return (
-        <section className="rounded-[2.5rem] border border-gray-100 bg-white p-6 shadow-sm">
+        <section className="rounded-[2.5rem] bg-white p-6 shadow-md">
             <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 className="text-xl font-bold text-gray-900">Schedule Calendar</h2>
@@ -184,13 +184,13 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setWindowStart(prev => plusDays(prev, -7))}
-                        className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+                        className="h-9 w-9 rounded-lg bg-white text-gray-600 shadow-sm transition-shadow hover:shadow-md"
                     >
                         <ChevronLeft className="mx-auto h-4 w-4" />
                     </button>
                     <button
                         onClick={() => setWindowStart(prev => plusDays(prev, 7))}
-                        className="h-9 w-9 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+                        className="h-9 w-9 rounded-lg bg-white text-gray-600 shadow-sm transition-shadow hover:shadow-md"
                     >
                         <ChevronRight className="mx-auto h-4 w-4" />
                     </button>
@@ -199,10 +199,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
 
             <div className="mb-6 grid grid-cols-1 gap-2 md:grid-cols-7">
                 {days.map(day => (
-                    <div
-                        key={day.key}
-                        className="rounded-2xl border border-gray-100 bg-gray-50 p-3"
-                    >
+                    <div key={day.key} className="rounded-2xl bg-gray-50 p-3 shadow-inner">
                         <p className="text-xs font-bold tracking-wide text-gray-500 uppercase">
                             {day.label}
                         </p>
@@ -213,7 +210,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                                 (groupedByDate.get(day.key) ?? []).map(shift => (
                                     <div
                                         key={shift.id}
-                                        className="rounded-xl border border-gray-100 bg-white p-2"
+                                        className="rounded-xl bg-white p-2 shadow-sm"
                                     >
                                         <div className="flex items-center justify-between gap-2">
                                             <span className="text-xs font-semibold text-gray-800">
@@ -242,7 +239,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                 ))}
             </div>
 
-            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4">
+            <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
                 <div className="mb-3 flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-gray-500" />
                     <h3 className="text-sm font-bold text-gray-800">Add Shift</h3>

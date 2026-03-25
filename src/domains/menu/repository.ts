@@ -1,9 +1,18 @@
 /**
  * Menu Domain - Repository Layer
  * CRIT-07: GraphQL Federation - Menu subgraph data access
+ * MED-001: Use explicit column selections instead of SELECT *
  */
 
 import { createClient } from '@/lib/supabase/client';
+import {
+    MENU_ITEM_LIST_COLUMNS,
+    MENU_ITEM_DETAIL_COLUMNS,
+    CATEGORY_LIST_COLUMNS,
+    MODIFIER_GROUP_COLUMNS,
+    MODIFIER_OPTION_COLUMNS,
+    columnsToString,
+} from '@/lib/constants/query-columns';
 
 // Use 'any' for database row types to avoid schema sync issues
 // In production, these would be generated from Supabase types
@@ -21,7 +30,11 @@ export async function getMenuItems(
 ): Promise<Record<string, unknown>[]> {
     const supabase = createClient();
 
-    let query = supabase.from('menu_items').select('*').eq('restaurant_id', restaurantId);
+    // MED-001: Use explicit columns for menu items
+    let query = supabase
+        .from('menu_items')
+        .select(columnsToString(MENU_ITEM_LIST_COLUMNS))
+        .eq('restaurant_id', restaurantId);
 
     if (options?.categoryId) {
         query = query.eq('category_id', options.categoryId);
@@ -52,7 +65,12 @@ export async function getMenuItems(
 export async function getMenuItem(id: string): Promise<Record<string, unknown> | null> {
     const supabase = createClient();
 
-    const { data, error } = await supabase.from('menu_items').select('*').eq('id', id).single();
+    // MED-001: Use explicit columns for menu item detail
+    const { data, error } = await supabase
+        .from('menu_items')
+        .select(columnsToString(MENU_ITEM_DETAIL_COLUMNS))
+        .eq('id', id)
+        .single();
 
     if (error) {
         if (error.code === 'PGRST116') return null;
@@ -69,9 +87,10 @@ export async function getMenuItem(id: string): Promise<Record<string, unknown> |
 export async function getMenuCategories(restaurantId: string): Promise<Record<string, unknown>[]> {
     const supabase = createClient();
 
+    // MED-001: Use explicit columns for categories
     const { data, error } = await supabase
         .from('categories')
-        .select('*')
+        .select(columnsToString(CATEGORY_LIST_COLUMNS))
         .eq('restaurant_id', restaurantId);
 
     if (error) {
@@ -88,9 +107,10 @@ export async function getMenuCategories(restaurantId: string): Promise<Record<st
 export async function getModifierGroups(menuItemId: string): Promise<Record<string, unknown>[]> {
     const supabase = createClient();
 
+    // MED-001: Use explicit columns for modifier groups
     const { data, error } = await supabase
         .from('modifier_groups')
-        .select('*')
+        .select(columnsToString(MODIFIER_GROUP_COLUMNS))
         .eq('menu_item_id', menuItemId)
         .eq('is_active', true);
 
@@ -110,9 +130,10 @@ export async function getModifierOptions(
 ): Promise<Record<string, unknown>[]> {
     const supabase = createClient();
 
+    // MED-001: Use explicit columns for modifier options
     const { data, error } = await supabase
         .from('modifier_options')
-        .select('*')
+        .select(columnsToString(MODIFIER_OPTION_COLUMNS))
         .eq('modifier_group_id', modifierGroupId)
         .eq('is_available', true);
 
@@ -132,7 +153,11 @@ export async function getMenuItemsByIds(ids: string[]): Promise<Record<string, u
     if (ids.length === 0) return [];
     const supabase = createClient();
 
-    const { data, error } = await supabase.from('menu_items').select('*').in('id', ids);
+    // MED-001: Use explicit columns for menu items batch
+    const { data, error } = await supabase
+        .from('menu_items')
+        .select(columnsToString(MENU_ITEM_LIST_COLUMNS))
+        .in('id', ids);
 
     if (error) {
         console.error('[menu/repository] Error fetching menu items by IDs:', error);
@@ -152,9 +177,10 @@ export async function getModifierGroupsByMenuItemIds(
     if (menuItemIds.length === 0) return [];
     const supabase = createClient();
 
+    // MED-001: Use explicit columns for modifier groups batch
     const { data, error } = await supabase
         .from('modifier_groups')
-        .select('*')
+        .select(columnsToString(MODIFIER_GROUP_COLUMNS))
         .in('menu_item_id', menuItemIds)
         .eq('is_active', true);
 
@@ -176,9 +202,10 @@ export async function getModifierOptionsByGroupIds(
     if (groupIds.length === 0) return [];
     const supabase = createClient();
 
+    // MED-001: Use explicit columns for modifier options batch
     const { data, error } = await supabase
         .from('modifier_options')
-        .select('*')
+        .select(columnsToString(MODIFIER_OPTION_COLUMNS))
         .in('modifier_group_id', groupIds)
         .eq('is_available', true);
 
@@ -198,7 +225,11 @@ export async function getCategoriesByIds(ids: string[]): Promise<Record<string, 
     if (ids.length === 0) return [];
     const supabase = createClient();
 
-    const { data, error } = await supabase.from('categories').select('*').in('id', ids);
+    // MED-001: Use explicit columns for categories batch
+    const { data, error } = await supabase
+        .from('categories')
+        .select(columnsToString(CATEGORY_LIST_COLUMNS))
+        .in('id', ids);
 
     if (error) {
         console.error('[menu/repository] Error fetching categories by IDs:', error);
@@ -216,7 +247,11 @@ export async function getModifierGroupsByIds(ids: string[]): Promise<Record<stri
     if (ids.length === 0) return [];
     const supabase = createClient();
 
-    const { data, error } = await supabase.from('modifier_groups').select('*').in('id', ids);
+    // MED-001: Use explicit columns for modifier groups batch
+    const { data, error } = await supabase
+        .from('modifier_groups')
+        .select(columnsToString(MODIFIER_GROUP_COLUMNS))
+        .in('id', ids);
 
     if (error) {
         console.error('[menu/repository] Error fetching modifier groups by IDs:', error);
@@ -234,7 +269,11 @@ export async function getModifierOptionsByIds(ids: string[]): Promise<Record<str
     if (ids.length === 0) return [];
     const supabase = createClient();
 
-    const { data, error } = await supabase.from('modifier_options').select('*').in('id', ids);
+    // MED-001: Use explicit columns for modifier options batch
+    const { data, error } = await supabase
+        .from('modifier_options')
+        .select(columnsToString(MODIFIER_OPTION_COLUMNS))
+        .in('id', ids);
 
     if (error) {
         console.error('[menu/repository] Error fetching modifier options by IDs:', error);

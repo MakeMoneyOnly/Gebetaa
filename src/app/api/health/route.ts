@@ -9,6 +9,9 @@
  * - Redis connectivity (Upstash)
  * - QStash availability (job queue)
  * - Environment configuration
+ * - Payment providers (Chapa, Telebirr)
+ * - Circuit breaker status
+ * - Performance metrics
  *
  * Used by Better Uptime for monitoring with Telegram alerting on non-200.
  *
@@ -18,9 +21,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getPoolConfig } from '@/lib/supabase/pool';
+import { circuitBreakerRegistry } from '@/lib/api/circuit-breaker';
+import { performanceMetricsStore, getPerformanceSummary } from '@/lib/monitoring/performance';
+import { gracefulServiceRegistry } from '@/lib/api/graceful-degradation';
+
+/**
+ * Payment provider health check result
+ */
+interface PaymentProviderHealth {
+    name: string;
+    status: 'pass' | 'fail' | 'not_configured';
+    latency_ms?: number;
+    message?: string;
+}
+
+/**
+ * Circuit breaker health status
+ */
+interface CircuitBreakerHealth {
+    name: string;
+    state: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+    failureCount: number;
+}
+
+/**
+ * Performance health summary
+ */
+interface PerformanceHealth {
+    totalOperations: number;
+    slowOperations: number;
+    criticalOperations: number;
+    alerts: Array<{ type: string; message: string; severity: string }>;
+}
 
 /**
  * Health check response interface
+ * MED-025: Enhanced with payment providers, circuit breakers, and performance metrics
  */
 interface HealthStatus {
     status: 'healthy' | 'unhealthy' | 'degraded';
@@ -63,6 +99,12 @@ interface HealthStatus {
             configured: string[];
             missing: string[];
         };
+        /** MED-025: Payment providers health */
+        payments?: PaymentProviderHealth[];
+        /** MED-025: Circuit breaker status */
+        circuitBreakers?: CircuitBreakerHealth[];
+        /** MED-025: Performance metrics */
+        performance?: PerformanceHealth;
     };
     region?: string;
 }
@@ -380,6 +422,122 @@ function checkMemory(): {
 }
 
 /**
+ * Check payment providers health
+ * MED-025: Added payment provider health checks
+ */
+async function checkPaymentProviders(): Promise<PaymentProviderHealth[]> {
+    const providers: PaymentProviderHealth[] = [];
+
+    // Check Chapa
+    if (process.env.CHAPA_SECRET_KEY) {
+        try {
+            const start = Date.now();
+            // Chapa doesn't have a dedicated health endpoint, so we check if the key is configured
+            // In production, you might want to make a lightweight API call
+            providers.push({
+                name: 'chapa',
+                status: 'pass',
+                latency_ms: Date.now() - start,
+                message: 'Chapa API key configured',
+            });
+        } catch (error) {
+            providers.push({
+                name: 'chapa',
+                status: 'fail',
+                message: error instanceof Error ? error.message : 'Unknown error',
+            });
+        }
+    } else {
+        providers.push({
+            name: 'chapa',
+            status: 'not_configured',
+            message: 'CHAPA_SECRET_KEY not set',
+        });
+    }
+
+    // Check Telebirr
+    if (process.env.TELEBIRR_APP_ID && process.env.TELEBIRR_APP_KEY) {
+        try {
+            const start = Date.now();
+            // Telebirr configuration check
+            providers.push({
+                name: 'telebirr',
+                status: 'pass',
+                latency_ms: Date.now() - start,
+                message: 'Telebirr credentials configured',
+            });
+        } catch (error) {
+            providers.push({
+                name: 'telebirr',
+                status: 'fail',
+                message: error instanceof Error ? error.message : 'Unknown error',
+            });
+        }
+    } else {
+        providers.push({
+            name: 'telebirr',
+            status: 'not_configured',
+            message: 'TELEBIRR_APP_ID or TELEBIRR_APP_KEY not set',
+        });
+    }
+
+    return providers;
+}
+
+/**
+ * Get circuit breaker health status
+ * MED-025: Added circuit breaker status aggregation
+ */
+function getCircuitBreakerHealth(): CircuitBreakerHealth[] {
+    const breakers = circuitBreakerRegistry.getAllBreakers();
+    const health: CircuitBreakerHealth[] = [];
+
+    for (const [name, breaker] of breakers) {
+        const stats = breaker.getStats();
+        health.push({
+            name,
+            state: stats.state,
+            failureCount: stats.failureCount,
+        });
+    }
+
+    return health;
+}
+
+/**
+ * Get performance health status
+ * MED-025: Added performance metrics aggregation
+ */
+function getPerformanceHealth(): PerformanceHealth {
+    const summary = getPerformanceSummary();
+    const alerts =
+        summary.criticalOperations > 0
+            ? [
+                  {
+                      type: 'critical',
+                      message: `${summary.criticalOperations} critical performance issues`,
+                      severity: 'critical',
+                  },
+              ]
+            : summary.slowOperations > 0
+              ? [
+                    {
+                        type: 'warning',
+                        message: `${summary.slowOperations} slow operations detected`,
+                        severity: 'warning',
+                    },
+                ]
+              : [];
+
+    return {
+        totalOperations: summary.totalOperations,
+        slowOperations: summary.slowOperations,
+        criticalOperations: summary.criticalOperations,
+        alerts,
+    };
+}
+
+/**
  * GET /api/health
  * Returns comprehensive health status
  *
@@ -396,15 +554,19 @@ function checkMemory(): {
  */
 export async function GET(_request: NextRequest): Promise<NextResponse<HealthStatus>> {
     // Run checks in parallel for efficiency
-    const [databaseCheck, redisCheck, qstashCheck, supabaseCheck] = await Promise.all([
-        checkDatabase(),
-        checkRedis(),
-        checkQStash(),
-        checkSupabase(),
-    ]);
+    const [databaseCheck, redisCheck, qstashCheck, supabaseCheck, paymentChecks] =
+        await Promise.all([
+            checkDatabase(),
+            checkRedis(),
+            checkQStash(),
+            checkSupabase(),
+            checkPaymentProviders(),
+        ]);
 
     const environmentCheck = checkEnvironment();
     const memoryCheck = checkMemory();
+    const circuitBreakerHealth = getCircuitBreakerHealth();
+    const performanceHealth = getPerformanceHealth();
 
     // Determine overall status
     // Unhealthy: Database is down (critical dependency)
@@ -448,6 +610,10 @@ export async function GET(_request: NextRequest): Promise<NextResponse<HealthSta
             qstash: qstashCheck,
             memory: memoryCheck,
             environment: environmentCheck,
+            // MED-025: Added payment providers, circuit breakers, and performance
+            payments: paymentChecks,
+            circuitBreakers: circuitBreakerHealth,
+            performance: performanceHealth,
         },
         region: process.env.VERCEL_REGION || process.env.AWS_REGION,
     };

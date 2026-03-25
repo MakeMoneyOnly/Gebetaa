@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Utensils, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // Register GSAP plugins safely
 if (typeof window !== 'undefined') {
@@ -14,6 +15,7 @@ if (typeof window !== 'undefined') {
 
 // ----------------------------------------------------------------------
 // MAGNETIC BUTTON COMPONENT
+// With reduced motion support for accessibility
 // ----------------------------------------------------------------------
 function MagneticButton({
     children,
@@ -27,10 +29,16 @@ function MagneticButton({
     className?: string;
 }) {
     const buttonRef = useRef<HTMLAnchorElement>(null);
+    const prefersReducedMotion = useReducedMotion();
 
     useEffect(() => {
         const btn = buttonRef.current;
         if (!btn) return;
+
+        // Skip animations if user prefers reduced motion
+        if (prefersReducedMotion) {
+            return;
+        }
 
         const ctx = gsap.context(() => {
             btn.addEventListener('mouseenter', () => {
@@ -53,7 +61,7 @@ function MagneticButton({
         }, btn);
 
         return () => ctx.revert();
-    }, []);
+    }, [prefersReducedMotion]);
 
     const baseStyles =
         'relative overflow-hidden inline-flex items-center justify-center rounded-full px-8 py-4 font-inter font-medium transition-colors outline-none focus-visible:ring-4 focus-visible:ring-Ember/20';
@@ -73,8 +81,17 @@ function MagneticButton({
 
 export default function LandingPage() {
     const containerRef = useRef<HTMLElement>(null);
+    const prefersReducedMotion = useReducedMotion();
 
     useEffect(() => {
+        // Skip GSAP animations if user prefers reduced motion
+        if (prefersReducedMotion) {
+            // Just make elements visible without animation
+            const featureSections = gsap.utils.toArray('.feature-card');
+            gsap.set(featureSections, { opacity: 1, y: 0 });
+            return;
+        }
+
         const ctx = gsap.context(() => {
             // Hero Animation (Handled by Framer Motion)
 
@@ -99,7 +116,7 @@ export default function LandingPage() {
         }, containerRef);
 
         return () => ctx.revert();
-    }, []);
+    }, [prefersReducedMotion]);
 
     return (
         <main
@@ -390,12 +407,23 @@ function Navbar() {
 
 // ----------------------------------------------------------------------
 // FEATURE INTERACTIONS
+// With reduced motion support for accessibility
 // ----------------------------------------------------------------------
 
 function OrderShuffler() {
     const shufflerRef = useRef<HTMLDivElement>(null);
+    const prefersReducedMotion = useReducedMotion();
 
     useEffect(() => {
+        // Skip continuous animation if user prefers reduced motion
+        // Just show the first card in a static state
+        if (prefersReducedMotion) {
+            gsap.set('.shuffle-card-1', { y: 0, scale: 1, opacity: 1, zIndex: 3 });
+            gsap.set('.shuffle-card-2', { y: 0, scale: 1, opacity: 0.8, zIndex: 2 });
+            gsap.set('.shuffle-card-3', { y: 0, scale: 1, opacity: 0.6, zIndex: 1 });
+            return;
+        }
+
         const ctx = gsap.context(() => {
             // Logic for a continuous spring bounce 3-card stack swap
             const tl = gsap.timeline({ repeat: -1 });
@@ -513,7 +541,7 @@ function OrderShuffler() {
             );
         }, shufflerRef);
         return () => ctx.revert();
-    }, []);
+    }, [prefersReducedMotion]);
 
     return (
         <div ref={shufflerRef} className="relative flex h-full w-full items-center justify-center">
@@ -628,8 +656,16 @@ function TelemetryFeed() {
 
 function CommandScheduler() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const prefersReducedMotion = useReducedMotion();
 
     useEffect(() => {
+        // Skip cursor animation if user prefers reduced motion
+        // Just show the final state without animation
+        if (prefersReducedMotion) {
+            gsap.set('.anim-cursor', { opacity: 0 }); // Hide cursor entirely
+            return;
+        }
+
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 });
 
@@ -677,7 +713,7 @@ function CommandScheduler() {
                 ); // reset day
         }, containerRef);
         return () => ctx.revert();
-    }, []);
+    }, [prefersReducedMotion]);
 
     return (
         <div

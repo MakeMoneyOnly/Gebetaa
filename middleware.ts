@@ -1,6 +1,7 @@
 import { updateSession } from '@/lib/supabase/middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limit';
 import { detectApiVersion, getVersionedHeaders } from '@/lib/api/versioning';
+import { tracingMiddleware } from '@/lib/api/tracing';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -49,6 +50,9 @@ const buildCSP = (isProduction: boolean): string => {
 };
 
 export async function middleware(request: NextRequest) {
+    // MED-026: Initialize request tracing for distributed tracing
+    const { context: traceContext, addHeaders: addTraceHeaders } = tracingMiddleware(request);
+
     // First, update the Supabase session
     const supabaseResponse = await updateSession(request);
 
@@ -69,6 +73,10 @@ export async function middleware(request: NextRequest) {
             'Strict-Transport-Security',
             'max-age=63072000; includeSubDomains; preload'
         );
+
+        // MED-026: Add trace headers to rate limit response
+        rateLimitResponse.headers.set('x-request-id', traceContext.requestId);
+        rateLimitResponse.headers.set('x-trace-id', traceContext.traceId);
 
         return rateLimitResponse;
     }
@@ -94,6 +102,9 @@ export async function middleware(request: NextRequest) {
         'Strict-Transport-Security',
         'max-age=63072000; includeSubDomains; preload'
     );
+
+    // MED-026: Add trace headers to response
+    addTraceHeaders(supabaseResponse);
 
     // Add API versioning headers for API routes
     const requestPath = request.nextUrl.pathname;

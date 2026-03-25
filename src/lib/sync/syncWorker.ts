@@ -29,11 +29,12 @@ interface SyncOperationRow {
 
 /**
  * HIGH-013: API endpoint configuration for sync operations
+ * Uses the unified /api/sync endpoint for batch operations
  */
-const SYNC_API_BASE = '/api/sync';
+const SYNC_API_ENDPOINT = '/api/sync';
 
 /**
- * Sync operation types mapped to API endpoints
+ * Individual table endpoints for direct operations (fallback)
  */
 const SYNC_ENDPOINTS: Record<string, string> = {
     orders: '/api/orders',
@@ -107,7 +108,110 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
     }
 
     /**
-     * HIGH-013: Make actual API call to server for sync operation
+     * HIGH-013: Execute batch sync via unified /api/sync endpoint
+     * This is more efficient than individual API calls
+     */
+    async function executeBatchSync(operations: SyncOperationRow[]): Promise<{
+        succeeded: number;
+        failed: number;
+        results: Map<number, { success: boolean; error?: string }>;
+    }> {
+        const results = new Map<number, { success: boolean; error?: string }>();
+        let succeeded = 0;
+        let failed = 0;
+
+        if (operations.length === 0) {
+            return { succeeded, failed, results };
+        }
+
+        // Transform operations to sync API format
+        const syncOperations = operations.map(op => {
+            let payload;
+            try {
+                payload = op.payload ? JSON.parse(op.payload) : {};
+            } catch {
+                payload = {};
+            }
+
+            return {
+                id: crypto.randomUUID(),
+                operation: op.operation.toLowerCase(),
+                tableName: op.table_name,
+                recordId: op.record_id,
+                data: payload,
+                version: 1,
+                lastModified: new Date().toISOString(),
+                idempotencyKey: op.idempotency_key || `sync-${op.id}`,
+                restaurantId: payload.restaurant_id || '',
+            };
+        });
+
+        try {
+            const response = await fetch(SYNC_API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    operations: syncOperations,
+                    clientId: `sync-worker-${Date.now()}`,
+                }),
+            });
+
+            if (!response.ok) {
+                // Batch failed - fall back to individual operations
+                console.warn(
+                    '[SyncWorker] Batch sync failed, falling back to individual operations'
+                );
+                for (const op of operations) {
+                    const result = await executeSyncOperation(op);
+                    results.set(op.id, result);
+                    if (result.success) {
+                        succeeded++;
+                    } else {
+                        failed++;
+                    }
+                }
+                return { succeeded, failed, results };
+            }
+
+            const data = await response.json();
+
+            // Process results from batch response
+            if (data.data?.results && Array.isArray(data.data.results)) {
+                for (let i = 0; i < operations.length; i++) {
+                    const op = operations[i];
+                    const result = data.data.results[i];
+                    if (result) {
+                        results.set(op.id, { success: result.success, error: result.error });
+                        if (result.success) {
+                            succeeded++;
+                        } else {
+                            failed++;
+                        }
+                    }
+                }
+            }
+
+            return { succeeded, failed, results };
+        } catch (error) {
+            console.error('[SyncWorker] Batch sync error:', error);
+            // Fall back to individual operations
+            for (const op of operations) {
+                const result = await executeSyncOperation(op);
+                results.set(op.id, result);
+                if (result.success) {
+                    succeeded++;
+                } else {
+                    failed++;
+                }
+            }
+            return { succeeded, failed, results };
+        }
+    }
+
+    /**
+     * HIGH-013: Make actual API call to server for sync operation (fallback)
      */
     async function executeSyncOperation(
         op: SyncOperationRow
@@ -120,11 +224,13 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         }
 
         const method =
-            op.operation === 'INSERT' ? 'POST' : op.operation === 'UPDATE' ? 'PATCH' : 'DELETE';
+            op.operation === 'INSERT' || op.operation === 'create'
+                ? 'POST'
+                : op.operation === 'UPDATE' || op.operation === 'update'
+                  ? 'PATCH'
+                  : 'DELETE';
         const url =
-            op.operation === 'DELETE' || op.operation === 'UPDATE'
-                ? `${endpoint}/${op.record_id}`
-                : endpoint;
+            method === 'DELETE' || method === 'PATCH' ? `${endpoint}/${op.record_id}` : endpoint;
 
         try {
             const response = await fetch(url, {
@@ -134,14 +240,14 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                     'x-sync-operation-id': String(op.id),
                     'x-idempotency-key': op.idempotency_key || String(op.id),
                 },
-                body: op.operation !== 'DELETE' ? op.payload : undefined,
+                body: method !== 'DELETE' ? op.payload : undefined,
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 return {
                     success: false,
-                    error: errorData.error?.message || `HTTP ${response.status}`,
+                    error: errorData.error?.message || errorData.error || `HTTP ${response.status}`,
                 };
             }
 
@@ -156,8 +262,46 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
 
     /**
      * Process pending sync operations with retry logic
+     * Uses batch sync for efficiency
      */
     async function processSyncOperations(): Promise<{
+        processed: number;
+        succeeded: number;
+        failed: number;
+    }> {
+        const operations = await getPendingSyncOperations(cfg.batchSize);
+
+        if (operations.length === 0) {
+            return { processed: 0, succeeded: 0, failed: 0 };
+        }
+
+        console.log(`[SyncWorker] Processing ${operations.length} operations via batch sync`);
+
+        // Use batch sync for efficiency
+        const { succeeded, failed, results } = await executeBatchSync(operations);
+
+        // Mark operations as completed or failed based on results
+        for (const op of operations) {
+            const result = results.get(op.id);
+            if (result?.success) {
+                await markSyncOperationCompleted(op.id);
+            } else if (result) {
+                const retryCount = op.attempts || 0;
+                if (retryCount >= MAX_RETRIES) {
+                    await markSyncOperationFailed(op.id, result.error || 'Max retries exceeded');
+                    cfg.onError?.(new Error(result.error || 'Sync operation failed'));
+                }
+            }
+        }
+
+        return { processed: operations.length, succeeded, failed };
+    }
+
+    /**
+     * Process pending sync operations individually (legacy method)
+     * Used as fallback when batch sync fails
+     */
+    async function processSyncOperationsIndividually(): Promise<{
         processed: number;
         succeeded: number;
         failed: number;

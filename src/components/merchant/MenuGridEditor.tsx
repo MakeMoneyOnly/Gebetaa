@@ -242,7 +242,7 @@ export function MenuGridEditor({
                             setSelectedIds([]);
                             setFieldError(null);
                         }}
-                        className="h-9 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                        className="h-9 rounded-xl bg-white px-3 text-xs font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md"
                     >
                         {isSelectionMode ? 'Cancel Selection' : 'Select Multiple'}
                     </button>
@@ -258,7 +258,7 @@ export function MenuGridEditor({
                                     setIsBulkPriceModalOpen(true);
                                 }}
                                 disabled={isBulkSaving}
-                                className="h-9 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                className="h-9 rounded-xl bg-white px-3 text-xs font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
                             >
                                 Bulk Price
                             </button>
@@ -363,7 +363,7 @@ export function MenuGridEditor({
                                             type="button"
                                             onClick={() => startInlineEdit(item)}
                                             disabled={readOnly || isSelectionMode}
-                                            className="inline-flex h-9 items-center gap-1 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                            className="inline-flex h-9 items-center gap-1 rounded-xl bg-white px-3 text-xs font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
                                         >
                                             <Edit2 className="h-3.5 w-3.5" />
                                             Inline Edit
@@ -372,7 +372,7 @@ export function MenuGridEditor({
                                             type="button"
                                             onClick={() => onOpenAdvancedEdit(category, item)}
                                             disabled={isSelectionMode}
-                                            className="h-9 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                            className="h-9 rounded-xl bg-white px-3 text-xs font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
                                         >
                                             Advanced
                                         </button>
@@ -450,7 +450,7 @@ export function MenuGridEditor({
                                             type="button"
                                             onClick={cancelInlineEdit}
                                             disabled={isSaving}
-                                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-gray-200 px-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                            className="inline-flex h-8 items-center gap-1 rounded-lg bg-white px-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
                                         >
                                             <X className="h-3.5 w-3.5" />
                                             Cancel
@@ -521,7 +521,7 @@ export function MenuGridEditor({
                             </label>
                         </div>
 
-                        <div className="rounded-2xl border border-gray-200 p-3">
+                        <div className="rounded-2xl bg-gray-50 p-3 shadow-inner">
                             <div className="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                                 Preview
                             </div>
@@ -566,7 +566,7 @@ export function MenuGridEditor({
                                 type="button"
                                 onClick={() => setIsBulkPriceModalOpen(false)}
                                 disabled={isBulkSaving}
-                                className="h-10 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                className="h-10 rounded-xl bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
                             >
                                 Cancel
                             </button>

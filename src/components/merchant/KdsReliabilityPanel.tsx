@@ -26,14 +26,26 @@ type KdsTelemetryPayload = {
     };
 };
 
-export function KdsReliabilityPanel() {
+interface KdsReliabilityPanelProps {
+    restaurantId?: string;
+}
+
+export function KdsReliabilityPanel({ restaurantId }: KdsReliabilityPanelProps) {
     const [data, setData] = useState<KdsTelemetryPayload | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchTelemetry = useCallback(async () => {
         try {
-            const response = await fetch('/api/kds/telemetry?sla_minutes=30', {
+            const query = new URLSearchParams({
+                sla_minutes: '30',
+            });
+            if (restaurantId) {
+                query.set('restaurant_id', restaurantId);
+            }
+
+            const response = await fetch(`/api/kds/telemetry?${query.toString()}`, {
+                method: 'GET',
                 cache: 'no-store',
             });
             const payload = await response.json().catch(() => ({}));
@@ -48,7 +60,7 @@ export function KdsReliabilityPanel() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [restaurantId]);
 
     useEffect(() => {
         void fetchTelemetry();

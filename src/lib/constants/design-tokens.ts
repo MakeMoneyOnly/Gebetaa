@@ -284,10 +284,12 @@ export const components = {
             md: '10px 16px',
             lg: '12px 24px',
         },
+        // WCAG 2.1 AA: Minimum touch target is 44x44px (Guideline 2.5.5)
+        // All heights meet or exceed this requirement
         height: {
-            sm: '32px',
-            md: '40px',
-            lg: '48px',
+            sm: '44px', // Minimum compliant touch target
+            md: '48px', // Comfortable default
+            lg: '56px', // Prominent action
         },
         iconSize: {
             sm: '14px',

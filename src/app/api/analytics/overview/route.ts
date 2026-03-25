@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     const prevSince = prevDate.toISOString();
 
     // Try to get TimescaleDB analytics first (faster for large datasets)
-    let timeseriesMetrics: ReturnType<typeof getAnalyticsOverview> | null = null;
+    let timeseriesMetrics: Awaited<ReturnType<typeof getAnalyticsOverview>> | null = null;
     try {
         timeseriesMetrics = await getAnalyticsOverview(
             context.supabase,

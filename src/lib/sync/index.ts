@@ -87,6 +87,21 @@ export {
     type SyncProgress,
 } from './syncWorker';
 
+// Conflict Resolution
+export {
+    detectConflict,
+    getConflictType,
+    resolveConflict,
+    handleSyncConflict,
+    logConflictResolution,
+    getConflictHistory,
+    getUnresolvedConflictsCount,
+    batchResolveConflicts,
+    type ConflictStrategy,
+    type ConflictRecord,
+    type SyncConflictLog,
+} from './conflict-resolution';
+
 // React Hooks
 export { PowerSyncProvider, usePowerSync, useOfflineMode, useSyncStatus } from './usePowerSync';
 

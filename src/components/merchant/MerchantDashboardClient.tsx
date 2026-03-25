@@ -57,6 +57,7 @@ const EMPTY_METRICS: CommandCenterMetrics = {
     open_requests: 0,
     payment_success_rate: 0,
     gross_sales_today: 0,
+    gross_sales_previous: 0,
     total_orders_today: 0,
     avg_order_value_etb: 0,
     unique_tables_today: 0,
@@ -291,39 +292,10 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setAlertRuleDrawerOpen(true)}
-                        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700"
+                        className="h-10 rounded-xl bg-white px-3 text-sm font-bold text-gray-700 shadow-sm transition-shadow hover:shadow-md"
                     >
                         Alert Rules
                     </button>
-                    <div className="relative">
-                        <button
-                            onClick={() => setFilterOpen(value => !value)}
-                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 capitalize"
-                        >
-                            {range}
-                            <ChevronDown
-                                className={`h-4 w-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-                        {filterOpen && (
-                            <div className="absolute right-0 z-20 mt-2 w-28 rounded-xl bg-white p-1 shadow-lg">
-                                {(['today', 'week', 'month'] as CommandCenterRange[]).map(
-                                    option => (
-                                        <button
-                                            key={option}
-                                            onClick={() => {
-                                                setRange(option);
-                                                setFilterOpen(false);
-                                            }}
-                                            className={`w-full rounded-lg px-2.5 py-2 text-left text-sm capitalize ${range === option ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}`}
-                                        >
-                                            {option}
-                                        </button>
-                                    )
-                                )}
-                            </div>
-                        )}
-                    </div>
                     <button
                         onClick={() => fetchCommandCenter(true)}
                         className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-bold text-white hover:bg-[#a0151e]"
@@ -395,21 +367,71 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                             Real-time analysis of your daily revenue streams.
                         </p>
                     </div>
-                    <span className="text-sm font-semibold text-gray-500">
-                        Gross {formatETBCurrency(metrics.gross_sales_today, { compact: false })}
-                    </span>
+                    <div className="relative">
+                        <button
+                            onClick={() => setFilterOpen(value => !value)}
+                            className="inline-flex h-10 items-center gap-2 rounded-xl bg-gray-50 px-4 text-sm font-bold text-gray-700 capitalize transition-colors hover:bg-gray-100"
+                        >
+                            {range}
+                            <ChevronDown
+                                className={`h-4 w-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
+                            />
+                        </button>
+                        {filterOpen && (
+                            <div className="absolute right-0 z-20 mt-2 w-32 rounded-xl bg-white p-1 shadow-xl ring-1 ring-black/5">
+                                {(['today', 'week', 'month'] as CommandCenterRange[]).map(
+                                    option => (
+                                        <button
+                                            key={option}
+                                            onClick={() => {
+                                                setRange(option);
+                                                setFilterOpen(false);
+                                            }}
+                                            className={`w-full rounded-lg px-3 py-2 text-left text-sm font-semibold capitalize ${range === option ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}`}
+                                        >
+                                            {option}
+                                        </button>
+                                    )
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <div className="flex h-full flex-col items-center gap-12 xl:flex-row">
                     <div className="flex h-full w-full flex-1 flex-col justify-center pl-[35px]">
                         <span className="block text-[3.5rem] leading-none font-bold tracking-tighter text-slate-900">
-                            {metrics.payment_success_rate}%
+                            {Math.floor(metrics.gross_sales_today).toLocaleString()}
+                            <span className="ml-2 text-xl font-medium text-slate-400">ETB</span>
                         </span>
-                        <p className="text-lg leading-relaxed font-medium text-wrap text-slate-500">
-                            Payment success in current range
+                        <p className="mt-2 text-lg leading-relaxed font-medium text-wrap text-slate-500">
+                            {(() => {
+                                const diff = Math.floor(
+                                    metrics.gross_sales_today - (metrics.gross_sales_previous ?? 0)
+                                );
+                                const type =
+                                    range === 'today'
+                                        ? 'yesterday'
+                                        : range === 'week'
+                                          ? 'last week'
+                                          : 'last month';
+                                return (
+                                    <>
+                                        You made{' '}
+                                        <span
+                                            className={
+                                                diff >= 0 ? 'text-emerald-500' : 'text-rose-500'
+                                            }
+                                        >
+                                            {Math.abs(diff).toLocaleString()} ETB
+                                        </span>{' '}
+                                        {diff >= 0 ? 'more' : 'less'} than {type}
+                                    </>
+                                );
+                            })()}
                         </p>
                     </div>
                     <div className="h-full min-h-[350px] w-full flex-[4] overflow-hidden">
-                        <RevenueChart />
+                        <RevenueChart data={commandCenter?.chart_data ?? []} />
                     </div>
                 </div>
             </div>
@@ -476,7 +498,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                 onOpenSettings={() => router.push('/merchant/settings')}
             />
 
-            <KdsReliabilityPanel />
+            <KdsReliabilityPanel restaurantId={commandCenter?.restaurant_id} />
 
             <AlertRuleBuilderDrawer
                 open={alertRuleDrawerOpen}

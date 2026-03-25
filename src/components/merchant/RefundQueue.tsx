@@ -93,7 +93,7 @@ export function RefundQueue({
 
                 <form
                     onSubmit={handleSubmit}
-                    className="flex-1 space-y-5 rounded-4xl border border-gray-100 bg-gray-50/40 p-5"
+                    className="flex-1 space-y-5 rounded-[2.5rem] bg-gray-50/40 p-5 shadow-inner"
                 >
                     <div className="space-y-1.5">
                         <label className="ml-1 text-xs font-bold tracking-tight text-gray-400">
@@ -105,7 +105,7 @@ export function RefundQueue({
                                 onChange={event => setPaymentReference(event.target.value)}
                                 placeholder="Select or type reference"
                                 list="refund-payment-options"
-                                className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold transition-all outline-none placeholder:text-gray-300 focus:border-gray-400"
+                                className="focus:ring-brand-crimson/20 h-12 w-full rounded-xl bg-white px-4 text-sm font-semibold shadow-sm transition-all outline-none placeholder:text-gray-300 focus:shadow-md focus:ring-2"
                             />
                             <datalist id="refund-payment-options">
                                 {payments.map(payment => (
@@ -136,7 +136,7 @@ export function RefundQueue({
                             onChange={event => setAmount(event.target.value)}
                             placeholder="0.00"
                             inputMode="decimal"
-                            className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold transition-all outline-none focus:border-gray-400"
+                            className="focus:ring-brand-crimson/20 h-12 w-full rounded-xl bg-white px-4 text-sm font-bold shadow-sm transition-all outline-none focus:shadow-md focus:ring-2"
                         />
                     </div>
 
@@ -149,7 +149,7 @@ export function RefundQueue({
                             onChange={event => setReason(event.target.value)}
                             placeholder="e.g. Order cancelled by guest"
                             rows={3}
-                            className="w-full resize-none rounded-xl border border-gray-200 bg-white p-4 text-sm font-medium transition-all outline-none placeholder:text-gray-300 focus:border-gray-400"
+                            className="focus:ring-brand-crimson/20 w-full resize-none rounded-xl bg-white p-4 text-sm font-medium shadow-sm transition-all outline-none placeholder:text-gray-300 focus:shadow-md focus:ring-2"
                         />
                     </div>
 
@@ -192,7 +192,7 @@ export function RefundQueue({
                             ))}
                         </div>
                     ) : refunds.length === 0 ? (
-                        <div className="flex h-64 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-100 bg-gray-50/50 p-8 text-center">
+                        <div className="flex h-64 flex-col items-center justify-center rounded-3xl bg-gray-50/50 p-8 text-center shadow-inner">
                             <div className="mb-4 rounded-full bg-white p-4 shadow-sm">
                                 <RefreshCcw className="h-8 w-8 text-gray-300" />
                             </div>
@@ -218,9 +218,9 @@ export function RefundQueue({
                                     {refunds.map(refund => (
                                         <tr
                                             key={refund.id}
-                                            className="group h-14 bg-white transition-colors hover:bg-gray-50/50"
+                                            className="group h-14 bg-white shadow-sm transition-all hover:shadow-md"
                                         >
-                                            <td className="rounded-l-2xl border-y border-l border-gray-100 px-4">
+                                            <td className="rounded-l-2xl px-4">
                                                 <div className="flex flex-col">
                                                     <span className="font-mono text-xs font-bold text-gray-900">
                                                         {refund.payment_id.slice(0, 12)}...
@@ -232,19 +232,19 @@ export function RefundQueue({
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="border-y border-gray-100 px-4 text-right">
+                                            <td className="px-4 text-right">
                                                 <span className="font-bold text-gray-900">
                                                     {formatETBCurrency(Number(refund.amount ?? 0), {
                                                         locale,
                                                     })}
                                                 </span>
                                             </td>
-                                            <td className="border-y border-gray-100 px-4">
+                                            <td className="px-4">
                                                 <span className="line-clamp-1 text-xs font-semibold text-gray-600">
                                                     {refund.reason}
                                                 </span>
                                             </td>
-                                            <td className="rounded-r-2xl border-y border-r border-gray-100 px-4 text-right">
+                                            <td className="rounded-r-2xl px-4 text-right">
                                                 <span
                                                     className={cn(
                                                         'inline-flex items-center rounded-lg px-2 py-1 text-[10px] font-bold tracking-wider uppercase',

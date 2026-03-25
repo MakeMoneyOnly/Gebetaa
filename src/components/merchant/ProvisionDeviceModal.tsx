@@ -151,7 +151,7 @@ export function ProvisionDeviceModal({
                                 </select>
                             </div>
                             {deviceType === 'terminal' && (
-                                <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                                <div className="space-y-4 rounded-2xl bg-emerald-50/60 p-4 shadow-inner">
                                     <div>
                                         <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-400 uppercase">
                                             Station Name
@@ -294,7 +294,7 @@ export function ProvisionDeviceModal({
                     </>
                 ) : (
                     <div className="animate-in fade-in zoom-in flex flex-col items-center text-center duration-500">
-                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50 text-green-500 shadow-xl ring-1 shadow-green-100/50 ring-green-100">
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50 text-green-500 shadow-xl shadow-green-100/50">
                             <Tablet className="h-10 w-10" />
                         </div>
                         <h3 className="text-2xl font-black tracking-tight text-gray-900">

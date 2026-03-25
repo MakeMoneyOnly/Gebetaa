@@ -34,7 +34,7 @@ export function FinancePageClient(_props: FinancePageClientProps) {
     const copy = getP2Copy(locale);
     const { loading, markLoaded } = usePageLoadGuard('finance');
     const [error, setError] = useState<string | null>(null);
-    const [payments, setPayments] = useState<PaymentRow[]>([]);
+    const [payments, setPayments] = useState<PaymentRow[] | null>(null);
     const [refunds, setRefunds] = useState<RefundRow[]>([]);
     const [payouts, setPayouts] = useState<PayoutRow[]>([]);
     const [reconciliationEntries, setReconciliationEntries] = useState<ReconciliationRow[]>([]);
@@ -276,7 +276,7 @@ export function FinancePageClient(_props: FinancePageClientProps) {
                                 loading={loading}
                                 creating={creatingRefund}
                                 refunds={refunds}
-                                payments={payments}
+                                payments={payments || []}
                                 onCreateRefund={handleCreateRefund}
                                 locale={locale}
                             />

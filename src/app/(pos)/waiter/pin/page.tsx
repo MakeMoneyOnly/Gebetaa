@@ -51,9 +51,9 @@ function WaiterPinContent() {
 
             // Save the staff context to sessionStorage so the POS knows who is ringing things up
             // sessionStorage is cleared when the tab/browser is closed, providing better XSS protection
-            sessionStorage.setItem('gebata_waiter_context', JSON.stringify(data.staff));
+            sessionStorage.setItem('gebata_waiter_context', JSON.stringify(data.data.staff));
 
-            toast.success(`Welcome, ${data.staff.name || 'Waitstaff'}`);
+            toast.success(`Welcome, ${data.data.staff.name || 'Waitstaff'}`);
             router.push(`/waiter?restaurantId=${restaurantId}`);
         } catch (err: any) {
             toast.error(err.message || 'Verification failed');

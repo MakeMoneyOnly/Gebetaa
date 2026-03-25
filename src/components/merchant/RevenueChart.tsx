@@ -18,17 +18,17 @@ const RevenueChartContent = dynamic(
     }
 );
 
-const chartData = [
-    { day: 'Mon', income: 4500, previous: 3200 },
-    { day: 'Tue', income: 6800, previous: 4500 },
-    { day: 'Wed', income: 5200, previous: 4100 },
-    { day: 'Thu', income: 7900, previous: 5600 },
-    { day: 'Fri', income: 9500, previous: 7200 },
-    { day: 'Sat', income: 12500, previous: 8900 },
-    { day: 'Sun', income: 10800, previous: 8100 },
-];
+interface ChartPoint {
+    label: string;
+    income: number;
+    previous: number;
+}
 
-export const RevenueChart = () => {
+interface RevenueChartProps {
+    data: ChartPoint[];
+}
+
+export const RevenueChart = ({ data }: RevenueChartProps) => {
     const [mounted, setMounted] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [chartSize, setChartSize] = useState({ width: 0, height: 0 });
@@ -59,7 +59,7 @@ export const RevenueChart = () => {
     return (
         <div ref={containerRef} className="h-[350px] w-full select-none">
             {chartSize.width > 0 && chartSize.height > 0 ? (
-                <RevenueChartContent data={chartData} />
+                <RevenueChartContent data={data} />
             ) : (
                 <ChartSkeleton />
             )}

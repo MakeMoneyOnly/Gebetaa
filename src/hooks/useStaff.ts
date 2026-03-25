@@ -19,17 +19,18 @@ export type StaffMember = {
 };
 
 export const ROLE_BADGE: Record<string, string> = {
-    owner: 'bg-purple-50 text-purple-600',
-    admin: 'bg-indigo-50 text-indigo-600',
-    manager: 'bg-blue-50 text-blue-600',
-    kitchen: 'bg-orange-50 text-orange-600',
-    waiter: 'bg-green-50 text-green-600',
-    bar: 'bg-pink-50 text-pink-600',
+    owner: 'bg-black text-white border-black',
+    admin: 'bg-gray-900 text-white border-gray-900',
+    manager: 'bg-gray-100 text-gray-900 border-gray-200',
+    waiter: 'bg-white text-gray-600 border border-gray-100',
+    bar: 'bg-white text-gray-600 border border-gray-100',
+    kitchen: 'bg-white text-gray-600 border border-gray-100',
+    runner: 'bg-white text-gray-400 border border-gray-100',
 };
 
-export function useStaff() {
-    const [staff, setStaff] = useState<StaffMember[]>([]);
-    const [loading, setLoading] = useState(true);
+export function useStaff(initialData?: StaffMember[]) {
+    const [staff, setStaff] = useState<StaffMember[]>(initialData ?? []);
+    const [loading, setLoading] = useState(!initialData);
     const [error, setError] = useState<string | null>(null);
     const [activeUpdatingId, setActiveUpdatingId] = useState<string | null>(null);
     const [inviteLoading, setInviteLoading] = useState(false);
@@ -37,7 +38,10 @@ export function useStaff() {
 
     const fetchStaff = useCallback(async () => {
         try {
-            setLoading(true);
+            // Only set loading to true if we don't have data yet
+            if (staff.length === 0) {
+                setLoading(true);
+            }
             setError(null);
             const response = await fetch('/api/staff', { method: 'GET' });
 
@@ -54,14 +58,15 @@ export function useStaff() {
             }
 
             const payload = await response.json();
-            setStaff((payload?.data?.staff ?? []) as StaffMember[]);
+            const freshStaff = (payload?.data?.staff ?? []) as StaffMember[];
+            setStaff(freshStaff);
         } catch (fetchError) {
             console.error(fetchError);
             setError(fetchError instanceof Error ? fetchError.message : 'Failed to fetch staff.');
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [staff.length]);
 
     // Initial load
     useEffect(() => {
