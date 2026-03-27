@@ -56,7 +56,7 @@ export async function getMenuItems(
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -78,7 +78,7 @@ export async function getMenuItem(id: string): Promise<Record<string, unknown> |
         throw error;
     }
 
-    return data;
+    return data as unknown as Record<string, unknown> | null;
 }
 
 /**
@@ -98,7 +98,7 @@ export async function getMenuCategories(restaurantId: string): Promise<Record<st
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -119,7 +119,7 @@ export async function getModifierGroups(menuItemId: string): Promise<Record<stri
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -142,7 +142,7 @@ export async function getModifierOptions(
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -164,7 +164,7 @@ export async function getMenuItemsByIds(ids: string[]): Promise<Record<string, u
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -189,7 +189,7 @@ export async function getModifierGroupsByMenuItemIds(
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -214,7 +214,7 @@ export async function getModifierOptionsByGroupIds(
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -236,7 +236,7 @@ export async function getCategoriesByIds(ids: string[]): Promise<Record<string, 
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -258,7 +258,7 @@ export async function getModifierGroupsByIds(ids: string[]): Promise<Record<stri
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 /**
@@ -280,7 +280,7 @@ export async function getModifierOptionsByIds(ids: string[]): Promise<Record<str
         throw error;
     }
 
-    return data || [];
+    return (data as unknown as Record<string, unknown>[]) || [];
 }
 
 export const menuRepository = {

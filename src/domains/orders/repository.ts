@@ -45,7 +45,7 @@ export class OrdersRepository {
             .select(columnsToString(ORDER_DETAIL_COLUMNS))
             .eq('id', id)
             .single();
-        return data;
+        return data as OrderRow | null;
     }
 
     async findByRestaurant(
@@ -75,7 +75,7 @@ export class OrdersRepository {
             .range(options.offset ?? 0, (options.limit ?? 20) - 1);
 
         const { data } = await query;
-        return data ?? [];
+        return (data as unknown as OrderRow[]) ?? [];
     }
 
     /**
@@ -98,7 +98,7 @@ export class OrdersRepository {
             .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
-        return data ?? [];
+        return (data as unknown as OrderRow[]) ?? [];
     }
 
     /**
@@ -130,7 +130,7 @@ export class OrdersRepository {
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 
-        return data ?? [];
+        return (data as unknown as OrderRow[]) ?? [];
     }
 
     async create(data: {
