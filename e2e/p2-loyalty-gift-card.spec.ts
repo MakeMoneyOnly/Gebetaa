@@ -34,6 +34,20 @@ test.describe('P2 loyalty and gift-card redemption', () => {
             },
         ];
 
+        // Set up all route handlers BEFORE navigating to the page
+        await page.route('**/api/merchant/activity**', async route => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    orders: [],
+                    requests: [],
+                    restaurant: { name: 'Test Restaurant', slug: 'test-restaurant' },
+                    restaurantId: 'rest-1',
+                }),
+            });
+        });
+
         await page.route('**/api/guests?**', async route => {
             await route.fulfill({
                 status: 200,
@@ -147,18 +161,36 @@ test.describe('P2 loyalty and gift-card redemption', () => {
 
         await page.goto('/merchant/guests', { waitUntil: 'domcontentloaded' });
 
-        await expect(page.getByRole('heading', { name: 'Loyalty Program Builder' })).toBeVisible({
+        // Wait for the main Guests heading to confirm page loaded
+        await expect(page.getByRole('heading', { name: 'Guests', exact: true })).toBeVisible({
             timeout: 15000,
         });
-        await expect(page.getByRole('heading', { name: 'Gift Card Manager' })).toBeVisible({
+
+        // Click on the Loyalty program tab to show the LoyaltyProgramBuilder
+        await page.getByRole('button', { name: /Loyalty program/i }).click();
+
+        // Verify loyalty program section is visible (uses "Create program" heading)
+        await expect(page.getByRole('heading', { name: 'Create program' })).toBeVisible({
             timeout: 15000,
         });
+
+        // Verify the mock loyalty program "Weekend Perks" is visible while on Loyalty tab
         await expect(page.getByText('Weekend Perks')).toBeVisible({ timeout: 15000 });
 
-        const giftCardSection = page.locator('section').filter({ hasText: 'Gift Card Manager' });
-        await giftCardSection.getByPlaceholder('Initial balance').fill('600');
-        await giftCardSection.getByPlaceholder('Currency').fill('ETB');
-        await giftCardSection.getByRole('button', { name: 'Issue Card' }).click({ force: true });
+        // Click on the Gift cards tab to show the GiftCardManager
+        await page.getByRole('button', { name: /Gift cards/i }).click();
+
+        // Verify gift card section is visible (uses "Issue gift card" heading)
+        await expect(page.getByRole('heading', { name: 'Issue gift card' })).toBeVisible({
+            timeout: 15000,
+        });
+
+        // Gift card section - use the "Issue gift card" heading context
+        const giftCardSection = page.locator('div').filter({ hasText: 'Issue gift card' }).first();
+        await giftCardSection.getByPlaceholder('Balance (ETB)').fill('600');
+        await giftCardSection
+            .getByRole('button', { name: 'Issue gift card' })
+            .click({ force: true });
 
         await expect.poll(() => capturedGiftCardCreatePayload).not.toBeNull();
         expect(capturedGiftCardCreatePayload).toMatchObject({

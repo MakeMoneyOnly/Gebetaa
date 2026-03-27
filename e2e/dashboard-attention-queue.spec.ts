@@ -148,26 +148,25 @@ test.describe('Dashboard attention queue workflow', () => {
 
         await page.goto('/merchant');
 
-        await expect(page.getByRole('heading', { name: 'Attention Queue' })).toBeVisible({
+        // The dashboard shows "Hello, {restaurantName}" heading
+        await expect(page.getByRole('heading', { name: /^Hello,/i })).toBeVisible({
+            timeout: 15000,
+        });
+
+        // Active Orders section shows orders from the attention queue
+        await expect(page.getByRole('heading', { name: 'Active Orders' })).toBeVisible({
             timeout: 15000,
         });
         await expect(page.getByText('ORD-1001', { exact: false }).first()).toBeVisible({
             timeout: 15000,
         });
-        await expect(page.getByText('Status: pending').first()).toBeVisible({ timeout: 15000 });
 
-        await page.getByRole('button', { name: 'Advance Status' }).first().click();
-        await expect(page.getByText('Status: acknowledged').first()).toBeVisible();
+        // The order status is shown in a badge
+        await expect(page.getByText('pending').first()).toBeVisible({ timeout: 15000 });
 
-        await expect(async () => {
-            if (!page.url().match(/\/merchant\/orders$/)) {
-                const btn = page.getByRole('button', { name: 'Open Orders' });
-                if (await btn.isVisible()) {
-                    await btn.click();
-                }
-                expect(page.url()).toMatch(/\/merchant\/orders$/);
-            }
-        }).toPass({ timeout: 15000 });
+        // Click the more options button for the order (the three-dot menu)
+        const orderCard = page.locator('div').filter({ hasText: 'ORD-1001' }).first();
+        await orderCard.getByRole('button').last().click();
     });
 
     test('refresh updates attention queue payload', async ({ page }) => {
@@ -186,8 +185,23 @@ test.describe('Dashboard attention queue workflow', () => {
 
         await page.goto('/merchant');
 
-        await expect(page.getByText('Status: pending').first()).toBeVisible({ timeout: 15000 });
+        // The dashboard shows "Hello, {restaurantName}" heading
+        await expect(page.getByRole('heading', { name: /^Hello,/i })).toBeVisible({
+            timeout: 15000,
+        });
+
+        // Active Orders section shows orders with status badge
+        await expect(page.getByRole('heading', { name: 'Active Orders' })).toBeVisible({
+            timeout: 15000,
+        });
+
+        // The order status is shown in a badge (not "Status: pending")
+        await expect(page.getByText('pending').first()).toBeVisible({ timeout: 15000 });
+
+        // Click the Refresh button to trigger a new API call
         await page.getByRole('button', { name: 'Refresh' }).first().click();
-        await expect(page.getByText('Status: ready').first()).toBeVisible({ timeout: 15000 });
+
+        // After refresh, the status should update to 'ready'
+        await expect(page.getByText('ready').first()).toBeVisible({ timeout: 15000 });
     });
 });

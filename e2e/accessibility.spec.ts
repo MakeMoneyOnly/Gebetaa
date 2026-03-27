@@ -346,6 +346,11 @@ test.describe('Accessibility Tests', () => {
             // Both are valid outcomes for keyboard navigation
             expect(typeof focusedBefore).toBe('string');
             expect(typeof focusedAfter).toBe('string');
+
+            // Verify that the page has focusable elements and keyboard navigation works
+            // by checking that activeElement is not null after tabbing
+            const finalActiveElement = await page.evaluate(() => document.activeElement?.tagName);
+            expect(finalActiveElement).toBeTruthy();
         });
     });
 });

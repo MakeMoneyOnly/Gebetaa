@@ -123,17 +123,28 @@ test.describe('P2 finance reconciliation', () => {
         await expect(page.getByRole('heading', { name: /Finance/i }).first()).toBeVisible({
             timeout: 15000,
         });
-        await expect(page.getByRole('heading', { name: 'Payout Reconciliation' })).toBeVisible({
+
+        // Click on the "Payout reconciliation" tab to show the PayoutReconciliationTable
+        await page.getByRole('button', { name: /Payout reconciliation/i }).click();
+
+        // The heading is "Payout reconciliation" (lowercase 'r')
+        await expect(page.getByRole('heading', { name: 'Payout reconciliation' })).toBeVisible({
             timeout: 15000,
         });
         await expect(page.getByText('chapa')).toBeVisible();
         await expect(page.getByText(/open exceptions/i)).toBeVisible();
 
-        const reconciliationCard = page
-            .locator('section')
-            .filter({ hasText: 'Accounting Exports' })
-            .first();
-        await reconciliationCard.getByRole('button', { name: 'Export CSV' }).nth(3).click();
+        // Click on the "Accounting exports" tab to show the AccountingExportPanel
+        await page.getByRole('button', { name: /Accounting exports/i }).click();
+
+        // The heading is "Data exports" in the AccountingExportPanel
+        await expect(page.getByRole('heading', { name: 'Data exports' })).toBeVisible({
+            timeout: 15000,
+        });
+
+        // Click the "Export CSV" button for reconciliation (4th button, index 3)
+        const exportButtons = page.getByRole('button', { name: 'Export CSV' });
+        await exportButtons.nth(3).click();
 
         await expect.poll(() => exportedDataset).toBe('reconciliation');
     });
