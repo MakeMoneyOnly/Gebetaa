@@ -1,32 +1,40 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import type { Database } from '@/types/database';
 
 export async function createClient() {
     const cookieStore = await cookies();
+    const headersList = await headers();
 
-    // Check for E2E test bypass - check both cookie AND environment variables
+    // Check for E2E test bypass - check BOTH cookie AND headers
+    // Middleware sets cookie on response, but server components run during request
+    // So we need to check headers directly for the initial request
+
+    // Use the same default secret as middleware for consistency
+    const effectiveBypassSecret = process.env.E2E_BYPASS_SECRET || 'e2e-test-secret';
+
+    // Check for header-based bypass (set by Playwright via setExtraHTTPHeaders)
+    const e2eBypassAuth = headersList.get('x-e2e-bypass-auth');
+    const e2eBypassSecret = headersList.get('x-e2e-bypass-secret');
+    const hasValidHeaderBypass =
+        e2eBypassAuth === '1' &&
+        e2eBypassSecret !== null &&
+        e2eBypassSecret !== '' &&
+        e2eBypassSecret === effectiveBypassSecret;
+
+    // Check for cookie-based bypass (set by middleware on subsequent requests)
     const cookieValue = cookieStore.get('sb-access-token')?.value;
-    const isE2EBypass = cookieValue === 'e2e-mock-access-token';
-    const isE2EMode = process.env.E2E_TEST_MODE === 'true';
-    const e2eBypassSecret = process.env.E2E_BYPASS_SECRET;
-    const isE2EIntentional = isE2EMode && e2eBypassSecret && e2eBypassSecret !== '';
+    const expectedCookieValue = `e2e-mock-access-token:${effectiveBypassSecret}`;
+    const hasValidCookieBypass = cookieValue === expectedCookieValue;
 
-    // Debug logging for E2E bypass detection
-    console.log('[E2E Debug createClient] Cookie value:', cookieValue);
-    console.log('[E2E Debug createClient] Is E2E bypass (cookie):', isE2EBypass);
-    console.log('[E2E Debug createClient] E2E_TEST_MODE:', process.env.E2E_TEST_MODE);
-    console.log('[E2E Debug createClient] Is E2E mode active:', isE2EMode);
-    console.log('[E2E Debug createClient] E2E_BYPASS_SECRET set:', !!e2eBypassSecret);
-    console.log('[E2E Debug createClient] Is E2E intentional:', isE2EIntentional);
+    // E2E bypass is active if either header or cookie bypass is valid
+    const isE2EBypass = hasValidHeaderBypass || hasValidCookieBypass;
 
-    // IMPORTANT: E2E_TEST_MODE takes priority over real credentials
-    // When E2E_TEST_MODE=true with a valid E2E_BYPASS_SECRET, always use mock client
-    // This ensures E2E tests work with mocked data regardless of credential presence
-    // Also check for the E2E bypass cookie that middleware sets
-    if (isE2EIntentional || isE2EBypass) {
+    // Log when E2E bypass is active
+    if (isE2EBypass) {
         console.log(
-            '[E2E] Using mock Supabase client - E2E_TEST_MODE is active or E2E cookie present'
+            '[E2E] Using mock Supabase client - E2E bypass detected via',
+            hasValidHeaderBypass ? 'headers' : 'cookie'
         );
     }
 
@@ -54,24 +62,12 @@ export async function createClient() {
     const hasRealCredentials = supabaseUrl && supabaseKey && !isPlaceholderUrl && !isPlaceholderKey;
 
     // Use mock client when:
-    // 1. E2E_TEST_MODE is active with valid E2E_BYPASS_SECRET (highest priority)
-    // 2. E2E bypass cookie is set (middleware set this from headers)
-    // 3. No credentials at all
-    // 4. Placeholder values (E2E tests without real backend)
-    // NOTE: E2E_TEST_MODE with valid secret OR E2E bypass cookie takes priority over real credentials
+    // 1. E2E bypass cookie is set (middleware set this from headers)
+    // 2. No credentials at all
+    // 3. Placeholder values (E2E tests without real backend)
+    // NOTE: E2E bypass cookie takes priority over real credentials
     // This ensures E2E tests have predictable mocked data
-    if (isE2EIntentional || isE2EBypass || !hasRealCredentials) {
-        if (isE2EMode || isE2EBypass) {
-            console.log(
-                '[E2E] Using mock Supabase client - E2E_TEST_MODE:',
-                isE2EMode,
-                'isE2EBypass:',
-                isE2EBypass
-            );
-        }
-        if (isE2EBypass) {
-            console.log('[E2E] Using mock Supabase client for testing');
-        }
+    if (isE2EBypass || !hasRealCredentials) {
         // Helper to create chainable mock methods.
         // NOTE: data is the list-level result; maybeSingle returns null (no row found)
         // unless overridden by a table-specific mock below.

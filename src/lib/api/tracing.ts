@@ -8,7 +8,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { randomUUID } from 'crypto';
 import { logger } from '../logger';
 
 /**
@@ -54,7 +53,7 @@ export interface TraceContext {
  */
 function generateTraceId(): string {
     // Generate a 32-character hex string (16 bytes)
-    return randomUUID().replace(/-/g, '');
+    return crypto.randomUUID().replace(/-/g, '');
 }
 
 /**
@@ -62,7 +61,7 @@ function generateTraceId(): string {
  */
 function generateSpanId(): string {
     // Generate a 16-character hex string (8 bytes)
-    return randomUUID().replace(/-/g, '').slice(0, 16);
+    return crypto.randomUUID().replace(/-/g, '').slice(0, 16);
 }
 
 /**
@@ -97,7 +96,7 @@ export function formatBaggage(baggage: Record<string, string>): string {
  * Extract trace context from request headers
  */
 export function extractTraceContext(request: NextRequest): TraceContext {
-    const requestId = request.headers.get(TRACING_HEADERS.requestId) || randomUUID();
+    const requestId = request.headers.get(TRACING_HEADERS.requestId) || crypto.randomUUID();
     const traceId = request.headers.get(TRACING_HEADERS.traceId) || generateTraceId();
     const spanId = generateSpanId();
     const parentSpanId = request.headers.get(TRACING_HEADERS.spanId) || undefined;
@@ -147,24 +146,30 @@ export function addTraceHeaders(response: NextResponse, context: TraceContext): 
 }
 
 /**
- * Trace context storage using AsyncLocalStorage pattern
+ * Trace context storage - Edge Runtime compatible
+ * Note: AsyncLocalStorage is not available in Edge Runtime,
+ * so we use a simple module-level variable for middleware context.
  */
-import { AsyncLocalStorage } from 'async_hooks';
-
-const traceStorage = new AsyncLocalStorage<TraceContext>();
+let currentTraceContext: TraceContext | undefined;
 
 /**
- * Get the current trace context from async storage
+ * Get the current trace context
  */
 export function getCurrentTraceContext(): TraceContext | undefined {
-    return traceStorage.getStore();
+    return currentTraceContext;
 }
 
 /**
  * Run a function within a trace context
  */
 export function withTraceContext<T>(context: TraceContext, fn: () => T): T {
-    return traceStorage.run(context, fn);
+    const previousContext = currentTraceContext;
+    currentTraceContext = context;
+    try {
+        return fn();
+    } finally {
+        currentTraceContext = previousContext;
+    }
 }
 
 /**
@@ -187,7 +192,7 @@ export function createChildSpan(operationName: string): TraceContext {
 
     // No parent context, create a new one
     return {
-        requestId: randomUUID(),
+        requestId: crypto.randomUUID(),
         traceId: generateTraceId(),
         spanId: generateSpanId(),
         startTime: Date.now(),
@@ -271,7 +276,7 @@ export class SpanTimer {
         this.operationName = operationName;
         this.context = context ||
             getCurrentTraceContext() || {
-                requestId: randomUUID(),
+                requestId: crypto.randomUUID(),
                 traceId: generateTraceId(),
                 spanId: generateSpanId(),
                 startTime: Date.now(),

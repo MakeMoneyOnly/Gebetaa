@@ -34,8 +34,8 @@ const eslintConfig = defineConfig([
                 },
             ],
             // LOW-008: Detect unused imports to reduce bundle size
-            // Warns on imports that are never used in the file
-            '@typescript-eslint/no-unused-imports': 'warn',
+            // Note: Using @typescript-eslint/no-unused-vars which handles both unused vars and imports
+            // The no-unused-imports rule is not available in ESLint 9 without additional plugins
             // DISABLED: Requires explicit return types on ALL functions - too strict for this codebase
             // Would require adding return types to 900+ functions across hundreds of files
             '@typescript-eslint/explicit-function-return-type': 'off',
