@@ -18,9 +18,9 @@
  */
 
 import { type ComponentType, useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { formatETBCurrency } from '@/lib/format/et';
 import {
+    Bell,
     CalendarCheck,
     CheckCircle,
     ChevronDown,
@@ -31,13 +31,13 @@ import {
     PlayCircle,
     Timer,
     Users,
+    UtensilsCrossed,
     Wallet,
 } from 'lucide-react';
 
 import { MetricCard } from '@/components/merchant/MetricCard';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
-import { AttentionQueuePanel } from '@/components/merchant/command-center/AttentionQueuePanel';
-import { KdsReliabilityPanel } from '@/components/merchant/KdsReliabilityPanel';
+
 import { AlertRuleBuilderDrawer } from '@/components/merchant/command-center/AlertRuleBuilderDrawer';
 import {
     AttentionItem,
@@ -85,7 +85,6 @@ interface MerchantDashboardClientProps {
 }
 
 export function MerchantDashboardClient({ initialData }: MerchantDashboardClientProps) {
-    const router = useRouter();
     const [range, setRange] = useState<CommandCenterRange>('today');
 
     // Initialize state with server data - NO loading flash!
@@ -215,36 +214,25 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
             };
         });
 
-    const handleAdvanceOrder = useCallback(
-        async (item: AttentionItem) => {
-            if (item.type !== 'order') return;
-            const next = nextOrderStatus(item.status);
-            if (!next) return;
-
-            try {
-                const response = await fetch(`/api/orders/${item.id}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: next }),
-                });
-                if (!response.ok) {
-                    throw new Error(`Unable to advance order (${response.status})`);
-                }
-                fetchCommandCenter(true);
-            } catch (advanceError) {
-                // Silently ignore abort errors
-                if (isAbortError(advanceError)) {
-                    return;
-                }
-                setError(
-                    advanceError instanceof Error
-                        ? advanceError.message
-                        : 'Failed to advance order status'
-                );
-            }
-        },
-        [fetchCommandCenter]
-    );
+    const activeServiceRequests = queueForPreset
+        .filter(item => item.type === 'service_request')
+        .slice(0, 4)
+        .map(item => {
+            return {
+                id: item.id,
+                title: `${item.label}${item.table_number ? ` (Table ${item.table_number})` : ''}`,
+                status: item.status,
+                statusColor: item.status === 'completed' ? 'text-green-500' : 'text-blue-500',
+                time: item.created_at
+                    ? `${Math.max(0, Math.round((Date.now() - new Date(item.created_at).getTime()) / 60000))}m`
+                    : '0m',
+                icon: item.status === 'completed' ? CheckCircle : Users,
+                iconBg:
+                    item.status === 'completed'
+                        ? 'bg-green-50 text-green-500'
+                        : 'bg-blue-50 text-blue-500',
+            };
+        });
 
     return (
         <div className="space-y-8 pb-10">
@@ -436,69 +424,143 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                 </div>
             </div>
 
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-bold text-black">Active Orders</h2>
-                        <span className="bg-brand-crimson rounded-full px-3 py-1 text-xs font-bold text-white">
-                            {metrics.orders_in_flight} Pending
-                        </span>
+            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
+                {/* Active Orders Panel */}
+                <div className="flex h-full flex-col rounded-4xl bg-white p-8 shadow-sm">
+                    <div className="mb-6 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                                Active Orders
+                            </h2>
+                            <span className="bg-brand-crimson rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm">
+                                {metrics.orders_in_flight} Pending
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div className="grid grid-cols-1 gap-4">
-                    {activeOrders.map(order => (
-                        <div
-                            key={order.id}
-                            className="group flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 shadow-sm transition-all hover:shadow-md"
-                        >
-                            <div className="flex flex-1 items-center gap-4">
+                    {activeOrders.length === 0 ? (
+                        <div className="flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-100 bg-gray-50/50 py-12 text-center">
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
+                                <ListOrdered className="h-6 w-6 text-gray-400" />
+                            </div>
+                            <p className="text-sm font-bold text-gray-700">No active orders</p>
+                            <p className="mt-1 text-xs font-medium text-gray-500">
+                                New incoming orders will appear here automatically.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-3">
+                            {activeOrders.map(order => (
                                 <div
-                                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${order.iconBg}`}
+                                    key={order.id}
+                                    className="group flex cursor-pointer items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-md"
                                 >
-                                    <order.icon className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <h4 className="mb-1 text-sm font-bold text-gray-900">
-                                        {order.title}
-                                    </h4>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-3 w-3 text-gray-400" />
-                                        <span className="text-xs font-medium text-gray-500">
-                                            {order.time} ago
-                                        </span>
+                                    <div className="flex flex-1 items-center gap-4">
+                                        <div
+                                            className={`flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-100 ${order.statusColor}`}
+                                        >
+                                            <order.icon className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="mb-1 text-sm font-bold text-slate-900">
+                                                {order.title}
+                                            </h4>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                                <span className="text-xs font-semibold text-gray-500">
+                                                    {order.time} ago
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 shadow-sm ring-1 ring-gray-100">
+                                            <div
+                                                className={`h-2 w-2 rounded-full ${order.statusColor.replace('text-', 'bg-')}`}
+                                            />
+                                            <span
+                                                className={`text-xs font-bold ${order.statusColor}`}
+                                            >
+                                                {order.status}
+                                            </span>
+                                        </div>
+                                        <button className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-slate-900">
+                                            <MoreHorizontal className="h-5 w-5" />
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1">
-                                    <div
-                                        className={`h-2 w-2 rounded-full ${order.statusColor.replace('text-', 'bg-')}`}
-                                    />
-                                    <span className={`text-xs font-bold ${order.statusColor}`}>
-                                        {order.status}
-                                    </span>
-                                </div>
-                                <button className="flex h-8 w-8 items-center justify-center text-gray-400 hover:text-black">
-                                    <MoreHorizontal className="h-5 w-5" />
-                                </button>
-                            </div>
+                            ))}
                         </div>
-                    ))}
+                    )}
+                </div>
+
+                {/* Service Requests Panel */}
+                <div className="flex h-full flex-col rounded-4xl bg-white p-8 shadow-sm">
+                    <div className="mb-6 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                                Service Requests
+                            </h2>
+                            <span className="rounded-full bg-blue-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                                {metrics.open_requests} Open
+                            </span>
+                        </div>
+                    </div>
+                    {activeServiceRequests.length === 0 ? (
+                        <div className="flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-100 bg-gray-50/50 py-12 text-center">
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
+                                <UtensilsCrossed className="h-6 w-6 text-gray-400" />
+                            </div>
+                            <p className="text-sm font-bold text-gray-700">No pending requests</p>
+                            <p className="mt-1 text-xs font-medium text-gray-500">
+                                Service requests from tables will show up here.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-3">
+                            {activeServiceRequests.map(request => (
+                                <div
+                                    key={request.id}
+                                    className="group flex cursor-pointer items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-md"
+                                >
+                                    <div className="flex flex-1 items-center gap-4">
+                                        <div
+                                            className={`flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-100 ${request.statusColor}`}
+                                        >
+                                            <request.icon className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="mb-1 text-sm font-bold text-slate-900">
+                                                {request.title}
+                                            </h4>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                                <span className="text-xs font-semibold text-gray-500">
+                                                    {request.time} ago
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 shadow-sm ring-1 ring-gray-100">
+                                            <div
+                                                className={`h-2 w-2 rounded-full ${request.statusColor.replace('text-', 'bg-')}`}
+                                            />
+                                            <span
+                                                className={`text-xs font-bold ${request.statusColor}`}
+                                            >
+                                                {request.status}
+                                            </span>
+                                        </div>
+                                        <button className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-slate-900">
+                                            <MoreHorizontal className="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
-
-            <AttentionQueuePanel
-                items={queueForPreset}
-                loading={false}
-                error={error}
-                onRetry={() => fetchCommandCenter(true)}
-                onAdvanceOrder={handleAdvanceOrder}
-                onOpenOrders={() => router.push('/merchant/orders')}
-                onOpenTables={() => router.push('/merchant/tables')}
-                onOpenSettings={() => router.push('/merchant/settings')}
-            />
-
-            <KdsReliabilityPanel restaurantId={commandCenter?.restaurant_id} />
 
             <AlertRuleBuilderDrawer
                 open={alertRuleDrawerOpen}

@@ -25,10 +25,10 @@ interface ChartPoint {
 }
 
 interface RevenueChartProps {
-    data: ChartPoint[];
+    data?: ChartPoint[];
 }
 
-export const RevenueChart = ({ data }: RevenueChartProps) => {
+export const RevenueChart = ({ data = [] }: RevenueChartProps) => {
     const [mounted, setMounted] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [chartSize, setChartSize] = useState({ width: 0, height: 0 });

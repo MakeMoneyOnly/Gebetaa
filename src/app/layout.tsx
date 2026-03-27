@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en" suppressHydrationWarning className="overflow-x-clip">
             <body
-                className={`${inter.variable} ${manrope.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} ${playfair.variable} ${geist.variable} text-Charcoal bg-Cream overscroll-none overflow-x-clip antialiased`}
+                className={`${inter.variable} ${manrope.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} ${playfair.variable} ${geist.variable} text-Charcoal bg-Cream overflow-x-clip overscroll-none antialiased`}
             >
                 <ServiceWorkerCleanup />
                 <SkipLink href="#main-content">Skip to main content</SkipLink>
