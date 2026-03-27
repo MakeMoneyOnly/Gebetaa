@@ -98,21 +98,21 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #111111;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--color-surface-300);
-    border-radius: 3px;
+    background: #333333;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-brand-crimson);
+    background: #555555;
 }
 
 /* Custom Utilities */
