@@ -39,6 +39,31 @@ interface CursorToken {
     id: string;
 }
 
+interface QueueResponse {
+    orders: QueueItem[];
+    total: number;
+    summary: {
+        dineIn: number;
+        directDelivery: number;
+        directPickup: number;
+        partners: number;
+    };
+    cursor: {
+        next: string | null;
+        has_more: boolean;
+    };
+    filters: {
+        status: string | null;
+        station: string;
+        sla_status: string | null;
+        sla_minutes: number;
+    };
+    policies: {
+        ready_auto_archive_minutes: number;
+        auto_archived_in_this_fetch: number;
+    };
+}
+
 interface QueueItem {
     id: string;
     source:
@@ -358,12 +383,14 @@ export async function GET(request: Request) {
         ? restaurantSettingsRows[0]
         : restaurantSettingsRows;
     const readyAutoArchiveMinutes = resolveReadyAutoArchiveMinutes(restaurantSettingsRow?.settings);
-    const autoArchivedCount = await autoArchiveReadyOrders({
-        db,
-        restaurantId,
-        actorUserId,
-        readyAutoArchiveMinutes,
-    });
+    const autoArchivedCount = restaurantId
+        ? await autoArchiveReadyOrders({
+              db,
+              restaurantId,
+              actorUserId,
+              readyAutoArchiveMinutes,
+          })
+        : 0;
 
     const { data: dineInOrders, error: dineInError } = await db
         .from('orders')
@@ -698,15 +725,8 @@ export async function GET(request: Request) {
 
     const page = filtered.slice(0, limit);
     const hasMore = filtered.length > limit;
-    const nextCursor =
-        hasMore && page.length > 0
-            ? encodeCursor({
-                  createdAt: page[page.length - 1].createdAt,
-                  id: page[page.length - 1].id,
-              })
-            : null;
 
-    return apiSuccess({
+    return apiSuccess<QueueResponse>({
         orders: page,
         total: page.length,
         summary: {
@@ -718,7 +738,13 @@ export async function GET(request: Request) {
             ).length,
         },
         cursor: {
-            next: nextCursor,
+            next:
+                hasMore && page.length > 0
+                    ? encodeCursor({
+                          createdAt: page[page.length - 1].createdAt,
+                          id: page[page.length - 1].id,
+                      })
+                    : null,
             has_more: hasMore,
         },
         filters: {

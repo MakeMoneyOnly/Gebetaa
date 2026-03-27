@@ -26,14 +26,16 @@ const server = createSubgraphServer({
 // Handler for the payments subgraph
 const handler = startServerAndCreateNextHandler<NextRequest, GraphQLContext>(server, {
     context: async (req: NextRequest): Promise<GraphQLContext> => {
-        // Create fresh DataLoaders for this request (prevents cache leakage)
-        const dataLoaders = createDataLoaders();
-
         const userId = req.headers.get('x-user-id');
         const userRole = req.headers.get('x-user-role');
         const restaurantId = req.headers.get('x-restaurant-id');
         const guestSession = req.headers.get('x-guest-session');
         const authHeader = req.headers.get('authorization');
+
+        // Create fresh DataLoaders for this request with tenant context
+        // Use a default restaurant ID for guest sessions, or the provided one for authenticated users
+        const effectiveRestaurantId = restaurantId || 'guest-session';
+        const dataLoaders = createDataLoaders({ restaurantId: effectiveRestaurantId });
 
         if (guestSession) {
             return {

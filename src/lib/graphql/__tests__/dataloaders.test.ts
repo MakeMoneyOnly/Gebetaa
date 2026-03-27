@@ -22,10 +22,11 @@ import { ordersRepository } from '@/domains/orders/repository';
 
 describe('DataLoaders', () => {
     let loaders: DataLoaders;
+    const testRestaurantId = 'test-restaurant-123';
 
     beforeEach(() => {
         vi.clearAllMocks();
-        loaders = createDataLoaders();
+        loaders = createDataLoaders({ restaurantId: testRestaurantId });
     });
 
     afterEach(() => {
@@ -58,8 +59,8 @@ describe('DataLoaders', () => {
         });
 
         it('should create new DataLoader instances on each call', () => {
-            const loaders1 = createDataLoaders();
-            const loaders2 = createDataLoaders();
+            const loaders1 = createDataLoaders({ restaurantId: testRestaurantId });
+            const loaders2 = createDataLoaders({ restaurantId: testRestaurantId });
 
             expect(loaders1.menuItems).not.toBe(loaders2.menuItems);
         });
@@ -374,8 +375,8 @@ describe('DataLoaders', () => {
                 { id: 'item-1', name: 'Item 1' },
             ]);
 
-            const loaders1 = createDataLoaders();
-            const loaders2 = createDataLoaders();
+            const loaders1 = createDataLoaders({ restaurantId: testRestaurantId });
+            const loaders2 = createDataLoaders({ restaurantId: testRestaurantId });
 
             await loaders1.menuItems.load('item-1');
             await loaders2.menuItems.load('item-1');
