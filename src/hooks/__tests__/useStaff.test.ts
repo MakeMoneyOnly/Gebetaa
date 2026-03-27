@@ -153,6 +153,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockResolvedValueOnce({
