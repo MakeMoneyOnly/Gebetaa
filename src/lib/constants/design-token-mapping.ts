@@ -13,9 +13,9 @@
 
 export const colorMappings = {
     // Primary Brand Colors
-    '#A81818': 'var(--brand-crimson)',
-    '#8B1313': 'var(--brand-crimson-dark)',
-    '#FDF2F2': 'var(--brand-crimson-light)',
+    '#A81818': 'var(--brand-accent)',
+    '#8B1313': 'var(--brand-accent-dark)',
+    '#FDF2F2': 'var(--brand-accent-light)',
 
     // Secondary Brand Colors
     '#E0F2E9': 'var(--brand-mint)',
@@ -121,11 +121,11 @@ export const typographyMappings = {
 export const buttonTokenMappings = {
     // Primary variant
     primary: {
-        background: 'var(--brand-crimson)',
-        hoverBackground: 'var(--brand-crimson-dark)',
+        background: 'var(--brand-accent)',
+        hoverBackground: 'var(--brand-accent-dark)',
         shadow: 'var(--shadow-crimson)',
         hoverShadow: '0 4px 12px rgba(168, 24, 24, 0.35)',
-        focusRing: 'var(--brand-crimson)',
+        focusRing: 'var(--brand-accent)',
     },
     // Secondary variant
     secondary: {
@@ -170,7 +170,7 @@ export const cardTokenMappings = {
         radius: 'var(--radius-lg)',
     },
     hero: {
-        background: 'var(--brand-crimson)',
+        background: 'var(--brand-accent)',
         shadow: 'var(--shadow-crimson)',
         radius: 'var(--radius-xl)',
     },
@@ -193,8 +193,8 @@ export const badgeTokenMappings = {
         color: 'var(--semantic-error)',
     },
     primary: {
-        background: 'var(--brand-crimson-light)',
-        color: 'var(--brand-crimson)',
+        background: 'var(--brand-accent-light)',
+        color: 'var(--brand-accent)',
     },
     neutral: {
         background: 'var(--surface-elevated)',
@@ -213,13 +213,13 @@ export const kdsStatusMappings = {
     },
     acknowledged: {
         background: 'var(--brand-mint)',
-        color: 'var(--brand-crimson)',
+        color: 'var(--brand-accent)',
         border: 'var(--brand-mint-dark)',
     },
     preparing: {
-        background: 'var(--brand-crimson-light)',
-        color: 'var(--brand-crimson)',
-        border: 'var(--brand-crimson)',
+        background: 'var(--brand-accent-light)',
+        color: 'var(--brand-accent)',
+        border: 'var(--brand-accent)',
     },
     ready: {
         background: 'var(--semantic-success-light)',

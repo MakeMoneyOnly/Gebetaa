@@ -117,6 +117,7 @@ export async function generateMenuEngineeringReport(
     params: MenuEngineeringParams
 ): Promise<MenuEngineeringReport> {
     const { restaurantId, periodStart, periodEnd, categoryId } = params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Default to last 30 days if no period specified
@@ -192,6 +193,7 @@ export async function generateMenuEngineeringReport(
     }
 
     // Calculate performance metrics for each menu item
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const itemPerformances: MenuItemPerformance[] = (menuItems || []).map((item: any) => {
         const sales = salesByItem.get(item.id) || { total_sold: 0, total_revenue: 0 };
         const cost = Number(item.cost) || 0;

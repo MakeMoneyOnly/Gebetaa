@@ -90,7 +90,7 @@ export function MenuCard({
                     className={cn(
                         'absolute top-3 left-3 z-[20] flex h-9 w-9 touch-manipulation items-center justify-center rounded-full border border-white/30 shadow-sm transition-all active:scale-90',
                         'bg-white/30 backdrop-blur-xl hover:bg-white/50',
-                        isLiked && 'text-brand-crimson scale-110 shadow-md'
+                        isLiked && 'scale-110 text-black shadow-md'
                     )}
                     style={{ transform: 'translateZ(0)' }}
                 >
@@ -121,7 +121,7 @@ export function MenuCard({
                 {/* Add Button (Bottom Right of Image) */}
                 <button
                     onClick={handleAdd}
-                    className="bg-brand-crimson absolute right-3 bottom-3 z-[50] flex h-10 w-10 touch-manipulation items-center justify-center rounded-full text-white shadow-lg transition-transform group-hover:scale-110 active:scale-90"
+                    className="bg-brand-accent absolute right-3 bottom-3 z-[50] flex h-10 w-10 touch-manipulation items-center justify-center rounded-full text-black shadow-lg transition-transform group-hover:scale-110 active:scale-90"
                 >
                     <Plus size={20} />
                 </button>
@@ -137,7 +137,7 @@ export function MenuCard({
                         {item.shopName}
                     </p>
                     <div className="mr-1 flex items-center gap-0.5">
-                        <span className="text-brand-crimson text-xs font-bold">★</span>
+                        <span className="text-xs font-bold text-black">★</span>
                         <span className="text-xs font-bold text-black/90 dark:text-white/90">
                             {item.rating || 4.5}
                         </span>

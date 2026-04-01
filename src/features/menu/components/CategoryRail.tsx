@@ -106,7 +106,7 @@ export function CategoryRail({ activeTab, activeCategoryId, onCategoryChange }: 
                                 className={cn(
                                     'text-xs font-bold tracking-wide transition-colors duration-300',
                                     isActive
-                                        ? 'text-brand-crimson dark:text-white'
+                                        ? 'text-black dark:text-white'
                                         : 'text-black/30 dark:text-white/40'
                                 )}
                             >

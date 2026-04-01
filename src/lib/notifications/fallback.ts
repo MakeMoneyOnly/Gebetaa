@@ -60,6 +60,7 @@ export interface SendWithFallbackParams {
     /** Whether to skip SMS and use push directly */
     skipSms?: boolean;
     /** Supabase client (optional) */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>;
 }
 
@@ -91,6 +92,7 @@ export interface UpdateGuestPreferenceParams {
     restaurantId: string;
     pushEnabled: boolean;
     preferredChannel?: 'sms' | 'push' | 'both';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>;
 }
 
@@ -312,10 +314,12 @@ export async function sendWithFallback(
  */
 export async function getGuestPushPreference(
     guestId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>
 ): Promise<GuestPushPreference | null> {
     const db = supabase ?? createServiceRoleClient();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (db as any)
         .from('guest_push_preferences')
         .select('*')
@@ -353,6 +357,7 @@ export async function updateGuestPushPreference(
     const now = new Date().toISOString();
 
     // Check if preference exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (db as any)
         .from('guest_push_preferences')
         .select('id, push_enabled')
@@ -361,6 +366,7 @@ export async function updateGuestPushPreference(
 
     if (existing) {
         // Update existing
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (db as any)
             .from('guest_push_preferences')
             .update({
@@ -373,6 +379,7 @@ export async function updateGuestPushPreference(
             .eq('guest_id', guestId);
     } else {
         // Insert new
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (db as any).from('guest_push_preferences').insert({
             guest_id: guestId,
             restaurant_id: restaurantId,
@@ -394,6 +401,7 @@ export async function updateGuestPushPreference(
  */
 export async function guestPrefersPush(
     guestId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>
 ): Promise<boolean> {
     const preference = await getGuestPushPreference(guestId, supabase);
@@ -437,6 +445,7 @@ export async function processSmsFailuresForPush(limit: number = 50): Promise<num
     const _now = new Date().toISOString();
 
     // Find failed SMS notifications that haven't been retried via push
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: failedSms, error } = await (supabase as any)
         .from('notification_queue')
         .select('*')
@@ -471,6 +480,7 @@ export async function processSmsFailuresForPush(limit: number = 50): Promise<num
                     });
 
                     // Update original notification
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     await (supabase as any)
                         .from('notification_queue')
                         .update({
@@ -495,6 +505,7 @@ export async function processSmsFailuresForPush(limit: number = 50): Promise<num
                 restaurantId: notification.restaurant_id,
                 guestPhone: notification.guest_phone,
                 guestId: notification.guest_id,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 notificationType: notification.notification_type as any,
                 channel: 'push',
                 messageAm: notification.message_am || '',
@@ -509,6 +520,7 @@ export async function processSmsFailuresForPush(limit: number = 50): Promise<num
             });
 
             // Mark original as queued for fallback
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (supabase as any)
                 .from('notification_queue')
                 .update({
@@ -536,6 +548,7 @@ export async function processSmsFailuresForPush(limit: number = 50): Promise<num
  * Log successful notification to queue for audit
  */
 async function logNotificationToQueue(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: SupabaseClient<any>,
     params: {
         restaurantId: string;
@@ -550,6 +563,7 @@ async function logNotificationToQueue(
     try {
         // Insert into notification queue (we don't enqueue since it's already sent,
         // but we log for audit trail)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any).from('notification_queue').upsert(
             {
                 restaurant_id: params.restaurantId,

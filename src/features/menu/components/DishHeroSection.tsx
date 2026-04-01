@@ -35,7 +35,7 @@ export function DishHeroSection({
             {/* Back Button */}
             <button
                 onClick={onBack}
-                className="text-brand-crimson absolute top-4 left-4 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-white/50 shadow-sm backdrop-blur-md transition-all hover:bg-white active:scale-90"
+                className="absolute top-4 left-4 z-20 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-white/50 text-black shadow-sm backdrop-blur-md transition-all hover:bg-white active:scale-90"
             >
                 <ArrowLeft size={24} strokeWidth={2.5} />
             </button>
@@ -45,7 +45,7 @@ export function DishHeroSection({
                 onClick={e => onToggleLike(e)}
                 className={`absolute top-4 right-4 z-20 flex h-10 w-10 touch-manipulation items-center justify-center rounded-full border border-white/30 shadow-sm transition-all active:scale-90 ${
                     isLiked
-                        ? 'text-brand-crimson scale-110 shadow-md'
+                        ? 'scale-110 text-black shadow-md'
                         : 'bg-white/30 text-white backdrop-blur-xl hover:bg-white/50'
                 }`}
             >

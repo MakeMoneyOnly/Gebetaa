@@ -62,6 +62,7 @@ export async function calculateOrderFireTimes(
 ): Promise<
     { success: true; calculation: FireTimeCalculation } | { success: false; error: string }
 > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -110,7 +111,10 @@ export async function calculateOrderFireTimes(
 
         // Find max prep time
         const maxPrepTime = Math.max(
-            ...orderItems.map((item: any) => item.menu_items?.prep_time_minutes ?? 15)
+            ...orderItems.map(
+                (item: { menu_items?: { prep_time_minutes?: number } | null }) =>
+                    item.menu_items?.prep_time_minutes ?? 15
+            )
         );
 
         const items: OrderItemFireInfo[] = [];
@@ -180,6 +184,7 @@ export async function getItemsReadyToFire(
     supabase: SupabaseClient<Database>,
     restaurantId: string
 ): Promise<ItemsReadyToFire[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -192,18 +197,31 @@ export async function getItemsReadyToFire(
             return [];
         }
 
-        return (data ?? []).map((item: any) => ({
-            order_id: item.order_id,
-            order_number: item.order_number,
-            table_number: item.table_number,
-            item_id: item.item_id,
-            item_name: item.item_name,
-            quantity: item.quantity,
-            course: item.course,
-            prep_time_minutes: item.prep_time_minutes,
-            calculated_fire_at: item.calculated_fire_at,
-            minutes_until_fire: item.minutes_until_fire,
-        }));
+        return (data ?? []).map(
+            (item: {
+                order_id: string;
+                order_number: string;
+                table_number: string;
+                item_id: string;
+                item_name: string;
+                quantity: number;
+                course: string | null;
+                prep_time_minutes: number;
+                calculated_fire_at: string;
+                minutes_until_fire: number;
+            }) => ({
+                order_id: item.order_id,
+                order_number: item.order_number,
+                table_number: item.table_number,
+                item_id: item.item_id,
+                item_name: item.item_name,
+                quantity: item.quantity,
+                course: item.course,
+                prep_time_minutes: item.prep_time_minutes,
+                calculated_fire_at: item.calculated_fire_at,
+                minutes_until_fire: item.minutes_until_fire,
+            })
+        );
     } catch (error) {
         console.error('[PrepTimeCalculator] Error:', error);
         return [];
@@ -218,6 +236,7 @@ export async function markItemFired(
     orderItemId: string,
     staffId?: string
 ): Promise<{ success: boolean; firedAt?: string; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -249,6 +268,7 @@ export async function markItemsFired(
     orderItemIds: string[],
     staffId?: string
 ): Promise<{ success: boolean; firedCount: number; errors: string[] }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _db = supabase as any;
     const errors: string[] = [];
     let firedCount = 0;
@@ -272,6 +292,7 @@ export async function autoFireReadyItems(
     supabase: SupabaseClient<Database>,
     restaurantId: string
 ): Promise<{ success: boolean; itemsFired: number }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -307,6 +328,7 @@ export async function updateMenuItemPrepTime(
     menuItemId: string,
     prepTimeMinutes: number
 ): Promise<{ success: boolean; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -360,6 +382,7 @@ export async function getPrepTimeSummary(
     averagePrepTime: number;
     longestPrepTime: number;
 }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -383,15 +406,23 @@ export async function getPrepTimeSummary(
             return { items: [], averagePrepTime: 0, longestPrepTime: 0 };
         }
 
-        const items = (data ?? []).map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            category: item.categories?.name ?? 'Uncategorized',
-            prep_time_minutes: item.prep_time_minutes ?? 15,
-            order_count: item.order_count ?? 0,
-        }));
+        const items = (data ?? []).map(
+            (item: {
+                id: string;
+                name: string;
+                categories?: { name: string } | null;
+                prep_time_minutes?: number;
+                order_count?: number;
+            }) => ({
+                id: item.id,
+                name: item.name,
+                category: item.categories?.name ?? 'Uncategorized',
+                prep_time_minutes: item.prep_time_minutes ?? 15,
+                order_count: item.order_count ?? 0,
+            })
+        );
 
-        const prepTimes = items.map((i: any) => i.prep_time_minutes);
+        const prepTimes = items.map((i: { prep_time_minutes: number }) => i.prep_time_minutes);
         const averagePrepTime =
             prepTimes.length > 0
                 ? prepTimes.reduce((a: number, b: number) => a + b, 0) / prepTimes.length
@@ -429,6 +460,7 @@ export async function calculateCourseFireTimes(
         ...options,
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -487,7 +519,10 @@ export async function calculateCourseFireTimes(
 
             const courseDelay = courseDelays[course] ?? 0;
             const maxCoursePrep = Math.max(
-                ...itemsInCourse.map((item: any) => item.menu_items?.prep_time_minutes ?? 15)
+                ...itemsInCourse.map(
+                    (item: { menu_items?: { prep_time_minutes?: number } | null }) =>
+                        item.menu_items?.prep_time_minutes ?? 15
+                )
             );
 
             maxPrepTime = Math.max(maxPrepTime, maxCoursePrep + courseDelay);

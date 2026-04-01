@@ -23,7 +23,7 @@ export function DishNutritionSection({ nutrition }: DishNutritionSectionProps) {
                 {stats.map((stat, i) => (
                     <div
                         key={i}
-                        className="flex flex-col items-center justify-center rounded-2xl border border-black/5 bg-black/5 p-3 py-4 dark:border-white/5 dark:bg-white/5"
+                        className="flex flex-col items-center justify-center rounded-xl border border-black/5 bg-black/5 p-3 py-4 dark:border-white/5 dark:bg-white/5"
                     >
                         <div className="flex items-baseline gap-0.5">
                             <span className="font-manrope text-lg font-black text-black dark:text-white">

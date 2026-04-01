@@ -1,36 +1,37 @@
 // Guests Domain - Resolvers Layer
-// Placeholder resolvers for Guests subgraph
-
+// GraphQL resolvers with authorization and validation
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from '@/lib/graphql/context';
 import { requireAuth, requireRestaurantAccess } from '@/lib/graphql/authz';
-import {
-    createErrorResult,
-    handleResolverError,
-    NOT_IMPLEMENTED_ERROR,
-} from '@/lib/graphql/errors';
+import { createErrorResult, handleResolverError } from '@/lib/graphql/errors';
 import {
     validateInput,
     CreateGuestInputSchema,
     UpdateGuestInputSchema,
 } from '@/lib/validators/graphql';
 import { enforcePaginationLimit } from '@/lib/graphql/constants';
+import { guestsRepository } from './repository';
+import { guestsService } from './service';
 
 export const guestsResolvers = {
     Query: {
         guest: async (_: unknown, args: { id: string }, context: GraphQLContext) => {
             // Authorization: Require authentication
-            requireAuth(context);
+            const authContext = requireAuth(context);
 
-            // TODO: Implement with guests repository
-            // When implemented, should verify tenant isolation:
-            // const guest = await guestsRepository.getGuest(args.id);
-            // if (guest && guest.restaurant_id !== authContext.user.restaurantId) {
-            //     throw new GraphQLError('Access denied to this guest', {
-            //         extensions: { code: 'FORBIDDEN', http: { status: 403 } },
-            //     });
-            // }
-            return null;
+            // Fetch guest
+            const guest = await guestsRepository.getGuest(args.id);
+
+            // Tenant isolation: Verify user has access to this guest's restaurant
+            if (guest && authContext.user?.restaurantId) {
+                if (guest.restaurant_id !== authContext.user.restaurantId) {
+                    throw new GraphQLError('Access denied to this guest', {
+                        extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+                    });
+                }
+            }
+
+            return guest;
         },
 
         guests: async (
@@ -46,37 +47,52 @@ export const guestsResolvers = {
             // Authorization: Verify user has access to this restaurant
             await requireRestaurantAccess(context, args.restaurantId);
 
-            // Enforce pagination limits to prevent unbounded result sets
-            enforcePaginationLimit(args.first);
+            // Enforce pagination limits
+            const limit = enforcePaginationLimit(args.first);
+            const offset = args.after ? parseInt(args.after, 10) : 0;
 
-            // TODO: Implement with guests repository
-            // When implemented, pass limit and offset to repository:
-            // const guests = await guestsRepository.getGuests(args.restaurantId, {
-            //     limit,
-            //     offset: args.after ? parseInt(args.after, 10) : 0,
-            //     search: args.search,
-            // });
+            // Fetch guests list
+            const guests = await guestsRepository.getGuests(args.restaurantId, {
+                limit,
+                offset,
+                search: args.search,
+            });
+
+            // Return connection format
             return {
-                edges: [],
+                edges: guests.map(guest => ({
+                    node: guest,
+                    cursor: Buffer.from(String(offset + guests.indexOf(guest))).toString('base64'),
+                })),
                 pageInfo: {
-                    hasNextPage: false,
-                    hasPreviousPage: false,
-                    startCursor: null,
-                    endCursor: null,
+                    hasNextPage: guests.length === limit,
+                    hasPreviousPage: offset > 0,
+                    startCursor:
+                        guests.length > 0 ? Buffer.from(String(offset)).toString('base64') : null,
+                    endCursor:
+                        guests.length > 0
+                            ? Buffer.from(String(offset + guests.length - 1)).toString('base64')
+                            : null,
                 },
             };
         },
 
         searchGuests: async (
             _: unknown,
-            args: { restaurantId: string; query: string },
+            args: { restaurantId: string; query: string; limit?: number },
             context: GraphQLContext
         ) => {
             // Authorization: Verify user has access to this restaurant
             await requireRestaurantAccess(context, args.restaurantId);
 
-            // TODO: Implement with guests repository
-            return [];
+            // Search guests
+            const guests = await guestsRepository.searchGuests(
+                args.restaurantId,
+                args.query,
+                args.limit ?? 10
+            );
+
+            return guests;
         },
     },
 
@@ -95,10 +111,20 @@ export const guestsResolvers = {
                 // Authorization: Verify user has access to this restaurant
                 await requireRestaurantAccess(context, validation.data.restaurantId);
 
-                // TODO: Implement with guests repository
+                // Create guest
+                const guest = await guestsService.createGuest({
+                    restaurantId: validation.data.restaurantId,
+                    name: validation.data.name,
+                    phone: validation.data.phone,
+                    email: validation.data.email,
+                    notes: validation.data.notes,
+                    tags: validation.data.tags,
+                });
+
                 return {
-                    ...NOT_IMPLEMENTED_ERROR,
-                    guest: null,
+                    success: true,
+                    message: 'Guest created successfully',
+                    guest,
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
@@ -130,20 +156,72 @@ export const guestsResolvers = {
                 }
 
                 // Authorization: Require authentication
-                const _authContext = requireAuth(context);
+                const authContext = requireAuth(context);
 
-                // TODO: When implemented, fetch guest and verify tenant isolation
-                // const existingGuest = await guestsRepository.getGuest(validation.data.id);
-                // if (existingGuest && existingGuest.restaurant_id !== authContext.user.restaurantId) {
-                //     throw new GraphQLError('Access denied to this guest', {
-                //         extensions: { code: 'FORBIDDEN', http: { status: 403 } },
-                //     });
-                // }
+                // Fetch existing guest and verify tenant isolation
+                const existingGuest = await guestsRepository.getGuest(validation.data.id);
+                if (!existingGuest) {
+                    return {
+                        ...createErrorResult('NOT_FOUND', 'Guest not found'),
+                        guest: null,
+                    };
+                }
 
-                // TODO: Implement with guests repository
+                if (existingGuest.restaurant_id !== authContext.user?.restaurantId) {
+                    throw new GraphQLError('Access denied to this guest', {
+                        extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+                    });
+                }
+
+                // Update guest
+                const guest = await guestsService.updateGuest(
+                    validation.data.id,
+                    {
+                        name: validation.data.name,
+                        phone: validation.data.phone,
+                        email: validation.data.email,
+                        notes: validation.data.notes,
+                        tags: validation.data.tags,
+                    },
+                    authContext.user?.restaurantId
+                );
+
                 return {
-                    ...NOT_IMPLEMENTED_ERROR,
+                    success: true,
+                    message: 'Guest updated successfully',
+                    guest,
+                };
+            } catch (error) {
+                if (error instanceof GraphQLError) {
+                    throw error;
+                }
+                return {
+                    ...handleResolverError(error),
                     guest: null,
+                };
+            }
+        },
+
+        recordGuestVisit: async (
+            _: unknown,
+            args: { guestId: string; amountSpent: number },
+            context: GraphQLContext
+        ) => {
+            try {
+                // Authorization: Require authentication
+                const authContext = requireAuth(context);
+
+                // Update guest visit stats
+                const guest = await guestsService.recordVisit(
+                    args.guestId,
+                    args.amountSpent,
+                    authContext.user?.restaurantId
+                );
+
+                return {
+                    success: true,
+                    message: 'Visit recorded successfully',
+                    guest,
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
@@ -158,27 +236,33 @@ export const guestsResolvers = {
     },
 
     Guest: {
-        __resolveReference: async (reference: { id: string }, _context: GraphQLContext) => {
-            // TODO: Implement with guests repository when available
-            // The implementation should:
-            // 1. Fetch guest from repository
-            // 2. Validate tenant isolation
-            //
-            // Example implementation:
-            // const guest = await guestsRepository.getGuest(reference.id);
-            // if (guest && context.user?.restaurantId) {
-            //     if (guest.restaurant_id !== context.user.restaurantId) {
-            //         console.error(
-            //             `Tenant isolation violation: User ${context.user.id} attempted to access guest ${reference.id}`
-            //         );
-            //         return null;
-            //     }
-            // }
-            // return guest;
+        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+            // Federation reference resolver
+            const authContext = requireAuth(context);
 
-            // Placeholder: Log the reference for debugging until repository is implemented
-            console.log('[guests/resolvers] __resolveReference called for id:', reference.id);
-            return null;
+            // Fetch guest
+            const guest = await guestsRepository.getGuest(reference.id);
+
+            // Tenant isolation
+            if (guest && authContext.user?.restaurantId) {
+                if (guest.restaurant_id !== authContext.user.restaurantId) {
+                    console.error(
+                        `[guests/resolvers] Tenant isolation violation: User ${authContext.user.id} attempted to access guest ${reference.id}`
+                    );
+                    return null;
+                }
+            }
+
+            return guest;
+        },
+
+        // Computed field for loyalty tier
+        loyaltyTier: (parent: { total_spent?: number }) => {
+            const totalSpent = parent.total_spent ?? 0;
+            if (totalSpent >= 100000) return 'platinum';
+            if (totalSpent >= 50000) return 'gold';
+            if (totalSpent >= 20000) return 'silver';
+            return 'bronze';
         },
     },
 };

@@ -31,7 +31,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
                 'relative overflow-hidden transition-all duration-300 hover:-translate-y-1',
                 variant === 'default' && 'border-none',
                 variant === 'highlight' &&
-                    'from-brand-crimson shadow-glow-crimson bg-gradient-to-br to-red-600 text-white',
+                    'from-brand-accent shadow-glow-crimson bg-gradient-to-br to-red-600 text-white',
                 className
             )}
         >

@@ -32,6 +32,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
     const db = createServiceRoleClient();
 
     const { data: attribution, error: attributionError } = await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('order_guest_attributions' as any)
         .select('id, restaurant_id, table_id, auth_state, user_id, guest_id')
         .eq('order_id', orderId)
@@ -45,6 +46,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
     }
 
     const { data: existingEarn, error: earnLookupError } = await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('loyalty_transactions' as any)
         .select('id')
         .eq('order_id', orderId)
@@ -63,6 +65,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
         await Promise.all([
             db.from('orders').select('id, total_price').eq('id', orderId).maybeSingle(),
             db
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .from('loyalty_programs' as any)
                 .select('id, points_rule_json')
                 .eq('restaurant_id', attribution.restaurant_id)
@@ -111,6 +114,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
     }
 
     const { data: account, error: accountError } = await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('loyalty_accounts' as any)
         .upsert(
             {
@@ -132,6 +136,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
     const nextBalance = currentBalance + pointsToEarn;
 
     const { error: updateBalanceError } = await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('loyalty_accounts' as any)
         .update({ points_balance: nextBalance })
         .eq('id', account.id);
@@ -139,6 +144,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
         return { applied: false, reason: updateBalanceError.message };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: insertTxError } = await db.from('loyalty_transactions' as any).insert({
         restaurant_id: attribution.restaurant_id,
         account_id: account.id,
@@ -159,6 +165,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
     }
 
     await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('order_guest_attributions' as any)
         .update({ guest_id: guestId })
         .eq('id', attribution.id);
@@ -170,6 +177,7 @@ export async function accrueLoyaltyPointsForCompletedOrder(
         .maybeSingle();
 
     if (!existingVisit) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await db.from('guest_visits' as any).insert({
             restaurant_id: attribution.restaurant_id,
             guest_id: guestId,

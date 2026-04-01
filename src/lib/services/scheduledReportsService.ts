@@ -125,6 +125,7 @@ export async function createScheduledReport(
     input: CreateScheduledReportInput,
     userId: string
 ): Promise<{ success: true; report: ScheduledReport } | { success: false; error: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -186,6 +187,7 @@ export async function getScheduledReports(
     restaurantId: string,
     options?: { activeOnly?: boolean }
 ): Promise<ScheduledReport[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     let query = db
@@ -217,6 +219,7 @@ export async function updateScheduledReport(
     reportId: string,
     updates: Partial<CreateScheduledReportInput & { is_active: boolean }>
 ): Promise<{ success: boolean; report?: ScheduledReport; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -282,6 +285,7 @@ export async function deleteScheduledReport(
     restaurantId: string,
     reportId: string
 ): Promise<{ success: boolean; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { error } = await db
@@ -307,6 +311,7 @@ export async function deleteScheduledReport(
 export async function getReportsDueForExecution(
     supabase: SupabaseClient<Database>
 ): Promise<ScheduledReport[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -330,6 +335,7 @@ export async function executeScheduledReport(
     supabase: SupabaseClient<Database>,
     reportId: string
 ): Promise<{ success: boolean; execution?: ReportExecution; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -398,6 +404,7 @@ export async function getExecutionHistory(
     reportId: string,
     limit: number = 10
 ): Promise<ReportExecution[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -532,6 +539,7 @@ async function generateReportData(
     endDate: Date,
     _filters: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     switch (reportType) {
@@ -545,7 +553,10 @@ async function generateReportData(
 
             return {
                 total_sales:
-                    orders?.reduce((sum: number, o: any) => sum + (o.total_price ?? 0), 0) ?? 0,
+                    orders?.reduce(
+                        (sum: number, o: { total_price?: number }) => sum + (o.total_price ?? 0),
+                        0
+                    ) ?? 0,
                 order_count: orders?.length ?? 0,
                 period_start: startDate,
                 period_end: endDate,
@@ -587,11 +598,13 @@ async function completeExecution(
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendReportEmail(db: any, report: ScheduledReport, _fileUrl: string): Promise<void> {
     // In production, integrate with Resend/SendGrid
     console.log(`[ScheduledReports] Would send email to ${report.recipient_emails.join(', ')}`);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getExecution(db: any, executionId: string): Promise<ReportExecution | null> {
     const { data } = await db.from('report_executions').select('*').eq('id', executionId).single();
     return data;

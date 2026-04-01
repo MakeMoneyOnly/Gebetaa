@@ -68,7 +68,7 @@ export const LoginForm = () => {
     return (
         <Card className="bg-surface-0/80 border-surface-200 w-full max-w-md border p-8 shadow-2xl backdrop-blur-xl">
             <div className="mb-8 text-center">
-                <h1 className="text-brand-crimson mb-2 text-3xl font-bold">Gebeta</h1>
+                <h1 className="mb-2 text-3xl font-bold text-black">Gebeta</h1>
                 <p className="text-text-secondary">Restaurant Operations Platform</p>
             </div>
 
@@ -82,7 +82,7 @@ export const LoginForm = () => {
                             required
                             value={email}
                             onChange={e => setEmail(e.target.value)}
-                            className="border-surface-200 bg-surface-50 text-text-primary focus:border-brand-crimson focus:ring-brand-crimson w-full rounded-lg border py-2.5 pr-4 pl-10 transition-all outline-none focus:ring-1"
+                            className="border-surface-200 bg-surface-50 text-text-primary focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border py-2.5 pr-4 pl-10 transition-all outline-none focus:ring-1"
                             placeholder="name@restaurant.com"
                         />
                     </div>
@@ -97,7 +97,7 @@ export const LoginForm = () => {
                             required
                             value={password}
                             onChange={e => setPassword(e.target.value)}
-                            className="border-surface-200 bg-surface-50 text-text-primary focus:border-brand-crimson focus:ring-brand-crimson w-full rounded-lg border py-2.5 pr-12 pl-10 transition-all outline-none focus:ring-1"
+                            className="border-surface-200 bg-surface-50 text-text-primary focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border py-2.5 pr-12 pl-10 transition-all outline-none focus:ring-1"
                             placeholder="••••••••"
                         />
                         <button
@@ -122,7 +122,7 @@ export const LoginForm = () => {
 
                 <Button
                     type="submit"
-                    className="bg-brand-crimson hover:bg-brand-crimson-hover shadow-brand-crimson/20 h-12 w-full text-lg font-bold text-white shadow-lg"
+                    className="bg-brand-accent hover:bg-brand-accent-hover shadow-brand-accent/20 h-12 w-full text-lg font-bold text-black shadow-lg"
                     isLoading={loading}
                 >
                     Sign In
@@ -132,7 +132,7 @@ export const LoginForm = () => {
             <div className="mt-6 text-center">
                 <a
                     href="#"
-                    className="text-text-tertiary hover:text-brand-crimson text-sm transition-colors"
+                    className="text-text-tertiary text-sm transition-colors hover:text-black"
                 >
                     Forgot your password?
                 </a>

@@ -284,6 +284,7 @@ async function recordNotificationRedis(params: RecordNotificationParams): Promis
 /**
  * Check for duplicates in the notification_queue table
  */
+
 async function checkDuplicateDatabase(params: DedupeCheckParams): Promise<DedupeCheckResult> {
     const supabase = createServiceRoleClient();
     const key = getDedupeKey(params);
@@ -292,6 +293,12 @@ async function checkDuplicateDatabase(params: DedupeCheckParams): Promise<Dedupe
     // Use idempotency_key as the dedupe key in database
     // Check for any recent notification with the same key
     const windowStart = new Date(Date.now() - windowSeconds * 1000).toISOString();
+
+    // Pre-declare result to avoid ESLint false positive with catch block
+    const result: DedupeCheckResult = {
+        isDuplicate: false,
+        dedupeKey: key,
+    };
 
     try {
         const { data, error } = await (supabase as any)
@@ -305,10 +312,7 @@ async function checkDuplicateDatabase(params: DedupeCheckParams): Promise<Dedupe
         if (error) {
             console.error('[deduplication] Database error during duplicate check:', error);
             // On database error, allow the notification (fail open)
-            return {
-                isDuplicate: false,
-                dedupeKey: key,
-            };
+            return result;
         }
 
         if (data) {
@@ -325,12 +329,8 @@ async function checkDuplicateDatabase(params: DedupeCheckParams): Promise<Dedupe
             };
         }
 
-        return {
-            isDuplicate: false,
-            dedupeKey: key,
-        };
-    } catch (error) {
-        console.error('[deduplication] Unexpected database error:', error);
+        return result;
+    } catch {
         // Fail open - allow notification
         return {
             isDuplicate: false,

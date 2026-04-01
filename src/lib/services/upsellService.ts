@@ -56,6 +56,8 @@ export async function getFrequentlyBoughtTogether(
         excludeItemIds?: string[];
     }
 ): Promise<UpsellRecommendation[]> {
+    // Tables: order_items, menu_items, categories not fully typed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const limit = options?.limit ?? 4;
     const minCoOccurrence = options?.minCoOccurrence ?? 2;
@@ -72,7 +74,7 @@ export async function getFrequentlyBoughtTogether(
             return [];
         }
 
-        const orderIds = orderItems.map((oi: any) => oi.order_id);
+        const orderIds = orderItems.map((oi: { order_id: string }) => oi.order_id);
 
         // Get other items from these orders
         const { data: coOccurringItems, error: coError } = await db
@@ -89,7 +91,19 @@ export async function getFrequentlyBoughtTogether(
         }
 
         // Count co-occurrences
-        const coOccurrenceMap = new Map<string, { count: number; item: any }>();
+        const coOccurrenceMap = new Map<
+            string,
+            {
+                count: number;
+                item: {
+                    id: string;
+                    name: string;
+                    price: number;
+                    image_url: string | null;
+                    categories?: { name: string };
+                };
+            }
+        >();
 
         for (const oi of coOccurringItems) {
             const menuItem = oi.menu_items;
@@ -153,6 +167,7 @@ export async function getEnhancedUpsellRecommendations(
         includeFrequentlyBoughtTogether?: boolean;
     }
 ): Promise<UpsellRecommendation[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const limit = options?.limit ?? 6;
     const recommendations: UpsellRecommendation[] = [];
@@ -291,6 +306,7 @@ export async function getPersonalizedRecommendations(
         limit?: number;
     }
 ): Promise<UpsellRecommendation[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const limit = options?.limit ?? 3;
     const excludeIds = options?.excludeItemIds ?? [];
@@ -309,7 +325,7 @@ export async function getPersonalizedRecommendations(
             return [];
         }
 
-        const orderIds = guestOrders.map((o: any) => o.id);
+        const orderIds = guestOrders.map((o: { id: string }) => o.id);
 
         // Get items from these orders with counts
         const { data: orderItems } = await db
@@ -325,14 +341,14 @@ export async function getPersonalizedRecommendations(
 
         // Filter out excluded items
         const filteredItems = orderItems
-            .filter((oi: any) => !excludeIds.includes(oi.menu_item_id))
+            .filter((oi: { menu_item_id: string }) => !excludeIds.includes(oi.menu_item_id))
             .slice(0, limit);
 
         if (filteredItems.length === 0) {
             return [];
         }
 
-        const menuItemIds = filteredItems.map((oi: any) => oi.menu_item_id);
+        const menuItemIds = filteredItems.map((oi: { menu_item_id: string }) => oi.menu_item_id);
 
         // Get item details
         const { data: items } = await db
@@ -348,9 +364,13 @@ export async function getPersonalizedRecommendations(
 
         // Create a map for counts
         const countMap = new Map<string, number>(
-            filteredItems.map((oi: any) => [oi.menu_item_id, oi.count])
+            filteredItems.map((oi: { menu_item_id: string; count: number }) => [
+                oi.menu_item_id,
+                oi.count,
+            ])
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return items.map((item: any) => ({
             id: item.id,
             name: item.name,
@@ -384,6 +404,7 @@ export async function trackUpsellImpression(
         source: string;
     }
 ): Promise<string | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -420,6 +441,7 @@ export async function trackUpsellClick(
     analyticsId: string,
     clickedItemId: string
 ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -443,6 +465,7 @@ export async function trackUpsellConversion(
     analyticsId: string,
     addedItemId: string
 ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -480,6 +503,7 @@ export async function getUpsellAnalytics(
         conversions: number;
     }>;
 }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -505,8 +529,12 @@ export async function getUpsellAnalytics(
         }
 
         const totalImpressions = data.length;
-        const totalClicks = data.filter((d: any) => d.clicked_item).length;
-        const totalConversions = data.filter((d: any) => d.added_to_cart).length;
+        const totalClicks = data.filter(
+            (d: { clicked_item: string | null }) => d.clicked_item
+        ).length;
+        const totalConversions = data.filter(
+            (d: { added_to_cart: boolean }) => d.added_to_cart
+        ).length;
 
         // Aggregate by recommended items
         const itemStats = new Map<

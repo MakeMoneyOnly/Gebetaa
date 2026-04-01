@@ -90,6 +90,7 @@ export async function getActivePartners(
     supabase: SupabaseClient<Database>,
     restaurantId: string
 ): Promise<DeliveryPartner[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -121,6 +122,7 @@ export async function registerPartner(
         prep_time_minutes?: number;
     }
 ): Promise<{ success: boolean; partner?: DeliveryPartner; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -179,6 +181,7 @@ export async function receiveExternalOrder(
         placed_at?: string;
     }
 ): Promise<{ success: boolean; order?: AggregatorOrder; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -250,6 +253,7 @@ export async function injectAggregatorOrder(
     aggregatorOrderId: string,
     staffId?: string
 ): Promise<InjectedOrderResult> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -282,6 +286,7 @@ export async function getPendingAggregatorOrders(
     supabase: SupabaseClient<Database>,
     restaurantId: string
 ): Promise<AggregatorOrder[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -308,6 +313,7 @@ export async function updateAggregatorOrderStatus(
     aggregatorOrderId: string,
     status: AggregatorOrderStatus
 ): Promise<{ success: boolean; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const statusTimestamps: Partial<Record<AggregatorOrderStatus, string>> = {
@@ -353,6 +359,7 @@ export async function syncMenuToPartners(
     success: boolean;
     results: Array<{ partner_id: string; partner_name: string; success: boolean; error?: string }>;
 }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Get partners to sync
@@ -468,6 +475,7 @@ export async function getMenuSyncHistory(
         completed_at: string | null;
     }>
 > {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -482,14 +490,25 @@ export async function getMenuSyncHistory(
         return [];
     }
 
-    return (data ?? []).map((log: any) => ({
-        id: log.id,
-        partner_name: log.delivery_partners?.display_name ?? 'Unknown',
-        sync_type: log.sync_type,
-        status: log.status,
-        items_total: log.items_total,
-        items_success: log.items_success,
-        started_at: log.started_at,
-        completed_at: log.completed_at,
-    }));
+    return (data ?? []).map(
+        (log: {
+            id: string;
+            delivery_partners?: { display_name: string } | null;
+            sync_type: string;
+            status: string;
+            items_total: number;
+            items_success: number;
+            started_at: string;
+            completed_at: string | null;
+        }) => ({
+            id: log.id,
+            partner_name: log.delivery_partners?.display_name ?? 'Unknown',
+            sync_type: log.sync_type,
+            status: log.status,
+            items_total: log.items_total,
+            items_success: log.items_success,
+            started_at: log.started_at,
+            completed_at: log.completed_at,
+        })
+    );
 }

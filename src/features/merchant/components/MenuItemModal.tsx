@@ -223,7 +223,7 @@ export function MenuItemModal({
                                 required
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className="border-surface-200 bg-surface-50 focus:border-brand-crimson w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                className="border-surface-200 bg-surface-50 focus:border-brand-accent w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 placeholder="e.g. Burger"
                             />
                         </div>
@@ -234,7 +234,7 @@ export function MenuItemModal({
                             <input
                                 value={nameAm}
                                 onChange={e => setNameAm(e.target.value)}
-                                className="border-surface-200 bg-surface-50 focus:border-brand-crimson font-amharic w-full rounded-lg border px-3 py-2 focus:outline-none"
+                                className="border-surface-200 bg-surface-50 focus:border-brand-accent font-amharic w-full rounded-lg border px-3 py-2 focus:outline-none"
                                 placeholder="e.g. በርገር"
                             />
                         </div>
@@ -251,7 +251,7 @@ export function MenuItemModal({
                             step="0.01"
                             value={price}
                             onChange={e => setPrice(e.target.value)}
-                            className="border-surface-200 bg-surface-50 focus:border-brand-crimson w-full rounded-lg border px-3 py-2 focus:outline-none"
+                            className="border-surface-200 bg-surface-50 focus:border-brand-accent w-full rounded-lg border px-3 py-2 focus:outline-none"
                             placeholder="0.00"
                         />
                     </div>
@@ -263,7 +263,7 @@ export function MenuItemModal({
                         <textarea
                             value={description}
                             onChange={e => setDescription(e.target.value)}
-                            className="border-surface-200 bg-surface-50 focus:border-brand-crimson min-h-[100px] w-full rounded-lg border px-3 py-2 focus:outline-none"
+                            className="border-surface-200 bg-surface-50 focus:border-brand-accent min-h-[100px] w-full rounded-lg border px-3 py-2 focus:outline-none"
                             placeholder="Describe the dish..."
                         />
                     </div>
@@ -280,7 +280,7 @@ export function MenuItemModal({
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-brand-crimson hover:bg-brand-crimson-hover flex-1 text-white"
+                            className="bg-brand-accent hover:bg-brand-accent-hover flex-1 text-black"
                             isLoading={loading}
                         >
                             {itemToEdit ? 'Save Changes' : 'Create Item'}

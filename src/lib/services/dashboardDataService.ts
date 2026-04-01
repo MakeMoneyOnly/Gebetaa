@@ -186,56 +186,6 @@ export interface DeviceSummary {
     assigned_zones: string[] | null;
 }
 
-export interface FinancePageData {
-    payments: PaymentSummary[];
-    refunds: RefundSummary[];
-    payouts: PayoutSummary[];
-    reconciliation: ReconciliationSummary[];
-    totals: {
-        payments_gross: number;
-        refunds_total: number;
-        payouts_net: number;
-    };
-    restaurant_id: string;
-}
-
-export interface PaymentSummary {
-    id: string;
-    amount: number;
-    currency: string;
-    method: string;
-    status: string;
-    created_at: string;
-    order_id: string | null;
-}
-
-export interface RefundSummary {
-    id: string;
-    amount: number;
-    status: string;
-    reason: string | null;
-    created_at: string;
-    provider_reference: string | null;
-}
-
-export interface PayoutSummary {
-    id: string;
-    net: number;
-    currency: string;
-    status: string;
-    created_at: string;
-    paid_at: string | null;
-}
-
-export interface ReconciliationSummary {
-    id: string;
-    created_at: string;
-    expected_amount: number;
-    settled_amount: number;
-    delta_amount: number;
-    status: string;
-}
-
 export interface ChannelsPageData {
     summary: {
         delivery_partners: number;
@@ -466,7 +416,10 @@ export async function getCommandCenterData(
     const grossSalesSantim = orders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0);
     const grossSales = grossSalesSantim / 100;
     const grossSalesPrevious =
-        previousOrders.reduce((sum: number, o: any) => sum + Number(o.total_price ?? 0), 0) / 100;
+        previousOrders.reduce(
+            (sum: number, o: { total_price?: number | null }) => sum + Number(o.total_price ?? 0),
+            0
+        ) / 100;
     const avgOrderValue = orders.length > 0 ? Math.round(grossSales / orders.length) : 0;
     const uniqueTablesToday = new Set(orders.map(o => o.table_number).filter(Boolean)).size;
 
@@ -871,6 +824,7 @@ export async function getStaffPageData(): Promise<StaffPageData | null> {
             .eq('restaurant_id', restaurantId)
             .order('created_at', { ascending: true }),
         supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .from('devices' as any)
             .select(
                 'id, name, device_type, device_token, pairing_code, last_active_at, assigned_zones'
@@ -882,65 +836,6 @@ export async function getStaffPageData(): Promise<StaffPageData | null> {
     return {
         staff: (staffRes.data ?? []) as unknown as StaffMemberSummary[],
         devices: (devicesRes.data ?? []) as unknown as DeviceSummary[],
-        restaurant_id: restaurantId,
-    };
-}
-
-/**
- * Fetches finance page data for initial render.
- */
-export async function getFinancePageData(): Promise<FinancePageData | null> {
-    const supabase = await createClient();
-
-    const restaurantId = await resolveRestaurantId();
-    if (!restaurantId) {
-        return null;
-    }
-
-    const [paymentsRes, refundsRes, payoutsRes, reconciliationRes] = await Promise.all([
-        supabase
-            .from('payments')
-            .select('id, amount, currency, method, status, created_at, order_id')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(200),
-        supabase
-            .from('refunds')
-            .select('id, amount, status, reason, created_at, provider_reference')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(200),
-        supabase
-            .from('payouts')
-            .select('id, net, currency, status, created_at, paid_at')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(200),
-        supabase
-            .from('reconciliation_entries')
-            .select('id, created_at, expected_amount, settled_amount, delta_amount, status')
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .limit(200),
-    ]);
-
-    const paymentsGross = (paymentsRes.data ?? []).reduce(
-        (sum, p) => sum + Number(p.amount ?? 0),
-        0
-    );
-    const refundsTotal = (refundsRes.data ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
-    const payoutsNet = (payoutsRes.data ?? []).reduce((sum, p) => sum + Number(p.net ?? 0), 0);
-
-    return {
-        payments: (paymentsRes.data ?? []) as PaymentSummary[],
-        refunds: (refundsRes.data ?? []) as RefundSummary[],
-        payouts: (payoutsRes.data ?? []) as PayoutSummary[],
-        reconciliation: (reconciliationRes.data ?? []) as ReconciliationSummary[],
-        totals: {
-            payments_gross: paymentsGross,
-            refunds_total: refundsTotal,
-            payouts_net: payoutsNet,
-        },
         restaurant_id: restaurantId,
     };
 }
@@ -970,6 +865,7 @@ export async function getChannelsPageData(): Promise<ChannelsPageData | null> {
             .order('created_at', { ascending: false })
             .limit(100),
         supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .from('online_ordering_settings' as any)
             .select(
                 'enabled, accepts_scheduled_orders, auto_accept_orders, prep_time_minutes, max_daily_orders, service_hours, order_throttling_enabled, throttle_limit_per_15m'

@@ -48,7 +48,6 @@ export function AggregatorDashboard({ restaurantId }: AggregatorDashboardProps) 
 
     useEffect(() => {
         loadData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [restaurantId]);
 
     const loadData = async () => {

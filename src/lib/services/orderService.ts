@@ -7,6 +7,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import crypto from 'crypto';
 import {
     getOrderByIdempotencyKey,
     insertOrder,
@@ -260,29 +261,7 @@ export function generateGuestFingerprint(ip: string, userAgent: string | null): 
     const raw = `${ip}-${userAgent || 'unknown'}`;
     // Use SHA-256 hash to ensure consistent 64-character hex fingerprint
     // This prevents short fingerprint attacks like "short-fp"
-    const encoder = new TextEncoder();
-    const data = encoder.encode(raw);
-
-    // Synchronous hash using subtle crypto (available in Node.js 18+ and browsers)
-    // For server-side, we use crypto module
-    if (typeof window === 'undefined') {
-        // Server-side: use Node.js crypto
-        const crypto = require('crypto');
-        return crypto.createHash('sha256').update(raw).digest('hex');
-    }
-
-    // For client-side, we'll use a simple hash that produces 64 chars
-    // This is a fallback that shouldn't normally be used for fingerprints
-    let hash = '';
-    for (let i = 0; i < raw.length; i++) {
-        const char = raw.charCodeAt(i);
-        hash += ((char << 5) - char + 0xdeadbeef).toString(16).slice(-4);
-    }
-    // Pad to ensure minimum 32 characters
-    while (hash.length < 64) {
-        hash += hash;
-    }
-    return hash.slice(0, 64);
+    return crypto.createHash('sha256').update(raw).digest('hex');
 }
 
 /**

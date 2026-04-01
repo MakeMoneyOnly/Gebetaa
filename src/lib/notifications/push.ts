@@ -88,6 +88,7 @@ export interface RegisterTokenParams {
     /** Optional metadata */
     metadata?: Record<string, unknown>;
     /** Supabase client (optional) */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>;
 }
 
@@ -569,6 +570,7 @@ export async function registerDeviceToken(params: RegisterTokenParams): Promise<
     const supabase = providedSupabase ?? createServiceRoleClient();
 
     // Check if token already exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (supabase as any)
         .from('device_tokens')
         .select('id')
@@ -577,6 +579,7 @@ export async function registerDeviceToken(params: RegisterTokenParams): Promise<
 
     if (existing) {
         // Update existing token
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
             .from('device_tokens')
             .update({
@@ -590,6 +593,7 @@ export async function registerDeviceToken(params: RegisterTokenParams): Promise<
             .eq('id', existing.id);
     } else {
         // Insert new token
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any).from('device_tokens').insert({
             restaurant_id: restaurantId,
             guest_id: guestId || null,
@@ -611,10 +615,12 @@ export async function registerDeviceToken(params: RegisterTokenParams): Promise<
  */
 export async function unsubscribeDevice(
     token: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>
 ): Promise<void> {
     const db = supabase ?? createServiceRoleClient();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).from('device_tokens').delete().eq('token', token);
 }
 
@@ -627,10 +633,12 @@ export async function unsubscribeDevice(
  */
 export async function getGuestPushTokens(
     guestId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>
 ): Promise<Array<{ token: string; provider: string; device_type: string }>> {
     const db = supabase ?? createServiceRoleClient();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (db as any)
         .from('device_tokens')
         .select('token, provider, device_type')

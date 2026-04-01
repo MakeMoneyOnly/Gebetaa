@@ -1,6 +1,5 @@
 // Staff Domain - Resolvers Layer
-// Placeholder resolvers for Staff subgraph
-
+// GraphQL resolvers with authorization and validation
 import { GraphQLError } from 'graphql';
 import { GraphQLContext } from '@/lib/graphql/context';
 import { requireAuth, requireRestaurantAccess } from '@/lib/graphql/authz';
@@ -15,22 +14,28 @@ import {
     UpdateStaffInputSchema,
 } from '@/lib/validators/graphql';
 import { enforcePaginationLimit } from '@/lib/graphql/constants';
+import { staffRepository } from './repository';
+import { staffService } from './service';
 
 export const staffResolvers = {
     Query: {
         staffMember: async (_: unknown, args: { id: string }, context: GraphQLContext) => {
             // Authorization: Require authentication
-            requireAuth(context);
+            const authContext = requireAuth(context);
 
-            // TODO: Implement with staff repository
-            // When implemented, should verify tenant isolation:
-            // const staffMember = await staffRepository.getStaffMember(args.id);
-            // if (staffMember && staffMember.restaurant_id !== authContext.user.restaurantId) {
-            //     throw new GraphQLError('Access denied to this staff member', {
-            //         extensions: { code: 'FORBIDDEN', http: { status: 403 } },
-            //     });
-            // }
-            return null;
+            // Fetch staff member
+            const staff = await staffRepository.getStaffMember(args.id);
+
+            // Tenant isolation: Verify user has access to this staff member's restaurant
+            if (staff && authContext.user?.restaurantId) {
+                if (staff.restaurant_id !== authContext.user.restaurantId) {
+                    throw new GraphQLError('Access denied to this staff member', {
+                        extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+                    });
+                }
+            }
+
+            return staff;
         },
 
         staff: async (
@@ -47,22 +52,31 @@ export const staffResolvers = {
             await requireRestaurantAccess(context, args.restaurantId);
 
             // Enforce pagination limits to prevent unbounded result sets
-            enforcePaginationLimit(args.first);
+            const limit = enforcePaginationLimit(args.first);
+            const offset = args.after ? parseInt(args.after, 10) : 0;
 
-            // TODO: Implement with staff repository
-            // When implemented, pass limit and offset to repository:
-            // const staff = await staffRepository.getStaff(args.restaurantId, {
-            //     limit,
-            //     offset: args.after ? parseInt(args.after, 10) : 0,
-            //     role: args.role,
-            // });
+            // Fetch staff list
+            const staff = await staffRepository.getStaff(args.restaurantId, {
+                role: args.role,
+                limit,
+                offset,
+            });
+
+            // Return connection format
             return {
-                edges: [],
+                edges: staff.map(member => ({
+                    node: member,
+                    cursor: Buffer.from(String(offset + staff.indexOf(member))).toString('base64'),
+                })),
                 pageInfo: {
-                    hasNextPage: false,
-                    hasPreviousPage: false,
-                    startCursor: null,
-                    endCursor: null,
+                    hasNextPage: staff.length === limit,
+                    hasPreviousPage: offset > 0,
+                    startCursor:
+                        staff.length > 0 ? Buffer.from(String(offset)).toString('base64') : null,
+                    endCursor:
+                        staff.length > 0
+                            ? Buffer.from(String(offset + staff.length - 1)).toString('base64')
+                            : null,
                 },
             };
         },
@@ -87,10 +101,21 @@ export const staffResolvers = {
                 // Authorization: Verify user has access to this restaurant
                 await requireRestaurantAccess(context, validation.data.restaurantId);
 
-                // TODO: Implement with staff repository
+                // Create staff member
+                const staffMember = await staffService.createStaffMember({
+                    restaurantId: validation.data.restaurantId,
+                    userId: validation.data.userId,
+                    name: validation.data.name,
+                    email: validation.data.email,
+                    role: validation.data.role,
+                    pinCode: validation.data.pinCode,
+                    phone: validation.data.phone,
+                });
+
                 return {
-                    ...NOT_IMPLEMENTED_ERROR,
-                    staffMember: null,
+                    success: true,
+                    message: 'Staff member created successfully',
+                    staffMember,
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
@@ -122,20 +147,87 @@ export const staffResolvers = {
                 }
 
                 // Authorization: Require authentication
-                const _authContext = requireAuth(context);
+                const authContext = requireAuth(context);
 
-                // TODO: When implemented, fetch staff member and verify tenant isolation
-                // const existingStaff = await staffRepository.getStaffMember(validation.data.id);
-                // if (existingStaff && existingStaff.restaurant_id !== authContext.user.restaurantId) {
-                //     throw new GraphQLError('Access denied to this staff member', {
-                //         extensions: { code: 'FORBIDDEN', http: { status: 403 } },
-                //     });
-                // }
+                // Fetch existing staff member and verify tenant isolation
+                const existingStaff = await staffRepository.getStaffMember(validation.data.id);
+                if (!existingStaff) {
+                    return {
+                        ...createErrorResult('NOT_FOUND', 'Staff member not found'),
+                        staffMember: null,
+                    };
+                }
 
-                // TODO: Implement with staff repository
+                if (existingStaff.restaurant_id !== authContext.user?.restaurantId) {
+                    throw new GraphQLError('Access denied to this staff member', {
+                        extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+                    });
+                }
+
+                // Update staff member
+                const staffMember = await staffService.updateStaffMember(
+                    validation.data.id,
+                    {
+                        name: validation.data.name,
+                        email: validation.data.email,
+                        role: validation.data.role,
+                        pinCode: validation.data.pinCode,
+                        phone: validation.data.phone,
+                        isActive: validation.data.isActive,
+                    },
+                    authContext.user?.restaurantId
+                );
+
                 return {
-                    ...NOT_IMPLEMENTED_ERROR,
+                    success: true,
+                    message: 'Staff member updated successfully',
+                    staffMember,
+                };
+            } catch (error) {
+                if (error instanceof GraphQLError) {
+                    throw error;
+                }
+                return {
+                    ...handleResolverError(error),
                     staffMember: null,
+                };
+            }
+        },
+
+        deactivateStaffMember: async (
+            _: unknown,
+            args: { id: string },
+            context: GraphQLContext
+        ) => {
+            try {
+                // Authorization: Require authentication
+                const authContext = requireAuth(context);
+
+                // Fetch existing staff member and verify tenant isolation
+                const existingStaff = await staffRepository.getStaffMember(args.id);
+                if (!existingStaff) {
+                    return {
+                        ...createErrorResult('NOT_FOUND', 'Staff member not found'),
+                        staffMember: null,
+                    };
+                }
+
+                if (existingStaff.restaurant_id !== authContext.user?.restaurantId) {
+                    throw new GraphQLError('Access denied to this staff member', {
+                        extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+                    });
+                }
+
+                // Deactivate staff member
+                const staffMember = await staffService.deactivateStaffMember(
+                    args.id,
+                    authContext.user?.restaurantId
+                );
+
+                return {
+                    success: true,
+                    message: 'Staff member deactivated successfully',
+                    staffMember,
                 };
             } catch (error) {
                 if (error instanceof GraphQLError) {
@@ -150,27 +242,24 @@ export const staffResolvers = {
     },
 
     StaffMember: {
-        __resolveReference: async (reference: { id: string }, _context: GraphQLContext) => {
-            // TODO: Implement with staff repository when available
-            // The implementation should:
-            // 1. Fetch staff member from repository
-            // 2. Validate tenant isolation
-            //
-            // Example implementation:
-            // const staffMember = await staffRepository.getStaffMember(reference.id);
-            // if (staffMember && context.user?.restaurantId) {
-            //     if (staffMember.restaurant_id !== context.user.restaurantId) {
-            //         console.error(
-            //             `Tenant isolation violation: User ${context.user.id} attempted to access staff member ${reference.id}`
-            //         );
-            //         return null;
-            //     }
-            // }
-            // return staffMember;
+        __resolveReference: async (reference: { id: string }, context: GraphQLContext) => {
+            // Federation reference resolver
+            const authContext = requireAuth(context);
 
-            // Placeholder: Log the reference for debugging until repository is implemented
-            console.log('[staff/resolvers] __resolveReference called for id:', reference.id);
-            return null;
+            // Fetch staff member
+            const staff = await staffRepository.getStaffMember(reference.id);
+
+            // Tenant isolation
+            if (staff && authContext.user?.restaurantId) {
+                if (staff.restaurant_id !== authContext.user.restaurantId) {
+                    console.error(
+                        `[staff/resolvers] Tenant isolation violation: User ${authContext.user.id} attempted to access staff ${reference.id}`
+                    );
+                    return null;
+                }
+            }
+
+            return staff;
         },
     },
 };

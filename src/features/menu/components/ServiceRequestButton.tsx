@@ -66,7 +66,7 @@ export function ServiceRequestButton({ guestContext, tableNumber }: ServiceReque
                     trigger('medium');
                     setOpen(true);
                 }}
-                className="bg-brand-crimson fixed bottom-6 left-6 z-40 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full text-white shadow-2xl transition-transform active:scale-90"
+                className="bg-brand-accent fixed bottom-6 left-6 z-40 flex h-16 w-16 touch-manipulation items-center justify-center rounded-full text-black shadow-2xl transition-transform active:scale-90"
             >
                 <Bell size={24} fill="currentColor" />
             </button>
@@ -85,18 +85,18 @@ export function ServiceRequestButton({ guestContext, tableNumber }: ServiceReque
                             <button
                                 disabled={submitting}
                                 onClick={() => submitRequest('waiter')}
-                                className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-2xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
+                                className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
                             >
-                                <HandPlatter size={24} className="text-brand-crimson" />
+                                <HandPlatter size={24} className="text-black" />
                                 Call for a Waiter
                             </button>
 
                             <button
                                 disabled={submitting}
                                 onClick={() => submitRequest('bill')}
-                                className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-2xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
+                                className="bg-surface-1 flex h-16 w-full items-center justify-center gap-3 rounded-xl text-lg font-bold transition-transform hover:bg-gray-100 active:scale-95"
                             >
-                                <Receipt size={24} className="text-brand-crimson" />
+                                <Receipt size={24} className="text-black" />
                                 Ask for a Bill
                             </button>
 

@@ -50,7 +50,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
     return (
         <div
             className={cn(
-                'bg-brand-crimson pt-safe relative mb-6 overflow-visible rounded-b-[40px] px-6 pb-16 shadow-2xl transition-all duration-300',
+                'bg-brand-accent pt-safe relative mb-6 overflow-visible rounded-b-[40px] px-6 pb-16 shadow-2xl transition-all duration-300',
                 isMenuOpen ? 'z-[9999]' : 'z-10'
             )}
         >
@@ -63,7 +63,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className="bg-brand-crimson pt-safe fixed inset-0 z-[9999] flex flex-col p-8 text-white"
+                        className="bg-brand-accent pt-safe fixed inset-0 z-[9999] flex flex-col p-8 text-black"
                     >
                         <div className="mb-16 flex items-center justify-between pt-4">
                             <div className="relative h-10 w-32">
@@ -159,8 +159,8 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                         className={cn(
                             'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'food'
-                                ? 'bg-brand-crimson text-white shadow-md'
-                                : 'text-black/50 hover:text-black/80 dark:text-white/50 dark:hover:text-white/80'
+                                ? 'bg-brand-accent text-black shadow-md'
+                                : 'text-black/50 hover:text-black/80 dark:text-black/50 dark:hover:text-white/80'
                         )}
                     >
                         <Utensils size={18} />
@@ -171,8 +171,8 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                         className={cn(
                             'no-select flex h-12 flex-1 touch-manipulation items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95',
                             activeTab === 'drinks'
-                                ? 'bg-brand-crimson text-white shadow-md'
-                                : 'text-black/50 hover:text-black/80 dark:text-white/50 dark:hover:text-white/80'
+                                ? 'bg-brand-accent text-black shadow-md'
+                                : 'text-black/50 hover:text-black/80 dark:text-black/50 dark:hover:text-white/80'
                         )}
                     >
                         <CupSoda size={18} />

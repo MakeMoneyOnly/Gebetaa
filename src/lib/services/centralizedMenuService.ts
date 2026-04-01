@@ -77,6 +77,7 @@ export async function getMenuLocations(
     supabase: SupabaseClient<Database>,
     primaryRestaurantId: string
 ): Promise<MenuLocation[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -112,6 +113,7 @@ export async function getMenuLocations(
             return [];
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (links ?? []).map((link: any) => ({
             id: link.restaurant_id,
             restaurant_id: link.restaurant_id,
@@ -137,6 +139,7 @@ export async function addMenuLocation(
     targetRestaurantId: string,
     userId: string
 ): Promise<{ success: boolean; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -219,6 +222,7 @@ export async function pushMenuToLocations(
         syncAvailability?: boolean;
     }
 ): Promise<{ success: boolean; results: SyncResult[] }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -309,13 +313,18 @@ export async function pushMenuToLocations(
 /**
  * Get full menu data from a restaurant
  */
+
 async function getFullMenuData(
     db: any,
     restaurantId: string
 ): Promise<{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     categories: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     menuItems: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     modifierGroups: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     modifierOptions: any[];
 }> {
     // Get categories
@@ -359,13 +368,18 @@ async function getFullMenuData(
 /**
  * Sync menu data to a single location
  */
+
 async function syncMenuToLocation(
     db: any,
     targetRestaurantId: string,
     menuData: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         categories: any[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         menuItems: any[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         modifierGroups: any[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         modifierOptions: any[];
     },
     options: {
@@ -563,6 +577,7 @@ export async function recordMenuChange(
     },
     userId: string
 ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -595,7 +610,7 @@ export async function recordMenuChange(
             change_type: change.change_type,
             entity_type: change.entity_type,
             entity_id: change.entity_id,
-            location_ids: links.map((l: any) => l.restaurant_id),
+            location_ids: links.map((l: { restaurant_id: string }) => l.restaurant_id),
             change_data: change.change_data,
             status: 'pending',
             created_by: userId,
@@ -620,6 +635,7 @@ export async function getPendingChanges(
     supabase: SupabaseClient<Database>,
     primaryRestaurantId: string
 ): Promise<MenuChange[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {

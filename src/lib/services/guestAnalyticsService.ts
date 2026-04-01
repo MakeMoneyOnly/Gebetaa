@@ -237,7 +237,10 @@ export async function getGuestLifetimeValue(
 
         for (const guest of guests || []) {
             const totalSpend =
-                (guest.orders as any[])?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
+                (guest.orders as Array<{ total_price?: number }>)?.reduce(
+                    (sum, o) => sum + (o.total_price || 0),
+                    0
+                ) || 0;
             ltvValues.push(totalSpend);
         }
 
@@ -331,6 +334,7 @@ function calculateMetrics(
     };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function calculateSegments(guests: any[], orders: any[]): GuestSegment[] {
     const segments: Record<string, { count: number; spend: number; visits: number }> = {
         new: { count: 0, spend: 0, visits: 0 },
@@ -343,6 +347,7 @@ function calculateSegments(guests: any[], orders: any[]): GuestSegment[] {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const guestOrders = new Map<string, any[]>();
     for (const order of orders) {
         if (order.guest_id) {
@@ -397,6 +402,7 @@ function calculateSegments(guests: any[], orders: any[]): GuestSegment[] {
     }));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function calculateVisitPatterns(orders: any[]): VisitPattern[] {
     const patterns = new Map<string, { count: number; spend: number }>();
 
@@ -431,11 +437,12 @@ function calculateVisitPatterns(orders: any[]): VisitPattern[] {
     return result;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function calculateTopGuests(guests: any[]): TopGuest[] {
     const guestData: TopGuest[] = [];
 
     for (const guest of guests) {
-        const orders = (guest.orders as any[]) || [];
+        const orders = (guest.orders as Array<{ total_price?: number; created_at: string }>) || [];
         const visitCount = orders.length;
         const totalSpend = orders.reduce((sum, o) => sum + (o.total_price || 0), 0);
         const lastVisit =
@@ -464,6 +471,7 @@ function calculateTopGuests(guests: any[]): TopGuest[] {
     return guestData.sort((a, b) => b.totalSpend - a.totalSpend).slice(0, 10);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function calculateTrends(orders: any[], _startDate?: string, _endDate?: string): GuestTrend[] {
     const trends = new Map<
         string,

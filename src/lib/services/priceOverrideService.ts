@@ -61,6 +61,7 @@ export async function canOverridePrices(
     userId: string,
     restaurantId: string
 ): Promise<{ allowed: boolean; reason?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -163,6 +164,7 @@ export async function createPriceOverride(
     restaurantId: string,
     input: CreatePriceOverrideInput
 ): Promise<{ success: boolean; override?: PriceOverride; error?: string }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -227,6 +229,7 @@ export async function getPriceOverridesForOrder(
     supabase: SupabaseClient<Database>,
     orderId: string
 ): Promise<PriceOverride[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -251,6 +254,7 @@ export async function getPriceOverridesForOrder(
 /**
  * Recalculate order total after price change
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function recalculateOrderTotal(db: any, orderId: string): Promise<void> {
     const { data: items } = await db
         .from('order_items')
@@ -258,7 +262,8 @@ async function recalculateOrderTotal(db: any, orderId: string): Promise<void> {
         .eq('order_id', orderId);
 
     const totalPrice = (items ?? []).reduce(
-        (sum: number, item: any) => sum + (item.price ?? 0) * (item.quantity ?? 1),
+        (sum: number, item: { price?: number; quantity?: number }) =>
+            sum + (item.price ?? 0) * (item.quantity ?? 1),
         0
     );
 

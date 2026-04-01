@@ -134,7 +134,7 @@ export function DishDetailDrawer({
                                     {item.title}
                                 </h2>
                                 <div className="flex flex-col items-end">
-                                    <span className="text-brand-crimson text-2xl font-black">
+                                    <span className="text-2xl font-black text-black">
                                         {formatCurrencyCompact(item.price * quantity)}
                                     </span>
                                     <span className="text-xs font-bold text-black/40 dark:text-white/40">
@@ -170,7 +170,7 @@ export function DishDetailDrawer({
                                     {ingredients.map((ing, i) => (
                                         <div
                                             key={i}
-                                            className="bg-brand-crimson/5 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-black/70 shadow-sm dark:bg-white/5 dark:text-white/70"
+                                            className="bg-brand-accent/5 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-black/70 shadow-sm dark:bg-white/5 dark:text-black/70"
                                         >
                                             <div className="bg-brand-yellow h-1.5 w-1.5 rounded-full"></div>
                                             {ing}

@@ -153,6 +153,7 @@ export async function getDeliveryZones(
     supabase: SupabaseClient,
     restaurantId: string
 ): Promise<DeliveryZone[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -176,6 +177,7 @@ export async function createDeliveryZone(
     restaurantId: string,
     input: CreateDeliveryZoneInput
 ): Promise<DeliveryZone> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Validate boundary data based on type
@@ -230,6 +232,7 @@ export async function updateDeliveryZone(
     zoneId: string,
     updates: Partial<CreateDeliveryZoneInput>
 ): Promise<DeliveryZone> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -258,6 +261,7 @@ export async function deleteDeliveryZone(
     restaurantId: string,
     zoneId: string
 ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { error } = await db
@@ -309,6 +313,7 @@ export async function calculateDeliveryFee(
     restaurantLat?: number,
     restaurantLon?: number
 ): Promise<DeliveryFeeCalculation> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Get restaurant location if not provided

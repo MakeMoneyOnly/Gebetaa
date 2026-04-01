@@ -48,6 +48,26 @@ export function isAbortError(error: unknown): boolean {
     return false;
 }
 
+/**
+ * Helper function to check if an error is an IndexedDB lock error.
+ * This can occur when multiple tabs/windows compete for the same storage lock.
+ * Use this to silently handle lock contention and keep showing stale data.
+ */
+export function isLockError(error: unknown): boolean {
+    if (error instanceof Error) {
+        return (
+            error.name === 'LockError' ||
+            error.message.includes('Lock broken') ||
+            error.message.includes('lock') ||
+            error.message.includes('steal')
+        );
+    }
+    if (error && typeof error === 'object' && 'name' in error) {
+        return error.name === 'LockError';
+    }
+    return false;
+}
+
 export function useSafeFetch() {
     const abortControllerRef = useRef<AbortController | null>(null);
 

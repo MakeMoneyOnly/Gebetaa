@@ -241,6 +241,25 @@ export const PAYMENT_LIST_COLUMNS = [
     'updated_at',
 ] as const;
 
+/**
+ * Columns for full payment details
+ */
+export const PAYMENT_DETAIL_COLUMNS = [
+    'id',
+    'restaurant_id',
+    'order_id',
+    'amount',
+    'currency',
+    'provider',
+    'status',
+    'payment_method',
+    'transaction_id',
+    'metadata',
+    'idempotency_key',
+    'created_at',
+    'updated_at',
+] as const;
+
 // ============================================
 // GUESTS TABLE COLUMNS
 // ============================================
@@ -260,6 +279,25 @@ export const GUEST_LIST_COLUMNS = [
     'created_at',
 ] as const;
 
+/**
+ * Columns for full guest details
+ */
+export const GUEST_DETAIL_COLUMNS = [
+    'id',
+    'restaurant_id',
+    'name',
+    'phone',
+    'email',
+    'notes',
+    'tags',
+    'visit_count',
+    'total_spent',
+    'first_visit_at',
+    'last_visit_at',
+    'created_at',
+    'updated_at',
+] as const;
+
 // ============================================
 // RESTAURANT_STAFF TABLE COLUMNS
 // ============================================
@@ -273,7 +311,23 @@ export const STAFF_LIST_COLUMNS = [
     'user_id',
     'role',
     'is_active',
-    'pin_hash',
+    'created_at',
+    'updated_at',
+] as const;
+
+/**
+ * Columns for full staff details
+ */
+export const STAFF_DETAIL_COLUMNS = [
+    'id',
+    'restaurant_id',
+    'user_id',
+    'name',
+    'email',
+    'phone',
+    'role',
+    'is_active',
+    'pin_code',
     'created_at',
     'updated_at',
 ] as const;

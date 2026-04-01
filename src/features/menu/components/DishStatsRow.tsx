@@ -11,7 +11,7 @@ interface DishStatsRowProps {
 
 export function DishStatsRow({ item, likesCount, formatLikes }: DishStatsRowProps) {
     return (
-        <div className="mb-8 flex items-center justify-between rounded-3xl border border-black/10 bg-black/5 px-6 py-4 dark:border-white/10 dark:bg-white/5">
+        <div className="mb-8 flex items-center justify-between rounded-2xl border border-black/10 bg-black/5 px-6 py-4 dark:border-white/10 dark:bg-white/5">
             {/* Rating Group */}
             <div className="flex flex-col items-center">
                 <div className="flex items-center gap-1.5">
@@ -32,11 +32,7 @@ export function DishStatsRow({ item, likesCount, formatLikes }: DishStatsRowProp
             {/* Likes Group */}
             <div className="flex flex-col items-center">
                 <div className="flex items-center gap-1.5">
-                    <Heart
-                        size={18}
-                        className="text-brand-crimson fill-brand-crimson"
-                        strokeWidth={0}
-                    />
+                    <Heart size={18} className="fill-brand-accent text-black" strokeWidth={0} />
                     <span className="font-manrope text-xl font-black text-black dark:text-white">
                         {formatLikes(likesCount)}
                     </span>

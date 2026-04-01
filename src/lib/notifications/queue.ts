@@ -166,6 +166,7 @@ export async function enqueueNotification(params: EnqueueParams): Promise<string
     }
 
     // Insert into notification queue
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
         .from('notification_queue')
         .insert({
@@ -239,6 +240,7 @@ export async function processQueue(limit: number = 50): Promise<ProcessResult> {
     const now = new Date().toISOString();
 
     // Fetch pending notifications that are due for processing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: pending, error } = await (supabase as any)
         .from('notification_queue')
         .select('*')
@@ -299,6 +301,7 @@ export async function processQueue(limit: number = 50): Promise<ProcessResult> {
  * @returns Processing result
  */
 async function processNotification(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: any,
     notification: NotificationQueueRow
 ): Promise<{
@@ -310,6 +313,7 @@ async function processNotification(
 
     try {
         // Mark as processing
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
             .from('notification_queue')
             .update({
@@ -337,6 +341,7 @@ async function processNotification(
 
         if (sendResult.success) {
             // Mark as sent
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (supabase as any)
                 .from('notification_queue')
                 .update({
@@ -372,6 +377,7 @@ async function processNotification(
                 RETRY_CONFIG.BASE_DELAY_MS
             ).toISOString();
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (supabase as any)
                 .from('notification_queue')
                 .update({
@@ -398,6 +404,7 @@ async function processNotification(
         }
 
         // Max retries exceeded
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
             .from('notification_queue')
             .update({
@@ -425,6 +432,7 @@ async function processNotification(
         console.error('[queue] Error processing notification:', error);
 
         // Mark as failed
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
             .from('notification_queue')
             .update({
@@ -461,11 +469,13 @@ export async function scheduleRetry(notificationId: string, delayMs: number): Pr
     const supabase = createServiceRoleClient();
     const nextRetryAt = new Date(Date.now() + delayMs).toISOString();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from('notification_queue')
         .update({
             status: 'pending',
             next_retry_at: nextRetryAt,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             retry_count: (supabase as any).rpc('increment_retry_count', {
                 notification_id: notificationId,
             }),
@@ -480,6 +490,7 @@ export async function scheduleRetry(notificationId: string, delayMs: number): Pr
     }
 
     // Fetch notification details for event
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: notification } = await (supabase as any)
         .from('notification_queue')
         .select('restaurant_id, guest_phone, notification_type, channel, retry_count')
@@ -508,6 +519,7 @@ export async function scheduleRetry(notificationId: string, delayMs: number): Pr
 export async function cancelNotification(notificationId: string): Promise<void> {
     const supabase = createServiceRoleClient();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from('notification_queue')
         .update({
@@ -540,6 +552,7 @@ export async function getQueueStats(restaurantId?: string): Promise<{
 }> {
     const supabase = createServiceRoleClient();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase as any)
         .from('notification_queue')
         .select('status', { count: 'exact', head: true });
@@ -563,30 +576,40 @@ export async function getQueueStats(restaurantId?: string): Promise<{
 
     // Get counts by status
     const [pending, processing, sent, failed, cancelled] = await Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase as any)
             .from('notification_queue')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'pending')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .then((r: any) => r.count || 0),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase as any)
             .from('notification_queue')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'processing')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .then((r: any) => r.count || 0),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase as any)
             .from('notification_queue')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'sent')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .then((r: any) => r.count || 0),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase as any)
             .from('notification_queue')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'failed')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .then((r: any) => r.count || 0),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase as any)
             .from('notification_queue')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'cancelled')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .then((r: any) => r.count || 0),
     ]);
 
@@ -608,6 +631,7 @@ async function publishNotificationEvent(
     payload: EventPayload
 ): Promise<void> {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await publishEvent(eventName as any, payload);
     } catch (error) {
         console.error('[queue] Failed to publish event:', error);

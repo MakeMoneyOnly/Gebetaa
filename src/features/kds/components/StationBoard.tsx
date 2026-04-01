@@ -128,26 +128,26 @@ function urgencyStyles(
 } {
     const pct = elapsedMinutes / slaMinutes;
     if (pct >= 1) {
-        // SLA breached — red background + pulse
+        // SLA breached — danger
         return {
-            card: 'border-red-400 bg-red-50 animate-[slaPulse_2s_ease-in-out_infinite]',
-            header: 'border-red-200 bg-red-100/60',
-            timer: 'font-black text-red-600',
+            card: 'border-state-danger-bg bg-state-danger-bg/20 animate-[slaPulse_2s_ease-in-out_infinite] ring-2 ring-state-danger/10',
+            header: 'border-state-danger/10 bg-state-danger-bg/40',
+            timer: 'font-black text-state-danger',
         };
     }
     if (pct >= 0.75) {
-        // At risk — amber warning
+        // At risk — warning
         return {
-            card: 'border-amber-300 bg-amber-50',
-            header: 'border-amber-200 bg-amber-100/60',
-            timer: 'font-bold text-amber-600',
+            card: 'border-state-warning-bg bg-state-warning-bg/20 ring-1 ring-state-warning/10',
+            header: 'border-state-warning/10 bg-state-warning-bg/40',
+            timer: 'font-bold text-state-warning',
         };
     }
     // On track — clean
     return {
-        card: 'border-gray-200 bg-white',
-        header: 'border-gray-100',
-        timer: 'font-medium text-gray-500',
+        card: 'border-brand-neutral-soft/10 bg-white shadow-soft',
+        header: 'border-brand-neutral-soft/5 bg-brand-canvas-alt/50',
+        timer: 'font-bold text-brand-neutral',
     };
 }
 
@@ -866,85 +866,89 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
 
     if (isLoading || roleLoading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-gray-50">
-                <div className="text-center text-gray-500">Loading {title} queue...</div>
+            <div className="bg-brand-canvas flex h-screen items-center justify-center">
+                <div className="text-brand-neutral text-center font-bold tracking-tight">
+                    Loading {title} queue...
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="font-manrope flex h-full min-h-0 flex-col bg-gray-50 text-gray-900">
-            <div className="z-10 flex items-start justify-between bg-gray-50/90 px-8 py-6 backdrop-blur-sm">
+        <div className="font-manrope bg-brand-canvas text-brand-ink flex h-full min-h-0 flex-col">
+            <div className="bg-brand-canvas/90 z-10 flex items-start justify-between px-8 py-8 backdrop-blur-sm">
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight text-black">{title}</h1>
-                    <div className="mt-2 flex items-center gap-3 text-sm font-medium text-gray-500">
+                    <h1 className="text-brand-ink-strong text-5xl font-bold tracking-tight">
+                        {title}
+                    </h1>
+                    <div className="text-micro text-brand-neutral mt-3 flex items-center gap-3 font-bold tracking-wider uppercase">
                         <span className={`rounded-full px-3 py-1 ${accentClassName}`}>
                             {stationOrders.length} Tickets
                         </span>
                         <span>{format(clock, 'EEE, MMM d HH:mm')}</span>
                         <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            className={`rounded-full px-3 py-1 font-bold ${
                                 realtimeConnected
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-amber-100 text-amber-700'
+                                    ? 'bg-state-success-bg/30 text-state-success'
+                                    : 'bg-state-warning-bg/30 text-state-warning'
                             }`}
                         >
                             {realtimeConnected ? 'Realtime Connected' : 'Realtime Degraded'}
                         </span>
                         <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            className={`rounded-full px-3 py-1 font-bold ${
                                 isOnline
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-rose-100 text-rose-700'
+                                    ? 'bg-state-success-bg/30 text-state-success'
+                                    : 'bg-state-danger-bg/30 text-state-danger'
                             }`}
                         >
                             {isOnline ? 'Network Online' : 'Offline Mode'}
                         </span>
                         {queuedActionCount > 0 ? (
-                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                            <span className="bg-state-info-bg/30 text-state-info rounded-full px-3 py-1 font-bold">
                                 Queued Actions: {queuedActionCount}
                             </span>
                         ) : null}
-                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                        <span className="bg-brand-canvas-alt text-brand-neutral rounded-full px-3 py-1 font-bold">
                             Print: {printPolicy.mode}
                         </span>
                         {breachedCount > 0 && (
-                            <span className="animate-pulse rounded-full bg-red-100 px-3 py-1 text-xs font-black text-red-600">
+                            <span className="bg-state-danger animate-pulse rounded-full px-3 py-1 font-bold text-white">
                                 ⚠ {breachedCount} SLA BREACH{breachedCount > 1 ? 'ES' : ''}
                             </span>
                         )}
                     </div>
-                    <p className="mt-2 text-xs font-medium text-gray-500">
+                    <p className="text-micro text-brand-neutral mt-2 font-bold tracking-wider uppercase">
                         Bump-bar keys: `1-9` select, `S` start, `H` hold, `R` ready, `Enter` run
                     </p>
-                    <nav className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                    <nav className="text-micro mt-4 flex flex-wrap gap-2 font-bold tracking-wider uppercase">
                         <Link
                             href="/kds"
-                            className={`rounded-full px-2.5 py-1 ${station === 'kitchen' ? 'bg-gray-900 text-white' : 'border border-gray-200 bg-white text-gray-700'}`}
+                            className={`rounded-full px-3 py-1 transition-all ${station === 'kitchen' ? 'bg-brand-ink shadow-medium text-white' : 'text-brand-neutral hover:bg-brand-canvas-alt bg-white'}`}
                         >
                             Kitchen
                         </Link>
                         <Link
                             href="/bar"
-                            className={`rounded-full px-2.5 py-1 ${station === 'bar' ? 'bg-gray-900 text-white' : 'border border-gray-200 bg-white text-gray-700'}`}
+                            className={`rounded-full px-3 py-1 transition-all ${station === 'bar' ? 'bg-brand-ink shadow-medium text-white' : 'text-brand-neutral hover:bg-brand-canvas-alt bg-white'}`}
                         >
                             Bar
                         </Link>
                         <Link
                             href="/dessert"
-                            className={`rounded-full px-2.5 py-1 ${station === 'dessert' ? 'bg-gray-900 text-white' : 'border border-gray-200 bg-white text-gray-700'}`}
+                            className={`rounded-full px-3 py-1 transition-all ${station === 'dessert' ? 'bg-brand-ink shadow-medium text-white' : 'text-brand-neutral hover:bg-brand-canvas-alt bg-white'}`}
                         >
                             Dessert
                         </Link>
                         <Link
                             href="/coffee"
-                            className={`rounded-full px-2.5 py-1 ${station === 'coffee' ? 'bg-gray-900 text-white' : 'border border-gray-200 bg-white text-gray-700'}`}
+                            className={`rounded-full px-3 py-1 transition-all ${station === 'coffee' ? 'bg-brand-ink shadow-medium text-white' : 'text-brand-neutral hover:bg-brand-canvas-alt bg-white'}`}
                         >
                             Coffee
                         </Link>
                         <Link
                             href="/expeditor"
-                            className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-gray-700"
+                            className="text-brand-neutral hover:bg-brand-canvas-alt rounded-full bg-white px-3 py-1 transition-all"
                         >
                             Expeditor
                         </Link>
@@ -999,7 +1003,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                     </button>
                     <button
                         onClick={toggleFullScreen}
-                        className="bg-brand-crimson flex h-11 w-11 items-center justify-center rounded-xl text-white hover:bg-[#a0151e]"
+                        className="bg-brand-accent flex h-11 w-11 items-center justify-center rounded-xl text-black hover:brightness-105"
                         title="Toggle full screen"
                     >
                         <Maximize2 className="h-4 w-4" />
@@ -1009,7 +1013,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
 
             {/* ── Prep Summary Sidebar ──────────────────────────────────── */}
             {showPrepSummary && (
-                <aside className="mx-8 mb-4 rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <aside className="mx-8 mb-4 rounded-xl border border-gray-200 bg-white shadow-sm">
                     <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                         <h2 className="text-sm font-black tracking-widest text-gray-500 uppercase">
                             Prep Density — {title}
@@ -1074,17 +1078,17 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                         return (
                             <section
                                 key={order.id}
-                                className={`w-full min-w-0 rounded-[2rem] border shadow-sm ${urgency.card} ${sourceBorder}`}
+                                className={`shadow-soft w-full min-w-0 overflow-hidden rounded-4xl border transition-all ${urgency.card} ${sourceBorder}`}
                                 style={sourceBorderColor}
                             >
-                                <header className={`border-b px-4 py-3 ${urgency.header}`}>
+                                <header className={`border-b px-5 py-4 ${urgency.header}`}>
                                     <div className="flex items-center justify-between">
-                                        <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                                        <p className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
                                             Order #{order.orderNumber}
                                         </p>
                                         {order.sourceLabel && (
                                             <span
-                                                className="rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase"
+                                                className="text-micro rounded-full px-2 py-0.5 font-bold tracking-wide text-white uppercase"
                                                 style={{
                                                     backgroundColor: order.sourceColor || '#6B7280',
                                                 }}
@@ -1093,7 +1097,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-4xl leading-tight font-black tracking-tight text-gray-900">
+                                    <p className="text-brand-ink mt-1 text-3xl font-black tracking-tight">
                                         {order.tableNumber
                                             ? `Table ${order.tableNumber}`
                                             : (order.customerName ?? 'Guest')}
@@ -1110,7 +1114,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                     </p>
                                     {order.fireMode === 'manual' ? (
                                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                                            <span className="bg-brand-info-bg/30 text-micro text-brand-info rounded-full px-2.5 py-1 font-bold tracking-wider uppercase">
                                                 Active course:{' '}
                                                 {courseLabel(
                                                     order.currentCourse as CourseType | null
@@ -1125,7 +1129,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                                         order.currentCourse as CourseType | null
                                                     ) === null
                                                 }
-                                                className="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="bg-brand-canvas-alt text-micro text-brand-neutral hover:bg-brand-neutral-soft/10 hover:text-brand-ink rounded-full px-3 py-1 font-bold tracking-wider uppercase transition-all disabled:opacity-50"
                                             >
                                                 {advancingCourseOrderId === order.id
                                                     ? 'Advancing...'
@@ -1144,7 +1148,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                                     )
                                                 }
                                                 disabled={printingOrderId === order.id}
-                                                className="rounded-full border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="bg-brand-canvas-alt text-micro text-brand-neutral hover:bg-brand-neutral-soft/10 hover:text-brand-ink rounded-full px-3 py-1.5 font-bold tracking-wider uppercase transition-all disabled:opacity-50"
                                             >
                                                 {printingOrderId === order.id
                                                     ? 'Printing...'
@@ -1155,7 +1159,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                 </header>
                                 <div
                                     data-lenis-prevent
-                                    className="max-h-[68vh] space-y-2 overflow-y-auto bg-gray-50/30 p-3"
+                                    className="bg-brand-canvas-alt/10 max-h-[68vh] space-y-3 overflow-y-auto p-4"
                                 >
                                     {order.stationItems.map(item => {
                                         const itemKey = `${order.id}:${item.id}`;
@@ -1166,30 +1170,30 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                         return (
                                             <article
                                                 key={itemKey}
-                                                className={`rounded-2xl border bg-white p-3 shadow-sm ${
+                                                className={`shadow-soft rounded-2xl border bg-white p-4 transition-all ${
                                                     isSelected
-                                                        ? 'border-gray-900 ring-2 ring-gray-900/20'
-                                                        : 'border-gray-100'
-                                                } ${isRecalled ? 'animate-pulse border-rose-300 bg-rose-50/50' : ''}`}
+                                                        ? 'border-brand-ink ring-brand-ink/10 ring-2'
+                                                        : 'border-brand-neutral-soft/10'
+                                                } ${isRecalled ? 'border-state-danger-bg bg-state-danger-bg/10 animate-pulse' : ''}`}
                                             >
-                                                <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-start justify-between gap-3">
                                                     <div>
-                                                        <p className="text-2xl leading-tight font-extrabold tracking-tight text-gray-900">
+                                                        <p className="text-brand-ink text-2xl leading-tight font-black tracking-tight">
                                                             {item.quantity}x {item.name}
                                                         </p>
                                                         {item.notes ? (
-                                                            <p className="mt-1 text-xs text-gray-600">
+                                                            <p className="text-body-sm text-brand-neutral mt-1 font-medium">
                                                                 {item.notes}
                                                             </p>
                                                         ) : null}
                                                         {item.modifiers &&
                                                             item.modifiers.length > 0 && (
-                                                                <div className="mt-2 flex flex-wrap gap-1">
+                                                                <div className="mt-2.5 flex flex-wrap gap-1.5">
                                                                     {item.modifiers.map(
                                                                         (mod, idx) => (
                                                                             <span
                                                                                 key={idx}
-                                                                                className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-black tracking-tight uppercase ring-1 ring-inset ${getModifierStyle(mod)}`}
+                                                                                className={`text-micro inline-flex items-center rounded-sm px-2 py-0.5 font-bold tracking-wider uppercase ring-1 ring-inset ${getModifierStyle(mod)}`}
                                                                             >
                                                                                 {mod}
                                                                             </span>
@@ -1197,8 +1201,8 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                                                     )}
                                                                 </div>
                                                             )}
-                                                        <p className="mt-1 text-xs font-medium text-gray-500">
-                                                            Item status:{' '}
+                                                        <p className="text-brand-neutral text-micro mt-2 font-bold tracking-wider uppercase">
+                                                            Status:{' '}
                                                             {statusLabel(item.status ?? 'queued')}
                                                         </p>
                                                     </div>
@@ -1226,7 +1230,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                                                         setSelectedItemKey(itemKey)
                                                                     }
                                                                     disabled={disabled}
-                                                                    className="min-h-11 min-w-[88px] rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-bold text-gray-800 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                    className="bg-brand-canvas-alt text-brand-ink hover:bg-brand-neutral-soft/10 min-h-12 min-w-[100px] rounded-xl px-4 py-2 text-base font-bold transition-all active:scale-95 disabled:opacity-50"
                                                                 >
                                                                     {disabled
                                                                         ? 'Working...'
@@ -1237,7 +1241,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                                     )}
                                                     {allowedActions(item.status ?? 'queued')
                                                         .length === 0 ? (
-                                                        <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
+                                                        <span className="bg-state-success-bg/30 text-body-sm text-state-success rounded-xl px-4 py-2 font-bold">
                                                             Ready
                                                         </span>
                                                     ) : null}
@@ -1246,7 +1250,7 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                                         );
                                     })}
                                     {order.stationItems.length === 0 ? (
-                                        <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                                        <p className="border-brand-neutral-soft/20 bg-brand-canvas-alt/50 text-body-sm text-brand-neutral rounded-2xl border border-dashed p-6 text-center font-medium">
                                             No {station} items in this ticket.
                                         </p>
                                     ) : null}
@@ -1266,16 +1270,16 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
             </main>
 
             {selectedActionableItem ? (
-                <div className="sticky bottom-0 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(0,0,0,0.06)] backdrop-blur">
-                    <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-2">
-                        <span className="mr-2 text-sm font-semibold text-gray-700">
+                <div className="border-brand-neutral-soft/10 shadow-strong sticky bottom-0 border-t bg-white/95 px-6 py-4 backdrop-blur-md">
+                    <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3">
+                        <span className="text-body text-brand-ink mr-4 font-bold">
                             Selected: {selectedActionableItem.name}
                         </span>
                         {allowedActions(selectedActionableItem.status).map(action => (
                             <button
                                 key={`quick-${action}`}
                                 onClick={() => runSelectedItemAction(action)}
-                                className="min-h-11 min-w-[100px] rounded-xl border border-gray-300 bg-white px-3 py-2 text-base font-bold text-gray-800 hover:bg-gray-100"
+                                className="bg-brand-accent text-brand-ink-strong shadow-soft min-h-12 min-w-[120px] rounded-xl px-5 py-2 text-base font-black tracking-tight transition-all hover:scale-105 active:scale-95"
                             >
                                 {actionLabel(action)}
                             </button>

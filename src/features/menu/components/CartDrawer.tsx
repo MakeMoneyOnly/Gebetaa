@@ -67,10 +67,10 @@ function OrderTypeButton({
         <button
             type="button"
             onClick={onClick}
-            className={`flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-3 text-xs font-bold transition-all ${
+            className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl border-2 py-3 text-xs font-bold transition-all ${
                 selected
-                    ? 'border-brand-crimson bg-brand-crimson text-white shadow-md'
-                    : 'border-black/10 bg-black/5 text-black/60 dark:border-white/10 dark:bg-white/5 dark:text-white/60'
+                    ? 'border-brand-accent bg-brand-accent text-black shadow-md'
+                    : 'border-black/10 bg-black/5 text-black/60 dark:border-white/10 dark:bg-white/5 dark:text-black/60'
             }`}
         >
             <span className={`${selected ? 'text-white' : 'text-black/40 dark:text-white/40'}`}>
@@ -98,16 +98,16 @@ function PaymentChoiceButton({
         <button
             type="button"
             onClick={onClick}
-            className={`group flex w-full items-center gap-4 rounded-3xl border p-4 text-left transition-all duration-300 outline-none active:scale-[0.98] ${
+            className={`group flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all duration-300 outline-none active:scale-[0.98] ${
                 selected
-                    ? 'border-brand-crimson bg-brand-crimson/5 dark:bg-brand-crimson/10 shadow-[0_8px_16px_-6px_rgba(220,38,38,0.15)]'
+                    ? 'border-brand-accent bg-brand-accent/5 dark:bg-brand-accent/10 shadow-[0_8px_16px_-6px_rgba(220,38,38,0.15)]'
                     : 'border-black/5 bg-transparent hover:border-black/10 hover:bg-black/5 dark:border-white/5 dark:hover:border-white/10 dark:hover:bg-white/5'
             }`}
         >
             <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
                     selected
-                        ? 'bg-brand-crimson shadow-brand-crimson/30 scale-105 text-white shadow-lg'
+                        ? 'bg-brand-accent shadow-brand-accent/30 scale-105 text-black shadow-lg'
                         : 'bg-black/5 text-black/50 group-hover:scale-105 group-hover:text-black/70 dark:bg-white/10 dark:text-white/50 dark:group-hover:text-white/70'
                 }`}
             >
@@ -116,7 +116,7 @@ function PaymentChoiceButton({
             <div className="min-w-0 flex-1">
                 <p
                     className={`text-[15px] font-bold tracking-tight transition-colors duration-300 ${
-                        selected ? 'text-brand-crimson' : 'text-black dark:text-white'
+                        selected ? 'text-black' : 'text-black dark:text-white'
                     }`}
                 >
                     {label}
@@ -129,7 +129,7 @@ function PaymentChoiceButton({
                 <div
                     className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-300 ${
                         selected
-                            ? 'border-brand-crimson bg-brand-crimson'
+                            ? 'border-brand-accent bg-brand-accent'
                             : 'border-black/20 dark:border-white/20'
                     }`}
                 >
@@ -202,7 +202,6 @@ export function CartDrawer({
                 setPlacedOrderId(paymentOrderId);
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [paymentOrderId, paymentReturnSuccess]);
 
     useEffect(() => {
@@ -453,7 +452,7 @@ export function CartDrawer({
 
                             {/* Online order summary card */}
                             {isOnlineOrder && (
-                                <div className="w-full rounded-2xl border border-black/5 bg-black/5 p-4 text-left dark:border-white/5 dark:bg-white/5">
+                                <div className="w-full rounded-xl border border-black/5 bg-black/5 p-4 text-left dark:border-white/5 dark:bg-white/5">
                                     {orderType === 'delivery' && deliveryAddress && (
                                         <p className="text-sm font-bold text-black/60 dark:text-white/60">
                                             📍 {deliveryAddress}
@@ -578,7 +577,7 @@ export function CartDrawer({
                                                 className="flex flex-col gap-4 border-b border-black/5 pb-6 last:border-0 last:pb-0 dark:border-white/5"
                                             >
                                                 <div className="flex gap-4">
-                                                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/5">
+                                                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/5">
                                                         {item.image && (
                                                             <Image
                                                                 src={item.image}
@@ -597,7 +596,7 @@ export function CartDrawer({
                                                                 {item.title}
                                                             </h3>
                                                             <div className="flex flex-col items-end">
-                                                                <span className="text-brand-crimson font-black">
+                                                                <span className="font-black text-black">
                                                                     {formatCurrencyCompact(
                                                                         item.price * item.quantity
                                                                     )}{' '}
@@ -616,7 +615,7 @@ export function CartDrawer({
                                                                         )
                                                                     }
                                                                     disabled={item.quantity <= 1}
-                                                                    className="bg-brand-crimson/10 flex h-7 w-7 items-center justify-center rounded-full transition-transform active:scale-90 disabled:opacity-50"
+                                                                    className="bg-brand-accent/10 flex h-7 w-7 items-center justify-center rounded-full transition-transform active:scale-90 disabled:opacity-50"
                                                                 >
                                                                     <Minus size={12} />
                                                                 </button>
@@ -630,7 +629,7 @@ export function CartDrawer({
                                                                             1
                                                                         )
                                                                     }
-                                                                    className="bg-brand-crimson flex h-7 w-7 items-center justify-center rounded-full text-white transition-transform active:scale-90"
+                                                                    className="bg-brand-accent flex h-7 w-7 items-center justify-center rounded-full text-black transition-transform active:scale-90"
                                                                 >
                                                                     <Plus size={12} />
                                                                 </button>
@@ -642,7 +641,7 @@ export function CartDrawer({
                                                                         -item.quantity
                                                                     )
                                                                 }
-                                                                className="text-brand-crimson bg-brand-crimson/10 flex h-7 w-7 items-center justify-center rounded-full transition-transform active:scale-90"
+                                                                className="bg-brand-accent/10 flex h-7 w-7 items-center justify-center rounded-full text-black transition-transform active:scale-90"
                                                             >
                                                                 <Trash2 size={12} />
                                                             </button>
@@ -659,7 +658,7 @@ export function CartDrawer({
                                                             e.target.value
                                                         )
                                                     }
-                                                    className="focus:ring-brand-crimson/40 bg-brand-crimson/5 w-full rounded-xl border border-black/10 px-4 py-2.5 text-sm text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
+                                                    className="focus:ring-brand-accent/40 bg-brand-accent/5 w-full rounded-xl border border-black/10 px-4 py-2.5 text-sm text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-black dark:placeholder:text-black/30"
                                                 />
                                             </div>
                                         ))}
@@ -677,14 +676,14 @@ export function CartDrawer({
                                             placeholder="Full name *"
                                             value={customerName}
                                             onChange={e => setCustomerName(e.target.value)}
-                                            className="focus:ring-brand-crimson/30 w-full rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
+                                            className="focus:ring-brand-accent/30 w-full rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
                                         />
                                         <input
                                             type="tel"
                                             placeholder="Phone number *"
                                             value={customerPhone}
                                             onChange={e => setCustomerPhone(e.target.value)}
-                                            className="focus:ring-brand-crimson/30 w-full rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
+                                            className="focus:ring-brand-accent/30 w-full rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
                                         />
                                         {orderType === 'delivery' && (
                                             <textarea
@@ -692,7 +691,7 @@ export function CartDrawer({
                                                 value={deliveryAddress}
                                                 onChange={e => setDeliveryAddress(e.target.value)}
                                                 rows={2}
-                                                className="focus:ring-brand-crimson/30 w-full resize-none rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
+                                                className="focus:ring-brand-accent/30 w-full resize-none rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm font-medium text-black placeholder:text-black/30 focus:ring-2 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
                                             />
                                         )}
                                         {orderType === 'pickup' && (
@@ -718,7 +717,7 @@ export function CartDrawer({
                             {/* ── Footer / Checkout ──────────────────────── */}
                             <div className="bg-background border-t border-black/5 p-6 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-5px_30px_rgba(0,0,0,0.05)] dark:border-white/10 dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
                                 {availableDiscounts.length > 0 && step === 'cart' && (
-                                    <div className="mb-4 space-y-3 rounded-2xl border border-black/5 bg-black/5 p-3 dark:border-white/10 dark:bg-white/5">
+                                    <div className="mb-4 space-y-3 rounded-xl border border-black/5 bg-black/5 p-3 dark:border-white/10 dark:bg-white/5">
                                         <div>
                                             <label className="mb-1 block text-sm font-bold text-black/50 dark:text-white/50">
                                                 Discount
@@ -775,7 +774,7 @@ export function CartDrawer({
                                             !digitalPaymentMethod)
                                     }
                                     onClick={handlePlaceOrder}
-                                    className="bg-brand-crimson hover:bg-brand-crimson/90 flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold text-white shadow-lg transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="bg-brand-accent hover:bg-brand-accent/90 flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold text-black shadow-lg transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {submitting ? (
                                         'Placing order...'

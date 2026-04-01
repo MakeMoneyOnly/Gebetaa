@@ -26,9 +26,9 @@ export const FulfillmentSelectionModal: React.FC<FulfillmentSelectionModalProps>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative z-10 mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="relative z-10 mx-4 w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
                 {/* Header */}
-                <div className="from-brand-crimson bg-gradient-to-r to-red-600 px-6 py-5 text-white">
+                <div className="from-brand-accent bg-gradient-to-r to-red-600 px-6 py-5 text-white">
                     <h2 className="text-xl font-bold">Welcome to {restaurantName}</h2>
                     <p className="mt-1 text-sm text-white/80">How would you like to order?</p>
                 </div>

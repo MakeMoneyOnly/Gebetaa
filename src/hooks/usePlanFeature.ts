@@ -4,7 +4,13 @@
  */
 
 import { useMemo } from 'react';
-import { checkFeature, getFeatureAccess, getUpgradeMessage } from '@/lib/subscription/plan-gates';
+import {
+    checkFeature,
+    getFeatureAccess,
+    getUpgradeMessage,
+    getLockedFeatures,
+    canUpgrade,
+} from '@/lib/subscription/plan-gates';
 import type { PlanLevel } from '@/lib/subscription/plan-types';
 
 export interface UsePlanFeatureOptions {
@@ -120,14 +126,9 @@ export function usePlanLockedFeatures(plan: PlanLevel): {
     canUpgrade: boolean;
 } {
     return useMemo(() => {
-        const {
-            getLockedFeatures,
-            canUpgrade: checkCanUpgrade,
-        } = require('@/lib/subscription/plan-gates');
-
         return {
             lockedFeatures: getLockedFeatures(plan),
-            canUpgrade: checkCanUpgrade(plan),
+            canUpgrade: canUpgrade(plan),
         };
     }, [plan]);
 }

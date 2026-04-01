@@ -138,6 +138,21 @@ export interface CampaignAnalytics {
     bounce_rate: number;
 }
 
+// Internal type for guest data with metadata
+interface GuestWithMetadata {
+    id: string;
+    name: string | null;
+    metadata: Record<string, unknown> | null;
+}
+
+// Internal type for unsubscribe data
+interface UnsubscribeRecord {
+    guest_id: string;
+}
+
+// Type for extended Supabase client with additional tables
+type ExtendedSupabaseClient = SupabaseClient<Database>;
+
 // =========================================================
 // Campaign CRUD Operations
 // =========================================================
@@ -146,13 +161,11 @@ export interface CampaignAnalytics {
  * Create a new marketing campaign
  */
 export async function createCampaign(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     input: CreateCampaignInput,
     userId: string
 ): Promise<{ success: true; campaign: MarketingCampaign } | { success: false; error: string }> {
-    const db = supabase as any;
-
     try {
         // Validate required fields based on channel
         if (input.channel !== 'sms' && !input.subject) {
@@ -163,8 +176,8 @@ export async function createCampaign(
             return { success: false, error: 'SMS body is required for SMS campaigns' };
         }
 
-        const { data: campaign, error } = await db
-            .from('marketing_campaigns')
+        const { data: campaign, error } = await supabase
+            .from('marketing_campaigns' as unknown as keyof Database['public']['Tables'])
             .insert({
                 restaurant_id: restaurantId,
                 name: input.name,
@@ -193,7 +206,7 @@ export async function createCampaign(
             return { success: false, error: 'Failed to create campaign' };
         }
 
-        return { success: true, campaign };
+        return { success: true, campaign: campaign as unknown as MarketingCampaign };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return { success: false, error: errorMessage };
@@ -204,7 +217,7 @@ export async function createCampaign(
  * Get campaigns for a restaurant
  */
 export async function getCampaigns(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     options?: {
         status?: CampaignStatus;
@@ -213,9 +226,8 @@ export async function getCampaigns(
         offset?: number;
     }
 ): Promise<MarketingCampaign[]> {
-    const db = supabase as any;
-
-    let query = db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query = (supabase as any)
         .from('marketing_campaigns')
         .select('*')
         .eq('restaurant_id', restaurantId)
@@ -244,20 +256,19 @@ export async function getCampaigns(
         return [];
     }
 
-    return data ?? [];
+    return (data ?? []) as MarketingCampaign[];
 }
 
 /**
  * Get a single campaign by ID
  */
 export async function getCampaign(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     campaignId: string
 ): Promise<MarketingCampaign | null> {
-    const db = supabase as any;
-
-    const { data, error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
         .from('marketing_campaigns')
         .select('*')
         .eq('id', campaignId)
@@ -269,22 +280,21 @@ export async function getCampaign(
         return null;
     }
 
-    return data;
+    return data as MarketingCampaign | null;
 }
 
 /**
  * Update a campaign
  */
 export async function updateCampaign(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     campaignId: string,
     updates: Partial<CreateCampaignInput & { status: CampaignStatus }>
 ): Promise<{ success: true; campaign: MarketingCampaign } | { success: false; error: string }> {
-    const db = supabase as any;
-
     try {
-        const { data: campaign, error } = await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: campaign, error } = await (supabase as any)
             .from('marketing_campaigns')
             .update({
                 ...updates,
@@ -299,7 +309,7 @@ export async function updateCampaign(
             return { success: false, error: 'Failed to update campaign' };
         }
 
-        return { success: true, campaign };
+        return { success: true, campaign: campaign as MarketingCampaign };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return { success: false, error: errorMessage };
@@ -310,13 +320,12 @@ export async function updateCampaign(
  * Delete a campaign
  */
 export async function deleteCampaign(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     campaignId: string
 ): Promise<{ success: boolean; error?: string }> {
-    const db = supabase as any;
-
-    const { error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
         .from('marketing_campaigns')
         .delete()
         .eq('id', campaignId)
@@ -337,14 +346,13 @@ export async function deleteCampaign(
  * Get target guests for a campaign
  */
 export async function getCampaignTargetGuests(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     campaign: MarketingCampaign
 ): Promise<Array<{ id: string; email: string | null; phone: string | null; name: string | null }>> {
-    const db = supabase as any;
-
     try {
-        let query = db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let query = (supabase as any)
             .from('guests')
             .select('id, name, metadata')
             .eq('restaurant_id', restaurantId);
@@ -379,14 +387,15 @@ export async function getCampaignTargetGuests(
         }
 
         // Filter out unsubscribed
-        const unsubscribedGuests = await getUnsubscribedGuests(db, restaurantId);
-        const filteredGuests = (guests ?? []).filter((g: any) => !unsubscribedGuests.has(g.id));
+        const unsubscribedGuests = await getUnsubscribedGuests(supabase, restaurantId);
+        const typedGuests = (guests ?? []) as GuestWithMetadata[];
+        const filteredGuests = typedGuests.filter(g => !unsubscribedGuests.has(g.id));
 
-        return filteredGuests.map((g: any) => ({
+        return filteredGuests.map(g => ({
             id: g.id,
             name: g.name,
-            email: g.metadata?.email ?? null,
-            phone: g.metadata?.phone ?? null,
+            email: (g.metadata?.email as string | null) ?? null,
+            phone: (g.metadata?.phone as string | null) ?? null,
         }));
     } catch (error) {
         console.error('[MarketingCampaign] Error getting target guests:', error);
@@ -398,14 +407,13 @@ export async function getCampaignTargetGuests(
  * Schedule a campaign for sending
  */
 export async function scheduleCampaign(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     campaignId: string,
     scheduledAt: string
 ): Promise<{ success: boolean; error?: string }> {
-    const db = supabase as any;
-
-    const { error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
         .from('marketing_campaigns')
         .update({
             status: 'scheduled',
@@ -426,7 +434,7 @@ export async function scheduleCampaign(
  * Send a campaign immediately
  */
 export async function sendCampaign(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     campaignId: string,
     _options?: {
@@ -441,6 +449,7 @@ export async function sendCampaign(
     smsSent?: number;
     error?: string;
 }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -469,7 +478,7 @@ export async function sendCampaign(
             campaign_id: campaignId,
             restaurant_id: restaurantId,
             guest_id: g.id,
-            status: 'pending',
+            status: 'pending' as const,
         }));
 
         await db.from('campaign_recipients').insert(recipientRecords);
@@ -502,14 +511,13 @@ export async function sendCampaign(
  * Get campaign analytics
  */
 export async function getCampaignAnalytics(
-    supabase: SupabaseClient<Database>,
-    restaurantId: string,
+    supabase: ExtendedSupabaseClient,
+    _restaurantId: string,
     campaignId: string
 ): Promise<CampaignAnalytics | null> {
-    const db = supabase as any;
-
     try {
-        const { data, error } = await db.rpc('get_campaign_analytics', {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_campaign_analytics', {
             p_campaign_id: campaignId,
         });
 
@@ -518,7 +526,7 @@ export async function getCampaignAnalytics(
             return null;
         }
 
-        return data;
+        return data as CampaignAnalytics | null;
     } catch (error) {
         console.error('[MarketingCampaign] Error getting analytics:', error);
         return null;
@@ -529,12 +537,11 @@ export async function getCampaignAnalytics(
  * Track email open
  */
 export async function trackEmailOpen(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     recipientId: string
 ): Promise<void> {
-    const db = supabase as any;
-
-    await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
         .from('campaign_recipients')
         .update({
             status: 'opened',
@@ -547,12 +554,11 @@ export async function trackEmailOpen(
  * Track email click
  */
 export async function trackEmailClick(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     recipientId: string
 ): Promise<void> {
-    const db = supabase as any;
-
-    await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
         .from('campaign_recipients')
         .update({
             status: 'clicked',
@@ -568,8 +574,12 @@ export async function trackEmailClick(
 /**
  * Get set of unsubscribed guest IDs
  */
-async function getUnsubscribedGuests(db: any, restaurantId: string): Promise<Set<string>> {
-    const { data, error } = await db
+async function getUnsubscribedGuests(
+    supabase: ExtendedSupabaseClient,
+    restaurantId: string
+): Promise<Set<string>> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
         .from('guest_unsubscribes')
         .select('guest_id')
         .eq('restaurant_id', restaurantId);
@@ -578,21 +588,20 @@ async function getUnsubscribedGuests(db: any, restaurantId: string): Promise<Set
         return new Set();
     }
 
-    return new Set(data.map((u: any) => u.guest_id));
+    return new Set((data as UnsubscribeRecord[]).map(u => u.guest_id));
 }
 
 /**
  * Unsubscribe a guest from emails
  */
 export async function unsubscribeGuestEmail(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     guestId: string,
     reason?: string
 ): Promise<{ success: boolean }> {
-    const db = supabase as any;
-
-    await db.from('guest_unsubscribes').upsert(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('guest_unsubscribes').upsert(
         {
             restaurant_id: restaurantId,
             guest_id: guestId,
@@ -609,14 +618,13 @@ export async function unsubscribeGuestEmail(
  * Unsubscribe a guest from SMS
  */
 export async function unsubscribeGuestSms(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     guestId: string,
     reason?: string
 ): Promise<{ success: boolean }> {
-    const db = supabase as any;
-
-    await db.from('guest_unsubscribes').upsert(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('guest_unsubscribes').upsert(
         {
             restaurant_id: restaurantId,
             guest_id: guestId,
@@ -637,12 +645,11 @@ export async function unsubscribeGuestSms(
  * Get email templates for a restaurant
  */
 export async function getEmailTemplates(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string
 ): Promise<EmailTemplate[]> {
-    const db = supabase as any;
-
-    const { data, error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
         .from('email_templates')
         .select('*')
         .or(`restaurant_id.eq.${restaurantId},is_system.eq.true`)
@@ -654,14 +661,14 @@ export async function getEmailTemplates(
         return [];
     }
 
-    return data ?? [];
+    return (data ?? []) as EmailTemplate[];
 }
 
 /**
  * Create an email template
  */
 export async function createEmailTemplate(
-    supabase: SupabaseClient<Database>,
+    supabase: ExtendedSupabaseClient,
     restaurantId: string,
     template: {
         name: string;
@@ -675,10 +682,9 @@ export async function createEmailTemplate(
     },
     userId: string
 ): Promise<{ success: true; template: EmailTemplate } | { success: false; error: string }> {
-    const db = supabase as any;
-
     try {
-        const { data, error } = await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any)
             .from('email_templates')
             .insert({
                 restaurant_id: restaurantId,
@@ -702,7 +708,7 @@ export async function createEmailTemplate(
             return { success: false, error: 'Failed to create template' };
         }
 
-        return { success: true, template: data };
+        return { success: true, template: data as EmailTemplate };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return { success: false, error: errorMessage };

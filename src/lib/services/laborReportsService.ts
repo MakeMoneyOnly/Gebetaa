@@ -300,6 +300,7 @@ export async function getLaborCostPercentage(
 // Helper Functions
 // ============================================================================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function calculateStaffSummaryFromOrders(staff: any[], orders: any[]): TimeEntrySummary[] {
     const staffOrderMap = new Map<string, { orderCount: number; totalSales: number }>();
 

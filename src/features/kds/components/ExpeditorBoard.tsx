@@ -760,7 +760,7 @@ export function ExpeditorBoard() {
                         return (
                             <article
                                 key={order.id}
-                                className="rounded-2xl border-l-4 border-gray-200 bg-white p-4 shadow-sm"
+                                className="rounded-xl border-l-4 border-gray-200 bg-white p-4 shadow-sm"
                                 style={{ borderLeftColor: order.sourceColor || undefined }}
                             >
                                 <div className="flex items-start justify-between">

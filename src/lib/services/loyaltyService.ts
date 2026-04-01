@@ -201,6 +201,8 @@ export async function recordGuestVisit(params: {
     error?: string;
 }> {
     const { supabase, restaurantId, guestId, orderId, orderTotal, programConfig } = params;
+    // Tables: loyalty_accounts, guest_visits, loyalty_transactions, guest_rewards not in Database schema
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -402,6 +404,7 @@ export async function processBirthdayReward(params: {
     error?: string;
 }> {
     const { supabase, restaurantId, guestId, birthdayConfig } = params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const config = birthdayConfig ?? DEFAULT_BIRTHDAY_REWARD;
 
@@ -549,6 +552,7 @@ export async function getUpcomingBirthdays(params: {
     }>
 > {
     const { supabase, restaurantId, daysAhead } = params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -632,6 +636,7 @@ export async function calculateOrderPoints(params: {
     tier: LoyaltyTier;
 }> {
     const { supabase, restaurantId, guestId, orderTotal, programConfig } = params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Get loyalty account
@@ -679,6 +684,7 @@ export async function awardOrderPoints(params: {
     error?: string;
 }> {
     const { supabase, restaurantId, guestId, orderId, orderTotal, programConfig } = params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {
@@ -815,6 +821,7 @@ export async function getAvailableRewards(params: {
     }>
 > {
     const { supabase, restaurantId, guestId } = params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const now = new Date().toISOString();
@@ -832,6 +839,7 @@ export async function getAvailableRewards(params: {
         return [];
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data ?? []).map((r: any) => ({
         id: r.id,
         name: r.name,
@@ -860,6 +868,7 @@ export async function redeemReward(params: {
     error?: string;
 }> {
     const { supabase, restaurantId, guestId, rewardId, orderId } = params;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     try {

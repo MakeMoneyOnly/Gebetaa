@@ -106,7 +106,7 @@ export const DeliveryAddressForm: React.FC<DeliveryAddressFormProps> = ({
 
     if (fulfillmentType === 'pickup') {
         return (
-            <div className="mx-auto max-w-md rounded-2xl bg-white p-6 shadow-lg">
+            <div className="mx-auto max-w-md rounded-xl bg-white p-6 shadow-lg">
                 <div className="mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Pickup Details</h2>
                     <p className="mt-1 text-sm text-gray-500">
@@ -215,7 +215,7 @@ export const DeliveryAddressForm: React.FC<DeliveryAddressFormProps> = ({
 
     // Delivery Form
     return (
-        <div className="mx-auto max-w-md rounded-2xl bg-white p-6 shadow-lg">
+        <div className="mx-auto max-w-md rounded-xl bg-white p-6 shadow-lg">
             <div className="mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Delivery Address</h2>
                 <p className="mt-1 text-sm text-gray-500">Where should we deliver your order?</p>

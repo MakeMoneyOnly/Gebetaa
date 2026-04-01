@@ -285,6 +285,7 @@ export async function getVerifiedRecipients(
         return [];
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (guests || []).map((g: any) => ({
         guestId: g.id,
         phone: g.phone,

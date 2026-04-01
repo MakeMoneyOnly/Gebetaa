@@ -63,7 +63,7 @@ export const TicketCard = ({
     return (
         <div
             className={cn(
-                'flex max-h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md',
+                'flex max-h-full flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-all duration-300 hover:shadow-md',
                 status === 'active'
                     ? `border-l-4 ${borderColor} border-l-${urgencyColor} ring-1 ring-black/5`
                     : 'border-gray-200'
@@ -108,7 +108,7 @@ export const TicketCard = ({
                         <span>{elapsedMinutes}m ago</span>
                     </div>
                     {status === 'new' && (
-                        <div className="bg-brand-crimson/10 text-brand-crimson animate-pulse rounded-lg px-2 py-1 text-xs font-bold tracking-wide uppercase">
+                        <div className="bg-brand-accent/10 animate-pulse rounded-lg px-2 py-1 text-xs font-bold tracking-wide text-black uppercase">
                             New
                         </div>
                     )}
@@ -127,7 +127,7 @@ export const TicketCard = ({
                                 {item.quantity}x
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="group-hover:text-brand-crimson text-sm leading-tight font-bold text-gray-900 transition-colors">
+                                <p className="text-sm leading-tight font-bold text-gray-900 transition-colors group-hover:text-black">
                                     {item.name}
                                 </p>
                                 {item.modifiers && item.modifiers.length > 0 && (
