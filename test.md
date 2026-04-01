@@ -443,7 +443,7 @@ Color contrast violations found: [
     - waiting for getByRole('heading', { name: 'Guests', exact: true })
       149 |
         > 150 | await expect(page.getByRole('heading', { name: 'Loyalty Program Builder' })).toBeVisible({
-                                                                |                                                                                      ^
+                                                                  |                                                                                      ^
         151 | timeout: 15000,
         152 | });
         153 | await expect(page.getByRole('heading', { name: 'Gift Card Manager' })).toBeVisible({

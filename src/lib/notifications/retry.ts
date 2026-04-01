@@ -56,6 +56,7 @@ export interface SendSmsParams {
     /** Optional metadata for the notification */
     metadata?: Record<string, unknown>;
     /** Optional Supabase client (defaults to service role client) */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: SupabaseClient<any>;
 }
 
@@ -177,6 +178,7 @@ interface NotificationQueueUpdate {
  * Create or update a notification queue entry
  */
 async function upsertNotificationQueue(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: SupabaseClient<any>,
     params: {
         restaurantId: string;
@@ -214,6 +216,7 @@ async function upsertNotificationQueue(
     }
 
     // Check if notification exists
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (supabase as any)
         .from('notification_queue')
         .select('id')
@@ -236,6 +239,7 @@ async function upsertNotificationQueue(
             ).toISOString();
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
             .from('notification_queue')
             .update(updateData)
@@ -259,6 +263,7 @@ async function upsertNotificationQueue(
         ).toISOString();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
         .from('notification_queue')
         .insert(notificationData)
@@ -277,10 +282,12 @@ async function upsertNotificationQueue(
  * Mark a notification as sent successfully
  */
 async function markNotificationSent(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: SupabaseClient<any>,
     idempotencyKey: string,
     providerResponse?: unknown
 ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from('notification_queue')
         .update({
@@ -299,10 +306,12 @@ async function markNotificationSent(
  * Mark a notification as permanently failed
  */
 async function markNotificationFailed(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: SupabaseClient<any>,
     idempotencyKey: string,
     errorMessage: string
 ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
         .from('notification_queue')
         .update({
@@ -375,6 +384,7 @@ export async function sendSmsWithRetry(params: SendSmsParams): Promise<SmsResult
 
                 return {
                     success: true,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     provider: (smsResult.provider as any) || 'log',
                     attempts,
                     providerResponse: smsResult,
@@ -463,6 +473,7 @@ export async function processPendingNotifications(limit: number = 100): Promise<
     const now = new Date().toISOString();
 
     // Get pending notifications that are due for retry
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: pending, error } = await (supabase as any)
         .from('notification_queue')
         .select('*')
