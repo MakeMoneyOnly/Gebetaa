@@ -52,6 +52,7 @@ export async function listActiveDiscountsForRestaurant(
     restaurantId: string,
     options?: { excludeManagerApproval?: boolean }
 ): Promise<DiscountRecord[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { data, error } = await db
         .from('discounts')
@@ -77,6 +78,7 @@ export async function getDiscountById(
     restaurantId: string,
     discountId: string
 ): Promise<DiscountRecord | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { data, error } = await db
         .from('discounts')
@@ -108,6 +110,7 @@ async function assertDailyLimit(
 
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { count, error } = await db
         .from('orders')
@@ -200,6 +203,7 @@ export async function prepareOrderDiscount(params: {
     await assertDailyLimit(params.supabase, params.restaurantId, discount);
 
     const itemIds = params.items.map(item => item.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (params.supabase as any)
         .from('menu_items')
         .select('id, category_id')
