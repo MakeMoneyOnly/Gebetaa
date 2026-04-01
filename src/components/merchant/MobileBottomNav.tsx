@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import {
     BarChart3,
     HelpCircle,
-    Landmark,
     LayoutGrid,
     QrCode,
     RadioTower,
@@ -26,7 +25,6 @@ const MOBILE_MENU_ITEMS = [
     { label: 'Channels', href: '/merchant/channels', icon: RadioTower },
     { label: 'Staff', href: '/merchant/staff', icon: Users },
     { label: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
-    { label: 'Finance', href: '/merchant/finance', icon: Landmark },
     { label: 'Settings', href: '/merchant/settings', icon: Settings },
     { label: 'Help', href: '/merchant/help', icon: HelpCircle },
 ];
@@ -37,7 +35,7 @@ export function MobileBottomNav() {
     return (
         <nav
             aria-label="Mobile merchant navigation"
-            className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 md:hidden"
+            className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur supports-backdrop-filter:bg-white/85 md:hidden"
             data-testid="mobile-bottom-nav"
         >
             <div className="grid grid-cols-4">

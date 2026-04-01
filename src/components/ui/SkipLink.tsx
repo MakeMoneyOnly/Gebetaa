@@ -31,12 +31,12 @@ export const SkipLink = forwardRef<HTMLAnchorElement, SkipLinkProps>(
                 className={cn(
                     // Base styles - visually hidden but accessible
                     'absolute top-0 left-0 z-[9999] px-4 py-3',
-                    'bg-brand-crimson font-semibold text-white',
+                    'bg-brand-accent font-semibold text-black',
                     'transition-transform duration-200 ease-out',
                     // CSS-based visual hiding - keeps element in tab order
                     '-translate-y-full',
                     // Focus styles - visible on focus
-                    'focus:ring-brand-crimson/50 focus:translate-y-0 focus:ring-4 focus:outline-none',
+                    'focus:ring-brand-accent/50 focus:translate-y-0 focus:ring-4 focus:outline-none',
                     // Ensure it appears above everything
                     'pointer-events-auto',
                     className

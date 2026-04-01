@@ -254,7 +254,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                             year: 'numeric',
                         })}
                     </span>
-                    <button className="bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]">
+                    <button className="bg-brand-accent flex h-10 w-10 items-center justify-center rounded-xl text-black shadow-lg shadow-black/10 transition-colors hover:brightness-105">
                         <CalendarCheck className="h-5 w-5" />
                     </button>
                 </div>
@@ -286,7 +286,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                     </button>
                     <button
                         onClick={() => fetchCommandCenter(true)}
-                        className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-bold text-white hover:bg-[#a0151e]"
+                        className="bg-brand-accent h-10 rounded-xl px-4 text-sm font-bold text-black hover:brightness-105"
                         disabled={refreshing}
                     >
                         {refreshing ? 'Refreshing...' : 'Refresh'}
@@ -294,7 +294,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     icon={ListOrdered}
                     chip="Live"
@@ -432,13 +432,13 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                                 Active Orders
                             </h2>
-                            <span className="bg-brand-crimson rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm">
+                            <span className="bg-brand-accent rounded-full px-3 py-1 text-xs font-bold text-black shadow-sm">
                                 {metrics.orders_in_flight} Pending
                             </span>
                         </div>
                     </div>
                     {activeOrders.length === 0 ? (
-                        <div className="flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-100 bg-gray-50/50 py-12 text-center">
+                        <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-100 bg-gray-50/50 py-12 text-center">
                             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
                                 <ListOrdered className="h-6 w-6 text-gray-400" />
                             </div>
@@ -452,7 +452,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                             {activeOrders.map(order => (
                                 <div
                                     key={order.id}
-                                    className="group flex cursor-pointer items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-md"
+                                    className="group flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-md"
                                 >
                                     <div className="flex flex-1 items-center gap-4">
                                         <div
@@ -506,7 +506,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                         </div>
                     </div>
                     {activeServiceRequests.length === 0 ? (
-                        <div className="flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-100 bg-gray-50/50 py-12 text-center">
+                        <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-100 bg-gray-50/50 py-12 text-center">
                             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
                                 <UtensilsCrossed className="h-6 w-6 text-gray-400" />
                             </div>
@@ -520,7 +520,7 @@ export function MerchantDashboardClient({ initialData }: MerchantDashboardClient
                             {activeServiceRequests.map(request => (
                                 <div
                                     key={request.id}
-                                    className="group flex cursor-pointer items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-md"
+                                    className="group flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-gray-50 p-4 transition-all hover:border-gray-200 hover:bg-white hover:shadow-md"
                                 >
                                     <div className="flex flex-1 items-center gap-4">
                                         <div

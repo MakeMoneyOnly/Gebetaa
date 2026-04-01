@@ -30,27 +30,27 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
             <AreaChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#17120B" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="#17120B" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorPrevious" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#CBD5E1" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#CBD5E1" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#8A887A" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#8A887A" stopOpacity={0} />
                     </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#F1F5F9" />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#F4F3EF" />
                 <Tooltip
                     contentStyle={{
-                        backgroundColor: '#fff',
-                        border: 'none',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #F4F3EF',
                         borderRadius: '12px',
-                        color: '#10B981',
+                        color: '#17120B',
                         fontSize: '12px',
                         fontWeight: 'bold',
-                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                        boxShadow: '0 8px 24px 0 rgba(23, 18, 11, 0.08)',
                     }}
-                    itemStyle={{ color: '#10B981' }}
-                    cursor={{ stroke: '#10B981', strokeWidth: 1, strokeDasharray: '3 3' }}
+                    itemStyle={{ color: '#17120B' }}
+                    cursor={{ stroke: '#8A887A', strokeWidth: 1, strokeDasharray: '3 3' }}
                     formatter={(value, name) => {
                         const numValue = typeof value === 'number' ? value : 0;
                         return [
@@ -58,19 +58,19 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                             name === 'income' ? 'Current Period' : 'Previous Period',
                         ];
                     }}
-                    labelStyle={{ color: '#94A3B8', marginBottom: '8px' }}
+                    labelStyle={{ color: '#8A887A', marginBottom: '8px' }}
                 />
                 <XAxis
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12, fontWeight: 600 }}
+                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500 }}
                     dy={10}
                 />
                 <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12, fontWeight: 600 }}
+                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500 }}
                     tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
                     domain={[0, 'auto']}
                     width={40}
@@ -79,7 +79,7 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                 <Area
                     type="monotone"
                     dataKey="previous"
-                    stroke="#94A3B8"
+                    stroke="#8A887A"
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     fill="url(#colorPrevious)"
@@ -90,11 +90,11 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                 <Area
                     type="monotone"
                     dataKey="income"
-                    stroke="#10B981"
-                    strokeWidth={4}
+                    stroke="#17120B"
+                    strokeWidth={3}
                     fill="url(#colorIncome)"
                     fillOpacity={1}
-                    activeDot={{ r: 8, fill: '#10B981', strokeWidth: 4, stroke: '#fff' }}
+                    activeDot={{ r: 6, fill: '#17120B', strokeWidth: 3, stroke: '#ffffff' }}
                     animationDuration={1500}
                 />
             </AreaChart>

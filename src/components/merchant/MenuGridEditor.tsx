@@ -459,7 +459,7 @@ export function MenuGridEditor({
                                             type="button"
                                             onClick={saveInlineEdit}
                                             disabled={isSaving}
-                                            className="bg-brand-crimson inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                                            className="bg-brand-accent inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-black hover:brightness-105 disabled:opacity-50"
                                         >
                                             {isSaving ? (
                                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -478,7 +478,7 @@ export function MenuGridEditor({
 
             {isBulkPriceModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-xl space-y-4 rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-xl space-y-4 rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="text-lg font-bold text-gray-900">Bulk price update</h3>
                         <p className="text-sm text-gray-600">
                             Review price changes for {selectedCount} selected item(s) before
@@ -521,7 +521,7 @@ export function MenuGridEditor({
                             </label>
                         </div>
 
-                        <div className="rounded-2xl bg-gray-50 p-3 shadow-inner">
+                        <div className="rounded-xl bg-gray-50 p-3 shadow-inner">
                             <div className="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                                 Preview
                             </div>
@@ -574,7 +574,7 @@ export function MenuGridEditor({
                                 type="button"
                                 onClick={applyBulkPriceUpdates}
                                 disabled={isBulkSaving}
-                                className="bg-brand-crimson inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                                className="bg-brand-accent inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                             >
                                 {isBulkSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                                 Apply Prices

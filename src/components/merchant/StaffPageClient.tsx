@@ -154,7 +154,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                     </button>
                     <button
                         onClick={() => setAddStaffOpen(true)}
-                        className="bg-brand-crimson flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
+                        className="bg-brand-accent flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-black shadow-lg shadow-black/10 transition-colors hover:brightness-105"
                     >
                         <Plus className="h-4 w-4" />
                         Add Staff
@@ -213,7 +213,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
             {/* Tabs & Content */}
             <div className="space-y-6">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex w-full overflow-hidden rounded-2xl bg-gray-200/40 p-1 shadow-inner md:w-max">
+                    <div className="flex w-full overflow-hidden rounded-xl bg-gray-200/40 p-1 shadow-inner md:w-max">
                         <button
                             onClick={() => setActiveTab('staff')}
                             className={cn(
@@ -247,8 +247,8 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                 className="flex flex-col gap-5 rounded-[2.5rem] bg-white p-6 shadow-sm"
                             >
                                 <div className="flex items-start justify-between">
-                                    <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-50 shadow-sm">
-                                        <Skeleton className="h-14 w-14 rounded-3xl" />
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50 shadow-sm">
+                                        <Skeleton className="h-14 w-14 rounded-2xl" />
                                     </div>
                                     <Skeleton className="h-8 w-8 rounded-full" />
                                 </div>
@@ -261,7 +261,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                     </div>
                                 </div>
 
-                                <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
+                                <div className="rounded-xl bg-gray-50 p-4 shadow-inner">
                                     <div className="flex justify-between pb-2">
                                         <Skeleton className="h-3 w-1/4 rounded" />
                                         <Skeleton className="h-4 w-1/3 rounded" />
@@ -290,7 +290,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                         className="group relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-50 text-xl font-bold text-gray-700 shadow-sm">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50 text-xl font-bold text-gray-700 shadow-sm">
                                                 {(member.name || member.email || 'US')
                                                     .slice(0, 2)
                                                     .toUpperCase()}
@@ -335,7 +335,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                             </div>
                                         </div>
 
-                                        <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
+                                        <div className="rounded-xl bg-gray-50 p-4 shadow-inner">
                                             <div className="flex justify-between pb-2">
                                                 <span className="text-xs font-bold text-gray-400">
                                                     Login PIN
@@ -442,7 +442,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                         className="group relative flex flex-col gap-5 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gray-900 text-white shadow-xl">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-xl">
                                                 <Tablet className="h-6 w-6" />
                                             </div>
                                             <div
@@ -466,7 +466,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                             </div>
                                         </div>
 
-                                        <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
+                                        <div className="rounded-xl bg-gray-50 p-4 shadow-inner">
                                             <div className="mb-2 flex justify-between pb-2">
                                                 <span className="text-xs font-bold text-gray-400">
                                                     Status
@@ -550,7 +550,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                         </p>
                                         <button
                                             onClick={() => setAddDeviceOpen(true)}
-                                            className="bg-brand-crimson mt-5 rounded-xl px-5 py-3 text-sm font-bold text-white hover:bg-[#a0151e]"
+                                            className="bg-brand-accent mt-5 rounded-xl px-5 py-3 text-sm font-bold text-black hover:brightness-105"
                                         >
                                             Provision First Device
                                         </button>

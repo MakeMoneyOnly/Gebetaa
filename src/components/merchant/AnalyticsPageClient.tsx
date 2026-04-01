@@ -144,8 +144,8 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {/* Summary Cards - Unified Pattern */}
+            <div className="grid w-full grid-cols-1 gap-5 py-8 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     icon={Wallet}
                     chip="REVENUE"
@@ -199,7 +199,7 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
             </div>
 
             {/* Revenue Chart */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+            <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
                 <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-gray-900">Revenue Over Time</h2>
                     <button
@@ -214,7 +214,7 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
             </div>
 
             {/* Order Performance Card with Gradient Bars - Recharts */}
-            <div className="rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-gray-100">
+            <div className="rounded-4xl bg-white p-8 shadow-sm ring-1 ring-gray-100">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h3 className="text-3xl font-bold tracking-tight text-gray-900">
@@ -296,7 +296,7 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
             {/* Bottom Section: Cards Grid */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* 1. Customer Feedback/Satisfaction - Rating Card */}
-                <div className="flex h-[500px] flex-col justify-between rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-gray-100">
+                <div className="flex h-[500px] flex-col justify-between rounded-4xl bg-white p-8 shadow-sm ring-1 ring-gray-100">
                     <div>
                         <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -355,7 +355,7 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
                         </div>
                     </div>
 
-                    <div className="mt-auto rounded-2xl bg-gray-50 p-6">
+                    <div className="mt-auto rounded-xl bg-gray-50 p-6">
                         <div className="mb-2 flex items-center justify-between">
                             <span className="text-sm font-bold text-gray-900">Total Reviews</span>
                             <span className="rounded-lg bg-green-100 px-2 py-1 text-xs font-bold text-green-600">
@@ -379,7 +379,7 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
                 </div>
 
                 {/* 2. Operational/Live Activity Card */}
-                <div className="relative flex h-[500px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-gray-100">
+                <div className="relative flex h-[500px] flex-col justify-between overflow-hidden rounded-4xl bg-white p-8 shadow-sm ring-1 ring-gray-100">
                     <div className="absolute top-0 right-0 p-8 opacity-5">
                         <Users className="h-48 w-48" />
                     </div>
@@ -438,7 +438,7 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
                     </div>
 
                     <div className="relative z-10 mt-auto">
-                        <div className="rounded-2xl bg-gray-900 p-6 text-white">
+                        <div className="rounded-xl bg-gray-900 p-6 text-white">
                             <div className="mb-4 flex items-start justify-between">
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase">

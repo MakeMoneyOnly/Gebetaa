@@ -601,7 +601,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                     </button>
                     <button
                         onClick={openCreateCategoryModal}
-                        className="bg-brand-crimson flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
+                        className="bg-brand-accent flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-bold text-black shadow-lg shadow-black/10 transition-colors hover:brightness-105"
                     >
                         <Plus className="h-4 w-4" />
                         Add Category
@@ -689,7 +689,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                         </p>
                         <button
                             onClick={openCreateCategoryModal}
-                            className="bg-brand-crimson h-12 rounded-xl px-8 font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
+                            className="bg-brand-accent h-12 rounded-xl px-8 font-bold text-black shadow-lg shadow-black/10 transition-colors hover:brightness-105"
                         >
                             Create Category
                         </button>
@@ -715,7 +715,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
 
             {isCategoryModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">
                             {categoryMode === 'edit' ? 'Edit category' : 'Create category'}
                         </h3>
@@ -763,7 +763,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
                                 <button
                                     type="submit"
                                     disabled={categorySubmitting}
-                                    className="bg-brand-crimson inline-flex h-10 min-w-28 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                                    className="bg-brand-accent inline-flex h-10 min-w-28 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                                 >
                                     {categorySubmitting && (
                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -778,7 +778,7 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
 
             {categoryToDelete && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Delete category</h3>
                         <p className="mt-2 text-sm text-gray-600">
                             Delete{' '}
@@ -818,13 +818,13 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
 
             {isPublishModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Publish menu changes</h3>
                         <p className="mt-1 text-sm text-gray-600">
                             Review draft differences before publishing this menu version.
                         </p>
 
-                        <div className="mt-4 rounded-2xl border border-gray-200 p-4">
+                        <div className="mt-4 rounded-xl border border-gray-200 p-4">
                             <p className="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                                 Change preview ({diffEntries.length})
                             </p>

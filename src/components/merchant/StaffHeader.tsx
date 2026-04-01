@@ -33,7 +33,7 @@ export function StaffHeader({ viewMode, onViewModeChange, onInvite }: StaffHeade
                 {onInvite && (
                     <button
                         onClick={onInvite}
-                        className="bg-brand-crimson flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e] md:w-auto"
+                        className="bg-brand-accent flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-black shadow-lg shadow-black/10 transition-colors hover:brightness-105 md:w-auto"
                     >
                         <Plus className="h-4 w-4" />
                         Provision Link

@@ -31,11 +31,11 @@ interface ChannelHealthBoardProps {
 export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoardProps) {
     if (loading) {
         return (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, index) => (
                     <div
                         key={index}
-                        className="h-[180px] animate-pulse rounded-[2rem] bg-white shadow-sm"
+                        className="h-[180px] animate-pulse rounded-4xl bg-white shadow-sm"
                     />
                 ))}
             </div>
@@ -46,7 +46,7 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
         return (
             <div
                 role="alert"
-                className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800"
+                className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800"
             >
                 {error}
             </div>
@@ -57,7 +57,7 @@ export function ChannelHealthBoard({ loading, summary, error }: ChannelHealthBoa
 
     return (
         <div className="space-y-5">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     icon={Truck}
                     chip="CHANNELS"

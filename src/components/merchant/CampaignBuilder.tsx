@@ -103,7 +103,7 @@ export function CampaignBuilder({
     return (
         <div className="grid min-h-[500px] grid-cols-1 gap-6 lg:grid-cols-12">
             {/* Left: Creation/Edit Form */}
-            <div className="flex flex-col rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-4">
+            <div className="flex flex-col rounded-2xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-4">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h3 className="text-xl leading-tight font-bold text-gray-900">
@@ -195,10 +195,10 @@ export function CampaignBuilder({
                                 message.trim().length < 2
                             }
                             className={cn(
-                                'flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-bold text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50',
+                                'flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-black shadow-xl transition-all active:scale-[0.98] disabled:opacity-50',
                                 editingId
                                     ? 'bg-gray-900 shadow-gray-900/10'
-                                    : 'bg-brand-crimson shadow-crimson-900/10'
+                                    : 'bg-brand-accent shadow-crimson-900/10'
                             )}
                         >
                             {isOperationLoading ? (
@@ -215,7 +215,7 @@ export function CampaignBuilder({
             </div>
 
             {/* Right: Management List */}
-            <div className="flex flex-col overflow-hidden rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-8">
+            <div className="flex flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-8">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h3 className="text-xl leading-tight font-bold text-gray-900">
@@ -233,13 +233,13 @@ export function CampaignBuilder({
                             {[1, 2, 3, 4].map(i => (
                                 <div
                                     key={i}
-                                    className="h-24 w-full animate-pulse rounded-2xl bg-gray-50"
+                                    className="h-24 w-full animate-pulse rounded-xl bg-gray-50"
                                 />
                             ))}
                         </div>
                     ) : campaigns.length === 0 ? (
                         <div className="flex h-full flex-col items-center justify-center rounded-4xl border border-dashed border-gray-200 bg-gray-50/30 py-20">
-                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
+                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
                                 <Repeat className="h-6 w-6 text-gray-300" />
                             </div>
                             <p className="text-sm font-bold text-gray-500">No campaigns yet</p>
@@ -252,11 +252,11 @@ export function CampaignBuilder({
                             {campaigns.map(camp => (
                                 <div
                                     key={camp.id}
-                                    className="group rounded-2xl border-none bg-white p-5 shadow-sm transition-all hover:bg-gray-50/30"
+                                    className="group rounded-xl border-none bg-white p-5 shadow-sm transition-all hover:bg-gray-50/30"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 transition-all group-hover:bg-white group-hover:shadow-sm">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 text-gray-400 transition-all group-hover:bg-white group-hover:shadow-sm">
                                                 <Megaphone className="h-6 w-6" />
                                             </div>
                                             <div>

@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 // Chart skeleton loader for better UX during lazy loading
 const ChartSkeleton = () => (
-    <div className="h-[300px] w-full animate-pulse rounded-3xl bg-gray-50/50" />
+    <div className="h-[300px] w-full animate-pulse rounded-2xl bg-gray-50/50" />
 );
 
 // Lazy load the entire chart component to reduce initial bundle by ~300KB

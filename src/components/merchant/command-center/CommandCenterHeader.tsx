@@ -50,7 +50,7 @@ export function CommandCenterHeader({
                     <select
                         value={range}
                         onChange={event => onRangeChange(event.target.value as CommandCenterRange)}
-                        className="focus:ring-brand-crimson h-10 rounded-xl bg-white px-3 text-sm font-semibold text-gray-700 capitalize shadow-sm outline-none focus:ring-2"
+                        className="focus:ring-brand-accent h-10 rounded-xl bg-white px-3 text-sm font-semibold text-gray-700 capitalize shadow-sm outline-none focus:ring-2"
                     >
                         {RANGE_OPTIONS.map(option => (
                             <option key={option} value={option}>
@@ -62,7 +62,7 @@ export function CommandCenterHeader({
                         type="button"
                         onClick={onRefresh}
                         disabled={isRefreshing}
-                        className="bg-brand-crimson inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-bold text-white transition hover:bg-[#a0151e] disabled:opacity-60"
+                        className="bg-brand-accent inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-bold text-black transition hover:brightness-105 disabled:opacity-60"
                     >
                         <RotateCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                         Refresh

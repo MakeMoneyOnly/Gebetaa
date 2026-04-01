@@ -8,7 +8,7 @@ type BulkStatus = 'acknowledged' | 'preparing' | 'ready' | 'served' | 'completed
 type StaffOption = {
     id: string;
     role: string | null;
-    user_id: string;
+    user_id: string | null;
 };
 
 interface BulkActionBarProps {
@@ -48,7 +48,7 @@ export function BulkActionBar({
     if (selectedCount === 0) return null;
 
     return (
-        <div className="sticky bottom-4 z-30 rounded-2xl bg-white p-3 shadow-xl ring-1 ring-gray-200/80">
+        <div className="sticky bottom-4 z-30 rounded-xl bg-white p-3 shadow-xl ring-1 ring-gray-200/80">
             <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-gray-900 px-3 py-1 text-xs font-bold text-white">
                     {selectedCount} selected
@@ -89,7 +89,7 @@ export function BulkActionBar({
                         <option value="">Assign staff…</option>
                         {staffOptions.map(staff => (
                             <option key={staff.id} value={staff.id}>
-                                {staff.role ?? 'staff'} · {staff.user_id.slice(0, 8)}
+                                {staff.role ?? 'staff'} · {(staff.user_id ?? staff.id).slice(0, 8)}
                             </option>
                         ))}
                     </select>

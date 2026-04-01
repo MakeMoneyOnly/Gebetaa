@@ -118,7 +118,7 @@ export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupa
     if (!tables || tables.length === 0) {
         return (
             <div
-                className={`rounded-[2rem] bg-white p-6 shadow-sm ${className} flex min-h-[150px] items-center justify-center`}
+                className={`rounded-4xl bg-white p-6 shadow-sm ${className} flex min-h-[150px] items-center justify-center`}
             >
                 <p className="font-medium text-gray-400">No table data available.</p>
             </div>
@@ -126,9 +126,7 @@ export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupa
     }
 
     return (
-        <div
-            className={`contribution-graph mt-8 rounded-[2rem] bg-white p-8 shadow-sm ${className}`}
-        >
+        <div className={`contribution-graph mt-8 rounded-4xl bg-white p-8 shadow-sm ${className}`}>
             <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
                     <h3 className="text-xl font-bold tracking-tight text-gray-900">
@@ -201,15 +199,15 @@ export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupa
                     {/* Header: Hours */}
                     <thead>
                         <tr>
-                            <td className="sticky left-0 z-10 w-16 bg-white"></td>
                             {HOURS.map(hour => (
                                 <td
                                     key={hour}
-                                    className="min-w-[32px] pb-2 text-center text-[10px] font-bold text-gray-400"
+                                    className="min-w-8 pb-2 text-center text-[10px] font-bold text-gray-400"
                                 >
                                     {formatHour(hour)}
                                 </td>
                             ))}
+                            <td className="w-16"></td>
                         </tr>
                     </thead>
 
@@ -217,11 +215,6 @@ export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupa
                     <tbody>
                         {tables.map(table => (
                             <tr key={table.id}>
-                                {/* Row Label - Sticky */}
-                                <td className="sticky left-0 z-10 bg-white pr-4 text-right text-[11px] font-bold whitespace-nowrap text-gray-500">
-                                    {table.table_number}
-                                </td>
-
                                 {/* Cells */}
                                 {HOURS.map(hour => {
                                     const level = occupancyData[table.id]?.[hour] ?? 0;
@@ -242,6 +235,11 @@ export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupa
                                         </td>
                                     );
                                 })}
+
+                                {/* Row Label - Right Side */}
+                                <td className="text-micro pl-4 text-left font-bold whitespace-nowrap text-gray-500">
+                                    {table.table_number}
+                                </td>
                             </tr>
                         ))}
                     </tbody>

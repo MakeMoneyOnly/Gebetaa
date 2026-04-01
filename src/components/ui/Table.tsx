@@ -13,7 +13,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
         const variants = {
             default: 'w-full caption-bottom border-collapse',
             striped: 'w-full caption-bottom border-collapse',
-            bordered: 'w-full caption-bottom border-collapse border border-black/10',
+            bordered: 'w-full caption-bottom border-collapse border border-brand-neutral-soft/10',
         };
 
         const sizes = {
@@ -59,7 +59,10 @@ const TableFooter = React.forwardRef<HTMLTableSectionElement, TableFooterProps>(
     ({ className, ...props }, ref) => (
         <tfoot
             ref={ref}
-            className={cn('border-t bg-black/5 font-medium [&>tr]:last:border-b-0', className)}
+            className={cn(
+                'border-brand-neutral-soft/10 bg-surface-muted border-t font-medium [&>tr]:last:border-b-0',
+                className
+            )}
             {...props}
         />
     )
@@ -74,15 +77,15 @@ const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
     ({ className, variant = 'default', ...props }, ref) => {
         const variants = {
             default: '',
-            hover: 'hover:bg-black/5',
-            selected: 'bg-brand-crimson/5 hover:bg-brand-crimson/10',
+            hover: 'hover:bg-surface-muted',
+            selected: 'bg-brand-accent/5 hover:bg-brand-accent/10',
         };
 
         return (
             <tr
                 ref={ref}
                 className={cn(
-                    'border-b border-black/10 transition-colors data-[state=selected]:bg-black/5',
+                    'border-brand-neutral-soft/10 data-[state=selected]:bg-brand-neutral-soft/5 border-b transition-colors',
                     variants[variant],
                     className
                 )}
@@ -100,7 +103,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
         <th
             ref={ref}
             className={cn(
-                'h-12 px-4 text-left align-middle font-medium text-black/60 [&:has([role=checkbox])]:pr-0',
+                'text-text-secondary h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0',
                 className
             )}
             {...props}
@@ -126,7 +129,11 @@ type TableCaptionProps = React.HTMLAttributes<HTMLTableCaptionElement>;
 
 const TableCaption = React.forwardRef<HTMLTableCaptionElement, TableCaptionProps>(
     ({ className, ...props }, ref) => (
-        <caption ref={ref} className={cn('mt-4 text-sm text-black/60', className)} {...props} />
+        <caption
+            ref={ref}
+            className={cn('text-text-secondary mt-4 text-sm', className)}
+            {...props}
+        />
     )
 );
 TableCaption.displayName = 'TableCaption';

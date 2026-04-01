@@ -66,7 +66,7 @@ export function AddPinStaffModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 p-4 backdrop-blur">
-            <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
                 <div className="mb-6 flex items-start justify-between xl:-mr-1">
                     <div>
                         <h3 className="text-xl font-black tracking-tight text-gray-900">
@@ -93,7 +93,7 @@ export function AddPinStaffModal({
                             value={name}
                             onChange={event => setName(event.target.value)}
                             placeholder="e.g. David Smith"
-                            className="w-full rounded-2xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
+                            className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
                         />
                     </div>
                     <div className="flex gap-4">
@@ -104,7 +104,7 @@ export function AddPinStaffModal({
                             <select
                                 value={role}
                                 onChange={event => setRole(event.target.value as StaffRole)}
-                                className="w-full rounded-2xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 capitalize shadow-sm transition-all outline-none focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 capitalize shadow-sm transition-all outline-none focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
                             >
                                 {ROLE_OPTIONS.map(roleOption => (
                                     <option key={roleOption} value={roleOption}>
@@ -126,7 +126,7 @@ export function AddPinStaffModal({
                                     setPinCode(event.target.value.replace(/\D/g, '').slice(0, 4))
                                 }
                                 placeholder="e.g. 1234"
-                                className="w-full rounded-2xl bg-gray-50 px-4 py-3 text-sm font-black tracking-[0.3em] text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm font-black tracking-[0.3em] text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
                             />
                         </div>
                     </div>
@@ -169,14 +169,14 @@ export function AddPinStaffModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 rounded-2xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-200"
+                            className="flex-1 rounded-xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-200"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-brand-crimson flex-1 rounded-2xl px-6 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-all hover:bg-[#a0151e] disabled:opacity-50 disabled:shadow-none"
+                            className="bg-brand-accent flex-1 rounded-xl px-6 py-3 text-sm font-bold text-black shadow-lg shadow-black/10 transition-all hover:brightness-105 disabled:opacity-50 disabled:shadow-none"
                         >
                             {loading ? 'Adding...' : 'Add Staff'}
                         </button>

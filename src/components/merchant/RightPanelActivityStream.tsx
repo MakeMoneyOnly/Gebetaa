@@ -25,7 +25,7 @@ export function ActivityStream({ activities, loading }: ActivityStreamProps) {
                                 <Skeleton className="h-3 w-12 rounded-md" />
                             </div>
                             <Skeleton className="mb-3 h-4 w-full rounded-md" />
-                            <Skeleton className="h-16 w-full rounded-2xl" />
+                            <Skeleton className="h-16 w-full rounded-xl" />
                         </div>
                     ))}
                 </div>

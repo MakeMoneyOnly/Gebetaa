@@ -80,18 +80,18 @@ export function CommandBarShell() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="fixed right-5 bottom-5 z-40 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-lg hover:bg-gray-50"
+                className="fixed right-5 bottom-5 z-40 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-lg hover:bg-gray-50"
             >
                 <Command className="h-4 w-4" />
                 Command Bar
-                <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">
+                <span className="text-micro rounded-xs bg-gray-100 px-1.5 py-0.5 text-gray-500">
                     Ctrl K
                 </span>
             </button>
 
             {open && (
                 <div className="fixed inset-0 z-50 bg-black/40 p-4">
-                    <div className="mx-auto mt-20 w-full max-w-xl rounded-2xl border border-gray-100 bg-white p-3 shadow-2xl">
+                    <div className="mx-auto mt-20 w-full max-w-xl rounded-xl border border-gray-100 bg-white p-3 shadow-2xl">
                         <div className="relative mb-3">
                             <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input

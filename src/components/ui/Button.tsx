@@ -50,7 +50,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
         const variants = {
             primary:
-                'bg-brand-crimson text-white hover:bg-brand-crimson-hover shadow-lg shadow-brand-crimson/20',
+                'bg-brand-accent text-black hover:bg-brand-accent-hover shadow-lg shadow-brand-accent/20',
             secondary: 'bg-surface-100 text-text-primary hover:bg-surface-200',
             glass: 'bg-glass-white backdrop-blur-md border border-white/40 text-text-primary hover:bg-white/90 shadow-glass',
             ghost: 'bg-transparent text-text-secondary hover:bg-surface-100/50 hover:text-text-primary',

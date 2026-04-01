@@ -88,7 +88,7 @@ export function Theme({
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-[100]" onClick={() => setIsOpen(false)} />
-                    <div className="animate-in fade-in zoom-in-95 absolute right-0 z-[101] mt-2 min-w-[140px] overflow-hidden rounded-2xl bg-white p-1 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)] dark:bg-black">
+                    <div className="animate-in fade-in zoom-in-95 absolute right-0 z-[101] mt-2 min-w-[140px] overflow-hidden rounded-xl bg-white p-1 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)] dark:bg-black">
                         {themes.map(t => (
                             <button
                                 key={t}

@@ -98,7 +98,7 @@ const DropdownMenuItem = React.forwardRef<
     <DropdownMenuPrimitive.Item
         ref={ref}
         className={cn(
-            'focus:text-brand-crimson relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none focus:bg-black/5 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+            'relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm transition-colors outline-none select-none focus:bg-black/5 focus:text-black data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
             inset && 'pl-8',
             className
         )}
@@ -118,7 +118,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     <DropdownMenuPrimitive.CheckboxItem
         ref={ref}
         className={cn(
-            'focus:text-brand-crimson relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm transition-colors outline-none select-none focus:bg-black/5 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+            'relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm transition-colors outline-none select-none focus:bg-black/5 focus:text-black data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
             className
         )}
         checked={checked}
@@ -145,7 +145,7 @@ const DropdownMenuRadioItem = React.forwardRef<
     <DropdownMenuPrimitive.RadioItem
         ref={ref}
         className={cn(
-            'focus:text-brand-crimson relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm transition-colors outline-none select-none focus:bg-black/5 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+            'relative flex cursor-pointer items-center rounded-sm py-1.5 pr-2 pl-8 text-sm transition-colors outline-none select-none focus:bg-black/5 focus:text-black data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
             className
         )}
         {...props}

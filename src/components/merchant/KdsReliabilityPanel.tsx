@@ -71,7 +71,7 @@ export function KdsReliabilityPanel({ restaurantId }: KdsReliabilityPanelProps) 
     }, [fetchTelemetry]);
 
     return (
-        <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">KDS Reliability</h2>
                 <button
@@ -90,7 +90,7 @@ export function KdsReliabilityPanel({ restaurantId }: KdsReliabilityPanelProps) 
                 </div>
             ) : data ? (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <article className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <article className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                         <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-xs font-semibold text-gray-600">
                             <Timer className="h-3.5 w-3.5" />
                             Queue Lag
@@ -104,7 +104,7 @@ export function KdsReliabilityPanel({ restaurantId }: KdsReliabilityPanelProps) 
                         </p>
                     </article>
 
-                    <article className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <article className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                         <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-xs font-semibold text-gray-600">
                             <AlertTriangle className="h-3.5 w-3.5" />
                             SLA Breaches
@@ -118,7 +118,7 @@ export function KdsReliabilityPanel({ restaurantId }: KdsReliabilityPanelProps) 
                         </p>
                     </article>
 
-                    <article className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <article className="rounded-xl border border-gray-100 bg-gray-50 p-4">
                         <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-xs font-semibold text-gray-600">
                             <Radio className="h-3.5 w-3.5" />
                             Websocket

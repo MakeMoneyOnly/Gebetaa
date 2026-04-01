@@ -27,15 +27,15 @@ interface TableGridProps {
 const getStatusColor = (status: TableGridRow['status']) => {
     switch (status) {
         case 'available':
-            return 'bg-green-50 text-green-600';
+            return 'bg-state-success-bg/30 text-state-success ring-1 ring-state-success/10';
         case 'occupied':
-            return 'bg-orange-50 text-orange-600';
+            return 'bg-state-warning-bg/30 text-state-warning ring-1 ring-state-warning/10';
         case 'reserved':
-            return 'bg-blue-50 text-blue-600';
+            return 'bg-state-info-bg/30 text-state-info ring-1 ring-state-info/10';
         case 'bill_requested':
-            return 'bg-purple-50 text-purple-600';
+            return 'bg-brand-ink text-white shadow-medium';
         default:
-            return 'bg-gray-50 text-gray-600';
+            return 'bg-brand-canvas text-brand-neutral ring-1 ring-brand-neutral-soft/10';
     }
 };
 
@@ -54,13 +54,13 @@ export function TableGrid({
                 {Array.from({ length: 8 }).map((_, index) => (
                     <div
                         key={index}
-                        className="min-h-[240px] animate-pulse rounded-[2.5rem] bg-white p-6 shadow-sm"
+                        className="shadow-soft min-h-[240px] animate-pulse rounded-4xl bg-white p-6"
                     >
-                        <div className="h-6 w-20 rounded-full bg-gray-100" />
-                        <div className="mx-auto mt-10 h-16 w-20 rounded-xl bg-gray-100" />
+                        <div className="bg-brand-canvas-alt h-6 w-20 rounded-full" />
+                        <div className="bg-brand-canvas-alt mx-auto mt-10 h-16 w-20 rounded-2xl" />
                         <div className="mt-8 grid grid-cols-2 gap-3">
-                            <div className="h-10 rounded-xl bg-gray-100" />
-                            <div className="h-10 rounded-xl bg-gray-100" />
+                            <div className="bg-brand-canvas-alt h-10 rounded-xl" />
+                            <div className="bg-brand-canvas-alt h-10 rounded-xl" />
                         </div>
                     </div>
                 ))}
@@ -70,16 +70,16 @@ export function TableGrid({
 
     if (!isLoading && tables.length === 0) {
         return (
-            <div className="rounded-[2.5rem] border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
-                <p className="text-base font-semibold text-gray-700">No tables found.</p>
-                <p className="mt-1 text-sm text-gray-500">
-                    Create your first table to start seating guests.
+            <div className="border-brand-neutral-soft/20 bg-brand-canvas shadow-soft rounded-4xl border border-dashed p-16 text-center">
+                <p className="text-brand-ink text-xl font-black tracking-tight">No tables found.</p>
+                <p className="text-body-sm text-brand-neutral mt-2 font-medium">
+                    Create your first table to start seating guests and generating revenue.
                 </p>
                 <button
                     onClick={onAddTable}
-                    className="bg-brand-crimson mt-5 inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-bold text-white transition-colors hover:bg-[#a0151e]"
+                    className="bg-brand-accent text-body-sm text-brand-ink-strong shadow-soft mt-8 inline-flex h-12 items-center gap-2 rounded-xl px-8 font-bold transition-all hover:scale-105 active:scale-95"
                 >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-5 w-5" />
                     Add Table
                 </button>
             </div>
@@ -91,76 +91,67 @@ export function TableGrid({
             {tables.map(table => (
                 <div
                     key={table.id}
-                    className="group relative flex min-h-[240px] flex-col justify-between overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl"
+                    className="group shadow-soft ring-brand-neutral-soft/5 relative flex min-h-[260px] flex-col justify-between overflow-hidden rounded-4xl bg-white p-7 ring-1"
                 >
-                    <div className="relative z-10 flex items-start justify-between">
-                        <span
-                            className={cn(
-                                'rounded-full px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase shadow-sm',
-                                getStatusColor(table.status)
-                            )}
-                        >
-                            {table.status.replace('_', ' ')}
-                        </span>
-
-                        <div className="flex items-center gap-1 opacity-40 transition-opacity group-hover:opacity-100">
+                    <div className="relative z-10 flex items-start justify-end">
+                        <div className="flex items-center gap-1.5 transition-all duration-300">
                             <button
                                 onClick={() => onEditTable(table)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-500 transition-all hover:bg-gray-100 hover:text-black"
+                                className="bg-brand-canvas-alt text-brand-neutral hover:bg-brand-neutral-soft/10 hover:text-brand-ink flex h-9 w-9 items-center justify-center rounded-xl transition-all"
                             >
                                 <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => onDeleteTable(table)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-500 transition-all hover:bg-red-50 hover:text-red-500"
+                                className="bg-brand-canvas-alt text-brand-neutral hover:bg-state-danger-bg/20 hover:text-state-danger flex h-9 w-9 items-center justify-center rounded-xl transition-all"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </button>
                         </div>
                     </div>
 
-                    <div className="relative z-10 my-4 flex flex-col items-center justify-center">
-                        <span className="mb-2 text-xs font-bold tracking-widest text-gray-400 uppercase">
+                    <div className="relative z-10 my-6 flex flex-col items-center justify-center">
+                        <span className="text-brand-neutral text-micro mb-1 font-bold tracking-widest">
                             Table
                         </span>
                         <div
-                            className="text-6xl font-black tracking-tighter text-gray-900"
+                            className="text-brand-ink text-7xl font-black tracking-tighter"
                             style={{ fontVariantNumeric: 'tabular-nums' }}
                         >
                             {table.table_number}
                         </div>
                     </div>
 
-                    <div className="relative z-10 mt-auto grid grid-cols-2 gap-3 border-t border-gray-50 pt-4">
+                    <div className="border-brand-neutral-soft/5 relative z-10 mt-auto grid grid-cols-2 gap-3 border-t pt-5">
                         <button
                             onClick={() => onShowQR(table)}
-                            className="bg-brand-crimson flex h-10 items-center justify-center gap-2 rounded-xl text-xs font-bold text-white shadow-lg shadow-black/10 transition-all group-hover:scale-[1.02] hover:bg-[#a0151e]"
+                            className="bg-brand-accent text-body-xs text-brand-ink-strong shadow-medium flex h-11 items-center justify-center gap-2 rounded-xl font-bold transition-all"
                         >
-                            <QrCode className="h-3 w-3" />
-                            QR Code
+                            <QrCode className="h-4 w-4" />
+                            QR
                         </button>
                         <button
                             onClick={() => onRefreshTable(table)}
-                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-gray-100 text-xs font-bold text-gray-600 transition-all group-hover:scale-[1.02] hover:bg-gray-200"
+                            className="bg-brand-canvas-alt text-body-xs text-brand-neutral flex h-11 items-center justify-center gap-2 rounded-xl font-bold transition-all active:scale-95"
                             title="Refresh Status"
                         >
-                            <RefreshCcw className="h-3 w-3" />
-                            Status
+                            <RefreshCcw className="h-4 w-4" />
+                            Sync
                         </button>
                     </div>
 
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent to-gray-50/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                    <div className="to-brand-canvas-alt/20 pointer-events-none absolute inset-0 bg-linear-to-br from-transparent opacity-0" />
                 </div>
             ))}
 
             <button
                 onClick={onAddTable}
-                className="group flex min-h-[240px] flex-col items-center justify-center gap-4 rounded-[2.5rem] border-2 border-dashed border-gray-200 bg-gray-50/50 transition-all hover:border-black/20 hover:bg-gray-100"
+                className="group border-brand-neutral-soft/20 bg-brand-canvas/30 hover:border-brand-accent hover:shadow-soft flex min-h-[260px] flex-col items-center justify-center gap-5 rounded-4xl border-2 border-dashed transition-all hover:bg-white"
             >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-110">
-                    <Plus className="h-8 w-8 text-gray-400 group-hover:text-black" />
+                <div className="shadow-soft ring-brand-neutral-soft/5 relative flex h-20 w-20 items-center justify-center rounded-3xl bg-white ring-1 transition-all duration-300 group-hover:scale-110 group-hover:rotate-90">
+                    <Plus className="text-brand-neutral group-hover:text-brand-ink h-10 w-10 transition-colors" />
                 </div>
-                <span className="font-bold text-gray-400 transition-colors group-hover:text-black">
+                <span className="text-brand-neutral group-hover:text-brand-ink font-bold tracking-tight transition-colors">
                     Add New Table
                 </span>
             </button>

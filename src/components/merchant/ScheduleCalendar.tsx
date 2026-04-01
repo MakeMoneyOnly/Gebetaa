@@ -199,7 +199,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
 
             <div className="mb-6 grid grid-cols-1 gap-2 md:grid-cols-7">
                 {days.map(day => (
-                    <div key={day.key} className="rounded-2xl bg-gray-50 p-3 shadow-inner">
+                    <div key={day.key} className="rounded-xl bg-gray-50 p-3 shadow-inner">
                         <p className="text-xs font-bold tracking-wide text-gray-500 uppercase">
                             {day.label}
                         </p>
@@ -239,7 +239,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                 ))}
             </div>
 
-            <div className="rounded-2xl bg-gray-50 p-4 shadow-inner">
+            <div className="rounded-xl bg-gray-50 p-4 shadow-inner">
                 <div className="mb-3 flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-gray-500" />
                     <h3 className="text-sm font-bold text-gray-800">Add Shift</h3>
@@ -296,7 +296,7 @@ export function ScheduleCalendar({ staff }: { staff: StaffMember[] }) {
                         onClick={() => {
                             void createShift();
                         }}
-                        className="bg-brand-crimson h-10 rounded-lg px-3 text-sm font-bold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                        className="bg-brand-accent h-10 rounded-lg px-3 text-sm font-bold text-black hover:brightness-105 disabled:opacity-50"
                     >
                         <span className="inline-flex items-center gap-1">
                             <Plus className="h-4 w-4" />

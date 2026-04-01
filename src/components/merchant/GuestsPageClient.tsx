@@ -9,7 +9,6 @@ import {
     type CampaignRow,
     type SegmentOption,
 } from '@/components/merchant/CampaignBuilder';
-import { GiftCardManager, type GiftCardRow } from '@/components/merchant/GiftCardManager';
 import { GuestDirectory, type GuestDirectoryRow } from '@/components/merchant/GuestDirectory';
 import { GuestProfileDrawer } from '@/components/merchant/GuestProfileDrawer';
 import {
@@ -69,17 +68,12 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
     const [growthLoading, setGrowthLoading] = useState(true);
     const [growthError, setGrowthError] = useState<string | null>(null);
     const [loyaltyPrograms, setLoyaltyPrograms] = useState<LoyaltyProgramRow[]>([]);
-    const [giftCards, setGiftCards] = useState<GiftCardRow[]>([]);
     const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
     const [segments, setSegments] = useState<SegmentOption[]>([]);
     const [creatingLoyalty, setCreatingLoyalty] = useState(false);
-    const [creatingGiftCard, setCreatingGiftCard] = useState(false);
-    const [redeemingGiftCardId, setRedeemingGiftCardId] = useState<string | null>(null);
     const [creatingCampaign, setCreatingCampaign] = useState(false);
     const [launchingCampaignId, setLaunchingCampaignId] = useState<string | null>(null);
-    const [activeGrowthTab, setActiveGrowthTab] = useState<'loyalty' | 'gift-cards' | 'campaigns'>(
-        'loyalty'
-    );
+    const [activeGrowthTab, setActiveGrowthTab] = useState<'loyalty' | 'campaigns'>('loyalty');
 
     // Mark as loaded on mount
     useEffect(() => {
@@ -139,7 +133,6 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
             }
 
             setLoyaltyPrograms((programsPayload?.data?.programs ?? []) as LoyaltyProgramRow[]);
-            setGiftCards((cardsPayload?.data?.gift_cards ?? []) as GiftCardRow[]);
             setCampaigns((campaignsPayload?.data?.campaigns ?? []) as CampaignRow[]);
             setSegments(
                 ((campaignsPayload?.data?.segments ?? []) as SegmentOption[]).map(item => ({
@@ -296,57 +289,6 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
         }
     };
 
-    const handleCreateGiftCard = async (payload: {
-        code?: string;
-        initial_balance: number;
-        currency: string;
-        expires_at?: string;
-    }) => {
-        try {
-            setCreatingGiftCard(true);
-            const response = await fetch('/api/gift-cards', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result?.error ?? 'Failed to issue gift card.');
-            }
-            toast.success('Gift card issued.');
-            setRefreshToken(value => value + 1);
-        } catch (createError) {
-            toast.error(
-                createError instanceof Error ? createError.message : 'Failed to issue gift card.'
-            );
-        } finally {
-            setCreatingGiftCard(false);
-        }
-    };
-
-    const handleRedeemGiftCard = async (giftCardId: string, amount: number) => {
-        try {
-            setRedeemingGiftCardId(giftCardId);
-            const response = await fetch(`/api/gift-cards/${giftCardId}/redeem`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount }),
-            });
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result?.error ?? 'Failed to redeem gift card.');
-            }
-            toast.success('Gift card redeemed.');
-            setRefreshToken(value => value + 1);
-        } catch (redeemError) {
-            toast.error(
-                redeemError instanceof Error ? redeemError.message : 'Failed to redeem gift card.'
-            );
-        } finally {
-            setRedeemingGiftCardId(null);
-        }
-    };
-
     const handleCreateCampaign = async (payload: {
         id?: string;
         name: string;
@@ -438,38 +380,6 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
             setRefreshToken(v => v + 1);
         } catch (error: any) {
             toast.error(error.message || `Failed to ${status} program`);
-        }
-    };
-
-    const handleDeleteGiftCard = async (id: string) => {
-        try {
-            const res = await fetch(`/api/gift-cards/${id}`, { method: 'DELETE' });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || 'Failed to delete gift card');
-            }
-            toast.success('Gift card deleted');
-            setRefreshToken(v => v + 1);
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to delete gift card');
-        }
-    };
-
-    const handleArchiveGiftCard = async (id: string) => {
-        try {
-            const res = await fetch(`/api/gift-cards/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'archived' }),
-            });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || 'Failed to archive gift card');
-            }
-            toast.success('Gift card archived');
-            setRefreshToken(v => v + 1);
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to archive gift card');
         }
     };
 
@@ -581,10 +491,9 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                         </p>
                     </div>
 
-                    <div className="flex w-fit items-center gap-1 rounded-2xl bg-gray-100/50 p-1">
+                    <div className="flex w-fit items-center gap-1 rounded-xl bg-gray-100/50 p-1">
                         {[
                             { id: 'loyalty', label: 'Loyalty program', icon: Crown },
-                            { id: 'gift-cards', label: 'Gift cards', icon: Wallet },
                             { id: 'campaigns', label: 'Campaigns', icon: Repeat },
                         ].map(tab => (
                             <button
@@ -620,20 +529,6 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                             onDelete={handleDeleteLoyalty}
                             onStatusChange={handleStatusChangeLoyalty}
                             onEdit={id => handleEdit('loyalty', id)}
-                            locale={locale}
-                        />
-                    )}
-                    {activeGrowthTab === 'gift-cards' && (
-                        <GiftCardManager
-                            cards={giftCards}
-                            guests={guests}
-                            loading={growthLoading}
-                            creating={creatingGiftCard}
-                            redeemingId={redeemingGiftCardId}
-                            onCreate={handleCreateGiftCard}
-                            onRedeem={handleRedeemGiftCard}
-                            onArchive={handleArchiveGiftCard}
-                            onDelete={handleDeleteGiftCard}
                             locale={locale}
                         />
                     )}

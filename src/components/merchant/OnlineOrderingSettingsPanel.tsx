@@ -280,7 +280,7 @@ export function OnlineOrderingSettingsPanel({
             )}
 
             {loading ? (
-                <div className="mt-4 h-48 animate-pulse rounded-2xl bg-gray-50" />
+                <div className="mt-4 h-48 animate-pulse rounded-xl bg-gray-50" />
             ) : (
                 <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4">

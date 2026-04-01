@@ -50,7 +50,7 @@ export function OrderKanbanCard({
     return (
         <article
             className={cn(
-                'rounded-2xl bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md',
+                'rounded-xl bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md',
                 isSelected ? 'ring-2 ring-gray-800/20 ring-offset-1' : 'ring-1 ring-gray-100'
             )}
         >

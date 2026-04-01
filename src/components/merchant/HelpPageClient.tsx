@@ -148,7 +148,7 @@ export function HelpPageClient({ initialArticles, initialTickets }: HelpPageClie
                                 className="h-11 w-full rounded-xl border border-gray-200 pr-3 pl-9 text-sm outline-none focus:border-gray-400"
                             />
                         </div>
-                        <button className="bg-brand-crimson h-11 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e]">
+                        <button className="bg-brand-accent h-11 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105">
                             Search
                         </button>
                     </form>

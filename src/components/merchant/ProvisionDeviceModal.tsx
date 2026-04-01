@@ -101,7 +101,7 @@ export function ProvisionDeviceModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 p-4 backdrop-blur">
-            <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
                 {!newDevice ? (
                     <>
                         <div className="mb-2 flex items-start justify-between xl:-mr-1">
@@ -130,7 +130,7 @@ export function ProvisionDeviceModal({
                                     value={name}
                                     onChange={e => setName(e.target.value)}
                                     placeholder="e.g. Patio POS 1"
-                                    className="w-full rounded-2xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
                                     required
                                 />
                             </div>
@@ -143,7 +143,7 @@ export function ProvisionDeviceModal({
                                     onChange={e =>
                                         setDeviceType(e.target.value as HardwareDeviceType)
                                     }
-                                    className="w-full rounded-2xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 capitalize shadow-sm transition-all outline-none focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 capitalize shadow-sm transition-all outline-none focus:bg-white focus:shadow-md focus:ring-4 focus:ring-black/5"
                                 >
                                     <option value="pos">POS Terminal (Waiters)</option>
                                     <option value="kds">Kitchen Display (KDS)</option>
@@ -151,7 +151,7 @@ export function ProvisionDeviceModal({
                                 </select>
                             </div>
                             {deviceType === 'terminal' && (
-                                <div className="space-y-4 rounded-2xl bg-emerald-50/60 p-4 shadow-inner">
+                                <div className="space-y-4 rounded-xl bg-emerald-50/60 p-4 shadow-inner">
                                     <div>
                                         <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-400 uppercase">
                                             Station Name
@@ -160,7 +160,7 @@ export function ProvisionDeviceModal({
                                             value={stationName}
                                             onChange={e => setStationName(e.target.value)}
                                             placeholder="e.g. Front Cashier"
-                                            className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                            className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none placeholder:text-gray-400 focus:shadow-md focus:ring-4 focus:ring-black/5"
                                         />
                                     </div>
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -175,7 +175,7 @@ export function ProvisionDeviceModal({
                                                         e.target.value as TerminalSettlementMode
                                                     )
                                                 }
-                                                className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                                className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none focus:shadow-md focus:ring-4 focus:ring-black/5"
                                             >
                                                 <option value="cashier">Cashier</option>
                                                 <option value="counter">Counter</option>
@@ -193,7 +193,7 @@ export function ProvisionDeviceModal({
                                                         e.target.value as TerminalReceiptMode
                                                     )
                                                 }
-                                                className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none focus:shadow-md focus:ring-4 focus:ring-black/5"
+                                                className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all outline-none focus:shadow-md focus:ring-4 focus:ring-black/5"
                                             >
                                                 <option value="prompt">Prompt Staff</option>
                                                 <option value="auto">Auto Prompt</option>
@@ -264,11 +264,11 @@ export function ProvisionDeviceModal({
                                     Optional: Restrict device to specific zones
                                 </p>
                             </div>
-                            <div className="rounded-2xl bg-gray-50 px-4 py-3 text-[11px] font-semibold text-gray-500">
+                            <div className="rounded-xl bg-gray-50 px-4 py-3 text-[11px] font-semibold text-gray-500">
                                 Staff devices should be installed as a PWA and locked to kiosk mode
                                 on managed Android tablets for enterprise-grade operation.
                             </div>
-                            <div className="rounded-2xl bg-amber-50 px-4 py-3 text-[11px] font-semibold text-amber-700">
+                            <div className="rounded-xl bg-amber-50 px-4 py-3 text-[11px] font-semibold text-amber-700">
                                 Customer kiosk provisioning is temporarily hidden until the
                                 dedicated self-order kiosk UI is implemented. Today the supported
                                 managed device types are Waiter POS, KDS, and Cashier Terminal.
@@ -278,14 +278,14 @@ export function ProvisionDeviceModal({
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="flex-1 rounded-2xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-200"
+                                    className="flex-1 rounded-xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading || !name.trim()}
-                                    className="bg-brand-crimson flex-1 rounded-2xl px-6 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-all hover:bg-[#a0151e] disabled:opacity-50 disabled:shadow-none"
+                                    className="bg-brand-accent flex-1 rounded-xl px-6 py-3 text-sm font-bold text-black shadow-lg shadow-black/10 transition-all hover:brightness-105 disabled:opacity-50 disabled:shadow-none"
                                 >
                                     {loading ? 'Generating...' : 'Generate Code'}
                                 </button>
@@ -306,7 +306,7 @@ export function ProvisionDeviceModal({
 
                         <div className="mt-8 w-full space-y-4">
                             {/* Setup Link Section */}
-                            <div className="group relative flex flex-col items-start rounded-2xl bg-gray-50 p-4 shadow-sm transition-all hover:shadow">
+                            <div className="group relative flex flex-col items-start rounded-xl bg-gray-50 p-4 shadow-sm transition-all hover:shadow">
                                 <span className="mb-1 text-[10px] font-black tracking-wider text-gray-400 uppercase">
                                     Setup URL
                                 </span>
@@ -321,7 +321,7 @@ export function ProvisionDeviceModal({
                                             );
                                             toast.success('Setup link copied!');
                                         }}
-                                        className="hover:bg-brand-crimson flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-gray-400 shadow-sm transition-all hover:text-white hover:shadow-md"
+                                        className="hover:bg-brand-accent flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-gray-400 shadow-sm transition-all hover:text-black hover:shadow-md"
                                     >
                                         <Copy className="h-4 w-4" />
                                     </button>
@@ -329,7 +329,7 @@ export function ProvisionDeviceModal({
                             </div>
 
                             {/* Pairing Code Section */}
-                            <div className="flex w-full flex-col items-center gap-2 rounded-2xl bg-gray-50 p-6 shadow-inner">
+                            <div className="flex w-full flex-col items-center gap-2 rounded-xl bg-gray-50 p-6 shadow-inner">
                                 <span className="mb-1 text-[10px] font-black tracking-wider text-gray-400 uppercase">
                                     Pairing Code
                                 </span>
@@ -352,7 +352,7 @@ export function ProvisionDeviceModal({
                                     setNewDevice(null);
                                     onClose();
                                 }}
-                                className="bg-brand-crimson flex-1 rounded-xl py-3 text-sm font-bold text-white shadow-lg shadow-black/10 hover:bg-[#a0151e]"
+                                className="bg-brand-accent flex-1 rounded-xl py-3 text-sm font-bold text-black shadow-lg shadow-black/10 hover:brightness-105"
                             >
                                 Done
                             </button>

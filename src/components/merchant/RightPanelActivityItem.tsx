@@ -56,7 +56,7 @@ export function ActivityItem({ item }: ActivityItemProps) {
             </p>
 
             {item.hasMessage && (
-                <div className="relative mb-2 rounded-2xl rounded-tl-none bg-[#EEF2FF] p-4 text-sm leading-relaxed font-medium text-[#4F46E5] transition-shadow group-hover:shadow-md">
+                <div className="relative mb-2 rounded-xl rounded-tl-none bg-[#EEF2FF] p-4 text-sm leading-relaxed font-medium text-[#4F46E5] transition-shadow group-hover:shadow-md">
                     "{item.message}"
                     <div className="absolute -right-2 -bottom-2 rounded-full border-4 border-white bg-yellow-400 p-1.5 shadow-sm">
                         <span role="img" aria-label="note" className="block text-xs">
@@ -67,8 +67,8 @@ export function ActivityItem({ item }: ActivityItemProps) {
             )}
 
             {item.hasFile && (
-                <div className="group/file flex cursor-pointer items-center gap-4 rounded-2xl border border-green-100 bg-green-50 p-4 transition-colors hover:bg-green-100">
-                    <div className="bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md shadow-black/10 transition-transform group-hover/file:scale-110">
+                <div className="group/file flex cursor-pointer items-center gap-4 rounded-xl border border-green-100 bg-green-50 p-4 transition-colors hover:bg-green-100">
+                    <div className="bg-brand-accent flex h-10 w-10 items-center justify-center rounded-xl text-black shadow-md shadow-black/10 transition-transform group-hover/file:scale-110">
                         <FileText className="h-5 w-5 text-green-400" />
                     </div>
                     <div className="flex-1">

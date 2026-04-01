@@ -145,7 +145,7 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                     </button>
                 </div>
 
-                <div className="space-y-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                <div className="space-y-3 rounded-xl border border-gray-100 bg-gray-50 p-4">
                     <input
                         value={draft.name}
                         onChange={event =>
@@ -236,7 +236,7 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                         onClick={() => {
                             void saveDraft();
                         }}
-                        className="bg-brand-crimson h-10 w-full rounded-lg text-sm font-bold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                        className="bg-brand-accent h-10 w-full rounded-lg text-sm font-bold text-black hover:brightness-105 disabled:opacity-50"
                     >
                         {saving ? 'Saving...' : draft.id ? 'Update Rule' : 'Create Rule'}
                     </button>
@@ -253,7 +253,7 @@ export function AlertRuleBuilderDrawer({ open, onClose }: { open: boolean; onClo
                             key={rule.id}
                             type="button"
                             onClick={() => setDraft(fromRule(rule))}
-                            className="card-shadow hover:card-shadow-lg w-full rounded-2xl bg-white p-4 text-left transition-all"
+                            className="card-shadow hover:card-shadow-lg w-full rounded-xl bg-white p-4 text-left transition-all"
                         >
                             <div className="flex items-center justify-between gap-2">
                                 <p className="text-sm font-semibold text-gray-900">{rule.name}</p>

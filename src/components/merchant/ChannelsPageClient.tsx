@@ -232,7 +232,7 @@ export function ChannelsPageClient(_props: ChannelsPageClientProps) {
             </div>
 
             {error && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
                     {error}
                 </div>
             )}

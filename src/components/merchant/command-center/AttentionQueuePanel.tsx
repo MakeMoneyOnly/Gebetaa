@@ -49,7 +49,7 @@ export function AttentionQueuePanel({
                 <div className="flex items-center gap-2">
                     <Siren className="h-4 w-4 text-rose-500" />
                     <h2 className="text-lg font-bold text-gray-900">Attention Queue</h2>
-                    <span className="bg-brand-crimson rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
+                    <span className="bg-brand-accent rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider text-black uppercase">
                         {items.length}
                     </span>
                 </div>
@@ -72,7 +72,7 @@ export function AttentionQueuePanel({
             {loading ? (
                 <div className="space-y-3">
                     {Array.from({ length: 4 }).map((_, index) => (
-                        <div key={index} className="rounded-2xl border border-gray-100 p-4">
+                        <div key={index} className="rounded-xl border border-gray-100 p-4">
                             <Skeleton className="h-4 w-40 rounded-lg" />
                             <Skeleton className="mt-2 h-3 w-28 rounded-lg" />
                             <Skeleton className="mt-3 h-9 w-24 rounded-xl" />
@@ -80,7 +80,7 @@ export function AttentionQueuePanel({
                     ))}
                 </div>
             ) : error ? (
-                <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
+                <div className="rounded-xl border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
                     <p className="font-semibold">Unable to load queue.</p>
                     <p className="pt-1 text-xs">{error}</p>
                     <button
@@ -91,7 +91,7 @@ export function AttentionQueuePanel({
                     </button>
                 </div>
             ) : items.length === 0 ? (
-                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-8 text-center">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-8 text-center">
                     <UtensilsCrossed className="mx-auto h-6 w-6 text-gray-400" />
                     <p className="pt-2 text-sm font-semibold text-gray-700">Queue is clear.</p>
                 </div>
@@ -100,7 +100,7 @@ export function AttentionQueuePanel({
                     {items.slice(0, 8).map(item => (
                         <article
                             key={`${item.type}-${item.id}`}
-                            className="card-shadow hover:card-shadow-lg rounded-3xl bg-white p-4 transition-all"
+                            className="card-shadow hover:card-shadow-lg rounded-2xl bg-white p-4 transition-all"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export function AttentionQueuePanel({
                                 {item.type === 'order' && (
                                     <button
                                         onClick={() => onAdvanceOrder(item)}
-                                        className="bg-brand-crimson rounded-xl px-3 py-2 text-xs font-bold text-white transition hover:bg-[#a0151e]"
+                                        className="bg-brand-accent rounded-xl px-3 py-2 text-xs font-bold text-black transition hover:brightness-105"
                                     >
                                         Advance Status
                                     </button>

@@ -47,13 +47,13 @@ export function TableSessionDrawer({
                     </div>
                     <button
                         onClick={onClose}
-                        className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 shadow-sm transition-colors hover:text-white"
+                        className="hover:bg-brand-accent flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 shadow-sm transition-colors hover:text-black"
                     >
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                <div className="mt-6 rounded-2xl bg-gray-50 p-4 shadow-inner">
+                <div className="mt-6 rounded-xl bg-gray-50 p-4 shadow-inner">
                     {loading && <p className="text-sm text-gray-500">Loading session state...</p>}
 
                     {!loading && !session && (

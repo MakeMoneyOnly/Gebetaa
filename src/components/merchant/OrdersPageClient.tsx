@@ -240,7 +240,7 @@ export function OrdersPageClient({ initialData }: OrdersPageClientProps) {
 
             {/* Pending Service Requests */}
             {pendingRequests.length > 0 && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                     <h3 className="mb-2 font-bold text-amber-800">Pending Service Requests</h3>
                     <div className="space-y-2">
                         {pendingRequests.map(request => (

@@ -60,7 +60,7 @@ export function InviteStaffModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                 <div className="flex items-start justify-between">
                     <div>
                         <h3 className="text-xl font-bold text-gray-900">Provision Access Key</h3>
@@ -69,7 +69,7 @@ export function InviteStaffModal({
                         </p>
                     </div>
                     <button
-                        className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
+                        className="hover:bg-brand-accent flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-black"
                         onClick={onClose}
                     >
                         <X className="h-5 w-5" />
@@ -128,7 +128,7 @@ export function InviteStaffModal({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                            className="bg-brand-accent h-10 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                         >
                             {loading ? 'Provisioning...' : 'Create Provisioning Link'}
                         </button>

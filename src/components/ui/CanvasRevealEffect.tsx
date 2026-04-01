@@ -18,7 +18,7 @@ export const CanvasRevealEffect = ({ containerClassName }: CanvasRevealEffectPro
         <div className={cn('relative h-full w-full bg-transparent', containerClassName)}>
             {/* Simplified animated background using CSS */}
             <div className="absolute inset-0 opacity-20 dark:opacity-30">
-                <div className="from-brand-crimson/20 to-brand-crimson/10 absolute inset-0 animate-pulse bg-gradient-to-br via-transparent" />
+                <div className="from-brand-accent/20 to-brand-accent/10 absolute inset-0 animate-pulse bg-gradient-to-br via-transparent" />
                 <div
                     className="absolute inset-0"
                     style={{

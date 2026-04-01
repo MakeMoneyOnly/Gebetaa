@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import type { TableSummary } from '@/lib/services/dashboardDataService';
@@ -16,15 +17,15 @@ interface TablesPageClientProps {
 function statusColor(status: string) {
     switch (status) {
         case 'available':
-            return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60';
+            return 'bg-state-success-bg/30 text-state-success ring-1 ring-state-success/10';
         case 'occupied':
-            return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60';
+            return 'bg-state-warning-bg/30 text-state-warning ring-1 ring-state-warning/10';
         case 'reserved':
-            return 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/60';
+            return 'bg-state-info-bg/30 text-state-info ring-1 ring-state-info/10';
         case 'cleaning':
-            return 'bg-purple-50 text-purple-700 ring-1 ring-purple-200/60';
+            return 'bg-brand-canvas-alt text-brand-neutral ring-1 ring-brand-neutral/10';
         default:
-            return 'bg-gray-100 text-gray-600 ring-1 ring-gray-200/60';
+            return 'bg-brand-canvas text-brand-neutral ring-1 ring-brand-neutral-soft/10';
     }
 }
 
@@ -116,67 +117,64 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
 
     return (
         <div className="min-h-screen space-y-6 pb-20">
-            {/* Header */}
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
                 <div>
-                    <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Tables</h1>
-                    <p className="font-medium text-gray-500">
-                        Manage restaurant tables and seating.
+                    <h1 className="text-brand-ink-strong text-5xl font-bold tracking-tight">
+                        Tables
+                    </h1>
+                    <p className="text-body text-brand-neutral mt-2 font-medium">
+                        Manage restaurant floor, seating capacity and real-time status.
                     </p>
                 </div>
                 <button
                     onClick={refreshData}
                     disabled={refreshing}
-                    className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:opacity-50"
+                    className="bg-brand-canvas-alt text-body-sm text-brand-ink hover:bg-brand-neutral-soft/10 flex items-center gap-2 rounded-2xl px-6 py-3.5 font-bold transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {refreshing ? 'Refreshing...' : 'Refresh'}
+                    {refreshing ? 'Syncing...' : 'Refresh'}
                 </button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-                <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-                    <p className="text-sm font-medium text-gray-500">Total</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                </div>
-                <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
-                    <p className="text-sm font-medium text-emerald-600">Available</p>
-                    <p className="text-2xl font-bold text-emerald-700">{stats.available}</p>
-                </div>
-                <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
-                    <p className="text-sm font-medium text-amber-600">Occupied</p>
-                    <p className="text-2xl font-bold text-amber-700">{stats.occupied}</p>
-                </div>
-                <div className="rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100">
-                    <p className="text-sm font-medium text-blue-600">Reserved</p>
-                    <p className="text-2xl font-bold text-blue-700">{stats.reserved}</p>
-                </div>
-                <div className="rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
-                    <p className="text-sm font-medium text-gray-500">Inactive</p>
-                    <p className="text-2xl font-bold text-gray-600">{stats.inactive}</p>
-                </div>
+            {/* Stats - Unified Pattern */}
+            <div className="divide-brand-neutral-soft/10 flex w-full divide-x py-8">
+                {[
+                    { label: 'Total', value: stats.total, color: 'text-brand-ink' },
+                    { label: 'Available', value: stats.available, color: 'text-state-success' },
+                    { label: 'Occupied', value: stats.occupied, color: 'text-state-warning' },
+                    { label: 'Reserved', value: stats.reserved, color: 'text-state-info' },
+                    { label: 'Inactive', value: stats.inactive, color: 'text-brand-neutral-soft' },
+                ].map((stat, idx) => (
+                    <div key={idx} className="flex-1 px-8 first:pl-10 last:pr-10">
+                        <p className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                            {stat.label}
+                        </p>
+                        <p className={cn('mt-1 text-4xl font-black tracking-tight', stat.color)}>
+                            {stat.value}
+                        </p>
+                    </div>
+                ))}
             </div>
 
             {/* Tables Grid */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {tables.map(table => (
                     <button
                         key={table.id}
                         onClick={() => setSelectedTable(table)}
                         className={cn(
-                            'rounded-2xl p-4 text-left transition-all',
+                            'group relative rounded-4xl p-6 text-left transition-all hover:scale-105 active:scale-95',
                             table.is_active
-                                ? 'bg-white shadow-sm ring-1 ring-gray-100 hover:ring-2 hover:ring-gray-200'
-                                : 'bg-gray-50 opacity-60 ring-1 ring-gray-200'
+                                ? 'shadow-soft ring-brand-neutral-soft/5 hover:shadow-medium hover:ring-brand-accent bg-white ring-1'
+                                : 'bg-brand-canvas-alt ring-brand-neutral-soft/10 opacity-50 ring-1'
                         )}
                     >
-                        <div className="mb-2 flex items-center justify-between">
-                            <span className="text-lg font-bold text-gray-900">
+                        <div className="mb-3 flex items-start justify-between">
+                            <span className="text-brand-ink group-hover:text-brand-ink-strong text-2xl font-black tracking-tight">
                                 {table.table_number}
                             </span>
                             <span
                                 className={cn(
-                                    'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase',
+                                    'text-micro rounded-full px-2 py-0.5 font-bold tracking-wider uppercase ring-1',
                                     statusColor(table.status)
                                 )}
                             >
@@ -184,7 +182,9 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
                             </span>
                         </div>
                         {table.capacity && (
-                            <p className="text-sm text-gray-500">Seats: {table.capacity}</p>
+                            <p className="text-body-sm text-brand-neutral font-medium">
+                                Seats: {table.capacity}
+                            </p>
                         )}
                     </button>
                 ))}
@@ -192,33 +192,41 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
 
             {/* Selected Table Panel */}
             {selectedTable && (
-                <div className="fixed right-0 bottom-0 left-0 rounded-t-3xl bg-white p-6 shadow-lg ring-1 ring-gray-200">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-lg font-bold text-gray-900">
-                            Table {selectedTable.table_number}
-                        </h3>
-                        <button
-                            onClick={() => setSelectedTable(null)}
-                            className="text-gray-400 hover:text-gray-600"
-                        >
-                            Close
-                        </button>
-                    </div>
-                    <div className="flex gap-2">
-                        {['available', 'occupied', 'reserved', 'cleaning'].map(status => (
+                <div className="bg-brand-ink/40 fixed inset-x-0 bottom-0 z-50 flex items-end justify-center p-4 backdrop-blur-sm">
+                    <div className="animate-in slide-in-from-bottom-5 shadow-strong ring-brand-neutral-soft/10 w-full max-w-2xl rounded-4xl bg-white p-8 ring-1">
+                        <div className="mb-8 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-brand-ink text-2xl font-black tracking-tight">
+                                    Table {selectedTable.table_number}
+                                </h3>
+                                <p className="text-body-sm text-brand-neutral mt-1 font-medium">
+                                    Capacity: {selectedTable.capacity} · Current status:{' '}
+                                    <span className="capitalize">{selectedTable.status}</span>
+                                </p>
+                            </div>
                             <button
-                                key={status}
-                                onClick={() => handleStatusUpdate(selectedTable.id, status)}
-                                className={cn(
-                                    'rounded-xl px-4 py-2 text-sm font-bold capitalize',
-                                    selectedTable.status === status
-                                        ? 'bg-gray-900 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                )}
+                                onClick={() => setSelectedTable(null)}
+                                className="bg-brand-canvas-alt text-brand-neutral hover:bg-brand-canvas-alt hover:text-brand-ink flex h-10 w-10 items-center justify-center rounded-xl transition-all active:scale-90"
                             >
-                                {status}
+                                <X className="h-5 w-5" />
                             </button>
-                        ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            {['available', 'occupied', 'reserved', 'cleaning'].map(status => (
+                                <button
+                                    key={status}
+                                    onClick={() => handleStatusUpdate(selectedTable.id, status)}
+                                    className={cn(
+                                        'text-body-sm rounded-2xl px-5 py-4 font-black tracking-wider uppercase transition-all',
+                                        selectedTable.status === status
+                                            ? 'bg-brand-ink shadow-medium text-white'
+                                            : 'bg-brand-canvas-alt text-brand-neutral hover:bg-brand-neutral-soft/10 hover:text-brand-ink'
+                                    )}
+                                >
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}

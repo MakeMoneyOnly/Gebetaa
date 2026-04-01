@@ -58,7 +58,7 @@ export function RolePermissionDrawer({
                         <p className="mt-1 text-sm text-gray-500">ID: {staff.id?.slice(0, 8)}</p>
                     </div>
                     <button
-                        className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
+                        className="hover:bg-brand-accent flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-black"
                         onClick={onClose}
                     >
                         <X className="h-5 w-5" />
@@ -99,7 +99,7 @@ export function RolePermissionDrawer({
                         type="button"
                         disabled={loading}
                         onClick={() => onSave(staff.id, role)}
-                        className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                        className="bg-brand-accent h-10 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                     >
                         {loading ? 'Saving...' : 'Save Role'}
                     </button>

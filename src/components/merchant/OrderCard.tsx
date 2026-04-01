@@ -1,8 +1,8 @@
 'use client';
 
-import { Clock, DollarSign } from 'lucide-react';
+import React from 'react';
 import { cn } from '@/lib/utils';
-import { formatETBCurrency } from '@/lib/format/et';
+import { formatCurrencyCompact } from '@/lib/utils/monetary';
 import { Order } from '@/types/database';
 
 interface OrderCardProps {
@@ -15,33 +15,6 @@ interface OrderCardProps {
     onOpenDetails: (orderId: string) => void;
     onStatusUpdate: (orderId: string, status: string | null) => void;
     onToggleOrder: (orderId: string) => void;
-}
-
-function statusColor(status: string | null) {
-    if (status?.startsWith('service_')) return 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/60';
-    if (status === 'completed') return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60';
-    if (status === 'pending') return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60';
-    if (status === 'cancelled') return 'bg-red-50 text-red-700 ring-1 ring-red-200/60';
-    if (status === 'ready' || status === 'served')
-        return 'bg-green-50 text-green-700 ring-1 ring-green-200/60';
-    return 'bg-orange-50 text-orange-700 ring-1 ring-orange-200/60';
-}
-
-function ageColor(createdAt: string | null) {
-    const ageMinutes = createdAt
-        ? Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000))
-        : 0;
-    if (ageMinutes >= 30) return 'text-red-500';
-    if (ageMinutes >= 15) return 'text-orange-500';
-    return 'text-emerald-600';
-}
-
-function formatNextStatus(status: string | null): string {
-    if (!status) return 'Done';
-    return status
-        .replace('service_', '')
-        .replace('_', ' ')
-        .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export function OrderCard({
@@ -57,79 +30,133 @@ export function OrderCard({
 }: OrderCardProps) {
     const isLoading = loadingOrderId === order.id;
 
+    let statusColorClass = 'bg-state-info-bg text-state-info ring-state-info/20';
+
+    if (order.status === 'completed' || order.status === 'service_completed')
+        statusColorClass = 'bg-state-success-bg text-state-success ring-state-success/20';
+    else if (order.status === 'pending' || order.status === 'service_pending')
+        statusColorClass = 'bg-state-warning-bg text-state-warning ring-state-warning/20';
+    else if (order.status === 'cancelled')
+        statusColorClass = 'bg-state-danger-bg text-state-danger ring-state-danger/20';
+    else if (order.status === 'ready')
+        statusColorClass = 'bg-state-success-bg text-state-success ring-state-success/20';
+    else if (
+        order.status === 'preparing' ||
+        order.status === 'acknowledged' ||
+        order.status === 'service_in_progress'
+    )
+        statusColorClass = 'bg-state-warning-bg text-state-warning ring-state-warning/20';
+
+    const ageMinutes = React.useMemo(() => {
+        if (!order.created_at) return 0;
+        // Using Date.now() to calculate order age - intentional for live display
+        return Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000));
+    }, [order.created_at]);
+
+    const ageColorClass =
+        ageMinutes >= 30
+            ? 'text-brand-ember'
+            : ageMinutes >= 15
+              ? 'text-state-warning'
+              : 'text-brand-neutral';
+
     return (
-        <article
+        <div
             className={cn(
-                'rounded-2xl bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md',
-                isSelected ? 'ring-2 ring-gray-800/20 ring-offset-1' : 'ring-1 ring-gray-100'
+                'group shadow-soft hover:shadow-medium relative flex min-h-72 flex-col gap-4 overflow-hidden rounded-4xl bg-white p-4 transition-all duration-300',
+                isSelected ? 'ring-brand-accent/30 ring-2' : 'ring-brand-neutral-soft/10 ring-1'
             )}
         >
-            {/* SR badge or checkbox */}
-            {isServiceRequest ? (
-                <p className="mb-2 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
-                    Service request
-                </p>
-            ) : (
-                <div className="mb-2">
-                    <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => onToggleOrder(order.id)}
-                        className="h-4 w-4 rounded border-gray-300 accent-gray-800"
-                    />
-                </div>
-            )}
+            {/* Top Area: Table Number & Status Overlay */}
+            <div className="bg-brand-canvas-alt relative flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-3xl">
+                {/* Decorative background */}
+                <div className="from-brand-canvas-alt to-brand-canvas absolute inset-0 bg-linear-to-br" />
 
-            {/* Table + Status */}
-            <div className="mb-3 flex items-start justify-between gap-2">
-                <div>
-                    <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                        Table
-                    </p>
-                    <p className="text-xl font-black tracking-tight text-gray-900">
-                        {order.table_number || 'N/A'}
-                    </p>
-                </div>
-                <span
-                    className={cn(
-                        'rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase',
-                        statusColor(order.status)
-                    )}
-                >
-                    {(order.status || '').replace('service_', '')}
+                {/* Visual Anchor: Table Number */}
+                <span className="text-brand-neutral/20 relative text-6xl font-black tracking-tighter select-none">
+                    {order.table_number || '?'}
                 </span>
+
+                {/* Status Badge Overlay */}
+                {order.status !== 'completed' && order.status !== 'service_completed' && (
+                    <div className="absolute top-3 left-3">
+                        <span
+                            className={cn(
+                                'text-micro rounded-lg px-2.5 py-1 font-bold tracking-wide uppercase ring-1 backdrop-blur-md',
+                                statusColorClass
+                            )}
+                        >
+                            {(order.status || '').replace('service_', '').replace('_', ' ')}
+                        </span>
+                    </div>
+                )}
+
+                {/* Selection / SR Badge Overlay */}
+                <div className="absolute top-3 right-3">
+                    {isServiceRequest ? (
+                        <span className="bg-brand-surface-dark text-micro rounded-lg px-2.5 py-1 font-bold tracking-wider text-white uppercase shadow-sm">
+                            SR
+                        </span>
+                    ) : (
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onToggleOrder(order.id)}
+                            className="border-brand-neutral-soft/30 accent-brand-accent h-5 w-5 cursor-pointer rounded-md transition-all"
+                        />
+                    )}
+                </div>
             </div>
 
-            {/* Time + Total/Notes */}
-            <div className="mb-4 space-y-2">
-                <div className="flex items-center gap-2 text-xs">
-                    <Clock className="h-3.5 w-3.5 text-gray-400" />
-                    <span className={cn('font-semibold', ageColor(order.created_at))}>
+            {/* Info Area: Table, Total, Time */}
+            <div className="space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                    <div>
+                        <p className="text-micro text-brand-neutral font-bold tracking-widest uppercase">
+                            Table
+                        </p>
+                        <h4 className="text-brand-ink text-xl leading-tight font-bold">
+                            {order.table_number || 'N/A'}
+                        </h4>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-micro text-brand-neutral font-bold tracking-widest uppercase">
+                            {isServiceRequest ? 'Request' : 'Total'}
+                        </p>
+                        <p className="text-brand-ink font-bold whitespace-nowrap">
+                            {isServiceRequest
+                                ? order.notes || 'Service'
+                                : `${formatCurrencyCompact(order.total_price)} ETB`}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <div
+                        className={cn(
+                            'h-1.5 w-1.5 rounded-full',
+                            ageMinutes >= 30
+                                ? 'bg-brand-ember animate-pulse'
+                                : 'bg-brand-neutral/30'
+                        )}
+                    />
+                    <p className={cn('text-xs font-semibold', ageColorClass)}>
                         {order.created_at
                             ? new Date(order.created_at).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
                               })
                             : 'N/A'}
-                    </span>
+                        <span className="ml-1 opacity-50">({ageMinutes}m)</span>
+                    </p>
                 </div>
-                {isServiceRequest ? (
-                    <div className="text-xs font-semibold text-blue-700">
-                        {order.notes || 'No notes'}
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700">
-                        <DollarSign className="h-3.5 w-3.5 text-gray-400" />
-                        {formatETBCurrency(order.total_price)}
-                    </div>
-                )}
             </div>
 
-            {/* Action buttons */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Action Buttons: Details & Workflow */}
+            <div className="mt-auto flex items-center gap-2">
                 <button
                     onClick={() => onOpenDetails(order.id)}
-                    className="h-9 rounded-xl border border-gray-300 bg-white text-xs font-bold text-gray-800 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50"
+                    className="border-brand-neutral-soft/10 text-brand-ink hover:bg-brand-canvas-alt inline-flex h-10 flex-1 items-center justify-center gap-1 rounded-xl border px-4 text-xs font-bold transition-all duration-200 active:scale-95"
                 >
                     {isLoading ? 'Loading…' : 'Details'}
                 </button>
@@ -137,15 +164,22 @@ export function OrderCard({
                     disabled={!nextStatus || isUpdating}
                     onClick={() => onStatusUpdate(order.id, order.status)}
                     className={cn(
-                        'h-9 rounded-xl text-xs font-bold transition-all duration-200',
+                        'h-10 flex-[1.5] rounded-xl px-4 text-xs font-bold transition-all duration-200 active:scale-95',
                         !nextStatus
-                            ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+                            ? 'bg-brand-canvas-alt text-brand-neutral cursor-not-allowed opacity-50'
+                            : 'bg-brand-accent text-brand-ink shadow-sm hover:brightness-105'
                     )}
                 >
-                    {isUpdating ? 'Updating…' : formatNextStatus(nextStatus)}
+                    {isUpdating
+                        ? 'Updating…'
+                        : nextStatus
+                          ? nextStatus
+                                .replace('service_', '')
+                                .replace('_', ' ')
+                                .replace(/\b\w/g, c => c.toUpperCase())
+                          : 'Done'}
                 </button>
             </div>
-        </article>
+        </div>
     );
 }

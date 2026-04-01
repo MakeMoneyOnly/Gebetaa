@@ -17,7 +17,7 @@ export function BroadcastInput({ value, onChange, onBroadcast, onKeyDown }: Broa
                     value={value}
                     onChange={e => onChange(e.target.value)}
                     onKeyDown={onKeyDown}
-                    className="w-full rounded-2xl bg-[#F8F9FA] py-4 pr-12 pl-6 text-sm font-medium shadow-inner transition-all placeholder:text-gray-400 focus:ring-0 focus:outline-none"
+                    className="w-full rounded-xl bg-[#F8F9FA] py-4 pr-12 pl-6 text-sm font-medium shadow-inner transition-all placeholder:text-gray-400 focus:ring-0 focus:outline-none"
                 />
 
                 <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center gap-3 text-gray-400">

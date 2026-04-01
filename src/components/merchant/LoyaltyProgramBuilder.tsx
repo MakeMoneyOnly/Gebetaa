@@ -119,7 +119,7 @@ export function LoyaltyProgramBuilder({
     return (
         <div className="grid min-h-[500px] grid-cols-1 gap-6 lg:grid-cols-12">
             {/* Left: Creation/Edit Form */}
-            <div className="flex flex-col rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-4">
+            <div className="flex flex-col rounded-2xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-4">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h3 className="text-xl leading-tight font-bold text-gray-900">
@@ -163,7 +163,7 @@ export function LoyaltyProgramBuilder({
                                 <input
                                     value={spendAmount}
                                     onChange={event => setSpendAmount(event.target.value)}
-                                    className="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-center text-sm font-bold transition-all outline-none focus:border-gray-400"
+                                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-center text-sm font-bold transition-all outline-none focus:border-gray-400"
                                 />
                                 <div className="absolute -top-2 left-4 bg-gray-50 px-1.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase">
                                     Spend (ETB)
@@ -176,7 +176,7 @@ export function LoyaltyProgramBuilder({
                                 <input
                                     value={earnPoints}
                                     onChange={event => setEarnPoints(event.target.value)}
-                                    className="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-center text-sm font-bold text-emerald-600 transition-all outline-none focus:border-emerald-400"
+                                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-center text-sm font-bold text-emerald-600 transition-all outline-none focus:border-emerald-400"
                                 />
                                 <div className="absolute -top-2 left-4 bg-gray-50 px-1.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase">
                                     Earn (Pts)
@@ -214,10 +214,10 @@ export function LoyaltyProgramBuilder({
                             onClick={submit}
                             disabled={isOperationLoading || name.trim().length < 2}
                             className={cn(
-                                'flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-bold text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50',
+                                'flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-black shadow-xl transition-all active:scale-[0.98] disabled:opacity-50',
                                 editingId
                                     ? 'bg-gray-900 shadow-gray-900/10'
-                                    : 'bg-brand-crimson shadow-crimson-900/10'
+                                    : 'bg-brand-accent shadow-crimson-900/10'
                             )}
                         >
                             {isOperationLoading ? (
@@ -239,7 +239,7 @@ export function LoyaltyProgramBuilder({
             </div>
 
             {/* Right: Management List */}
-            <div className="flex flex-col overflow-hidden rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-8">
+            <div className="flex flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-xl shadow-gray-200/50 lg:col-span-8">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h3 className="text-xl leading-tight font-bold text-gray-900">
@@ -263,13 +263,13 @@ export function LoyaltyProgramBuilder({
                             {[1, 2, 3, 4].map(i => (
                                 <div
                                     key={i}
-                                    className="h-16 w-full animate-pulse rounded-2xl bg-gray-50"
+                                    className="h-16 w-full animate-pulse rounded-xl bg-gray-50"
                                 />
                             ))}
                         </div>
                     ) : programs.length === 0 ? (
                         <div className="flex h-full flex-col items-center justify-center rounded-4xl border border-dashed border-gray-200 bg-gray-50/30 py-20">
-                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
+                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
                                 <Crown className="h-6 w-6 text-gray-300" />
                             </div>
                             <p className="text-sm font-bold text-gray-500">No programs yet</p>
@@ -285,7 +285,7 @@ export function LoyaltyProgramBuilder({
                                 return (
                                     <div
                                         key={program.id}
-                                        className="group flex items-center justify-between rounded-2xl border-none bg-white p-4 shadow-sm transition-all hover:shadow-md"
+                                        className="group flex items-center justify-between rounded-xl border-none bg-white p-4 shadow-sm transition-all hover:shadow-md"
                                     >
                                         <div className="flex items-center gap-4">
                                             <div
