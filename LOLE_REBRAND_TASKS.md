@@ -18,7 +18,7 @@ Rebrand the entire platform around the landing page design language so every Lol
 
 ## Current Phase
 
-Phase 0: Foundations and brand lock
+Phase 3: Shared shell and navigation
 
 ## Task Status Legend
 
@@ -31,11 +31,11 @@ Phase 0: Foundations and brand lock
 
 | ID    | Task                                                           | Status | Deliverable                                           |
 | ----- | -------------------------------------------------------------- | ------ | ----------------------------------------------------- |
-| P0-01 | Create root-level design-system foundation doc                 | done   | `LOLE_DESIGN_SYSTEM_FOUNDATION.md`                    |
-| P0-02 | Create root-level rebrand execution tracker                    | done   | `LOLE_REBRAND_TASKS.md`                               |
-| P0-03 | Lock canonical brand name, casing, tone, and expression levels | done   | Foundation doc sections completed                     |
-| P0-04 | Audit landing page and extract first-pass visual language      | done   | Audit section in foundation doc                       |
-| P0-05 | Inventory current shared primitives and styling drift          | done   | Component inventory and drift notes in foundation doc |
+| P0-01 | Create root-level design-system foundation doc                 | todo   | `LOLE_DESIGN_SYSTEM_FOUNDATION.md`                    |
+| P0-02 | Create root-level rebrand execution tracker                    | todo   | `LOLE_REBRAND_TASKS.md`                               |
+| P0-03 | Lock canonical brand name, casing, tone, and expression levels | todo   | Foundation doc sections completed                     |
+| P0-04 | Audit landing page and extract first-pass visual language      | todo   | Audit section in foundation doc                       |
+| P0-05 | Inventory current shared primitives and styling drift          | todo   | Component inventory and drift notes in foundation doc |
 | P0-06 | Identify legacy `Gebeta` / `LoLe` naming to retire over time   | todo   | Rebrand cleanup backlog                               |
 
 ## Phase 1: Token Infrastructure
@@ -94,9 +94,9 @@ Acceptance criteria:
 
 | ID    | Task                                                     | Status | Deliverable                |
 | ----- | -------------------------------------------------------- | ------ | -------------------------- |
-| P4-01 | Define dashboard analytics card and chart frame patterns | todo   | Analytics pattern set      |
-| P4-02 | Define order ticket and order-detail patterns            | todo   | Orders pattern set         |
-| P4-03 | Define KDS urgency, fire, and SLA states                 | todo   | KDS state pattern set      |
+| P4-01 | Define dashboard analytics card and chart frame patterns | done   | Analytics pattern set      |
+| P4-02 | Define order ticket and order-detail patterns            | done   | Orders pattern set         |
+| P4-03 | Define KDS urgency, fire, and SLA states                 | done   | KDS state pattern set      |
 | P4-04 | Define table, floor, and session patterns                | todo   | Tables/session pattern set |
 | P4-05 | Define payment, split-check, retry, and refund patterns  | todo   | Payment pattern set        |
 | P4-06 | Define offline, syncing, and printer-fallback patterns   | todo   | Reliability state patterns |
@@ -188,7 +188,7 @@ Acceptance criteria:
 
 ## Immediate Next Tasks
 
-1. Start Task `P1-01` by replacing the mixed global palette with canonical Lole semantic tokens
-2. Start Task `P1-02` by simplifying root typography and font roles
-3. Start Task `P1-03` and `P1-04` by implementing semantic state, spacing, radius, shadow, border, and motion tokens
-4. Prepare the shared primitives for refactor once the token layer is stable
+1. Finish `P3-05` by aligning auth and public utility layouts with Lole
+2. Start Phase 4 with dashboard analytics and operational pattern rules
+3. Keep `P1-05` and `P1-06` pending until legacy aliases can be safely removed
+4. Continue adopting `PageHeader` and feedback-state components across existing screens

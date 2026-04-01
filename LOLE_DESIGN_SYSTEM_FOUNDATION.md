@@ -24,7 +24,7 @@ This is not a mood board. It is the operating spec for building a branded compan
 Visual inputs, in order:
 
 1. [src/app/page.tsx](c:/Users/user/Desktop/Gebetaa/src/app/page.tsx) as the current visual source of truth for the rebrand
-2. [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) for brand strategy, messaging, and naming principles
+2. [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) for company vision, mission, positioning, and messaging only
 3. Existing shared primitives in [src/components/ui/Button.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Button.tsx), [src/components/ui/Card.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Card.tsx), and [src/components/ui/Input.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Input.tsx)
 4. Existing global token layer in [src/app/globals.css](c:/Users/user/Desktop/Gebetaa/src/app/globals.css)
 
@@ -32,7 +32,8 @@ Important:
 
 - Canonical brand name is `Lole`
 - Legacy names `Gebeta`, `Gebetaa`, and stylistic casing `LoLe` must be retired from product-facing surfaces
-- The current landing page visual direction supersedes the older green-heavy palette in [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) for UI styling decisions
+- [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) is a legacy strategic document and must not be used as a visual source for colors, typography, layout, motion, or component styling
+- The current landing page visual direction is the only visual source of truth for the rebrand
 - The strategic parts of [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) remain useful and should be preserved where they align
 
 ## Task 1: Brand Lock
