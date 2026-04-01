@@ -45,6 +45,7 @@ function normalizeWaitlistEntry(row: TableWaitlistRow): WaitlistEntry {
 /**
  * Calculate the next position for a new waitlist entry
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getNextPosition(supabase: any, restaurantId: string): Promise<number> {
     const { data, error } = await supabase
         .from('table_waitlist')
@@ -81,6 +82,7 @@ function estimateWaitTimeByPosition(position: number): number {
 /**
  * Update positions after a guest is seated or cancelled
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function recalculatePositions(supabase: any, restaurantId: string): Promise<void> {
     // Get all waiting entries ordered by position
     const { data: entries, error } = await supabase
@@ -120,6 +122,7 @@ function generateIdempotencyKey(waitlistId: string, notificationType: string): s
  */
 export async function addToWaitlist(params: AddWaitlistParams): Promise<WaitlistEntry> {
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { restaurantId, guestName, guestPhone, guestCount, notes } = params;
@@ -179,6 +182,7 @@ export async function getWaitlist(
     status?: WaitlistStatus
 ): Promise<WaitlistEntry[]> {
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     let query = db.from('table_waitlist').select('*').eq('restaurant_id', restaurantId);
@@ -202,6 +206,7 @@ export async function getWaitlist(
  */
 export async function getWaitlistEntry(waitlistId: string): Promise<WaitlistEntry | null> {
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { data, error } = await db
@@ -227,6 +232,7 @@ export async function getWaitlistEntry(waitlistId: string): Promise<WaitlistEntr
  */
 export async function getWaitlistStats(restaurantId: string): Promise<WaitlistStats> {
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Get count of waiting guests
@@ -270,6 +276,7 @@ export async function getWaitlistStats(restaurantId: string): Promise<WaitlistSt
  */
 export async function notifyGuest(waitlistId: string): Promise<NotifyResult> {
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Get the waitlist entry
@@ -366,6 +373,7 @@ export async function notifyGuest(waitlistId: string): Promise<NotifyResult> {
 /**
  * Internal function to update waitlist status
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function updateStatusInternal(
     supabase: any,
     waitlistId: string,
@@ -395,6 +403,7 @@ async function updateStatusInternal(
  */
 export async function updateStatus(params: UpdateWaitlistStatusParams): Promise<void> {
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     const { waitlistId, status } = params;
@@ -495,6 +504,7 @@ function interpolateMessage(template: string, vars: { position: number; minutes:
  */
 export async function removeFromWaitlist(waitlistId: string): Promise<void> {
     const supabase = createServiceRoleClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
     // Get the entry first

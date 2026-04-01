@@ -74,10 +74,10 @@ function DeviceProvisioningContent() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-            <div className="w-full max-w-md space-y-8 rounded-2xl border border-gray-100 bg-white p-8 shadow-xl">
+            <div className="w-full max-w-md space-y-8 rounded-xl border border-gray-100 bg-white p-8 shadow-xl">
                 {/* Header */}
                 <div className="space-y-2 text-center">
-                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-blue-50">
                         <Tablet className="h-8 w-8 text-blue-600" />
                     </div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">

@@ -12,7 +12,7 @@ export default function SetupLoading() {
                 </div>
 
                 {/* Form Skeleton */}
-                <div className="space-y-4 rounded-2xl bg-white p-6 shadow-sm">
+                <div className="space-y-4 rounded-xl bg-white p-6 shadow-sm">
                     <Skeleton className="h-10 w-full rounded-xl" />
                     <Skeleton className="h-10 w-full rounded-xl" />
                     <Skeleton className="h-10 w-full rounded-xl" />

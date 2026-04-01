@@ -116,7 +116,7 @@ export default function DeviceSetupPage() {
             <div className="relative z-10 w-full max-w-md">
                 {status !== 'success' ? (
                     <div className="flex flex-col items-center text-center">
-                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-white shadow-xl shadow-gray-200/50">
+                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-white shadow-xl shadow-gray-200/50">
                             <Tablet className="h-12 w-12 text-gray-800" />
                         </div>
 
@@ -145,7 +145,7 @@ export default function DeviceSetupPage() {
                                     autoFocus
                                     placeholder="••••"
                                     className={cn(
-                                        'w-full max-w-[320px] rounded-2xl bg-white py-6 text-center font-mono text-5xl font-black tracking-[0.5em] shadow-lg shadow-gray-100 transition-all focus:outline-none',
+                                        'w-full max-w-[320px] rounded-xl bg-white py-6 text-center font-mono text-5xl font-black tracking-[0.5em] shadow-lg shadow-gray-100 transition-all focus:outline-none',
                                         status === 'invalid'
                                             ? 'bg-red-50 text-red-600 ring-4 shadow-red-100 ring-red-500/10'
                                             : 'text-gray-900 focus:shadow-xl focus:ring-4 focus:ring-black/5'
@@ -156,7 +156,7 @@ export default function DeviceSetupPage() {
                             <button
                                 type="submit"
                                 disabled={pairingCode.length !== 4 || status === 'pairing'}
-                                className="group bg-brand-crimson disabled:hover:bg-brand-crimson relative mx-auto flex w-full max-w-[320px] items-center justify-center overflow-hidden rounded-2xl px-6 py-5 text-lg font-bold text-white shadow-xl shadow-black/10 transition-all hover:scale-[1.02] hover:bg-[#a0151e] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+                                className="group bg-brand-accent disabled:hover:bg-brand-accent relative mx-auto flex w-full max-w-[320px] items-center justify-center overflow-hidden rounded-xl px-6 py-5 text-lg font-bold text-black shadow-xl shadow-black/10 transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
                             >
                                 {status === 'pairing' ? (
                                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -191,9 +191,9 @@ export default function DeviceSetupPage() {
                             ready to use.
                         </p>
 
-                        <div className="mt-10 w-full max-w-[320px] rounded-3xl bg-white p-6 shadow-xl shadow-gray-100">
+                        <div className="mt-10 w-full max-w-[320px] rounded-2xl bg-white p-6 shadow-xl shadow-gray-100">
                             <div className="flex items-center gap-5 text-left">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                                     <Laptop className="h-7 w-7" />
                                 </div>
                                 <div>

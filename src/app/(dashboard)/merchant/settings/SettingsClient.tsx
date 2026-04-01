@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { Bell, CreditCard, Loader2, Lock, Save, Shield, Sparkles, Crown, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bell, Loader2, Lock, Save, Shield, Sparkles, Crown, Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { PaymentAccountsSettingsPanel } from '@/components/merchant/PaymentAccountsSettingsPanel';
-import { PlanPricing, FeatureDescriptions, getNextPlan } from '@/lib/subscription/plan-types';
+import { PlanPricing, getNextPlan } from '@/lib/subscription/plan-types';
 import type { PlanLevel } from '@/lib/subscription/plan-types';
 
 type SecuritySettings = {
@@ -65,9 +64,7 @@ export function SettingsClient({
     banks: initialBanks,
     directoryUnavailable: initialDirectoryUnavailable,
 }: SettingsClientProps) {
-    const [activeTab, setActiveTab] = useState<'security' | 'notifications' | 'payments' | 'plan'>(
-        'security'
-    );
+    const [activeTab, setActiveTab] = useState<'security' | 'notifications' | 'plan'>('security');
     const [saving, setSaving] = useState(false);
     const [security, setSecurity] = useState<SecuritySettings>(initialSecurity);
     const [notifications, setNotifications] = useState<NotificationSettings>(initialNotifications);
@@ -75,37 +72,8 @@ export function SettingsClient({
         (initialSecurity.allowed_ip_ranges ?? []).join('\n')
     );
 
-    // Lift payment settings state so it survives PaymentAccountsSettingsPanel unmount/remount on tab switch
-    const [currentPayments, setCurrentPayments] = useState<PaymentSettings>(initialPayments);
-
     // Plan state
     const [currentPlan, setCurrentPlan] = useState<PlanSettings>(initialPlan);
-
-    // Re-fetch persisted payment settings from the server
-    const refreshPayments = useCallback(async () => {
-        try {
-            const response = await fetch('/api/settings/payments', { cache: 'no-store' });
-            if (!response.ok) return;
-            const payload = await response.json();
-            const fresh = payload?.data as PaymentSettings | undefined;
-            if (fresh) {
-                setCurrentPayments(fresh);
-            }
-        } catch {
-            // Silently ignore — user sees last-known state
-        }
-    }, []);
-
-    // Refresh payment settings when the browser tab regains focus
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                void refreshPayments();
-            }
-        };
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [refreshPayments]);
 
     const saveSecurity = async () => {
         try {
@@ -185,13 +153,6 @@ export function SettingsClient({
                     Notifications
                 </button>
                 <button
-                    onClick={() => setActiveTab('payments')}
-                    className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${activeTab === 'payments' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                    <CreditCard className="h-4 w-4" />
-                    Payment Accounts
-                </button>
-                <button
                     onClick={() => setActiveTab('plan')}
                     className={`inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold ${activeTab === 'plan' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
@@ -201,7 +162,7 @@ export function SettingsClient({
             </div>
 
             {activeTab === 'security' && (
-                <div className="max-w-3xl space-y-4 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="max-w-3xl space-y-4 rounded-4xl border border-gray-100 bg-white p-6 shadow-sm">
                     <h2 className="text-xl font-bold text-gray-900">Security Controls</h2>
                     <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
                         <span className="text-sm font-medium text-gray-700">Require MFA</span>
@@ -265,7 +226,7 @@ export function SettingsClient({
                         <button
                             onClick={() => void saveSecurity()}
                             disabled={saving}
-                            className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                            className="bg-brand-accent inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                         >
                             {saving ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -279,7 +240,7 @@ export function SettingsClient({
             )}
 
             {activeTab === 'notifications' && (
-                <div className="max-w-3xl space-y-4 rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="max-w-3xl space-y-4 rounded-4xl border border-gray-100 bg-white p-6 shadow-sm">
                     <h2 className="text-xl font-bold text-gray-900">Notification Routing</h2>
                     <label className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
                         <span className="text-sm font-medium text-gray-700">
@@ -362,7 +323,7 @@ export function SettingsClient({
                         <button
                             onClick={() => void saveNotifications()}
                             disabled={saving}
-                            className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                            className="bg-brand-accent inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                         >
                             {saving ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -375,24 +336,15 @@ export function SettingsClient({
                 </div>
             )}
 
-            {activeTab === 'payments' && (
-                <PaymentAccountsSettingsPanel
-                    initialSettings={currentPayments}
-                    initialBanks={initialBanks}
-                    initialDirectoryUnavailable={initialDirectoryUnavailable}
-                    onSettingsSaved={updated => setCurrentPayments(updated)}
-                />
-            )}
-
             {activeTab === 'plan' && (
                 <div className="max-w-3xl space-y-6">
                     {/* Current Plan Display */}
-                    <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                    <div className="rounded-4xl border border-gray-100 bg-white p-6 shadow-sm">
                         <h2 className="mb-4 text-xl font-bold text-gray-900">Current Plan</h2>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div
-                                    className={`flex h-16 w-16 items-center justify-center rounded-2xl ${currentPlan.plan === 'free' ? 'bg-gray-100' : currentPlan.plan === 'pro' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-amber-500 to-orange-600'}`}
+                                    className={`flex h-16 w-16 items-center justify-center rounded-xl ${currentPlan.plan === 'free' ? 'bg-gray-100' : currentPlan.plan === 'pro' ? 'bg-linear-to-br from-purple-500 to-indigo-600' : 'bg-linear-to-br from-amber-500 to-orange-600'}`}
                                 >
                                     {currentPlan.plan === 'free' ? (
                                         <Star className="h-8 w-8 text-gray-400" />
@@ -425,7 +377,7 @@ export function SettingsClient({
                             </div>
                             {currentPlan.plan !== 'enterprise' && (
                                 <button
-                                    className="bg-brand-crimson inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e]"
+                                    className="bg-brand-accent inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105"
                                     onClick={() => {
                                         const nextPlan = getNextPlan(currentPlan.plan);
                                         if (nextPlan) {
@@ -441,7 +393,7 @@ export function SettingsClient({
                     </div>
 
                     {/* Plan Comparison */}
-                    <div className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-sm">
+                    <div className="rounded-4xl border border-gray-100 bg-white p-6 shadow-sm">
                         <h2 className="mb-4 text-xl font-bold text-gray-900">Available Plans</h2>
                         <div className="grid gap-4 md:grid-cols-3">
                             {/* Free Plan */}
@@ -482,7 +434,7 @@ export function SettingsClient({
                                     <li>✓ Analytics Dashboard</li>
                                     <li>✓ Inventory Management</li>
                                     <li>✓ Guest Directory</li>
-                                    <li>✓ Loyalty & Gift Cards</li>
+                                    <li>✓ Loyalty program</li>
                                     <li>✓ Delivery Integration</li>
                                 </ul>
                             </div>
@@ -517,7 +469,7 @@ export function SettingsClient({
 
                     {/* Pro Features Info */}
                     {currentPlan.plan === 'free' && (
-                        <div className="rounded-[2rem] border border-purple-100 bg-purple-50 p-6">
+                        <div className="rounded-4xl border border-purple-100 bg-purple-50 p-6">
                             <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-purple-900">
                                 <Sparkles className="h-5 w-5" />
                                 Unlock PRO Features

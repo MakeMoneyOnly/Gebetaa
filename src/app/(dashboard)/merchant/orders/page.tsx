@@ -7,10 +7,9 @@ import { Search, Filter, Utensils, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/useRole';
 import { Order, ServiceRequest } from '@/types/database';
-import { OrdersQueueTable } from '@/components/merchant/OrdersQueueTable';
-import { OrdersKanbanBoard } from '@/components/merchant/OrdersKanbanBoard';
+import { OrderCard } from '@/components/merchant/OrderCard';
 import { BulkActionBar } from '@/components/merchant/BulkActionBar';
-import { isAbortError } from '@/hooks/useSafeFetch';
+import { isAbortError, isLockError } from '@/hooks/useSafeFetch';
 import { formatCurrencyCompact } from '@/lib/utils/monetary';
 
 type OrderEvent = {
@@ -90,8 +89,11 @@ export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>(() => {
         if (typeof window === 'undefined') return [];
         try {
-            const savedFilter = localStorage.getItem('orders.activeFilter') ?? 'all';
-            const cached = sessionStorage.getItem(`orders.cache.${savedFilter}.`);
+            const savedFilter =
+                (typeof window !== 'undefined'
+                    ? localStorage.getItem('orders.activeFilter')
+                    : null) ?? 'all';
+            const cached = sessionStorage.getItem(`orders.cache.${savedFilter}.1`);
             return cached ? JSON.parse(cached) : [];
         } catch {
             return [];
@@ -100,8 +102,11 @@ export default function OrdersPage() {
     const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>(() => {
         if (typeof window === 'undefined') return [];
         try {
-            const savedFilter = localStorage.getItem('orders.activeFilter') ?? 'all';
-            const cached = sessionStorage.getItem(`orders.srCache.${savedFilter}.`);
+            const savedFilter =
+                (typeof window !== 'undefined'
+                    ? localStorage.getItem('orders.activeFilter')
+                    : null) ?? 'all';
+            const cached = sessionStorage.getItem(`orders.srCache.${savedFilter}.1`);
             return cached ? JSON.parse(cached) : [];
         } catch {
             return [];
@@ -138,7 +143,6 @@ export default function OrdersPage() {
     const [detailsError, setDetailsError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [actionInfo, setActionInfo] = useState<string | null>(null);
-    const [viewMode, setViewMode] = useState<'table' | 'kanban' | 'cards'>('table');
     const [sortKey, setSortKey] = useState<
         'created_at' | 'table_number' | 'status' | 'total_price'
     >('created_at');
@@ -150,6 +154,11 @@ export default function OrdersPage() {
     const [bulkStaffId, setBulkStaffId] = useState('');
     const [staff, setStaff] = useState<StaffMember[]>([]);
     const [bulkLoading, setBulkLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalOrders, setTotalOrders] = useState(0);
+    const [totalSRs, setTotalSRs] = useState(0);
+    const PAGE_SIZE = 24;
+
     const { user, loading: roleLoading } = useRole(null);
     const supabase = createClient();
 
@@ -339,7 +348,8 @@ export default function OrdersPage() {
                 if (search.trim().length > 0) {
                     params.set('search', search.trim());
                 }
-                params.set('limit', '100');
+                params.set('limit', PAGE_SIZE.toString());
+                params.set('offset', ((page - 1) * PAGE_SIZE).toString());
 
                 const response = await fetch(`/api/orders?${params.toString()}`, {
                     method: 'GET',
@@ -348,6 +358,12 @@ export default function OrdersPage() {
                 });
 
                 if (!response.ok) {
+                    // Don't throw on 401 - user may be in an intermediate auth state
+                    // Keep showing stale data instead of flashing empty
+                    if (response.status === 401) {
+                        console.warn('[OrdersPage] Auth state uncertain (401), keeping stale data');
+                        return;
+                    }
                     throw new Error(`Failed to fetch orders (${response.status})`);
                 }
 
@@ -355,6 +371,7 @@ export default function OrdersPage() {
                 // Only replace state when real data arrives — never flash empty
                 const fresh = payload?.data?.orders ?? [];
                 setOrders(fresh);
+                setTotalOrders(payload?.data?.total ?? 0);
                 // Write-through cache keyed by filter+search
                 try {
                     sessionStorage.setItem(cacheKey, JSON.stringify(fresh));
@@ -381,11 +398,13 @@ export default function OrdersPage() {
             srAbortRef.current = controller;
 
             // Seed UI instantly from per-filter cache
-            const cacheKey = `orders.srCache.${status}.${search.trim()}`;
+            const cacheKey = `orders.srCache.${status}.${search.trim()}.${page}`;
             try {
                 const cached = sessionStorage.getItem(cacheKey);
                 if (cached) setServiceRequests(JSON.parse(cached));
-            } catch {}
+            } catch {
+                // Ignore cache read errors (e.g., IndexedDB lock issues)
+            }
 
             try {
                 const params = new URLSearchParams();
@@ -395,7 +414,8 @@ export default function OrdersPage() {
                 if (search.trim().length > 0) {
                     params.set('search', search.trim());
                 }
-                params.set('limit', '100');
+                params.set('limit', PAGE_SIZE.toString());
+                params.set('offset', ((page - 1) * PAGE_SIZE).toString());
 
                 const response = await fetch(`/api/service-requests?${params.toString()}`, {
                     method: 'GET',
@@ -403,23 +423,36 @@ export default function OrdersPage() {
                     signal: controller.signal,
                 });
                 if (!response.ok) {
+                    // Don't throw on 401 - user may be in an intermediate auth state
+                    // Keep showing stale data instead of flashing empty
+                    if (response.status === 401) {
+                        console.warn(
+                            '[OrdersPage] Auth state uncertain (401), keeping stale service requests'
+                        );
+                        return;
+                    }
                     throw new Error(`Failed to fetch service requests (${response.status})`);
                 }
                 const payload = await response.json();
                 // Only replace state when real data arrives — never flash empty
                 const fresh = payload?.data?.requests ?? [];
                 setServiceRequests(fresh);
+                setTotalSRs(payload?.data?.total ?? 0);
                 // Write-through cache keyed by filter+search
                 try {
                     sessionStorage.setItem(cacheKey, JSON.stringify(fresh));
                 } catch {}
             } catch (error) {
                 if (isAbortError(error)) return; // stale request — ignore
-                console.error('Error fetching service requests from API:', error);
-                // Do NOT clear on error — keep showing stale data
+                if (isLockError(error)) {
+                    console.warn('[OrdersPage] IndexedDB lock contention, keeping stale data');
+                    return;
+                }
+                console.error('Error fetching orders from API:', error);
+                // Do NOT clear orders on error — keep showing stale data
             }
         },
-        [user]
+        [user, page]
     );
 
     const fetchStaff = useCallback(async () => {
@@ -441,15 +474,11 @@ export default function OrdersPage() {
 
     useEffect(() => {
         const storedSearch = window.localStorage.getItem('orders.searchTerm');
-        const storedView = window.localStorage.getItem('orders.viewMode');
         const storedSortKey = window.localStorage.getItem('orders.sortKey');
         const storedSortDirection = window.localStorage.getItem('orders.sortDirection');
         if (storedSearch) {
             setSearchTerm(storedSearch);
             setDebouncedSearchTerm(storedSearch);
-        }
-        if (storedView === 'table' || storedView === 'cards' || storedView === 'kanban') {
-            setViewMode(storedView);
         }
         if (
             storedSortKey === 'created_at' ||
@@ -473,10 +502,6 @@ export default function OrdersPage() {
     }, [searchTerm]);
 
     useEffect(() => {
-        window.localStorage.setItem('orders.viewMode', viewMode);
-    }, [viewMode]);
-
-    useEffect(() => {
         window.localStorage.setItem('orders.sortKey', sortKey);
     }, [sortKey]);
 
@@ -496,6 +521,8 @@ export default function OrdersPage() {
             if (event.key === '2') setActiveFilter('pending');
             if (event.key === '3') setActiveFilter('completed');
             if (event.key === '4') setActiveFilter('cancelled');
+            if (event.key === 'ArrowRight') setPage(p => p + 1);
+            if (event.key === 'ArrowLeft') setPage(p => Math.max(1, p - 1));
         };
 
         window.addEventListener('keydown', onKeyDown);
@@ -505,6 +532,7 @@ export default function OrdersPage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
+            setPage(1); // Reset to first page on search
         }, 300);
 
         return () => clearTimeout(timer);
@@ -537,6 +565,7 @@ export default function OrdersPage() {
         fetchStaff,
         user,
         roleLoading,
+        page,
     ]);
 
     // Silently refresh when the tab becomes visible again — enterprise pattern.
@@ -655,7 +684,7 @@ export default function OrdersPage() {
         });
     }, [filteredOrders, sortKey, sortDirection]);
 
-    const handleSortChange = (key: 'created_at' | 'table_number' | 'status' | 'total_price') => {
+    const _handleSortChange = (key: 'created_at' | 'table_number' | 'status' | 'total_price') => {
         if (sortKey === key) {
             setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
             return;
@@ -686,7 +715,7 @@ export default function OrdersPage() {
         );
     };
 
-    const toggleAllVisibleSelection = () => {
+    const _toggleAllVisibleSelection = () => {
         const visibleIds = queueOrders
             .filter(order => !order.id.startsWith(SERVICE_REQUEST_ROW_PREFIX))
             .map(order => order.id);
@@ -791,7 +820,7 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Queue table skeleton — mirrors the real table exactly */}
-                <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-gray-100">
+                <div className="overflow-hidden rounded-4xl bg-white shadow-sm ring-1 ring-gray-100">
                     {/* Table header */}
                     <div className="flex items-center gap-4 border-b border-gray-100 px-5 py-4">
                         <Skeleton className="h-4 w-4 rounded" />
@@ -855,41 +884,6 @@ export default function OrdersPage() {
                         <Filter className="h-4 w-4" />
                         Filter
                     </button>
-                    <div className="flex rounded-xl border border-gray-200 bg-gray-50 p-1">
-                        <button
-                            onClick={() => setViewMode('table')}
-                            className={cn(
-                                'h-9 rounded-lg px-4 text-xs font-bold transition-all duration-200',
-                                viewMode === 'table'
-                                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80'
-                                    : 'text-gray-500 hover:text-gray-700'
-                            )}
-                        >
-                            Queue
-                        </button>
-                        <button
-                            onClick={() => setViewMode('kanban')}
-                            className={cn(
-                                'h-9 rounded-lg px-4 text-xs font-bold transition-all duration-200',
-                                viewMode === 'kanban'
-                                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80'
-                                    : 'text-gray-500 hover:text-gray-700'
-                            )}
-                        >
-                            Kanban
-                        </button>
-                        <button
-                            onClick={() => setViewMode('cards')}
-                            className={cn(
-                                'h-9 rounded-lg px-4 text-xs font-bold transition-all duration-200',
-                                viewMode === 'cards'
-                                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/80'
-                                    : 'text-gray-500 hover:text-gray-700'
-                            )}
-                        >
-                            Cards
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -898,7 +892,10 @@ export default function OrdersPage() {
                 {filterTabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveFilter(tab.id)}
+                        onClick={() => {
+                            setActiveFilter(tab.id);
+                            setPage(1);
+                        }}
                         className={cn(
                             'h-10 rounded-xl px-5 text-sm font-bold whitespace-nowrap transition-all duration-200',
                             activeFilter === tab.id
@@ -912,227 +909,82 @@ export default function OrdersPage() {
             </div>
 
             {/* Orders List */}
-            {queueOrders.length === 0 ? (
-                <div className="col-span-full flex min-h-[400px] flex-col items-center justify-center rounded-[2rem] bg-white p-12 text-center shadow-sm">
-                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gray-50 shadow-sm">
-                        <Utensils className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <h3 className="mb-2 text-2xl font-bold text-gray-900">No orders found</h3>
-                    <p className="text-lg font-medium text-gray-500">
-                        Try changing the filter or search term.
-                    </p>
-                </div>
-            ) : viewMode === 'table' ? (
-                <OrdersQueueTable
-                    orders={queueOrders}
-                    sortKey={sortKey}
-                    sortDirection={sortDirection}
-                    onSortChange={handleSortChange}
-                    onOpenDetails={handleOpenDetails}
-                    onStatusUpdate={handleStatusUpdate}
-                    getNextStatus={getNextStatus}
-                    loadingOrderId={loadingOrderId}
-                    updatingOrderId={updatingOrderId}
-                    selectedOrderIds={selectedOrderIds}
-                    onToggleOrder={toggleOrderSelection}
-                    onToggleAllVisible={toggleAllVisibleSelection}
-                />
-            ) : viewMode === 'kanban' ? (
-                <OrdersKanbanBoard
-                    orders={queueOrders}
-                    onOpenDetails={handleOpenDetails}
-                    onStatusUpdate={handleStatusUpdate}
-                    getNextStatus={getNextStatus}
-                    loadingOrderId={loadingOrderId}
-                    updatingOrderId={updatingOrderId}
-                    selectedOrderIds={selectedOrderIds}
-                    onToggleOrder={toggleOrderSelection}
-                />
-            ) : (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {queueOrders.length === 0 ? (
-                        <div className="col-span-full flex min-h-[400px] flex-col items-center justify-center rounded-[2rem] bg-white p-12 text-center shadow-sm">
-                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gray-50 shadow-sm">
-                                <Utensils className="h-8 w-8 text-gray-400" />
-                            </div>
-                            <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                                No orders found
-                            </h3>
-                            <p className="text-lg font-medium text-gray-500">
-                                Try changing the filter or search term.
-                            </p>
+            <div className="space-y-6">
+                {queueOrders.length === 0 ? (
+                    <div className="col-span-full flex min-h-[400px] flex-col items-center justify-center rounded-4xl bg-white p-12 text-center shadow-sm">
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-4xl bg-gray-50 shadow-sm">
+                            <Utensils className="h-8 w-8 text-gray-400" />
                         </div>
-                    ) : (
-                        queueOrders.map(order => {
+                        <h3 className="mb-2 text-2xl font-bold text-gray-900">No orders found</h3>
+                        <p className="text-lg font-medium text-gray-500">
+                            Try changing the filter or search term.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {queueOrders.map(order => {
                             const isServiceRequest = order.id.startsWith(
                                 SERVICE_REQUEST_ROW_PREFIX
                             );
-                            let statusColor = 'bg-blue-50 text-blue-700 ring-blue-200/60';
-                            if (
-                                order.status === 'completed' ||
-                                order.status === 'service_completed'
-                            )
-                                statusColor = 'bg-emerald-50 text-emerald-700 ring-emerald-200/60';
-                            else if (
-                                order.status === 'pending' ||
-                                order.status === 'service_pending'
-                            )
-                                statusColor = 'bg-amber-50 text-amber-700 ring-amber-200/60';
-                            else if (order.status === 'cancelled')
-                                statusColor = 'bg-red-50 text-red-700 ring-red-200/60';
-                            else if (order.status === 'ready')
-                                statusColor = 'bg-green-50 text-green-700 ring-green-200/60';
-                            else if (
-                                order.status === 'preparing' ||
-                                order.status === 'acknowledged' ||
-                                order.status === 'service_in_progress'
-                            )
-                                statusColor = 'bg-orange-50 text-orange-700 ring-orange-200/60';
-
                             const nextStatus = getNextStatus(order.status);
-                            const isUpdating = updatingOrderId === order.id;
                             const isSelected =
                                 !isServiceRequest && selectedOrderIds.includes(order.id);
 
                             return (
-                                <div
+                                <OrderCard
                                     key={order.id}
-                                    className={cn(
-                                        'group relative flex min-h-72 flex-col gap-4 overflow-hidden rounded-[2rem] bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-lg',
-                                        isSelected ? 'ring-2 ring-black/10' : 'ring-1 ring-gray-100'
-                                    )}
-                                >
-                                    {/* Top image-like area — status badge overlay, like Menu cards */}
-                                    <div className="relative flex h-36 w-full flex-shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] bg-gray-50">
-                                        {/* Decorative background */}
-                                        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100" />
-                                        {/* Big table number centered */}
-                                        <span className="relative text-6xl font-black tracking-tighter text-gray-200 select-none">
-                                            {order.table_number || '?'}
-                                        </span>
-                                        {/* Status badge top-left like Menu's In Stock badge */}
-                                        <div className="absolute top-3 left-3">
-                                            <span
-                                                className={cn(
-                                                    'rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase ring-1 backdrop-blur-md',
-                                                    statusColor
-                                                )}
-                                            >
-                                                {(order.status || '').replace('service_', '')}
-                                            </span>
-                                        </div>
-                                        {/* Service request badge top-right */}
-                                        {isServiceRequest ? (
-                                            <div className="absolute top-3 right-3">
-                                                <span className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold tracking-wider text-blue-700 uppercase ring-1 ring-blue-200/60">
-                                                    SR
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="absolute top-3 right-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => toggleOrderSelection(order.id)}
-                                                    className="h-4 w-4 rounded border-gray-300 accent-gray-800"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Info — like Menu card name/price row */}
-                                    <div className="space-y-1">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div>
-                                                <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                                                    Table
-                                                </p>
-                                                <h4 className="text-xl leading-tight font-bold text-gray-900">
-                                                    {order.table_number || 'N/A'}
-                                                </h4>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                                                    Total
-                                                </p>
-                                                <p className="font-bold whitespace-nowrap text-gray-900">
-                                                    {isServiceRequest
-                                                        ? serviceRequests.find(
-                                                              r =>
-                                                                  `${SERVICE_REQUEST_ROW_PREFIX}${r.id}` ===
-                                                                  order.id
-                                                          )?.notes || 'Request'
-                                                        : `${formatCurrencyCompact(order.total_price)} ETB`}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <p
-                                            className={cn(
-                                                'text-xs font-semibold',
-                                                (() => {
-                                                    const age = order.created_at
-                                                        ? Math.max(
-                                                              0,
-                                                              Math.floor(
-                                                                  (Date.now() -
-                                                                      new Date(
-                                                                          order.created_at
-                                                                      ).getTime()) /
-                                                                      60000
-                                                              )
-                                                          )
-                                                        : 0;
-                                                    if (age >= 30) return 'text-red-500';
-                                                    if (age >= 15) return 'text-orange-500';
-                                                    return 'text-gray-400';
-                                                })()
-                                            )}
-                                        >
-                                            {order.created_at
-                                                ? new Date(order.created_at).toLocaleTimeString(
-                                                      [],
-                                                      { hour: '2-digit', minute: '2-digit' }
-                                                  )
-                                                : 'N/A'}
-                                        </p>
-                                    </div>
-
-                                    {/* Action Buttons — like Menu card Inline Edit / Advanced */}
-                                    <div className="mt-auto flex items-center gap-2">
-                                        <button
-                                            onClick={() => handleOpenDetails(order.id)}
-                                            className="inline-flex h-9 items-center gap-1 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50"
-                                        >
-                                            {loadingOrderId === order.id ? 'Loading…' : 'Details'}
-                                        </button>
-                                        <button
-                                            disabled={!nextStatus || isUpdating}
-                                            onClick={() =>
-                                                handleStatusUpdate(order.id, order.status)
-                                            }
-                                            className={cn(
-                                                'h-9 rounded-xl px-3 text-xs font-semibold transition-all duration-200',
-                                                !nextStatus
-                                                    ? 'cursor-not-allowed border border-gray-100 bg-gray-50 text-gray-400'
-                                                    : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                            )}
-                                        >
-                                            {isUpdating
-                                                ? 'Updating…'
-                                                : nextStatus
-                                                  ? nextStatus
-                                                        .replace('service_', '')
-                                                        .replace('_', ' ')
-                                                        .replace(/\b\w/g, c => c.toUpperCase())
-                                                  : 'Done'}
-                                        </button>
-                                    </div>
-                                </div>
+                                    order={order}
+                                    isServiceRequest={isServiceRequest}
+                                    nextStatus={nextStatus}
+                                    isUpdating={updatingOrderId === order.id}
+                                    isSelected={isSelected}
+                                    loadingOrderId={loadingOrderId}
+                                    onOpenDetails={handleOpenDetails}
+                                    onStatusUpdate={handleStatusUpdate}
+                                    onToggleOrder={toggleOrderSelection}
+                                />
                             );
-                        })
-                    )}
-                </div>
-            )}
+                        })}
+                    </div>
+                )}
+
+                {/* Pagination UI */}
+                {(totalOrders > PAGE_SIZE || totalSRs > PAGE_SIZE) && (
+                    <div className="border-brand-neutral-soft/5 mt-8 flex items-center justify-between border-t pt-6">
+                        <p className="text-body-sm text-brand-neutral font-medium">
+                            Showing{' '}
+                            <span className="text-brand-ink font-bold">
+                                {(page - 1) * PAGE_SIZE + 1}
+                            </span>{' '}
+                            to{' '}
+                            <span className="text-brand-ink font-bold">
+                                {Math.min(page * PAGE_SIZE, Math.max(totalOrders, totalSRs))}
+                            </span>{' '}
+                            of{' '}
+                            <span className="text-brand-ink font-bold">
+                                {Math.max(totalOrders, totalSRs)}
+                            </span>{' '}
+                            orders
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="border-brand-neutral-soft/10 text-brand-ink hover:bg-brand-canvas-alt inline-flex h-10 items-center justify-center rounded-xl border bg-white px-4 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-30"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={page * PAGE_SIZE >= Math.max(totalOrders, totalSRs)}
+                                className="border-brand-neutral-soft/10 text-brand-ink hover:bg-brand-canvas-alt inline-flex h-10 items-center justify-center rounded-xl border bg-white px-4 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-30"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             <BulkActionBar
                 selectedCount={selectedOrderIds.length}
@@ -1148,45 +1000,54 @@ export default function OrdersPage() {
             />
 
             {selectedOrderDetails?.order && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-gray-100">
-                        <div className="mb-5 flex items-start justify-between">
+                <div className="bg-brand-ink/40 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="shadow-strong ring-brand-neutral-soft/10 w-full max-w-lg rounded-4xl bg-white p-8 ring-1">
+                        <div className="mb-6 flex items-start justify-between">
                             <div>
-                                <h3 className="text-xl font-bold text-gray-900">
+                                <h3 className="text-brand-ink text-2xl font-bold tracking-tight">
                                     Order #
-                                    {selectedOrderDetails.order.order_number ||
-                                        selectedOrderDetails.order.id.slice(0, 8)}
+                                    {selectedOrderDetails?.order?.order_number ||
+                                        selectedOrderDetails?.order?.id.slice(0, 8)}
                                 </h3>
-                                <p className="mt-0.5 text-sm text-gray-500">
-                                    Table {selectedOrderDetails.order.table_number || 'N/A'}
+                                <p className="text-body-sm text-brand-neutral mt-1 font-medium">
+                                    Table {selectedOrderDetails?.order?.table_number || 'N/A'}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setSelectedOrderDetails(null)}
-                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
+                                className="bg-brand-canvas-alt text-brand-neutral hover:bg-brand-canvas-alt hover:text-brand-ink flex h-10 w-10 items-center justify-center rounded-xl transition-all active:scale-90"
                             >
-                                <X className="h-4 w-4" />
+                                <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between border-b border-gray-50 py-2">
-                                <span className="font-medium text-gray-500">Status</span>
-                                <span className="font-bold text-gray-900">
-                                    {selectedOrderDetails.order.status || 'N/A'}
+                        <div className="text-body-sm space-y-4">
+                            <div className="border-brand-neutral-soft/5 flex justify-between border-b py-2">
+                                <span className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                                    Status
+                                </span>
+                                <span className="text-brand-ink font-bold">
+                                    {selectedOrderDetails?.order?.status || 'N/A'}
                                 </span>
                             </div>
-                            <div className="flex justify-between border-b border-gray-50 py-2">
-                                <span className="font-medium text-gray-500">Total</span>
-                                <span className="font-bold text-gray-900">
-                                    {formatCurrencyCompact(selectedOrderDetails.order.total_price)}{' '}
+                            <div className="border-brand-neutral-soft/5 flex justify-between border-b py-2">
+                                <span className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                                    Total
+                                </span>
+                                <span className="text-brand-ink font-bold">
+                                    {selectedOrderDetails?.order &&
+                                        formatCurrencyCompact(
+                                            selectedOrderDetails.order.total_price
+                                        )}{' '}
                                     ETB
                                 </span>
                             </div>
-                            <div className="flex justify-between border-b border-gray-50 py-2">
-                                <span className="font-medium text-gray-500">Created</span>
-                                <span className="font-bold text-gray-900">
-                                    {selectedOrderDetails.order.created_at
+                            <div className="border-brand-neutral-soft/5 flex justify-between border-b py-2">
+                                <span className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                                    Created
+                                </span>
+                                <span className="text-brand-ink font-bold">
+                                    {selectedOrderDetails?.order?.created_at
                                         ? new Date(
                                               selectedOrderDetails.order.created_at
                                           ).toLocaleString()
@@ -1194,44 +1055,48 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="py-2">
-                                <p className="mb-2 font-medium text-gray-500">Notes</p>
-                                <p className="rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-800">
-                                    {selectedOrderDetails.order.notes || 'No notes'}
+                                <p className="text-brand-neutral text-micro mb-2 font-bold tracking-wider uppercase">
+                                    Notes
+                                </p>
+                                <p className="bg-brand-canvas-alt text-body text-brand-ink rounded-2xl p-4 font-medium">
+                                    {selectedOrderDetails?.order?.notes || 'No notes'}
                                 </p>
                             </div>
                             <div className="py-2">
-                                <div className="mb-2 flex items-center justify-between">
-                                    <p className="font-medium text-gray-500">Timeline</p>
+                                <div className="mb-3 flex items-center justify-between">
+                                    <p className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                                        Timeline
+                                    </p>
                                     {loadingEvents && (
-                                        <span className="animate-pulse text-[10px] text-gray-400">
-                                            Loading…
+                                        <span className="text-micro text-brand-accent animate-pulse font-bold uppercase">
+                                            Syncing…
                                         </span>
                                     )}
                                 </div>
-                                <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                                <div className="max-h-56 space-y-3 overflow-y-auto pr-1">
                                     {loadingEvents &&
                                     (selectedOrderDetails.events ?? []).length === 0 ? (
-                                        <div className="space-y-2">
-                                            <div className="h-10 animate-pulse rounded-xl bg-gray-100" />
-                                            <div className="h-10 animate-pulse rounded-xl bg-gray-100" />
+                                        <div className="space-y-3">
+                                            <div className="bg-brand-canvas-alt h-12 animate-pulse rounded-2xl" />
+                                            <div className="bg-brand-canvas-alt h-12 animate-pulse rounded-2xl" />
                                         </div>
                                     ) : (selectedOrderDetails.events ?? []).length === 0 ? (
-                                        <p className="text-xs text-gray-400">
+                                        <p className="text-body-sm text-brand-neutral">
                                             No timeline events yet.
                                         </p>
                                     ) : (
                                         selectedOrderDetails.events.map(event => (
                                             <div
                                                 key={event.id}
-                                                className="rounded-xl bg-gray-50 px-3 py-2.5"
+                                                className="bg-brand-canvas-alt rounded-2xl px-4 py-3"
                                             >
-                                                <p className="text-xs font-bold text-gray-700">
+                                                <p className="text-body-sm text-brand-ink font-bold">
                                                     {event.from_status
                                                         ? `${event.from_status} → `
                                                         : ''}
                                                     {event.to_status ?? event.event_type}
                                                 </p>
-                                                <p className="mt-0.5 text-[11px] text-gray-400">
+                                                <p className="text-micro text-brand-neutral mt-1 font-medium">
                                                     {new Date(event.created_at).toLocaleString()}
                                                 </p>
                                             </div>
@@ -1245,41 +1110,47 @@ export default function OrdersPage() {
             )}
 
             {selectedServiceRequest && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-gray-100">
-                        <div className="mb-5 flex items-start justify-between">
+                <div className="bg-brand-ink/40 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="shadow-strong ring-brand-neutral-soft/10 w-full max-w-lg rounded-4xl bg-white p-8 ring-1">
+                        <div className="mb-6 flex items-start justify-between">
                             <div>
-                                <h3 className="text-xl font-bold text-gray-900">
+                                <h3 className="text-brand-ink text-2xl font-bold tracking-tight">
                                     Service Request #{selectedServiceRequest.id.slice(0, 8)}
                                 </h3>
-                                <p className="mt-0.5 text-sm text-gray-500">
+                                <p className="text-body-sm text-brand-neutral mt-1 font-medium">
                                     Table {selectedServiceRequest.table_number || 'N/A'}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setSelectedServiceRequest(null)}
-                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
+                                className="bg-brand-canvas-alt text-brand-neutral hover:bg-brand-canvas-alt hover:text-brand-ink flex h-10 w-10 items-center justify-center rounded-xl transition-all active:scale-90"
                             >
-                                <X className="h-4 w-4" />
+                                <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between border-b border-gray-50 py-2">
-                                <span className="font-medium text-gray-500">Request Type</span>
-                                <span className="font-bold text-gray-900 capitalize">
+                        <div className="text-body-sm space-y-4">
+                            <div className="border-brand-neutral-soft/5 flex justify-between border-b py-2">
+                                <span className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                                    Request Type
+                                </span>
+                                <span className="text-brand-ink font-bold capitalize">
                                     {selectedServiceRequest.request_type}
                                 </span>
                             </div>
-                            <div className="flex justify-between border-b border-gray-50 py-2">
-                                <span className="font-medium text-gray-500">Status</span>
-                                <span className="font-bold text-gray-900">
+                            <div className="border-brand-neutral-soft/5 flex justify-between border-b py-2">
+                                <span className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                                    Status
+                                </span>
+                                <span className="text-brand-ink font-bold">
                                     {selectedServiceRequest.status || 'N/A'}
                                 </span>
                             </div>
-                            <div className="flex justify-between border-b border-gray-50 py-2">
-                                <span className="font-medium text-gray-500">Created</span>
-                                <span className="font-bold text-gray-900">
+                            <div className="border-brand-neutral-soft/5 flex justify-between border-b py-2">
+                                <span className="text-brand-neutral text-micro font-bold tracking-wider uppercase">
+                                    Created
+                                </span>
+                                <span className="text-brand-ink font-bold">
                                     {selectedServiceRequest.created_at
                                         ? new Date(
                                               selectedServiceRequest.created_at
@@ -1288,8 +1159,10 @@ export default function OrdersPage() {
                                 </span>
                             </div>
                             <div className="py-2">
-                                <p className="mb-2 font-medium text-gray-500">Notes</p>
-                                <p className="rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-800">
+                                <p className="text-brand-neutral text-micro mb-2 font-bold tracking-wider uppercase">
+                                    Notes
+                                </p>
+                                <p className="bg-brand-canvas-alt text-body text-brand-ink rounded-2xl p-4 font-medium">
                                     {selectedServiceRequest.notes || 'No notes'}
                                 </p>
                             </div>

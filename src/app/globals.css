@@ -1,7 +1,127 @@
 @import 'tailwindcss';
 
 @theme {
-    /* Gebeta Landing Page Tokens */
+    /* ========================================= */
+    /* 1. LOLE CANONICAL TOKENS                  */
+    /* ========================================= */
+
+    /* Brand Core */
+    --color-brand-canvas: #f5f5f3;
+    --color-brand-canvas-alt: #f4f3ef;
+    --color-brand-accent: #ddf853;
+    --color-brand-accent-hover: #cbe346;
+    --color-brand-ink: #17120b;
+    --color-brand-ink-strong: #170b05;
+    --color-brand-surface-dark: #292723;
+    --color-brand-surface-dark-hover: #3d3a34;
+    --color-brand-neutral: #8a887a;
+    --color-brand-neutral-soft: #888884;
+    --color-brand-ember: #e34105;
+    --color-brand-ember-deep: #481a05;
+    --color-brand-ink-alt: #1c1917;
+
+    /* Gradients */
+    --background-image-brand-hero-dark: linear-gradient(
+        135deg,
+        #170b05 0%,
+        #481a05 55%,
+        #e34105 100%
+    );
+    --background-image-brand-panel-dark: linear-gradient(180deg, #292723 0%, #17120b 100%);
+
+    /* State Tokens */
+    --color-state-success: #10b981;
+    --color-state-success-bg: #d1fae5;
+    --color-state-warning: #f59e0b;
+    --color-state-warning-bg: #fef3c7;
+    --color-state-danger: #ef4444;
+    --color-state-danger-bg: #fee2e2;
+    --color-state-info: #3b82f6;
+    --color-state-info-bg: #dbeafe;
+    --color-state-offline: #6b7280;
+    --color-state-offline-bg: #f3f4f6;
+    --color-state-syncing: #8b5cf6;
+    --color-state-syncing-bg: #ede9fe;
+    --color-state-urgent: #dc2626;
+    --color-state-urgent-bg: #fecaca;
+
+    /* Text */
+    --color-text-primary: #17120b; /* brand-ink */
+    --color-text-secondary: #8a887a; /* brand-neutral */
+    --color-text-inverse: #ffffff;
+    --color-text-inverse-muted: rgba(255, 255, 255, 0.7);
+
+    /* Surface */
+    --color-surface-page: #f5f5f3; /* brand-canvas */
+    --color-surface-raised: #ffffff;
+    --color-surface-muted: #f4f3ef; /* brand-canvas-alt */
+    --color-surface-dark: #292723; /* brand-surface-dark */
+    --color-surface-overlay: rgba(255, 255, 255, 0.8);
+
+    /* Fonts */
+    --font-inter: var(--font-inter), sans-serif;
+    --font-manrope: var(--font-manrope), sans-serif;
+
+    /* Type Roles & Sizes */
+    --text-display-1: 64px;
+    --text-display-2: 48px;
+    --text-heading-1: 34px;
+    --text-heading-2: 24px;
+    --text-heading-3: 20px;
+    --text-body-lg: 18px;
+    --text-body: 15px;
+    --text-body-sm: 14px;
+    --text-caption: 12px;
+    --text-micro: 11px;
+
+    /* Spacing */
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-5: 20px;
+    --spacing-6: 24px;
+    --spacing-8: 32px;
+    --spacing-10: 40px;
+    --spacing-12: 48px;
+    --spacing-16: 64px;
+    --spacing-20: 80px;
+    --spacing-24: 96px;
+    --spacing-32: 128px;
+
+    /* Radius - Proportional Scale */
+    --radius-xs: 4px;
+    --radius-sm: 6px; /* Used for tags and chips */
+    --radius-md: 8px; /* Used for small elements */
+    --radius-lg: 12px; /* Used for standard inputs */
+    --radius-xl: 16px; /* Exactly matches Landing Page CTA */
+    --radius-2xl: 24px;
+    --radius-3xl: 32px;
+    --radius-pill: 999px;
+
+    /* Shadows */
+    --shadow-soft: 0 4px 12px 0 rgba(23, 18, 11, 0.05);
+    --shadow-medium: 0 8px 24px 0 rgba(23, 18, 11, 0.08);
+    --shadow-strong: 0 16px 40px -4px rgba(23, 18, 11, 0.12);
+    --shadow-dark-glow: 0 0 24px 0 rgba(227, 65, 5, 0.15);
+
+    /* Animation/Motion */
+    --animate-fast: 120ms;
+    --animate-standard: 180ms;
+    --animate-emphasis: 240ms;
+    --animate-panel: 320ms;
+    --animate-scene: 500ms;
+    --ease-enter: ease-out;
+    --ease-exit: ease-in;
+    --ease-standard: ease-in-out;
+
+    /* Base mappings */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    /* ========================================= */
+    /* LEGACY GEBETA TOKENS (Pending Phase 6)    */
+    /* ========================================= */
     --color-Ember: #a81818;
     --color-Ember-dark: #8b1313;
     --color-Ember-light: #fdf2f2;
@@ -12,13 +132,6 @@
     --color-Coffee: #5d4037;
     --color-Success: #10b981;
 
-    --font-jakarta: var(--font-manrope), sans-serif;
-    --font-playfair: var(--font-playfair), serif;
-    --font-jetbrains: var(--font-jetbrains), monospace;
-    --font-geist: var(--font-geist), sans-serif;
-    --font-instrument: var(--font-instrument), serif;
-
-    /* Brand Colors - Premium & Vibrant (Gebeta Dashboard Tokens) */
     --color-brand-crimson: #a81818;
     --color-brand-crimson-dark: #8b1313;
     --color-brand-crimson-light: #fdf2f2;
@@ -29,37 +142,28 @@
     --color-brand-yellow: #ffc900;
     --color-brand-gold: #d4af37;
 
-    /* Base Surfaces mapped to variables */
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-
-    /* Surface Colors */
     --color-surface-0: #ffffff;
     --color-surface-50: #fafafa;
     --color-surface-100: #f3f4f6;
     --color-surface-200: #e5e7eb;
     --color-surface-300: #d1d5db;
 
-    /* Text Colors */
-    --color-text-primary: var(--foreground);
-    --color-text-secondary: #4b5563;
     --color-text-tertiary: #9ca3af;
 
-    /* Fonts */
-    --font-inter: var(--font-inter), sans-serif;
-    --font-manrope: var(--font-manrope), sans-serif;
-
-    /* Shadows */
     --shadow-float: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
     --shadow-float-strong: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
     --shadow-glow-crimson: 0 0 20px rgba(201, 29, 38, 0.3);
 
-    /* Radius */
     --radius-4xl: 2rem;
 
-    /* Animations */
     --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --font-jakarta: var(--font-manrope), sans-serif;
+    --font-playfair: var(--font-playfair), serif;
+    --font-jetbrains: var(--font-jetbrains), monospace;
+    --font-geist: var(--font-geist), sans-serif;
+    --font-instrument: var(--font-instrument), serif;
 }
 
 /* 
@@ -69,21 +173,21 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-    --background: #f8f9fa;
-    --foreground: #000000;
+    --background: #f5f5f3; /* brand-canvas */
+    --foreground: #17120b; /* brand-ink */
 }
 
 /* Ensure .dark override works even with higher specificity */
 [class~='dark'] {
-    --background: #000000;
-    --foreground: #ffffff;
+    --background: #292723; /* brand-surface-dark */
+    --foreground: #ffffff; /* text-inverse */
 }
 
 /* Base Configuration */
 body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-manrope);
+    font-family: var(--font-inter);
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     transition:
@@ -92,8 +196,8 @@ body {
 }
 
 ::selection {
-    background-color: var(--color-brand-crimson);
-    color: white;
+    background-color: var(--color-brand-accent);
+    color: var(--color-brand-ink-strong);
 }
 
 /* Custom Scrollbar */
@@ -103,16 +207,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #111111;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #333333;
+    background: #e5e7eb;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555555;
+    background: #d1d5db;
 }
 
 /* Custom Utilities */
@@ -247,77 +351,13 @@ body {
 /* ── Accessibility: Focus Indicators ─────────────────────────────────────── */
 /*
  * WCAG 2.1 AA Compliance: Visible Focus Indicators
- * All interactive elements must have clearly visible focus states
+ * High-contrast focus rings are now handled dynamically by Tailwind focus:ring utilities
+ * instead of global forced variables to prevent aesthetic clashing.
  */
-
-/* High-contrast focus ring for all interactive elements */
-*:focus-visible {
-    outline: 3px solid var(--color-brand-crimson);
-    outline-offset: 2px;
-}
 
 /* Remove default focus for mouse users, keep for keyboard */
 *:focus:not(:focus-visible) {
     outline: none;
-}
-
-/* Enhanced focus ring with custom styling */
-.focus-ring {
-    position: relative;
-}
-
-.focus-ring:focus-visible {
-    outline: none;
-}
-
-.focus-ring:focus-visible::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border: 2px solid var(--color-brand-crimson);
-    border-radius: inherit;
-    pointer-events: none;
-}
-
-/* Focus styles for links */
-a:focus-visible {
-    outline: 3px solid var(--color-brand-crimson);
-    outline-offset: 3px;
-    border-radius: 2px;
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-}
-
-/* Focus styles for buttons */
-button:focus-visible {
-    outline: 3px solid var(--color-brand-crimson);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 6px rgba(168, 24, 24, 0.2);
-}
-
-/* Focus styles for form inputs */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-    outline: 3px solid var(--color-brand-crimson);
-    outline-offset: 0;
-    box-shadow: 0 0 0 4px rgba(168, 24, 24, 0.15);
-}
-
-/* Focus styles for checkboxes and radio buttons */
-input[type='checkbox']:focus-visible,
-input[type='radio']:focus-visible {
-    outline: 3px solid var(--color-brand-crimson);
-    outline-offset: 3px;
-}
-
-/* Focus styles for custom interactive elements */
-[role='button']:focus-visible,
-[role='tab']:focus-visible,
-[role='menuitem']:focus-visible {
-    outline: 3px solid var(--color-brand-crimson);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 6px rgba(168, 24, 24, 0.2);
 }
 
 /* Skip link focus animation */

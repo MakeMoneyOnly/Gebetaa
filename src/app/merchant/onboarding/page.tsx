@@ -110,7 +110,7 @@ function InputField({
         <div className="space-y-1.5">
             <label className="text-sm font-bold text-gray-700">
                 {label}
-                {required && <span className="text-brand-crimson ml-0.5">*</span>}
+                {required && <span className="ml-0.5 text-black">*</span>}
             </label>
             <div className="group relative">
                 <Icon className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#0D3B40]" />
@@ -281,7 +281,7 @@ function StepSettlement({
 
             <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700">
-                    Payout Destination <span className="text-brand-crimson ml-0.5">*</span>
+                    Payout Destination <span className="ml-0.5 text-black">*</span>
                 </label>
                 <div className="flex gap-2">
                     <button
@@ -366,7 +366,7 @@ function StepSettlement({
                 }
             />
 
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
                 This step only sets where eligible Chapa-hosted payouts go. Guest payment methods
                 are configured separately in Guest Menu, Online Ordering, Waiter POS, and Terminal.
             </div>
@@ -401,7 +401,7 @@ function StepBrand({
                             type="button"
                             title={label}
                             onClick={() => onChange({ brand_color: value })}
-                            className="relative aspect-square rounded-2xl transition-all hover:scale-105 focus:outline-none"
+                            className="relative aspect-square rounded-xl transition-all hover:scale-105 focus:outline-none"
                             style={{ backgroundColor: value }}
                         >
                             {data.brand_color === value && (
@@ -414,7 +414,7 @@ function StepBrand({
                             )}
                             {data.brand_color === value && (
                                 <span
-                                    className="absolute inset-0 rounded-2xl ring-2 ring-white ring-offset-2"
+                                    className="absolute inset-0 rounded-xl ring-2 ring-white ring-offset-2"
                                     style={{ boxShadow: `0 0 0 3px ${value}` }}
                                 />
                             )}
@@ -427,7 +427,7 @@ function StepBrand({
             </div>
 
             {/* Preview */}
-            <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-gray-100 shadow-sm">
                 <div className="h-12 w-full" style={{ backgroundColor: data.brand_color }} />
                 <div className="flex items-center gap-3 bg-white p-4">
                     <div
@@ -465,7 +465,7 @@ function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean 
         <div className="space-y-6">
             <div className="text-center">
                 <div
-                    className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl shadow-xl"
+                    className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl shadow-xl"
                     style={{ backgroundColor: data.brand_color }}
                 >
                     <Sparkles className="h-10 w-10 text-white" />
@@ -479,7 +479,7 @@ function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean 
                 </p>
             </div>
 
-            <div className="space-y-2.5 rounded-2xl border border-gray-100 bg-gray-50/50 p-4">
+            <div className="space-y-2.5 rounded-xl border border-gray-100 bg-gray-50/50 p-4">
                 {checks.map(({ label }) => (
                     <div key={label} className="flex items-center gap-3">
                         <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500">
@@ -490,7 +490,7 @@ function StepGoLive({ data, loading }: { data: OnboardingData; loading: boolean 
                 ))}
             </div>
 
-            <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
                 <p className="text-sm font-bold text-amber-800">
                     ⚡ Your 30-minute checklist after launch:
                 </p>
@@ -704,7 +704,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Card */}
-                <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl shadow-gray-200/60">
+                <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl shadow-gray-200/60">
                     {/* Progress bar */}
                     <div className="h-1 bg-gray-100">
                         <motion.div
@@ -774,7 +774,7 @@ export default function OnboardingPage() {
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => go(step + 1)}
                                     disabled={!canProceed}
-                                    className="flex items-center gap-2 rounded-2xl bg-[#0D3B40] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/25 transition-all hover:bg-[#08282C] disabled:cursor-not-allowed disabled:opacity-40"
+                                    className="flex items-center gap-2 rounded-xl bg-[#0D3B40] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/25 transition-all hover:bg-[#08282C] disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                     Continue <ChevronRight className="h-4 w-4" />
                                 </motion.button>
@@ -784,7 +784,7 @@ export default function OnboardingPage() {
                                 <motion.button
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => go(5)}
-                                    className="flex items-center gap-2 rounded-2xl bg-[#0D3B40] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/25 transition-all hover:bg-[#08282C]"
+                                    className="flex items-center gap-2 rounded-xl bg-[#0D3B40] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0D3B40]/25 transition-all hover:bg-[#08282C]"
                                 >
                                     Preview &amp; Launch <UtensilsCrossed className="h-4 w-4" />
                                 </motion.button>
@@ -795,7 +795,7 @@ export default function OnboardingPage() {
                                     whileTap={{ scale: 0.97 }}
                                     onClick={handleSubmit}
                                     disabled={loading}
-                                    className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     {loading ? 'Launching...' : 'Go Live'}{' '}
                                     <ArrowRight className="h-4 w-4" />

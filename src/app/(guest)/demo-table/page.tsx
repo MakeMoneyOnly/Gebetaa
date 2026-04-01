@@ -311,8 +311,8 @@ function DemoMenuContent() {
     return (
         <main className="app-container pb-safe bg-[var(--background)] transition-colors duration-300">
             {/* Demo Banner */}
-            <div className="bg-brand-crimson/10 border-brand-crimson/20 border-b px-4 py-2 text-center">
-                <p className="text-brand-crimson text-sm font-medium">
+            <div className="bg-brand-accent/10 border-brand-accent/20 border-b px-4 py-2 text-center">
+                <p className="text-sm font-medium text-black">
                     🎉 Demo Mode - Explore the menu without scanning a QR code
                 </p>
             </div>
@@ -330,7 +330,7 @@ function DemoMenuContent() {
                         <h2 className="no-select font-manrope text-2xl font-black tracking-tighter text-black dark:text-white">
                             Main Menu
                         </h2>
-                        <button className="font-manrope hover:text-brand-crimson text-sm font-bold text-black/60 transition-colors dark:text-white/60">
+                        <button className="font-manrope text-sm font-bold text-black/60 transition-colors hover:text-black dark:text-white/60">
                             View All
                         </button>
                     </div>

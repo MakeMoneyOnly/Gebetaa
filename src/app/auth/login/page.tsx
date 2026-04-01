@@ -76,14 +76,16 @@ export default function LoginPage() {
             {/* Left Section: Form */}
             <section className="relative flex flex-col items-center justify-center bg-white px-6 py-12 lg:px-12">
                 {/* Logo - Pinned Top Left */}
-                <div className="absolute top-8 left-8 flex items-center gap-3 lg:top-12 lg:left-12">
-                    <div className="bg-brand-crimson shadow-brand-crimson/30 flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg">
-                        <span className="text-lg font-bold">G</span>
-                    </div>
-                    <span className="font-manrope text-xl font-bold tracking-tight text-black">
-                        Gebeta
-                    </span>
-                </div>
+                <Link
+                    href="/"
+                    className="absolute top-8 left-8 flex h-8 w-24 items-center pl-1 lg:top-12 lg:left-12"
+                >
+                    <img
+                        src="/logo-black.svg"
+                        alt="Lole"
+                        className="pointer-events-none absolute top-1/2 left-0 h-[74px] w-auto max-w-none origin-left -translate-y-1/2 md:h-[90px]"
+                    />
+                </Link>
 
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -113,13 +115,13 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-black/80">Email</label>
                             <div className="group relative">
-                                <Mail className="group-focus-within:text-brand-crimson absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/40 transition-colors" />
+                                <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/40 transition-colors group-focus-within:text-black" />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
                                     placeholder="Enter your email"
-                                    className="font-manrope focus:border-brand-crimson focus:ring-brand-crimson/5 focus:shadow-brand-crimson/10 w-full rounded-xl border border-black/15 bg-white px-12 py-3.5 text-base font-medium text-black transition-all outline-none placeholder:text-black/30 focus:shadow-lg focus:ring-4"
+                                    className="font-manrope focus:border-brand-accent focus:ring-brand-accent/5 focus:shadow-brand-accent/10 w-full rounded-xl border border-black/15 bg-white px-12 py-3.5 text-base font-medium text-black transition-all outline-none placeholder:text-black/30 focus:shadow-lg focus:ring-4"
                                     required
                                 />
                             </div>
@@ -128,13 +130,13 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-black/80">Password</label>
                             <div className="group relative">
-                                <Lock className="group-focus-within:text-brand-crimson absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/40 transition-colors" />
+                                <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-black/40 transition-colors group-focus-within:text-black" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     placeholder="Enter your password"
-                                    className="font-manrope focus:border-brand-crimson focus:ring-brand-crimson/5 focus:shadow-brand-crimson/10 w-full rounded-xl border border-black/15 bg-white px-12 py-3.5 pr-14 text-base font-medium text-black transition-all outline-none placeholder:text-black/30 focus:shadow-lg focus:ring-4"
+                                    className="font-manrope focus:border-brand-accent focus:ring-brand-accent/5 focus:shadow-brand-accent/10 w-full rounded-xl border border-black/15 bg-white px-12 py-3.5 pr-14 text-base font-medium text-black transition-all outline-none placeholder:text-black/30 focus:shadow-lg focus:ring-4"
                                     required
                                 />
                                 <button
@@ -151,7 +153,7 @@ export default function LoginPage() {
                         <div className="flex justify-end">
                             <Link
                                 href="#"
-                                className="text-brand-crimson hover:text-brand-crimson-hover text-sm font-bold"
+                                className="hover:text-black-hover text-sm font-bold text-black"
                             >
                                 Forgot Password?
                             </Link>
@@ -162,7 +164,7 @@ export default function LoginPage() {
                             whileHover={{ scale: 1.01 }}
                             disabled={loading}
                             type="submit"
-                            className="group font-manrope flex w-full items-center justify-center gap-2 rounded-xl bg-[#0D3B40] px-6 py-3.5 text-lg font-bold text-white transition-all hover:bg-[#08282C] focus:ring-4 focus:ring-[#0D3B40]/20 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="group font-manrope bg-brand-accent focus:ring-brand-accent/20 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-lg font-bold text-black transition-all hover:brightness-105 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {loading ? 'Signing In...' : 'Sign In'}
                         </motion.button>
@@ -213,7 +215,7 @@ export default function LoginPage() {
                         Don&apos;t have an Account?{' '}
                         <Link
                             href="/auth/signup"
-                            className="text-brand-crimson hover:text-brand-crimson-hover hover:underline"
+                            className="hover:text-black-hover text-black hover:underline"
                         >
                             Sign Up
                         </Link>
@@ -222,8 +224,8 @@ export default function LoginPage() {
             </section>
 
             {/* Right Section: Brand Panel */}
-            <section className="relative hidden w-full flex-col justify-between overflow-hidden bg-[radial-gradient(circle_at_top_right,#2A0A0F_0%,#130607_45%,#090909_100%)] p-12 text-white lg:flex xl:p-24">
-                <div className="bg-brand-crimson/10 absolute top-0 right-0 h-[500px] w-[500px] rounded-full blur-[120px]" />
+            <section className="relative hidden w-full flex-col justify-between overflow-hidden bg-[radial-gradient(circle_at_top_right,#1A1A1A_0%,#090909_45%,#000000_100%)] p-12 text-white lg:flex xl:p-24">
+                <div className="bg-brand-accent/10 absolute top-0 right-0 h-[500px] w-[500px] rounded-full blur-[120px]" />
                 <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-white/5 blur-[120px]" />
 
                 {/* Spacer for layout balance */}
@@ -238,9 +240,9 @@ export default function LoginPage() {
                     <h2 className="font-manrope text-5xl leading-[1.1] font-bold tracking-tight text-white xl:text-5xl">
                         Revolutionize your Restaurant with Smarter Automation
                     </h2>
-                    <div className="border-brand-crimson mt-8 border-l-2 pl-6">
+                    <div className="border-brand-accent mt-8 border-l-2 pl-6">
                         <p className="text-xl leading-relaxed font-medium text-white/90 italic">
-                            &ldquo;Gebeta has completely transformed our service process. It&apos;s
+                            &ldquo;Lole has completely transformed our service process. It&apos;s
                             reliable, efficient, and ensures our tables are always turning
                             fast.&rdquo;
                         </p>

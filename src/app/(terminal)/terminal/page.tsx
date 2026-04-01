@@ -392,7 +392,7 @@ export default function TerminalPage() {
     if (!deviceToken && !loading) {
         return (
             <div className="flex min-h-screen items-center justify-center p-6">
-                <div className="max-w-md rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+                <div className="max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
                     <AlertCircle className="mx-auto h-10 w-10 text-amber-300" />
                     <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
                         Terminal not paired
@@ -409,7 +409,7 @@ export default function TerminalPage() {
     if (deviceInfo?.device_type && deviceInfo.device_type !== 'terminal') {
         return (
             <div className="flex min-h-screen items-center justify-center p-6">
-                <div className="max-w-md rounded-3xl border border-red-400/20 bg-red-500/10 p-8 text-center">
+                <div className="max-w-md rounded-2xl border border-red-400/20 bg-red-500/10 p-8 text-center">
                     <AlertCircle className="mx-auto h-10 w-10 text-red-300" />
                     <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
                         Wrong device role
@@ -928,7 +928,7 @@ export default function TerminalPage() {
                                                                 setOrderAmountInput(e.target.value)
                                                             }
                                                             placeholder="0.00"
-                                                            className="h-14 w-full rounded-2xl border border-gray-700 bg-gray-800 p-4 pl-14 text-lg font-bold text-white transition-all outline-none placeholder:text-gray-500 focus:border-gray-500 focus:bg-gray-700"
+                                                            className="h-14 w-full rounded-xl border border-gray-700 bg-gray-800 p-4 pl-14 text-lg font-bold text-white transition-all outline-none placeholder:text-gray-500 focus:border-gray-500 focus:bg-gray-700"
                                                         />
                                                     </div>
                                                 </div>
@@ -950,7 +950,7 @@ export default function TerminalPage() {
                                                                 ? 'Chapa tx_ref'
                                                                 : 'Txn ID or receipt #'
                                                         }
-                                                        className="h-14 w-full rounded-2xl border border-gray-700 bg-gray-800 px-4 text-sm font-bold text-white transition-all outline-none placeholder:text-gray-500 focus:border-gray-500 focus:bg-gray-700"
+                                                        className="h-14 w-full rounded-xl border border-gray-700 bg-gray-800 px-4 text-sm font-bold text-white transition-all outline-none placeholder:text-gray-500 focus:border-gray-500 focus:bg-gray-700"
                                                     />
                                                 </div>
 
@@ -959,7 +959,7 @@ export default function TerminalPage() {
                                                     disabled={
                                                         capturingId === `table-${selectedTable?.id}`
                                                     }
-                                                    className="bg-brand-crimson mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-2xl px-6 text-[16px] font-bold text-white shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:bg-[#a0151e] active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                                                    className="bg-brand-accent mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-xl px-6 text-[16px] font-bold text-black shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:brightness-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                                                 >
                                                     {capturingId ===
                                                     `table-${selectedTable?.id}` ? (

@@ -124,7 +124,7 @@ function RestaurantInfoContent() {
     if (error || !restaurant) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--background)] p-4">
-                <div className="rounded-2xl bg-red-50 p-6 text-center">
+                <div className="rounded-xl bg-red-50 p-6 text-center">
                     <p className="text-red-600">{error || 'Restaurant not found'}</p>
                 </div>
             </div>
@@ -190,7 +190,7 @@ function RestaurantInfoContent() {
             <main className="p-4">
                 {activeTab === 'location' && (
                     <div className="space-y-4">
-                        <div className="rounded-2xl bg-white p-4 shadow-sm">
+                        <div className="rounded-xl bg-white p-4 shadow-sm">
                             {restaurant.latitude && restaurant.longitude ? (
                                 <LocationMap
                                     latitude={restaurant.latitude}
@@ -224,7 +224,7 @@ function RestaurantInfoContent() {
                 )}
 
                 {activeTab === 'hours' && (
-                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                    <div className="rounded-xl bg-white p-4 shadow-sm">
                         <h2 className="font-manrope mb-4 text-lg font-bold text-gray-900">
                             Opening Hours
                         </h2>
@@ -270,7 +270,7 @@ function RestaurantInfoContent() {
                 {activeTab === 'contact' && (
                     <div className="space-y-3">
                         {restaurant.phone && (
-                            <div className="rounded-2xl bg-white p-4 shadow-sm">
+                            <div className="rounded-xl bg-white p-4 shadow-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
                                         <Phone className="h-5 w-5 text-green-600" />
@@ -288,7 +288,7 @@ function RestaurantInfoContent() {
                             </div>
                         )}
                         {restaurant.email && (
-                            <div className="rounded-2xl bg-white p-4 shadow-sm">
+                            <div className="rounded-xl bg-white p-4 shadow-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
                                         <Info className="h-5 w-5 text-blue-600" />
@@ -306,7 +306,7 @@ function RestaurantInfoContent() {
                             </div>
                         )}
                         {restaurant.website && (
-                            <div className="rounded-2xl bg-white p-4 shadow-sm">
+                            <div className="rounded-xl bg-white p-4 shadow-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
                                         <Navigation className="h-5 w-5 text-purple-600" />
@@ -326,7 +326,7 @@ function RestaurantInfoContent() {
                             </div>
                         )}
                         {!restaurant.phone && !restaurant.email && !restaurant.website && (
-                            <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
+                            <div className="rounded-xl bg-white p-4 text-center shadow-sm">
                                 <p className="text-gray-500">Contact information not available</p>
                             </div>
                         )}
@@ -335,7 +335,7 @@ function RestaurantInfoContent() {
 
                 {activeTab === 'about' && (
                     <div className="space-y-6">
-                        <div className="rounded-2xl bg-[var(--card)] p-6 shadow-sm">
+                        <div className="rounded-xl bg-[var(--card)] p-6 shadow-sm">
                             <h2 className="font-manrope mb-4 text-lg font-bold text-black dark:text-white">
                                 About {restaurant.name}
                             </h2>
@@ -358,7 +358,7 @@ function RestaurantInfoContent() {
                         </div>
 
                         {restaurant.logo_url && (
-                            <div className="rounded-2xl bg-[var(--card)] p-6 text-center shadow-sm">
+                            <div className="rounded-xl bg-[var(--card)] p-6 text-center shadow-sm">
                                 <Image
                                     src={restaurant.logo_url}
                                     alt={restaurant.name}

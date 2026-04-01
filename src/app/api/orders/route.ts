@@ -124,6 +124,7 @@ const OrdersQuerySchema = z.object({
     status: z.string().optional(),
     search: z.string().optional(),
     limit: z.coerce.number().int().positive().max(200).optional().default(50),
+    offset: z.coerce.number().int().nonnegative().optional().default(0),
 });
 
 const OnlineOrderGuestContextSchema = z.object({
@@ -242,6 +243,7 @@ export async function GET(request: NextRequest) {
             status: request.nextUrl.searchParams.get('status') ?? undefined,
             search: request.nextUrl.searchParams.get('search') ?? undefined,
             limit: request.nextUrl.searchParams.get('limit') ?? undefined,
+            offset: request.nextUrl.searchParams.get('offset') ?? undefined,
         });
         if (!parsed.success) {
             responseStatus = 400;
@@ -250,10 +252,10 @@ export async function GET(request: NextRequest) {
 
         let query = supabase
             .from('orders')
-            .select('*')
+            .select('*', { count: 'exact' })
             .eq('restaurant_id', restaurantId)
             .order('created_at', { ascending: false })
-            .limit(parsed.data.limit);
+            .range(parsed.data.offset, parsed.data.offset + parsed.data.limit - 1);
 
         if (parsed.data.status && parsed.data.status !== 'all') {
             query = query.eq('status', parsed.data.status);
@@ -268,7 +270,7 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        const { data, error } = await query;
+        const { data, error, count } = await query;
 
         if (error) {
             responseStatus = 500;
@@ -278,7 +280,7 @@ export async function GET(request: NextRequest) {
         responseStatus = 200;
         return apiSuccess({
             orders: data?.map(o => ({ ...o, total_price: Number(o.total_price ?? 0) / 100 })) ?? [],
-            total: data?.length ?? 0,
+            total: count ?? 0,
         });
     } catch (error) {
         responseStatus = 500;

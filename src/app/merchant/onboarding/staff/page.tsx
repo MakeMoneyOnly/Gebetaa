@@ -85,7 +85,7 @@ export default function OnboardingPage() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 dark:bg-zinc-900">
-            <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
                 <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Welcome!</h1>
                 <p className="mb-6 text-gray-600 dark:text-gray-400">
                     Let's set up your profile. How should we call you?

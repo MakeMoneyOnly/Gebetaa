@@ -34,7 +34,7 @@ export default function OrdersLoading() {
                         {/* Order Cards */}
                         <div className="space-y-3">
                             {Array.from({ length: 3 }).map((_, j) => (
-                                <div key={j} className="rounded-2xl bg-gray-50 p-4">
+                                <div key={j} className="rounded-xl bg-gray-50 p-4">
                                     <Skeleton className="mb-2 h-4 w-20 rounded-lg" />
                                     <Skeleton className="mb-3 h-8 w-12 rounded-xl" />
                                     <div className="flex items-center justify-between">

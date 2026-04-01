@@ -10,12 +10,12 @@ export default function MarketingLoading() {
             <div className="w-full max-w-md px-4">
                 {/* Logo skeleton */}
                 <div className="mb-8 text-center">
-                    <Skeleton className="mx-auto h-16 w-16 rounded-2xl" />
+                    <Skeleton className="mx-auto h-16 w-16 rounded-xl" />
                     <Skeleton className="mx-auto mt-4 h-8 w-32 rounded-lg" />
                 </div>
 
                 {/* Form card skeleton */}
-                <div className="rounded-2xl bg-white p-8 shadow-xl">
+                <div className="rounded-xl bg-white p-8 shadow-xl">
                     <div className="space-y-4">
                         <div>
                             <Skeleton className="mb-2 h-4 w-20 rounded" />

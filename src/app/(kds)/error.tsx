@@ -23,7 +23,7 @@ export default function KDSError({
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-4">
-            <div className="w-full max-w-md rounded-2xl border border-red-800 bg-gray-800 p-8 text-center">
+            <div className="w-full max-w-md rounded-xl border border-red-800 bg-gray-800 p-8 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-900/50">
                     <AlertTriangle className="h-8 w-8 text-red-400" />
                 </div>

@@ -39,7 +39,7 @@ export default function GuestLoading() {
                     {[...Array(6)].map((_, i) => (
                         <div
                             key={i}
-                            className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+                            className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
                         >
                             {/* Image placeholder */}
                             <div className="aspect-video w-full bg-gray-100" />

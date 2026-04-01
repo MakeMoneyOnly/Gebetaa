@@ -16,7 +16,7 @@ function SubmitButton() {
         <button
             type="submit"
             disabled={pending}
-            className={`hover:bg-brand-crimson focus:ring-brand-crimson flex w-full justify-center rounded-2xl border border-transparent bg-black px-4 py-4 text-lg font-black text-white shadow-xl transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none active:scale-[0.98] ${pending ? 'cursor-not-allowed opacity-50' : ''}`}
+            className={`hover:bg-brand-accent focus:ring-brand-accent flex w-full justify-center rounded-xl border border-transparent bg-black px-4 py-4 text-lg font-black text-black shadow-xl transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none active:scale-[0.98] ${pending ? 'cursor-not-allowed opacity-50' : ''}`}
         >
             {pending ? 'Signing In...' : 'Sign In'}
         </button>
@@ -30,7 +30,7 @@ export default function LoginForm() {
         <div className="shadow-apple-lg rounded-[48px] border border-black/5 bg-white bg-white/95 px-8 py-12 backdrop-blur-sm sm:px-12">
             <form action={formAction} className="space-y-8">
                 {state?.error && (
-                    <div className="animate-in fade-in slide-in-from-top-4 rounded-2xl border border-red-100/50 bg-red-50 p-4 text-[13px] font-black text-red-600 duration-500">
+                    <div className="animate-in fade-in slide-in-from-top-4 rounded-xl border border-red-100/50 bg-red-50 p-4 text-[13px] font-black text-red-600 duration-500">
                         <div className="flex items-center gap-2">
                             <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-600" />
                             {state.error}
@@ -50,7 +50,7 @@ export default function LoginForm() {
                         type="email"
                         autoComplete="email"
                         required
-                        className="bg-surface-1 shadow-inner-soft focus:ring-brand-crimson/20 focus:border-brand-crimson/30 block w-full appearance-none rounded-[20px] border border-transparent px-6 py-4.5 font-bold text-black placeholder-gray-400 transition-all duration-300 focus:bg-white focus:ring-2 focus:outline-none"
+                        className="bg-surface-1 shadow-inner-soft focus:ring-brand-accent/20 focus:border-brand-accent/30 block w-full appearance-none rounded-[20px] border border-transparent px-6 py-4.5 font-bold text-black placeholder-gray-400 transition-all duration-300 focus:bg-white focus:ring-2 focus:outline-none"
                         placeholder="name@restaurant.com"
                     />
                 </div>
@@ -68,7 +68,7 @@ export default function LoginForm() {
                         type="password"
                         autoComplete="current-password"
                         required
-                        className="bg-surface-1 shadow-inner-soft focus:ring-brand-crimson/20 focus:border-brand-crimson/30 block w-full appearance-none rounded-[20px] border border-transparent px-6 py-4.5 font-bold text-black placeholder-gray-400 transition-all duration-300 focus:bg-white focus:ring-2 focus:outline-none"
+                        className="bg-surface-1 shadow-inner-soft focus:ring-brand-accent/20 focus:border-brand-accent/30 block w-full appearance-none rounded-[20px] border border-transparent px-6 py-4.5 font-bold text-black placeholder-gray-400 transition-all duration-300 focus:bg-white focus:ring-2 focus:outline-none"
                         placeholder="••••••••"
                     />
                 </div>
@@ -79,7 +79,7 @@ export default function LoginForm() {
                             id="remember-me"
                             name="remember-me"
                             type="checkbox"
-                            className="text-brand-crimson focus:ring-brand-crimson/20 h-4.5 w-4.5 rounded-lg border-gray-300 transition-colors"
+                            className="focus:ring-brand-accent/20 h-4.5 w-4.5 rounded-lg border-gray-300 text-black transition-colors"
                         />
                         <label
                             htmlFor="remember-me"
@@ -92,7 +92,7 @@ export default function LoginForm() {
                     <div className="text-xs">
                         <Link
                             href="#"
-                            className="text-brand-crimson text-[10px] font-black tracking-widest uppercase transition-colors hover:text-black"
+                            className="text-[10px] font-black tracking-widest text-black uppercase transition-colors hover:text-black"
                         >
                             Forgot?
                         </Link>

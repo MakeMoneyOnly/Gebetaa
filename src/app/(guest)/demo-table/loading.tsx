@@ -20,7 +20,7 @@ export default function DemoTableLoading() {
                 {/* Items Skeleton */}
                 <div className="mt-4 space-y-3">
                     {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="flex gap-4 rounded-2xl bg-white p-4 shadow-sm">
+                        <div key={i} className="flex gap-4 rounded-xl bg-white p-4 shadow-sm">
                             <Skeleton className="h-20 w-20 rounded-xl" />
                             <div className="flex-1">
                                 <Skeleton className="h-5 w-3/4 rounded-lg" />

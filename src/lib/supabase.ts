@@ -1,5 +1,19 @@
 import { createBrowserClient } from '@supabase/ssr';
 
+/**
+ * SECURITY: Check if mock client is allowed in the current environment.
+ * Mock clients should NEVER be used in production.
+ */
+function isMockClientAllowed(): boolean {
+    // Never allow mock client in production
+    if (process.env.NODE_ENV === 'production') {
+        return false;
+    }
+
+    // In development/test, allow mock client for E2E testing or when no credentials configured
+    return true;
+}
+
 export const createClient = () => {
     // Get and clean environment variables (remove any surrounding quotes)
     let url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -14,18 +28,28 @@ export const createClient = () => {
     const isPlaceholderUrl = url.includes('placeholder');
     const isPlaceholderKey = key === 'placeholder-key';
 
-    // Only use mock client when Supabase URL is a placeholder (no real backend)
-    // When real credentials are available, use the real client even in E2E mode
-    // The middleware handles E2E auth bypass, allowing login without real credentials
-    // while database queries go to the real backend
+    // SECURITY: Only allow mock client when:
+    // 1. NOT in production environment
+    // 2. Placeholder credentials are detected (E2E testing without real backend)
     if (isPlaceholderUrl || isPlaceholderKey) {
-        console.log(
-            '[Browser] Using mock client - placeholder credentials detected:',
-            'isPlaceholderUrl:',
-            isPlaceholderUrl,
-            'isPlaceholderKey:',
-            isPlaceholderKey
-        );
+        // SECURITY: Check if mock client is allowed
+        if (!isMockClientAllowed()) {
+            console.error(
+                '[SECURITY CRITICAL] Placeholder Supabase credentials detected in production! ' +
+                    'This is a critical security vulnerability. ' +
+                    'Set proper NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY environment variables.'
+            );
+            // Return a client that will fail gracefully
+            // This prevents the app from running with mock data in production
+        } else {
+            console.log(
+                '[Browser] Using mock client - placeholder credentials detected:',
+                'isPlaceholderUrl:',
+                isPlaceholderUrl,
+                'isPlaceholderKey:',
+                isPlaceholderKey
+            );
+        }
         // Return a mock client for E2E tests
         return {
             auth: {

@@ -204,7 +204,9 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
     // Uses @powersync/web for core functionality and @powersync/react for React integration
     try {
         // Use dynamic import to avoid build errors when packages aren't available
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let webModule: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let reactModule: any;
 
         try {

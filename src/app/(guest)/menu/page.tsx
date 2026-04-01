@@ -58,7 +58,7 @@ export default function MenuPage() {
                 <div className="px-4 pb-20">
                     <div className="mb-4 flex items-center justify-between px-2">
                         <h2 className="no-select text-2xl font-black text-white">Near You</h2>
-                        <button className="hover:text-brand-crimson touch-manipulation text-sm font-semibold text-white/60 transition-all active:scale-95">
+                        <button className="touch-manipulation text-sm font-semibold text-white/60 transition-all hover:text-black active:scale-95">
                             View All
                         </button>
                     </div>

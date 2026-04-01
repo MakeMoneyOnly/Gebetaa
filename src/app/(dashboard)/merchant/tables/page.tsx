@@ -18,10 +18,6 @@ import { QRCodeSVG } from 'qrcode.react';
 import { TableOccupancyGraph } from '@/components/merchant/TableOccupancyGraph';
 import { TableGrid, TableGridRow } from '@/components/merchant/TableGrid';
 import { TableSessionDrawer } from '@/components/merchant/TableSessionDrawer';
-import {
-    OccupancyTimelineBucket,
-    TableOccupancyTimeline,
-} from '@/components/merchant/TableOccupancyTimeline';
 import { toast } from 'react-hot-toast';
 import { isAbortError } from '@/hooks/useSafeFetch';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
@@ -78,15 +74,6 @@ export default function TablesPage() {
         assigned_staff_id: string | null;
         notes: string | null;
     } | null>(null);
-    const [timelineBuckets, setTimelineBuckets] = useState<OccupancyTimelineBucket[]>(() => {
-        if (typeof window === 'undefined') return [];
-        try {
-            const cached = sessionStorage.getItem('tables.timeline.cache');
-            return cached ? JSON.parse(cached) : [];
-        } catch {
-            return [];
-        }
-    });
     const [isQrLoading, setIsQrLoading] = useState(false);
 
     // Ref for abort controller
@@ -119,13 +106,11 @@ export default function TablesPage() {
         const signal = abortControllerRef.current.signal;
 
         fetchTables(signal);
-        void fetchOccupancyTimeline(signal);
 
         return () => {
             isMountedRef.current = false;
             abortControllerRef.current?.abort();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, roleLoading, supabase]);
 
     useEffect(() => {
@@ -139,7 +124,6 @@ export default function TablesPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase, user]);
 
     useEffect(() => {
@@ -199,78 +183,6 @@ export default function TablesPage() {
         }
     };
 
-    const fetchOccupancyTimeline = async (_signal?: AbortSignal) => {
-        try {
-            const since = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-            const { data, error } = await supabase
-                .from('table_sessions')
-                .select('opened_at, closed_at')
-                .gte('opened_at', since)
-                .order('opened_at', { ascending: true })
-                .limit(300);
-
-            if (error) {
-                throw new Error(error.message || 'Failed to load occupancy timeline.');
-            }
-
-            const bucketsMap = new Map<string, { opens: number; closes: number }>();
-            for (let i = 5; i >= 0; i -= 1) {
-                const date = new Date(Date.now() - i * 2 * 60 * 60 * 1000);
-                const label = `${date.getHours().toString().padStart(2, '0')}:00`;
-                bucketsMap.set(label, { opens: 0, closes: 0 });
-            }
-
-            for (const row of data ?? []) {
-                const openedAt = row.opened_at ? new Date(row.opened_at) : null;
-                const closedAt = row.closed_at ? new Date(row.closed_at) : null;
-                if (openedAt) {
-                    const label = `${openedAt.getHours().toString().padStart(2, '0')}:00`;
-                    if (bucketsMap.has(label)) {
-                        const bucket = bucketsMap.get(label)!;
-                        bucket.opens += 1;
-                    }
-                }
-                if (closedAt) {
-                    const label = `${closedAt.getHours().toString().padStart(2, '0')}:00`;
-                    if (bucketsMap.has(label)) {
-                        const bucket = bucketsMap.get(label)!;
-                        bucket.closes += 1;
-                    }
-                }
-            }
-
-            if (isMountedRef.current) {
-                setTimelineBuckets(
-                    Array.from(bucketsMap.entries()).map(([label, value]) => ({
-                        label,
-                        opens: value.opens,
-                        closes: value.closes,
-                    }))
-                );
-                try {
-                    const buckets = Array.from(bucketsMap.entries()).map(([label, value]) => ({
-                        label,
-                        opens: value.opens,
-                        closes: value.closes,
-                    }));
-                    sessionStorage.setItem('tables.timeline.cache', JSON.stringify(buckets));
-                } catch {}
-            }
-        } catch (error) {
-            // Silently ignore abort errors
-            if (isAbortError(error)) {
-                return;
-            }
-            console.error(error);
-            if (isMountedRef.current) {
-                setTimelineBuckets([]);
-                try {
-                    sessionStorage.removeItem('tables.timeline.cache');
-                } catch {}
-            }
-        }
-    };
-
     const resetForm = () => {
         setTableNumberInput('');
         setCapacityInput('4');
@@ -324,7 +236,6 @@ export default function TablesPage() {
             resetForm();
             toast.success('Table created.');
             void fetchTables();
-            void fetchOccupancyTimeline();
         } catch (err: any) {
             toast.error('Error adding table: ' + (err.message || 'Unknown error'));
         } finally {
@@ -369,7 +280,6 @@ export default function TablesPage() {
             resetForm();
             toast.success('Table updated.');
             void fetchTables();
-            void fetchOccupancyTimeline();
         } catch (error: any) {
             toast.error(error?.message ?? 'Error updating table.');
         } finally {
@@ -389,7 +299,6 @@ export default function TablesPage() {
             setTables(prev => prev.filter(table => table.id !== tableToDelete.id));
             setTableToDelete(null);
             toast.success('Table deleted.');
-            void fetchOccupancyTimeline();
         } catch (error: any) {
             toast.error(error?.message ?? 'Error deleting table.');
         } finally {
@@ -437,7 +346,6 @@ export default function TablesPage() {
             }
             toast.success('Table seated successfully.');
             void fetchTables();
-            void fetchOccupancyTimeline();
         } catch (error: any) {
             toast.error(error?.message ?? 'Failed to seat table.');
         } finally {
@@ -461,7 +369,6 @@ export default function TablesPage() {
             }
             toast.success('Table session closed.');
             void fetchTables();
-            void fetchOccupancyTimeline();
         } catch (error: any) {
             toast.error(error?.message ?? 'Failed to close session.');
         } finally {
@@ -494,7 +401,6 @@ export default function TablesPage() {
             toast.success('Session transferred.');
             setTransferTargetTableId('');
             void fetchTables();
-            void fetchOccupancyTimeline();
         } catch (error: any) {
             toast.error(error?.message ?? 'Failed to transfer session.');
         } finally {
@@ -662,7 +568,7 @@ export default function TablesPage() {
                             resetForm();
                             setIsCreateModalOpen(true);
                         }}
-                        className="bg-brand-crimson flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-lg shadow-black/10 transition-colors hover:bg-[#a0151e]"
+                        className="bg-brand-accent flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-bold text-black shadow-lg shadow-black/10 transition-colors hover:brightness-105"
                     >
                         <Plus className="h-4 w-4" />
                         Add Table
@@ -673,7 +579,7 @@ export default function TablesPage() {
             {/* Stats Row - Inspired by Dashboard Asymmetric Grid */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {/* Total Tables Card */}
-                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-4xl bg-white p-5 shadow-sm transition-all hover:shadow-md">
                     <div className="mb-2 flex items-start justify-between">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm">
                             <LayoutGrid className="h-4 w-4" />
@@ -682,7 +588,7 @@ export default function TablesPage() {
                             <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold tracking-wider text-gray-600 uppercase">
                                 Capacity
                             </span>
-                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                            <h3 className="mt-5 text-4xl font-bold tracking-tight text-gray-900">
                                 {totalTables}
                             </h3>
                         </div>
@@ -720,7 +626,7 @@ export default function TablesPage() {
                 </div>
 
                 {/* Occupied/Active Card */}
-                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-4xl bg-white p-5 shadow-sm transition-all hover:shadow-md">
                     <div className="mb-2 flex items-start justify-between">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-orange-600 shadow-sm">
                             <UserX className="h-4 w-4" />
@@ -729,7 +635,7 @@ export default function TablesPage() {
                             <span className="rounded-full bg-orange-50 px-2 py-1 text-[10px] font-bold tracking-wider text-orange-600 uppercase">
                                 {utilizationRate}% Full
                             </span>
-                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                            <h3 className="mt-5 text-4xl font-bold tracking-tight text-gray-900">
                                 {activeTables}
                             </h3>
                         </div>
@@ -766,7 +672,7 @@ export default function TablesPage() {
                 </div>
 
                 {/* Reserved - New Card */}
-                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-4xl bg-white p-5 shadow-sm transition-all hover:shadow-md">
                     <div className="mb-2 flex items-start justify-between">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-blue-600 shadow-sm">
                             <Clock className="h-4 w-4" />
@@ -775,7 +681,7 @@ export default function TablesPage() {
                             <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold tracking-wider text-blue-600 uppercase">
                                 Upcoming
                             </span>
-                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                            <h3 className="mt-5 text-4xl font-bold tracking-tight text-gray-900">
                                 {reservedTables}
                             </h3>
                         </div>
@@ -813,7 +719,7 @@ export default function TablesPage() {
                 </div>
 
                 {/* Available Card */}
-                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="group relative flex h-[180px] flex-col justify-between overflow-hidden rounded-4xl bg-white p-5 shadow-sm transition-all hover:shadow-md">
                     <div className="mb-2 flex items-start justify-between">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-green-600 shadow-sm">
                             <CheckCircle className="h-4 w-4" />
@@ -822,7 +728,7 @@ export default function TablesPage() {
                             <span className="rounded-full bg-green-50 px-2 py-1 text-[10px] font-bold tracking-wider text-green-600 uppercase">
                                 Ready
                             </span>
-                            <h3 className="mt-[20px] text-4xl font-bold tracking-tight text-gray-900">
+                            <h3 className="mt-5 text-4xl font-bold tracking-tight text-gray-900">
                                 {availableTables}
                             </h3>
                         </div>
@@ -880,14 +786,13 @@ export default function TablesPage() {
 
             {/* Table Occupancy Heatmap */}
             <TableOccupancyGraph tables={tables} />
-            <TableOccupancyTimeline buckets={timelineBuckets} />
 
             {/* QR Code Modal */}
             {selectedTableQR && selectedTableQrUrl && (
                 <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6 backdrop-blur-md duration-300">
                     <div className="animate-in zoom-in-95 relative flex w-full max-w-sm flex-col items-center rounded-[3rem] bg-white p-8 shadow-2xl duration-300">
                         <button
-                            className="hover:bg-brand-crimson absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
+                            className="hover:bg-brand-accent absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-black"
                             onClick={() => {
                                 setSelectedTableQR(null);
                                 setSelectedTableQrUrl(null);
@@ -896,7 +801,7 @@ export default function TablesPage() {
                             <X className="h-5 w-5" />
                         </button>
 
-                        <div className="bg-brand-crimson mt-4 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-xl shadow-black/20">
+                        <div className="bg-brand-accent mt-4 mb-6 flex h-16 w-16 items-center justify-center rounded-xl text-black shadow-xl shadow-black/20">
                             <Scan className="h-8 w-8" />
                         </div>
 
@@ -909,7 +814,7 @@ export default function TablesPage() {
                         </p>
 
                         <div className="group relative mx-auto mb-8 w-fit overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white p-8 shadow-lg">
-                            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-gray-50 opacity-50" />
+                            <div className="absolute inset-0 bg-linear-to-br from-transparent to-gray-50 opacity-50" />
                             <div className="relative z-10">
                                 <QRCodeSVG
                                     id="qr-code-svg"
@@ -922,7 +827,7 @@ export default function TablesPage() {
                         </div>
 
                         <button
-                            className="bg-brand-crimson flex h-14 w-full items-center justify-center gap-3 rounded-2xl text-base font-bold text-white shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:bg-[#a0151e]"
+                            className="bg-brand-accent flex h-14 w-full items-center justify-center gap-3 rounded-xl text-base font-bold text-black shadow-xl shadow-black/20 transition-all hover:scale-[1.02] hover:brightness-105"
                             onClick={() => {
                                 const svg = document.getElementById('qr-code-svg');
                                 if (svg) {
@@ -953,7 +858,7 @@ export default function TablesPage() {
 
             {isBatchQrModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-4xl rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-xl">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900">Batch QR Export</h3>
@@ -962,7 +867,7 @@ export default function TablesPage() {
                                 </p>
                             </div>
                             <button
-                                className="hover:bg-brand-crimson flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-white"
+                                className="hover:bg-brand-accent flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:text-black"
                                 onClick={() => setIsBatchQrModalOpen(false)}
                             >
                                 <X className="h-5 w-5" />
@@ -976,7 +881,7 @@ export default function TablesPage() {
                             {batchQrEntries.map(entry => (
                                 <div
                                     key={entry.id}
-                                    className="rounded-2xl border border-gray-200 p-4 text-center"
+                                    className="rounded-xl border border-gray-200 p-4 text-center"
                                 >
                                     <p className="mb-2 text-xs font-bold text-gray-500">
                                         Table {entry.table_number}
@@ -1004,7 +909,7 @@ export default function TablesPage() {
                             <button
                                 type="button"
                                 onClick={handleBatchQrDownload}
-                                className="bg-brand-crimson inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e]"
+                                className="bg-brand-accent inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105"
                             >
                                 <Download className="h-4 w-4" />
                                 Download All PNG
@@ -1016,7 +921,7 @@ export default function TablesPage() {
 
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Create table</h3>
                         <p className="mt-1 text-sm text-gray-500">
                             Add a new table to your floor plan.
@@ -1076,7 +981,7 @@ export default function TablesPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                                    className="bg-brand-accent h-10 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                                 >
                                     {isSubmitting ? 'Creating...' : 'Create'}
                                 </button>
@@ -1088,7 +993,7 @@ export default function TablesPage() {
 
             {isEditModalOpen && tableToEdit && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Edit table</h3>
                         <p className="mt-1 text-sm text-gray-500">
                             Update table details and status.
@@ -1198,7 +1103,7 @@ export default function TablesPage() {
                                         type="button"
                                         onClick={handleTransferTableSession}
                                         disabled={isSessionActionLoading}
-                                        className="bg-brand-crimson h-9 rounded-lg px-3 text-xs font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                                        className="bg-brand-accent h-9 rounded-lg px-3 text-xs font-semibold text-black hover:brightness-105 disabled:opacity-50"
                                     >
                                         Transfer
                                     </button>
@@ -1216,7 +1121,7 @@ export default function TablesPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="bg-brand-crimson h-10 rounded-xl px-4 text-sm font-semibold text-white hover:bg-[#a0151e] disabled:opacity-50"
+                                    className="bg-brand-accent h-10 rounded-xl px-4 text-sm font-semibold text-black hover:brightness-105 disabled:opacity-50"
                                 >
                                     {isSubmitting ? 'Saving...' : 'Save'}
                                 </button>
@@ -1228,7 +1133,7 @@ export default function TablesPage() {
 
             {tableToDelete && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="text-xl font-bold text-gray-900">Delete table</h3>
                         <p className="mt-2 text-sm text-gray-600">
                             Delete table{' '}
@@ -1269,8 +1174,8 @@ export default function TablesPage() {
 
             {/* Zone Management Modal */}
             {isZoneModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/20 p-4 backdrop-blur">
-                    <div className="w-full max-w-md rounded-3xl border border-white/40 bg-white/95 p-6 shadow-2xl backdrop-blur-xl">
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-gray-900/20 p-4 backdrop-blur">
+                    <div className="w-full max-w-md rounded-2xl border border-white/40 bg-white/95 p-6 shadow-2xl backdrop-blur-xl">
                         <div className="mb-6 flex items-center justify-between xl:-mr-1">
                             <div>
                                 <h3 className="text-xl font-black tracking-tight text-gray-900">
@@ -1288,7 +1193,7 @@ export default function TablesPage() {
                             </button>
                         </div>
 
-                        <div className="mb-8 flex min-h-[40px] flex-wrap items-center gap-2">
+                        <div className="mb-8 flex min-h-10 flex-wrap items-center gap-2">
                             {availableZones.length > 0 ? (
                                 availableZones.map(zone => (
                                     <div
@@ -1324,7 +1229,7 @@ export default function TablesPage() {
                                 value={newZoneName}
                                 onChange={e => setNewZoneName(e.target.value)}
                                 placeholder="e.g. Patio, Main Dining, Bar"
-                                className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-black focus:bg-white focus:ring-4 focus:ring-black/5"
+                                className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-900 transition-all outline-none placeholder:text-gray-400 focus:border-black focus:bg-white focus:ring-4 focus:ring-black/5"
                                 onKeyDown={async e => {
                                     if (e.key === 'Enter') {
                                         e.preventDefault();
@@ -1353,7 +1258,7 @@ export default function TablesPage() {
                                     });
                                 }}
                                 disabled={!newZoneName.trim()}
-                                className="bg-brand-crimson shrink-0 rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/10 transition-all hover:bg-[#a0151e] disabled:opacity-50 disabled:shadow-none"
+                                className="bg-brand-accent shrink-0 rounded-xl px-5 py-3 text-sm font-bold text-black shadow-lg shadow-black/10 transition-all hover:brightness-105 disabled:opacity-50 disabled:shadow-none"
                             >
                                 Add Zone
                             </button>

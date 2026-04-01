@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 export default function POSWaiterPinLoading() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-xl">
                 {/* Logo/Title skeleton */}
                 <div className="mb-8 text-center">
                     <Skeleton className="mx-auto h-12 w-12 rounded-xl" />

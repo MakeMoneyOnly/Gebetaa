@@ -18,7 +18,7 @@ export default function MerchantDashboardLoading() {
             {/* Stats Cards Skeleton */}
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="rounded-2xl bg-white p-6 shadow-sm">
+                    <div key={i} className="rounded-xl bg-white p-6 shadow-sm">
                         <Skeleton className="h-4 w-24 rounded-lg" />
                         <Skeleton className="mt-3 h-8 w-16 rounded-xl" />
                         <Skeleton className="mt-2 h-3 w-20 rounded-lg" />
@@ -28,18 +28,18 @@ export default function MerchantDashboardLoading() {
 
             {/* Charts/Content Skeleton */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-2xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm">
                     <Skeleton className="h-6 w-32 rounded-lg" />
                     <Skeleton className="mt-4 h-48 w-full rounded-xl" />
                 </div>
-                <div className="rounded-2xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm">
                     <Skeleton className="h-6 w-32 rounded-lg" />
                     <Skeleton className="mt-4 h-48 w-full rounded-xl" />
                 </div>
             </div>
 
             {/* Recent Activity Skeleton */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="rounded-xl bg-white p-6 shadow-sm">
                 <Skeleton className="h-6 w-40 rounded-lg" />
                 <div className="mt-4 space-y-3">
                     {Array.from({ length: 5 }).map((_, i) => (

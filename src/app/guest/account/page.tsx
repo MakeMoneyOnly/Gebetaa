@@ -215,10 +215,10 @@ function AccountContent() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-3xl bg-white p-8 shadow-xl"
+                    className="rounded-2xl bg-white p-8 shadow-xl"
                 >
                     <div className="mb-8 flex items-center gap-4">
-                        <div className="bg-brand-crimson flex h-12 w-12 items-center justify-center rounded-2xl">
+                        <div className="bg-brand-accent flex h-12 w-12 items-center justify-center rounded-xl">
                             <User className="h-6 w-6 text-white" />
                         </div>
                         <div>
@@ -263,7 +263,7 @@ function AccountContent() {
                                         value={phone}
                                         onChange={e => setPhone(e.target.value)}
                                         placeholder="+251 912 345 678"
-                                        className="focus:border-brand-crimson focus:ring-brand-crimson/10 w-full rounded-xl border border-gray-200 bg-white px-12 py-3.5 text-base font-medium text-gray-900 outline-none focus:ring-4"
+                                        className="focus:border-brand-accent focus:ring-brand-accent/10 w-full rounded-xl border border-gray-200 bg-white px-12 py-3.5 text-base font-medium text-gray-900 outline-none focus:ring-4"
                                     />
                                 </div>
                                 <button
@@ -342,7 +342,7 @@ function AccountContent() {
                                                             verifying ||
                                                             verificationCode.length !== 6
                                                         }
-                                                        className="bg-brand-crimson hover:bg-brand-crimson-hover rounded-xl px-6 py-3 text-sm font-bold text-white transition-all disabled:opacity-50"
+                                                        className="bg-brand-accent hover:bg-brand-accent-hover rounded-xl px-6 py-3 text-sm font-bold text-black transition-all disabled:opacity-50"
                                                     >
                                                         {verifying ? (
                                                             <Loader2 className="h-5 w-5 animate-spin" />
@@ -369,7 +369,7 @@ function AccountContent() {
                                         <button
                                             onClick={handleSendVerification}
                                             disabled={verifying || !phone.trim()}
-                                            className="text-brand-crimson hover:text-brand-crimson-hover flex items-center gap-2 text-sm font-bold"
+                                            className="hover:text-black-hover flex items-center gap-2 text-sm font-bold text-black"
                                         >
                                             <Send className="h-4 w-4" />
                                             {verifying ? 'Sending...' : 'Send verification code'}

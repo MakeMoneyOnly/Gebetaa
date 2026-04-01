@@ -10,7 +10,7 @@ export default function OrderTrackerLoading() {
 
             {/* Order Status Skeleton */}
             <div className="px-4">
-                <div className="rounded-2xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm">
                     <Skeleton className="h-6 w-32 rounded-lg" />
                     <Skeleton className="mt-2 h-4 w-48 rounded-lg" />
 
@@ -34,7 +34,7 @@ export default function OrderTrackerLoading() {
 
             {/* Order Items Skeleton */}
             <div className="mt-4 px-4">
-                <div className="rounded-2xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm">
                     <Skeleton className="h-6 w-24 rounded-lg" />
                     <div className="mt-4 space-y-3">
                         {Array.from({ length: 3 }).map((_, i) => (
@@ -53,7 +53,7 @@ export default function OrderTrackerLoading() {
 
             {/* Order Summary Skeleton */}
             <div className="mt-4 px-4 pb-8">
-                <div className="rounded-2xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm">
                     <Skeleton className="h-6 w-32 rounded-lg" />
                     <div className="mt-4 space-y-2">
                         <div className="flex justify-between">

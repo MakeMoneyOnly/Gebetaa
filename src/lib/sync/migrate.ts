@@ -17,8 +17,9 @@ type DexieDatabase = any;
  */
 function getDexieDatabase(): DexieDatabase | null {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        /* eslint-disable @typescript-eslint/no-require-imports */
         const Dexie = require('dexie');
+        /* eslint-enable @typescript-eslint/no-require-imports */
         return new Dexie('GebetaOrders');
     } catch {
         return null;

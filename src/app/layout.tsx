@@ -1,11 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import {
-    Inter,
-    Manrope,
-    JetBrains_Mono,
-    Instrument_Serif,
-    Playfair_Display,
-} from 'next/font/google';
+import { Inter, Manrope } from 'next/font/google';
 import './globals.css';
 import { LenisRoot } from '@/components/providers/LenisRoot';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
@@ -16,28 +10,9 @@ import { SkipLink } from '@/components/ui/SkipLink';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
-const jetbrainsMono = JetBrains_Mono({
-    subsets: ['latin'],
-    variable: '--font-jetbrains',
-    display: 'swap',
-});
-const instrumentSerif = Instrument_Serif({
-    weight: '400',
-    subsets: ['latin'],
-    style: ['italic', 'normal'],
-    variable: '--font-instrument',
-    display: 'swap',
-});
-const playfair = Playfair_Display({
-    subsets: ['latin'],
-    style: ['italic', 'normal'],
-    variable: '--font-playfair',
-    display: 'swap',
-});
-const geist = Inter({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
 
 export const metadata: Metadata = {
-    title: 'Gebeta - Restaurant Infrastructure',
+    title: 'Lole - Restaurant Infrastructure',
     description: 'The operating system for restaurants in emerging markets.',
     manifest: '/manifest.json',
 };
@@ -56,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en" suppressHydrationWarning className="overflow-x-clip">
             <body
-                className={`${inter.variable} ${manrope.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} ${playfair.variable} ${geist.variable} text-Charcoal bg-Cream overflow-x-clip overscroll-none antialiased`}
+                className={`${inter.variable} ${manrope.variable} font-inter text-brand-ink bg-brand-canvas overflow-x-clip overscroll-none antialiased`}
             >
                 <ServiceWorkerCleanup />
                 <SkipLink href="#main-content">Skip to main content</SkipLink>

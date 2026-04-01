@@ -23,6 +23,7 @@ const ListServiceRequestsQuerySchema = z.object({
     status: z.string().optional(),
     search: z.string().optional(),
     limit: z.coerce.number().int().positive().max(200).optional().default(100),
+    offset: z.coerce.number().int().nonnegative().optional().default(0),
 });
 
 export async function GET(request: NextRequest) {
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
             status: request.nextUrl.searchParams.get('status') ?? undefined,
             search: request.nextUrl.searchParams.get('search') ?? undefined,
             limit: request.nextUrl.searchParams.get('limit') ?? undefined,
+            offset: request.nextUrl.searchParams.get('offset') ?? undefined,
         },
         ListServiceRequestsQuerySchema
     );
@@ -50,10 +52,10 @@ export async function GET(request: NextRequest) {
 
     let query = context.supabase
         .from('service_requests')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false })
-        .limit(parsed.data.limit);
+        .range(parsed.data.offset, parsed.data.offset + parsed.data.limit - 1);
 
     if (parsed.data.status && parsed.data.status !== 'all') {
         query = query.eq('status', parsed.data.status);
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     if (error) {
         return apiError(
             'Failed to load service requests',
@@ -80,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     return apiSuccess({
         requests: data ?? [],
-        total: data?.length ?? 0,
+        total: count ?? 0,
     });
 }
 

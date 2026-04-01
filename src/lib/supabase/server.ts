@@ -1,41 +1,73 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies, headers } from 'next/headers';
 import type { Database } from '@/types/database';
+import {
+    isE2EBypassAllowed,
+    isValidE2EBypassSecret,
+    logE2ESecurityEvent,
+} from '@/lib/security/e2e-validation';
 
 export async function createClient() {
     const cookieStore = await cookies();
     const headersList = await headers();
 
-    // Check for E2E test bypass - check BOTH cookie AND headers
-    // Middleware sets cookie on response, but server components run during request
-    // So we need to check headers directly for the initial request
+    // =========================================================
+    // CRIT-003: Secure E2E Test Bypass
+    // =========================================================
+    // SECURITY: Check if E2E bypass is allowed in current environment
+    // This is the FIRST check - if not allowed, skip all bypass logic
+    // =========================================================
 
-    // Use the same default secret as middleware for consistency
-    const effectiveBypassSecret = process.env.E2E_BYPASS_SECRET || 'e2e-test-secret';
+    let isE2EBypass = false;
 
-    // Check for header-based bypass (set by Playwright via setExtraHTTPHeaders)
-    const e2eBypassAuth = headersList.get('x-e2e-bypass-auth');
-    const e2eBypassSecret = headersList.get('x-e2e-bypass-secret');
-    const hasValidHeaderBypass =
-        e2eBypassAuth === '1' &&
-        e2eBypassSecret !== null &&
-        e2eBypassSecret !== '' &&
-        e2eBypassSecret === effectiveBypassSecret;
+    if (!isE2EBypassAllowed()) {
+        // In production, log any bypass attempts for security monitoring
+        const e2eBypassAuth = headersList.get('x-e2e-bypass-auth');
+        const e2eBypassSecret = headersList.get('x-e2e-bypass-secret');
+        const cookieToken = cookieStore.get('sb-access-token')?.value;
 
-    // Check for cookie-based bypass (set by middleware on subsequent requests)
-    const cookieValue = cookieStore.get('sb-access-token')?.value;
-    const expectedCookieValue = `e2e-mock-access-token:${effectiveBypassSecret}`;
-    const hasValidCookieBypass = cookieValue === expectedCookieValue;
+        if (e2eBypassAuth === '1' || e2eBypassSecret || cookieToken?.startsWith('e2e-mock-')) {
+            logE2ESecurityEvent('bypass_attempt', {
+                source: 'server',
+                hasHeaderAuth: !!e2eBypassAuth,
+                hasHeaderSecret: !!e2eBypassSecret,
+                hasCookieToken: !!cookieToken,
+            });
+        }
+        // Continue to normal Supabase client - E2E bypass is NOT available
+    } else {
+        // E2E bypass is allowed in this environment (non-production with E2E_TEST_MODE=true)
+        const configuredSecret = process.env.E2E_BYPASS_SECRET;
 
-    // E2E bypass is active if either header or cookie bypass is valid
-    const isE2EBypass = hasValidHeaderBypass || hasValidCookieBypass;
+        // SECURITY: Require configured secret - NO default fallback
+        if (!configuredSecret || configuredSecret === '') {
+            logE2ESecurityEvent('config_warning', {
+                source: 'server',
+                reason: 'E2E_BYPASS_SECRET not configured',
+            });
+        } else {
+            // Check for header-based bypass (set by Playwright via setExtraHTTPHeaders)
+            const e2eBypassAuth = headersList.get('x-e2e-bypass-auth');
+            const e2eBypassSecret = headersList.get('x-e2e-bypass-secret');
+            const hasValidHeaderBypass =
+                e2eBypassAuth === '1' && isValidE2EBypassSecret(e2eBypassSecret ?? undefined);
 
-    // Log when E2E bypass is active
-    if (isE2EBypass) {
-        console.log(
-            '[E2E] Using mock Supabase client - E2E bypass detected via',
-            hasValidHeaderBypass ? 'headers' : 'cookie'
-        );
+            // Check for cookie-based bypass (set by middleware on subsequent requests)
+            const cookieValue = cookieStore.get('sb-access-token')?.value;
+            const expectedCookieValue = `e2e-mock-access-token:${configuredSecret}`;
+            const hasValidCookieBypass = cookieValue === expectedCookieValue;
+
+            // E2E bypass is active if either header or cookie bypass is valid
+            isE2EBypass = hasValidHeaderBypass || hasValidCookieBypass;
+
+            // Log when E2E bypass is active
+            if (isE2EBypass) {
+                logE2ESecurityEvent('bypass_success', {
+                    source: 'server',
+                    method: hasValidHeaderBypass ? 'header' : 'cookie',
+                });
+            }
+        }
     }
 
     // Get and clean environment variables

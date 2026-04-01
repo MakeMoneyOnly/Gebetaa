@@ -694,11 +694,11 @@ export default function LandingPage() {
                     className={`relative z-50 flex w-full flex-col transition-all duration-500 ease-in-out ${
                         isFeaturesOpen
                             ? isScrolled
-                                ? 'max-w-6xl rounded-2xl md:rounded-3xl'
-                                : 'max-w-full rounded-2xl md:rounded-3xl'
+                                ? 'max-w-6xl rounded-xl md:rounded-2xl'
+                                : 'max-w-full rounded-xl md:rounded-2xl'
                             : isScrolled
-                              ? 'max-w-6xl rounded-2xl bg-[#8a887a]/95 shadow-xl backdrop-blur-md md:rounded-3xl'
-                              : 'max-w-full rounded-2xl bg-transparent md:rounded-3xl'
+                              ? 'max-w-6xl rounded-xl bg-[#8a887a]/95 shadow-xl backdrop-blur-md md:rounded-2xl'
+                              : 'max-w-full rounded-xl bg-transparent md:rounded-2xl'
                     }`}
                 >
                     {/* Header Top Row */}
@@ -795,7 +795,7 @@ export default function LandingPage() {
                             </Link>
                             <Link
                                 href="/auth/signup"
-                                className="flex items-center gap-1.5 rounded-[16px] bg-[#DDF853] px-6 py-3 text-[14px] leading-[21px] font-medium text-black transition-colors hover:bg-[#cbe346]"
+                                className="flex items-center gap-1.5 rounded-[16px] bg-[#DDF853] px-6 py-3 text-[14px] leading-[21px] font-medium text-black transition-colors hover:brightness-105"
                             >
                                 Book a demo
                                 <ArrowRight className="h-4 w-4" />
@@ -812,7 +812,7 @@ export default function LandingPage() {
                             ease: 'easeOut',
                             delay: isFeaturesOpen ? 0 : 0,
                         }}
-                        className={`absolute top-0 right-0 left-0 -z-10 w-full overflow-hidden ${isScrolled ? 'rounded-2xl md:rounded-3xl' : 'rounded-2xl md:rounded-3xl'} shadow-2xl transition-shadow duration-300 ${isFeaturesOpen ? 'pointer-events-auto shadow-black/10' : 'pointer-events-none shadow-transparent'}`}
+                        className={`absolute top-0 right-0 left-0 -z-10 w-full overflow-hidden ${isScrolled ? 'rounded-xl md:rounded-2xl' : 'rounded-xl md:rounded-2xl'} shadow-2xl transition-shadow duration-300 ${isFeaturesOpen ? 'pointer-events-auto shadow-black/10' : 'pointer-events-none shadow-transparent'}`}
                     >
                         <motion.div
                             initial={false}
@@ -950,7 +950,7 @@ export default function LandingPage() {
             {/* Top Panel: Hero Section Wrapper with uniform spacing gap */}
             <div className="box-border h-svh w-full p-3 md:p-4">
                 {/* Hero Card */}
-                <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-gray-900 md:rounded-3xl">
+                <div className="relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-gray-900 md:rounded-2xl">
                     {/* Background Image */}
                     <div
                         className="absolute inset-0 bg-cover bg-center"
@@ -974,7 +974,7 @@ export default function LandingPage() {
                         <div className="flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
                             <Link
                                 href="/auth/signup"
-                                className="flex w-full items-center justify-center gap-1.5 rounded-[16px] bg-[#DDF853] px-6 py-3 text-[14px] leading-[21px] font-medium text-black transition-colors hover:bg-[#cbe346] sm:w-auto"
+                                className="flex w-full items-center justify-center gap-1.5 rounded-[16px] bg-[#DDF853] px-6 py-3 text-[14px] leading-[21px] font-medium text-black transition-colors hover:brightness-105 sm:w-auto"
                             >
                                 Book a demo
                                 <ArrowRight className="h-4 w-4" />
@@ -1082,7 +1082,7 @@ export default function LandingPage() {
                                                 {[op.name, op.location, op.type].map((tag, i) => (
                                                     <span
                                                         key={i}
-                                                        className="rounded-2xl border border-white/20 px-5 py-2 text-[13px] font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10"
+                                                        className="rounded-xl border border-white/20 px-5 py-2 text-[13px] font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10"
                                                     >
                                                         {tag}
                                                     </span>
@@ -1819,7 +1819,7 @@ export default function LandingPage() {
                             </Link>
                             <Link
                                 href="/auth/signup"
-                                className="flex items-center justify-center gap-1.5 rounded-[16px] bg-[#DDF853] px-6 py-3 text-[14px] leading-[21px] font-medium text-black transition-colors hover:bg-[#cbe346]"
+                                className="flex items-center justify-center gap-1.5 rounded-[16px] bg-[#DDF853] px-6 py-3 text-[14px] leading-[21px] font-medium text-black transition-colors hover:brightness-105"
                             >
                                 Book a demo
                                 <ArrowRight className="h-4 w-4" />
@@ -1831,7 +1831,7 @@ export default function LandingPage() {
                 {/* Footer Section Wrapper */}
                 <div className="w-full p-3 md:p-4">
                     {/* Footer Card */}
-                    <footer className="relative flex min-h-[400px] w-full flex-col justify-between overflow-hidden rounded-[1.5rem] bg-gradient-to-r from-[#170B05] via-[#481A05] to-[#E34105] px-8 pt-[60px] pb-[62px] md:rounded-[2rem] md:px-12 md:pt-[80px] md:pb-[78px] lg:px-16 lg:pt-[75px] lg:pb-[94px]">
+                    <footer className="relative flex min-h-[400px] w-full flex-col justify-between overflow-hidden rounded-[1.5rem] bg-gradient-to-r from-[#170B05] via-[#481A05] to-[#E34105] px-8 pt-[60px] pb-[62px] md:rounded-4xl md:px-12 md:pt-[80px] md:pb-[78px] lg:px-16 lg:pt-[75px] lg:pb-[94px]">
                         <div className="relative z-10 flex w-full -translate-y-[20px] flex-col justify-between gap-12 lg:flex-row lg:items-start">
                             {/* Left Column */}
                             <div className="flex flex-col justify-between gap-12 lg:gap-0">

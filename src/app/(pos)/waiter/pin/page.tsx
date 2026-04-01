@@ -68,16 +68,15 @@ function WaiterPinContent() {
         if (pin.length === 4) {
             void handleSubmit();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pin]);
 
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 px-4">
-            <div className="w-full max-w-sm rounded-3xl bg-gray-800 p-8 shadow-2xl">
+            <div className="w-full max-w-sm rounded-2xl bg-gray-800 p-8 shadow-2xl">
                 <div className="mb-8 flex flex-col items-center text-center">
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-700">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-gray-700">
                         <Tablet className="h-8 w-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold tracking-tight text-white">
@@ -109,7 +108,7 @@ function WaiterPinContent() {
                             key={num}
                             onClick={() => handleNumberClick(num)}
                             disabled={loading || pin.length >= 4}
-                            className="flex h-16 items-center justify-center rounded-2xl bg-gray-700 text-2xl font-semibold text-white transition-all hover:bg-gray-600 active:scale-95 disabled:opacity-50"
+                            className="flex h-16 items-center justify-center rounded-xl bg-gray-700 text-2xl font-semibold text-white transition-all hover:bg-gray-600 active:scale-95 disabled:opacity-50"
                         >
                             {num}
                         </button>
@@ -118,14 +117,14 @@ function WaiterPinContent() {
                     <button
                         onClick={() => handleNumberClick(0)}
                         disabled={loading || pin.length >= 4}
-                        className="flex h-16 items-center justify-center rounded-2xl bg-gray-700 text-2xl font-semibold text-white transition-all hover:bg-gray-600 active:scale-95 disabled:opacity-50"
+                        className="flex h-16 items-center justify-center rounded-xl bg-gray-700 text-2xl font-semibold text-white transition-all hover:bg-gray-600 active:scale-95 disabled:opacity-50"
                     >
                         0
                     </button>
                     <button
                         onClick={handleDelete}
                         disabled={loading || pin.length === 0}
-                        className="flex h-16 items-center justify-center rounded-2xl bg-gray-700 text-xl font-semibold text-white transition-all hover:bg-red-500 hover:text-white active:scale-95 disabled:opacity-20"
+                        className="flex h-16 items-center justify-center rounded-xl bg-gray-700 text-xl font-semibold text-white transition-all hover:bg-red-500 hover:text-white active:scale-95 disabled:opacity-20"
                     >
                         Clear
                     </button>
