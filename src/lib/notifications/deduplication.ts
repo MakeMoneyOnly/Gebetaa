@@ -301,6 +301,7 @@ async function checkDuplicateDatabase(params: DedupeCheckParams): Promise<Dedupe
     };
 
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
             .from('notification_queue')
             .select('id, created_at')
@@ -353,6 +354,7 @@ async function recordNotificationDatabase(params: RecordNotificationParams): Pro
     try {
         // Insert a placeholder record with the deduplication key
         // We use idempotency_key for this purpose
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any).from('notification_queue').upsert(
             {
                 idempotency_key: key,
@@ -484,6 +486,7 @@ export async function clearOldEntries(olderThanHours: number = 24): Promise<numb
 
     try {
         // Delete old dedup markers
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
             .from('notification_queue')
             .delete()
