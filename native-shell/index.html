@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta name="theme-color" content="#170b05" />
+        <title>Gebeta Device Shell</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <main class="shell">
+            <div class="shell__glow shell__glow--left" aria-hidden="true"></div>
+            <div class="shell__glow shell__glow--right" aria-hidden="true"></div>
+
+            <section class="shell__panel" aria-labelledby="shell-title">
+                <p class="shell__eyebrow">Managed Hardware</p>
+                <h1 id="shell-title">Gebeta Device Shell</h1>
+                <p class="shell__copy">
+                    Native Android provisioning is wired. This fallback bundle keeps Capacitor
+                    healthy while the full restaurant experience is attached to the shell.
+                </p>
+
+                <div class="shell__status" role="status" aria-live="polite">
+                    <span class="shell__status-dot"></span>
+                    <span id="runtime-status">Checking native runtime…</span>
+                </div>
+
+                <dl class="shell__facts">
+                    <div>
+                        <dt>Bundle</dt>
+                        <dd>Capacitor bootstrap</dd>
+                    </div>
+                    <div>
+                        <dt>Mode</dt>
+                        <dd id="platform-label">Web fallback</dd>
+                    </div>
+                    <div>
+                        <dt>Profile</dt>
+                        <dd id="profile-label">Waiting for pairing</dd>
+                    </div>
+                    <div>
+                        <dt>Launch Path</dt>
+                        <dd id="launch-path">/device</dd>
+                    </div>
+                    <div>
+                        <dt>Next Step</dt>
+                        <dd id="next-step">Connect the routed device shell experience</dd>
+                    </div>
+                </dl>
+            </section>
+        </main>
+
+        <script src="./app.js"></script>
+    </body>
+</html>
