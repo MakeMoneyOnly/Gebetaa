@@ -171,11 +171,11 @@ test.describe('Accessibility Tests', () => {
 
             // Log contrast violations for debugging
             if (contrastViolations.length > 0) {
-                console.log('Color contrast violations found:');
+                console.warn('Color contrast violations found:');
                 contrastViolations.forEach(v => {
-                    console.log(`  - ${v.impact}: ${v.description}`);
+                    console.warn(`  - ${v.impact}: ${v.description}`);
                     v.nodes.forEach(node => {
-                        console.log(`    Target: ${node.target}`);
+                        console.warn(`    Target: ${node.target}`);
                     });
                 });
             }

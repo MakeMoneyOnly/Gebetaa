@@ -110,9 +110,9 @@ export const options = {
 
     // Setup and teardown
     setup: () => {
-        console.log(`Starting load tests against: ${BASE_URL}`);
-        console.log(`Using bypass auth: ${USE_BYPASS_AUTH}`);
-        console.log(`Using bearer token: ${!!AUTH_TOKEN}`);
+        console.warn(`Starting load tests against: ${BASE_URL}`);
+        console.warn(`Using bypass auth: ${USE_BYPASS_AUTH}`);
+        console.warn(`Using bearer token: ${!!AUTH_TOKEN}`);
     },
 };
 
@@ -202,5 +202,5 @@ export function testOrderStatusUpdate() {
 
 // Teardown
 export function teardown() {
-    console.log('Load tests completed');
+    console.warn('Load tests completed');
 }

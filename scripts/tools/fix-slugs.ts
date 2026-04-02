@@ -41,7 +41,7 @@ async function main() {
     }
 
     if (!restaurants || restaurants.length === 0) {
-        console.log('No restaurants found');
+        console.warn('No restaurants found');
         return;
     }
 
@@ -59,7 +59,7 @@ async function main() {
                 .eq('id', restaurant.id);
 
             if (err) console.error('Error updating:', err);
-            else console.log('Successfully updated.');
+            else console.warn('Successfully updated.');
         } else if (!restaurant.slug) {
             const newSlug = restaurant.name
                 .toLowerCase()
@@ -73,7 +73,7 @@ async function main() {
                 .eq('id', restaurant.id);
 
             if (err2) console.error('Error updating:', err2);
-            else console.log('Successfully updated.');
+            else console.warn('Successfully updated.');
         } else {
             const newSlug = restaurant.name
                 .toLowerCase()
@@ -81,14 +81,14 @@ async function main() {
                 .trim()
                 .replace(/\s+/g, '-');
             if (restaurant.slug !== newSlug) {
-                console.log(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
+                console.warn(`Updating ${restaurant.name}: ${restaurant.slug} -> ${newSlug}`);
                 const { error: err3 } = await supabase
                     .from('restaurants')
                     .update({ slug: newSlug })
                     .eq('id', restaurant.id);
 
                 if (err3) console.error('Error updating:', err3);
-                else console.log('Successfully updated.');
+                else console.warn('Successfully updated.');
             }
         }
     }

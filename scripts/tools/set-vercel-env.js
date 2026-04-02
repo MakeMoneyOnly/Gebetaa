@@ -15,7 +15,7 @@ const vars = {
 
 for (const env of envs) {
     for (const [key, value] of Object.entries(vars)) {
-        console.log(`Adding ${key} to ${env}...`);
+        console.warn(`Adding ${key} to ${env}...`);
         try {
             fs.writeFileSync('.tmp-val', value);
             // vercel env add [name] [environment]

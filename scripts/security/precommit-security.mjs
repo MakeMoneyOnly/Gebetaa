@@ -47,7 +47,7 @@ function resolveGgshield() {
     return null;
 }
 
-console.log('Running GitGuardian secret scan (ggshield)...');
+console.warn('Running GitGuardian secret scan (ggshield)...');
 const gg = resolveGgshield();
 if (!gg) {
     console.error(
@@ -57,7 +57,7 @@ if (!gg) {
 }
 run(gg.command, [...gg.argsPrefix, 'secret', 'scan', 'pre-commit']);
 
-console.log('Running Trivy vulnerability scan...');
+console.warn('Running Trivy vulnerability scan...');
 const trivy = resolveTrivy();
 if (!trivy) {
     console.error(

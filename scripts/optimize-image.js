@@ -27,7 +27,7 @@ if (!fs.existsSync(inputPath)) {
 
 async function optimizeImage() {
     try {
-        console.log(`Optimizing: ${inputPath}`);
+        console.warn(`Optimizing: ${inputPath}`);
 
         const originalSize = fs.statSync(inputPath).size;
 
@@ -37,10 +37,10 @@ async function optimizeImage() {
             .webp({ quality: 65, effort: 6 })
             .toFile(outputPath);
 
-        console.log(`\n✅ Successfully optimized image!`);
-        console.log(`- Original Size: ${(originalSize / 1024).toFixed(2)} KB`);
-        console.log(`- New Size: ${(optimized.size / 1024).toFixed(2)} KB`);
-        console.log(`- Saved to: ${outputPath}`);
+        console.warn(`\n✅ Successfully optimized image!`);
+        console.warn(`- Original Size: ${(originalSize / 1024).toFixed(2)} KB`);
+        console.warn(`- New Size: ${(optimized.size / 1024).toFixed(2)} KB`);
+        console.warn(`- Saved to: ${outputPath}`);
 
         if (generateBase64) {
             const b64 = fs.readFileSync(outputPath).toString('base64');
@@ -48,7 +48,7 @@ async function optimizeImage() {
 
             const b64Path = outputPath.replace('.webp', '-base64.txt');
             fs.writeFileSync(b64Path, dataUri, 'utf8');
-            console.log(`- Base64 String saved to: ${b64Path}\n`);
+            console.warn(`- Base64 String saved to: ${b64Path}\n`);
         }
     } catch (error) {
         console.error('❌ Optimization failed:', error);

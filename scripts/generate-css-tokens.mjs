@@ -134,4 +134,4 @@ function generateCss() {
 }
 
 // Run the generator
-console.log(generateCss());
+console.warn(generateCss());

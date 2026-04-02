@@ -11,6 +11,9 @@
         "build": "next build",
         "build:analyze": "ANALYZE=true next build",
         "start": "next start",
+        "cap:sync:android": "cap sync android",
+        "cap:open:android": "cap open android",
+        "supabase:cli": "cross-env DOCKER_CONFIG=.docker supabase",
         "lint": "eslint",
         "test": "vitest",
         "test:coverage": "vitest --coverage",
@@ -33,10 +36,16 @@
         "deps:clean": "pnpm store prune"
     },
     "dependencies": {
-        "@apollo/server": "^4.11.0",
+        "@apollo/server": "^5.5.0",
         "@apollo/subgraph": "^2.9.0",
-        "@as-integrations/next": "^3.1.0",
+        "@as-integrations/next": "^4.1.0",
+        "@capacitor/android": "^8.3.0",
+        "@capacitor/cli": "^8.3.0",
+        "@capacitor/core": "^8.3.0",
+        "@capacitor/device": "^8.0.2",
+        "@capacitor/preferences": "^8.0.1",
         "@journeyapps/wa-sqlite": "^1.5.0",
+        "@point-of-sale/receipt-printer-encoder": "^3.0.3",
         "@powersync/react": "^1.9.0",
         "@powersync/web": "^1.36.0",
         "@radix-ui/react-dialog": "^1.1.15",
@@ -59,7 +68,7 @@
         "date-fns": "^4.1.0",
         "dexie": "^4.2.1",
         "framer-motion": "^12.35.2",
-        "graphql": "^16.10.0",
+        "graphql": "^16.13.2",
         "graphql-tag": "^2.12.6",
         "gsap": "^3.14.2",
         "html2canvas": "^1.4.1",
@@ -117,7 +126,8 @@
         "supabase": "^2.79.0",
         "tailwindcss": "^4.2.1",
         "typescript": "^5",
-        "vitest": "^4.0.18"
+        "vitest": "^4.0.18",
+        "webpack": "^5.105.4"
     },
     "pnpm": {
         "overrides": {
@@ -129,10 +139,20 @@
             "@apollo/server",
             "@sentry/nextjs",
             "esbuild",
+            "supabase",
             "swc"
         ],
         "auditConfig": {
             "ignoreGhsas": []
-        }
+        },
+        "onlyBuiltDependencies": [
+            "@apollo/protobufjs",
+            "@journeyapps/wa-sqlite",
+            "@sentry/cli",
+            "esbuild",
+            "sharp",
+            "supabase",
+            "unrs-resolver"
+        ]
     }
 }

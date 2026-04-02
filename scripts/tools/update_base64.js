@@ -7,4 +7,4 @@ const start = c.indexOf('src="data:image/webp;base64,');
 const end = c.indexOf('"', start + 5);
 const nt = c.substring(0, start) + 'src="' + uri + c.substring(end);
 fs.writeFileSync('src/app/(guest)/[slug]/page.tsx', nt);
-console.log('done');
+console.warn('done');
