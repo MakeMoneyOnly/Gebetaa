@@ -67,7 +67,7 @@ export const menuResolvers = {
         category: async (_: unknown, args: { id: string }, _context: GraphQLContext) => {
             // For now, return null - would need a getCategory method
             // This is a placeholder for federation reference resolution
-            console.log('[menu/resolvers] category query called with id:', args.id);
+            console.warn('[menu/resolvers] category query called with id:', args.id);
             return null;
         },
 
