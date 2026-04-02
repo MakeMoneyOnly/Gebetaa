@@ -28,10 +28,12 @@ export async function trackApiMetric(
     };
 
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (typeof (supabase as any).from !== 'function') {
             return { error: null };
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const query = supabase.from('audit_logs') as any;
         if (typeof query.insert !== 'function') {
             return { error: null };

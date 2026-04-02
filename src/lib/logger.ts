@@ -77,11 +77,11 @@ class Logger {
         switch (entry.level) {
             case 'debug':
                 if (process.env.NODE_ENV === 'development') {
-                    console.debug(prefix + requestId, entry.message, logData);
+                    console.warn(prefix + requestId, entry.message, logData);
                 }
                 break;
             case 'info':
-                console.info(prefix + requestId, entry.message, logData);
+                console.warn(prefix + requestId, entry.message, logData);
                 break;
             case 'warn':
                 console.warn(prefix + requestId, entry.message, logData);

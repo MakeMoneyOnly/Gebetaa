@@ -77,7 +77,7 @@ export async function GET(request: Request) {
             );
         }
 
-        console.log(
+        console.warn(
             `[Schedule API] Fetching for restaurant ${context.restaurantId} from ${startIso} to ${endIso}`
         );
 

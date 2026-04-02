@@ -199,5 +199,6 @@ export interface IWaitlistService {
  */
 export interface WaitlistServiceParams {
     /** Supabase client */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: SupabaseClient<any>;
 }

@@ -8,11 +8,12 @@ import type { GraphQLContext } from './context';
 import { createDataLoaders } from './dataloaders';
 import { graphqlConfig } from './config';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ResolversType = Record<string, any>;
 
 export interface SubgraphConfig {
     typeDefs: string;
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolvers: Record<string, any>;
 }
 

@@ -190,7 +190,7 @@ async function submitToERCA(
     const ercaApiKey = process.env.ERCA_API_KEY;
 
     if (!ercaEndpoint || !ercaApiKey) {
-        console.log('[ERCA] No API configured, would submit:', invoiceData);
+        console.warn('[ERCA] No API configured, would submit:', invoiceData);
         // Simulate successful submission for demo
         return {
             success: true,

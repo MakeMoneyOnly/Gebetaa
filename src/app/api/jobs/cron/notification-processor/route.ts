@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '50', 10);
         const cleanupDays = parseInt(searchParams.get('cleanup_days') || '7', 10);
 
-        console.log('[notification-processor] Starting notification processing:', {
+        console.warn('[notification-processor] Starting notification processing:', {
             limit,
             cleanupDays,
         });
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         const duration = Date.now() - startTime;
 
         // Log summary
-        console.log('[notification-processor] Processing complete:', {
+        console.warn('[notification-processor] Processing complete:', {
             duration: `${duration}ms`,
             processed: processResult.processed,
             sent: processResult.sent,

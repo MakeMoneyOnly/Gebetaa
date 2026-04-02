@@ -22,7 +22,7 @@ export const graphqlConfig = {
 
 // Log configuration on startup
 if (process.env.NODE_ENV !== 'test') {
-    console.log(
+    console.warn(
         `GraphQL Configuration: introspection=${ENABLE_INTROSPECTION}, debug=${graphqlConfig.debug}`
     );
 }

@@ -162,7 +162,7 @@ export async function getDeviceContext(request: Request) {
     const { data: device, error } = await admin
         .from('hardware_devices')
         .select(
-            'id, restaurant_id, device_type, name, assigned_zones, status, metadata, last_active_at'
+            'id, restaurant_id, location_id, device_type, device_profile, name, assigned_zones, status, metadata, last_active_at, pairing_state, management_provider, management_device_id'
         )
         .eq('device_token', token)
         .single();

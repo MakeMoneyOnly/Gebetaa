@@ -172,7 +172,7 @@ export function useSessionRefresh(config: SessionRefreshConfig = {}) {
 
         // Refresh if session is about to expire
         if (sessionInfo.timeUntilExpiry <= refreshThresholdSeconds) {
-            console.log(
+            console.warn(
                 '[SessionRefresh] Session expiring soon, refreshing...',
                 `Time until expiry: ${sessionInfo.timeUntilExpiry}s`
             );

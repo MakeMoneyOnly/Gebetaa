@@ -59,10 +59,10 @@ type SettingsClientProps = {
 export function SettingsClient({
     security: initialSecurity,
     notifications: initialNotifications,
-    payments: initialPayments,
+    payments: _initialPayments,
     plan: initialPlan,
-    banks: initialBanks,
-    directoryUnavailable: initialDirectoryUnavailable,
+    banks: _initialBanks,
+    directoryUnavailable: _initialDirectoryUnavailable,
 }: SettingsClientProps) {
     const [activeTab, setActiveTab] = useState<'security' | 'notifications' | 'plan'>('security');
     const [saving, setSaving] = useState(false);
@@ -73,7 +73,7 @@ export function SettingsClient({
     );
 
     // Plan state
-    const [currentPlan, setCurrentPlan] = useState<PlanSettings>(initialPlan);
+    const [currentPlan, _setCurrentPlan] = useState<PlanSettings>(initialPlan);
 
     const saveSecurity = async () => {
         try {

@@ -336,7 +336,7 @@ export function groupBy<T, K extends string | number | symbol>(
  * @example
  * ```ts
  * await sleep(1000); // Wait 1 second
- * console.log('Done!');
+ * console.warn('Done!');
  * ```
  */
 export function sleep(ms: number): Promise<void> {

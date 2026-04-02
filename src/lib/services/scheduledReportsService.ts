@@ -601,7 +601,7 @@ async function completeExecution(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendReportEmail(db: any, report: ScheduledReport, _fileUrl: string): Promise<void> {
     // In production, integrate with Resend/SendGrid
-    console.log(`[ScheduledReports] Would send email to ${report.recipient_emails.join(', ')}`);
+    console.warn(`[ScheduledReports] Would send email to ${report.recipient_emails.join(', ')}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

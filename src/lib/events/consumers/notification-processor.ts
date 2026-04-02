@@ -133,7 +133,7 @@ async function handleOrderStatusChanged(
     const { payload } = event;
 
     if (!payload.guest_phone) {
-        console.log('[notification-processor] No guest phone for order, skipping notification');
+        console.warn('[notification-processor] No guest phone for order, skipping notification');
         return { success: true }; // Not an error - just no notification needed
     }
 

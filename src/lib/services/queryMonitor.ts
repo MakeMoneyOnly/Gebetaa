@@ -229,13 +229,13 @@ class QueryMonitorService {
 
         if (this.isDevelopment) {
             const prefix = isSlow ? '🐢' : error ? '❌' : '✓';
-            console.log(
+            console.warn(
                 `[QueryMonitor] ${prefix} ${queryName}: ${durationMs.toFixed(2)}ms`,
                 logData
             );
         } else {
             // In production, use structured logging
-            console.log(
+            console.warn(
                 JSON.stringify({
                     level: logLevel,
                     message: `Query executed: ${queryName}`,

@@ -310,7 +310,7 @@ export async function notifyGuest(waitlistId: string): Promise<NotifyResult> {
     });
 
     if (dedupeResult.isDuplicate) {
-        console.log('[waitlist] Duplicate notification detected, skipping:', waitlistId);
+        console.warn('[waitlist] Duplicate notification detected, skipping:', waitlistId);
         // Still update the status to notified even if it's a duplicate
         await updateStatusInternal(db, waitlistId, 'notified');
 
@@ -373,8 +373,8 @@ export async function notifyGuest(waitlistId: string): Promise<NotifyResult> {
 /**
  * Internal function to update waitlist status
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function updateStatusInternal(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: any,
     waitlistId: string,
     status: WaitlistStatus

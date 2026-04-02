@@ -18,7 +18,7 @@ export function ServiceWorkerCleanup() {
                 const registrations = await navigator.serviceWorker.getRegistrations();
 
                 if (registrations.length > 0) {
-                    console.debug(
+                    console.warn(
                         `[ServiceWorkerCleanup] Unregistering ${registrations.length} service worker(s) in development mode`
                     );
 
@@ -42,13 +42,13 @@ export function ServiceWorkerCleanup() {
                             cacheName.includes('offline-fallback')
                         ) {
                             await caches.delete(cacheName);
-                            console.debug(`[ServiceWorkerCleanup] Cleared cache: ${cacheName}`);
+                            console.warn(`[ServiceWorkerCleanup] Cleared cache: ${cacheName}`);
                         }
                     }
                 }
             } catch (error) {
                 // Silently fail - this is just a cleanup operation
-                console.debug('[ServiceWorkerCleanup] Cleanup skipped:', error);
+                console.warn('[ServiceWorkerCleanup] Cleanup skipped:', error);
             }
         };
 

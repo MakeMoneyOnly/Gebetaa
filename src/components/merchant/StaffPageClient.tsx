@@ -461,7 +461,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                             </h3>
                                             <div className="mt-2 flex items-center gap-2">
                                                 <span className="rounded-lg bg-indigo-50 px-2.5 py-1 text-[10px] font-bold tracking-wider text-indigo-700 uppercase">
-                                                    {device.device_type}
+                                                    {device.device_profile || device.device_type}
                                                 </span>
                                             </div>
                                         </div>
@@ -486,10 +486,19 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                                             </div>
                                             <div className="mb-2 flex justify-between py-2">
                                                 <span className="text-xs font-bold text-gray-400">
-                                                    Setup Code
+                                                    Pairing Code
                                                 </span>
                                                 <span className="font-mono text-xs font-black tracking-widest text-black">
                                                     {device.pairing_code || '---'}
+                                                </span>
+                                            </div>
+                                            <div className="mb-2 flex justify-between py-2">
+                                                <span className="text-xs font-bold text-gray-400">
+                                                    Pairing State
+                                                </span>
+                                                <span className="text-xs font-bold text-black capitalize">
+                                                    {device.pairing_state ||
+                                                        (device.device_token ? 'paired' : 'ready')}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between pt-2">

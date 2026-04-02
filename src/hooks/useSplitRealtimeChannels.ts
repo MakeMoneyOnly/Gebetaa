@@ -216,6 +216,9 @@ export function useSplitRealtimeChannels({
         []
     );
 
+    // Ref to hold attemptReconnect callback to avoid immutability issues
+    const attemptReconnectRef = useRef<(channelType: ChannelType) => void>(() => {});
+
     /**
      * Setup a single channel
      */
@@ -243,7 +246,7 @@ export function useSplitRealtimeChannels({
                             if (!mountedRef.current) return;
                             const typedPayload = payload as unknown as RealtimePayload;
                             if (checkDuplicate(typedPayload)) {
-                                console.log(`[Realtime] Skipping duplicate orders message`);
+                                console.warn(`[Realtime] Skipping duplicate orders message`);
                                 return;
                             }
                             onOrderChange?.(typedPayload);
@@ -264,7 +267,7 @@ export function useSplitRealtimeChannels({
                             if (!mountedRef.current) return;
                             const typedPayload = payload as unknown as RealtimePayload;
                             if (checkDuplicate(typedPayload)) {
-                                console.log(
+                                console.warn(
                                     `[Realtime] Skipping duplicate external_orders message`
                                 );
                                 return;
@@ -287,7 +290,7 @@ export function useSplitRealtimeChannels({
                             if (!mountedRef.current) return;
                             const typedPayload = payload as unknown as RealtimePayload;
                             if (checkDuplicate(typedPayload)) {
-                                console.log(`[Realtime] Skipping duplicate tables message`);
+                                console.warn(`[Realtime] Skipping duplicate tables message`);
                                 return;
                             }
                             onTableChange?.(typedPayload);
@@ -308,7 +311,7 @@ export function useSplitRealtimeChannels({
                             if (!mountedRef.current) return;
                             const typedPayload = payload as unknown as RealtimePayload;
                             if (checkDuplicate(typedPayload)) {
-                                console.log(`[Realtime] Skipping duplicate kds_items message`);
+                                console.warn(`[Realtime] Skipping duplicate kds_items message`);
                                 return;
                             }
                             onKDSItemChange?.(typedPayload);
@@ -323,7 +326,7 @@ export function useSplitRealtimeChannels({
 
             // Subscribe with status handling
             channel.subscribe(status => {
-                console.log(`[Realtime] ${channelType} subscription status: ${status}`);
+                console.warn(`[Realtime] ${channelType} subscription status: ${status}`);
                 if (!mountedRef.current) return;
 
                 if (status === 'SUBSCRIBED') {
@@ -335,7 +338,7 @@ export function useSplitRealtimeChannels({
                     status === 'TIMED_OUT'
                 ) {
                     updateStatus(channelType, 'error');
-                    attemptReconnect(channelType);
+                    attemptReconnectRef.current(channelType);
                 }
             });
 
@@ -369,7 +372,7 @@ export function useSplitRealtimeChannels({
             }
 
             const delay = calculateReconnectDelay(currentRetry);
-            console.log(
+            console.warn(
                 `[Realtime] ${channelType}: Scheduling reconnect attempt ${currentRetry + 1} in ${Math.round(delay)}ms`
             );
 
@@ -393,6 +396,11 @@ export function useSplitRealtimeChannels({
         },
         [setupChannel, updateStatus]
     );
+
+    useEffect(() => {
+        // Set up the ref after both callbacks are defined
+        attemptReconnectRef.current = attemptReconnect;
+    }, [attemptReconnect]);
 
     /**
      * Setup all requested channels

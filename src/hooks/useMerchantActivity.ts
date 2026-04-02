@@ -46,10 +46,10 @@ export function useMerchantActivity() {
                 if (!mounted) return;
                 setLoading(true);
 
-                console.log('[Hook] Fetching merchant activity...');
+                console.warn('[Hook] Fetching merchant activity...');
                 const response = await fetch('/api/merchant/activity');
 
-                console.log('[Hook] Response status:', response.status);
+                console.warn('[Hook] Response status:', response.status);
 
                 if (!response.ok) {
                     if (response.status === 401 || response.status === 404) {
@@ -62,7 +62,7 @@ export function useMerchantActivity() {
                 }
 
                 const data = await response.json();
-                console.log('[Hook] Received data:', {
+                console.warn('[Hook] Received data:', {
                     orderCount: data.orders?.length || 0,
                     requestCount: data.requests?.length || 0,
                     restaurant: data.restaurant,

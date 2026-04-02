@@ -132,7 +132,7 @@ class PerformanceMonitorService {
         this.events.push(event);
 
         if (this.isDevelopment) {
-            console.log(`[Performance] ${name}: ${duration.toFixed(2)}ms`, metadata ?? '');
+            console.warn(`[Performance] ${name}: ${duration.toFixed(2)}ms`, metadata ?? '');
         }
 
         // Report to analytics
@@ -246,7 +246,7 @@ class PerformanceMonitorService {
         if (!this.isDevelopment) return;
 
         const emoji = metric.rating === 'good' ? '✅' : metric.rating === 'poor' ? '❌' : '⚠️';
-        console.log(
+        console.warn(
             `[WebVitals] ${emoji} ${metric.name}: ${metric.value.toFixed(2)}ms (${metric.rating})`
         );
     }

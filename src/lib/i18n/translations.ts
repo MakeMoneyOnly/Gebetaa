@@ -682,7 +682,7 @@ export function plural(
     return interpolate(finalTranslation, { count: count.toString() });
 }
 
-export default {
+const i18nExports = {
     t,
     getTranslations,
     hasTranslation,
@@ -690,3 +690,5 @@ export default {
     plural,
     translations,
 };
+
+export default i18nExports;

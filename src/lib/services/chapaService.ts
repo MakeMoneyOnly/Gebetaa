@@ -117,7 +117,7 @@ export async function listChapaBanks(): Promise<ChapaBankRecord[]> {
         throw new Error('CHAPA_SECRET_KEY is not configured');
     }
 
-    console.log('Fetching banks from Chapa API...');
+    console.warn('Fetching banks from Chapa API...');
 
     const response = await fetch(`${CHAPA_BASE_URL}/banks`, {
         method: 'GET',
@@ -133,7 +133,7 @@ export async function listChapaBanks(): Promise<ChapaBankRecord[]> {
         data?: Array<Record<string, unknown>>;
     };
 
-    console.log('Chapa banks API response:', {
+    console.warn('Chapa banks API response:', {
         status: response.status,
         ok: response.ok,
         payloadStatus: payload.status,
@@ -172,7 +172,7 @@ export async function listChapaBanks(): Promise<ChapaBankRecord[]> {
         .filter((bank): bank is ChapaBankRecord => bank !== null)
         .sort((left, right) => left.name.localeCompare(right.name));
 
-    console.log(`Parsed ${banks.length} valid banks from Chapa response`);
+    console.warn(`Parsed ${banks.length} valid banks from Chapa response`);
     return banks;
 }
 
@@ -188,7 +188,7 @@ export async function createChapaSubaccount(
         throw new Error('CHAPA_SECRET_KEY is not configured');
     }
 
-    console.log('Creating Chapa subaccount with params:', {
+    console.warn('Creating Chapa subaccount with params:', {
         business_name: params.business_name,
         account_name: params.account_name,
         bank_code: params.bank_code,
@@ -207,7 +207,7 @@ export async function createChapaSubaccount(
 
     const data = (await response.json()) as ChapaSubaccountResponse;
 
-    console.log('Chapa subaccount API response:', {
+    console.warn('Chapa subaccount API response:', {
         httpStatus: response.status,
         ok: response.ok,
         status: data.status,

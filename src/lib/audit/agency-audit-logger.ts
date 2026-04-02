@@ -372,7 +372,7 @@ export async function queryAgencyAuditLogs(params: {
     }
 }
 
-export default {
+const agencyAuditLoggerExports = {
     logAgencyAction,
     logRestaurantAccess,
     logRestaurantCreate,
@@ -382,3 +382,5 @@ export default {
     logImpersonationEnd,
     queryAgencyAuditLogs,
 };
+
+export default agencyAuditLoggerExports;

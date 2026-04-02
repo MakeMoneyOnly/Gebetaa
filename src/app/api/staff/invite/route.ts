@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     let emailSent = false;
 
     if (parsed.data.email && resend) {
-        console.log('Attempting to send email to:', parsed.data.email);
+        console.warn('Attempting to send email to:', parsed.data.email);
         try {
             const { data: emailData, error: emailError } = await resend.emails.send({
                 from: EMAIL_FROM,
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
             if (emailError) {
                 console.error('Resend API returned error:', emailError);
             } else {
-                console.log('Email sent successfully:', emailData);
+                console.warn('Email sent successfully:', emailData);
                 emailSent = true;
             }
         } catch (emailError) {
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
             // We don't fail the request if email fails, but we'll flag it in the response
         }
     } else {
-        console.log(
+        console.warn(
             'Skipping email: Email provided?',
             Boolean(parsed.data.email),
             'Resend client ready?',

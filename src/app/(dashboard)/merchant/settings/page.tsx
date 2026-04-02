@@ -158,13 +158,13 @@ async function getPlanSettings(
 
 async function getBanks(): Promise<{ banks: BankOption[]; directoryUnavailable: boolean }> {
     if (!isChapaConfigured()) {
-        console.log('Chapa not configured - skipping bank fetch');
+        console.warn('Chapa not configured - skipping bank fetch');
         return { banks: [], directoryUnavailable: true };
     }
 
     try {
         const banks = await listChapaBanks();
-        console.log(`Successfully fetched ${banks.length} banks from Chapa`);
+        console.warn(`Successfully fetched ${banks.length} banks from Chapa`);
         return { banks, directoryUnavailable: false };
     } catch (error) {
         console.error('Failed to fetch banks from Chapa:', error);

@@ -206,9 +206,12 @@ export async function dispatchKdsPrintJob(
                     break;
                 }
                 await sleep(computeBackoffMs(policy.base_backoff_ms, attempt));
-            } catch (error: any) {
+            } catch (error: unknown) {
                 clearTimeout(timeoutHandle);
-                lastError = String(error?.message ?? 'bridge_request_failed');
+                lastError = String(
+                    (error instanceof Error ? error.message : 'bridge_request_failed') ??
+                        'bridge_request_failed'
+                );
                 if (attempt === policy.max_attempts) break;
                 await sleep(computeBackoffMs(policy.base_backoff_ms, attempt));
             }
@@ -220,7 +223,7 @@ export async function dispatchKdsPrintJob(
     }
 
     // Log-mode provider acts as a non-hardware fallback in lower environments.
-    console.info('[KDS_PRINTER_LOG]', {
+    console.warn('[KDS_PRINTER_LOG]', {
         event: 'kds.ticket.print.v1',
         event_id: eventId,
         copies: policy.copies,

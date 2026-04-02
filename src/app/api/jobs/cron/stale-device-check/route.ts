@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             maxDevicesPerRun: 100,
         };
 
-        console.log('[stale-device-check] Starting detection with config:', {
+        console.warn('[stale-device-check] Starting detection with config:', {
             warningThreshold: config.warningThresholdMinutes,
             criticalThreshold: config.criticalThresholdMinutes,
             businessHoursOnly: config.businessHoursOnly,
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         const duration = Date.now() - startTime;
 
         // Log summary
-        console.log('[stale-device-check] Detection complete:', {
+        console.warn('[stale-device-check] Detection complete:', {
             duration: `${duration}ms`,
             checked: result.checked,
             warning: result.warningDevices.length,

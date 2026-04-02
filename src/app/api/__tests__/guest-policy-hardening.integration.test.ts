@@ -8,7 +8,7 @@ const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
 // Check if all required secrets are available
 function hasRequiredSecrets(): boolean {
     if (!supabaseUrl || !publishableKey || !serviceRoleKey) {
-        console.log('Missing secrets:', {
+        console.warn('Missing secrets:', {
             hasUrl: !!supabaseUrl,
             hasPublishableKey: !!publishableKey,
             hasServiceRoleKey: !!serviceRoleKey,
@@ -18,10 +18,10 @@ function hasRequiredSecrets(): boolean {
     // Validate URL format
     try {
         const url = new URL(supabaseUrl);
-        console.log('Supabase URL validated:', url.host);
+        console.warn('Supabase URL validated:', url.host);
         return true;
     } catch {
-        console.log('Invalid Supabase URL:', supabaseUrl);
+        console.warn('Invalid Supabase URL:', supabaseUrl);
         return false;
     }
 }
@@ -60,7 +60,7 @@ describe('Guest policy hardening integration', () => {
     beforeAll(async () => {
         // Skip everything if secrets are not available
         if (!hasRequiredSecrets()) {
-            console.log('Skipping policy hardening tests: Supabase secrets not configured');
+            console.warn('Skipping policy hardening tests: Supabase secrets not configured');
             return;
         }
 
@@ -74,7 +74,7 @@ describe('Guest policy hardening integration', () => {
         });
 
         // Test connection by fetching restaurants
-        console.log('Testing Supabase connection...');
+        console.warn('Testing Supabase connection...');
         try {
             const { data, error, status } = await adminClient!
                 .from('restaurants')
@@ -83,7 +83,7 @@ describe('Guest policy hardening integration', () => {
                 .limit(1)
                 .maybeSingle();
 
-            console.log('Supabase response:', { status, hasData: !!data, error: error?.message });
+            console.warn('Supabase response:', { status, hasData: !!data, error: error?.message });
 
             if (error) {
                 console.error('Supabase query error:', error);
@@ -91,13 +91,13 @@ describe('Guest policy hardening integration', () => {
             }
 
             if (!data?.id) {
-                console.log('No active restaurant found in database');
+                console.warn('No active restaurant found in database');
                 throw new Error('No active restaurant found for tests');
             }
 
             restaurantId = data.id;
             testsShouldRun = true;
-            console.log('Successfully connected to Supabase, restaurantId:', restaurantId);
+            console.warn('Successfully connected to Supabase, restaurantId:', restaurantId);
         } catch (err) {
             console.error('Failed to connect to Supabase:', err);
             // Don't throw - let tests skip gracefully
@@ -124,7 +124,7 @@ describe('Guest policy hardening integration', () => {
 
     it('orders policy rejects insert without idempotency_key', async () => {
         if (!testsShouldRun || !anonClient) {
-            console.log('Skipping test: testsShouldRun=', testsShouldRun);
+            console.warn('Skipping test: testsShouldRun=', testsShouldRun);
             return;
         }
         const payload = buildValidOrderPayload(

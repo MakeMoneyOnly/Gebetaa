@@ -206,7 +206,7 @@ export function useKDSRealtime({
             if (recordId && deduplicatorRef.current) {
                 const messageId = generateMessageId(payload.table, payload.eventType, recordId);
                 if (deduplicatorRef.current.isDuplicate(messageId)) {
-                    console.log(`[KDS Realtime] Skipping duplicate message: ${messageId}`);
+                    console.warn(`[KDS Realtime] Skipping duplicate message: ${messageId}`);
                     return;
                 }
             }
@@ -254,7 +254,7 @@ export function useKDSRealtime({
             if (recordId && deduplicatorRef.current) {
                 const messageId = generateMessageId(payload.table, payload.eventType, recordId);
                 if (deduplicatorRef.current.isDuplicate(messageId)) {
-                    console.log(`[KDS Realtime] Skipping duplicate message: ${messageId}`);
+                    console.warn(`[KDS Realtime] Skipping duplicate message: ${messageId}`);
                     return;
                 }
             }
@@ -297,44 +297,8 @@ export function useKDSRealtime({
         [restaurantId, onNewOrder, onOrderUpdate, onOrderDelete]
     );
 
-    /**
-     * HIGH-015: Attempt to reconnect with exponential backoff
-     */
-    const attemptReconnect = useCallback(() => {
-        if (!mountedRef.current) return;
-
-        const currentRetry = retryCountRef.current;
-
-        if (currentRetry >= RECONNECT_CONFIG.maxRetries) {
-            console.error(
-                `[KDS Realtime] Max reconnection attempts (${RECONNECT_CONFIG.maxRetries}) reached`
-            );
-            setReconnectionStatus('failed');
-            return;
-        }
-
-        const delay = calculateReconnectDelay(currentRetry);
-        console.log(
-            `[KDS Realtime] Scheduling reconnect attempt ${currentRetry + 1}/${RECONNECT_CONFIG.maxRetries} in ${Math.round(delay)}ms`
-        );
-
-        setReconnectionStatus('reconnecting');
-
-        reconnectTimeoutRef.current = setTimeout(() => {
-            if (!mountedRef.current) return;
-
-            retryCountRef.current++;
-
-            // Unsubscribe existing channel if any
-            if (channelRef.current) {
-                channelRef.current.unsubscribe();
-                channelRef.current = null;
-            }
-
-            // Trigger reconnection by setting up a new subscription
-            setupChannel();
-        }, delay);
-    }, []);
+    // HIGH-015: Refs to hold callback functions to avoid immutability errors
+    const attemptReconnectRef = useRef<() => void>(() => {});
 
     /**
      * HIGH-015: Setup channel with reconnection handling
@@ -369,7 +333,7 @@ export function useKDSRealtime({
                 }
             )
             .subscribe(status => {
-                console.log(`[KDS Realtime] Subscription status: ${status}`);
+                console.warn(`[KDS Realtime] Subscription status: ${status}`);
                 if (!mountedRef.current) return;
 
                 if (status === 'SUBSCRIBED') {
@@ -382,12 +346,56 @@ export function useKDSRealtime({
                 if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
                     setIsConnected(false);
                     // HIGH-015: Attempt reconnection with exponential backoff
-                    attemptReconnect();
+                    attemptReconnectRef.current();
                 }
             });
 
         channelRef.current = channel;
-    }, [restaurantId, supabase, handleOrdersChange, handleExternalOrdersChange, attemptReconnect]);
+    }, [restaurantId, supabase, handleOrdersChange, handleExternalOrdersChange]);
+
+    /**
+     * HIGH-015: Attempt to reconnect with exponential backoff
+     */
+    const attemptReconnect = useCallback(() => {
+        if (!mountedRef.current) return;
+
+        const currentRetry = retryCountRef.current;
+
+        if (currentRetry >= RECONNECT_CONFIG.maxRetries) {
+            console.error(
+                `[KDS Realtime] Max reconnection attempts (${RECONNECT_CONFIG.maxRetries}) reached`
+            );
+            setReconnectionStatus('failed');
+            return;
+        }
+
+        const delay = calculateReconnectDelay(currentRetry);
+        console.warn(
+            `[KDS Realtime] Scheduling reconnect attempt ${currentRetry + 1}/${RECONNECT_CONFIG.maxRetries} in ${Math.round(delay)}ms`
+        );
+
+        setReconnectionStatus('reconnecting');
+
+        reconnectTimeoutRef.current = setTimeout(() => {
+            if (!mountedRef.current) return;
+
+            retryCountRef.current++;
+
+            // Unsubscribe existing channel if any
+            if (channelRef.current) {
+                channelRef.current.unsubscribe();
+                channelRef.current = null;
+            }
+
+            // Trigger reconnection by setting up a new subscription
+            setupChannel();
+        }, delay);
+    }, [setupChannel]);
+
+    useEffect(() => {
+        // Set up the ref after both callbacks are defined
+        attemptReconnectRef.current = attemptReconnect;
+    }, [attemptReconnect]);
 
     useEffect(() => {
         if (!enabled || !restaurantId) return;

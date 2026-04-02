@@ -48,7 +48,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 silentCallbacks: detectionResult.silentCallbacks.length,
             });
         } else {
-            console.log('[silent-callback-check] Check complete:', {
+            console.warn('[silent-callback-check] Check complete:', {
                 pendingSessions: healthStats.pendingSessions,
                 recentCallbacks: healthStats.recentCallbacks,
             });
