@@ -210,7 +210,7 @@ export function getSupabasePoolerConfig() {
  * - Use prepared statements only in session mode
  */
 
-export default {
+const connectionPoolingExports = {
     getConnectionPoolConfig,
     getPooledConnectionUrl,
     checkPoolHealth,
@@ -218,3 +218,5 @@ export default {
     SERVERLESS_POOL_CONFIG,
     LONG_RUNNING_POOL_CONFIG,
 };
+
+export default connectionPoolingExports;

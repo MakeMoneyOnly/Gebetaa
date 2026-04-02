@@ -42,7 +42,7 @@ export const createClient = () => {
             // Return a client that will fail gracefully
             // This prevents the app from running with mock data in production
         } else {
-            console.log(
+            console.warn(
                 '[Browser] Using mock client - placeholder credentials detected:',
                 'isPlaceholderUrl:',
                 isPlaceholderUrl,

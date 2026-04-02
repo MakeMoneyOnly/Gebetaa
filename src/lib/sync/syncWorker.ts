@@ -275,7 +275,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
             return { processed: 0, succeeded: 0, failed: 0 };
         }
 
-        console.log(`[SyncWorker] Processing ${operations.length} operations via batch sync`);
+        console.warn(`[SyncWorker] Processing ${operations.length} operations via batch sync`);
 
         // Use batch sync for efficiency
         const { succeeded, failed, results } = await executeBatchSync(operations);
@@ -318,7 +318,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
             const retryCount = op.attempts || 0;
 
             try {
-                console.log(
+                console.warn(
                     `[SyncWorker] Processing ${op.operation} on ${op.table_name}/${op.record_id} (attempt ${retryCount + 1})`
                 );
 
@@ -328,7 +328,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                 if (result.success) {
                     await markSyncOperationCompleted(op.id);
                     succeeded++;
-                    console.log(`[SyncWorker] Successfully synced operation ${op.id}`);
+                    console.warn(`[SyncWorker] Successfully synced operation ${op.id}`);
                 } else {
                     // Check if we should retry
                     if (retryCount < MAX_RETRIES) {
@@ -403,11 +403,11 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
      */
     async function syncOnce(): Promise<SyncProgress> {
         if (!navigator.onLine) {
-            console.log('[SyncWorker] Offline - skipping sync');
+            console.warn('[SyncWorker] Offline - skipping sync');
             return getStatus();
         }
 
-        console.log('[SyncWorker] Starting sync cycle');
+        console.warn('[SyncWorker] Starting sync cycle');
 
         const syncResult = await processSyncOperations();
 
@@ -421,7 +421,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         const status = await getStatus();
         cfg.onSyncProgress?.(status);
 
-        console.log(
+        console.warn(
             `[SyncWorker] Sync complete: ${syncResult.succeeded} succeeded, ${syncResult.failed} failed`
         );
 
@@ -440,7 +440,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         // Run immediately on start
         syncOnce();
 
-        console.log('[SyncWorker] Started');
+        console.warn('[SyncWorker] Started');
     }
 
     /**
@@ -455,7 +455,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         }
 
         isRunning = false;
-        console.log('[SyncWorker] Stopped');
+        console.warn('[SyncWorker] Stopped');
     }
 
     return {

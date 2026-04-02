@@ -253,7 +253,7 @@ export async function clearLegacyStorage(): Promise<void> {
         // Clear waiter context (session-specific, but clear anyway)
         localStorage.removeItem('gebata_waiter_context');
 
-        console.log('[Migration] Legacy storage cleared');
+        console.warn('[Migration] Legacy storage cleared');
     } catch (error) {
         console.error('[Migration] Failed to clear legacy storage:', error);
     }

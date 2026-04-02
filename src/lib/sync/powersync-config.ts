@@ -118,6 +118,21 @@ export const powerSyncSchema = `
         FOREIGN KEY (order_id) REFERENCES orders(id)
     );
 
+    -- Fiscal submission queue for offline compliance replay
+    CREATE TABLE IF NOT EXISTS fiscal_jobs (
+        id TEXT PRIMARY KEY,
+        order_id TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        attempts INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT,
+        warning_text TEXT,
+        created_at TEXT NOT NULL,
+        submitted_at TEXT,
+        synced_at TEXT,
+        FOREIGN KEY (order_id) REFERENCES orders(id)
+    );
+
     -- Restaurant settings cached locally
     CREATE TABLE IF NOT EXISTS restaurant_settings (
         restaurant_id TEXT PRIMARY KEY,
@@ -134,6 +149,7 @@ export const powerSyncSchema = `
     CREATE INDEX IF NOT EXISTS idx_kds_items_station ON kds_items(station);
     CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(status);
     CREATE INDEX IF NOT EXISTS idx_printer_jobs_status ON printer_jobs(status);
+    CREATE INDEX IF NOT EXISTS idx_fiscal_jobs_status ON fiscal_jobs(status);
 `;
 
 /**
@@ -237,7 +253,7 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
         });
 
         if (config.debug) {
-            console.log('[PowerSync] Database initialized successfully');
+            console.warn('[PowerSync] Database initialized successfully');
         }
 
         return powerSyncDb;

@@ -52,7 +52,7 @@ export function validateE2EConfig(): void {
                     'Set E2E_BYPASS_SECRET environment variable.'
             );
         } else {
-            console.log(
+            console.warn(
                 '[E2E] E2E test mode is enabled with configured secret. ' +
                     'E2E bypass will be available for testing.'
             );
@@ -61,7 +61,7 @@ export function validateE2EConfig(): void {
 
     // Log for debugging in non-production
     if (nodeEnv === 'development' && e2eTestMode !== 'true') {
-        console.log(
+        console.warn(
             '[E2E] E2E test mode is disabled. ' +
                 'Set E2E_TEST_MODE=true and E2E_BYPASS_SECRET=<secret> to enable E2E bypass.'
         );
@@ -176,8 +176,8 @@ export function logE2ESecurityEvent(
     } else if (event === 'bypass_rejected') {
         console.warn('[SECURITY] E2E bypass rejected:', logEntry);
     } else if (event === 'bypass_success') {
-        console.log('[E2E] E2E bypass successful:', logEntry);
+        console.warn('[E2E] E2E bypass successful:', logEntry);
     } else {
-        console.log('[E2E]', event, logEntry);
+        console.warn('[E2E]', event, logEntry);
     }
 }

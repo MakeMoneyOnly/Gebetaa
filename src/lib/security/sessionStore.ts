@@ -255,7 +255,7 @@ async function createRedisClient(): Promise<RedisClient | null> {
         // Test connection
         await redis.ping();
 
-        console.log('✅ Redis connected for session storage');
+        console.warn('✅ Redis connected for session storage');
         return redis as unknown as RedisClient;
     } catch (error) {
         console.warn('⚠️ Redis connection failed, falling back to memory store:', error);
@@ -290,7 +290,7 @@ export async function initializeSessionStore(): Promise<void> {
 
         // Fall back to memory store
         memoryStore = new MemorySessionStore();
-        console.log('📝 Using in-memory session store (not recommended for production)');
+        console.warn('📝 Using in-memory session store (not recommended for production)');
     })();
 
     return initializationPromise;

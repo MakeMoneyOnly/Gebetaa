@@ -223,6 +223,7 @@ export async function fetchItemsForValidation(
     }> | null;
     error: Error | null;
 }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     return db
         .from('menu_items')
