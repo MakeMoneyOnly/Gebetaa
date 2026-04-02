@@ -1,43 +1,44 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import {
     Banknote,
     Bell,
     BookOpen,
     Calendar,
     ChevronDown,
-    ChevronLeft,
-    ChevronRight,
+    _ChevronLeft,
+    _ChevronRight,
     Clock,
-    CreditCard,
+    _CreditCard,
     Flame,
-    Gift,
+    _Gift,
     Inbox,
-    KeyRound,
+    _KeyRound,
     MessageSquare,
     PauseCircle,
     Pencil,
-    Percent,
+    _Percent,
     Plus,
     Printer,
     RotateCcw,
     Search,
     Send,
-    Split,
+    _Split,
     Trash2,
     User,
-    UserPlus,
-    Users,
+    _UserPlus,
+    _Users,
     X,
     CheckCircle2,
-    ArrowRight,
-    QrCode,
-    Scan,
-    Coins,
-    Receipt,
-    Handshake,
-    ArrowLeftRight,
+    _ArrowRight,
+    _QrCode,
+    _Scan,
+    _Coins,
+    _Receipt,
+    _Handshake,
+    _ArrowLeftRight,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -45,16 +46,18 @@ export default function WaiterPosPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showFireMenu, setShowFireMenu] = useState(false);
     const [showSplitPayment, setShowSplitPayment] = useState(false);
-    const [payFlow, setPayFlow] = useState<
+    const [_payFlow, setPayFlow] = useState<
         'MODE_SELECT' | 'SINGLE_QR' | 'SPLIT_AVATARS' | 'SPLIT_QR'
     >('MODE_SELECT');
     const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID'>('PENDING');
-    const [isGuestMode, setIsGuestMode] = useState(false);
+    const [_isGuestMode, setIsGuestMode] = useState(false);
     const [activeGuestId, setActiveGuestId] = useState(1);
-    const [guestList, setGuestList] = useState([
+    const [_guestList, setGuestList] = useState([
         { id: 1, name: 'Guest 1', color: 'bg-blue-100', paid: false },
         { id: 2, name: 'Guest 2', color: 'bg-emerald-100', paid: false },
     ]);
+    const [splitMode, setSplitMode] = useState<'full' | 'split'>('full');
+    const [splitCount, setSplitCount] = useState(2);
 
     return (
         <div className="flex h-screen overflow-hidden bg-[#fbfbfb] text-[#000000] antialiased">
@@ -65,9 +68,11 @@ export default function WaiterPosPage() {
                     {/* Left Header */}
                     <div className="flex items-center gap-6">
                         <div className="flex h-11 cursor-pointer items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 transition-colors hover:bg-gray-100">
-                            <img
+                            <Image
                                 src="https://i.pravatar.cc/150?img=33"
                                 alt="Store"
+                                width={28}
+                                height={28}
                                 className="h-7 w-7 rounded-full object-cover"
                             />
                             <span className="text-sm font-semibold">Hadid's Food</span>
@@ -335,43 +340,187 @@ export default function WaiterPosPage() {
                                 </div>
                             </div>
                         </div>
-                        {/* Visual Tint Overlay for Payment Mode */}
+                        {/* Concentrated POS Terminal (Outer card removed, layout structure restored) */}
                         {showSplitPayment && (
                             <div
-                                className="animate-in fade-in absolute inset-0 z-20 flex items-center justify-center bg-black/40 p-12 backdrop-blur-sm duration-500"
+                                className="animate-in fade-in absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/10 backdrop-blur-sm duration-300"
                                 onClick={() => setShowSplitPayment(false)}
                             >
+                                {/* Layout Wrapper - Max Width stays the same but no bg card */}
                                 <div
-                                    className="animate-in zoom-in-95 flex flex-col items-center gap-12 rounded-xl bg-white p-14 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] duration-500"
+                                    className="relative flex w-full max-w-[850px] flex-col items-center justify-center overflow-visible text-black"
                                     onClick={e => e.stopPropagation()}
                                 >
-                                    <div className="rounded-xl bg-gray-50 p-8 shadow-inner">
-                                        <QRCodeSVG
-                                            value="https://gebeta.app/pay/B12309"
-                                            size={320}
-                                            level="H"
-                                            includeMargin={false}
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-3 text-center">
-                                        <h3 className="text-3xl font-black tracking-tighter text-black uppercase">
-                                            Scan to Pay
-                                        </h3>
-                                        <p className="px-4 text-xl font-bold text-gray-500">
-                                            Order #B12309 •{' '}
-                                            <span className="text-black">2,322.00 Br.</span>
-                                        </p>
-                                    </div>
-
-                                    <div className="h-px w-full bg-gray-100" />
-
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-brand-accent/20 flex h-12 w-12 items-center justify-center rounded-xl">
-                                            <QrCode className="h-6 w-6 text-black" />
+                                    {/* Central Interaction Card */}
+                                    <div
+                                        className={`relative mx-auto flex w-full flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-black/5 bg-white shadow-[0_40px_100px_-20px_rgba(0,0,0,0.15)] transition-all duration-300 ${splitMode === 'split' ? 'max-w-[760px] p-10 pt-11' : 'max-w-[640px] px-10 py-11'}`}
+                                    >
+                                        {/* Icon & Label */}
+                                        <div className="mb-5 flex flex-col items-center gap-3 text-center">
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-50 text-gray-400">
+                                                <Banknote className="h-7 w-7" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold tracking-tight text-black/80">
+                                                {splitMode === 'full'
+                                                    ? 'ORDER #B12309'
+                                                    : 'ORDER #B12309 | _Split Payment'}
+                                            </h3>
                                         </div>
-                                        <span className="text-base font-bold text-gray-400">
-                                            Merchant POS ID: #GP-882
-                                        </span>
+
+                                        {/* Mode Select Tabs - Scaled & Brand Aligned */}
+                                        <div
+                                            className={`mb-8 flex w-full gap-1.5 rounded-[1.2rem] border border-black/3 bg-gray-50/80 p-1.5 transition-all ${splitMode === 'split' ? 'max-w-[500px]' : 'max-w-[420px]'}`}
+                                        >
+                                            <button
+                                                onClick={() => setSplitMode('full')}
+                                                className={`flex-1 rounded-[0.9rem] py-3 text-base font-bold transition-all duration-300 ${
+                                                    splitMode === 'full'
+                                                        ? 'bg-brand-accent text-black shadow-md'
+                                                        : 'text-gray-400 hover:text-gray-600'
+                                                }`}
+                                            >
+                                                Pay in Full
+                                            </button>
+                                            <button
+                                                onClick={() => setSplitMode('split')}
+                                                className={`flex-1 rounded-[0.9rem] py-3 text-base font-bold transition-all duration-300 ${
+                                                    splitMode === 'split'
+                                                        ? 'bg-brand-accent text-black shadow-md'
+                                                        : 'text-gray-400 hover:text-gray-600'
+                                                }`}
+                                            >
+                                                _Split Bill
+                                            </button>
+                                        </div>
+
+                                        {splitMode === 'full' ? (
+                                            <>
+                                                {/* QR Area - Compact & Refined */}
+                                                <div className="mb-2 flex flex-col items-center gap-5">
+                                                    <div className="relative p-1.5">
+                                                        {/* Ambient Glow */}
+                                                        <div className="absolute inset-0 rounded-[2rem] bg-black/3 blur-[40px]" />
+                                                        <div className="relative rounded-[1.5rem] border border-black/3 bg-white p-7 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08)]">
+                                                            <QRCodeSVG
+                                                                value={`https://gebeta.app/pay/B12309?mode=full`}
+                                                                size={240}
+                                                                level="H"
+                                                                includeMargin={false}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-base font-semibold text-gray-400">
+                                                        _Scan to pay
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => setPaymentStatus('PAID')}
+                                                    className="mt-6 h-12 w-full max-w-[300px] rounded-[0.8rem] border border-emerald-500/20 bg-emerald-500/10 text-base font-bold text-emerald-600 transition-all hover:bg-emerald-500/20"
+                                                >
+                                                    Mark as Paid
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="mt-2 flex w-full items-stretch gap-10">
+                                                {/* Left Column: Configuration */}
+                                                <div className="flex flex-1 flex-col items-center justify-between border-r border-black/5 py-4 pr-10">
+                                                    <div className="flex flex-col items-center gap-6">
+                                                        <span className="text-sm font-bold tracking-tight whitespace-nowrap text-gray-400">
+                                                            Number of Guests
+                                                        </span>
+
+                                                        {/* Precision Stepper Controls */}
+                                                        <div className="flex items-center gap-5">
+                                                            <button
+                                                                onClick={() => {
+                                                                    const newCount = Math.max(
+                                                                        2,
+                                                                        splitCount - 1
+                                                                    );
+                                                                    setSplitCount(newCount);
+                                                                    if (activeGuestId > newCount)
+                                                                        setActiveGuestId(newCount);
+                                                                }}
+                                                                className="border-brand-accent bg-brand-accent/5 hover:bg-brand-accent/20 flex h-14 w-14 items-center justify-center rounded-2xl border-2 text-2xl font-black text-black transition-all active:scale-95"
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <span className="w-16 text-center text-4xl font-black text-black tabular-nums">
+                                                                {splitCount}
+                                                            </span>
+                                                            <button
+                                                                onClick={() =>
+                                                                    setSplitCount(
+                                                                        Math.min(12, splitCount + 1)
+                                                                    )
+                                                                }
+                                                                className="border-brand-accent bg-brand-accent/5 hover:bg-brand-accent/20 flex h-14 w-14 items-center justify-center rounded-2xl border-2 text-2xl font-black text-black transition-all active:scale-95"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => setPaymentStatus('PAID')}
+                                                        className="mt-8 h-14 w-full rounded-[0.8rem] border border-emerald-500/20 bg-emerald-500/10 text-base font-bold text-emerald-600 transition-all hover:bg-emerald-500/20"
+                                                    >
+                                                        Mark as Paid (All)
+                                                    </button>
+                                                </div>
+
+                                                {/* Right Column: QR & Context */}
+                                                <div className="flex flex-1 flex-col items-center">
+                                                    <h4 className="mb-5 text-center text-xl font-bold tracking-tight text-black/90">
+                                                        _Scan for Guest {activeGuestId} <br />
+                                                        <span className="text-base font-semibold text-gray-500">
+                                                            (
+                                                            {(2322.0 / splitCount).toLocaleString(
+                                                                'en-US',
+                                                                {
+                                                                    minimumFractionDigits: 2,
+                                                                    maximumFractionDigits: 2,
+                                                                }
+                                                            )}{' '}
+                                                            Br.)
+                                                        </span>
+                                                    </h4>
+
+                                                    <div className="relative mb-6 p-1.5">
+                                                        <div className="absolute inset-0 rounded-[2rem] bg-black/3 blur-[40px]" />
+                                                        <div className="relative rounded-[1.5rem] border border-black/3 bg-white p-6 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08)]">
+                                                            <QRCodeSVG
+                                                                value={`https://gebeta.app/pay/B12309?mode=split&count=${splitCount}&guest=${activeGuestId}`}
+                                                                size={200}
+                                                                level="H"
+                                                                includeMargin={false}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Context Avatars */}
+                                                    <div className="no-scrollbar flex w-full max-w-[300px] items-center justify-center gap-3 overflow-x-auto p-2 px-2">
+                                                        {Array.from({ length: splitCount }).map(
+                                                            (_, i) => (
+                                                                <button
+                                                                    key={i + 1}
+                                                                    onClick={() =>
+                                                                        setActiveGuestId(i + 1)
+                                                                    }
+                                                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold transition-all ${
+                                                                        activeGuestId === i + 1
+                                                                            ? 'ring-brand-accent bg-black text-white ring-[3px] ring-offset-[3px]'
+                                                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                                                    }`}
+                                                                >
+                                                                    {i + 1}
+                                                                </button>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -712,7 +861,7 @@ export default function WaiterPosPage() {
                         <div className="mt-4 grid w-full grid-cols-2 gap-4 px-6">
                             <button className="flex h-20 items-center justify-center gap-3 rounded-[30px] bg-black text-lg font-bold text-white shadow-2xl transition-all hover:bg-gray-900 active:scale-95">
                                 <Printer className="text-brand-accent h-6 w-6" />
-                                <span>Print Receipt</span>
+                                <span>Print _Receipt</span>
                             </button>
                             <button
                                 onClick={() => setPaymentStatus('PENDING')}

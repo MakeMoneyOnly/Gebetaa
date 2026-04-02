@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
+import _Image from 'next/image';
 
 import { createClient } from '@/lib/supabase';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -463,10 +463,10 @@ export function MenuClientContent() {
         } = supabase.auth.onAuthStateChange((event: string, session: unknown) => {
             if (event === 'TOKEN_REFRESHED') {
                 // Handle token refresh - session is renewed
-                const sessionData = session as { access_token?: string } | null;
+                const _sessionData = session as { access_token?: string } | null;
                 // Session successfully refreshed - no action needed, user stays logged in
                 if (process.env.NODE_ENV === 'development') {
-                    console.debug('[Guest Auth] Token refreshed successfully');
+                    console.warn('[Guest Auth] Token refreshed successfully');
                 }
             }
             if (event === 'SIGNED_OUT') {

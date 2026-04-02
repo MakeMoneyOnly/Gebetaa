@@ -4,7 +4,7 @@
  * Live Guest Order Tracker — /[slug]/tracker
  *
  * Shows real-time prep status of each item after a guest places an order.
- * Accessed from the success screen or via a deep-link: /<slug>/tracker?order_id=...&table=...&sig=...&exp=...
+ * Accessed from the success screen or via a deep-link: /<slug>/tracker?order_id=...&table=...&_sig=...&_exp=...
  * Polls /api/guest/track every 8 seconds and subscribes to Supabase Realtime for instant updates.
  */
 
@@ -21,7 +21,7 @@ import {
     ArrowLeft,
     RefreshCw,
 } from 'lucide-react';
-import { formatETBCurrency } from '@/lib/format/et';
+import { _formatETBCurrency } from '@/lib/format/et';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -116,9 +116,9 @@ function TrackerContent() {
     const slug = params.slug;
 
     const orderId = searchParams.get('order_id');
-    const tableNumber = searchParams.get('table');
-    const sig = searchParams.get('sig');
-    const exp = searchParams.get('exp');
+    const _tableNumber = searchParams.get('table');
+    const _sig = searchParams.get('_sig');
+    const _exp = searchParams.get('_exp');
 
     const [items, setItems] = useState<KdsItem[]>([]);
     const [order, setOrder] = useState<OrderSummary | null>(null);

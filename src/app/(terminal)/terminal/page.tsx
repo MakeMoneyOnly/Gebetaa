@@ -17,6 +17,11 @@ import { useDeviceHeartbeat } from '@/hooks/useDeviceHeartbeat';
 import type { SupportedPaymentMethod } from '@/lib/devices/config';
 import { getDeviceTypeLabel } from '@/lib/devices/config';
 import { formatCurrencyCompact } from '@/lib/utils/monetary';
+import { getStoredDeviceSession } from '@/lib/mobile/device-storage';
+import {
+    buildReceiptFromPaymentPayload,
+    handleApprovedTransactionReceipt,
+} from '@/lib/printer/transaction-print';
 
 type TerminalTable = {
     id: string;
@@ -110,14 +115,17 @@ export default function TerminalPage() {
     const [capturingId, setCapturingId] = useState<string | null>(null);
 
     useEffect(() => {
-        try {
-            const token = sessionStorage.getItem('gebata_device_token');
-            const rawInfo = sessionStorage.getItem('gebata_device_info');
-            if (token) setDeviceToken(token);
-            if (rawInfo) setDeviceInfo(JSON.parse(rawInfo));
-        } catch (error) {
-            console.error('Failed to load paired terminal context', error);
-        }
+        void (async () => {
+            try {
+                const session = await getStoredDeviceSession();
+                if (session?.device_token) {
+                    setDeviceToken(session.device_token);
+                    setDeviceInfo(session);
+                }
+            } catch (error) {
+                console.error('Failed to load paired terminal context', error);
+            }
+        })();
     }, []);
 
     useDeviceHeartbeat({
@@ -333,6 +341,39 @@ export default function TerminalPage() {
             if (!response.ok) {
                 throw new Error(payload?.error ?? 'Failed to record payment');
             }
+
+            const shouldAutoPrint = overview?.device.metadata?.receipt_mode === 'auto';
+            if (shouldAutoPrint) {
+                const receipt = buildReceiptFromPaymentPayload({
+                    restaurantName: deviceInfo?.name ?? overview?.device.name ?? 'Gebeta',
+                    restaurantTin: null,
+                    transactionNumber:
+                        payload?.data?.transaction_number ??
+                        providerReference.trim() ??
+                        crypto.randomUUID().slice(0, 8).toUpperCase(),
+                    orderNumber: selectedOrder?.order_number ?? args.label,
+                    paymentLabel: selectedPaymentOption?.label ?? paymentMethod,
+                    subtotal: args.amount,
+                    total: args.amount,
+                    items: [
+                        {
+                            name: args.label,
+                            quantity: 1,
+                            unit_price: args.amount,
+                            total_price: args.amount,
+                        },
+                    ],
+                });
+
+                await handleApprovedTransactionReceipt({
+                    autoPrint: true,
+                    orderId: args.orderId ?? selectedOrder?.id ?? null,
+                    transactionNumber: receipt.transaction_number,
+                    receipt,
+                    fiscalRequest: payload?.data?.fiscal_request ?? null,
+                });
+            }
+
             toast.success(`Payment recorded for ${args.label}`);
             setProviderReference('');
             await Promise.all([

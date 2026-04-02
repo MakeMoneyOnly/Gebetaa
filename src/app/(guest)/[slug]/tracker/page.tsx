@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { _Suspense } from 'react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { generateOrderTrackerMetadata } from '@/lib/seo';

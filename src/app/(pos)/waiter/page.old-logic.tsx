@@ -441,7 +441,7 @@ function WaiterPosContent() {
                 }
             )
             .subscribe((status, err) => {
-                console.log('Waiter Realtime status:', status, err);
+                console.warn('Waiter Realtime status:', status, err);
                 setConnected(status === 'SUBSCRIBED');
             });
 

@@ -1,217 +1,316 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Tablet, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Laptop } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import {
+    ArrowRight,
+    CheckCircle2,
+    Loader2,
+    ShieldCheck,
+    Smartphone,
+    Sparkles,
+    TabletSmartphone,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
-import { getDeviceTypeLabel } from '@/lib/devices/config';
+import { getDeviceProfileLabel, getDeviceTypeLabel } from '@/lib/devices/config';
+import { DEVICE_PAIRING_CODE_LENGTH, normalizePairingCode } from '@/lib/devices/pairing';
+import { getNativeDeviceInfo } from '@/lib/mobile/capacitor';
+import { storeDeviceSession, storePrinterSelection } from '@/lib/mobile/device-storage';
+
+type PairResponse = {
+    device_token: string;
+    device_type: string;
+    device_profile?: 'cashier' | 'waiter' | 'kds' | 'kiosk' | null;
+    name: string;
+    restaurant_id?: string | null;
+    location_id?: string | null;
+    metadata?: {
+        printer?: {
+            connection_type?: 'bluetooth' | 'usb' | 'network' | 'none';
+            device_id?: string | null;
+            device_name?: string | null;
+            mac_address?: string | null;
+        } | null;
+    } | null;
+    boot_path?: string | null;
+};
 
 export default function DeviceSetupPage() {
-    const [pairingCode, setPairingCode] = useState('');
-    const [status, setStatus] = useState<'idle' | 'pairing' | 'success' | 'invalid'>('idle');
-    const [deviceInfo, setDeviceInfo] = useState<any>(null);
-    const [restaurantName, setRestaurantName] = useState<string>('');
     const router = useRouter();
     const params = useParams();
     const slug = params?.slug as string;
+    const [pairingCode, setPairingCode] = useState('');
+    const [restaurantName, setRestaurantName] = useState('');
+    const [status, setStatus] = useState<'idle' | 'pairing' | 'success' | 'invalid'>('idle');
+    const [deviceInfo, setDeviceInfo] = useState<PairResponse | null>(null);
 
-    // Fetch the restaurant name for the header title
     useEffect(() => {
         if (!slug) return;
-        // Use the public Supabase REST API to look up the restaurant by its slug
+
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-        if (supabaseUrl && supabaseKey) {
-            fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${slug}&select=name`, {
-                headers: {
-                    apikey: supabaseKey,
-                    Authorization: `Bearer ${supabaseKey}`,
-                },
-            })
-                .then(r => r.json())
-                .then((rows: any[]) => {
-                    if (rows && rows.length > 0 && rows[0].name) {
-                        setRestaurantName(rows[0].name);
-                    } else {
-                        setRestaurantName(
-                            slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-                        );
-                    }
-                })
-                .catch(() => {
-                    setRestaurantName(
-                        slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-                    );
-                });
-        } else {
-            setRestaurantName(slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+
+        const fallbackName = slug.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+
+        if (!supabaseUrl || !supabaseKey) {
+            setRestaurantName(fallbackName);
+            return;
         }
+
+        fetch(`${supabaseUrl}/rest/v1/restaurants?slug=eq.${slug}&select=name`, {
+            headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`,
+            },
+        })
+            .then(response => response.json())
+            .then((rows: Array<{ name?: string }>) => {
+                setRestaurantName(rows?.[0]?.name?.trim() || fallbackName);
+            })
+            .catch(() => {
+                setRestaurantName(fallbackName);
+            });
     }, [slug]);
 
-    const getPageTitle = () => {
-        const name =
-            restaurantName ||
-            slug?.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) ||
-            'Restaurant';
-        return name;
-    };
+    const title = useMemo(() => {
+        if (restaurantName) {
+            return restaurantName;
+        }
 
-    const handlePair = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (pairingCode.length !== 4) return;
+        if (!slug) {
+            return 'Gebeta Device';
+        }
+
+        return slug.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    }, [restaurantName, slug]);
+
+    const handlePair = async (event: React.FormEvent) => {
+        event.preventDefault();
+
+        const normalizedCode = normalizePairingCode(pairingCode).slice(
+            0,
+            DEVICE_PAIRING_CODE_LENGTH
+        );
+        if (normalizedCode.length !== DEVICE_PAIRING_CODE_LENGTH) {
+            return;
+        }
 
         setStatus('pairing');
+
         try {
-            const response = await fetch('/api/devices/pair', {
+            const nativeInfo = await getNativeDeviceInfo();
+            const response = await fetch('/api/v1/devices/pair', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pairing_code: pairingCode }),
+                body: JSON.stringify({
+                    code: normalizedCode,
+                    device_uuid: nativeInfo.uuid ?? undefined,
+                    platform: nativeInfo.platform,
+                    app_version: nativeInfo.appVersion ?? nativeInfo.osVersion ?? undefined,
+                }),
             });
 
             const result = await response.json();
 
-            // apiSuccess wraps data in { data: {...} }; apiError returns { error: "..." }
-            if (response.ok && result.data) {
-                setStatus('success');
-                setDeviceInfo(result.data);
-
-                // Store device session in sessionStorage so the device app knows who it is
-                // sessionStorage is cleared when the tab/browser is closed, providing better XSS protection
-                sessionStorage.setItem('gebata_device_token', result.data.device_token);
-                sessionStorage.setItem('gebata_device_info', JSON.stringify(result.data));
-
-                // Redirect after a short delay
-                setTimeout(() => {
-                    if (result.data.device_type === 'kds') {
-                        router.push('/kds');
-                    } else if (result.data.device_type === 'pos') {
-                        router.push('/waiter');
-                    } else if (result.data.device_type === 'terminal') {
-                        router.push('/terminal');
-                    } else if (result.data.device_type === 'kiosk') {
-                        router.push(`/${slug}?entry=menu`);
-                    } else {
-                        router.push('/');
-                    }
-                }, 2500);
-            } else {
+            if (!response.ok || !result.data) {
                 setStatus('invalid');
-                toast.error(result.error || 'Invalid pairing code. Please try again.');
+                toast.error(result?.error ?? 'Pairing failed. Please try again.');
+                return;
             }
+
+            const pairedDevice = result.data as PairResponse;
+            setDeviceInfo(pairedDevice);
+            setStatus('success');
+
+            await storeDeviceSession({
+                device_token: pairedDevice.device_token,
+                device_type: pairedDevice.device_type,
+                device_profile: pairedDevice.device_profile ?? null,
+                name: pairedDevice.name,
+                restaurant_id: pairedDevice.restaurant_id ?? null,
+                location_id: pairedDevice.location_id ?? null,
+                boot_path: pairedDevice.boot_path ?? null,
+                metadata: pairedDevice.metadata ?? null,
+            });
+
+            if (pairedDevice.metadata?.printer?.connection_type) {
+                await storePrinterSelection({
+                    connection_type: pairedDevice.metadata.printer.connection_type,
+                    device_id: pairedDevice.metadata.printer.device_id ?? null,
+                    device_name: pairedDevice.metadata.printer.device_name ?? null,
+                    mac_address: pairedDevice.metadata.printer.mac_address ?? null,
+                });
+            }
+
+            window.setTimeout(() => {
+                router.push('/device');
+            }, 1600);
         } catch {
             setStatus('invalid');
-            toast.error('Connection error. Please try again.');
+            toast.error('Pairing failed. Check connectivity and try again.');
         }
     };
 
     return (
-        <div className="font-manrope flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6">
-            {/* Ambient Background Glows */}
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute -top-[20%] -left-[10%] h-[60%] w-[60%] rounded-full bg-emerald-100/40 blur-[120px]" />
-                <div className="absolute -right-[10%] -bottom-[20%] h-[60%] w-[60%] rounded-full bg-indigo-100/40 blur-[120px]" />
-            </div>
+        <div className="relative min-h-screen overflow-hidden bg-[#fbf6ef] text-[#131313]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(168,24,24,0.12),_transparent_38%),radial-gradient(circle_at_bottom_right,_rgba(242,201,76,0.18),_transparent_32%),linear-gradient(135deg,_rgba(224,242,233,0.58),_rgba(255,255,255,0.92))]" />
+            <div className="absolute inset-x-0 top-0 h-px bg-black/10" />
 
-            <div className="relative z-10 w-full max-w-md">
-                {status !== 'success' ? (
-                    <div className="flex flex-col items-center text-center">
-                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-white shadow-xl shadow-gray-200/50">
-                            <Tablet className="h-12 w-12 text-gray-800" />
-                        </div>
+            <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col justify-center gap-10 px-6 py-10 lg:flex-row lg:items-center lg:px-10">
+                <section className="max-w-xl space-y-6">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/75 px-4 py-2 text-[11px] font-black tracking-[0.24em] text-black/60 uppercase shadow-sm backdrop-blur">
+                        <Sparkles className="h-3.5 w-3.5 text-[#A81818]" />
+                        Enterprise Provisioning
+                    </div>
 
-                        <h1 className="text-3xl font-black tracking-tight text-gray-900">
-                            {getPageTitle()}
+                    <div className="space-y-4">
+                        <p className="text-sm font-black tracking-[0.28em] text-[#A81818]/80 uppercase">
+                            {title}
+                        </p>
+                        <h1 className="max-w-xl text-4xl font-black tracking-[-0.04em] text-black md:text-6xl">
+                            Welcome this device into the Gebeta fleet.
                         </h1>
-                        <p className="mt-2 text-sm font-black tracking-widest text-gray-400 uppercase">
-                            Terminal Setup
+                        <p className="max-w-lg text-base font-medium text-black/65 md:text-lg">
+                            Enter the pairing code from your merchant dashboard. This tablet will
+                            remember its profile, printer, and startup flow on every reboot.
                         </p>
-                        <p className="mt-3 text-sm font-semibold text-gray-500">
-                            Enter the 4-digit pairing code from your Merchant Dashboard to link this
-                            device.
-                        </p>
+                    </div>
 
-                        <form onSubmit={handlePair} className="mt-10 w-full space-y-6">
-                            <div className="flex justify-center">
-                                <input
-                                    type="text"
-                                    maxLength={4}
-                                    value={pairingCode}
-                                    onChange={e => {
-                                        const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                                        setPairingCode(val);
-                                        if (status === 'invalid') setStatus('idle');
-                                    }}
-                                    autoFocus
-                                    placeholder="••••"
-                                    className={cn(
-                                        'w-full max-w-[320px] rounded-xl bg-white py-6 text-center font-mono text-5xl font-black tracking-[0.5em] shadow-lg shadow-gray-100 transition-all focus:outline-none',
-                                        status === 'invalid'
-                                            ? 'bg-red-50 text-red-600 ring-4 shadow-red-100 ring-red-500/10'
-                                            : 'text-gray-900 focus:shadow-xl focus:ring-4 focus:ring-black/5'
-                                    )}
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={pairingCode.length !== 4 || status === 'pairing'}
-                                className="group bg-brand-accent disabled:hover:bg-brand-accent relative mx-auto flex w-full max-w-[320px] items-center justify-center overflow-hidden rounded-xl px-6 py-5 text-lg font-bold text-black shadow-xl shadow-black/10 transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
-                            >
-                                {status === 'pairing' ? (
-                                    <Loader2 className="h-6 w-6 animate-spin" />
-                                ) : (
-                                    <>
-                                        Pair This Device
-                                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
-
-                        <div className="mt-12 flex items-center gap-2 text-sm font-bold text-gray-400">
-                            <ShieldCheck className="h-5 w-5" />
-                            Secure Terminal Provisioning
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-[1.75rem] border border-black/10 bg-white/80 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.05)] backdrop-blur">
+                            <TabletSmartphone className="h-5 w-5 text-[#1848A8]" />
+                            <p className="mt-4 text-sm font-bold text-black">One APK</p>
+                            <p className="mt-1 text-sm text-black/55">
+                                Cashier, waiter, KDS, or kiosk
+                            </p>
+                        </div>
+                        <div className="rounded-[1.75rem] border border-black/10 bg-white/80 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.05)] backdrop-blur">
+                            <ShieldCheck className="h-5 w-5 text-[#A81818]" />
+                            <p className="mt-4 text-sm font-bold text-black">Tenant-scoped</p>
+                            <p className="mt-1 text-sm text-black/55">
+                                Paired to the right merchant context
+                            </p>
+                        </div>
+                        <div className="rounded-[1.75rem] border border-black/10 bg-white/80 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.05)] backdrop-blur">
+                            <Smartphone className="h-5 w-5 text-[#0f766e]" />
+                            <p className="mt-4 text-sm font-bold text-black">Silent hardware</p>
+                            <p className="mt-1 text-sm text-black/55">
+                                Ready for native printer memory
+                            </p>
                         </div>
                     </div>
-                ) : (
-                    <div className="animate-in fade-in zoom-in flex flex-col items-center text-center duration-500">
-                        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-green-50 text-green-500 shadow-xl shadow-green-100/50">
-                            <CheckCircle2 className="h-12 w-12" />
-                        </div>
+                </section>
 
-                        <p className="text-sm font-black tracking-widest text-gray-400 uppercase">
-                            Paired Successfully
-                        </p>
-                        <h1 className="mt-2 text-3xl font-black tracking-tight text-gray-900">
-                            {getPageTitle()} {getDeviceTypeLabel(deviceInfo?.device_type)}
-                        </h1>
-                        <p className="mt-3 text-sm font-semibold text-gray-500">
-                            <span className="font-bold text-gray-900">{deviceInfo?.name}</span> is
-                            ready to use.
-                        </p>
-
-                        <div className="mt-10 w-full max-w-[320px] rounded-2xl bg-white p-6 shadow-xl shadow-gray-100">
-                            <div className="flex items-center gap-5 text-left">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                                    <Laptop className="h-7 w-7" />
+                <section className="w-full max-w-xl">
+                    <div className="overflow-hidden rounded-[2rem] border border-black/10 bg-white/80 p-6 shadow-[0_28px_100px_rgba(0,0,0,0.08)] backdrop-blur md:p-8">
+                        {status !== 'success' ? (
+                            <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <p className="text-[11px] font-black tracking-[0.24em] text-black/45 uppercase">
+                                        Welcome Screen
+                                    </p>
+                                    <h2 className="text-3xl font-black tracking-[-0.03em] text-black">
+                                        Pair this tablet
+                                    </h2>
+                                    <p className="max-w-md text-sm font-medium text-black/55">
+                                        Use the six-character pairing code generated from the
+                                        merchant dashboard. No manual URLs or staff login are
+                                        required after this step.
+                                    </p>
                                 </div>
-                                <div>
-                                    <p className="text-[11px] font-black tracking-wider text-gray-400 uppercase">
-                                        Launching
-                                    </p>
-                                    <p className="text-xl font-black text-gray-900">
-                                        {getDeviceTypeLabel(deviceInfo?.device_type)}
-                                    </p>
+
+                                <form onSubmit={handlePair} className="space-y-6">
+                                    <label className="block space-y-3">
+                                        <span className="text-[11px] font-black tracking-[0.24em] text-black/45 uppercase">
+                                            Pairing Code
+                                        </span>
+                                        <input
+                                            value={pairingCode}
+                                            onChange={event => {
+                                                setPairingCode(
+                                                    normalizePairingCode(event.target.value).slice(
+                                                        0,
+                                                        DEVICE_PAIRING_CODE_LENGTH
+                                                    )
+                                                );
+                                                if (status === 'invalid') {
+                                                    setStatus('idle');
+                                                }
+                                            }}
+                                            autoFocus
+                                            placeholder="A1B2C3"
+                                            className={cn(
+                                                'w-full rounded-[1.5rem] border px-5 py-5 text-center font-mono text-4xl font-black tracking-[0.42em] text-black transition-all outline-none md:text-5xl',
+                                                status === 'invalid'
+                                                    ? 'border-[#A81818]/20 bg-[#fff2f2] ring-4 ring-[#A81818]/10'
+                                                    : 'border-black/10 bg-[#fcfbf7] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] focus:border-[#A81818]/30 focus:ring-4 focus:ring-[#A81818]/10'
+                                            )}
+                                        />
+                                    </label>
+
+                                    <Button
+                                        type="submit"
+                                        disabled={
+                                            pairingCode.length !== DEVICE_PAIRING_CODE_LENGTH ||
+                                            status === 'pairing'
+                                        }
+                                        className="group flex w-full items-center justify-center gap-2 rounded-[1.4rem] bg-[#F2C94C] px-6 py-4 text-base font-black text-black shadow-[0_18px_42px_rgba(242,201,76,0.28)] transition-transform hover:scale-[1.01] hover:bg-[#efc33c] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:scale-100"
+                                    >
+                                        {status === 'pairing' ? (
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                            <>
+                                                Pair Device
+                                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                                            </>
+                                        )}
+                                    </Button>
+                                </form>
+
+                                <div className="rounded-[1.5rem] border border-black/8 bg-[#f8f5ef] px-4 py-4 text-sm font-medium text-black/55">
+                                    This device keeps its role and printer memory locally so it can
+                                    recover cleanly after reboot or weak connectivity.
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="space-y-8 text-center">
+                                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#E0F2E9] text-[#0f766e] shadow-[0_20px_40px_rgba(16,185,129,0.18)]">
+                                    <CheckCircle2 className="h-10 w-10" />
+                                </div>
 
-                        <div className="mt-12 text-gray-300">
-                            <Loader2 className="h-8 w-8 animate-spin" />
-                        </div>
+                                <div className="space-y-3">
+                                    <p className="text-[11px] font-black tracking-[0.24em] text-black/45 uppercase">
+                                        Device Ready
+                                    </p>
+                                    <h2 className="text-3xl font-black tracking-[-0.03em] text-black">
+                                        {deviceInfo?.name}
+                                    </h2>
+                                    <p className="text-sm font-medium text-black/55">
+                                        Launching{' '}
+                                        {getDeviceProfileLabel(deviceInfo?.device_profile)} mode on{' '}
+                                        {getDeviceTypeLabel(deviceInfo?.device_type)}.
+                                    </p>
+                                </div>
+
+                                <div className="rounded-[1.5rem] border border-black/8 bg-[#fcfbf7] p-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div>
+                                            <p className="text-[11px] font-black tracking-[0.24em] text-black/45 uppercase">
+                                                Assigned Profile
+                                            </p>
+                                            <p className="mt-2 text-xl font-black text-black">
+                                                {getDeviceProfileLabel(deviceInfo?.device_profile)}
+                                            </p>
+                                        </div>
+                                        <Loader2 className="h-6 w-6 animate-spin text-[#A81818]" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </section>
             </div>
         </div>
     );
