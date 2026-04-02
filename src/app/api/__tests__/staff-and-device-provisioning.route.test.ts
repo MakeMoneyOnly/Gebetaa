@@ -140,4 +140,42 @@ describe('staff and device provisioning routes', () => {
         expect(response.status).toBe(500);
         expect(body.code).toBe('TERMINAL_DEVICE_MIGRATION_REQUIRED');
     });
+
+    it('POST /api/devices/provision assigns a six-character pairing code and device profile', async () => {
+        setAuthContextOk();
+
+        createServiceRoleClientMock.mockReturnValue({
+            from: vi.fn(() => ({
+                insert: vi.fn(() => ({
+                    select: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({
+                            data: {
+                                id: 'device-1',
+                                pairing_code: 'A1B2C3',
+                                device_type: 'terminal',
+                                device_profile: 'cashier',
+                            },
+                            error: null,
+                        }),
+                    })),
+                })),
+            })),
+        } as any);
+
+        const response = await postDeviceProvision(
+            new Request('http://localhost/api/devices/provision', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'Terminal 1',
+                    device_profile: 'cashier',
+                }),
+            })
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(201);
+        expect(body.data.device.pairing_code).toMatch(/^[A-Z0-9]{6}$/);
+        expect(body.data.device.device_profile).toBe('cashier');
+    });
 });

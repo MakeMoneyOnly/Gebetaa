@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import { getNativeDeviceInfo } from '@/lib/mobile/capacitor';
+import { getStoredPrinterSelection } from '@/lib/mobile/device-storage';
 
 interface UseDeviceHeartbeatOptions {
     deviceToken: string | null;
@@ -28,6 +30,11 @@ export function useDeviceHeartbeat({
             }
 
             try {
+                const [nativeInfo, printerSelection] = await Promise.all([
+                    getNativeDeviceInfo(),
+                    getStoredPrinterSelection(),
+                ]);
+
                 await fetch('/api/devices/heartbeat', {
                     method: 'POST',
                     headers: {
@@ -40,6 +47,15 @@ export function useDeviceHeartbeat({
                             ? 'pwa'
                             : 'browser',
                         visibility: document.visibilityState === 'visible' ? 'visible' : 'hidden',
+                        battery_percent:
+                            nativeInfo.batteryLevel !== undefined &&
+                            nativeInfo.batteryLevel !== null
+                                ? Math.round(nativeInfo.batteryLevel * 100)
+                                : undefined,
+                        native_platform: nativeInfo.platform,
+                        native_version: nativeInfo.appVersion ?? nativeInfo.osVersion ?? undefined,
+                        device_uuid: nativeInfo.uuid ?? undefined,
+                        printer: printerSelection ?? undefined,
                     }),
                 });
             } catch {

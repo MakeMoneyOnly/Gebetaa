@@ -84,6 +84,7 @@ export async function GET(request: Request) {
             id: ctx.device.id,
             name: ctx.device.name,
             device_type: ctx.device.device_type,
+            device_profile: ctx.device.device_profile ?? 'cashier',
             assigned_zones: ctx.device.assigned_zones,
             last_active_at: ctx.device.last_active_at,
             metadata: deviceMetadata,

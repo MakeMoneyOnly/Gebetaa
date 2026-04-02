@@ -1,18 +1,27 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import type { HardwareDeviceMetadata, HardwareDeviceType } from '@/lib/devices/config';
+import type {
+    DeviceProfile,
+    HardwareDeviceMetadata,
+    HardwareDeviceType,
+} from '@/lib/devices/config';
 
 export type HardwareDevice = {
     id: string;
     restaurant_id: string;
     name: string;
     device_type: HardwareDeviceType;
+    device_profile?: DeviceProfile | null;
     status: 'active' | 'inactive' | 'maintenance';
     pairing_code: string | null;
     device_token: string | null;
     paired_at: string | null;
     last_active_at: string | null;
+    pairing_code_expires_at?: string | null;
+    pairing_state?: 'ready' | 'paired' | 'revoked' | 'expired' | null;
     assigned_zones: string[];
+    management_provider?: ManagementProvider | null;
+    location_id?: string | null;
     metadata?: HardwareDeviceMetadata | null;
     created_at: string;
 };
@@ -59,7 +68,9 @@ export function useDevices(initialData?: HardwareDevice[]) {
 
     const handleProvisionDevice = async (payload: {
         name: string;
-        device_type: HardwareDeviceType;
+        device_type?: HardwareDeviceType;
+        device_profile?: DeviceProfile;
+        location_id?: string;
         assigned_zones?: string[];
         metadata?: HardwareDeviceMetadata;
     }) => {

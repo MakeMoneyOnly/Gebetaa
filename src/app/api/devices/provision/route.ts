@@ -1,20 +1,14 @@
-import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { normalizeDeviceMetadata } from '@/lib/devices/config';
 import {
-    HardwareDeviceMetadataSchema,
-    HardwareDeviceTypeSchema,
-    normalizeDeviceMetadata,
-} from '@/lib/devices/config';
-
-const ProvisionDeviceSchema = z.object({
-    name: z.string().trim().min(2).max(120),
-    device_type: HardwareDeviceTypeSchema,
-    assigned_zones: z.array(z.string()).optional(),
-    metadata: HardwareDeviceMetadataSchema.optional(),
-});
+    ProvisionDeviceSchema,
+    buildPairingExpiry,
+    generatePairingCode,
+    resolveProvisionedDeviceShape,
+} from '@/lib/devices/pairing';
 
 export async function POST(request: Request) {
     const auth = await getAuthenticatedUser();
@@ -32,26 +26,60 @@ export async function POST(request: Request) {
         return parsed.response;
     }
 
-    // Generate a 4-digit random code
-    const pairing_code = Math.floor(1000 + Math.random() * 9000).toString();
+    const { deviceType, deviceProfile } = resolveProvisionedDeviceShape(parsed.data);
+    const pairing_code = generatePairingCode();
     const adminClient = createServiceRoleClient();
+    const rawMetadata =
+        parsed.data.metadata && typeof parsed.data.metadata === 'object'
+            ? parsed.data.metadata
+            : undefined;
+    const managementMetadata = {
+        ...((rawMetadata?.management as Record<string, unknown> | undefined) ?? {}),
+        provider: 'esper',
+    };
 
     const { data, error } = await (adminClient as any)
         .from('hardware_devices')
         .insert({
             restaurant_id: context.restaurantId,
             name: parsed.data.name,
-            device_type: parsed.data.device_type,
+            location_id: parsed.data.location_id ?? null,
+            device_type: deviceType,
+            device_profile: deviceProfile,
             pairing_code,
+            pairing_code_expires_at: buildPairingExpiry(),
+            pairing_state: 'ready',
+            management_provider: 'esper',
+            management_status: 'pending',
             assigned_zones: parsed.data.assigned_zones ?? [],
-            metadata: normalizeDeviceMetadata(parsed.data.device_type, parsed.data.metadata),
+            metadata: normalizeDeviceMetadata(
+                deviceType,
+                {
+                    ...(rawMetadata ?? {}),
+                    management: managementMetadata,
+                },
+                deviceProfile
+            ),
         })
         .select('*')
         .single();
 
     if (error) {
         if (
-            parsed.data.device_type === 'terminal' &&
+            /device_profile|pairing_state|pairing_code_expires_at|management_provider|management_status|location_id|pairing_completed_at|hardware_fingerprint|printer_connection_type|printer_device_id|printer_device_name|printer_mac_address|fiscal_mode|column .* does not exist|schema cache/i.test(
+                error.message
+            )
+        ) {
+            return apiError(
+                'Device provisioning requires the enterprise device-shell migration. Apply supabase/migrations/20260401194500_enterprise_device_shell_foundation.sql and try again.',
+                500,
+                'ENTERPRISE_DEVICE_MIGRATION_REQUIRED',
+                error.message
+            );
+        }
+
+        if (
+            deviceType === 'terminal' &&
             /device_type|hardware_devices_device_type_check|violates check constraint/i.test(
                 error.message
             )
