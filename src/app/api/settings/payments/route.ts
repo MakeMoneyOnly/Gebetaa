@@ -73,7 +73,7 @@ function normalizePayoutStatus(params: {
         .toLowerCase();
     const haystack = `${providerStatus} ${providerMessage}`;
 
-    console.log('normalizePayoutStatus called with:', {
+    console.warn('normalizePayoutStatus called with:', {
         subaccountId,
         providerStatus,
         providerMessage,
@@ -91,29 +91,29 @@ function normalizePayoutStatus(params: {
         haystack.includes('subaccount created');
 
     if (isSuccess) {
-        console.log('normalizePayoutStatus: returning active (success detected)');
+        console.warn('normalizePayoutStatus: returning active (success detected)');
         return 'active';
     }
 
     // If we have a subaccount ID, the account was created successfully
     if (subaccountId) {
-        console.log('normalizePayoutStatus: returning active (subaccount ID present)');
+        console.warn('normalizePayoutStatus: returning active (subaccount ID present)');
         return 'active';
     }
 
     // If account already exists - this is actually a success case
     if (haystack.includes('exist') || haystack.includes('already')) {
-        console.log('normalizePayoutStatus: returning active (already exists)');
+        console.warn('normalizePayoutStatus: returning active (already exists)');
         return 'active';
     }
 
     // Only return verification_required if there's an actual error message
     if (providerMessage && !isSuccess) {
-        console.log('normalizePayoutStatus: returning failed (error message present)');
+        console.warn('normalizePayoutStatus: returning failed (error message present)');
         return 'failed';
     }
 
-    console.log('normalizePayoutStatus: returning not_configured');
+    console.warn('normalizePayoutStatus: returning not_configured');
     return 'not_configured';
 }
 
@@ -304,7 +304,7 @@ export async function PATCH(request: Request) {
             split_value: HOSTED_CHECKOUT_FEE_PERCENTAGE,
         });
 
-        console.log('Chapa subaccount response:', JSON.stringify(subaccount, null, 2));
+        console.warn('Chapa subaccount response:', JSON.stringify(subaccount, null, 2));
 
         const returnedSubaccountId = subaccount.data?.id?.trim();
         if (returnedSubaccountId) {
@@ -348,7 +348,7 @@ export async function PATCH(request: Request) {
         nextLastError = message;
     }
 
-    console.log('Saving to database:', {
+    console.warn('Saving to database:', {
         restaurantId: context.restaurantId,
         nextBankCode,
         nextBankName,
@@ -389,7 +389,7 @@ export async function PATCH(request: Request) {
     }
 
     const updatedRecord = updated as unknown as RestaurantPaymentRecord;
-    console.log('Database updated successfully. New values:', {
+    console.warn('Database updated successfully. New values:', {
         chapa_subaccount_status: updatedRecord.chapa_subaccount_status,
         chapa_settlement_bank_code: updatedRecord.chapa_settlement_bank_code,
         chapa_settlement_account_name: updatedRecord.chapa_settlement_account_name,

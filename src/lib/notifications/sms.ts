@@ -146,7 +146,7 @@ export async function sendSms(toPhone: string, message: string): Promise<SmsSend
         return sendWithAfricasTalking(normalizedPhone, message);
     }
 
-    console.log('[SMS:log]', { toPhone: normalizedPhone, message });
+    console.warn('[SMS:log]', { toPhone: normalizedPhone, message });
     return { success: true, provider: 'log' };
 }
 

@@ -16,6 +16,7 @@ export async function processPaymentLifecycleEvent(
     const admin = createServiceRoleClient();
     const { payload } = event;
     const now = new Date().toISOString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const adminAny = admin as any;
 
     const { data: resolvedOrder } = payload.order_id

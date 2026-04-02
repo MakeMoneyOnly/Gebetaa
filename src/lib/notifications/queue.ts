@@ -156,7 +156,7 @@ export async function enqueueNotification(params: EnqueueParams): Promise<string
     });
 
     if (isDuplicateResult) {
-        console.log('[queue] Notification is duplicate, skipping:', {
+        console.warn('[queue] Notification is duplicate, skipping:', {
             restaurantId,
             guestPhone,
             notificationType,
@@ -218,7 +218,7 @@ export async function enqueueNotification(params: EnqueueParams): Promise<string
         idempotency_key: idempotencyKey,
     });
 
-    console.log('[queue] Notification enqueued:', {
+    console.warn('[queue] Notification enqueued:', {
         notificationId,
         restaurantId,
         guestPhone,
@@ -289,7 +289,7 @@ export async function processQueue(limit: number = 50): Promise<ProcessResult> {
         }
     }
 
-    console.log('[queue] Queue processed:', result);
+    console.warn('[queue] Queue processed:', result);
     return result;
 }
 
@@ -329,11 +329,11 @@ async function processNotification(
             sendResult = await sendSms(guest_phone, message_en || '');
         } else if (channel === 'push') {
             // Push notification - placeholder
-            console.log('[queue] Push notification not implemented yet');
+            console.warn('[queue] Push notification not implemented yet');
             sendResult = { success: true, provider: 'log', skipped: true };
         } else if (channel === 'email') {
             // Email notification - placeholder
-            console.log('[queue] Email notification not implemented yet');
+            console.warn('[queue] Email notification not implemented yet');
             sendResult = { success: true, provider: 'log', skipped: true };
         } else {
             throw new Error(`Unsupported channel: ${channel}`);
@@ -534,7 +534,7 @@ export async function cancelNotification(notificationId: string): Promise<void> 
         throw new Error(`FAILED_TO_CANCEL: ${error.message}`);
     }
 
-    console.log('[queue] Notification cancelled:', notificationId);
+    console.warn('[queue] Notification cancelled:', notificationId);
 }
 
 /**

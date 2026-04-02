@@ -67,6 +67,7 @@ export interface PaymentSessionRecord {
 }
 
 type DbLike = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     from(table: string): any;
 };
 

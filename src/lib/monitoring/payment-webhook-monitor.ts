@@ -107,21 +107,26 @@ export async function findSilentCallbacks(
 
     const now = Date.now();
 
-    return sessions.map((session: any) => ({
-        id: session.id,
-        restaurant_id: session.restaurant_id,
-        order_id: session.order_id,
-        amount: session.amount,
-        currency: session.currency || 'ETB',
-        selected_provider: session.selected_provider || 'chapa',
-        provider_transaction_id: session.provider_transaction_id,
-        created_at: session.created_at,
-        restaurant_name: session.restaurants?.name,
-        order_number: session.orders?.order_number,
-        minutes_since_initiation: Math.round(
-            (now - new Date(session.created_at).getTime()) / 60000
-        ),
-    }));
+    return sessions.map(
+        (
+            session: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            any
+        ) => ({
+            id: session.id,
+            restaurant_id: session.restaurant_id,
+            order_id: session.order_id,
+            amount: session.amount,
+            currency: session.currency || 'ETB',
+            selected_provider: session.selected_provider || 'chapa',
+            provider_transaction_id: session.provider_transaction_id,
+            created_at: session.created_at,
+            restaurant_name: session.restaurants?.name,
+            order_number: session.orders?.order_number,
+            minutes_since_initiation: Math.round(
+                (now - new Date(session.created_at).getTime()) / 60000
+            ),
+        })
+    );
 }
 
 /**

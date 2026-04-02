@@ -15,7 +15,7 @@ export async function GET() {
 
     // Check if Chapa is configured
     if (!isChapaConfigured()) {
-        console.log('Chapa is not configured - CHAPA_SECRET_KEY missing or invalid');
+        console.warn('Chapa is not configured - CHAPA_SECRET_KEY missing or invalid');
         return apiSuccess({
             banks: [],
             directory_unavailable: true,
@@ -25,7 +25,7 @@ export async function GET() {
 
     try {
         const banks = await listChapaBanks();
-        console.log(`Successfully fetched ${banks.length} banks from Chapa`);
+        console.warn(`Successfully fetched ${banks.length} banks from Chapa`);
         return apiSuccess({ banks });
     } catch (error) {
         console.error('Failed to load settlement banks from Chapa:', error);

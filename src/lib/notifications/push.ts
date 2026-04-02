@@ -443,7 +443,7 @@ async function sendWithWebPush(params: PushParams): Promise<PushResult> {
 
         // Note: Full VAPID signed push requires crypto operations
         // For now, return a success for development mode
-        console.log('[push:webpush]', {
+        console.warn('[push:webpush]', {
             endpoint,
             title: params.title,
             body: params.body,
@@ -472,7 +472,7 @@ async function sendWithWebPush(params: PushParams): Promise<PushResult> {
  * Log push notification (development mode)
  */
 function sendWithLog(params: PushParams): PushResult {
-    console.log('[push:log]', {
+    console.warn('[push:log]', {
         token: params.token.slice(0, 20) + '...',
         title: params.title,
         body: params.body,

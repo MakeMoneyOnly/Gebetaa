@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        console.log('[push:subscribe] Subscription registered', {
+        console.warn('[push:subscribe] Subscription registered', {
             guestId: effectiveGuestId,
             restaurantId: effectiveRestaurantId,
             deviceType,
@@ -147,7 +147,7 @@ export async function DELETE(request: NextRequest) {
         // Unsubscribe the device
         await unsubscribeDevice(token);
 
-        console.log('[push:subscribe] Unsubscribed', {
+        console.warn('[push:subscribe] Unsubscribed', {
             token: token.slice(0, 50) + '...',
         });
 

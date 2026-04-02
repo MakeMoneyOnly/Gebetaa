@@ -167,7 +167,7 @@ export async function sendWithFallback(
 
         if (smsResult.success) {
             smsSuccess = true;
-            console.log('[fallback] SMS sent successfully on attempt', smsAttempts);
+            console.warn('[fallback] SMS sent successfully on attempt', smsAttempts);
             break;
         }
 
@@ -204,7 +204,7 @@ export async function sendWithFallback(
     }
 
     // Step 2: SMS failed, try push as fallback
-    console.log('[fallback] SMS failed after', smsAttempts, 'attempts, trying push');
+    console.warn('[fallback] SMS failed after', smsAttempts, 'attempts, trying push');
 
     let pushTokenToUse = pushToken;
 
@@ -263,7 +263,7 @@ export async function sendWithFallback(
     }
 
     // No push token available, queue for later retry
-    console.log('[fallback] No push token available, queuing fallback notification');
+    console.warn('[fallback] No push token available, queuing fallback notification');
 
     try {
         await enqueueNotification({

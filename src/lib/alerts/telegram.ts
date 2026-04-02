@@ -209,7 +209,7 @@ export async function sendAlert(
     // If not configured, log to console in development
     if (!botToken || !chatId) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(
+            console.warn(
                 `[TELEGRAM ALERT - ${level.toUpperCase()}] ${message}`,
                 context ? JSON.stringify(context, null, 2) : ''
             );
@@ -329,7 +329,7 @@ export async function sendEodReport(
     // Fallback to console in development
     if (!botToken || !chatId) {
         if (process.env.NODE_ENV === 'development') {
-            console.log('[EOD REPORT]', lines.join('\n'));
+            console.warn('[EOD REPORT]', lines.join('\n'));
         }
         return false;
     }
