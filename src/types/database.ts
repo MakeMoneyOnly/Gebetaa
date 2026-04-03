@@ -180,6 +180,127 @@ export type Database = {
                     },
                 ];
             };
+            campaign_deliveries: {
+                Row: {
+                    campaign_id: string;
+                    clicked_at: string | null;
+                    conversion_order_id: string | null;
+                    created_at: string | null;
+                    guest_id: string;
+                    id: string;
+                    metadata: Json;
+                    opened_at: string | null;
+                    sent_at: string | null;
+                    status: string;
+                };
+                Insert: {
+                    campaign_id: string;
+                    clicked_at?: string | null;
+                    conversion_order_id?: string | null;
+                    created_at?: string | null;
+                    guest_id: string;
+                    id?: string;
+                    metadata?: Json;
+                    opened_at?: string | null;
+                    sent_at?: string | null;
+                    status?: string;
+                };
+                Update: {
+                    campaign_id?: string;
+                    clicked_at?: string | null;
+                    conversion_order_id?: string | null;
+                    created_at?: string | null;
+                    guest_id?: string;
+                    id?: string;
+                    metadata?: Json;
+                    opened_at?: string | null;
+                    sent_at?: string | null;
+                    status?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'campaign_deliveries_campaign_id_fkey';
+                        columns: ['campaign_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'campaigns';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'campaign_deliveries_conversion_order_id_fkey';
+                        columns: ['conversion_order_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'orders';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'campaign_deliveries_guest_id_fkey';
+                        columns: ['guest_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'guests';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            campaigns: {
+                Row: {
+                    channel: string;
+                    created_at: string | null;
+                    created_by: string | null;
+                    id: string;
+                    launched_at: string | null;
+                    name: string;
+                    restaurant_id: string;
+                    scheduled_at: string | null;
+                    segment_id: string | null;
+                    status: string;
+                    template_json: Json;
+                    updated_at: string | null;
+                };
+                Insert: {
+                    channel: string;
+                    created_at?: string | null;
+                    created_by?: string | null;
+                    id?: string;
+                    launched_at?: string | null;
+                    name: string;
+                    restaurant_id: string;
+                    scheduled_at?: string | null;
+                    segment_id?: string | null;
+                    status?: string;
+                    template_json?: Json;
+                    updated_at?: string | null;
+                };
+                Update: {
+                    channel?: string;
+                    created_at?: string | null;
+                    created_by?: string | null;
+                    id?: string;
+                    launched_at?: string | null;
+                    name?: string;
+                    restaurant_id?: string;
+                    scheduled_at?: string | null;
+                    segment_id?: string | null;
+                    status?: string;
+                    template_json?: Json;
+                    updated_at?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'campaigns_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'campaigns_segment_id_fkey';
+                        columns: ['segment_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'segments';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             categories: {
                 Row: {
                     created_at: string | null;
@@ -215,6 +336,62 @@ export type Database = {
                     {
                         foreignKeyName: 'categories_restaurant_id_fkey';
                         columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            centralized_menu_configs: {
+                Row: {
+                    auto_sync_enabled: boolean;
+                    created_at: string;
+                    description: string | null;
+                    id: string;
+                    name: string;
+                    primary_restaurant_id: string;
+                    sync_availability: boolean;
+                    sync_categories: boolean;
+                    sync_items: boolean;
+                    sync_modifiers: boolean;
+                    sync_pricing: boolean;
+                    sync_schedule: string | null;
+                    updated_at: string;
+                };
+                Insert: {
+                    auto_sync_enabled?: boolean;
+                    created_at?: string;
+                    description?: string | null;
+                    id?: string;
+                    name: string;
+                    primary_restaurant_id: string;
+                    sync_availability?: boolean;
+                    sync_categories?: boolean;
+                    sync_items?: boolean;
+                    sync_modifiers?: boolean;
+                    sync_pricing?: boolean;
+                    sync_schedule?: string | null;
+                    updated_at?: string;
+                };
+                Update: {
+                    auto_sync_enabled?: boolean;
+                    created_at?: string;
+                    description?: string | null;
+                    id?: string;
+                    name?: string;
+                    primary_restaurant_id?: string;
+                    sync_availability?: boolean;
+                    sync_categories?: boolean;
+                    sync_items?: boolean;
+                    sync_modifiers?: boolean;
+                    sync_pricing?: boolean;
+                    sync_schedule?: string | null;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'centralized_menu_configs_primary_restaurant_id_fkey';
+                        columns: ['primary_restaurant_id'];
                         isOneToOne: false;
                         referencedRelation: 'restaurants';
                         referencedColumns: ['id'];
@@ -317,6 +494,66 @@ export type Database = {
                         columns: ['restaurant_id'];
                         isOneToOne: false;
                         referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            device_tokens: {
+                Row: {
+                    id: string;
+                    restaurant_id: string | null;
+                    guest_id: string | null;
+                    token: string;
+                    device_type: string;
+                    provider: string;
+                    device_name: string | null;
+                    metadata: Json;
+                    is_active: boolean;
+                    created_at: string;
+                    updated_at: string;
+                    last_used_at: string | null;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id?: string | null;
+                    guest_id?: string | null;
+                    token: string;
+                    device_type: string;
+                    provider?: string;
+                    device_name?: string | null;
+                    metadata?: Json;
+                    is_active?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                    last_used_at?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string | null;
+                    guest_id?: string | null;
+                    token?: string;
+                    device_type?: string;
+                    provider?: string;
+                    device_name?: string | null;
+                    metadata?: Json;
+                    is_active?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                    last_used_at?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'device_tokens_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'device_tokens_guest_id_fkey';
+                        columns: ['guest_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'guests';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -516,6 +753,120 @@ export type Database = {
                         columns: ['tenant_id'];
                         isOneToOne: false;
                         referencedRelation: 'tenants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            gift_cards: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    code: string;
+                    currency: string;
+                    initial_balance: number;
+                    current_balance: number;
+                    status: string;
+                    expires_at: string | null;
+                    metadata: Json;
+                    created_by: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    code: string;
+                    currency?: string;
+                    initial_balance: number;
+                    current_balance: number;
+                    status?: string;
+                    expires_at?: string | null;
+                    metadata?: Json;
+                    created_by?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    code?: string;
+                    currency?: string;
+                    initial_balance?: number;
+                    current_balance?: number;
+                    status?: string;
+                    expires_at?: string | null;
+                    metadata?: Json;
+                    created_by?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'gift_cards_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            gift_card_transactions: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    gift_card_id: string;
+                    order_id: string | null;
+                    amount_delta: number;
+                    balance_after: number;
+                    type: string;
+                    metadata: Json;
+                    created_by: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    gift_card_id: string;
+                    order_id?: string | null;
+                    amount_delta: number;
+                    balance_after: number;
+                    type: string;
+                    metadata?: Json;
+                    created_by?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    gift_card_id?: string;
+                    order_id?: string | null;
+                    amount_delta?: number;
+                    balance_after?: number;
+                    type?: string;
+                    metadata?: Json;
+                    created_by?: string | null;
+                    created_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'gift_card_transactions_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'gift_card_transactions_gift_card_id_fkey';
+                        columns: ['gift_card_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'gift_cards';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'gift_card_transactions_order_id_fkey';
+                        columns: ['order_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'orders';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -951,6 +1302,181 @@ export type Database = {
                     },
                 ];
             };
+            loyalty_accounts: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    guest_id: string;
+                    program_id: string;
+                    points_balance: number;
+                    tier: string;
+                    status: string;
+                    total_visits: number;
+                    total_points_earned: number;
+                    last_visit_at: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    guest_id: string;
+                    program_id: string;
+                    points_balance?: number;
+                    tier?: string;
+                    status?: string;
+                    total_visits?: number;
+                    total_points_earned?: number;
+                    last_visit_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    guest_id?: string;
+                    program_id?: string;
+                    points_balance?: number;
+                    tier?: string;
+                    status?: string;
+                    total_visits?: number;
+                    total_points_earned?: number;
+                    last_visit_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'loyalty_accounts_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'loyalty_accounts_guest_id_fkey';
+                        columns: ['guest_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'guests';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'loyalty_accounts_program_id_fkey';
+                        columns: ['program_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'loyalty_programs';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            loyalty_programs: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    name: string;
+                    points_rule_json: Json;
+                    tier_rule_json: Json;
+                    status: string;
+                    created_by: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    name: string;
+                    points_rule_json?: Json;
+                    tier_rule_json?: Json;
+                    status?: string;
+                    created_by?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    name?: string;
+                    points_rule_json?: Json;
+                    tier_rule_json?: Json;
+                    status?: string;
+                    created_by?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'loyalty_programs_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            loyalty_transactions: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    account_id: string;
+                    order_id: string | null;
+                    points_delta: number;
+                    balance_after: number;
+                    transaction_type: string;
+                    reason: string | null;
+                    metadata: Json;
+                    created_by: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    account_id: string;
+                    order_id?: string | null;
+                    points_delta: number;
+                    balance_after: number;
+                    transaction_type: string;
+                    reason?: string | null;
+                    metadata?: Json;
+                    created_by?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    account_id?: string;
+                    order_id?: string | null;
+                    points_delta?: number;
+                    balance_after?: number;
+                    transaction_type?: string;
+                    reason?: string | null;
+                    metadata?: Json;
+                    created_by?: string | null;
+                    created_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'loyalty_transactions_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'loyalty_transactions_account_id_fkey';
+                        columns: ['account_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'loyalty_accounts';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'loyalty_transactions_order_id_fkey';
+                        columns: ['order_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'orders';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             menu_items: {
                 Row: {
                     allergens: string[] | null;
@@ -987,6 +1513,8 @@ export type Database = {
                     spicy_level: number | null;
                     station: string | null;
                     stock_quantity: number | null;
+                    upsell_tags: string[] | null;
+                    complementary_items: string[] | null;
                     updated_at: string | null;
                 };
                 Insert: {
@@ -1024,6 +1552,8 @@ export type Database = {
                     spicy_level?: number | null;
                     station?: string | null;
                     stock_quantity?: number | null;
+                    upsell_tags?: string[] | null;
+                    complementary_items?: string[] | null;
                     updated_at?: string | null;
                 };
                 Update: {
@@ -1061,6 +1591,8 @@ export type Database = {
                     spicy_level?: number | null;
                     station?: string | null;
                     stock_quantity?: number | null;
+                    upsell_tags?: string[] | null;
+                    complementary_items?: string[] | null;
                     updated_at?: string | null;
                 };
                 Relationships: [
@@ -1069,6 +1601,119 @@ export type Database = {
                         columns: ['category_id'];
                         isOneToOne: false;
                         referencedRelation: 'categories';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            menu_location_links: {
+                Row: {
+                    id: string;
+                    menu_config_id: string;
+                    restaurant_id: string;
+                    is_primary: boolean;
+                    sync_enabled: boolean;
+                    sync_status: string | null;
+                    last_sync_at: string | null;
+                    pending_changes: number;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    menu_config_id: string;
+                    restaurant_id: string;
+                    is_primary?: boolean;
+                    sync_enabled?: boolean;
+                    sync_status?: string | null;
+                    last_sync_at?: string | null;
+                    pending_changes?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    menu_config_id?: string;
+                    restaurant_id?: string;
+                    is_primary?: boolean;
+                    sync_enabled?: boolean;
+                    sync_status?: string | null;
+                    last_sync_at?: string | null;
+                    pending_changes?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'menu_location_links_menu_config_id_fkey';
+                        columns: ['menu_config_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'centralized_menu_configs';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'menu_location_links_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            menu_change_queue: {
+                Row: {
+                    id: string;
+                    menu_config_id: string;
+                    change_type: string;
+                    entity_type: string;
+                    entity_id: string;
+                    location_ids: string[];
+                    change_data: Json;
+                    status: string;
+                    applied_at: string | null;
+                    applied_to: string[];
+                    failed_at: string | null;
+                    error_message: string | null;
+                    created_at: string;
+                    created_by: string;
+                };
+                Insert: {
+                    id?: string;
+                    menu_config_id: string;
+                    change_type: string;
+                    entity_type: string;
+                    entity_id: string;
+                    location_ids?: string[];
+                    change_data?: Json;
+                    status?: string;
+                    applied_at?: string | null;
+                    applied_to?: string[];
+                    failed_at?: string | null;
+                    error_message?: string | null;
+                    created_at?: string;
+                    created_by: string;
+                };
+                Update: {
+                    id?: string;
+                    menu_config_id?: string;
+                    change_type?: string;
+                    entity_type?: string;
+                    entity_id?: string;
+                    location_ids?: string[];
+                    change_data?: Json;
+                    status?: string;
+                    applied_at?: string | null;
+                    applied_to?: string[];
+                    failed_at?: string | null;
+                    error_message?: string | null;
+                    created_at?: string;
+                    created_by?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'menu_change_queue_menu_config_id_fkey';
+                        columns: ['menu_config_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'centralized_menu_configs';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -1830,6 +2475,53 @@ export type Database = {
                     },
                 ];
             };
+            notification_metrics: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    notification_id: string | null;
+                    channel: string;
+                    status: string;
+                    latency_ms: number | null;
+                    error_code: string | null;
+                    error_message: string | null;
+                    is_retry: boolean;
+                    recorded_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    notification_id?: string | null;
+                    channel: string;
+                    status: string;
+                    latency_ms?: number | null;
+                    error_code?: string | null;
+                    error_message?: string | null;
+                    is_retry?: boolean;
+                    recorded_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    notification_id?: string | null;
+                    channel?: string;
+                    status?: string;
+                    latency_ms?: number | null;
+                    error_code?: string | null;
+                    error_message?: string | null;
+                    is_retry?: boolean;
+                    recorded_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'notification_metrics_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             rate_limit_logs: {
                 Row: {
                     action: string;
@@ -2346,6 +3038,44 @@ export type Database = {
                         columns: ['staff_id'];
                         isOneToOne: false;
                         referencedRelation: 'restaurant_staff_with_users';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            segments: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    name: string;
+                    rule_json: Json;
+                    created_by: string | null;
+                    created_at: string | null;
+                    updated_at: string | null;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    name: string;
+                    rule_json?: Json;
+                    created_by?: string | null;
+                    created_at?: string | null;
+                    updated_at?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    name?: string;
+                    rule_json?: Json;
+                    created_by?: string | null;
+                    created_at?: string | null;
+                    updated_at?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'segments_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -3012,6 +3742,81 @@ export type Database = {
                     },
                 ];
             };
+            upsell_analytics: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    guest_id: string | null;
+                    item_viewed: string | null;
+                    recommended_items: string[] | null;
+                    clicked_item: string | null;
+                    added_to_cart: boolean | null;
+                    order_id: string | null;
+                    created_at: string | null;
+                    updated_at: string | null;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    guest_id?: string | null;
+                    item_viewed?: string | null;
+                    recommended_items?: string[] | null;
+                    clicked_item?: string | null;
+                    added_to_cart?: boolean | null;
+                    order_id?: string | null;
+                    created_at?: string | null;
+                    updated_at?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    guest_id?: string | null;
+                    item_viewed?: string | null;
+                    recommended_items?: string[] | null;
+                    clicked_item?: string | null;
+                    added_to_cart?: boolean | null;
+                    order_id?: string | null;
+                    created_at?: string | null;
+                    updated_at?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'upsell_analytics_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'upsell_analytics_guest_id_fkey';
+                        columns: ['guest_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'guests';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'upsell_analytics_item_viewed_fkey';
+                        columns: ['item_viewed'];
+                        isOneToOne: false;
+                        referencedRelation: 'menu_items';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'upsell_analytics_clicked_item_fkey';
+                        columns: ['clicked_item'];
+                        isOneToOne: false;
+                        referencedRelation: 'menu_items';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'upsell_analytics_order_id_fkey';
+                        columns: ['order_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'orders';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             workflow_audit_logs: {
                 Row: {
                     created_at: string | null;
@@ -3162,6 +3967,10 @@ export type Database = {
             };
             increment_likes: {
                 Args: { delta: number; item_id: string };
+                Returns: undefined;
+            };
+            increment_pending_changes: {
+                Args: { p_restaurant_id: string; p_menu_config_id: string };
                 Returns: undefined;
             };
             is_agency_admin: { Args: never; Returns: boolean };
