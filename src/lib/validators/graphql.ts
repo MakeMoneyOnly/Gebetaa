@@ -119,6 +119,8 @@ export const CreateGuestInputSchema = z.object({
         .max(255, 'Email cannot exceed 255 characters')
         .optional()
         .or(z.literal('')),
+    notes: z.string().max(2000, 'Notes cannot exceed 2000 characters').optional(),
+    tags: z.array(z.string().max(50)).max(20, 'Cannot exceed 20 tags').optional(),
 });
 
 /**
@@ -138,6 +140,8 @@ export const UpdateGuestInputSchema = z.object({
         .max(255, 'Email cannot exceed 255 characters')
         .optional()
         .or(z.literal('')),
+    notes: z.string().max(2000, 'Notes cannot exceed 2000 characters').optional(),
+    tags: z.array(z.string().max(50)).max(20, 'Cannot exceed 20 tags').optional(),
 });
 
 // ============================================================================

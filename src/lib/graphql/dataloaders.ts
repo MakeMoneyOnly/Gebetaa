@@ -12,6 +12,7 @@
 import DataLoader from 'dataloader';
 import { menuRepository } from '@/domains/menu/repository';
 import { ordersRepository, OrderItemRow } from '@/domains/orders/repository';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 /**
  * Tenant context for DataLoader operations
@@ -32,6 +33,62 @@ export type Category = Record<string, unknown>;
 export type OrderItem = OrderItemRow;
 
 /**
+ * HIGH-021: Guest types for DataLoader
+ */
+export interface Guest {
+    id: string;
+    restaurant_id: string;
+    identity_key: string;
+    name: string | null;
+    phone_hash: string | null;
+    email_hash: string | null;
+    language: string;
+    tags: string[];
+    notes: string | null;
+    is_vip: boolean;
+    first_seen_at: string;
+    last_seen_at: string;
+    visit_count: number;
+    lifetime_value: number;
+    metadata: Record<string, unknown>;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * HIGH-021: Payment types for DataLoader
+ */
+export interface Payment {
+    id: string;
+    restaurant_id: string;
+    order_id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    provider: string;
+    provider_tx_id: string | null;
+    payment_session_id: string | null;
+    split_id: string | null;
+    metadata: Record<string, unknown>;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * HIGH-021: Restaurant types for DataLoader
+ */
+export interface Restaurant {
+    id: string;
+    name: string;
+    slug: string;
+    currency: string;
+    timezone: string;
+    settings: Record<string, unknown>;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
  * DataLoaders interface for GraphQL context
  * Each loader handles a specific entity type with batched loading
  */
@@ -50,6 +107,16 @@ export interface DataLoaders {
     modifierGroup: DataLoader<string, ModifierGroup | null>;
     /** Load single modifier option by ID - returns null if not found (for federation references) */
     modifierOption: DataLoader<string, ModifierOption | null>;
+    /** HIGH-021: Load guests by ID - returns null if not found */
+    guests: DataLoader<string, Guest | null>;
+    /** HIGH-021: Load guests by session ID - returns empty array if none */
+    guestsBySession: DataLoader<string, Guest[]>;
+    /** HIGH-021: Load payments by ID - returns null if not found */
+    payments: DataLoader<string, Payment | null>;
+    /** HIGH-021: Load payments by order ID - returns empty array if none */
+    paymentsByOrder: DataLoader<string, Payment[]>;
+    /** HIGH-021: Load restaurants by ID - returns null if not found */
+    restaurants: DataLoader<string, Restaurant | null>;
 }
 
 /**
@@ -221,5 +288,137 @@ export function createDataLoaders(tenantContext: TenantContext): DataLoaders {
                 );
             }
         ),
+
+        /**
+         * HIGH-021: Guests loader - batches requests for guests by ID
+         * Returns the guest or null if not found
+         * HIGH-014: Includes tenant verification
+         */
+        guests: new DataLoader<string, Guest | null>(async (ids: readonly string[]) => {
+            const supabase = createServiceRoleClient();
+            const { data, error } = await supabase
+                .from('guests')
+                .select(
+                    'id, restaurant_id, identity_key, name, phone_hash, email_hash, language, tags, notes, is_vip, first_seen_at, last_seen_at, visit_count, lifetime_value, metadata, created_at, updated_at'
+                )
+                .in('id', [...ids]);
+
+            if (error) {
+                console.error('[DataLoader] Error loading guests:', error.message);
+                return ids.map(() => null);
+            }
+
+            return verifyTenantOwnership(data as Guest[], ids, guest => guest.id);
+        }),
+
+        /**
+         * HIGH-021: Guests by Session loader - batches requests for guests by session ID
+         * Returns an array of guests for each session (empty if none)
+         * HIGH-014: Includes tenant verification
+         */
+        guestsBySession: new DataLoader<string, Guest[]>(async (sessionIds: readonly string[]) => {
+            const supabase = createServiceRoleClient();
+            const { data, error } = await supabase
+                .from('table_sessions')
+                .select(
+                    'id, restaurant_id, guests(id, restaurant_id, identity_key, name, phone_hash, email_hash, language, tags, notes, is_vip, first_seen_at, last_seen_at, visit_count, lifetime_value, metadata, created_at, updated_at)'
+                )
+                .in('id', [...sessionIds]);
+
+            if (error) {
+                console.error('[DataLoader] Error loading guests by session:', error.message);
+                return sessionIds.map(() => []);
+            }
+
+            // Group by session_id with tenant verification
+            const guestsBySession = new Map<string, Guest[]>();
+            for (const session of data ?? []) {
+                if (session.restaurant_id && session.restaurant_id !== restaurantId) {
+                    continue; // Skip sessions from other tenants
+                }
+                const guests = ((session.guests as Guest[]) ?? []).filter(
+                    g => !g.restaurant_id || g.restaurant_id === restaurantId
+                );
+                guestsBySession.set(session.id, guests);
+            }
+
+            return sessionIds.map(id => guestsBySession.get(id) || []);
+        }),
+
+        /**
+         * HIGH-021: Payments loader - batches requests for payments by ID
+         * Returns the payment or null if not found
+         * HIGH-014: Includes tenant verification
+         */
+        payments: new DataLoader<string, Payment | null>(async (ids: readonly string[]) => {
+            const supabase = createServiceRoleClient();
+            const { data, error } = await supabase
+                .from('payments')
+                .select(
+                    'id, restaurant_id, order_id, amount, currency, status, provider, provider_tx_id, payment_session_id, split_id, metadata, created_at, updated_at'
+                )
+                .in('id', [...ids]);
+
+            if (error) {
+                console.error('[DataLoader] Error loading payments:', error.message);
+                return ids.map(() => null);
+            }
+
+            return verifyTenantOwnership(data as Payment[], ids, payment => payment.id);
+        }),
+
+        /**
+         * HIGH-021: Payments by Order loader - batches requests for payments by order ID
+         * Returns an array of payments for each order (empty if none)
+         * HIGH-014: Includes tenant verification
+         */
+        paymentsByOrder: new DataLoader<string, Payment[]>(async (orderIds: readonly string[]) => {
+            const supabase = createServiceRoleClient();
+            const { data, error } = await supabase
+                .from('payments')
+                .select(
+                    'id, restaurant_id, order_id, amount, currency, status, provider, provider_tx_id, payment_session_id, split_id, metadata, created_at, updated_at'
+                )
+                .in('order_id', [...orderIds]);
+
+            if (error) {
+                console.error('[DataLoader] Error loading payments by order:', error.message);
+                return orderIds.map(() => []);
+            }
+
+            // Group by order_id with tenant verification
+            const paymentsByOrder = new Map<string, Payment[]>();
+            for (const payment of data ?? []) {
+                if (payment.restaurant_id && payment.restaurant_id !== restaurantId) {
+                    continue; // Skip payments from other tenants
+                }
+                const existing = paymentsByOrder.get(payment.order_id) || [];
+                existing.push(payment as Payment);
+                paymentsByOrder.set(payment.order_id, existing);
+            }
+
+            return orderIds.map(id => paymentsByOrder.get(id) || []);
+        }),
+
+        /**
+         * HIGH-021: Restaurants loader - batches requests for restaurants by ID
+         * Returns the restaurant or null if not found
+         * Note: No tenant verification needed as restaurant is the tenant root
+         */
+        restaurants: new DataLoader<string, Restaurant | null>(async (ids: readonly string[]) => {
+            const supabase = createServiceRoleClient();
+            const { data, error } = await supabase
+                .from('restaurants')
+                .select('id, name, slug, currency, timezone, settings, created_at, updated_at')
+                .in('id', [...ids]);
+
+            if (error) {
+                console.error('[DataLoader] Error loading restaurants:', error.message);
+                return ids.map(() => null);
+            }
+
+            const restaurantMap = new Map(data?.map(r => [r.id, r as Restaurant]));
+            return ids.map(id => restaurantMap.get(id) ?? null);
+        }),
     };
 }
