@@ -19,10 +19,11 @@ export const guestsResolvers = {
             // Authorization: Require authentication
             const authContext = requireAuth(context);
 
-            // Fetch guest
-            const guest = await guestsRepository.getGuest(args.id);
+            // HIGH-021: Use DataLoader for N+1 prevention
+            // DataLoader handles tenant verification internally
+            const guest = await context.dataLoaders.guests.load(args.id);
 
-            // Tenant isolation: Verify user has access to this guest's restaurant
+            // Tenant isolation: DataLoader already verified, but double-check for safety
             if (guest && authContext.user?.restaurantId) {
                 if (guest.restaurant_id !== authContext.user.restaurantId) {
                     throw new GraphQLError('Access denied to this guest', {

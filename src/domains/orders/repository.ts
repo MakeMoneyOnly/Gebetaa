@@ -1,6 +1,5 @@
 // Orders Domain - Repository Layer
 // Database access layer - Supabase queries only, no business logic
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import {
     ORDER_LIST_COLUMNS,
@@ -10,28 +9,7 @@ import {
     ORDER_ITEM_KDS_COLUMNS,
     columnsToString,
 } from '@/lib/constants/query-columns';
-
-// Lazy initialization of Supabase client - only creates when actually needed
-// This allows the module to be imported during build without requiring env vars
-let supabase: SupabaseClient<Database> | null = null;
-
-function getSupabaseClient(): SupabaseClient<Database> {
-    if (!supabase) {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_SECRET_KEY;
-
-        if (!supabaseUrl || !supabaseKey) {
-            // During build, return a mock client that won't be used
-            // In production, these env vars must be set
-            throw new Error(
-                `Supabase configuration missing. NEXT_PUBLIC_SUPABASE_URL: ${!!supabaseUrl}, SUPABASE_SECRET_KEY: ${!!supabaseKey}`
-            );
-        }
-
-        supabase = createClient<Database>(supabaseUrl, supabaseKey);
-    }
-    return supabase;
-}
+import { getRepositoryClient, normalizePagination } from '@/lib/db/repository-base';
 
 export type OrderRow = Database['public']['Tables']['orders']['Row'];
 
@@ -40,7 +18,7 @@ export type OrderItemRow = Database['public']['Tables']['order_items']['Row'];
 export class OrdersRepository {
     async findById(id: string): Promise<OrderRow | null> {
         // MED-001: Use explicit columns for order detail
-        const { data } = await getSupabaseClient()
+        const { data } = await getRepositoryClient()
             .from('orders')
             .select(columnsToString(ORDER_DETAIL_COLUMNS))
             .eq('id', id)
@@ -58,7 +36,7 @@ export class OrdersRepository {
         } = {}
     ): Promise<OrderRow[]> {
         // MED-001: Use explicit columns for order list
-        let query = getSupabaseClient()
+        let query = getRepositoryClient()
             .from('orders')
             .select(columnsToString(ORDER_LIST_COLUMNS))
             .eq('restaurant_id', restaurantId);
@@ -70,9 +48,8 @@ export class OrdersRepository {
             query = query.eq('table_number', options.tableNumber);
         }
 
-        query = query
-            .order('created_at', { ascending: false })
-            .range(options.offset ?? 0, (options.limit ?? 20) - 1);
+        const { limit, offset } = normalizePagination(options);
+        query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
         const { data } = await query;
         return (data as unknown as OrderRow[]) ?? [];
@@ -87,11 +64,10 @@ export class OrdersRepository {
         restaurantId: string,
         options: { limit?: number; offset?: number } = {}
     ): Promise<OrderRow[]> {
-        const limit = Math.min(options.limit ?? 50, 200); // Default 50, max 200
-        const offset = options.offset ?? 0;
+        const { limit, offset } = normalizePagination(options);
 
         // MED-001: Use explicit columns for active orders
-        const { data } = await getSupabaseClient()
+        const { data } = await getRepositoryClient()
             .from('orders')
             .select(columnsToString(ORDER_LIST_COLUMNS))
             .eq('restaurant_id', restaurantId)
@@ -113,13 +89,12 @@ export class OrdersRepository {
         station: string,
         options: { limit?: number; offset?: number } = {}
     ): Promise<OrderRow[]> {
-        const limit = Math.min(options.limit ?? 50, 200);
-        const offset = options.offset ?? 0;
+        const { limit, offset } = normalizePagination(options);
 
         // MED-001: Use explicit columns for KDS orders
         // Use a subquery to filter orders that have order_items with the specified station
         // This moves filtering to the database level instead of in-memory
-        const { data } = await getSupabaseClient()
+        const { data } = await getRepositoryClient()
             .from('orders')
             .select(
                 `${columnsToString(ORDER_KDS_COLUMNS)}, order_items!inner(${columnsToString(ORDER_ITEM_KDS_COLUMNS)})`
@@ -145,7 +120,7 @@ export class OrdersRepository {
         staff_id?: string;
         idempotency_key: string;
     }): Promise<OrderRow> {
-        const { data: order, error } = await getSupabaseClient()
+        const { data: order, error } = await getRepositoryClient()
             .from('orders')
             .insert({
                 restaurant_id: data.restaurant_id,
@@ -169,7 +144,7 @@ export class OrdersRepository {
     }
 
     async updateStatus(id: string, status: string): Promise<OrderRow> {
-        const { data: order, error } = await getSupabaseClient()
+        const { data: order, error } = await getRepositoryClient()
             .from('orders')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -181,7 +156,7 @@ export class OrdersRepository {
     }
 
     async cancel(id: string, reason?: string): Promise<OrderRow> {
-        const { data: order, error } = await getSupabaseClient()
+        const { data: order, error } = await getRepositoryClient()
             .from('orders')
             .update({
                 status: 'cancelled',
@@ -199,7 +174,7 @@ export class OrdersRepository {
     // Order Items
     async getItems(orderId: string): Promise<OrderItemRow[]> {
         // MED-001: Use explicit columns for order items
-        const { data } = await getSupabaseClient()
+        const { data } = await getRepositoryClient()
             .from('order_items')
             .select(columnsToString(ORDER_ITEM_LIST_COLUMNS) as '*')
             .eq('order_id', orderId)
@@ -220,7 +195,7 @@ export class OrdersRepository {
             name?: string;
         }[]
     ): Promise<OrderItemRow[]> {
-        const { data, error } = await getSupabaseClient()
+        const { data, error } = await getRepositoryClient()
             .from('order_items')
             .insert(
                 items.map(item => ({
@@ -249,7 +224,7 @@ export class OrdersRepository {
      */
     async getItemById(id: string): Promise<OrderItemRow | null> {
         // MED-001: Use explicit columns for order item
-        const { data, error } = await getSupabaseClient()
+        const { data, error } = await getRepositoryClient()
             .from('order_items')
             .select(columnsToString(ORDER_ITEM_LIST_COLUMNS) as '*')
             .eq('id', id)
@@ -272,7 +247,7 @@ export class OrdersRepository {
         if (orderIds.length === 0) return [];
 
         // MED-001: Use explicit columns for order items batch
-        const { data, error } = await getSupabaseClient()
+        const { data, error } = await getRepositoryClient()
             .from('order_items')
             .select(columnsToString(ORDER_ITEM_LIST_COLUMNS) as '*')
             .in('order_id', orderIds)

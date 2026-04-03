@@ -1,6 +1,7 @@
 // Guests Domain - Service Layer
 // Business logic layer - loyalty calculations, visit tracking, etc.
 import { guestsRepository, GuestRow, GuestListOptions } from './repository';
+import { getLoyaltyTier, type LoyaltyTier } from '@/lib/constants/business';
 
 export interface CreateGuestInput {
     restaurantId: string;
@@ -21,14 +22,10 @@ export interface UpdateGuestInput {
 
 /**
  * Calculate loyalty tier based on total spent
+ * @deprecated Use getLoyaltyTier from '@/lib/constants/business' instead
  */
-export function calculateLoyaltyTier(
-    totalSpent: number
-): 'bronze' | 'silver' | 'gold' | 'platinum' {
-    if (totalSpent >= 100000) return 'platinum';
-    if (totalSpent >= 50000) return 'gold';
-    if (totalSpent >= 20000) return 'silver';
-    return 'bronze';
+export function calculateLoyaltyTier(totalSpent: number): LoyaltyTier {
+    return getLoyaltyTier(totalSpent);
 }
 
 /**
@@ -148,8 +145,8 @@ export class GuestsService {
     /**
      * Get guest loyalty tier
      */
-    getLoyaltyTier(guest: GuestRow): 'bronze' | 'silver' | 'gold' | 'platinum' {
-        return calculateLoyaltyTier(guest.lifetime_value ?? 0);
+    getLoyaltyTier(guest: GuestRow): LoyaltyTier {
+        return getLoyaltyTier(guest.lifetime_value ?? 0);
     }
 
     /**

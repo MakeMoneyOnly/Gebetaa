@@ -1,31 +1,12 @@
 // Payments Domain - Repository Layer
 // Database access layer - Supabase queries only, no business logic
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database, Json } from '@/types/database';
 import {
     PAYMENT_LIST_COLUMNS,
     PAYMENT_DETAIL_COLUMNS,
     columnsToString,
 } from '@/lib/constants/query-columns';
-
-// Lazy initialization of Supabase client
-let supabase: SupabaseClient<Database> | null = null;
-
-function getSupabaseClient(): SupabaseClient<Database> {
-    if (!supabase) {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_SECRET_KEY;
-
-        if (!supabaseUrl || !supabaseKey) {
-            throw new Error(
-                `Supabase configuration missing. NEXT_PUBLIC_SUPABASE_URL: ${!!supabaseUrl}, SUPABASE_SECRET_KEY: ${!!supabaseKey}`
-            );
-        }
-
-        supabase = createClient<Database>(supabaseUrl, supabaseKey);
-    }
-    return supabase;
-}
+import { getRepositoryClient, normalizePagination } from '@/lib/db/repository-base';
 
 export type PaymentRow = Database['public']['Tables']['payments']['Row'];
 
@@ -51,7 +32,7 @@ export class PaymentsRepository {
      * Get a single payment by ID
      */
     async getPayment(id: string): Promise<PaymentRow | null> {
-        const { data, error } = await getSupabaseClient()
+        const { data, error } = await getRepositoryClient()
             .from('payments')
             .select(columnsToString(PAYMENT_DETAIL_COLUMNS))
             .eq('id', id)
@@ -72,10 +53,9 @@ export class PaymentsRepository {
         orderId: string,
         options: PaymentListOptions = {}
     ): Promise<PaymentRow[]> {
-        const limit = Math.min(options.limit ?? 50, 200);
-        const offset = options.offset ?? 0;
+        const { limit, offset } = normalizePagination(options);
 
-        let query = getSupabaseClient()
+        let query = getRepositoryClient()
             .from('payments')
             .select(columnsToString(PAYMENT_LIST_COLUMNS))
             .eq('order_id', orderId)
@@ -107,10 +87,9 @@ export class PaymentsRepository {
         restaurantId: string,
         options: PaymentListOptions = {}
     ): Promise<PaymentRow[]> {
-        const limit = Math.min(options.limit ?? 50, 200);
-        const offset = options.offset ?? 0;
+        const { limit, offset } = normalizePagination(options);
 
-        let query = getSupabaseClient()
+        let query = getRepositoryClient()
             .from('payments')
             .select(columnsToString(PAYMENT_LIST_COLUMNS))
             .eq('restaurant_id', restaurantId)
@@ -148,7 +127,7 @@ export class PaymentsRepository {
         idempotency_key: string;
         metadata?: Record<string, unknown>;
     }): Promise<PaymentRow> {
-        const { data: payment, error } = await getSupabaseClient()
+        const { data: payment, error } = await getRepositoryClient()
             .from('payments')
             .insert({
                 restaurant_id: data.restaurant_id,
@@ -195,7 +174,7 @@ export class PaymentsRepository {
             updateData.metadata = metadata;
         }
 
-        const { data: payment, error } = await getSupabaseClient()
+        const { data: payment, error } = await getRepositoryClient()
             .from('payments')
             .update(updateData)
             .eq('id', id)
@@ -214,7 +193,7 @@ export class PaymentsRepository {
      * Get payment by idempotency key (for deduplication)
      */
     async getPaymentByIdempotencyKey(idempotencyKey: string): Promise<PaymentRow | null> {
-        const { data, error } = await getSupabaseClient()
+        const { data, error } = await getRepositoryClient()
             .from('payments')
             .select(columnsToString(PAYMENT_DETAIL_COLUMNS))
             .eq('idempotency_key', idempotencyKey)
@@ -238,7 +217,7 @@ export class PaymentsRepository {
     async getPaymentsByIds(ids: string[]): Promise<PaymentRow[]> {
         if (ids.length === 0) return [];
 
-        const { data, error } = await getSupabaseClient()
+        const { data, error } = await getRepositoryClient()
             .from('payments')
             .select(columnsToString(PAYMENT_LIST_COLUMNS))
             .in('id', ids);

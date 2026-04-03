@@ -15,10 +15,11 @@ export const paymentsResolvers = {
             // Authorization: Require authentication
             const authContext = requireAuth(context);
 
-            // Fetch payment
-            const payment = await paymentsRepository.getPayment(args.id);
+            // HIGH-021: Use DataLoader for N+1 prevention
+            // DataLoader handles tenant verification internally
+            const payment = await context.dataLoaders.payments.load(args.id);
 
-            // Tenant isolation: Verify user has access to this payment's restaurant
+            // Tenant isolation: DataLoader already verified, but double-check for safety
             if (payment && authContext.user?.restaurantId) {
                 if (payment.restaurant_id !== authContext.user.restaurantId) {
                     throw new GraphQLError('Access denied to this payment', {
@@ -53,15 +54,19 @@ export const paymentsResolvers = {
                 await requireRestaurantAccess(context, args.restaurantId);
             }
 
-            // Fetch payments
+            // HIGH-021: Use DataLoader for orderId-based queries (N+1 prevention)
             if (args.orderId) {
-                // For orderId-based queries, we need to verify the order belongs to user's restaurant
-                // The service will handle tenant filtering
-                return paymentsRepository.getPaymentsByOrder(args.orderId, {
-                    status: args.status as PaymentStatus,
-                    limit: args.limit ?? 50,
-                    offset: args.offset ?? 0,
-                });
+                // For orderId-based queries, use DataLoader for batching
+                // Note: DataLoader doesn't support status filtering, so fall back to repository for filtered queries
+                if (args.status) {
+                    return paymentsRepository.getPaymentsByOrder(args.orderId, {
+                        status: args.status as PaymentStatus,
+                        limit: args.limit ?? 50,
+                        offset: args.offset ?? 0,
+                    });
+                }
+                // Use DataLoader for unfiltered queries
+                return context.dataLoaders.paymentsByOrder.load(args.orderId);
             } else {
                 // restaurantId-based query
                 return paymentsRepository.getPaymentsByRestaurant(args.restaurantId!, {
