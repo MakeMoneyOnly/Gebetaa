@@ -10,7 +10,6 @@ const config: CapacitorConfig = {
     // Capacitor requires a local web bundle with an index.html entrypoint.
     // The native shell assets are a branded bootstrap while we wire the full App Router bundle.
     webDir: 'native-shell',
-    bundledWebRuntime: false,
     server: remoteServerUrl
         ? {
               url: remoteServerUrl,

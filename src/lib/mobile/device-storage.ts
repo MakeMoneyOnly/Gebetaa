@@ -36,7 +36,13 @@ async function withPreferences<T>(
     try {
         const importer = new Function('moduleName', 'return import(moduleName);') as (
             value: string
-        ) => Promise<{ Preferences?: any }>;
+        ) => Promise<{
+            Preferences?: {
+                get: (options: { key: string }) => Promise<{ value: string | null }>;
+                set: (options: { key: string; value: string }) => Promise<void>;
+                remove: (options: { key: string }) => Promise<void>;
+            };
+        }>;
         const capacitorModule = await importer('@capacitor/preferences');
         if (!capacitorModule?.Preferences) {
             return null;

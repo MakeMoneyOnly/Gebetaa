@@ -138,7 +138,7 @@ describe('staff and device provisioning routes', () => {
         const body = await response.json();
 
         expect(response.status).toBe(500);
-        expect(body.code).toBe('TERMINAL_DEVICE_MIGRATION_REQUIRED');
+        expect(body.error.code).toBe('TERMINAL_DEVICE_MIGRATION_REQUIRED');
     });
 
     it('POST /api/devices/provision assigns a six-character pairing code and device profile', async () => {

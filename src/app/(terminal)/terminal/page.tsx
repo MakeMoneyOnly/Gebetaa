@@ -13,11 +13,11 @@ import {
     Store,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { useDeviceHeartbeat } from '@/hooks/useDeviceHeartbeat';
+import { ManagedDeviceBanner } from '@/components/device/ManagedDeviceBanner';
+import { useManagedDeviceSession } from '@/hooks/useManagedDeviceSession';
 import type { SupportedPaymentMethod } from '@/lib/devices/config';
 import { getDeviceTypeLabel } from '@/lib/devices/config';
 import { formatCurrencyCompact } from '@/lib/utils/monetary';
-import { getStoredDeviceSession, type StoredDeviceSession } from '@/lib/mobile/device-storage';
 import {
     buildReceiptFromPaymentPayload,
     handleApprovedTransactionReceipt,
@@ -101,8 +101,13 @@ function getProviderForMethod(method: SupportedPaymentMethod): string {
 }
 
 export default function TerminalPage() {
-    const [deviceToken, setDeviceToken] = useState<string | null>(null);
-    const [deviceInfo, setDeviceInfo] = useState<StoredDeviceSession | null>(null);
+    const managedDevice = useManagedDeviceSession({
+        route: '/terminal',
+        expectedProfiles: ['cashier'],
+        requirePaired: true,
+    });
+    const deviceToken = managedDevice.deviceToken;
+    const deviceInfo = managedDevice.session;
     const [loading, setLoading] = useState(true);
     const [overview, setOverview] = useState<TerminalOverview | null>(null);
     const [selectedTableNumber, setSelectedTableNumber] = useState<string | null>(null);
@@ -113,26 +118,6 @@ export default function TerminalPage() {
     const [orderAmountInput, setOrderAmountInput] = useState('');
     const [providerReference, setProviderReference] = useState('');
     const [capturingId, setCapturingId] = useState<string | null>(null);
-
-    useEffect(() => {
-        void (async () => {
-            try {
-                const session = await getStoredDeviceSession();
-                if (session?.device_token) {
-                    setDeviceToken(session.device_token);
-                    setDeviceInfo(session);
-                }
-            } catch (error) {
-                console.error('Failed to load paired terminal context', error);
-            }
-        })();
-    }, []);
-
-    useDeviceHeartbeat({
-        deviceToken,
-        route: '/terminal',
-        enabled: Boolean(deviceToken),
-    });
 
     const loadOverview = useCallback(async () => {
         if (!deviceToken) {
@@ -365,13 +350,25 @@ export default function TerminalPage() {
                     ],
                 });
 
-                await handleApprovedTransactionReceipt({
+                const printResult = await handleApprovedTransactionReceipt({
                     autoPrint: true,
                     orderId: args.orderId ?? selectedOrder?.id ?? null,
                     transactionNumber: receipt.transaction_number,
                     receipt,
                     fiscalRequest: payload?.data?.fiscal_request ?? null,
+                    isOnline: typeof navigator === 'undefined' ? true : Boolean(navigator.onLine),
                 });
+
+                if (printResult.blocked) {
+                    throw new Error(
+                        printResult.warning ??
+                            'Fiscalization must succeed before printing this receipt.'
+                    );
+                }
+
+                if (printResult.warning && !printResult.queuedFiscal) {
+                    toast(printResult.warning, { icon: 'ℹ️' });
+                }
             }
 
             toast.success(`Payment recorded for ${args.label}`);
@@ -430,7 +427,23 @@ export default function TerminalPage() {
         }
     };
 
-    if (!deviceToken && !loading) {
+    if (managedDevice.loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-6">
+                <div className="max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-gray-400" />
+                    <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                        Preparing terminal
+                    </h1>
+                    <p className="mt-2 text-[15px] text-gray-600">
+                        Loading the paired cashier shell for this device.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (managedDevice.requiresPairing) {
         return (
             <div className="flex min-h-screen items-center justify-center p-6">
                 <div className="max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
@@ -447,7 +460,7 @@ export default function TerminalPage() {
         );
     }
 
-    if (deviceInfo?.device_type && deviceInfo.device_type !== 'terminal') {
+    if (managedDevice.hasProfileMismatch) {
         return (
             <div className="flex min-h-screen items-center justify-center p-6">
                 <div className="max-w-md rounded-2xl border border-red-400/20 bg-red-500/10 p-8 text-center">
@@ -456,7 +469,7 @@ export default function TerminalPage() {
                         Wrong device role
                     </h1>
                     <p className="mt-2 text-[15px] text-gray-600">
-                        This tablet is paired as {getDeviceTypeLabel(deviceInfo.device_type)}.
+                        This tablet is paired as {getDeviceTypeLabel(deviceInfo?.device_type)}.
                         Re-provision it as a cashier terminal to access `/terminal`.
                     </p>
                 </div>
@@ -466,6 +479,7 @@ export default function TerminalPage() {
 
     return (
         <div className="min-h-screen space-y-8 bg-slate-50 p-6 pb-24 md:p-8">
+            <ManagedDeviceBanner session={deviceInfo} routeLabel="Cashier Terminal" />
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
                 <div>
                     <h1 className="mb-2 text-4xl font-bold tracking-tight text-black md:text-5xl">

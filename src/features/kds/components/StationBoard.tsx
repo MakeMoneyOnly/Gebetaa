@@ -57,6 +57,8 @@ type StationBoardProps = {
     station: StationType;
     title: string;
     accentClassName: string;
+    restaurantIdOverride?: string | null;
+    headerSlot?: React.ReactNode;
 };
 
 const COURSE_SEQUENCE: CourseType[] = ['appetizer', 'main', 'dessert', 'beverage', 'side'];
@@ -283,11 +285,17 @@ function playAlertTone() {
     };
 }
 
-export function StationBoard({ station, title, accentClassName }: StationBoardProps) {
+export function StationBoard({
+    station,
+    title,
+    accentClassName,
+    restaurantIdOverride,
+    headerSlot,
+}: StationBoardProps) {
     const searchParams = useSearchParams();
     const queryRestaurantId = searchParams.get('restaurantId');
     const { restaurantId: roleRestaurantId, loading: roleLoading } = useRole(queryRestaurantId);
-    const restaurantId = queryRestaurantId || roleRestaurantId;
+    const restaurantId = restaurantIdOverride || queryRestaurantId || roleRestaurantId;
     const previousOrderIdsRef = useRef<string[]>([]);
     // alertPolicyRef mirrors alertPolicy state so fetchQueue can read it
     // without needing alertPolicy as a useCallback dependency (which caused
@@ -1010,6 +1018,8 @@ export function StationBoard({ station, title, accentClassName }: StationBoardPr
                     </button>
                 </div>
             </div>
+
+            {headerSlot ? <div className="mx-8 mb-4">{headerSlot}</div> : null}
 
             {/* ── Prep Summary Sidebar ──────────────────────────────────── */}
             {showPrepSummary && (

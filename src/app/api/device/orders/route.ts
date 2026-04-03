@@ -85,7 +85,9 @@ export async function GET(request: Request) {
     const admin = createServiceRoleClient();
     let query = admin
         .from('orders')
-        .select('*')
+        .select(
+            'id, restaurant_id, table_id, table_number, status, order_type, total_amount, currency, customer_name, customer_phone, delivery_address, notes, created_at, updated_at'
+        )
         .eq('restaurant_id', ctx.restaurantId)
         .in('status', ACTIVE_STATUSES)
         .order('created_at', { ascending: false });
@@ -269,7 +271,9 @@ export async function POST(request: Request) {
                 ? { discount_amount: discountRuntime.calculation.discountAmount }
                 : {}),
         } as Record<string, unknown>)
-        .select('*')
+        .select(
+            'id, restaurant_id, table_number, status, total_price, order_number, order_type, customer_name, customer_phone, delivery_address, notes, created_at, updated_at'
+        )
         .single();
 
     if (orderError || !order) {

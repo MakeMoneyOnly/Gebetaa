@@ -8,7 +8,7 @@ import type { Json } from '@/types/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
-interface CampaignRecord {
+interface _CampaignRecord {
     id: string;
     restaurant_id: string;
     name: string;

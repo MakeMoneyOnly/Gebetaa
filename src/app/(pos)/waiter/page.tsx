@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import {
     Banknote,
@@ -23,10 +23,109 @@ import {
     User,
     X,
     CheckCircle2,
+    AlertCircle,
+    Loader2,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { format } from 'date-fns';
+import { useManagedDeviceSession } from '@/hooks/useManagedDeviceSession';
+import { getSupabaseClient } from '@/lib/supabase/client';
+import type { Database } from '@/types/database';
+
+import { useCart, type CartItem } from '@/context/CartContext';
+
+type RestaurantData = Database['public']['Tables']['restaurants']['Row'];
+type CategoryData = Database['public']['Tables']['categories']['Row'];
+type MenuItemData = Database['public']['Tables']['menu_items']['Row'];
 
 export default function WaiterPosPage() {
+    const managedDevice = useManagedDeviceSession({
+        route: '/waiter',
+        expectedProfiles: ['waiter'],
+    });
+
+    const [restaurant, setRestaurant] = useState<RestaurantData | null>(null);
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [isLoadingRestaurant, setIsLoadingRestaurant] = useState(false);
+
+    // Menu Data State
+    const [categories, setCategories] = useState<CategoryData[]>([]);
+    const [menuItems, setMenuItems] = useState<MenuItemData[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
+    const [isLoadingMenu, setIsLoadingMenu] = useState(false);
+
+    const cart = useCart();
+
+    // Update time every minute
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Fetch restaurant and menu data when session is available
+    useEffect(() => {
+        const restaurantId = managedDevice.session?.restaurant_id;
+        if (!restaurantId) return;
+
+        async function fetchData() {
+            setIsLoadingRestaurant(true);
+            setIsLoadingMenu(true);
+            try {
+                const supabase = getSupabaseClient();
+
+                // 1. Fetch Restaurant
+                const { data: restData, error: restError } = await supabase
+                    .from('restaurants')
+                    .select('*')
+                    .eq('id', restaurantId as string)
+                    .single();
+
+                if (restData && !restError) {
+                    setRestaurant(restData);
+                }
+
+                // 2. Fetch Categories
+                const { data: catsData, error: catsError } = await supabase
+                    .from('categories')
+                    .select('*')
+                    .eq('restaurant_id', restaurantId as string)
+                    .order('order_index', { ascending: true });
+
+                if (catsData && !catsError) {
+                    setCategories(catsData);
+
+                    // 3. Fetch Items for these categories
+                    if (catsData.length > 0) {
+                        const { data: itemsData, error: itemsError } = await supabase
+                            .from('menu_items')
+                            .select('*')
+                            .in(
+                                'category_id',
+                                catsData.map(c => c.id)
+                            );
+
+                        if (itemsData && !itemsError) {
+                            setMenuItems(itemsData);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching data for POS:', err);
+            } finally {
+                setIsLoadingRestaurant(false);
+                setIsLoadingMenu(false);
+            }
+        }
+
+        void fetchData();
+    }, [managedDevice.session?.restaurant_id]);
+
+    const formattedDate = useMemo(() => {
+        return format(currentTime, "EEEE, d MMM yyyy 'at' p.");
+    }, [currentTime]);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [showFireMenu, setShowFireMenu] = useState(false);
     const [showSplitPayment, setShowSplitPayment] = useState(false);
@@ -43,6 +142,44 @@ export default function WaiterPosPage() {
     const [splitMode, setSplitMode] = useState<'full' | 'split'>('full');
     const [splitCount, setSplitCount] = useState(2);
 
+    const filteredItems = useMemo(() => {
+        return menuItems.filter(item => {
+            const matchesCategory =
+                selectedCategoryId === 'all' || item.category_id === selectedCategoryId;
+            const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+            return matchesCategory && matchesSearch;
+        });
+    }, [menuItems, selectedCategoryId, searchTerm]);
+
+    const groupedCartItems = useMemo(() => {
+        const groups: Record<string, CartItem[]> = {};
+        cart.items.forEach(item => {
+            const course = item.course || 'Food';
+            if (!groups[course]) groups[course] = [];
+            groups[course].push(item);
+        });
+        return groups;
+    }, [cart.items]);
+
+    const totalWithTax = cart.total * 1.15;
+
+    if (managedDevice.hasProfileMismatch) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-6">
+                <div className="max-w-md rounded-2xl border border-red-400/20 bg-red-500/10 p-8 text-center">
+                    <AlertCircle className="mx-auto h-10 w-10 text-red-300" />
+                    <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                        Wrong device role
+                    </h1>
+                    <p className="mt-2 text-[15px] text-gray-600">
+                        This tablet is paired for a different workspace. Re-provision it as a waiter
+                        device to keep the tableside flow on this screen.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen overflow-hidden bg-[#fbfbfb] text-[#000000] antialiased">
             {/* Main Wrapper */}
@@ -52,14 +189,24 @@ export default function WaiterPosPage() {
                     {/* Left Header */}
                     <div className="flex items-center gap-6">
                         <div className="flex h-11 cursor-pointer items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 transition-colors hover:bg-gray-100">
-                            <Image
-                                src="https://i.pravatar.cc/150?img=33"
-                                alt="Store"
-                                width={28}
-                                height={28}
-                                className="h-7 w-7 rounded-full object-cover"
-                            />
-                            <span className="text-sm font-semibold">Hadid's Food</span>
+                            {restaurant?.logo_url ? (
+                                <Image
+                                    src={restaurant.logo_url}
+                                    alt={restaurant.name}
+                                    width={28}
+                                    height={28}
+                                    className="h-7 w-7 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-500">
+                                    {restaurant?.name?.charAt(0) || 'R'}
+                                </div>
+                            )}
+                            <span className="text-sm font-semibold">
+                                {isLoadingRestaurant
+                                    ? 'Loading...'
+                                    : restaurant?.name || "Hadid's Food"}
+                            </span>
                         </div>
 
                         <button className="flex h-11 items-center gap-2 rounded-xl bg-white px-3 shadow-sm transition-all hover:shadow-md">
@@ -72,9 +219,7 @@ export default function WaiterPosPage() {
                     <div className="flex items-center gap-6">
                         <div className="flex h-11 items-center gap-2.5 rounded-xl bg-gray-50 px-4 text-gray-600">
                             <Calendar className="h-4 w-4" />
-                            <span className="text-sm font-semibold">
-                                Wednesday, 27 Mar 2024 at 9:48 AM.
-                            </span>
+                            <span className="text-sm font-semibold">{formattedDate}</span>
                         </div>
 
                         <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-500 shadow-sm transition-all hover:shadow-md">
@@ -99,7 +244,7 @@ export default function WaiterPosPage() {
                 {/* Content Area */}
                 <div className="relative flex flex-1 overflow-hidden">
                     {/* Menu Grid Section */}
-                    <div className="no-scrollbar relative flex flex-1 flex-col gap-6 overflow-y-auto p-8">
+                    <div className="relative flex flex-1 flex-col gap-6 overflow-y-auto p-8">
                         {/* Filters & Search - Operational Layout */}
                         <div className="flex flex-col gap-5">
                             {/* Line 1: Title & Filter Categories */}
@@ -112,36 +257,36 @@ export default function WaiterPosPage() {
                                 <div className="hidden h-6 w-px bg-[#F1F1F1] md:block"></div>
 
                                 <div className="flex flex-wrap items-center gap-2.5">
-                                    <button className="flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-gray-600 shadow-sm transition-all active:shadow-md">
+                                    <button
+                                        onClick={() => setSelectedCategoryId('all')}
+                                        className={`flex h-11 items-center gap-2 rounded-xl px-4 transition-all active:shadow-md ${selectedCategoryId === 'all' ? 'bg-brand-accent text-black shadow-md' : 'bg-white text-gray-600 shadow-sm'}`}
+                                    >
                                         <span className="text-[13px] font-bold">All</span>
-                                        <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-500">
-                                            43
+                                        <span
+                                            className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${selectedCategoryId === 'all' ? 'bg-black/10 text-black' : 'bg-gray-100 text-gray-500'}`}
+                                        >
+                                            {menuItems.length}
                                         </span>
                                     </button>
-                                    <button className="flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-gray-600 shadow-sm transition-all active:shadow-md">
-                                        <span className="text-[13px] font-bold">Beverages</span>
-                                        <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-500">
-                                            11
-                                        </span>
-                                    </button>
-                                    <button className="bg-brand-accent flex h-11 items-center gap-2 rounded-xl px-4 text-black shadow-md transition-all active:translate-y-0">
-                                        <span className="text-[13px] font-bold">Main Course</span>
-                                        <span className="rounded-md bg-black/10 px-1.5 py-0.5 text-[10px] font-bold text-black">
-                                            16
-                                        </span>
-                                    </button>
-                                    <button className="flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-gray-600 shadow-sm transition-all active:shadow-md">
-                                        <span className="text-[13px] font-bold">Dessert</span>
-                                        <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-500">
-                                            8
-                                        </span>
-                                    </button>
-                                    <button className="flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-gray-600 shadow-sm transition-all active:shadow-md">
-                                        <span className="text-[13px] font-bold">Appetizer</span>
-                                        <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-500">
-                                            8
-                                        </span>
-                                    </button>
+                                    {categories.map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => setSelectedCategoryId(cat.id)}
+                                            className={`flex h-11 items-center gap-2 rounded-xl px-4 transition-all active:shadow-md ${selectedCategoryId === cat.id ? 'bg-brand-accent text-black shadow-md' : 'bg-white text-gray-600 shadow-sm'}`}
+                                        >
+                                            <span className="text-[13px] font-bold">
+                                                {cat.name}
+                                            </span>
+                                            <span
+                                                className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${selectedCategoryId === cat.id ? 'bg-black/10 text-black' : 'bg-gray-100 text-gray-500'}`}
+                                            >
+                                                {
+                                                    menuItems.filter(i => i.category_id === cat.id)
+                                                        .length
+                                                }
+                                            </span>
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 
@@ -166,174 +311,100 @@ export default function WaiterPosPage() {
 
                         {/* Cards Grid - 5 cards per row, optimized for tablet touch */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-                            {/* Card 1 */}
-                            <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200">
-                                <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <Image
-                                        src="https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&q=80&w=600"
-                                        alt="Butter Chicken"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
+                            {isLoadingMenu ? (
+                                <div className="col-span-full flex h-64 items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                                 </div>
-                                <div className="flex flex-col gap-2 p-3">
-                                    <div className="flex items-start justify-between pt-0.5">
-                                        <h3 className="text-body truncate pr-1 leading-tight font-bold text-[#000000]">
-                                            Butter Chicken
-                                        </h3>
-                                        <span className="shrink-0 text-[13px] font-bold text-[#000000]">
-                                            450 Br.
-                                        </span>
-                                    </div>
-                                    <button className="bg-brand-accent mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-bold text-black shadow-sm transition-all duration-200 active:brightness-105">
-                                        <Plus className="h-3.5 w-3.5" />
-                                        Add to Cart
-                                    </button>
+                            ) : filteredItems.length === 0 ? (
+                                <div className="col-span-full flex h-64 flex-col items-center justify-center gap-2 text-center text-gray-400">
+                                    <Inbox className="h-12 w-12" />
+                                    <p className="font-bold">No dishes found</p>
                                 </div>
-                            </div>
+                            ) : (
+                                filteredItems.map(item => {
+                                    const inCart = cart.items.find(i => i.menuItemId === item.id);
+                                    const quantity = inCart?.quantity || 0;
 
-                            {/* Card 2 (In Cart) */}
-                            <div className="group ring-brand-accent/30 active:ring-brand-accent/60 relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 transition-all duration-200">
-                                <div className="bg-brand-accent absolute top-2 left-2 z-10 flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold text-black shadow-sm">
-                                    x1 in Cart
-                                </div>
-                                <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <Image
-                                        src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&q=80&w=600"
-                                        alt="French Fries"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
-                                </div>
-                                <div className="flex flex-col gap-2 p-3">
-                                    <div className="flex items-start justify-between pt-0.5">
-                                        <h3 className="text-body truncate pr-1 leading-tight font-bold text-[#000000]">
-                                            French Fries
-                                        </h3>
-                                        <span className="shrink-0 text-[13px] font-bold text-[#000000]">
-                                            120 Br.
-                                        </span>
-                                    </div>
-                                    <button className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-100 bg-gray-50 py-2.5 text-[13px] font-bold text-[#000000] transition-all duration-200 active:bg-gray-100">
-                                        Add More ( 1 )
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Card 3 */}
-                            <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md transition-all duration-200">
-                                <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <Image
-                                        src="https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&q=80&w=600"
-                                        alt="Roast Beef"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
-                                </div>
-                                <div className="flex flex-col gap-2 p-3">
-                                    <div className="flex items-start justify-between pt-0.5">
-                                        <h3 className="text-body truncate pr-1 leading-tight font-bold text-[#000000]">
-                                            Roast Beef
-                                        </h3>
-                                        <span className="shrink-0 text-[13px] font-bold text-[#000000]">
-                                            950 Br.
-                                        </span>
-                                    </div>
-                                    <button className="bg-brand-accent mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-bold text-black shadow-sm transition-all duration-200 active:brightness-105">
-                                        <Plus className="h-3.5 w-3.5" />
-                                        Add to Cart
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Card 4 */}
-                            <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200">
-                                <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <Image
-                                        src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=600"
-                                        alt="Sauerkraut"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
-                                </div>
-                                <div className="flex flex-col gap-2 p-3">
-                                    <div className="flex items-start justify-between pt-0.5">
-                                        <h3 className="text-body truncate pr-1 leading-tight font-bold text-[#000000]">
-                                            Sauerkraut
-                                        </h3>
-                                        <span className="shrink-0 text-[13px] font-bold text-[#000000]">
-                                            220 Br.
-                                        </span>
-                                    </div>
-                                    <button className="bg-brand-accent mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-bold text-black shadow-sm transition-all duration-200 active:brightness-105">
-                                        <Plus className="h-3.5 w-3.5" />
-                                        Add to Cart
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Card 5 (Unavailable) */}
-                            <div className="group relative flex cursor-not-allowed flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white opacity-[0.85] shadow-sm grayscale-[20%] transition-all duration-200">
-                                <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <Image
-                                        src="https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&q=80&w=600"
-                                        alt="Beef Kebab"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
-                                </div>
-                                <div className="flex flex-col gap-2 p-3">
-                                    <div className="flex items-start justify-between pt-0.5">
-                                        <h3 className="text-body truncate pr-1 leading-tight font-bold text-gray-700">
-                                            Beef Kebab
-                                        </h3>
-                                        <span className="shrink-0 text-[13px] font-bold text-gray-500 line-through">
-                                            480 Br.
-                                        </span>
-                                    </div>
-                                    <button className="mt-1 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-100 py-2.5 text-[13px] font-bold text-gray-500">
-                                        <X className="h-3.5 w-3.5" />
-                                        Not Available
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Card 6 */}
-                            <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200">
-                                <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <Image
-                                        src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg"
-                                        alt="Fish and Chips"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
-                                </div>
-                                <div className="flex flex-col gap-2 p-3">
-                                    <div className="flex items-start justify-between pt-0.5">
-                                        <h3 className="text-body truncate pr-1 leading-tight font-bold text-[#000000]">
-                                            Fish and Chips
-                                        </h3>
-                                        <span className="shrink-0 text-[13px] font-bold text-[#000000]">
-                                            520 Br.
-                                        </span>
-                                    </div>
-                                    <button className="bg-brand-accent mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-bold text-black shadow-sm transition-all duration-200 active:brightness-105">
-                                        <Plus className="h-3.5 w-3.5" />
-                                        Add to Cart
-                                    </button>
-                                </div>
-                            </div>
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className={`group relative flex flex-col overflow-hidden rounded-2xl bg-white transition-all duration-200 ${quantity > 0 ? 'ring-brand-accent/30 shadow-md ring-1' : 'border border-gray-100 shadow-sm'}`}
+                                        >
+                                            {quantity > 0 && (
+                                                <div className="bg-brand-accent absolute top-2 left-2 z-10 flex h-9 items-center justify-center rounded-xl px-4 text-xs font-bold text-black shadow-sm">
+                                                    x{quantity} in Cart
+                                                </div>
+                                            )}
+                                            <div className="relative h-32 w-full shrink-0 bg-gray-50">
+                                                <Image
+                                                    src={
+                                                        item.image_url ||
+                                                        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600'
+                                                    }
+                                                    alt={item.name}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                                <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
+                                            </div>
+                                            <div className="flex flex-col gap-2 p-3">
+                                                <div className="flex items-start justify-between pt-0.5">
+                                                    <h3 className="text-body truncate pr-1 leading-tight font-bold text-[#000000]">
+                                                        {item.name}
+                                                    </h3>
+                                                    <span className="shrink-0 text-[13px] font-bold text-[#000000]">
+                                                        {(item.price / 100).toLocaleString()} Br.
+                                                    </span>
+                                                </div>
+                                                {!item.is_available ? (
+                                                    <button className="mt-1 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-100 py-2.5 text-[13px] font-bold text-gray-500">
+                                                        <X className="h-3.5 w-3.5" />
+                                                        Not Available
+                                                    </button>
+                                                ) : quantity > 0 ? (
+                                                    <button
+                                                        onClick={() =>
+                                                            cart.addToCart({
+                                                                menuItemId: item.id,
+                                                                title: item.name,
+                                                                price: item.price / 100,
+                                                                quantity: 1,
+                                                                image: item.image_url || undefined,
+                                                                course: item.course || 'Food',
+                                                            })
+                                                        }
+                                                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-100 bg-gray-50 py-2.5 text-[13px] font-bold text-[#000000] transition-all duration-200 active:bg-gray-100"
+                                                    >
+                                                        Add More ( {quantity} )
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() =>
+                                                            cart.addToCart({
+                                                                menuItemId: item.id,
+                                                                title: item.name,
+                                                                price: item.price / 100,
+                                                                quantity: 1,
+                                                                image: item.image_url || undefined,
+                                                                course: item.course || 'Food',
+                                                            })
+                                                        }
+                                                        className="bg-brand-accent mt-1 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-bold text-black shadow-sm transition-all duration-200 active:brightness-105"
+                                                    >
+                                                        <Plus className="h-3.5 w-3.5" />
+                                                        Add to Cart
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
                         {/* Concentrated POS Terminal (Outer card removed, layout structure restored) */}
                         {showSplitPayment && (
                             <div
-                                className="animate-in fade-in absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/10 backdrop-blur-sm duration-300"
+                                className="animate-in fade-in absolute inset-0 z-100 flex flex-col items-center justify-center bg-black/10 backdrop-blur-sm duration-300"
                                 onClick={() => setShowSplitPayment(false)}
                             >
                                 {/* Layout Wrapper - Max Width stays the same but no bg card */}
@@ -477,7 +548,7 @@ export default function WaiterPosPage() {
                                                     </h4>
 
                                                     <div className="relative mb-6 p-1.5">
-                                                        <div className="absolute inset-0 rounded-[2rem] bg-black/3 blur-[40px]" />
+                                                        <div className="absolute inset-0 rounded-4xl bg-black/3 blur-2xl" />
                                                         <div className="relative rounded-[1.5rem] border border-black/3 bg-white p-6 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.08)]">
                                                             <QRCodeSVG
                                                                 value={`https://gebeta.app/pay/B12309?mode=split&count=${splitCount}&guest=${activeGuestId}`}
@@ -547,188 +618,92 @@ export default function WaiterPosPage() {
                         </div>
 
                         {/* Order Items - Grouped by Course */}
-                        <div className="no-scrollbar bg-surface-50 flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-2">
-                            {/* Section: Drinks */}
-                            <div className="flex flex-col gap-4 pt-4">
-                                <div className="flex items-center">
-                                    <h3 className="text-base leading-tight font-bold text-[#000000]">
-                                        Drinks
-                                    </h3>
-                                </div>
-                                <div className="flex flex-col gap-6">
-                                    {/* Item 1 */}
-                                    <div className="group relative flex cursor-pointer items-start gap-4 border-b border-gray-100/50 pb-6 last:border-0">
-                                        <div className="relative">
-                                            <Image
-                                                src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&q=80&w=200"
-                                                alt="French Fries"
-                                                width={60}
-                                                height={60}
-                                                className="shrink-0 rounded-[1rem] object-cover shadow-sm"
-                                            />
-                                            <div className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black text-[10px] font-bold text-white shadow-sm">
-                                                1
+                        <div className="bg-surface-50 flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-2">
+                            {Object.entries(groupedCartItems).map(([course, items]) => (
+                                <div key={course} className="flex flex-col gap-4 pt-4">
+                                    <div className="flex items-center">
+                                        <h3 className="text-base leading-tight font-bold text-[#000000]">
+                                            {course}
+                                        </h3>
+                                    </div>
+                                    <div className="flex flex-col gap-6">
+                                        {items.map(item => (
+                                            <div
+                                                key={item.uniqueId}
+                                                className="group relative flex cursor-pointer items-start gap-4 border-b border-gray-100/50 pb-6 last:border-0"
+                                            >
+                                                {/* Fixed image wrapper - Fixes "messed up" issue */}
+                                                <div className="relative h-15 w-15 shrink-0 overflow-hidden rounded-[1rem] shadow-sm">
+                                                    <Image
+                                                        src={
+                                                            item.image ||
+                                                            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=200'
+                                                        }
+                                                        alt={item.title}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                    <div className="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black text-[10px] font-bold text-white shadow-sm">
+                                                        {item.quantity}
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-1 flex-col py-0.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="text-base leading-tight font-bold text-[#000000]">
+                                                            {item.title}
+                                                        </h4>
+                                                        <span className="text-sm font-semibold text-gray-400">
+                                                            x{item.quantity}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-1 flex flex-col gap-1">
+                                                        <p
+                                                            className={`text-caption flex items-center gap-1.5 leading-tight font-bold ${item.instructions ? 'text-red-600' : 'text-gray-500'}`}
+                                                        >
+                                                            <MessageSquare className="h-3 w-3" />
+                                                            Notes: {item.instructions || 'None'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="ml-2 flex shrink-0 flex-col items-end gap-3 pt-0.5">
+                                                    <div className="text-body font-bold text-[#000000]">
+                                                        {(
+                                                            item.price * item.quantity
+                                                        ).toLocaleString(undefined, {
+                                                            minimumFractionDigits: 2,
+                                                        })}{' '}
+                                                        Br.
+                                                    </div>
+                                                    <div className="flex items-center gap-3 text-gray-400">
+                                                        <button
+                                                            onClick={() => {}}
+                                                            className="text-gray-400 transition-colors active:text-black"
+                                                            aria-label="Edit"
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                cart.removeFromCart(item.uniqueId)
+                                                            }
+                                                            className="text-gray-400 transition-colors active:text-red-500"
+                                                            aria-label="Delete"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex flex-1 flex-col py-0.5">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-base leading-tight font-bold text-[#000000]">
-                                                    Iced Tea
-                                                </h4>
-                                                <span className="text-sm font-semibold text-gray-400">
-                                                    x1
-                                                </span>
-                                            </div>
-                                            <div className="mt-1 flex flex-col gap-1">
-                                                <p className="text-caption flex items-center gap-1.5 leading-tight font-semibold text-gray-500">
-                                                    <MessageSquare className="h-3 w-3 text-gray-400" />
-                                                    Notes: None
-                                                </p>
-                                                <p className="text-caption leading-tight font-semibold text-gray-400">
-                                                    Size: None
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="ml-2 flex shrink-0 flex-col items-end gap-3 pt-0.5">
-                                            <div className="text-body font-bold text-[#000000]">
-                                                120.00 Br.
-                                            </div>
-                                            <div className="flex items-center gap-3 text-gray-400">
-                                                <button
-                                                    className="text-gray-400 transition-colors active:text-black"
-                                                    aria-label="Edit"
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className="text-gray-400 transition-colors active:text-red-500"
-                                                    aria-label="Delete"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Section: Food */}
-                            <div className="flex flex-col gap-4">
-                                <div className="flex items-center">
-                                    <h3 className="text-base leading-tight font-bold text-[#000000]">
-                                        Food
-                                    </h3>
+                            ))}
+                            {cart.items.length === 0 && (
+                                <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20 text-center opacity-30">
+                                    <BookOpen className="h-16 w-16" />
+                                    <p className="text-lg font-bold">Your cart is empty</p>
                                 </div>
-                                <div className="flex flex-col gap-6">
-                                    {/* Item 2 */}
-                                    <div className="group relative flex cursor-pointer items-start gap-4 border-b border-gray-100/50 pb-6 last:border-0">
-                                        <div className="relative">
-                                            <Image
-                                                src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&q=80&w=200"
-                                                alt="Wagyu Steak"
-                                                width={60}
-                                                height={60}
-                                                className="shrink-0 rounded-[1rem] object-cover shadow-sm"
-                                            />
-                                            <div className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black text-[10px] font-bold text-white shadow-sm">
-                                                2
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-1 flex-col py-0.5">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-base leading-tight font-bold text-[#000000]">
-                                                    Wagyu Steak
-                                                </h4>
-                                                <span className="text-sm font-semibold text-gray-400">
-                                                    x1
-                                                </span>
-                                            </div>
-                                            <div className="mt-1 flex flex-col gap-1">
-                                                <p className="text-caption flex items-center gap-1.5 leading-tight font-bold text-red-600">
-                                                    <MessageSquare className="h-3 w-3" />
-                                                    Notes: ALLERGY - Peanuts
-                                                </p>
-                                                <p className="text-caption leading-tight font-semibold text-gray-400">
-                                                    Size: Small
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="ml-2 flex shrink-0 flex-col items-end gap-3 pt-0.5">
-                                            <div className="text-body font-bold text-[#000000]">
-                                                1,450.00 Br.
-                                            </div>
-                                            <div className="flex items-center gap-3 text-gray-400">
-                                                <button
-                                                    className="text-gray-400 transition-colors active:text-black"
-                                                    aria-label="Edit"
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className="text-gray-400 transition-colors active:text-red-500"
-                                                    aria-label="Delete"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Item 3 */}
-                                    <div className="group relative flex cursor-pointer items-start gap-4 pb-4 last:border-0">
-                                        <div className="relative">
-                                            <Image
-                                                src="https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&q=80&w=200"
-                                                alt="Chicken Ramen"
-                                                width={60}
-                                                height={60}
-                                                className="shrink-0 rounded-[1rem] object-cover shadow-sm"
-                                            />
-                                            <div className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black text-[10px] font-bold text-white shadow-sm">
-                                                1
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-1 flex-col py-0.5">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-base leading-tight font-bold text-[#000000]">
-                                                    Chicken Ramen
-                                                </h4>
-                                                <span className="text-sm font-semibold text-gray-400">
-                                                    x1
-                                                </span>
-                                            </div>
-                                            <div className="mt-1 flex flex-col gap-1">
-                                                <p className="text-caption flex items-center gap-1.5 leading-tight font-bold text-red-600">
-                                                    <MessageSquare className="h-3 w-3" />
-                                                    Notes: NO Green Onions
-                                                </p>
-                                                <p className="text-caption leading-tight font-semibold text-gray-400">
-                                                    Size: Medium
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="ml-2 flex shrink-0 flex-col items-end gap-3 pt-0.5">
-                                            <div className="text-body font-bold text-[#000000]">
-                                                580.00 Br.
-                                            </div>
-                                            <div className="flex items-center gap-3 text-gray-400">
-                                                <button
-                                                    className="text-gray-400 transition-colors active:text-black"
-                                                    aria-label="Edit"
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    className="text-gray-400 transition-colors active:text-red-500"
-                                                    aria-label="Delete"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Footer Summary Area */}
@@ -797,28 +772,53 @@ export default function WaiterPosPage() {
                             <div className="flex flex-col gap-3">
                                 <div className="text-body flex items-center justify-between">
                                     <span className="font-semibold text-gray-600">Subtotal</span>
-                                    <span className="font-bold text-[#000000]">2,150.00 Br.</span>
+                                    <span className="font-bold text-[#000000]">
+                                        {cart.total.toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                        })}{' '}
+                                        Br.
+                                    </span>
                                 </div>
                                 <div className="text-body flex items-center justify-between">
-                                    <span className="font-semibold text-gray-600">Taxes</span>
-                                    <span className="font-bold text-[#000000]">322.00 Br.</span>
+                                    <span className="font-semibold text-gray-600">Taxes (15%)</span>
+                                    <span className="font-bold text-[#000000]">
+                                        {(cart.total * 0.15).toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                        })}{' '}
+                                        Br.
+                                    </span>
                                 </div>
                                 <div className="text-body flex items-center justify-between">
-                                    <span className="font-semibold text-gray-600">Discount</span>
-                                    <span className="font-bold text-emerald-600">-150.00 Br.</span>
+                                    <span className="font-semibold text-gray-600">Total</span>
+                                    <span className="text-xl font-black text-[#000000]">
+                                        {totalWithTax.toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                        })}{' '}
+                                        Br.
+                                    </span>
                                 </div>
                             </div>
 
                             {/* Action Buttons: Discount and Pay */}
                             <div className="mt-3 flex w-full gap-3">
-                                <button className="text-body-sm h-14 flex-1 rounded-xl border-2 border-gray-200 font-bold text-gray-700 transition-all duration-300 active:bg-gray-50">
+                                <button
+                                    onClick={() => {}}
+                                    className="text-body-sm h-14 flex-1 rounded-xl border-2 border-gray-200 font-bold text-gray-700 transition-all duration-300 active:bg-gray-50"
+                                >
                                     Discount
                                 </button>
                                 <button
-                                    onClick={() => setShowSplitPayment(true)}
-                                    className="bg-brand-accent text-body-sm h-14 flex-1 rounded-xl font-bold text-black shadow-sm transition-all duration-200 active:brightness-105"
+                                    onClick={() =>
+                                        cart.items.length > 0 && setShowSplitPayment(true)
+                                    }
+                                    disabled={cart.items.length === 0}
+                                    className={`text-body-sm h-14 flex-1 rounded-xl font-bold transition-all duration-200 ${cart.items.length > 0 ? 'bg-brand-accent text-black shadow-sm active:brightness-105' : 'cursor-not-allowed bg-gray-100 text-gray-400'}`}
                                 >
-                                    Pay 2,322.00 Br.
+                                    Pay{' '}
+                                    {totalWithTax.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                    })}{' '}
+                                    Br.
                                 </button>
                             </div>
                         </div>

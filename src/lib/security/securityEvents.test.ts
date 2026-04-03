@@ -41,6 +41,7 @@ describe('securityEvents', () => {
         it('inserts a record with the correct action prefix', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
             const db = makeDb({ insert: insertMock });
+
             vi.mocked(createClient).mockResolvedValue(db as any);
 
             await logSecurityEvent(baseEvent);
@@ -53,6 +54,7 @@ describe('securityEvents', () => {
         it('uses "anonymous" as entity_id when userId is not provided', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
             const db = makeDb({ insert: insertMock });
+
             vi.mocked(createClient).mockResolvedValue(db as any);
 
             await logSecurityEvent({ ...baseEvent, userId: undefined });
@@ -65,6 +67,7 @@ describe('securityEvents', () => {
         it('uses userId as entity_id when provided', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
             const db = makeDb({ insert: insertMock });
+
             vi.mocked(createClient).mockResolvedValue(db as any);
 
             await logSecurityEvent({ ...baseEvent, userId: 'user-123', severity: 'low' });
@@ -77,6 +80,7 @@ describe('securityEvents', () => {
         it('includes restaurantId in insert when provided', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
             const db = makeDb({ insert: insertMock });
+
             vi.mocked(createClient).mockResolvedValue(db as any);
 
             await logSecurityEvent({ ...baseEvent, restaurantId: 'rest-1', severity: 'low' });
@@ -90,6 +94,7 @@ describe('securityEvents', () => {
             const db = makeDb({
                 insert: vi.fn().mockResolvedValue({ error: { message: 'DB fail' } }),
             });
+
             vi.mocked(createClient).mockResolvedValue(db as any);
 
             await expect(logSecurityEvent(baseEvent)).resolves.not.toThrow();
@@ -97,6 +102,7 @@ describe('securityEvents', () => {
 
         it('triggers alert for critical severity immediately', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
+
             vi.mocked(createClient).mockResolvedValue(makeDb({ insert: insertMock }) as any);
 
             await logSecurityEvent({ ...baseEvent, severity: 'critical' });
@@ -137,6 +143,7 @@ describe('securityEvents', () => {
                     insert: vi.fn().mockResolvedValue({ error: null }),
                 }),
             };
+
             vi.mocked(createClient).mockResolvedValue(db as any);
 
             const result = await detectBruteForce('user@example.com', 'login');
@@ -145,6 +152,7 @@ describe('securityEvents', () => {
 
         it('returns true when at or above threshold', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
+
             vi.mocked(createClient).mockResolvedValue({
                 from: vi.fn().mockImplementation(() => ({
                     select: vi.fn().mockReturnThis(),
@@ -208,6 +216,7 @@ describe('securityEvents', () => {
 
         it('returns invalid and logs event when no staff record', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
+
             vi.mocked(createClient).mockResolvedValue({
                 from: vi.fn().mockImplementation(() => ({
                     select: vi.fn().mockReturnThis(),
@@ -245,6 +254,7 @@ describe('securityEvents', () => {
     describe('logInvalidSignatureAttempt', () => {
         it('logs with type invalid_signature_attempt', async () => {
             const insertMock = vi.fn().mockResolvedValue({ error: null });
+
             vi.mocked(createClient).mockResolvedValue({
                 from: vi.fn().mockReturnValue({
                     select: vi.fn().mockReturnThis(),

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
+import { getCacheHeaders, CACHE_PRESETS } from '@/lib/api/cache';
 
 type AttentionItem = {
     id: string;
@@ -316,34 +317,38 @@ export async function GET(request: NextRequest) {
         }
 
         responseStatus = 200;
-        return apiSuccess({
-            restaurant_id: restaurantId,
-            metrics: {
-                orders_in_flight: ordersInFlight,
-                avg_ticket_time_minutes: avgTicketMinutes,
-                active_tables: activeTables,
-                open_requests: openRequests,
-                payment_success_rate: paymentSuccessRate,
-                gross_sales_today: grossSales,
-                gross_sales_previous: grossSalesPrevious,
-                total_orders_today: orders.length,
-                avg_order_value_etb: avgOrderValue,
-                unique_tables_today: uniqueTablesToday,
+        return apiSuccess(
+            {
+                restaurant_id: restaurantId,
+                metrics: {
+                    orders_in_flight: ordersInFlight,
+                    avg_ticket_time_minutes: avgTicketMinutes,
+                    active_tables: activeTables,
+                    open_requests: openRequests,
+                    payment_success_rate: paymentSuccessRate,
+                    gross_sales_today: grossSales,
+                    gross_sales_previous: grossSalesPrevious,
+                    total_orders_today: orders.length,
+                    avg_order_value_etb: avgOrderValue,
+                    unique_tables_today: uniqueTablesToday,
+                },
+                attention_queue: attentionQueue,
+                chart_data: chartPoints,
+                alert_summary: {
+                    open_alerts: alerts.length,
+                },
+                filters: {
+                    range,
+                    since: sinceIso,
+                },
+                sync_status: {
+                    generated_at: new Date().toISOString(),
+                    source: 'postgres',
+                },
             },
-            attention_queue: attentionQueue,
-            chart_data: chartPoints,
-            alert_summary: {
-                open_alerts: alerts.length,
-            },
-            filters: {
-                range,
-                since: sinceIso,
-            },
-            sync_status: {
-                generated_at: new Date().toISOString(),
-                source: 'postgres',
-            },
-        });
+            200,
+            getCacheHeaders(CACHE_PRESETS.dashboard)
+        );
     } catch (error) {
         responseStatus = 500;
         return apiError(

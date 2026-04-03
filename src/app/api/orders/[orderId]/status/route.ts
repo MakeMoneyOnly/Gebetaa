@@ -154,7 +154,9 @@ export async function PATCH(
             .from('orders')
             .update(updatePayload)
             .eq('id', order.id)
-            .select('*')
+            .select(
+                'id, restaurant_id, status, kitchen_status, order_number, customer_phone, acknowledged_at, completed_at, created_at, updated_at'
+            )
             .single();
 
         if (updateError || !updatedOrder) {

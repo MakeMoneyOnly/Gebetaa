@@ -93,7 +93,7 @@ export function getConnectionPoolConfig(): ConnectionPoolConfig {
  * @param mode - The pooling mode to use
  * @returns The connection URL with pooling enabled
  */
-export function getPooledConnectionUrl(mode: 'transaction' | 'session' = 'transaction'): string {
+export function getPooledConnectionUrl(_mode: 'transaction' | 'session' = 'transaction'): string {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
     if (!supabaseUrl) {

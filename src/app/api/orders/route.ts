@@ -98,7 +98,7 @@
  *       429:
  *         description: Rate limit exceeded
  */
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { CreateOrderSchema } from '@/lib/validators/order';
@@ -318,9 +318,11 @@ export async function POST(request: NextRequest) {
         const parsed = CreateOrderRequestSchema.safeParse(body);
 
         if (!parsed.success) {
-            return NextResponse.json(
-                { error: 'Invalid request payload', details: parsed.error.flatten() },
-                { status: 400 }
+            return apiError(
+                'Invalid request payload',
+                400,
+                'VALIDATION_ERROR',
+                parsed.error.flatten()
             );
         }
 
@@ -344,16 +346,10 @@ export async function POST(request: NextRequest) {
                 .maybeSingle();
 
             if (restaurantError) {
-                return NextResponse.json(
-                    { error: 'Failed to resolve restaurant' },
-                    { status: 500 }
-                );
+                return apiError('Failed to resolve restaurant', 500, 'RESTAURANT_RESOLVE_FAILED');
             }
             if (!restaurant || restaurant.is_active === false) {
-                return NextResponse.json(
-                    { error: 'Restaurant not found or inactive' },
-                    { status: 404 }
-                );
+                return apiError('Restaurant not found or inactive', 404, 'RESTAURANT_NOT_FOUND');
             }
             restaurantId = restaurant.id;
             // Represent the order type as the table label for legacy display
@@ -367,9 +363,10 @@ export async function POST(request: NextRequest) {
             // ── Dine-in: full QR validation via resolveGuestContext ──
             const guestContext = await resolveGuestContext(supabase, parsed.data.guest_context);
             if (!guestContext.valid) {
-                return NextResponse.json(
-                    { error: guestContext.reason },
-                    { status: guestContext.status }
+                return apiError(
+                    guestContext.reason ?? 'Invalid guest context',
+                    guestContext.status ?? 401,
+                    'INVALID_GUEST_CONTEXT'
                 );
             }
             restaurantId = guestContext.data.restaurantId;
@@ -381,18 +378,17 @@ export async function POST(request: NextRequest) {
 
         const rateLimit = await checkRateLimit(supabase, fingerprint);
         if (!rateLimit.allowed) {
-            return NextResponse.json(
-                {
-                    error: 'Rate limit exceeded. Please wait before placing another order.',
-                    remainingOrders: rateLimit.remainingOrders ?? 0,
-                },
-                { status: 429 }
+            return apiError(
+                'Rate limit exceeded. Please wait before placing another order.',
+                429,
+                'RATE_LIMITED',
+                { remainingOrders: rateLimit.remainingOrders ?? 0 }
             );
         }
 
         const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
         if (explicitIdempotencyKey && !isIdempotencyKeyValid(explicitIdempotencyKey)) {
-            return NextResponse.json({ error: 'Invalid idempotency key' }, { status: 400 });
+            return apiError('Invalid idempotency key', 400, 'INVALID_IDEMPOTENCY_KEY');
         }
 
         const idempotencyKey =
@@ -431,9 +427,10 @@ export async function POST(request: NextRequest) {
                       },
                   };
         } catch (error) {
-            return NextResponse.json(
-                { error: error instanceof Error ? error.message : 'Failed to validate discount' },
-                { status: 400 }
+            return apiError(
+                error instanceof Error ? error.message : 'Failed to validate discount',
+                400,
+                'DISCOUNT_VALIDATION_FAILED'
             );
         }
 
@@ -454,7 +451,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!result.success) {
-            return NextResponse.json({ error: result.error }, { status: 400 });
+            return apiError(result.error ?? 'Failed to create order', 400, 'ORDER_CREATE_FAILED');
         }
 
         let campaignAttributionApplied = false;
@@ -547,20 +544,18 @@ export async function POST(request: NextRequest) {
             })
         );
 
-        return NextResponse.json(
+        return apiSuccess(
             {
-                data: {
-                    id: result.order.id,
-                    order_number: result.order.order_number,
-                    status: result.order.status,
-                    idempotency_key: idempotencyKey,
-                    campaign_attribution_applied: campaignAttributionApplied,
-                },
+                id: result.order.id,
+                order_number: result.order.order_number,
+                status: result.order.status,
+                idempotency_key: idempotencyKey,
+                campaign_attribution_applied: campaignAttributionApplied,
             },
-            { status: 201 }
+            201
         );
     } catch (error) {
         logger.error('[POST /api/orders] failed', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return apiError('Internal server error', 500, 'INTERNAL_ERROR');
     }
 }

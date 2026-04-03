@@ -57,8 +57,23 @@ export async function getNativeDeviceInfo(): Promise<NativeDeviceInfo> {
         return defaultInfo;
     }
 
+    interface CapacitorDeviceInfo {
+        osVersion?: string;
+        operatingSystem?: string;
+        appVersion?: string;
+        batteryLevel?: number;
+    }
+    interface CapacitorDeviceInfo {
+        osVersion?: string;
+        operatingSystem?: string;
+        appVersion?: string;
+        batteryLevel?: number;
+    }
     const deviceModule = await importOptionalModule<{
-        Device?: { getId: () => Promise<{ identifier?: string }>; getInfo: () => Promise<any> };
+        Device?: {
+            getId: () => Promise<{ identifier?: string }>;
+            getInfo: () => Promise<CapacitorDeviceInfo>;
+        };
     }>('@capacitor/device');
 
     if (!deviceModule?.Device) {

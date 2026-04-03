@@ -28,6 +28,17 @@ export interface FiscalSubmissionResult {
     raw?: Record<string, unknown> | null;
 }
 
+export class FiscalSubmissionError extends Error {
+    constructor(
+        message: string,
+        public readonly code: 'network' | 'rejected',
+        public readonly offlineFallbackAllowed: boolean
+    ) {
+        super(message);
+        this.name = 'FiscalSubmissionError';
+    }
+}
+
 export function isMorLiveConfigured(): boolean {
     return Boolean(process.env.MOR_FISCAL_API_URL && process.env.MOR_FISCAL_API_KEY);
 }
@@ -50,20 +61,31 @@ export async function submitFiscalTransaction(
         };
     }
 
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(request),
-    });
+    let response: Response;
+    try {
+        response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify(request),
+        });
+    } catch (error) {
+        throw new FiscalSubmissionError(
+            error instanceof Error ? error.message : 'MoR fiscal submission failed',
+            'network',
+            true
+        );
+    }
 
     const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
 
     if (!response.ok) {
-        throw new Error(
-            String(payload?.error ?? payload?.message ?? 'MoR fiscal submission failed')
+        throw new FiscalSubmissionError(
+            String(payload?.error ?? payload?.message ?? 'MoR fiscal submission failed'),
+            'rejected',
+            false
         );
     }
 

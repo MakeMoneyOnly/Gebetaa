@@ -5,7 +5,7 @@
  * while using PowerSync when available
  */
 
-import { getPowerSync } from '../sync/powersync-config';
+import { getPowerSync } from '@/lib/sync/powersync-config';
 
 /**
  * Get the offline KDS queue count

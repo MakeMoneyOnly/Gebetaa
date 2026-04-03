@@ -8,7 +8,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { testAlerts, areAlertsEnabled } from '../../../lib/monitoring';
+import { testAlerts, areAlertsEnabled } from '@/lib/monitoring';
 
 /**
  * GET /api/test-alerts

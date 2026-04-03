@@ -3,10 +3,10 @@ import { FOOD_ITEMS } from '@/lib/constants';
 import { FoodItemSchema } from '@/types/zod-schemas';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { getCacheHeaders, CACHE_PRESETS } from '@/lib/api/cache';
 
 export async function GET() {
     try {
-        // Validate the data against our schema to ensure consistency
         const validatedItems = z.array(FoodItemSchema).safeParse(FOOD_ITEMS);
 
         if (!validatedItems.success) {
@@ -14,7 +14,9 @@ export async function GET() {
             return NextResponse.json({ error: 'Data inconsistency' }, { status: 500 });
         }
 
-        return NextResponse.json(validatedItems.data);
+        return NextResponse.json(validatedItems.data, {
+            headers: getCacheHeaders(CACHE_PRESETS.menu),
+        });
     } catch (error) {
         logger.error('API Error', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -21,7 +21,7 @@ import { AppLocale, DEFAULT_APP_LOCALE } from './locale';
 /**
  * Translation key paths (nested object paths)
  */
-type TranslationKeys = typeof translations.en;
+type _TranslationKeys = typeof translations.en;
 
 /**
  * Deep partial type for incomplete translations

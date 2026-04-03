@@ -62,7 +62,9 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
             await Promise.all([
                 supabase
                     .from('orders')
-                    .select('*')
+                    .select(
+                        'id, restaurant_id, table_id, status, total_amount, currency, customer_name, customer_phone, notes, idempotency_key, created_at, updated_at'
+                    )
                     .eq('restaurant_id', restaurantId)
                     .eq('id', orderId)
                     .maybeSingle(),

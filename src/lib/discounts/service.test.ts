@@ -27,7 +27,6 @@ function makeSupabase(overrides: Record<string, unknown> = {}) {
     return {
         from: vi.fn().mockReturnValue({ ...defaultQueryBuilder, ...overrides }),
         auth: { getUser: vi.fn() },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 }
 

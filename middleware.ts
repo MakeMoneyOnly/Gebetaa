@@ -2,15 +2,18 @@ import { updateSession } from '@/lib/supabase/middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limit';
 import { detectApiVersion, getVersionedHeaders } from '@/lib/api/versioning';
 import { tracingMiddleware } from '@/lib/api/tracing';
+import { CSPBuilder, generateNonce } from '@/lib/security/nonce';
 import type { NextRequest } from 'next/server';
 
 /**
  * Content-Security-Policy configuration for P0 security requirements.
  *
+ * HIGH-022: CSP now uses nonce-based approach instead of unsafe-inline
+ *
  * CSP Directives:
  * - default-src 'self': Restrict all resources to same origin by default
- * - script-src 'self' 'unsafe-inline' 'unsafe-eval': Allow inline scripts and eval for Next.js SSR
- * - style-src 'self' 'unsafe-inline': Allow inline styles for CSS-in-JS and Next.js
+ * - script-src 'self' 'nonce-xxx' 'strict-dynamic': Allow scripts with valid nonce
+ * - style-src 'self' 'nonce-xxx': Allow styles with valid nonce
  * - img-src 'self' data: blob: https: Allow images from same origin, data URLs, blobs, and HTTPS sources
  * - connect-src 'self' https://*.supabase.co wss://*.supabase.co: Allow Supabase connections
  * - font-src 'self' data: https://fonts.gstatic.com: Allow Google Fonts
@@ -18,35 +21,13 @@ import type { NextRequest } from 'next/server';
  * - base-uri 'self': Restrict base tag to same origin
  * - form-action 'self': Restrict form submissions to same origin
  * - worker-src 'self' blob: Allow web workers for offline support (PWA)
+ *
+ * Note: unsafe-inline is replaced with nonce-based CSP for better security
+ * Scripts and styles must include the nonce attribute to be executed
  */
-const buildCSP = (isProduction: boolean): string => {
-    const directives = [
-        "default-src 'self'",
-        // Next.js requires 'unsafe-eval' for SSR and 'unsafe-inline' for dynamic styles/scripts
-        // In production, we could consider removing vercel.live but it's needed for some preview features
-        isProduction
-            ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-            : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        // blob: needed for image optimization, data: for inline images
-        "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.supabase.co https://grainy-gradients.vercel.app https://i.pravatar.cc https://api.dicebear.com",
-        // Supabase connections for auth and realtime
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-        // Google Fonts
-        "font-src 'self' data: https://fonts.gstatic.com",
-        // Prevent framing
-        "frame-ancestors 'none'",
-        // Restrict base tag
-        "base-uri 'self'",
-        // Restrict form submissions
-        "form-action 'self'",
-        // Web workers for PWA offline support
-        "worker-src 'self' blob:",
-        // Object-src for blob workers
-        "object-src 'none'",
-    ];
-
-    return directives.join('; ');
+const buildCSP = (nonce: string, isProduction: boolean): string => {
+    const builder = new CSPBuilder(nonce, isProduction);
+    return builder.build();
 };
 
 export async function middleware(request: NextRequest) {
@@ -61,7 +42,9 @@ export async function middleware(request: NextRequest) {
     if (rateLimitResponse) {
         // Rate limit exceeded - return rate limit response with security headers
         const isProduction = process.env.NODE_ENV === 'production';
-        const csp = buildCSP(isProduction);
+        // HIGH-022: Generate nonce for CSP
+        const nonce = generateNonce();
+        const csp = buildCSP(nonce, isProduction);
 
         rateLimitResponse.headers.set('Content-Security-Policy', csp);
         rateLimitResponse.headers.set('X-Content-Type-Options', 'nosniff');
@@ -84,11 +67,16 @@ export async function middleware(request: NextRequest) {
     // Determine if we're in production mode
     const isProduction = process.env.NODE_ENV === 'production';
 
-    // Build CSP header
-    const csp = buildCSP(isProduction);
+    // HIGH-022: Generate nonce for CSP (unique per request)
+    const nonce = generateNonce();
+
+    // Build CSP header with nonce
+    const csp = buildCSP(nonce, isProduction);
 
     // Add security headers
     supabaseResponse.headers.set('Content-Security-Policy', csp);
+    // HIGH-022: Expose nonce via header for Server Components to use
+    supabaseResponse.headers.set('x-csp-nonce', nonce);
     supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff');
     supabaseResponse.headers.set('X-Frame-Options', 'DENY');
     supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block');

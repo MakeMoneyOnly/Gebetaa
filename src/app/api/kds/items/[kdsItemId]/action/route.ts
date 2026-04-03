@@ -159,7 +159,9 @@ export async function POST(request: Request, context: { params: Promise<{ kdsIte
         .update(updatePayload)
         .eq('id', item.id)
         .eq('restaurant_id', restaurantContext.restaurantId)
-        .select('*')
+        .select(
+            'id, restaurant_id, order_id, order_item_id, station, status, name, quantity, notes, modifiers, last_action_by, last_action_at, started_at, held_at, ready_at, recalled_at, created_at, updated_at'
+        )
         .single();
 
     if (updateError || !updatedItem) {

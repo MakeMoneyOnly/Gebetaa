@@ -29,7 +29,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
     let serviceClient: SupabaseClient;
     let anonClient: SupabaseClient;
     let testRestaurantId: string;
-    let testUserId: string;
+    let _testUserId: string;
     let otherRestaurantId: string;
 
     beforeAll(async () => {
@@ -91,7 +91,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
 
     describe('restaurant_staff_with_users view', () => {
         it('should have security_invoker=on set', async () => {
-            const { data, error } = await serviceClient.rpc('exec_sql', {
+            const { data: _data, error } = await serviceClient.rpc('exec_sql', {
                 query: `
           SELECT reloptions 
           FROM pg_class 
@@ -111,7 +111,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
             // for restaurants where they are a staff member
 
             // For now, verify the view exists and has the expected structure
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('restaurant_staff_with_users')
                 .select('id, user_id, restaurant_id, role, email')
                 .limit(1);
@@ -124,19 +124,19 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
     describe('restaurant_plan_info view', () => {
         it('should have security_invoker=on set', async () => {
             // Verify the view exists and can be queried
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('restaurant_plan_info')
                 .select('id, slug, name, plan, has_pro_features')
                 .limit(5);
 
             expect(error).toBeNull();
-            expect(Array.isArray(data)).toBe(true);
+            expect(Array.isArray(_data)).toBe(true);
         });
 
         it('should respect RLS on restaurants table', async () => {
             // With security_invoker=on, anon/public users should only see
             // active restaurants (per the "Public Read Active Restaurants" policy)
-            const { data, error } = await anonClient
+            const { data: _data, error } = await anonClient
                 .from('restaurant_plan_info')
                 .select('id, slug, plan')
                 .eq('slug', 'test-restaurant-1-security-test');
@@ -167,7 +167,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
 
     describe('active_menu_items view', () => {
         it('should have security_invoker=on set', async () => {
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('active_menu_items')
                 .select('id, name, restaurant_id')
                 .limit(5);
@@ -191,7 +191,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
 
     describe('active_restaurants view', () => {
         it('should have security_invoker=on set', async () => {
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('active_restaurants')
                 .select('id, name')
                 .limit(5);
@@ -213,7 +213,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
 
     describe('active_tables view', () => {
         it('should have security_invoker=on set', async () => {
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('active_tables')
                 .select('id, table_number, restaurant_id')
                 .limit(5);
@@ -235,7 +235,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
 
     describe('active_restaurant_staff view', () => {
         it('should have security_invoker=on set', async () => {
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('active_restaurant_staff')
                 .select('id, user_id, restaurant_id, role')
                 .limit(5);
@@ -257,7 +257,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
 
     describe('delivery_partner_integrations view', () => {
         it('should have security_invoker=on set', async () => {
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('delivery_partner_integrations')
                 .select('id, restaurant_id, provider, status')
                 .limit(5);
@@ -268,7 +268,7 @@ describe.skipIf(!shouldRunTests)('View security_invoker Enforcement', () => {
         it('should respect RLS on delivery_partners table', async () => {
             // Staff should only see delivery partners for their restaurant
             // This would require authenticated user context to fully test
-            const { data, error } = await serviceClient
+            const { data: _data, error } = await serviceClient
                 .from('delivery_partner_integrations')
                 .select('*')
                 .limit(5);

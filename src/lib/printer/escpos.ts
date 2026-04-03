@@ -77,9 +77,25 @@ async function encodeWithOptionalLibrary(
     payload: EscPosReceiptPayload
 ): Promise<Uint8Array | null> {
     try {
+        interface ReceiptPrinterEncoderInstance {
+            initialize: () => void;
+            align: (alignment: string) => void;
+            line: (text: string) => void;
+            newline: () => void;
+            bold: (enabled: boolean) => void;
+            qrcode: (data: string) => void;
+            cut: () => void;
+            encode: () => Uint8Array;
+        }
+        interface EncoderModule {
+            default?: new (options: { language: string }) => ReceiptPrinterEncoderInstance;
+            ReceiptPrinterEncoder?: new (options: {
+                language: string;
+            }) => ReceiptPrinterEncoderInstance;
+        }
         const importer = new Function('moduleName', 'return import(moduleName);') as (
             value: string
-        ) => Promise<{ default?: any; ReceiptPrinterEncoder?: any }>;
+        ) => Promise<EncoderModule>;
         const encoderModule = await importer('@point-of-sale/receipt-printer-encoder');
         const ReceiptPrinterEncoder =
             encoderModule?.default ?? encoderModule?.ReceiptPrinterEncoder;

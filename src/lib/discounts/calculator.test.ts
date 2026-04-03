@@ -221,7 +221,7 @@ describe('calculateDiscount', () => {
         it('returns zero discount for unknown type', () => {
             const result = calculateDiscount(items, {
                 ...baseDiscount,
-                type: 'unknown_type' as any, // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                type: 'unknown_type' as any,
                 value: 100,
             });
             expect(result.discountAmount).toBe(0);

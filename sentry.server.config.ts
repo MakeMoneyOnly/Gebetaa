@@ -12,8 +12,7 @@ Sentry.init({
     // This is relative to tracesSampleRate
     profilesSampleRate: 0.1,
 
-    // Setting this option to true will print useful information to the console while you're setting up Sentry.
-    debug: process.env.NODE_ENV === 'development',
+    debug: false,
 
     // Set environment
     environment: process.env.NODE_ENV || 'development',
@@ -38,11 +37,6 @@ Sentry.init({
     replaysOnErrorSampleRate: 1.0,
 
     integrations: [
-        Sentry.replayIntegration({
-            // Additional Replay configuration goes in here
-            maskAllText: true,
-            blockAllMedia: true,
-        }),
         // Extra integrations for better error context
         Sentry.extraErrorDataIntegration(),
         Sentry.captureConsoleIntegration({

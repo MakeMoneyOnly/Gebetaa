@@ -29,6 +29,8 @@ export async function POST(request: Request) {
         const supabase = createServiceRoleClient();
 
         // Get guest
+        // NOTE: SELECT * is intentional here - verification requires phone/email columns
+        // that may be in a separate guest_contacts table or added via extension
         const { data: guest, error: guestError } = await supabase
             .from('guests')
             .select('*')
@@ -127,6 +129,7 @@ export async function PATCH(request: Request) {
         const supabase = createServiceRoleClient();
 
         // Get guest
+        // NOTE: SELECT * is intentional here - needs metadata and potential extension columns
         const { data: guest, error: guestError } = await supabase
             .from('guests')
             .select('*')

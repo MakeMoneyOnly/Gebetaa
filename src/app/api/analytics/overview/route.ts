@@ -5,6 +5,7 @@ import {
     getRangeStart,
     type AnalyticsRange,
 } from '@/lib/services/timescaleAnalyticsService';
+import { getCacheHeaders, CACHE_PRESETS } from '@/lib/api/cache';
 
 export async function GET(request: Request) {
     const auth = await getAuthenticatedUser();
@@ -204,25 +205,29 @@ export async function GET(request: Request) {
         ...data,
     }));
 
-    return apiSuccess({
-        range_start: since,
-        metrics: {
-            total_revenue: totalRevenue,
-            total_orders: totalOrders,
-            completed_orders: completedOrders,
-            previous_completed_orders: previousCompletedOrders,
-            pending_orders: pendingOrders,
-            open_requests: openRequests,
-            active_tables: activeTables,
-            total_tables: totalTables,
-            conversion_rate:
-                totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0,
-            avg_order_value: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0,
-            avg_rating: avgRating,
-            total_reviews: totalReviews,
-            reviews_this_week: reviewsThisWeek,
-            top_items: topItems,
-            trends: trends,
+    return apiSuccess(
+        {
+            range_start: since,
+            metrics: {
+                total_revenue: totalRevenue,
+                total_orders: totalOrders,
+                completed_orders: completedOrders,
+                previous_completed_orders: previousCompletedOrders,
+                pending_orders: pendingOrders,
+                open_requests: openRequests,
+                active_tables: activeTables,
+                total_tables: totalTables,
+                conversion_rate:
+                    totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0,
+                avg_order_value: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0,
+                avg_rating: avgRating,
+                total_reviews: totalReviews,
+                reviews_this_week: reviewsThisWeek,
+                top_items: topItems,
+                trends: trends,
+            },
         },
-    });
+        200,
+        getCacheHeaders(CACHE_PRESETS.analytics)
+    );
 }

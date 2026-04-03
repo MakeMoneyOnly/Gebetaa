@@ -11,7 +11,7 @@ import { resolveIdempotencyKey } from '@/lib/api/idempotency';
 import type { Json } from '@/types/database';
 import { redisRateLimiters } from '@/lib/security';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as _createClient } from '@/lib/supabase/server';
 
 const SplitMethodSchema = z.enum(['even', 'items', 'custom']);
 

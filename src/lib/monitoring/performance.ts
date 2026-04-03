@@ -9,7 +9,7 @@
  * @module lib/monitoring/performance
  */
 
-import { logger } from '../logger';
+import { logger } from '@/lib/logger';
 
 /**
  * Performance metric types

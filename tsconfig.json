@@ -31,5 +31,12 @@
         ".next/dev/types/**/*.ts",
         "**/*.mts"
     ],
-    "exclude": ["node_modules", "agent-skills-main", "fabrica", "SKILLS", "e2e"]
+    "exclude": [
+        "node_modules",
+        "agent-skills-main",
+        "fabrica",
+        "SKILLS",
+        "e2e",
+        ".next/types/validator.ts"
+    ]
 }

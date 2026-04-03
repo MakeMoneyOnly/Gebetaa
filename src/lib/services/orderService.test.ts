@@ -70,13 +70,11 @@ describe('orderService', () => {
         ];
 
         it('returns invalid when fetchItemsForValidation errors', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             vi.mocked(fetchItemsForValidation).mockResolvedValue({
                 data: null,
                 error: { message: 'DB error' } as any,
             });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await validateOrderItems(
                 {} as any,
                 items,
@@ -101,7 +99,6 @@ describe('orderService', () => {
                 error: null,
             });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await validateOrderItems({} as any, items, 250);
             expect(result.isValid).toBe(false);
             expect(result.error).toContain('Items not found');
@@ -130,7 +127,6 @@ describe('orderService', () => {
                 error: null,
             });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await validateOrderItems({} as any, items, 250);
             expect(result.isValid).toBe(false);
             expect(result.error).toContain('sold out');
@@ -159,7 +155,6 @@ describe('orderService', () => {
                 error: null,
             });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await validateOrderItems({} as any, items, 999); // wrong total
             expect(result.isValid).toBe(false);
             expect(result.error).toContain('Price mismatch');
@@ -188,7 +183,6 @@ describe('orderService', () => {
                 error: null,
             });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await validateOrderItems(
                 {} as any,
                 items,
@@ -222,7 +216,6 @@ describe('orderService', () => {
                 error: null,
             });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await validateOrderItems(
                 {} as any,
                 items,
@@ -240,16 +233,15 @@ describe('orderService', () => {
                         name: 'Injera',
                         price: 50,
                         is_available: true,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                         station: null as any,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                         course: null as any,
                     },
                 ],
                 error: null,
             });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await validateOrderItems(
                 {} as any,
                 [{ id: 'item-1', name: 'Injera', quantity: 2, price: 50 }],
@@ -271,7 +263,6 @@ describe('orderService', () => {
                 }),
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkRateLimit(supabase as any, 'fp-1');
             expect(result.allowed).toBe(true);
             expect(result.remainingOrders).toBe(3);
@@ -286,7 +277,6 @@ describe('orderService', () => {
                 }),
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkRateLimit(supabase as any, 'fp-1');
             expect(result.allowed).toBe(false);
             expect(result.remainingOrders).toBe(0);
@@ -301,7 +291,6 @@ describe('orderService', () => {
                 }),
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkRateLimit(supabase as any, 'fp-1');
             expect(result.allowed).toBe(true);
         });
@@ -315,7 +304,6 @@ describe('orderService', () => {
                 }),
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkRateLimit(supabase as any, 'fp-1', 10, 30);
             expect(result.allowed).toBe(true);
             expect(result.remainingOrders).toBe(7);
@@ -330,7 +318,6 @@ describe('orderService', () => {
                 }),
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkRateLimit(supabase as any, 'fp-1');
             expect(result.resetTime).toBeInstanceOf(Date);
         });
@@ -338,37 +325,31 @@ describe('orderService', () => {
 
     describe('checkDuplicateOrder', () => {
         it('returns null when no duplicate found', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({
                 data: null,
                 error: null,
             } as any);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkDuplicateOrder({} as any, 'idem-key-1');
             expect(result).toBeNull();
         });
 
         it('returns order data when duplicate found', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({
                 data: { id: 'order-1', status: 'pending' },
                 error: null,
             } as any);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkDuplicateOrder({} as any, 'idem-key-1');
             expect(result).toEqual({ id: 'order-1', status: 'pending' });
         });
 
         it('returns null when query errors', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             vi.mocked(getOrderByIdempotencyKey).mockResolvedValue({
                 data: null,
                 error: { message: 'DB error' } as any,
             } as any);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await checkDuplicateOrder({} as any, 'idem-key-1');
             expect(result).toBeNull();
         });

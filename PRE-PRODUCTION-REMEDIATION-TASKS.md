@@ -141,13 +141,22 @@
 
 ### HIGH-004: 19 Migrations Missing from Version Control
 
-- [ ] **Issue:** 19 migrations are tracked as missing from local version control, causing potential schema drift between environments.
-- [ ] **File:** `missing_migrations.json`
-- [ ] **Remediation:**
+- [x] **Issue:** 19 migrations are tracked as missing from local version control, causing potential schema drift between environments.
+- [x] **File:** `missing_migrations.json`
+- [x] **Remediation:**
     1. Reconcile migrations from remote Supabase project
     2. Ensure all migrations are committed to version control
     3. Implement CI check for migration sync
-- [ ] **Status:** Pending
+- [x] **Fix Applied:**
+    - Authenticated Supabase CLI with access token
+    - Re-linked project to remote (project ref: axuegixbqsvztdraenkz)
+    - Repaired migration history to sync local and remote versions
+    - Applied 2 pending migrations that were newer than remote:
+        1. `20260324100000_add_security_invoker_to_restaurant_plan_info.sql` - Security fix for CRIT-001 follow-up
+        2. `20260401194500_enterprise_device_shell_foundation.sql` - Enterprise device management foundation
+    - Verified database schema is now in sync
+    - `missing_migrations.json` confirmed empty (no missing migrations)
+- [x] **Status:** ✅ Completed (2026-04-03)
 
 ### HIGH-005: Sync Worker Has Placeholder Implementation
 
@@ -194,10 +203,16 @@
 
 ### HIGH-009: Device Token Storage in localStorage
 
-- [ ] **Issue:** Tokens vulnerable to XSS attacks, potential unauthorized device access.
-- [ ] **Files:** Multiple guest and terminal pages
-- [ ] **Remediation:** Migrate token storage to httpOnly cookies or secure storage mechanism.
-- [ ] **Status:** Pending
+- [x] **Issue:** Tokens vulnerable to XSS attacks, potential unauthorized device access.
+- [x] **Files:** Multiple guest and terminal pages
+- [x] **Remediation:** Migrate token storage to httpOnly cookies or secure storage mechanism.
+- [x] **Fix Applied:** Created secure httpOnly cookie-based device token storage:
+    - `src/lib/auth/device-token-cookies.ts` - Secure cookie utilities with HMAC signing
+    - Updated `src/app/api/devices/pair/route.ts` to set httpOnly cookies on pairing
+    - Updated `src/lib/api/authz.ts` `getDeviceContext()` to verify cookie tokens first
+    - Security properties: httpOnly, secure, sameSite=strict, HMAC-signed
+    - Backward compatible with header-based tokens (X-Device-Token)
+- [x] **Status:** ✅ Completed (2026-03-24)
 
 ### HIGH-010: Missing Rate Limiting on Webhooks
 
@@ -319,13 +334,17 @@
 
 ### HIGH-020: Permissive RLS Policies for service_role
 
-- [ ] **Issue:** Several tables have explicit `service_role` policies with `USING (true)` which are redundant since service role bypasses RLS.
-- [ ] **Files:**
+- [x] **Issue:** Several tables have explicit `service_role` policies with `USING (true)` which are redundant since service role bypasses RLS.
+- [x] **Files:**
     - `supabase/migrations/20260317_crit11_push_notification_support.sql:213-216` - device_tokens
     - `supabase/migrations/20260317_crit11_push_notification_support.sql:262-265` - guest_push_preferences
     - `supabase/migrations/20260316110000_device_sync_status.sql:75-78` - device_sync_status
-- [ ] **Remediation:** Remove redundant `service_role` policies since service role bypasses RLS.
-- [ ] **Status:** Pending
+- [x] **Remediation:** Remove redundant `service_role` policies since service role bypasses RLS.
+- [x] **Fix Applied:** Created `supabase/migrations/20260324000000_remove_redundant_service_role_policies.sql`:
+    - Removed redundant policies from device_tokens, guest_push_preferences, device_sync_status
+    - Added documentation comments explaining service role RLS bypass
+    - Included rollback instructions
+- [x] **Status:** ✅ Completed (2026-03-24)
 
 ### HIGH-021: N+1 Query Prevention Incomplete
 

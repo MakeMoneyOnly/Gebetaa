@@ -25,13 +25,27 @@ function toBase64(bytes: Uint8Array): string {
     return window.btoa(binary);
 }
 
-function getNativePrinterPlugin(): Record<string, any> | null {
+interface NativePrinterPlugin {
+    discover?: () => Promise<{ printers?: Array<Record<string, unknown>> }>;
+    printRaw?: (options: Record<string, unknown>) => Promise<void>;
+    print?: (options: Record<string, unknown>) => Promise<void>;
+}
+
+function getNativePrinterPlugin(): NativePrinterPlugin | null {
     if (typeof window === 'undefined') {
         return null;
     }
 
-    const capacitor = (window as typeof window & { Capacitor?: any }).Capacitor;
-    return capacitor?.Plugins?.ThermalPrinter ?? capacitor?.Plugins?.PrinterBridge ?? null;
+    const capacitor = (
+        window as typeof window & {
+            Capacitor?: { Plugins?: Record<string, unknown> };
+        }
+    ).Capacitor;
+    return (
+        (capacitor?.Plugins?.ThermalPrinter as NativePrinterPlugin | undefined) ??
+        (capacitor?.Plugins?.PrinterBridge as NativePrinterPlugin | undefined) ??
+        null
+    );
 }
 
 export async function rememberPrinterSelection(selection: StoredPrinterSelection): Promise<void> {

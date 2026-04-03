@@ -1,5 +1,10 @@
 import { queueFiscalJob } from '@/lib/fiscal/offline-queue';
-import { submitFiscalTransaction, type FiscalSubmissionRequest } from '@/lib/fiscal/mor-client';
+import {
+    FiscalSubmissionError,
+    isMorLiveConfigured,
+    submitFiscalTransaction,
+    type FiscalSubmissionRequest,
+} from '@/lib/fiscal/mor-client';
 import { silentPrintReceipt } from '@/lib/printer/silent-print';
 import type { EscPosReceiptPayload } from '@/lib/printer/escpos';
 
@@ -14,9 +19,17 @@ export async function handleApprovedTransactionReceipt(args: {
     transactionNumber: string;
     receipt: EscPosReceiptPayload;
     fiscalRequest?: FiscalSubmissionRequest | null;
-}): Promise<{ printed: boolean; queuedFiscal: boolean; warning?: string | null }> {
+    isOnline?: boolean;
+}): Promise<{
+    printed: boolean;
+    queuedFiscal: boolean;
+    blocked: boolean;
+    warning?: string | null;
+}> {
     let warning: string | null = null;
     let queuedFiscal = false;
+    let blocked = false;
+    const liveFiscalRequired = Boolean(args.fiscalRequest && isMorLiveConfigured());
 
     if (args.fiscalRequest) {
         try {
@@ -26,16 +39,26 @@ export async function handleApprovedTransactionReceipt(args: {
                 warning = fiscalResult.warning;
                 args.receipt.fiscal_warning = fiscalResult.warning;
             }
-        } catch (_error) {
-            warning = 'Pending fiscalization';
-            args.receipt.fiscal_warning = warning;
-            if (args.orderId) {
-                await queueFiscalJob({
-                    orderId: args.orderId,
-                    payload: { ...args.fiscalRequest },
-                    warningText: warning,
-                });
-                queuedFiscal = true;
+        } catch (error) {
+            const offlineFallbackAllowed =
+                !liveFiscalRequired ||
+                args.isOnline === false ||
+                (error instanceof FiscalSubmissionError && error.offlineFallbackAllowed);
+
+            if (!offlineFallbackAllowed) {
+                warning = 'Fiscalization failed while online. Receipt printing was blocked.';
+                blocked = true;
+            } else {
+                warning = 'Pending fiscalization';
+                args.receipt.fiscal_warning = warning;
+                if (args.orderId) {
+                    await queueFiscalJob({
+                        orderId: args.orderId,
+                        payload: { ...args.fiscalRequest },
+                        warningText: warning,
+                    });
+                    queuedFiscal = true;
+                }
             }
         }
     }
@@ -44,6 +67,16 @@ export async function handleApprovedTransactionReceipt(args: {
         return {
             printed: false,
             queuedFiscal,
+            blocked,
+            warning,
+        };
+    }
+
+    if (blocked) {
+        return {
+            printed: false,
+            queuedFiscal,
+            blocked: true,
             warning,
         };
     }
@@ -52,6 +85,7 @@ export async function handleApprovedTransactionReceipt(args: {
     return {
         printed: result.ok,
         queuedFiscal,
+        blocked: false,
         warning: warning ?? result.reason ?? null,
     };
 }

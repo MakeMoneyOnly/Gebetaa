@@ -19,9 +19,8 @@ const eslintConfig = defineConfig([
     ]),
     {
         rules: {
-            // HIGH-007: Re-enabled as 'warn' to gradually reduce `any` usage
-            // Existing codebase has broad legacy usage; warn to make lint actionable for CI gating.
-            '@typescript-eslint/no-explicit-any': 'warn',
+            // HIGH-007: Enforce no `any` in production code; test files exempted via overrides
+            '@typescript-eslint/no-explicit-any': 'error',
             'react/no-unescaped-entities': 'off',
             'react-hooks/set-state-in-effect': 'off',
             // Allow underscore-prefixed variables (intentionally unused function params)
@@ -39,9 +38,9 @@ const eslintConfig = defineConfig([
             // DISABLED: Requires explicit return types on ALL functions - too strict for this codebase
             // Would require adding return types to 900+ functions across hundreds of files
             '@typescript-eslint/explicit-function-return-type': 'off',
-            // MED-011: Warn on console statements to encourage structured logging
+            // MED-011: Error on console statements to enforce structured logging
             // Use src/lib/logger.ts instead of console.* for production code
-            'no-console': ['warn', { allow: ['warn', 'error'] }],
+            'no-console': ['error', { allow: ['warn', 'error'] }],
             // Disable errors that block build but are not critical
             // These patterns appear in legacy code and need careful refactoring
             'react-hooks/rules-of-hooks': 'off',
@@ -51,6 +50,13 @@ const eslintConfig = defineConfig([
             // Disable for legacy code patterns
             'no-use-before-define': 'off',
             '@typescript-eslint/no-use-before-define': 'off',
+        },
+    },
+    {
+        files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*', 'e2e/**/*'],
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
         },
     },
 ]);

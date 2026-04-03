@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
-import { login } from '../actions';
+import { login } from '@/app/auth/login/actions';
 
 const initialState = {
     error: null as string | null,

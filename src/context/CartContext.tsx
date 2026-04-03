@@ -11,6 +11,7 @@ export interface CartItem {
     quantity: number;
     instructions?: string;
     image?: string;
+    course?: string; // e.g., 'Drinks', 'Food', 'Main'
 }
 
 interface CartContextType {

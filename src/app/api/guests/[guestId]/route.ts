@@ -42,7 +42,9 @@ export async function GET(
 
     const { data, error } = await context.supabase
         .from('guests')
-        .select('*')
+        .select(
+            'id, restaurant_id, name, phone_hash, email_hash, language, tags, is_vip, notes, first_seen_at, last_seen_at, visit_count, lifetime_value, created_at, updated_at'
+        )
         .eq('id', guestIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
         .maybeSingle();
@@ -126,7 +128,9 @@ export async function PATCH(
         .update(payload)
         .eq('id', guestIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
-        .select('*')
+        .select(
+            'id, restaurant_id, name, phone_hash, email_hash, language, tags, is_vip, notes, first_seen_at, last_seen_at, visit_count, lifetime_value, created_at, updated_at'
+        )
         .single();
 
     if (error) {

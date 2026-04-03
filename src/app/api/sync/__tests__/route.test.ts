@@ -123,7 +123,7 @@ describe('Sync API Endpoint', () => {
                     aud: 'authenticated',
                     role: 'authenticated',
                 },
-                 
+
                 supabase: {} as any,
             });
 
@@ -144,7 +144,6 @@ describe('Sync API Endpoint', () => {
                         })),
                     })),
                 })),
-                 
             } as any);
 
             const request = new NextRequest('http://localhost/api/sync', {
@@ -168,7 +167,7 @@ describe('Sync API Endpoint', () => {
                     aud: 'authenticated',
                     role: 'authenticated',
                 },
-                 
+
                 supabase: {} as any,
             });
 
@@ -187,7 +186,6 @@ describe('Sync API Endpoint', () => {
                     })),
                     insert: vi.fn(),
                 })),
-                 
             } as any);
 
             const requestBody = {
@@ -235,7 +233,7 @@ describe('Sync API Endpoint', () => {
                     aud: 'authenticated',
                     role: 'authenticated',
                 },
-                 
+
                 supabase: {} as any,
             });
 
@@ -276,7 +274,6 @@ describe('Sync API Endpoint', () => {
                         insert: mockInsert,
                     };
                 }),
-                 
             } as any);
 
             const requestBody = {

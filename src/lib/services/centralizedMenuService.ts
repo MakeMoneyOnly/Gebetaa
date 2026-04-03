@@ -339,10 +339,10 @@ interface CategoryRow {
     restaurant_id: string;
     name: string;
     name_am: string | null;
-    order_index: number;
-    section?: string;
-    created_at: string;
-    updated_at: string;
+    order_index: number | null;
+    section?: string | null;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 interface MenuItemRow {
@@ -353,30 +353,32 @@ interface MenuItemRow {
     description: string | null;
     description_am: string | null;
     image_url: string | null;
-    is_available: boolean;
-    is_chef_special: boolean;
-    is_fasting: boolean;
-    allergens: string[];
-    dietary_tags: string[];
-    station: string;
-    course?: string;
-    connected_stations?: string[];
-    price?: number;
+    is_available: boolean | null;
+    is_chef_special: boolean | null;
+    is_fasting: boolean | null;
+    allergens: string[] | null;
+    dietary_tags: string[] | null;
+    station: string | null;
+    course: string;
+    connected_stations: string[];
+    price: number;
     categories?: { restaurant_id: string };
 }
 
 interface ModifierGroupRow {
     id: string;
     restaurant_id: string;
-    menu_item_id: string | null;
+    menu_item_id: string;
     name: string;
     name_am: string | null;
-    required: boolean;
-    multi_select: boolean;
-    min_select: number;
-    max_select: number;
-    sort_order: number;
-    is_active: boolean;
+    required: boolean | null;
+    multi_select: boolean | null;
+    min_select: number | null;
+    max_select: number | null;
+    sort_order: number | null;
+    is_active: boolean | null;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 interface ModifierOptionRow {
@@ -385,12 +387,13 @@ interface ModifierOptionRow {
     modifier_group_id: string;
     name: string;
     name_am: string | null;
-    sort_order: number;
-    is_available: boolean;
-    price_adjustment?: number;
+    sort_order: number | null;
+    is_available: boolean | null;
+    price_adjustment: number | null;
+    created_at: string | null;
 }
 
-interface MenuLocationRow {
+interface _MenuLocationRow {
     restaurant_id: string;
     sync_enabled: boolean;
     restaurants: { name: string } | null;
@@ -400,7 +403,7 @@ interface MenuLinkRow {
     restaurant_id: string;
 }
 
-interface MenuChangeQueueRow {
+interface _MenuChangeQueueRow {
     id: string;
     change_type: string;
     entity_type: string;
@@ -416,7 +419,7 @@ interface MenuChangeQueueRow {
     created_by: string;
 }
 
-async function getFullMenuData(
+async function _getFullMenuData(
     db: DbClient,
     restaurantId: string
 ): Promise<{

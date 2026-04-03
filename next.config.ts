@@ -189,6 +189,16 @@ const nextConfig: NextConfig = {
                 hostname: 'api.dicebear.com',
                 pathname: '/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'hoirqrkdgbmvpwutwuwj.supabase.co',
+                pathname: '/storage/v1/object/public/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'res.cloudinary.com',
+                pathname: '/**',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'inline',

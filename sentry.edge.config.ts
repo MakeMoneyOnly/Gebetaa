@@ -8,7 +8,7 @@ Sentry.init({
     tracesSampleRate: 0.1,
 
     // Setting this option to true will print useful information to the console while you're setting up Sentry.
-    debug: process.env.NODE_ENV === 'development',
+    debug: false,
 
     // Set environment
     environment: process.env.NODE_ENV || 'development',

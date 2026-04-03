@@ -10,6 +10,16 @@
 export async function register() {
     // Only run on the server side
     if (process.env.NEXT_RUNTIME === 'nodejs') {
+        // Silence OpenTelemetry diagnostics in development
+        if (process.env.NODE_ENV === 'development') {
+            try {
+                const { diag } = await import('@opentelemetry/api');
+                diag.disable();
+            } catch {
+                // OpenTelemetry not available, ignore
+            }
+        }
+
         // Validate E2E test configuration for security
         const { validateE2EConfig } = await import('./src/lib/security/e2e-validation');
         validateE2EConfig();

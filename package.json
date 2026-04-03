@@ -33,7 +33,8 @@
         "security:deprecated": "node scripts/security/check-deprecated.mjs",
         "security:overrides:check": "node scripts/security/check-unused-overrides.mjs",
         "deps:update": "pnpm update --interactive --latest",
-        "deps:clean": "pnpm store prune"
+        "deps:clean": "pnpm store prune",
+        "ci:migration-check": "npx tsx scripts/ci/check-migration-conflicts.ts"
     },
     "dependencies": {
         "@apollo/server": "^5.5.0",

@@ -106,7 +106,7 @@ export const createClient = () => {
                     return { data: { subscription: { unsubscribe: () => {} } } };
                 },
             },
-            from: (table: string) => ({
+            from: (_table: string) => ({
                 select: () => ({
                     data: [],
                     error: null,

@@ -45,7 +45,7 @@ describe('kds printer bridge', () => {
             ok: true,
             status: 200,
         });
-        global.fetch = fetchMock as any; // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        global.fetch = fetchMock as any;
 
         const policy = normalizeKdsPrintPolicy({
             mode: 'fallback',
@@ -80,7 +80,7 @@ describe('kds printer bridge', () => {
                 ok: true,
                 status: 200,
             });
-        global.fetch = fetchMock as any; // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        global.fetch = fetchMock as any;
 
         const policy = normalizeKdsPrintPolicy({
             mode: 'fallback',

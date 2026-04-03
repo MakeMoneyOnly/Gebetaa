@@ -1,8 +1,16 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { ChevronDown } from 'lucide-react';
+
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => mod.motion.div), {
+    ssr: false,
+});
+
+const AnimatePresence = dynamic(() => import('framer-motion').then(mod => mod.AnimatePresence), {
+    ssr: false,
+});
 
 export interface TableOccupancyGraphProps {
     className?: string;
@@ -249,7 +257,7 @@ export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupa
             {/* Tooltip */}
             <AnimatePresence>
                 {hoveredCell && (
-                    <motion.div
+                    <MotionDiv
                         initial={{ opacity: 0, y: 5, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 5, scale: 0.9 }}
@@ -273,7 +281,7 @@ export function TableOccupancyGraph({ className = '', tables = [] }: TableOccupa
                         </div>
                         {/* Arrow */}
                         <div className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-gray-900" />
-                    </motion.div>
+                    </MotionDiv>
                 )}
             </AnimatePresence>
         </div>

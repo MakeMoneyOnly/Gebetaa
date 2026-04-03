@@ -16,7 +16,9 @@ export async function GET(request: Request) {
 
     const { data, error } = await admin
         .from('tables')
-        .select('*')
+        .select(
+            'id, restaurant_id, table_number, capacity, status, active_order_id, section, created_at, updated_at'
+        )
         .eq('restaurant_id', ctx.restaurantId)
         .order('table_number');
 

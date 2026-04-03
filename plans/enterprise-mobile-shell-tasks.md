@@ -48,7 +48,7 @@ Upgrade Gebeta's existing PWA and device tooling into an enterprise-grade Androi
 
 - [x] Audit current provisioning, device auth, printing, terminal, KDS, and fiscal code paths
 - [x] Create tracked implementation plan document
-- [ ] Record final legacy removal list after replacement contracts are merged
+- [x] Record final legacy removal list after replacement contracts are merged
 
 ### Phase 1: Hardened Mobile Shell
 
@@ -72,21 +72,21 @@ Upgrade Gebeta's existing PWA and device tooling into an enterprise-grade Androi
 - [x] Add canonical device profiles: `cashier`, `waiter`, `kds`, `kiosk`
 - [x] Map paired device profile to route boot behavior
 - [x] Add a single device shell that renders the correct mode entry point
-- [ ] Preserve existing waiter, terminal, and KDS UX while bringing them under shared device-shell state
+- [x] Preserve existing waiter, terminal, and KDS UX while bringing them under shared device-shell state
 - [x] Add kiosk boot flow aligned with current brand/UI system
 
 ### Phase 4: Fleet Management
 
 - [x] Add Esper configuration/env contract
-- [ ] Add internal ops actions for remote reboot and wipe
+- [x] Add internal ops actions for remote reboot and wipe
 - [x] Store fleet action audit history
-- [ ] Add OTA/update status modeling for managed devices
-- [ ] Expose remote management state in an internal/admin fleet surface
+- [x] Add OTA/update status modeling for managed devices
+- [x] Expose remote management state in an internal/admin fleet surface
 
 ### Phase 5: Ethiopia Fiscal Compliance
 
 - [x] Replace stub-only fiscal flow with a reusable MoR client abstraction
-- [ ] Require fiscalization before final print when online
+- [x] Require fiscalization before final print when online
 - [x] Add fiscal receipt template fields and QR payload
 - [x] Add offline fiscal queue storage and sync retry logic
 - [x] Add pending-fiscalization receipt warnings for allowed offline scenarios
@@ -115,3 +115,11 @@ Upgrade Gebeta's existing PWA and device tooling into an enterprise-grade Androi
 - Supabase CLI now has a repo-local wrapper (`pnpm supabase:cli`) that avoids the local Docker config warning.
 - Targeted tests passed for device config, pairing helpers, ESC/POS encoding, and device provisioning routes.
 - Existing dirty worktree files are treated as user-owned and must not be reverted.
+
+## Final Legacy Removal List
+
+- Remove merchant-facing fleet management controls and keep Esper operations in internal agency-admin tooling only.
+- Remove standalone device-session boot logic from route-specific pages in favor of the shared managed-device session layer.
+- Remove browser-only receipt completion behavior that allowed online transactions to print before live fiscalization succeeded.
+- Remove reliance on implicit OTA state in loose metadata alone once the formal `hardware_devices` OTA columns are present everywhere.
+- Keep `src/app/(pos)/waiter/page.old-logic.tsx` deprecated and avoid routing new device traffic through it.

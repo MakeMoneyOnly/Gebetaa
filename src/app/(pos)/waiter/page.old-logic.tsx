@@ -2161,7 +2161,7 @@ function WaiterPosContent() {
                                                         {item.name}
                                                     </span>
                                                     <span className="text-xs font-bold text-gray-400 capitalize">
-                                                        {item.status || 'pending'}
+                                                        {'pending'}
                                                     </span>
                                                 </div>
                                             ))}

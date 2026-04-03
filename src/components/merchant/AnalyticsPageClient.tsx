@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { toast } from 'react-hot-toast';
 import {
     Wallet,
@@ -15,13 +16,34 @@ import {
     TrendingUp,
     Users,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MetricCard } from '@/components/merchant/MetricCard';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { useAppLocale } from '@/hooks/useAppLocale';
 import { formatETBCurrency } from '@/lib/format/et';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import type { AnalyticsPageData } from '@/lib/services/dashboardDataService';
+
+const BarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), {
+    ssr: false,
+    loading: () => <div className="h-[250px] w-full animate-pulse rounded-xl bg-gray-100" />,
+});
+
+const Bar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false });
+
+const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
+
+const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
+
+const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), {
+    ssr: false,
+});
+
+const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
+
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), {
+    ssr: false,
+    loading: () => <div className="h-[250px] w-full animate-pulse rounded-xl bg-gray-100" />,
+});
 
 interface AnalyticsPageClientProps {
     initialData: AnalyticsPageData | null;

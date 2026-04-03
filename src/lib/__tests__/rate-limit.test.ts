@@ -13,7 +13,7 @@ import {
     rateLimitMiddleware,
     withRateLimit,
     type RateLimitConfig,
-    type RateLimitResult,
+    type RateLimitResult as _RateLimitResult,
 } from '../rate-limit';
 
 // Mock the logger
