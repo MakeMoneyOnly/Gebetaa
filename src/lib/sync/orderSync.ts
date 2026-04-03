@@ -3,10 +3,20 @@
  *
  * CRIT-05: Offline sync consolidation for POS
  * Replaces Dexie.js order queue with PowerSync-backed sync
+ *
+ * HIGH-006: Integrated conflict resolution for order sync
  */
 
 import { getPowerSync } from './powersync-config';
 import { generateIdempotencyKey, queueSyncOperation } from './idempotency';
+import {
+    detectConflict,
+    resolveConflict,
+    logConflictResolution,
+    getConflictType,
+    type ConflictStrategy,
+} from './conflict-resolution';
+import { logger } from '@/lib/logger';
 
 /**
  * Order status for offline tracking
@@ -340,4 +350,298 @@ export async function clearOfflineOrders(): Promise<void> {
         await db.execute(`DELETE FROM orders`);
         await db.execute(`DELETE FROM sync_queue`);
     });
+}
+
+// ============================================================================
+// HIGH-006: Conflict Resolution Integration
+// ============================================================================
+
+/**
+ * Order conflict resolution result
+ */
+export interface OrderConflictResult {
+    resolved: boolean;
+    strategy: ConflictStrategy;
+    resolvedData?: OfflineOrder;
+    error?: string;
+    conflictType?: 'version_mismatch' | 'concurrent_edit' | 'delete_update';
+}
+
+/**
+ * Resolve order sync conflict
+ *
+ * Uses last-write-wins for non-critical fields (names, notes)
+ * and server-wins for financial data (prices, totals)
+ *
+ * @param orderId - The order ID with conflict
+ * @param clientData - Local/client order data
+ * @param serverData - Server order data
+ * @param preferredStrategy - Optional override strategy
+ */
+export async function resolveOrderConflict(
+    orderId: string,
+    clientData: OfflineOrder & { version: number; last_modified: string },
+    serverData: Record<string, unknown> & { version: number; last_modified: string },
+    preferredStrategy?: ConflictStrategy
+): Promise<OrderConflictResult> {
+    const db = getPowerSync();
+    if (!db) {
+        return {
+            resolved: false,
+            strategy: 'last_write_wins',
+            error: 'PowerSync not initialized',
+        };
+    }
+
+    try {
+        // Detect conflict type
+        const conflictType = getConflictType(
+            clientData as { deleted_at?: string | null; version: number },
+            serverData as { deleted_at?: string | null; version: number }
+        );
+
+        // Determine strategy based on data type
+        // Server wins for financial data, last-write-wins for other fields
+        const strategy: ConflictStrategy = preferredStrategy ?? 'last_write_wins';
+
+        // Resolve the conflict
+        const {
+            resolvedData,
+            strategy: usedStrategy,
+            auditDetails,
+        } = resolveConflict(
+            'orders',
+            clientData as unknown as Record<string, unknown> & {
+                version: number;
+                last_modified: string;
+            },
+            serverData,
+            strategy
+        );
+
+        // Apply financial data protection - server wins for prices
+        if (strategy === 'last_write_wins') {
+            // Override financial fields with server values
+            resolvedData.subtotal_santim = serverData.subtotal_santim ?? clientData.subtotal_santim;
+            resolvedData.discount_santim = serverData.discount_santim ?? clientData.discount_santim;
+            resolvedData.vat_santim = serverData.vat_santim ?? clientData.vat_santim;
+            resolvedData.total_santim = serverData.total_santim ?? clientData.total_santim;
+        }
+
+        // Update local record with resolved data
+        const now = new Date().toISOString();
+        await db.execute(
+            `UPDATE orders SET
+                status = 'resolved',
+                version = ?,
+                last_modified = ?,
+                updated_at = ?,
+                subtotal_santim = ?,
+                discount_santim = ?,
+                vat_santim = ?,
+                total_santim = ?,
+                guest_name = ?,
+                guest_phone = ?,
+                notes = ?,
+                table_number = ?
+            WHERE id = ?`,
+            [
+                resolvedData.version,
+                resolvedData.last_modified,
+                now,
+                resolvedData.subtotal_santim,
+                resolvedData.discount_santim ?? 0,
+                resolvedData.vat_santim,
+                resolvedData.total_santim,
+                resolvedData.guest_name ?? null,
+                resolvedData.guest_phone ?? null,
+                resolvedData.notes ?? null,
+                resolvedData.table_number ?? null,
+                orderId,
+            ]
+        );
+
+        // Log conflict resolution to sync_conflict_logs table
+        await logConflictResolution({
+            entityType: 'orders',
+            entityId: orderId,
+            conflictType,
+            clientData: clientData as unknown as Record<string, unknown>,
+            serverData,
+            resolvedData,
+            strategy: usedStrategy,
+            auditDetails,
+        });
+
+        // Also log to audit_logs for compliance
+        await logOrderConflictToAuditLog(
+            orderId,
+            clientData,
+            serverData,
+            usedStrategy,
+            auditDetails
+        );
+
+        logger.info('[OrderSync] Conflict resolved', {
+            orderId,
+            strategy: usedStrategy,
+            conflictType,
+            winner: auditDetails.winner,
+        });
+
+        // Get the resolved order
+        const resolvedOrder = await getOfflineOrder(orderId);
+
+        return {
+            resolved: true,
+            strategy: usedStrategy,
+            resolvedData: resolvedOrder ?? undefined,
+            conflictType,
+        };
+    } catch (error) {
+        logger.error('[OrderSync] Failed to resolve conflict', {
+            orderId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+
+        return {
+            resolved: false,
+            strategy: preferredStrategy ?? 'last_write_wins',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        };
+    }
+}
+
+/**
+ * Log order conflict to audit_logs table for compliance
+ */
+async function logOrderConflictToAuditLog(
+    orderId: string,
+    clientData: OfflineOrder,
+    serverData: Record<string, unknown>,
+    strategy: ConflictStrategy,
+    auditDetails: Record<string, unknown>
+): Promise<void> {
+    const db = getPowerSync();
+    if (!db) return;
+
+    try {
+        const now = new Date().toISOString();
+        const logId = crypto.randomUUID();
+
+        await db.execute(
+            `INSERT INTO audit_logs (
+                id, restaurant_id, action, entity_type, entity_id,
+                old_value, new_value, metadata, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                logId,
+                clientData.restaurant_id,
+                `sync_conflict:${strategy}`,
+                'orders',
+                orderId,
+                JSON.stringify(serverData),
+                JSON.stringify(clientData),
+                JSON.stringify({
+                    ...auditDetails,
+                    resolution_source: 'offline_sync',
+                }),
+                now,
+            ]
+        );
+    } catch (error) {
+        logger.error('[OrderSync] Failed to log conflict to audit_logs', {
+            orderId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+}
+
+/**
+ * Get orders with conflict status
+ */
+export async function getConflictedOrders(restaurantId?: string): Promise<OfflineOrder[]> {
+    const db = getPowerSync();
+    if (!db) return [];
+
+    let query = `SELECT * FROM orders WHERE status = 'conflict'`;
+    const params: string[] = [];
+
+    if (restaurantId) {
+        query += ` AND restaurant_id = ?`;
+        params.push(restaurantId);
+    }
+
+    query += ` ORDER BY updated_at DESC`;
+
+    const orders = await db.getAllAsync<OfflineOrder>(query, params);
+    return orders;
+}
+
+/**
+ * Mark order as having a conflict (for manual resolution)
+ */
+export async function markOrderConflict(orderId: string, reason?: string): Promise<boolean> {
+    const db = getPowerSync();
+    if (!db) return false;
+
+    const now = new Date().toISOString();
+
+    try {
+        await db.execute(
+            `UPDATE orders SET status = 'conflict', updated_at = ?, last_modified = ? WHERE id = ?`,
+            [now, now, orderId]
+        );
+
+        logger.warn('[OrderSync] Order marked as conflict', { orderId, reason });
+        return true;
+    } catch (error) {
+        logger.error('[OrderSync] Failed to mark order as conflict', {
+            orderId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return false;
+    }
+}
+
+/**
+ * Batch resolve multiple order conflicts
+ */
+export async function batchResolveOrderConflicts(
+    conflicts: Array<{
+        orderId: string;
+        clientData: OfflineOrder & { version: number; last_modified: string };
+        serverData: Record<string, unknown> & { version: number; last_modified: string };
+    }>
+): Promise<{
+    resolved: number;
+    failed: number;
+    errors: string[];
+}> {
+    let resolved = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const conflict of conflicts) {
+        const result = await resolveOrderConflict(
+            conflict.orderId,
+            conflict.clientData,
+            conflict.serverData
+        );
+
+        if (result.resolved) {
+            resolved++;
+        } else {
+            failed++;
+            errors.push(`${conflict.orderId}: ${result.error}`);
+        }
+    }
+
+    logger.info('[OrderSync] Batch conflict resolution complete', {
+        total: conflicts.length,
+        resolved,
+        failed,
+    });
+
+    return { resolved, failed, errors };
 }

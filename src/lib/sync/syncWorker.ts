@@ -53,6 +53,34 @@ const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 30000;
 
 /**
+ * Sync event types for UI updates
+ */
+export type SyncEventType =
+    | 'sync:start'
+    | 'sync:complete'
+    | 'sync:error'
+    | 'sync:conflict'
+    | 'sync:offline'
+    | 'sync:online'
+    | 'operation:success'
+    | 'operation:failed'
+    | 'operation:retry';
+
+/**
+ * Sync event payload
+ */
+export interface SyncEvent {
+    type: SyncEventType;
+    timestamp: string;
+    data?: Record<string, unknown>;
+}
+
+/**
+ * Sync event listener
+ */
+export type SyncEventListener = (event: SyncEvent) => void;
+
+/**
  * Sync worker configuration
  */
 export interface SyncWorkerConfig {
@@ -66,6 +94,8 @@ export interface SyncWorkerConfig {
     onSyncProgress?: (stats: SyncProgress) => void;
     /** Callback for errors */
     onError?: (error: Error) => void;
+    /** Callback for sync events (HIGH-005) */
+    onSyncEvent?: (event: SyncEvent) => void;
 }
 
 /**
@@ -80,6 +110,8 @@ export interface SyncProgress {
     printerJobsFailed: number;
     lastSyncAt: string | null;
     isOnline: boolean;
+    /** Number of conflicts detected in last sync */
+    conflictsDetected?: number;
 }
 
 const DEFAULT_CONFIG: SyncWorkerConfig = {
@@ -97,6 +129,20 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
     let isRunning = false;
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let lastSyncAt: string | null = null;
+    let conflictsDetected = 0;
+
+    /**
+     * HIGH-005: Emit sync event for UI updates
+     */
+    function emitEvent(type: SyncEventType, data?: Record<string, unknown>): void {
+        if (cfg.onSyncEvent) {
+            cfg.onSyncEvent({
+                type,
+                timestamp: new Date().toISOString(),
+                data,
+            });
+        }
+    }
 
     /**
      * HIGH-013: Calculate exponential backoff delay
@@ -301,7 +347,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
      * Process pending sync operations individually (legacy method)
      * Used as fallback when batch sync fails
      */
-    async function processSyncOperationsIndividually(): Promise<{
+    async function _processSyncOperationsIndividually(): Promise<{
         processed: number;
         succeeded: number;
         failed: number;
@@ -395,6 +441,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
             printerJobsFailed: 0,
             lastSyncAt,
             isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+            conflictsDetected,
         };
     }
 
@@ -404,28 +451,66 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
     async function syncOnce(): Promise<SyncProgress> {
         if (!navigator.onLine) {
             console.warn('[SyncWorker] Offline - skipping sync');
+            emitEvent('sync:offline', { reason: 'navigator.offline' });
             return getStatus();
         }
 
         console.warn('[SyncWorker] Starting sync cycle');
+        emitEvent('sync:start', { timestamp: new Date().toISOString() });
 
-        const syncResult = await processSyncOperations();
+        try {
+            const syncResult = await processSyncOperations();
 
-        let _printerResult = { processed: 0, succeeded: 0, failed: 0 };
-        if (cfg.enablePrinterQueue) {
-            _printerResult = await processPrinterQueue();
+            let _printerResult = { processed: 0, succeeded: 0, failed: 0 };
+            if (cfg.enablePrinterQueue) {
+                _printerResult = await processPrinterQueue();
+            }
+
+            lastSyncAt = new Date().toISOString();
+
+            // Emit success/failure events
+            if (syncResult.succeeded > 0) {
+                emitEvent('operation:success', {
+                    count: syncResult.succeeded,
+                    processed: syncResult.processed,
+                });
+            }
+
+            if (syncResult.failed > 0) {
+                emitEvent('operation:failed', {
+                    count: syncResult.failed,
+                    processed: syncResult.processed,
+                });
+            }
+
+            const status = await getStatus();
+            cfg.onSyncProgress?.(status);
+
+            console.warn(
+                `[SyncWorker] Sync complete: ${syncResult.succeeded} succeeded, ${syncResult.failed} failed`
+            );
+
+            emitEvent('sync:complete', {
+                succeeded: syncResult.succeeded,
+                failed: syncResult.failed,
+                processed: syncResult.processed,
+                conflictsDetected,
+            });
+
+            return status;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('[SyncWorker] Sync error:', errorMessage);
+
+            emitEvent('sync:error', {
+                error: errorMessage,
+                timestamp: new Date().toISOString(),
+            });
+
+            cfg.onError?.(error instanceof Error ? error : new Error(errorMessage));
+
+            throw error;
         }
-
-        lastSyncAt = new Date().toISOString();
-
-        const status = await getStatus();
-        cfg.onSyncProgress?.(status);
-
-        console.warn(
-            `[SyncWorker] Sync complete: ${syncResult.succeeded} succeeded, ${syncResult.failed} failed`
-        );
-
-        return status;
     }
 
     /**

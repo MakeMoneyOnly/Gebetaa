@@ -39,9 +39,14 @@ export {
     getOfflineOrdersByRestaurant,
     getOfflineOrdersCountByStatus,
     clearOfflineOrders,
+    resolveOrderConflict,
+    getConflictedOrders,
+    markOrderConflict,
+    batchResolveOrderConflicts,
     type OfflineOrder,
     type OfflineOrderItem,
     type OfflineOrderStatus,
+    type OrderConflictResult,
 } from './orderSync';
 
 // KDS Sync
@@ -53,9 +58,13 @@ export {
     executeKdsAction,
     getKdsStats,
     clearBumpedKdsItems,
+    resolveKdsConflict,
+    getConflictedKdsItems,
+    batchResolveKdsConflicts,
     type OfflineKdsItem,
     type KdsItemStatus,
     type KdsAction,
+    type KdsConflictResult,
 } from './kdsSync';
 
 // Printer Fallback
@@ -85,6 +94,9 @@ export {
     triggerSync,
     type SyncWorkerConfig,
     type SyncProgress,
+    type SyncEvent,
+    type SyncEventType,
+    type SyncEventListener,
 } from './syncWorker';
 
 // Conflict Resolution

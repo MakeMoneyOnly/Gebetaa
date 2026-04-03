@@ -8,7 +8,7 @@
  */
 
 import { getPowerSync } from './powersync-config';
-import { logger } from '../logger';
+import { logger } from '@/lib/logger';
 
 /**
  * Conflict resolution strategy types

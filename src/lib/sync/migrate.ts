@@ -10,7 +10,9 @@ import { generateIdempotencyKey } from './idempotency';
 
 // Import Dexie types for migration (if Dexie is still installed)
 
-type DexieDatabase = any;
+interface DexieDatabase {
+    table: (name: string) => { toArray: () => Promise<Array<Record<string, unknown>>> };
+}
 
 /**
  * Get the old Dexie database instance
@@ -74,7 +76,7 @@ export async function migrateDexieOrdersToPowerSync(): Promise<{
                         'dine_in',
                         order.total_price,
                         0,
-                        Math.round(order.total_price * 0.15),
+                        Math.round((order.total_price as number) * 0.15),
                         order.total_price,
                         order.notes || null,
                         idempotencyKey,

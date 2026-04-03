@@ -3,10 +3,20 @@
  *
  * CRIT-05: Offline sync consolidation for KDS
  * Replaces localStorage KDS queue with PowerSync-backed sync
+ *
+ * HIGH-006: Integrated conflict resolution for KDS sync
  */
 
 import { getPowerSync } from './powersync-config';
 import { queueSyncOperation, generateIdempotencyKey } from './idempotency';
+import {
+    detectConflict,
+    resolveConflict,
+    logConflictResolution,
+    getConflictType,
+    type ConflictStrategy,
+} from './conflict-resolution';
+import { logger } from '@/lib/logger';
 
 /**
  * KDS item status
@@ -283,4 +293,256 @@ export async function clearBumpedKdsItems(olderThanHours: number = 24): Promise<
     );
 
     return result.rowsAffected;
+}
+
+// ============================================================================
+// HIGH-006: Conflict Resolution Integration for KDS
+// ============================================================================
+
+/**
+ * KDS conflict resolution result
+ */
+export interface KdsConflictResult {
+    resolved: boolean;
+    strategy: ConflictStrategy;
+    resolvedData?: OfflineKdsItem;
+    error?: string;
+    conflictType?: 'version_mismatch' | 'concurrent_edit' | 'delete_update';
+}
+
+/**
+ * Resolve KDS item sync conflict
+ *
+ * Uses server-wins strategy for KDS items since the kitchen state
+ * should reflect the actual cooking status from the server.
+ *
+ * @param kdsId - The KDS item ID with conflict
+ * @param clientData - Local/client KDS item data
+ * @param serverData - Server KDS item data
+ * @param preferredStrategy - Optional override strategy (defaults to server_wins)
+ */
+export async function resolveKdsConflict(
+    kdsId: string,
+    clientData: OfflineKdsItem & { version: number; last_modified: string },
+    serverData: Record<string, unknown> & { version: number; last_modified: string },
+    preferredStrategy?: ConflictStrategy
+): Promise<KdsConflictResult> {
+    const db = getPowerSync();
+    if (!db) {
+        return {
+            resolved: false,
+            strategy: 'server_wins',
+            error: 'PowerSync not initialized',
+        };
+    }
+
+    try {
+        // Detect conflict type
+        const conflictType = getConflictType(
+            clientData as unknown as { deleted_at?: string | null; version: number },
+            serverData as { deleted_at?: string | null; version: number }
+        );
+
+        // KDS uses server_wins by default - kitchen state is authoritative
+        const strategy: ConflictStrategy = preferredStrategy ?? 'server_wins';
+
+        // Resolve the conflict
+        const {
+            resolvedData,
+            strategy: usedStrategy,
+            auditDetails,
+        } = resolveConflict(
+            'kds_items',
+            clientData as unknown as Record<string, unknown> & {
+                version: number;
+                last_modified: string;
+            },
+            serverData,
+            strategy
+        );
+
+        // Update local record with resolved data
+        const now = new Date().toISOString();
+        await db.execute(
+            `UPDATE kds_items SET
+                status = ?,
+                started_at = ?,
+                ready_at = ?,
+                recalled_at = ?,
+                bumped_at = ?,
+                priority = ?,
+                version = ?,
+                last_modified = ?
+            WHERE id = ?`,
+            [
+                resolvedData.status ?? 'queued',
+                resolvedData.started_at ?? null,
+                resolvedData.ready_at ?? null,
+                resolvedData.recalled_at ?? null,
+                resolvedData.bumped_at ?? null,
+                resolvedData.priority ?? 0,
+                resolvedData.version,
+                resolvedData.last_modified,
+                kdsId,
+            ]
+        );
+
+        // Log conflict resolution to sync_conflict_logs table
+        await logConflictResolution({
+            entityType: 'kds_items',
+            entityId: kdsId,
+            conflictType,
+            clientData: clientData as unknown as Record<string, unknown>,
+            serverData,
+            resolvedData,
+            strategy: usedStrategy,
+            auditDetails,
+        });
+
+        // Also log to audit_logs for compliance
+        await logKdsConflictToAuditLog(kdsId, clientData, serverData, usedStrategy, auditDetails);
+
+        logger.info('[KdsSync] Conflict resolved', {
+            kdsId,
+            strategy: usedStrategy,
+            conflictType,
+            winner: auditDetails.winner,
+        });
+
+        // Get the resolved KDS item
+        const resolvedItem = await getKdsItem(kdsId);
+
+        return {
+            resolved: true,
+            strategy: usedStrategy,
+            resolvedData: resolvedItem ?? undefined,
+            conflictType,
+        };
+    } catch (error) {
+        logger.error('[KdsSync] Failed to resolve conflict', {
+            kdsId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+
+        return {
+            resolved: false,
+            strategy: preferredStrategy ?? 'server_wins',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        };
+    }
+}
+
+/**
+ * Log KDS conflict to audit_logs table for compliance
+ */
+async function logKdsConflictToAuditLog(
+    kdsId: string,
+    clientData: OfflineKdsItem,
+    serverData: Record<string, unknown>,
+    strategy: ConflictStrategy,
+    auditDetails: Record<string, unknown>
+): Promise<void> {
+    const db = getPowerSync();
+    if (!db) return;
+
+    try {
+        const now = new Date().toISOString();
+        const logId = crypto.randomUUID();
+
+        await db.execute(
+            `INSERT INTO audit_logs (
+                id, restaurant_id, action, entity_type, entity_id,
+                old_value, new_value, metadata, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                logId,
+                serverData.restaurant_id ?? clientData.order_id, // Use order_id as fallback
+                `sync_conflict:${strategy}`,
+                'kds_items',
+                kdsId,
+                JSON.stringify(serverData),
+                JSON.stringify(clientData),
+                JSON.stringify({
+                    ...auditDetails,
+                    resolution_source: 'offline_sync',
+                }),
+                now,
+            ]
+        );
+    } catch (error) {
+        logger.error('[KdsSync] Failed to log conflict to audit_logs', {
+            kdsId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+}
+
+/**
+ * Get KDS items with conflict status (if tracked)
+ */
+export async function getConflictedKdsItems(orderId?: string): Promise<OfflineKdsItem[]> {
+    const db = getPowerSync();
+    if (!db) return [];
+
+    // KDS items don't have a conflict status field, but we can check sync_conflict_logs
+    let query = `
+        SELECT k.*, oi.menu_item_name, oi.menu_item_name_am, oi.quantity, oi.modifiers_json, oi.notes
+        FROM kds_items k
+        JOIN order_items oi ON k.order_item_id = oi.id
+        JOIN sync_conflict_logs scl ON scl.entity_id = k.id AND scl.entity_type = 'kds_items'
+        WHERE 1=1
+    `;
+    const params: string[] = [];
+
+    if (orderId) {
+        query += ` AND k.order_id = ?`;
+        params.push(orderId);
+    }
+
+    query += ` ORDER BY scl.created_at DESC`;
+
+    const items = await db.getAllAsync<OfflineKdsItem>(query, params);
+    return items;
+}
+
+/**
+ * Batch resolve multiple KDS item conflicts
+ */
+export async function batchResolveKdsConflicts(
+    conflicts: Array<{
+        kdsId: string;
+        clientData: OfflineKdsItem & { version: number; last_modified: string };
+        serverData: Record<string, unknown> & { version: number; last_modified: string };
+    }>
+): Promise<{
+    resolved: number;
+    failed: number;
+    errors: string[];
+}> {
+    let resolved = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const conflict of conflicts) {
+        const result = await resolveKdsConflict(
+            conflict.kdsId,
+            conflict.clientData,
+            conflict.serverData
+        );
+
+        if (result.resolved) {
+            resolved++;
+        } else {
+            failed++;
+            errors.push(`${conflict.kdsId}: ${result.error}`);
+        }
+    }
+
+    logger.info('[KdsSync] Batch conflict resolution complete', {
+        total: conflicts.length,
+        resolved,
+        failed,
+    });
+
+    return { resolved, failed, errors };
 }
