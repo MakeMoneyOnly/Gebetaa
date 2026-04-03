@@ -8,7 +8,7 @@
  * - Telegram via Telegram Bot API
  */
 
-import { sendSms, SmsSendResult } from '@/lib/notifications/sms';
+import { sendSms, SmsSendResult as _SmsSendResult } from '@/lib/notifications/sms';
 import { resend, EMAIL_FROM } from '@/lib/email/client';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 

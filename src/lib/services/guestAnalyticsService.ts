@@ -270,9 +270,33 @@ export async function getGuestLifetimeValue(
 // Helper Functions
 // ============================================================================
 
+interface GuestRow {
+    id: string;
+    name: string | null;
+    is_vip: boolean;
+    created_at: string;
+    orders?: Array<{ total_price?: number; created_at: string }>;
+}
+interface OrderRow {
+    guest_id: string | null;
+    total_price?: number;
+    created_at: string;
+}
+interface GuestRow {
+    id: string;
+    name: string | null;
+    is_vip: boolean;
+    created_at: string;
+    orders?: Array<{ total_price?: number; created_at: string }>;
+}
+interface OrderRow {
+    guest_id: string | null;
+    total_price?: number;
+    created_at: string;
+}
 function calculateMetrics(
-    guests: any[],
-    orders: any[],
+    guests: GuestRow[],
+    orders: OrderRow[],
     _startDate?: string,
     _endDate?: string
 ): GuestMetrics {

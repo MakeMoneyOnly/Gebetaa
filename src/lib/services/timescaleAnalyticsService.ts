@@ -128,7 +128,7 @@ export async function getHourlySalesData(
     range: AnalyticsRange
 ): Promise<HourlySalesData[]> {
     const startDate = getRangeStart(range);
-    const isToday = range === 'today';
+    const _isToday = range === 'today';
 
     // Try to use continuous aggregate first (faster)
     const { data: aggData, error: aggError } = await supabase
@@ -250,8 +250,8 @@ export async function getAnalyticsOverview(
     restaurantId: string,
     range: AnalyticsRange
 ): Promise<AnalyticsOverview> {
-    const startDate = getRangeStart(range);
-    const prevStartDate = getPreviousRangeStart(range);
+    const _startDate = getRangeStart(range);
+    const _prevStartDate = getPreviousRangeStart(range);
     const isToday = range === 'today';
 
     // Try to get data from TimescaleDB first

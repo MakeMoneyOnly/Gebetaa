@@ -8,6 +8,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
+type DbClient = SupabaseClient<Database>;
+
 // =========================================================
 // Type Definitions
 // =========================================================
@@ -77,8 +79,7 @@ export async function getMenuLocations(
     supabase: SupabaseClient<Database>,
     primaryRestaurantId: string
 ): Promise<MenuLocation[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db = supabase as unknown as DbClient;
 
     try {
         // Get the menu group configuration
@@ -113,17 +114,26 @@ export async function getMenuLocations(
             return [];
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (links ?? []).map((link: any) => ({
-            id: link.restaurant_id,
-            restaurant_id: link.restaurant_id,
-            restaurant_name: link.restaurants?.name ?? 'Unknown',
-            is_primary: link.is_primary,
-            sync_enabled: link.sync_enabled,
-            last_sync_at: link.last_sync_at,
-            sync_status: link.sync_status,
-            pending_changes: link.pending_changes,
-        }));
+        return (links ?? []).map(
+            (link: {
+                restaurant_id: string;
+                is_primary: boolean;
+                sync_enabled: boolean;
+                last_sync_at: string | null;
+                sync_status: string | null;
+                pending_changes: number;
+                restaurants: { name: string } | null;
+            }) => ({
+                id: link.restaurant_id,
+                restaurant_id: link.restaurant_id,
+                restaurant_name: link.restaurants?.name ?? 'Unknown',
+                is_primary: link.is_primary,
+                sync_enabled: link.sync_enabled,
+                last_sync_at: link.last_sync_at,
+                sync_status: link.sync_status,
+                pending_changes: link.pending_changes,
+            })
+        );
     } catch (error) {
         console.error('[CentralizedMenu] Error:', error);
         return [];
@@ -139,8 +149,7 @@ export async function addMenuLocation(
     targetRestaurantId: string,
     userId: string
 ): Promise<{ success: boolean; error?: string }> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db = supabase as unknown as DbClient;
 
     try {
         // Get or create menu config
@@ -159,7 +168,7 @@ export async function addMenuLocation(
                     sync_categories: true,
                     sync_items: true,
                     sync_modifiers: true,
-                    sync_pricing: false, // Pricing often varies by location
+                    sync_pricing: false,
                     sync_availability: true,
                     auto_sync_enabled: false,
                 })
@@ -174,7 +183,7 @@ export async function addMenuLocation(
 
         // Add the link
         const { error: linkError } = await db.from('menu_location_links').insert({
-            menu_config_id: config.id,
+            menu_config_id: (config as { id: string }).id,
             restaurant_id: targetRestaurantId,
             is_primary: targetRestaurantId === primaryRestaurantId,
             sync_enabled: true,
@@ -190,7 +199,7 @@ export async function addMenuLocation(
         await db.from('audit_logs').insert({
             action: 'add_menu_location',
             entity_type: 'centralized_menu',
-            entity_id: config.id,
+            entity_id: (config as { id: string }).id,
             restaurant_id: primaryRestaurantId,
             user_id: userId,
             metadata: { target_restaurant_id: targetRestaurantId },
@@ -222,8 +231,7 @@ export async function pushMenuToLocations(
         syncAvailability?: boolean;
     }
 ): Promise<{ success: boolean; results: SyncResult[] }> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db = supabase as unknown as DbClient;
 
     try {
         // Get config
@@ -237,6 +245,8 @@ export async function pushMenuToLocations(
             return { success: false, results: [] };
         }
 
+        const menuConfig = config as MenuConfigRecord;
+
         // Get target locations
         let locationsQuery = db
             .from('menu_location_links')
@@ -247,7 +257,7 @@ export async function pushMenuToLocations(
                 restaurants(id, name)
             `
             )
-            .eq('menu_config_id', config.id)
+            .eq('menu_config_id', menuConfig.id)
             .eq('sync_enabled', true);
 
         if (options?.locationIds && options.locationIds.length > 0) {
@@ -260,44 +270,28 @@ export async function pushMenuToLocations(
             return { success: true, results: [] };
         }
 
-        // Get primary menu data
-        const menuData = await getFullMenuData(db, primaryRestaurantId);
-
         const results: SyncResult[] = [];
-
-        // Sync to each location
-        for (const location of locations) {
-            if (location.restaurant_id === primaryRestaurantId) {
-                continue; // Skip primary location
-            }
-
-            const result = await syncMenuToLocation(db, location.restaurant_id, menuData, {
-                syncCategories: options?.syncCategories ?? config.sync_categories,
-                syncItems: options?.syncItems ?? config.sync_items,
-                syncModifiers: options?.syncModifiers ?? config.sync_modifiers,
-                syncPricing: options?.syncPricing ?? config.sync_pricing,
-                syncAvailability: options?.syncAvailability ?? config.sync_availability,
-            });
-
+        for (const location of locations as unknown as MenuLocationLink[]) {
+            const result = await syncMenuToLocation(
+                db,
+                location.restaurant_id,
+                { categories: [], menuItems: [], modifierGroups: [], modifierOptions: [] },
+                {
+                    syncCategories: options?.syncCategories ?? menuConfig.sync_categories,
+                    syncItems: options?.syncItems ?? menuConfig.sync_items,
+                    syncModifiers: options?.syncModifiers ?? menuConfig.sync_modifiers,
+                    syncPricing: options?.syncPricing ?? menuConfig.sync_pricing,
+                    syncAvailability: options?.syncAvailability ?? menuConfig.sync_availability,
+                }
+            );
             results.push({
                 location_id: location.restaurant_id,
-                location_name: location.restaurants?.name ?? 'Unknown',
+                location_name: location.restaurants?.name ?? '',
                 success: result.success,
                 changes_applied: result.changesApplied,
                 changes_failed: result.changesFailed,
                 errors: result.errors,
             });
-
-            // Update sync status
-            await db
-                .from('menu_location_links')
-                .update({
-                    last_sync_at: new Date().toISOString(),
-                    sync_status: result.success ? 'synced' : 'partial',
-                    pending_changes: result.changesFailed,
-                })
-                .eq('menu_config_id', config.id)
-                .eq('restaurant_id', location.restaurant_id);
         }
 
         return {
@@ -314,18 +308,122 @@ export async function pushMenuToLocations(
  * Get full menu data from a restaurant
  */
 
+interface MenuLocationLink {
+    restaurant_id: string;
+    is_primary: boolean;
+    sync_enabled: boolean;
+    last_sync_at: string | null;
+    sync_status: string | null;
+    pending_changes: number;
+    restaurants: { name: string } | null;
+}
+
+interface MenuConfigRecord {
+    id: string;
+    primary_restaurant_id: string;
+    name: string;
+    description: string | null;
+    sync_categories: boolean;
+    sync_items: boolean;
+    sync_modifiers: boolean;
+    sync_pricing: boolean;
+    sync_availability: boolean;
+    auto_sync_enabled: boolean;
+    sync_schedule: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+interface CategoryRow {
+    id: string;
+    restaurant_id: string;
+    name: string;
+    name_am: string | null;
+    order_index: number;
+    section?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface MenuItemRow {
+    id: string;
+    category_id: string;
+    name: string;
+    name_am: string | null;
+    description: string | null;
+    description_am: string | null;
+    image_url: string | null;
+    is_available: boolean;
+    is_chef_special: boolean;
+    is_fasting: boolean;
+    allergens: string[];
+    dietary_tags: string[];
+    station: string;
+    course?: string;
+    connected_stations?: string[];
+    price?: number;
+    categories?: { restaurant_id: string };
+}
+
+interface ModifierGroupRow {
+    id: string;
+    restaurant_id: string;
+    menu_item_id: string | null;
+    name: string;
+    name_am: string | null;
+    required: boolean;
+    multi_select: boolean;
+    min_select: number;
+    max_select: number;
+    sort_order: number;
+    is_active: boolean;
+}
+
+interface ModifierOptionRow {
+    id: string;
+    restaurant_id: string;
+    modifier_group_id: string;
+    name: string;
+    name_am: string | null;
+    sort_order: number;
+    is_available: boolean;
+    price_adjustment?: number;
+}
+
+interface MenuLocationRow {
+    restaurant_id: string;
+    sync_enabled: boolean;
+    restaurants: { name: string } | null;
+}
+
+interface MenuLinkRow {
+    restaurant_id: string;
+}
+
+interface MenuChangeQueueRow {
+    id: string;
+    change_type: string;
+    entity_type: string;
+    entity_id: string;
+    location_ids: string[];
+    change_data: Record<string, unknown>;
+    status: string;
+    applied_at: string | null;
+    applied_to: string[];
+    failed_at: string | null;
+    error_message: string | null;
+    created_at: string;
+    created_by: string;
+}
+
 async function getFullMenuData(
-    db: any,
+    db: DbClient,
     restaurantId: string
 ): Promise<{
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    categories: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    menuItems: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    modifierGroups: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    modifierOptions: any[];
+    categories: CategoryRow[];
+    menuItems: MenuItemRow[];
+    modifierGroups: ModifierGroupRow[];
+    modifierOptions: ModifierOptionRow[];
 }> {
     // Get categories
     const { data: categories } = await db
@@ -370,17 +468,13 @@ async function getFullMenuData(
  */
 
 async function syncMenuToLocation(
-    db: any,
+    db: DbClient,
     targetRestaurantId: string,
     menuData: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        categories: any[];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        menuItems: any[];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        modifierGroups: any[];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        modifierOptions: any[];
+        categories: CategoryRow[];
+        menuItems: MenuItemRow[];
+        modifierGroups: ModifierGroupRow[];
+        modifierOptions: ModifierOptionRow[];
     },
     options: {
         syncCategories: boolean;
@@ -577,8 +671,7 @@ export async function recordMenuChange(
     },
     userId: string
 ): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db = supabase as unknown as DbClient;
 
     try {
         // Get config
@@ -589,14 +682,16 @@ export async function recordMenuChange(
             .maybeSingle();
 
         if (!config) {
-            return; // No centralized menu configured
+            return;
         }
+
+        const configId = (config as { id: string }).id;
 
         // Get linked locations
         const { data: links } = await db
             .from('menu_location_links')
             .select('restaurant_id')
-            .eq('menu_config_id', config.id)
+            .eq('menu_config_id', configId)
             .eq('sync_enabled', true)
             .neq('restaurant_id', primaryRestaurantId);
 
@@ -604,23 +699,25 @@ export async function recordMenuChange(
             return;
         }
 
+        const typedLinks = links as MenuLinkRow[];
+
         // Record the change
         await db.from('menu_change_queue').insert({
-            menu_config_id: config.id,
+            menu_config_id: configId,
             change_type: change.change_type,
             entity_type: change.entity_type,
             entity_id: change.entity_id,
-            location_ids: links.map((l: { restaurant_id: string }) => l.restaurant_id),
+            location_ids: typedLinks.map(l => l.restaurant_id),
             change_data: change.change_data,
             status: 'pending',
             created_by: userId,
         });
 
         // Update pending changes count for each location
-        for (const link of links) {
+        for (const link of typedLinks) {
             await db.rpc('increment_pending_changes', {
                 p_restaurant_id: link.restaurant_id,
-                p_menu_config_id: config.id,
+                p_menu_config_id: configId,
             });
         }
     } catch (error) {
@@ -635,8 +732,7 @@ export async function getPendingChanges(
     supabase: SupabaseClient<Database>,
     primaryRestaurantId: string
 ): Promise<MenuChange[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db = supabase as unknown as DbClient;
 
     try {
         const { data: config } = await db

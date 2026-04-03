@@ -218,7 +218,13 @@ export async function generateLaborReport(
 
         // Calculate summaries based on order assignments (proxy for labor)
         const byStaff = calculateStaffSummaryFromOrders(staff || [], orders || []);
-        const byDay = calculateDailySummaryFromOrders(orders || [], groupBy);
+        const byDay = calculateDailySummaryFromOrders(
+            (orders || []).map(o => ({
+                created_at: o.created_at ?? '',
+                total_price: o.total_price ?? undefined,
+            })) as { created_at: string; total_price?: number | undefined }[],
+            groupBy
+        );
         const byRole = calculateRoleSummary(byStaff);
         const summary = calculateOverallSummary(byStaff, byDay);
         const insights = generateInsights(summary, byStaff, byDay);
@@ -340,7 +346,7 @@ function calculateStaffSummaryFromOrders(staff: any[], orders: any[]): TimeEntry
 }
 
 function calculateDailySummaryFromOrders(
-    orders: any[],
+    orders: Array<{ created_at: string; total_price?: number }>,
     _groupBy: 'day' | 'week' | 'month'
 ): DailyLaborSummary[] {
     const avgHourlyRate = 50;

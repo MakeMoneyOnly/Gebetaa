@@ -582,14 +582,14 @@ async function generateReportData(
 }
 
 async function completeExecution(
-    db: any,
+    db: SupabaseClient<Database>,
     executionId: string,
     status: 'success' | 'failed',
     fileUrl: string | null,
     fileSize: number | null,
     errorMessage: string | null
 ): Promise<void> {
-    await db.rpc('complete_report_execution', {
+    await db.rpc('complete_report_execution' as never, {
         p_execution_id: executionId,
         p_status: status,
         p_file_url: fileUrl,
@@ -598,14 +598,19 @@ async function completeExecution(
     });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function sendReportEmail(db: any, report: ScheduledReport, _fileUrl: string): Promise<void> {
+async function sendReportEmail(
+    db: SupabaseClient<Database>,
+    report: ScheduledReport,
+    _fileUrl: string
+): Promise<void> {
     // In production, integrate with Resend/SendGrid
     console.warn(`[ScheduledReports] Would send email to ${report.recipient_emails.join(', ')}`);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getExecution(db: any, executionId: string): Promise<ReportExecution | null> {
+async function getExecution(
+    db: SupabaseClient<Database>,
+    executionId: string
+): Promise<ReportExecution | null> {
     const { data } = await db.from('report_executions').select('*').eq('id', executionId).single();
     return data;
 }
