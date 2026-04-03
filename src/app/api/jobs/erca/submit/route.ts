@@ -129,24 +129,32 @@ async function generateERCAInvoice(
     }
 
     // Calculate invoice items
-    const items = (order.order_items || []).map((item: any) => {
-        const quantity = Number(item.quantity) || 1;
-        const unitPrice = Number(item.unit_price) || 0;
-        const subtotal = quantity * unitPrice;
-        const vatRate = 0.15; // Ethiopia VAT rate
-        const vatAmount = Math.round(subtotal * vatRate);
+    const items = (order.order_items || []).map(
+        (item: {
+            quantity?: number;
+            unit_price?: number;
+            menu_item_id?: string;
+            name_am?: string;
+            name?: string;
+        }) => {
+            const quantity = Number(item.quantity) || 1;
+            const unitPrice = Number(item.unit_price) || 0;
+            const subtotal = quantity * unitPrice;
+            const vatRate = 0.15; // Ethiopia VAT rate
+            const vatAmount = Math.round(subtotal * vatRate);
 
-        return {
-            code: item.menu_item_id || 'ITEM',
-            description: item.name_am || item.name || 'Item',
-            quantity,
-            unitPrice,
-            discount: 0,
-            vatRate,
-            vatAmount,
-            totalAmount: subtotal + vatAmount,
-        };
-    });
+            return {
+                code: item.menu_item_id || 'ITEM',
+                description: item.name_am || item.name || 'Item',
+                quantity,
+                unitPrice,
+                discount: 0,
+                vatRate,
+                vatAmount,
+                totalAmount: subtotal + vatAmount,
+            };
+        }
+    );
 
     const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const totalDiscount = Number(order.discount_amount) || 0;
@@ -179,7 +187,7 @@ async function generateERCAInvoice(
  * Submit invoice to ERCA (stub - actual implementation depends on ERCA API)
  */
 async function submitToERCA(
-    invoiceData: any,
+    invoiceData: Record<string, unknown>,
     _vatNumber: string
 ): Promise<{ success: boolean; reference?: string; error?: string }> {
     // This is a stub implementation
@@ -212,7 +220,7 @@ async function submitToERCA(
 async function storeERCAInvoice(
     orderId: string,
     restaurantId: string,
-    invoiceData: any,
+    invoiceData: Record<string, unknown>,
     ercaReference: string,
     status: 'pending' | 'submitted' | 'confirmed' | 'failed'
 ): Promise<void> {
@@ -275,7 +283,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!invoiceResult.success) {
         // Store failed attempt
-        await storeERCAInvoice(order_id, restaurant_id, null, '', 'failed').catch(console.error);
+        await storeERCAInvoice(
+            order_id,
+            restaurant_id,
+            {} as Record<string, unknown>,
+            '',
+            'failed'
+        ).catch(console.error);
 
         return NextResponse.json({
             data: {
@@ -296,7 +310,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         .maybeSingle();
 
     const submitResult = await submitToERCA(
-        invoiceResult.invoiceData,
+        invoiceResult.invoiceData as Record<string, unknown>,
         restaurant?.vat_number || ''
     );
 
@@ -304,7 +318,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await storeERCAInvoice(
         order_id,
         restaurant_id,
-        invoiceResult.invoiceData,
+        invoiceResult.invoiceData as Record<string, unknown>,
         submitResult.reference || '',
         submitResult.success ? 'submitted' : 'failed'
     );

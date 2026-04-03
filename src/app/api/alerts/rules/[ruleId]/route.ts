@@ -104,8 +104,8 @@ export async function PATCH(
         action: 'alert_rule_updated',
         entity_type: 'alert_rule',
         entity_id: updated.id,
-        old_value: existing as any,
-        new_value: updated as any,
+        old_value: existing as unknown as Json,
+        new_value: updated as unknown as Json,
         metadata: {
             source: 'merchant_dashboard',
             idempotency_key: idempotencyKey,

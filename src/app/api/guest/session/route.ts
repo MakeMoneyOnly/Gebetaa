@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
         if (parsed.data.session_id) {
             const { data: existingSession, error: sessionLookupError } = await db
-                .from('guest_menu_sessions' as any)
+                .from('guest_menu_sessions')
                 .select('id, restaurant_id, table_id, auth_state')
                 .eq('id', parsed.data.session_id)
                 .maybeSingle();
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
                 }
 
                 const { data: updatedSession, error: updateError } = await db
-                    .from('guest_menu_sessions' as any)
+                    .from('guest_menu_sessions')
                     .update(patch)
                     .eq('id', existingSession.id)
                     .select('id, auth_state, user_id, started_at, last_seen_at')
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         }
 
         const { data: createdSession, error: insertError } = await db
-            .from('guest_menu_sessions' as any)
+            .from('guest_menu_sessions')
             .insert({
                 restaurant_id: guestContext.data.restaurantId,
                 table_id: guestContext.data.tableId,

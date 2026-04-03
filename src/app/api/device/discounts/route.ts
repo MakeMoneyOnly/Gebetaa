@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
     try {
         const discounts = await listActiveDiscountsForRestaurant(
-            context.admin as any,
+            context.admin,
             context.restaurantId
         );
         return apiSuccess({ discounts });

@@ -3,6 +3,8 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const CreateSupportTicketSchema = z.object({
     subject: z.string().trim().min(3).max(140),
@@ -26,7 +28,7 @@ export async function GET(request: Request) {
     const limitRaw = Number.parseInt(url.searchParams.get('limit') ?? '20', 10);
     const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(limitRaw, 100)) : 20;
 
-    const { data, error } = await context.supabase
+    const { data, error } = await (context.supabase as SupabaseClient<Database>)
         .from('support_tickets')
         .select('id, subject, description, priority, status, source, created_at, updated_at')
         .eq('restaurant_id', context.restaurantId)
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
         return parsed.response;
     }
 
-    const { data, error } = await context.supabase
+    const { data, error } = await (context.supabase as SupabaseClient<Database>)
         .from('support_tickets')
         .insert({
             restaurant_id: context.restaurantId,
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
             description: parsed.data.description,
             priority: parsed.data.priority,
             status: 'open',
-            diagnostics_json: (parsed.data.diagnostics_json ?? {}) as any,
+            diagnostics_json: (parsed.data.diagnostics_json ?? {}) as Record<string, unknown>,
             created_by: auth.user.id,
         })
         .select('*')
@@ -85,7 +87,7 @@ export async function POST(request: Request) {
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'support_ticket_created',

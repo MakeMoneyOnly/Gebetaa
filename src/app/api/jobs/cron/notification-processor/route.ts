@@ -37,7 +37,7 @@ async function cleanupOldNotifications(olderThanDays: number = 7): Promise<numbe
     const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000).toISOString();
 
     // Delete old sent/cancelled notifications
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
         .from('notification_queue')
         .delete()
         .in('status', ['sent', 'cancelled'])
@@ -48,7 +48,7 @@ async function cleanupOldNotifications(olderThanDays: number = 7): Promise<numbe
         return 0;
     }
 
-    return Array.isArray(data) ? data.length : 0;
+    return Array.isArray(data) ? (data as unknown[]).length : 0;
 }
 
 /**

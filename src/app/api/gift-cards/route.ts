@@ -7,6 +7,8 @@ import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import { isSchemaNotReadyError } from '@/lib/api/schemaFallback';
 import type { Json } from '@/types/database';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const GiftCardsQuerySchema = z.object({
     status: z.enum(['active', 'redeemed', 'expired', 'voided']).optional(),
@@ -36,7 +38,7 @@ export async function GET(request: Request) {
         return context.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const url = new URL(request.url);
     const parsed = parseQuery(
@@ -51,7 +53,7 @@ export async function GET(request: Request) {
     }
 
     let query = db
-        .from('gift_cards' as any)
+        .from('gift_cards')
         .select('*')
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false })
@@ -89,7 +91,7 @@ export async function POST(request: Request) {
         return context.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
     if (explicitIdempotencyKey && !isIdempotencyKeyValid(explicitIdempotencyKey)) {
@@ -106,7 +108,7 @@ export async function POST(request: Request) {
     const balance = Number(parsed.data.initial_balance.toFixed(2));
 
     const { data: giftCard, error } = await db
-        .from('gift_cards' as any)
+        .from('gift_cards')
         .insert({
             restaurant_id: context.restaurantId,
             code,
@@ -130,7 +132,7 @@ export async function POST(request: Request) {
         );
     }
 
-    const { error: txError } = await db.from('gift_card_transactions' as any).insert({
+    const { error: txError } = await db.from('gift_card_transactions').insert({
         restaurant_id: context.restaurantId,
         gift_card_id: giftCard.id,
         amount_delta: balance,
@@ -149,7 +151,7 @@ export async function POST(request: Request) {
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'gift_card_created',

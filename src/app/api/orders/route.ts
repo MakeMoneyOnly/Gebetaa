@@ -119,6 +119,8 @@ import { publishEvent } from '@/lib/events/runtime';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { prepareOrderDiscount } from '@/lib/discounts/service';
 import { redisRateLimiters } from '@/lib/security';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const OrdersQuerySchema = z.object({
     status: z.string().optional(),
@@ -397,11 +399,19 @@ export async function POST(request: NextRequest) {
             explicitIdempotencyKey?.trim() ||
             parsed.data.idempotency_key ||
             generateIdempotencyKey();
-        let discountRuntime;
+        let discountRuntime: {
+            discount: { id: string } | null;
+            calculation: {
+                subtotal: number;
+                discountAmount: number;
+                total: number;
+                applied: boolean;
+            };
+        };
         try {
             discountRuntime = parsed.data.discount_id
                 ? await prepareOrderDiscount({
-                      supabase: createServiceRoleClient() as any,
+                      supabase: createServiceRoleClient(),
                       restaurantId,
                       discountId: parsed.data.discount_id,
                       items: parsed.data.items.map(item => ({
@@ -450,8 +460,10 @@ export async function POST(request: NextRequest) {
         let campaignAttributionApplied = false;
         if (parsed.data.campaign_attribution) {
             const attribution = parsed.data.campaign_attribution;
-            const { data: delivery, error: deliveryError } = await (supabase as any)
-                .from('campaign_deliveries' as any)
+            const { data: delivery, error: deliveryError } = await (
+                supabase as SupabaseClient<Database>
+            )
+                .from('campaign_deliveries')
                 .select('id, campaign_id, conversion_order_id')
                 .eq('id', attribution.campaign_delivery_id)
                 .maybeSingle();
@@ -464,8 +476,10 @@ export async function POST(request: NextRequest) {
                 const campaignMatches =
                     !attribution.campaign_id || attribution.campaign_id === delivery.campaign_id;
                 if (campaignMatches) {
-                    const { data: campaign, error: campaignError } = await (supabase as any)
-                        .from('campaigns' as any)
+                    const { data: campaign, error: campaignError } = await (
+                        supabase as SupabaseClient<Database>
+                    )
+                        .from('campaigns')
                         .select('id')
                         .eq('id', delivery.campaign_id)
                         .eq('restaurant_id', restaurantId)
@@ -476,8 +490,10 @@ export async function POST(request: NextRequest) {
                             error: campaignError.message,
                         });
                     } else if (campaign && !delivery.conversion_order_id) {
-                        const { error: updateDeliveryError } = await (supabase as any)
-                            .from('campaign_deliveries' as any)
+                        const { error: updateDeliveryError } = await (
+                            supabase as SupabaseClient<Database>
+                        )
+                            .from('campaign_deliveries')
                             .update({
                                 status: 'converted',
                                 conversion_order_id: result.order.id,

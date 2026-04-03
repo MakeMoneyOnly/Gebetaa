@@ -104,8 +104,8 @@ export async function POST(request: Request) {
         .select('settings')
         .eq('id', existingOrder.restaurant_id)
         .maybeSingle();
-    const notificationsSettings = (restaurantSettings?.settings as Record<string, any> | null)
-        ?.notifications;
+    const notificationsSettings = (restaurantSettings?.settings as Record<string, unknown> | null)
+        ?.notifications as Record<string, unknown> | undefined;
     const smsEnabled = Boolean(notificationsSettings?.sms_enabled);
 
     const smsPromise =

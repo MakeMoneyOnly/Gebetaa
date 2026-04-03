@@ -43,7 +43,7 @@ export async function GET() {
     }
 
     try {
-        const db = context.supabase as any;
+        const db = context.supabase;
         const { data, error } = await db
             .from('happy_hour_schedules')
             .select('*')
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
         );
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data, error } = await db
         .from('happy_hour_schedules')
         .insert({

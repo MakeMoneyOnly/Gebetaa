@@ -61,7 +61,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         return apiError('Assignee not found or inactive', 404, 'ASSIGNEE_NOT_FOUND');
     }
 
-    const { error: eventError } = await (supabase as any).from('order_events').insert({
+    const { error: eventError } = await supabase.from('order_events').insert({
         restaurant_id: order.restaurant_id,
         order_id: order.id,
         event_type: 'assigned',

@@ -6,6 +6,22 @@ import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import { isSchemaNotReadyError } from '@/lib/api/schemaFallback';
 import type { Json } from '@/types/database';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
+
+interface CampaignDeliveryRow {
+    campaign_id: string;
+    status: string;
+    conversion_order_id: string | null;
+}
+
+interface CampaignInsertResult {
+    id: string;
+    name: string;
+    channel: string;
+    status: string;
+    segment_id: string | null;
+}
 
 const CampaignsQuerySchema = z.object({
     status: z.enum(['draft', 'scheduled', 'running', 'completed', 'cancelled']).optional(),
@@ -31,7 +47,7 @@ export async function GET(request: Request) {
         return context.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const url = new URL(request.url);
     const parsed = parseQuery(
@@ -46,7 +62,7 @@ export async function GET(request: Request) {
     }
 
     let campaignQuery = db
-        .from('campaigns' as any)
+        .from('campaigns')
         .select('*')
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false })
@@ -60,7 +76,7 @@ export async function GET(request: Request) {
         await Promise.all([
             campaignQuery,
             db
-                .from('segments' as any)
+                .from('segments')
                 .select('id, name, rule_json, created_at')
                 .eq('restaurant_id', context.restaurantId)
                 .order('created_at', { ascending: false }),
@@ -89,7 +105,7 @@ export async function GET(request: Request) {
         );
     }
 
-    const campaignIds = (campaigns ?? []).map((item: any) => item.id);
+    const campaignIds = (campaigns ?? []).map((item: { id: string }) => item.id);
     const deliveriesByCampaign = new Map<
         string,
         {
@@ -104,14 +120,14 @@ export async function GET(request: Request) {
 
     if (campaignIds.length > 0) {
         const { data: deliveries, error: deliveryError } = await db
-            .from('campaign_deliveries' as any)
+            .from('campaign_deliveries')
             .select('campaign_id, status, conversion_order_id')
             .in('campaign_id', campaignIds);
 
         if (deliveryError) {
             if (isSchemaNotReadyError(deliveryError)) {
                 return apiSuccess({
-                    campaigns: (campaigns ?? []).map((campaign: any) => ({
+                    campaigns: (campaigns ?? []).map((campaign: Record<string, unknown>) => ({
                         ...campaign,
                         tracking: {
                             total: 0,
@@ -134,7 +150,8 @@ export async function GET(request: Request) {
         }
 
         for (const delivery of deliveries ?? []) {
-            const current = deliveriesByCampaign.get(delivery.campaign_id) ?? {
+            const typedDelivery = delivery as CampaignDeliveryRow;
+            const current = deliveriesByCampaign.get(typedDelivery.campaign_id) ?? {
                 total: 0,
                 sent: 0,
                 opened: 0,
@@ -143,20 +160,20 @@ export async function GET(request: Request) {
                 failed: 0,
             };
             current.total += 1;
-            if (delivery.status === 'sent') current.sent += 1;
-            if (delivery.status === 'opened') current.opened += 1;
-            if (delivery.status === 'clicked') current.clicked += 1;
-            if (delivery.status === 'converted' || Boolean(delivery.conversion_order_id))
+            if (typedDelivery.status === 'sent') current.sent += 1;
+            if (typedDelivery.status === 'opened') current.opened += 1;
+            if (typedDelivery.status === 'clicked') current.clicked += 1;
+            if (typedDelivery.status === 'converted' || Boolean(typedDelivery.conversion_order_id))
                 current.converted += 1;
-            if (delivery.status === 'failed') current.failed += 1;
-            deliveriesByCampaign.set(delivery.campaign_id, current);
+            if (typedDelivery.status === 'failed') current.failed += 1;
+            deliveriesByCampaign.set(typedDelivery.campaign_id, current);
         }
     }
 
     return apiSuccess({
-        campaigns: (campaigns ?? []).map((campaign: any) => ({
+        campaigns: (campaigns ?? []).map((campaign: Record<string, unknown>) => ({
             ...campaign,
-            tracking: deliveriesByCampaign.get(campaign.id) ?? {
+            tracking: deliveriesByCampaign.get(campaign.id as string) ?? {
                 total: 0,
                 sent: 0,
                 opened: 0,
@@ -180,7 +197,7 @@ export async function POST(request: Request) {
         return context.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const explicitIdempotencyKey = request.headers.get('x-idempotency-key');
     if (explicitIdempotencyKey && !isIdempotencyKeyValid(explicitIdempotencyKey)) {
@@ -195,7 +212,7 @@ export async function POST(request: Request) {
 
     if (parsed.data.segment_id) {
         const { data: segment, error: segmentError } = await db
-            .from('segments' as any)
+            .from('segments')
             .select('id')
             .eq('id', parsed.data.segment_id)
             .eq('restaurant_id', context.restaurantId)
@@ -217,7 +234,7 @@ export async function POST(request: Request) {
     const hasSchedule = Boolean(parsed.data.scheduled_at);
 
     const { data, error } = await db
-        .from('campaigns' as any)
+        .from('campaigns')
         .insert({
             restaurant_id: context.restaurantId,
             channel: parsed.data.channel,
@@ -235,17 +252,17 @@ export async function POST(request: Request) {
         return apiError('Failed to create campaign', 500, 'CAMPAIGN_CREATE_FAILED', error.message);
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'campaign_created',
         entity_type: 'campaign',
-        entity_id: data.id,
+        entity_id: (data as CampaignInsertResult).id,
         new_value: {
-            name: data.name,
-            channel: data.channel,
-            status: data.status,
-            segment_id: data.segment_id,
+            name: (data as CampaignInsertResult).name,
+            channel: (data as CampaignInsertResult).channel,
+            status: (data as CampaignInsertResult).status,
+            segment_id: (data as CampaignInsertResult).segment_id,
         },
         metadata: {
             source: 'merchant_dashboard',

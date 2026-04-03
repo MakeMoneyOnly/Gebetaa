@@ -99,7 +99,7 @@ export async function POST(request: Request) {
             source: 'merchant_dashboard',
             idempotency_key: idempotencyKey,
         },
-        new_value: inserted as any,
+        new_value: inserted as unknown as Json,
     });
 
     return apiSuccess({ rule: inserted, idempotency_key: idempotencyKey }, 201);

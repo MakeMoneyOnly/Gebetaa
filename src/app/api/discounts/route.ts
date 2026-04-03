@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         );
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase;
     const { data, error } = await db
         .from('discounts')
         .insert({

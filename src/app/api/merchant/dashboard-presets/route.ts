@@ -122,8 +122,11 @@ export async function PATCH(request: Request) {
         action: 'dashboard_preset_updated',
         entity_type: 'restaurant_settings',
         entity_id: context.restaurantId,
-        old_value: { dashboard_preset: currentSettings.dashboard_preset ?? null } as any,
-        new_value: { dashboard_preset: parsed.data.preset } as any,
+        old_value: { dashboard_preset: currentSettings.dashboard_preset ?? null } as Record<
+            string,
+            unknown
+        >,
+        new_value: { dashboard_preset: parsed.data.preset } as Record<string, unknown>,
         metadata: { source: 'merchant_dashboard' },
     });
 

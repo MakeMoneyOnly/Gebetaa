@@ -5,6 +5,18 @@ import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import type { Json } from '@/types/database';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
+
+interface GiftCardRecord {
+    id: string;
+    restaurant_id: string;
+    status: string;
+    current_balance: number;
+    expires_at: string | null;
+    created_at?: string;
+    updated_at?: string;
+}
 
 const GiftCardIdSchema = z.string().uuid();
 
@@ -28,7 +40,7 @@ export async function POST(
         return context.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const { giftCardId } = await routeContext.params;
     const giftCardIdParsed = GiftCardIdSchema.safeParse(giftCardId);
@@ -52,19 +64,19 @@ export async function POST(
         return parsed.response;
     }
 
-    const { data: giftCard, error: giftCardError } = await db
-        .from('gift_cards' as any)
+    const { data: giftCard, error: giftCardError } = (await db
+        .from('gift_cards')
         .select('*')
         .eq('id', giftCardIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
-        .maybeSingle();
+        .maybeSingle()) as { data: GiftCardRecord | null; error: unknown };
 
     if (giftCardError) {
         return apiError(
             'Failed to load gift card',
             500,
             'GIFT_CARD_FETCH_FAILED',
-            giftCardError.message
+            (giftCardError as { message?: string })?.message ?? 'Unknown error'
         );
     }
     if (!giftCard) {
@@ -86,8 +98,8 @@ export async function POST(
 
     const nextStatus = nextBalance === 0 ? 'redeemed' : 'active';
 
-    const { data: updated, error: updateError } = await db
-        .from('gift_cards' as any)
+    const { data: updated, error: updateError } = (await db
+        .from('gift_cards')
         .update({
             current_balance: nextBalance,
             status: nextStatus,
@@ -96,19 +108,19 @@ export async function POST(
         .eq('id', giftCard.id)
         .eq('restaurant_id', context.restaurantId)
         .select('*')
-        .single();
+        .single()) as { data: GiftCardRecord | null; error: unknown };
 
     if (updateError) {
         return apiError(
             'Failed to redeem gift card',
             500,
             'GIFT_CARD_REDEEM_FAILED',
-            updateError.message
+            (updateError as { message?: string })?.message ?? 'Unknown error'
         );
     }
 
-    const { data: transaction, error: txError } = await db
-        .from('gift_card_transactions' as any)
+    const { data: transaction, error: txError } = (await db
+        .from('gift_card_transactions')
         .insert({
             restaurant_id: context.restaurantId,
             gift_card_id: giftCard.id,
@@ -124,18 +136,18 @@ export async function POST(
             created_by: auth.user.id,
         })
         .select('*')
-        .single();
+        .single()) as { data: { id: string } | null; error: unknown };
 
     if (txError) {
         return apiError(
             'Failed to create gift card transaction',
             500,
             'GIFT_CARD_TRANSACTION_CREATE_FAILED',
-            txError.message
+            (txError as { message?: string })?.message ?? 'Unknown error'
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'gift_card_redeemed',
@@ -146,13 +158,13 @@ export async function POST(
             status: giftCard.status,
         },
         new_value: {
-            current_balance: updated.current_balance,
-            status: updated.status,
+            current_balance: (updated as GiftCardRecord).current_balance,
+            status: (updated as GiftCardRecord).status,
             amount: parsed.data.amount,
         },
         metadata: {
             order_id: parsed.data.order_id ?? null,
-            transaction_id: transaction.id,
+            transaction_id: (transaction as { id: string }).id,
             idempotency_key: idempotencyKey,
         },
     });

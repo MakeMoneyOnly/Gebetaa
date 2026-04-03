@@ -10,6 +10,8 @@ import { writeAuditLog } from '@/lib/api/audit';
 import { resolveIdempotencyKey } from '@/lib/api/idempotency';
 import type { Json } from '@/types/database';
 import { redisRateLimiters } from '@/lib/security';
+import type { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 const SplitMethodSchema = z.enum(['even', 'items', 'custom']);
 
@@ -50,7 +52,7 @@ function buildEvenAmounts(totalPrice: number, splitCount: number): number[] {
 export async function GET(_request: Request, context: { params: Promise<{ orderId: string }> }) {
     const auth = await getAuthenticatedUser();
     let restaurantId: string;
-    let db: any;
+    let db: Awaited<ReturnType<typeof getAuthorizedRestaurantContext>>['supabase'] | undefined;
 
     if (auth.ok) {
         const restaurantContext = await getAuthorizedRestaurantContext(auth.user.id);
@@ -69,7 +71,6 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
     }
 
     const { orderId } = await context.params;
-    const dbAny = db as any;
 
     const { data: order, error: orderError } = await db
         .from('orders')
@@ -85,8 +86,8 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
         return apiError('Order not found', 404, 'ORDER_NOT_FOUND');
     }
 
-    const { data: splits, error: splitsError } = await dbAny
-        .from('order_check_splits')
+    const { data: splits, error: splitsError } = await db
+        .from('order_check_splits' as unknown as never)
         .select('*')
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId)
@@ -101,14 +102,14 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
         );
     }
 
-    const splitRows = (splits ?? []) as Array<Record<string, unknown>>;
+    const splitRows = (splits ?? []) as unknown as Array<Record<string, unknown>>;
     const splitIds = splitRows.map(row => String(row.id)).filter(Boolean);
 
     let splitItems: Array<Record<string, unknown>> = [];
     let splitPayments: Array<Record<string, unknown>> = [];
     let orderItems: Array<Record<string, unknown>> = [];
 
-    const { data: orderItemsData, error: orderItemsError } = await dbAny
+    const { data: orderItemsData, error: orderItemsError } = await db
         .from('order_items')
         .select('id, name, quantity, price, notes, created_at')
         .eq('order_id', orderId)
@@ -130,12 +131,12 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
             { data: splitItemsData, error: splitItemsError },
             { data: splitPaymentsData, error: splitPaymentsError },
         ] = await Promise.all([
-            dbAny
-                .from('order_check_split_items')
+            db
+                .from('order_check_split_items' as unknown as never)
                 .select('*')
                 .eq('restaurant_id', restaurantId)
                 .eq('order_id', orderId),
-            dbAny
+            db
                 .from('payments')
                 .select('id, split_id, amount, tip_amount, method, status, created_at')
                 .eq('restaurant_id', restaurantId)
@@ -159,7 +160,7 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
             );
         }
 
-        splitItems = (splitItemsData ?? []) as Array<Record<string, unknown>>;
+        splitItems = (splitItemsData ?? []) as unknown as Array<Record<string, unknown>>;
         splitPayments = (splitPaymentsData ?? []) as Array<Record<string, unknown>>;
     }
 
@@ -197,7 +198,7 @@ type ComputedSplit = {
 
 export async function POST(request: Request, context: { params: Promise<{ orderId: string }> }) {
     // Apply rate limiting for order split (mutation endpoint)
-    const rateLimitResponse = await redisRateLimiters.mutation(request as any);
+    const rateLimitResponse = await redisRateLimiters.mutation(request as NextRequest);
     if (rateLimitResponse) {
         return rateLimitResponse;
     }
@@ -205,7 +206,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     const auth = await getAuthenticatedUser();
     let actorUserId: string | null = null;
     let restaurantId: string;
-    let db: any;
+    let db: Awaited<ReturnType<typeof getAuthorizedRestaurantContext>>['supabase'] | undefined;
 
     if (auth.ok) {
         const restaurantContext = await getAuthorizedRestaurantContext(auth.user.id);
@@ -235,7 +236,6 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
 
     const payload = parsed.data;
     const { orderId } = await context.params;
-    const dbAny = db as any;
 
     const { data: order, error: orderError } = await db
         .from('orders')
@@ -259,13 +259,13 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }
 
     const totalPrice = Number(order.total_price ?? 0);
-    const computed = await computeSplitPlan(dbAny, restaurantId, orderId, totalPrice, payload);
+    const computed = await computeSplitPlan(db, restaurantId, orderId, totalPrice, payload);
     if (!computed.ok) {
         return computed.response;
     }
 
-    const { error: deleteItemsError } = await dbAny
-        .from('order_check_split_items')
+    const { error: deleteItemsError } = await db
+        .from('order_check_split_items' as unknown as never)
         .delete()
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId);
@@ -279,8 +279,8 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         );
     }
 
-    const { error: deleteSplitsError } = await dbAny
-        .from('order_check_splits')
+    const { error: deleteSplitsError } = await db
+        .from('order_check_splits' as unknown as never)
         .delete()
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId);
@@ -306,8 +306,8 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         created_by: actorUserId,
     }));
 
-    const { data: insertedSplits, error: insertSplitsError } = await dbAny
-        .from('order_check_splits')
+    const { data: insertedSplits, error: insertSplitsError } = await db
+        .from('order_check_splits' as unknown as never)
         .insert(splitRowsToInsert)
         .select('*')
         .order('split_index', { ascending: true });
@@ -322,7 +322,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }
 
     const splitIdByIndex = new Map<number, string>();
-    for (const row of (insertedSplits ?? []) as Array<Record<string, unknown>>) {
+    for (const row of (insertedSplits ?? []) as unknown as Array<Record<string, unknown>>) {
         const splitIndex = Number(row.split_index);
         const splitId = String(row.id ?? '');
         if (Number.isFinite(splitIndex) && splitId.length > 0) {
@@ -343,8 +343,8 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
 
     let insertedSplitItems: Array<Record<string, unknown>> = [];
     if (splitItemRows.length > 0) {
-        const { data: insertItemsData, error: insertItemsError } = await dbAny
-            .from('order_check_split_items')
+        const { data: insertItemsData, error: insertItemsError } = await db
+            .from('order_check_split_items' as unknown as never)
             .insert(splitItemRows)
             .select('*');
 
@@ -357,7 +357,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
             );
         }
 
-        insertedSplitItems = (insertItemsData ?? []) as Array<Record<string, unknown>>;
+        insertedSplitItems = (insertItemsData ?? []) as unknown as Array<Record<string, unknown>>;
     }
 
     await writeAuditLog(db, {
@@ -390,7 +390,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
 }
 
 async function computeSplitPlan(
-    dbAny: any,
+    db: Awaited<ReturnType<typeof getAuthorizedRestaurantContext>>['supabase'],
     restaurantId: string,
     orderId: string,
     totalPrice: number,
@@ -473,7 +473,21 @@ async function computeSplitPlan(
         return { ok: true, plan, itemAmountById };
     }
 
-    const { data: orderItems, error: orderItemsError } = await dbAny
+    if (!db) {
+        return {
+            ok: false,
+            response: apiError('Database not initialized', 500, 'DB_NOT_INITIALIZED'),
+        };
+    }
+
+    if (!db) {
+        return {
+            ok: false,
+            response: apiError('Database not initialized', 500, 'DB_NOT_INITIALIZED'),
+        };
+    }
+
+    const { data: orderItems, error: orderItemsError } = await db
         .from('order_items')
         .select('id, quantity, price')
         .eq('order_id', orderId)

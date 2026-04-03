@@ -44,7 +44,7 @@ async function verifyAndProcessChapaPayment(
     success: boolean;
     status: 'completed' | 'failed' | 'pending' | 'error';
     error?: string;
-    data?: any;
+    data?: Record<string, unknown>;
 }> {
     try {
         // Verify the transaction with Chapa
@@ -123,7 +123,7 @@ async function checkRetryEligibility(paymentSessionId: string): Promise<{
         return { eligible: false, reason: 'Payment already completed' };
     }
 
-    const previousAttempts = (session.metadata as any)?.retry_count || 0;
+    const previousAttempts = (session.metadata as Record<string, unknown>)?.retry_count || 0;
     if (previousAttempts >= 5) {
         return { eligible: false, reason: 'Max retry attempts reached' };
     }
@@ -246,13 +246,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 .eq('id', payment_session_id)
                 .maybeSingle();
 
-            const currentRetryCount = (session?.metadata as any)?.retry_count || 0;
+            const currentRetryCount =
+                (session?.metadata as Record<string, unknown>)?.retry_count || 0;
 
             await admin
                 .from('payment_sessions')
                 .update({
                     metadata: {
-                        ...((session?.metadata as any) || {}),
+                        ...((session?.metadata as Record<string, unknown>) || {}),
                         retry_count: currentRetryCount + 1,
                         last_retry_at: new Date().toISOString(),
                         last_retry_status: result.status,

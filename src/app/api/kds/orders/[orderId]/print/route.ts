@@ -75,7 +75,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         return apiError('Printer fallback is disabled', 409, 'KDS_PRINT_MODE_OFF');
     }
 
-    const { data: rows, error: itemsError } = await (db as any)
+    const { data: rows, error: itemsError } = await db
         .from('kds_order_items')
         .select('name, quantity, station, notes, status')
         .eq('restaurant_id', restaurantContext.restaurantId)
@@ -144,7 +144,8 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
             event_id: result.event_id,
             bridge_status: result.bridge_status ?? null,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'unknown_error';
         await writeAuditLog(db, {
             restaurant_id: restaurantContext.restaurantId,
             user_id: auth.user.id,
@@ -157,10 +158,10 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
                 mode: policy.mode,
             },
             new_value: {
-                error: String(error?.message ?? 'unknown_error'),
+                error: errorMessage,
             },
         });
 
-        return apiError('Failed to print ticket', 502, 'KDS_PRINT_DISPATCH_FAILED', error?.message);
+        return apiError('Failed to print ticket', 502, 'KDS_PRINT_DISPATCH_FAILED', errorMessage);
     }
 }

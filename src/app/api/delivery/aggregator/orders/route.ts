@@ -11,6 +11,8 @@ import { receiveExternalOrder, getActivePartners } from '@/lib/delivery/aggregat
 import { createHmac } from 'crypto';
 import { redisRateLimiters } from '@/lib/security';
 import { z } from 'zod';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 /**
  * HIGH-009: Zod schema for external order validation
@@ -87,7 +89,7 @@ type ValidatedExternalOrder = z.infer<typeof ExternalOrderSchema>;
 
 export async function POST(request: NextRequest) {
     // HIGH-002: Apply rate limiting for webhook endpoint
-    const rateLimitResponse = await redisRateLimiters.mutation(request as any);
+    const rateLimitResponse = await redisRateLimiters.mutation(request as NextRequest);
     if (rateLimitResponse) {
         return rateLimitResponse;
     }
@@ -136,7 +138,7 @@ export async function POST(request: NextRequest) {
             }
 
             orderData = validationResult.data;
-        } catch (parseError) {
+        } catch (_parseError) {
             return NextResponse.json(
                 {
                     error: {
@@ -219,7 +221,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Log the injection
-        await (supabase as any).from('audit_logs').insert({
+        await (supabase as SupabaseClient<Database>).from('audit_logs').insert({
             action: 'delivery_order_received',
             entity_type: 'aggregator_order',
             entity_id: result.order?.id,
@@ -267,7 +269,7 @@ export async function GET(request: NextRequest) {
         );
 
         // Get aggregator status
-        const { data: configs, error } = await (supabase as any)
+        const { data: configs, error } = await (supabase as SupabaseClient<Database>)
             .from('delivery_aggregator_configs')
             .select('*')
             .eq('restaurant_id', restaurantId);

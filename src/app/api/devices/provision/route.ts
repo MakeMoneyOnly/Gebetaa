@@ -2,7 +2,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import { normalizeDeviceMetadata } from '@/lib/devices/config';
+import { normalizeDeviceMetadata, type DeviceManagementMetadata } from '@/lib/devices/config';
 import {
     ProvisionDeviceSchema,
     buildPairingExpiry,
@@ -33,12 +33,12 @@ export async function POST(request: Request) {
         parsed.data.metadata && typeof parsed.data.metadata === 'object'
             ? parsed.data.metadata
             : undefined;
-    const managementMetadata = {
+    const managementMetadata: DeviceManagementMetadata = {
         ...((rawMetadata?.management as Record<string, unknown> | undefined) ?? {}),
-        provider: 'esper',
+        provider: 'esper' as const,
     };
 
-    const { data, error } = await (adminClient as any)
+    const { data, error } = await adminClient
         .from('hardware_devices')
         .insert({
             restaurant_id: context.restaurantId,

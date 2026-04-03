@@ -54,7 +54,7 @@ export async function POST(
         }
 
         // Get user's restaurant membership
-        const { data: staffEntry, error: staffError } = await (supabase as any)
+        const { data: staffEntry, error: staffError } = await supabase
             .from('restaurant_staff')
             .select('restaurant_id, role')
             .eq('user_id', user.id)
@@ -108,7 +108,7 @@ export async function POST(
         }
 
         // Log to audit
-        await (supabase as any).from('audit_logs').insert({
+        await supabase.from('audit_logs').insert({
             action: 'send_marketing_campaign',
             entity_type: 'marketing_campaign',
             entity_id: campaignId,

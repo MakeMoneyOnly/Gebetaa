@@ -6,6 +6,8 @@ import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import { isSchemaNotReadyError } from '@/lib/api/schemaFallback';
 import type { Json } from '@/types/database';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const CreateProgramSchema = z.object({
     name: z.string().trim().min(2).max(120),
@@ -25,10 +27,10 @@ export async function GET() {
         return context.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const { data, error } = await db
-        .from('loyalty_programs' as any)
+        .from('loyalty_programs')
         .select('*')
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false });
@@ -65,7 +67,7 @@ export async function POST(request: Request) {
     }
     const idempotencyKey = resolveIdempotencyKey(explicitIdempotencyKey);
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const parsed = await parseJsonBody(request, CreateProgramSchema);
     if (!parsed.success) {
@@ -84,11 +86,7 @@ export async function POST(request: Request) {
         created_by: auth.user.id,
     };
 
-    const { data, error } = await db
-        .from('loyalty_programs' as any)
-        .insert(payload)
-        .select('*')
-        .single();
+    const { data, error } = await db.from('loyalty_programs').insert(payload).select('*').single();
 
     if (error) {
         return apiError(
@@ -99,7 +97,7 @@ export async function POST(request: Request) {
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'loyalty_program_created',

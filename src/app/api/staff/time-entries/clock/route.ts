@@ -4,6 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import type { Json } from '@/types/database';
 
 const ClockActionSchema = z.object({
     staff_id: z.string().uuid(),
@@ -113,8 +114,8 @@ export async function POST(request: Request) {
             metadata: {
                 source: parsed.data.source ?? 'dashboard',
                 idempotency_key: idempotencyKey,
-            },
-            new_value: inserted as any,
+            } as Json,
+            new_value: inserted as unknown as Json,
         });
 
         return apiSuccess(
@@ -175,12 +176,12 @@ export async function POST(request: Request) {
         action: 'staff_clock_out',
         entity_type: 'time_entry',
         entity_id: updated.id,
-        old_value: openEntry as any,
-        new_value: updated as any,
+        old_value: null,
+        new_value: updated as unknown as Json,
         metadata: {
             source: parsed.data.source ?? 'dashboard',
             idempotency_key: idempotencyKey,
-        },
+        } as Json,
     });
 
     return apiSuccess({

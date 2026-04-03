@@ -1,6 +1,8 @@
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { listActiveDiscountsForRestaurant } from '@/lib/discounts/service';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -31,9 +33,13 @@ export async function GET(request: Request) {
     }
 
     try {
-        const discounts = await listActiveDiscountsForRestaurant(admin as any, restaurant.id, {
-            excludeManagerApproval: true,
-        });
+        const discounts = await listActiveDiscountsForRestaurant(
+            admin as SupabaseClient<Database>,
+            restaurant.id,
+            {
+                excludeManagerApproval: true,
+            }
+        );
         return apiSuccess({ discounts });
     } catch (fetchError) {
         return apiError(

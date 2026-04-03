@@ -5,6 +5,18 @@ import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import type { Json } from '@/types/database';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
+
+interface LoyaltyAccountRow {
+    id: string;
+    points_balance: number;
+    guest_id: string | null;
+    program_id: string | null;
+    status: string;
+    restaurant_id: string;
+    updated_at?: string;
+}
 
 const AccountIdSchema = z.string().uuid();
 
@@ -52,26 +64,26 @@ export async function POST(
     }
     const idempotencyKey = resolveIdempotencyKey(explicitIdempotencyKey);
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const parsed = await parseJsonBody(request, AdjustLoyaltySchema);
     if (!parsed.success) {
         return parsed.response;
     }
 
-    const { data: account, error: accountError } = await db
-        .from('loyalty_accounts' as any)
+    const { data: account, error: accountError } = (await db
+        .from('loyalty_accounts')
         .select('id, points_balance, guest_id, program_id, status')
         .eq('id', accountIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
-        .maybeSingle();
+        .maybeSingle()) as { data: LoyaltyAccountRow | null; error: { message?: string } | null };
 
     if (accountError) {
         return apiError(
             'Failed to load loyalty account',
             500,
             'LOYALTY_ACCOUNT_FETCH_FAILED',
-            accountError.message
+            accountError.message ?? 'Unknown error'
         );
     }
     if (!account) {
@@ -84,14 +96,14 @@ export async function POST(
     const balanceAfter = Number(account.points_balance) + parsed.data.points_delta;
     if (balanceAfter < 0) {
         return apiError(
-            'Insufficient points balance for adjustment',
+            'Insufficient point balance for adjustment',
             409,
             'LOYALTY_INSUFFICIENT_POINTS'
         );
     }
 
-    const { data: updated, error: updateError } = await db
-        .from('loyalty_accounts' as any)
+    const { data: updated, error: updateError } = (await db
+        .from('loyalty_accounts')
         .update({
             points_balance: balanceAfter,
             updated_at: new Date().toISOString(),
@@ -99,21 +111,21 @@ export async function POST(
         .eq('id', account.id)
         .eq('restaurant_id', context.restaurantId)
         .select('*')
-        .single();
+        .single()) as { data: LoyaltyAccountRow | null; error: { message?: string } | null };
 
     if (updateError) {
         return apiError(
             'Failed to update loyalty balance',
             500,
             'LOYALTY_ACCOUNT_UPDATE_FAILED',
-            updateError.message
+            updateError.message ?? 'Unknown error'
         );
     }
 
     const transactionType = parsed.data.points_delta > 0 ? 'adjustment_credit' : 'adjustment_debit';
 
-    const { data: transaction, error: txError } = await db
-        .from('loyalty_transactions' as any)
+    const { data: transaction, error: txError } = (await db
+        .from('loyalty_transactions')
         .insert({
             restaurant_id: context.restaurantId,
             account_id: account.id,
@@ -129,18 +141,18 @@ export async function POST(
             created_by: auth.user.id,
         })
         .select('*')
-        .single();
+        .single()) as { data: { id: string } | null; error: { message?: string } | null };
 
     if (txError) {
         return apiError(
             'Failed to write loyalty transaction',
             500,
             'LOYALTY_TRANSACTION_CREATE_FAILED',
-            txError.message
+            txError.message ?? 'Unknown error'
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'loyalty_account_adjusted',
@@ -150,7 +162,7 @@ export async function POST(
         new_value: { points_balance: balanceAfter, points_delta: parsed.data.points_delta },
         metadata: {
             reason: parsed.data.reason,
-            transaction_id: transaction.id,
+            transaction_id: (transaction as { id: string }).id,
             idempotency_key: idempotencyKey,
         },
     });

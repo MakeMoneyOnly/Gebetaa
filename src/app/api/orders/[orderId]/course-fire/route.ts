@@ -17,7 +17,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ order
     const auth = await getAuthenticatedUser();
     let actorUserId: string | null = null;
     let restaurantId: string;
-    let db: any;
+    let db: Awaited<ReturnType<typeof getAuthorizedRestaurantContext>>['supabase'] | undefined;
 
     if (auth.ok) {
         const restaurantContext = await getAuthorizedRestaurantContext(auth.user.id);
@@ -60,7 +60,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ order
     }
 
     // Build update payload
-    const updatePayload: Record<string, any> = {};
+    const updatePayload: Record<string, unknown> = {};
 
     if (parsed.data.fire_mode !== undefined) {
         updatePayload.fire_mode = parsed.data.fire_mode;

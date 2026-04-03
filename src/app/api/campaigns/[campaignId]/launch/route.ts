@@ -5,6 +5,20 @@ import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import type { Json } from '@/types/database';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
+
+interface CampaignRecord {
+    id: string;
+    restaurant_id: string;
+    name: string;
+    channel?: string;
+    segment_id?: string | null;
+    status?: string;
+    launched_at?: string | null;
+    created_at?: string;
+    updated_at?: string;
+}
 
 const CampaignIdSchema = z.string().uuid();
 
@@ -58,7 +72,7 @@ export async function POST(
         return context.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const { campaignId } = await routeContext.params;
     const campaignIdParsed = CampaignIdSchema.safeParse(campaignId);
@@ -83,7 +97,7 @@ export async function POST(
     }
 
     const { data: campaign, error: campaignError } = await db
-        .from('campaigns' as any)
+        .from('campaigns')
         .select('*')
         .eq('id', campaignIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
@@ -94,7 +108,7 @@ export async function POST(
             'Failed to load campaign',
             500,
             'CAMPAIGN_FETCH_FAILED',
-            campaignError.message
+            (campaignError as { message?: string })?.message ?? 'Unknown error'
         );
     }
     if (!campaign) {
@@ -109,19 +123,19 @@ export async function POST(
     };
 
     if (campaign.segment_id) {
-        const { data: segment, error: segmentError } = await db
-            .from('segments' as any)
+        const { data: segment, error: segmentError } = (await db
+            .from('segments')
             .select('id, rule_json')
             .eq('id', campaign.segment_id)
             .eq('restaurant_id', context.restaurantId)
-            .maybeSingle();
+            .maybeSingle()) as { data: { id: string; rule_json: unknown } | null; error: unknown };
 
         if (segmentError) {
             return apiError(
                 'Failed to load campaign segment',
                 500,
                 'SEGMENT_FETCH_FAILED',
-                segmentError.message
+                (segmentError as { message?: string })?.message ?? 'Unknown error'
             );
         }
         if (!segment) {
@@ -131,20 +145,22 @@ export async function POST(
         segmentRules = normalizeSegmentRules(segment.rule_json);
     }
 
-    const guestFetchLimit = Math.min(parsed.data.limit * 4, 5000);
+    const _guestFetchLimit = Math.min(parsed.data.limit * 4, 5000);
 
     // Use campaign service to get only verified recipients
     const { getVerifiedRecipients } = await import('@/lib/services/campaignService');
 
     const allGuests = await getVerifiedRecipients(context.restaurantId, {
-        hasPhone: campaign.channel === 'sms' || campaign.channel === 'whatsapp',
-        hasEmail: campaign.channel === 'email',
+        hasPhone:
+            (campaign as { channel?: string }).channel === 'sms' ||
+            (campaign as { channel?: string }).channel === 'whatsapp',
+        hasEmail: (campaign as { channel?: string }).channel === 'email',
     });
 
     // Apply segment rules to filter verified guests
     const selectedGuests = allGuests
-        .filter((guest: any) => {
-            if (segmentRules.vip_only && !guest.is_verified) return false;
+        .filter((guest: { isVerified?: boolean }) => {
+            if (segmentRules.vip_only && !guest.isVerified) return false;
             // Note: segment rules for tags, visit_count etc would need additional data
             // For now, just use verified guests
             return true;
@@ -161,8 +177,8 @@ export async function POST(
     }
 
     if (selectedGuests.length > 0) {
-        const { error: deliveryError } = await db.from('campaign_deliveries' as any).upsert(
-            selectedGuests.map((guest: any) => ({
+        const { error: deliveryError } = await db.from('campaign_deliveries').upsert(
+            selectedGuests.map((guest: { guestId: string }) => ({
                 campaign_id: campaign.id,
                 guest_id: guest.guestId,
                 status: 'queued',
@@ -187,7 +203,7 @@ export async function POST(
     const nextStatus = selectedGuests.length > 0 ? 'running' : 'completed';
 
     const { data: updatedCampaign, error: updateError } = await db
-        .from('campaigns' as any)
+        .from('campaigns')
         .update({
             status: nextStatus,
             launched_at: new Date().toISOString(),
@@ -203,28 +219,28 @@ export async function POST(
             'Failed to update campaign launch state',
             500,
             'CAMPAIGN_UPDATE_FAILED',
-            updateError.message
+            (updateError as { message?: string })?.message ?? 'Unknown error'
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'campaign_launched',
         entity_type: 'campaign',
         entity_id: campaign.id,
         old_value: {
-            status: campaign.status,
-            launched_at: campaign.launched_at,
+            status: (campaign as { status?: string }).status,
+            launched_at: (campaign as { launched_at?: string | null }).launched_at,
         },
         new_value: {
-            status: updatedCampaign.status,
-            launched_at: updatedCampaign.launched_at,
+            status: (updatedCampaign as { status?: string }).status,
+            launched_at: (updatedCampaign as { launched_at?: string | null }).launched_at,
             queued_deliveries: selectedGuests.length,
         },
         metadata: {
             idempotency_key: idempotencyKey,
-            segment_id: campaign.segment_id,
+            segment_id: (campaign as { segment_id?: string | null }).segment_id,
         },
     });
 

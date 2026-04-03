@@ -13,7 +13,7 @@ export async function GET() {
     }
 
     // List all hardware devices for the restaurant
-    const { data, error } = await (context.supabase as any)
+    const { data, error } = await context.supabase
         .from('hardware_devices')
         .select('*')
         .eq('restaurant_id', context.restaurantId)

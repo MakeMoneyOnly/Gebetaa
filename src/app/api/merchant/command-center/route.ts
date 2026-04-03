@@ -280,7 +280,7 @@ export async function GET(request: NextRequest) {
         );
 
         // Build chart data
-        const chartPoints: any[] = [];
+        const chartPoints: Array<{ label: string; income: number; prevIncome: number }> = [];
         const daysToTrack = rangeParam === 'month' ? 30 : 7;
         const now = new Date();
 
@@ -311,7 +311,7 @@ export async function GET(request: NextRequest) {
             chartPoints.push({
                 label,
                 income: Math.floor(dayIncome),
-                previous: Math.floor(prevIncome),
+                prevIncome: Math.floor(prevIncome),
             });
         }
 

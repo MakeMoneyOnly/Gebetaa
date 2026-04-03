@@ -16,7 +16,7 @@ export async function GET() {
 
     if (error) return apiError('Failed to fetch zones', 500);
 
-    const zones = (restaurant?.settings as any)?.zones || [];
+    const zones = ((restaurant?.settings as Record<string, unknown>)?.zones || []) as string[];
     return apiSuccess({ zones });
 }
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
         if (fetchError) return apiError('Failed to fetch restaurant settings', 500);
 
-        const currentSettings = (restaurant?.settings as any) || {};
+        const currentSettings = (restaurant?.settings as Record<string, unknown>) || {};
         const newSettings = {
             ...currentSettings,
             zones: Array.from(

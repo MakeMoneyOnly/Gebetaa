@@ -173,9 +173,10 @@ export async function GET(request: Request) {
             shifts: shiftsRes.value.data ?? [],
             staff: processedStaff,
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Unknown error';
         console.error('[Schedule API] Unexpected error:', e);
-        return apiError('Internal Server Error', 500, 'INTERNAL_ERROR', e.message);
+        return apiError('Internal Server Error', 500, 'INTERNAL_ERROR', message);
     }
 }
 
@@ -285,7 +286,7 @@ export async function POST(request: Request) {
             source: 'merchant_dashboard',
             idempotency_key: idempotencyKey,
         },
-        new_value: inserted as any,
+        new_value: inserted as Record<string, unknown>,
     });
 
     return apiSuccess({ shift: inserted, idempotency_key: idempotencyKey }, 201);

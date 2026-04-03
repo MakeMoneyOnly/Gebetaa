@@ -12,6 +12,7 @@ import {
     normalizePairingCode,
 } from '@/lib/devices/pairing';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { setDeviceTokenCookies, type DeviceMetadata } from '@/lib/auth/device-token-cookies';
 
 export async function POST(request: Request) {
     const parsed = await parseJsonBody(request, PairDeviceSchema);
@@ -116,6 +117,19 @@ export async function POST(request: Request) {
         device_type: device.device_type,
         restaurant_slug: restaurant?.slug ?? null,
     });
+
+    // Set secure httpOnly cookies for device authentication
+    // The token is also returned in the response body for backward compatibility
+    // with existing clients that use localStorage/header-based auth
+    const deviceMetadata: DeviceMetadata = {
+        device_type: device.device_type,
+        restaurant_id: device.restaurant_id,
+        location_id: device.location_id ?? undefined,
+        name: device.name ?? undefined,
+        created_at: now,
+        last_used_at: now,
+    };
+    await setDeviceTokenCookies(device_token, deviceMetadata);
 
     return apiSuccess(
         {

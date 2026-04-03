@@ -78,11 +78,10 @@ export async function POST(request: Request, context: { params: Promise<{ kdsIte
     }
 
     const db = restaurantContext.supabase;
-    const dbAny = db as any;
     const { kdsItemId } = parsedParams.data;
     const { action, reason } = parsedBody.data;
 
-    const { data: item, error: itemError } = await dbAny
+    const { data: item, error: itemError } = await db
         .from('kds_order_items')
         .select('id, restaurant_id, order_id, order_item_id, station, status')
         .eq('id', kdsItemId)
@@ -155,7 +154,7 @@ export async function POST(request: Request, context: { params: Promise<{ kdsIte
     if (action === 'ready') updatePayload.ready_at = now;
     if (action === 'recall') updatePayload.recalled_at = now;
 
-    const { data: updatedItem, error: updateError } = await dbAny
+    const { data: updatedItem, error: updateError } = await restaurantContext.supabase
         .from('kds_order_items')
         .update(updatePayload)
         .eq('id', item.id)
@@ -172,7 +171,7 @@ export async function POST(request: Request, context: { params: Promise<{ kdsIte
         );
     }
 
-    const { error: eventError } = await dbAny.from('kds_item_events').insert({
+    const { error: eventError } = await restaurantContext.supabase.from('kds_item_events').insert({
         restaurant_id: restaurantContext.restaurantId,
         kds_order_item_id: updatedItem.id,
         order_id: updatedItem.order_id,
@@ -207,7 +206,7 @@ export async function POST(request: Request, context: { params: Promise<{ kdsIte
     }
 
     const [{ data: siblingItems }, { data: order }] = await Promise.all([
-        dbAny
+        restaurantContext.supabase
             .from('kds_order_items')
             .select('station, status')
             .eq('order_id', updatedItem.order_id)

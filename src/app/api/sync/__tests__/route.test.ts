@@ -66,7 +66,7 @@ vi.mock('@/lib/logger', () => ({
 
 const mockRestaurantId = '12345678-1234-1234-1234-123456789012';
 const mockUserId = '87654321-4321-4321-4321-210987654321';
-const mockDeviceId = 'device-123-456-789';
+const _mockDeviceId = 'device-123-456-789';
 
 describe('Sync API Endpoint', () => {
     beforeEach(() => {
@@ -83,12 +83,24 @@ describe('Sync API Endpoint', () => {
 
             vi.mocked(getAuthenticatedUser).mockResolvedValue({
                 ok: false,
-                response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+                response: NextResponse.json(
+                    { error: { code: 'UNAUTHORIZED', message: 'Unauthorized', requestId: 'test' } },
+                    { status: 401 }
+                ),
             });
 
             vi.mocked(getDeviceContext).mockResolvedValue({
                 ok: false,
-                response: NextResponse.json({ error: 'Device unauthorized' }, { status: 401 }),
+                response: NextResponse.json(
+                    {
+                        error: {
+                            code: 'DEVICE_UNAUTHORIZED',
+                            message: 'Device unauthorized',
+                            requestId: 'test',
+                        },
+                    },
+                    { status: 401 }
+                ),
             });
 
             const request = new NextRequest('http://localhost/api/sync', {
@@ -111,6 +123,7 @@ describe('Sync API Endpoint', () => {
                     aud: 'authenticated',
                     role: 'authenticated',
                 },
+                 
                 supabase: {} as any,
             });
 
@@ -131,6 +144,7 @@ describe('Sync API Endpoint', () => {
                         })),
                     })),
                 })),
+                 
             } as any);
 
             const request = new NextRequest('http://localhost/api/sync', {
@@ -154,6 +168,7 @@ describe('Sync API Endpoint', () => {
                     aud: 'authenticated',
                     role: 'authenticated',
                 },
+                 
                 supabase: {} as any,
             });
 
@@ -172,6 +187,7 @@ describe('Sync API Endpoint', () => {
                     })),
                     insert: vi.fn(),
                 })),
+                 
             } as any);
 
             const requestBody = {
@@ -219,6 +235,7 @@ describe('Sync API Endpoint', () => {
                     aud: 'authenticated',
                     role: 'authenticated',
                 },
+                 
                 supabase: {} as any,
             });
 
@@ -259,6 +276,7 @@ describe('Sync API Endpoint', () => {
                         insert: mockInsert,
                     };
                 }),
+                 
             } as any);
 
             const requestBody = {
@@ -310,7 +328,7 @@ describe('Sync API Endpoint', () => {
             const { createServiceRoleClient } = await import('@/lib/supabase/service-role');
 
             vi.mocked(createServiceRoleClient).mockReturnValue({
-                from: vi.fn((table: string) => ({
+                from: vi.fn((_table: string) => ({
                     select: vi.fn(() => ({
                         eq: vi.fn(() => ({
                             maybeSingle: vi.fn().mockResolvedValue({

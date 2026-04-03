@@ -15,7 +15,7 @@ export async function DELETE(
     if (!context.ok) return context.response;
 
     // Verify the device belongs to this restaurant before deleting
-    const { data: device, error: fetchError } = await (context.supabase as any)
+    const { data: device, error: fetchError } = await context.supabase
         .from('hardware_devices')
         .select('id, name, device_type')
         .eq('id', deviceId)
@@ -26,7 +26,7 @@ export async function DELETE(
         return apiError('Device not found or access denied', 404, 'DEVICE_NOT_FOUND');
     }
 
-    const { error: deleteError } = await (context.supabase as any)
+    const { error: deleteError } = await context.supabase
         .from('hardware_devices')
         .delete()
         .eq('id', deviceId)

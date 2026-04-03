@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     const { tip_pool_id, period_date, shift_id, total_tips_collected, total_bill_amount } =
         parsed.data;
-    const db = context.supabase as any;
+    const db = context.supabase;
 
     // Get the tip pool with shares
     const { data: tipPool, error: poolError } = await db
@@ -72,9 +72,11 @@ export async function POST(request: Request) {
     // Calculate distribution
     const distribution = calculateTipDistribution(
         poolableTips,
-        shares.map((s: any) => ({ role: s.role, percentage: s.percentage }))
+        shares.map((s: { role: string; percentage: number }) => ({
+            role: s.role,
+            percentage: s.percentage,
+        }))
     );
-
     const periodStart = new Date(period_date);
     periodStart.setHours(0, 0, 0, 0);
     const periodEnd = new Date(period_date);
@@ -93,7 +95,7 @@ export async function POST(request: Request) {
             total_tips_collected,
             total_tips_pooled: poolableTips,
             total_tips_distributed: distribution.reduce((sum, d) => sum + d.amount, 0),
-            distribution: distribution as any,
+            distribution: distribution as Array<{ role: string; amount: number }>,
             status: 'calculated',
             created_by: auth.user.id,
         })

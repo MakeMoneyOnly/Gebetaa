@@ -16,6 +16,8 @@ import { isChapaConfigured, verifyChapaTransaction } from '@/lib/services/chapaS
 import { ensurePaymentSessionForRecordedPayment } from '@/lib/payments/payment-sessions';
 import { createGebetaEvent } from '@/lib/events/contracts';
 import { enqueueInternalJob } from '@/lib/events/runtime';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const CloseTableSchema = z.object({
     table_id: z.string().uuid().optional(),
@@ -298,30 +300,33 @@ export async function POST(request: Request) {
     );
     const finalizableOrderIds = finalizableOrders.map(order => order.id);
 
-    const paymentSession = await ensurePaymentSessionForRecordedPayment(admin as any, {
-        restaurantId: ctx.restaurantId,
-        orderId: null,
-        surface: ctx.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos',
-        channel: 'dine_in',
-        method:
-            paymentProvider === 'cash'
-                ? 'cash'
-                : paymentProvider === 'other'
-                  ? 'other'
-                  : paymentProvider,
-        provider:
-            paymentProvider === 'cash' || paymentProvider === 'other'
-                ? 'internal'
-                : paymentProvider,
-        amount: settlementAmount,
-        status: 'captured',
-        metadata: {
-            source: `${ctx.device.device_type}_close_table`,
-            table_id: table.id,
-            table_number: table.table_number,
-            order_ids: activeOrders.map(order => order.id),
-        },
-    });
+    const paymentSession = await ensurePaymentSessionForRecordedPayment(
+        admin as SupabaseClient<Database>,
+        {
+            restaurantId: ctx.restaurantId,
+            orderId: null,
+            surface: ctx.device.device_type === 'terminal' ? 'terminal' : 'waiter_pos',
+            channel: 'dine_in',
+            method:
+                paymentProvider === 'cash'
+                    ? 'cash'
+                    : paymentProvider === 'other'
+                      ? 'other'
+                      : paymentProvider,
+            provider:
+                paymentProvider === 'cash' || paymentProvider === 'other'
+                    ? 'internal'
+                    : paymentProvider,
+            amount: settlementAmount,
+            status: 'captured',
+            metadata: {
+                source: `${ctx.device.device_type}_close_table`,
+                table_id: table.id,
+                table_number: table.table_number,
+                order_ids: activeOrders.map(order => order.id),
+            },
+        }
+    );
 
     const { data: paymentRecord, error: paymentError } = await admin
         .from('payments')

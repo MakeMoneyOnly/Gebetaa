@@ -37,7 +37,6 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }
 
     const db = restaurantContext.supabase;
-    const dbAny = db as any;
     const { orderId } = parsedParams.data;
     const { reason } = parsedBody.data;
 
@@ -75,7 +74,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
                 .eq('id', orderId)
                 .eq('restaurant_id', restaurantContext.restaurantId)
                 .maybeSingle(),
-            dbAny
+            db
                 .from('kds_order_items')
                 .select('id, status')
                 .eq('order_id', orderId)
@@ -143,7 +142,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }
 
     await Promise.all([
-        dbAny.from('order_events').insert({
+        db.from('order_events').insert({
             restaurant_id: restaurantContext.restaurantId,
             order_id: order.id,
             event_type: 'status_changed',

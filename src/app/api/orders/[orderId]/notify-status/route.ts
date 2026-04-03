@@ -4,6 +4,8 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { sendOrderStatusSms } from '@/lib/notifications/sms';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const OrderIdSchema = z.string().uuid();
 
@@ -54,7 +56,7 @@ export async function POST(
         return parsed.response;
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     // Fetch the order with customer details
     const { data: order, error: orderError } = await db
@@ -211,7 +213,7 @@ export async function POST(
     }
 
     // Write audit log
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'order_status_notification_sent',

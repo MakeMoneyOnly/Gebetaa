@@ -241,7 +241,7 @@ function resolveReadyAutoArchiveMinutes(settings: unknown): number {
 }
 
 async function autoArchiveReadyOrders(params: {
-    db: any;
+    db: Awaited<ReturnType<typeof getAuthorizedRestaurantContext>>['supabase'];
     restaurantId: string;
     actorUserId: string | null;
     readyAutoArchiveMinutes: number;
@@ -283,7 +283,7 @@ async function autoArchiveReadyOrders(params: {
     }
 
     await Promise.all([
-        db.from('order_events').insert(
+        db!.from('order_events').insert(
             orderIds.map(orderId => ({
                 restaurant_id: restaurantId,
                 order_id: orderId,
@@ -297,7 +297,7 @@ async function autoArchiveReadyOrders(params: {
                 },
             }))
         ),
-        db.from('audit_logs').insert(
+        db!.from('audit_logs').insert(
             orderIds.map(orderId => ({
                 restaurant_id: restaurantId,
                 user_id: actorUserId,
@@ -321,7 +321,7 @@ export async function GET(request: Request) {
     const auth = await getAuthenticatedUser();
 
     let restaurantId: string | null = null;
-    let db: any = null;
+    let db: Awaited<ReturnType<typeof getAuthorizedRestaurantContext>>['supabase'] | null = null;
 
     if (auth.ok) {
         const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p1' });

@@ -149,7 +149,7 @@ export async function GET(request: Request) {
     const itemSales: Record<string, { count: number; revenue: number }> = {};
     orders.forEach(order => {
         const items = order.order_items || [];
-        items.forEach((item: any) => {
+        items.forEach((item: { name: string; quantity: number | null; price: number }) => {
             const name = item.name || 'Unknown Item';
             const qty = item.quantity || 1;
             const price = item.price || 0;

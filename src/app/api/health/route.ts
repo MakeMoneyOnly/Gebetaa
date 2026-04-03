@@ -22,8 +22,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getPoolConfig } from '@/lib/supabase/pool';
 import { circuitBreakerRegistry } from '@/lib/api/circuit-breaker';
-import { performanceMetricsStore, getPerformanceSummary } from '@/lib/monitoring/performance';
-import { gracefulServiceRegistry } from '@/lib/api/graceful-degradation';
+import {
+    performanceMetricsStore as _performanceMetricsStore,
+    getPerformanceSummary,
+} from '@/lib/monitoring/performance';
+import { gracefulServiceRegistry as _gracefulServiceRegistry } from '@/lib/api/graceful-degradation';
 
 /**
  * Payment provider health check result

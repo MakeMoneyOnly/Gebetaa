@@ -204,7 +204,7 @@ export async function PATCH(
                 new_value: { status: parsed.data.status },
                 metadata: { source: 'merchant_dashboard' },
             }),
-            (supabase as any).from('order_events').insert({
+            supabase.from('order_events').insert({
                 restaurant_id: order.restaurant_id,
                 order_id: order.id,
                 event_type: 'status_changed',

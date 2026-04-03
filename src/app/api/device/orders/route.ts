@@ -63,6 +63,8 @@ import { createGebetaEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import { prepareOrderDiscount } from '@/lib/discounts/service';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 import {
     withRateLimit,
     RATE_LIMIT_CONFIGS,
@@ -229,7 +231,7 @@ export async function POST(request: Request) {
     let discountRuntime;
     try {
         discountRuntime = await prepareOrderDiscount({
-            supabase: admin as any,
+            supabase: admin as SupabaseClient<Database>,
             restaurantId: ctx.restaurantId,
             discountId: discount_id ?? null,
             managerPin: manager_pin ?? null,

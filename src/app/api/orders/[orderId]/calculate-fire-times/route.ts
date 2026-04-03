@@ -54,7 +54,7 @@ export async function POST(
         }
 
         // Get user's restaurant membership
-        const { data: staffEntry, error: staffError } = await (supabase as any)
+        const { data: staffEntry, error: staffError } = await supabase
             .from('restaurant_staff')
             .select('restaurant_id, role')
             .eq('user_id', user.id)

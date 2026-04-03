@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const ItemIdSchema = z.string().uuid();
 
@@ -63,7 +65,7 @@ export async function GET(request: Request, routeContext: { params: Promise<{ it
     }
 
     const { guest_id, cart_items, limit } = parsedQuery.data;
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     try {
         // Get the current item details
@@ -317,12 +319,20 @@ export async function POST(
         upsell_analytics_id?: string;
     };
 
-    const db = context.supabase as any;
+    const db = context.supabase;
 
     try {
         // Update existing analytics record or create new one
         if (upsell_analytics_id) {
-            await db
+            await (
+                db as unknown as {
+                    from: (table: string) => {
+                        update: (data: unknown) => {
+                            eq: (col: string, val: string) => Promise<void>;
+                        };
+                    };
+                }
+            )
                 .from('upsell_analytics')
                 .update({
                     clicked_item: clicked_item ?? null,
@@ -331,14 +341,20 @@ export async function POST(
                 })
                 .eq('id', upsell_analytics_id);
         } else if (guest_id) {
-            await db.from('upsell_analytics').insert({
-                restaurant_id: context.restaurantId,
-                guest_id,
-                item_viewed: itemIdParsed.data,
-                clicked_item: clicked_item ?? null,
-                added_to_cart: added_to_cart ?? false,
-                created_at: new Date().toISOString(),
-            });
+            await (
+                db as unknown as {
+                    from: (table: string) => { insert: (data: unknown) => Promise<void> };
+                }
+            )
+                .from('upsell_analytics')
+                .insert({
+                    restaurant_id: context.restaurantId,
+                    guest_id,
+                    item_viewed: itemIdParsed.data,
+                    clicked_item: clicked_item ?? null,
+                    added_to_cart: added_to_cart ?? false,
+                    created_at: new Date().toISOString(),
+                });
         }
 
         return apiSuccess({ tracked: true });

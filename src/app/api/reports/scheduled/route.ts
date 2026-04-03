@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createScheduledReport, getScheduledReports } from '@/lib/services/scheduledReportsService';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 export async function GET(request: NextRequest) {
     try {
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        const { data: staffEntry, error: staffError } = await (supabase as any)
+        const { data: staffEntry, error: staffError } = await supabase
             .from('restaurant_staff')
             .select('restaurant_id')
             .eq('user_id', user.id)
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { data: staffEntry, error: staffError } = await (supabase as any)
+        const { data: staffEntry, error: staffError } = await supabase
             .from('restaurant_staff')
             .select('restaurant_id, role')
             .eq('user_id', user.id)
@@ -191,7 +193,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Log to audit
-        await (supabase as any).from('audit_logs').insert({
+        await (supabase as SupabaseClient<Database>).from('audit_logs').insert({
             action: 'create_scheduled_report',
             entity_type: 'scheduled_report',
             entity_id: result.report?.id,

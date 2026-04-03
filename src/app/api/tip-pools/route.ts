@@ -50,7 +50,7 @@ export async function GET() {
     }
 
     try {
-        const db = context.supabase as any;
+        const db = context.supabase;
 
         // Get tip pools with their shares
         const { data: pools, error: poolsError } = await db
@@ -72,7 +72,7 @@ export async function GET() {
             return apiSuccess({ tip_pools: [], shares: {} });
         }
 
-        const poolIds = pools.map((p: any) => p.id);
+        const poolIds = pools.map((p: { id: string }) => p.id);
 
         // Get shares for all pools
         const { data: shares, error: sharesError } = await db
@@ -91,12 +91,13 @@ export async function GET() {
         }
 
         // Group shares by pool
-        const sharesByPool: Record<string, any[]> = {};
-        (shares ?? []).forEach((share: any) => {
-            if (!sharesByPool[share.tip_pool_id]) {
-                sharesByPool[share.tip_pool_id] = [];
+        const sharesByPool: Record<string, Array<Record<string, unknown>>> = {};
+        (shares ?? []).forEach((share: Record<string, unknown>) => {
+            const tipPoolId = share.tip_pool_id as string;
+            if (!sharesByPool[tipPoolId]) {
+                sharesByPool[tipPoolId] = [];
             }
-            sharesByPool[share.tip_pool_id].push(share);
+            sharesByPool[tipPoolId].push(share);
         });
 
         return apiSuccess({
@@ -137,7 +138,7 @@ export async function POST(request: Request) {
         return apiError('Total shares cannot exceed 100%', 400, 'TIP_POOL_SHARES_EXCEED_100');
     }
 
-    const db = context.supabase as any;
+    const db = context.supabase;
 
     // Create the tip pool
     const { data: pool, error: poolError } = await db

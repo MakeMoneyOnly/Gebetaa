@@ -3,6 +3,8 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const UpdateCampaignSchema = z.object({
     name: z.string().trim().min(2).max(120).optional(),
@@ -27,7 +29,7 @@ export async function PATCH(
     const parsed = await parseJsonBody(request, UpdateCampaignSchema);
     if (!parsed.success) return parsed.response;
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const { data: campaign, error: fetchError } = await db
         .from('campaigns')
@@ -54,7 +56,7 @@ export async function PATCH(
         return apiError('Failed to update campaign', 500, 'CAMPAIGN_UPDATE_FAILED', error.message);
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'campaign_updated',
@@ -80,7 +82,7 @@ export async function DELETE(
     const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
     if (!context.ok) return context.response;
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const { error } = await db
         .from('campaigns')
@@ -92,7 +94,7 @@ export async function DELETE(
         return apiError('Failed to delete campaign', 500, 'CAMPAIGN_DELETE_FAILED', error.message);
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'campaign_deleted',

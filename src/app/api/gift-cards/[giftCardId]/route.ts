@@ -3,6 +3,8 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 const UpdateGiftCardSchema = z.object({
     status: z.enum(['active', 'redeemed', 'expired', 'archived', 'voided']).optional(),
@@ -24,7 +26,7 @@ export async function PATCH(
     const parsed = await parseJsonBody(request, UpdateGiftCardSchema);
     if (!parsed.success) return parsed.response;
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const { data: giftCard, error: fetchError } = await db
         .from('gift_cards')
@@ -56,7 +58,7 @@ export async function PATCH(
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'gift_card_updated',
@@ -82,7 +84,7 @@ export async function DELETE(
     const context = await getAuthorizedRestaurantContext(auth.user.id, { phase: 'p2' });
     if (!context.ok) return context.response;
 
-    const db = context.supabase as any;
+    const db = context.supabase as SupabaseClient<Database>;
 
     const { error } = await db
         .from('gift_cards')
@@ -99,7 +101,7 @@ export async function DELETE(
         );
     }
 
-    await writeAuditLog(context.supabase, {
+    await writeAuditLog(context.supabase as SupabaseClient<Database>, {
         restaurant_id: context.restaurantId,
         user_id: auth.user.id,
         action: 'gift_card_deleted',

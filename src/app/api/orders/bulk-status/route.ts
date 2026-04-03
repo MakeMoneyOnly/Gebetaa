@@ -109,7 +109,7 @@ export async function POST(request: Request) {
         metadata: { source: 'merchant_dashboard' },
     }));
 
-    const { error: eventError } = await (supabase as any).from('order_events').insert(eventRows);
+    const { error: eventError } = await supabase.from('order_events').insert(eventRows);
     if (eventError) {
         console.warn(
             '[POST /api/orders/bulk-status] order_events insert failed:',
