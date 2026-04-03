@@ -1,7 +1,7 @@
 // Payments Domain - Repository Layer
 // Database access layer - Supabase queries only, no business logic
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/types/database';
+import { Database, Json } from '@/types/database';
 import {
     PAYMENT_LIST_COLUMNS,
     PAYMENT_DETAIL_COLUMNS,
@@ -156,10 +156,11 @@ export class PaymentsRepository {
                 amount: data.amount,
                 currency: data.currency,
                 provider: data.provider,
-                payment_method: data.payment_method,
+                method: data.payment_method,
                 status: 'pending',
                 idempotency_key: data.idempotency_key,
-                metadata: data.metadata ?? null,
+                tip_amount: 0,
+                metadata: (data.metadata ?? undefined) as Json | undefined,
             })
             .select()
             .single();
@@ -187,7 +188,7 @@ export class PaymentsRepository {
         };
 
         if (transactionId) {
-            updateData.transaction_id = transactionId;
+            updateData.provider_reference = transactionId;
         }
 
         if (metadata) {

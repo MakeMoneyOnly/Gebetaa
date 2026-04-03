@@ -6,7 +6,7 @@ import { requireAuth, requireRestaurantAccess } from '@/lib/graphql/authz';
 import {
     createErrorResult,
     handleResolverError,
-    NOT_IMPLEMENTED_ERROR,
+    NOT_IMPLEMENTED_ERROR as _NOT_IMPLEMENTED_ERROR,
 } from '@/lib/graphql/errors';
 import {
     validateInput,
@@ -104,11 +104,9 @@ export const staffResolvers = {
                 // Create staff member
                 const staffMember = await staffService.createStaffMember({
                     restaurantId: validation.data.restaurantId,
-                    userId: validation.data.userId,
-                    name: validation.data.name,
+                    name: validation.data.fullName,
                     email: validation.data.email,
                     role: validation.data.role,
-                    pinCode: validation.data.pinCode,
                     phone: validation.data.phone,
                 });
 
@@ -168,12 +166,10 @@ export const staffResolvers = {
                 const staffMember = await staffService.updateStaffMember(
                     validation.data.id,
                     {
-                        name: validation.data.name,
+                        name: validation.data.fullName,
                         email: validation.data.email,
                         role: validation.data.role,
-                        pinCode: validation.data.pinCode,
                         phone: validation.data.phone,
-                        isActive: validation.data.isActive,
                     },
                     authContext.user?.restaurantId
                 );

@@ -82,7 +82,7 @@ function getSupabaseClient(): SupabaseClient<Database> {
 }
 
 // Type for the validation result from the RPC function
-interface ModifierValidationResult {
+interface _ModifierValidationResult {
     is_valid: boolean;
     missing_groups: string[];
     error_message: string | null;
@@ -104,16 +104,31 @@ async function validateRequiredModifiers(
 }> {
     try {
         const supabase = getSupabaseClient();
-        // Use 'as any' to bypass TypeScript strict type checking for new RPC functions
-        // The function will be created by the migration
-        const { data, error } = await (supabase.rpc as any)('validate_required_modifiers', {
+
+        type ValidateModifiersResult = {
+            is_valid: boolean;
+            missing_groups: string[];
+            error_message: string | null;
+            error_message_am: string | null;
+        };
+
+        const { data, error } = await (
+            supabase as unknown as {
+                rpc: (
+                    fn: string,
+                    args: Record<string, unknown>
+                ) => Promise<{
+                    data: ValidateModifiersResult[] | null;
+                    error: { message: string } | null;
+                }>;
+            }
+        ).rpc('validate_required_modifiers', {
             p_menu_item_id: menuItemId,
             p_selected_modifier_ids: selectedModifierIds,
         });
 
         if (error) {
             console.error('[OrdersService] Modifier validation error:', error);
-            // If validation function fails, allow the order (fail-open for safety)
             return { isValid: true };
         }
 
@@ -128,7 +143,6 @@ async function validateRequiredModifiers(
         }
     } catch (err) {
         console.error('[OrdersService] Modifier validation exception:', err);
-        // Fail-open for safety
     }
 
     return { isValid: true };

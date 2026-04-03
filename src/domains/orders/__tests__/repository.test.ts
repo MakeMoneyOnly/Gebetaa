@@ -57,7 +57,7 @@ describe('OrdersRepository', () => {
 
     describe('findById', () => {
         it('should return an order when found', async () => {
-            const mockOrder = {
+            const _mockOrder = {
                 id: 'order-1',
                 order_number: '20260323-0001',
                 restaurant_id: 'restaurant-1',

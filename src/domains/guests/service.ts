@@ -149,7 +149,7 @@ export class GuestsService {
      * Get guest loyalty tier
      */
     getLoyaltyTier(guest: GuestRow): 'bronze' | 'silver' | 'gold' | 'platinum' {
-        return calculateLoyaltyTier(guest.total_spent ?? 0);
+        return calculateLoyaltyTier(guest.lifetime_value ?? 0);
     }
 
     /**

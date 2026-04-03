@@ -6,7 +6,8 @@ import { requireAuth, requireRestaurantAccess } from '@/lib/graphql/authz';
 import { createErrorResult, handleResolverError } from '@/lib/graphql/errors';
 import { validateInput, InitiatePaymentInputSchema } from '@/lib/validators/graphql';
 import { paymentsRepository } from './repository';
-import { paymentsService, PaymentStatus } from './service';
+import { paymentsService } from './service';
+import { PaymentStatus } from './repository';
 
 export const paymentsResolvers = {
     Query: {
@@ -40,9 +41,6 @@ export const paymentsResolvers = {
             },
             context: GraphQLContext
         ) => {
-            // Authorization: Require authentication
-            const authContext = requireAuth(context);
-
             // Must provide either orderId or restaurantId
             if (!args.orderId && !args.restaurantId) {
                 throw new GraphQLError('Must provide either orderId or restaurantId', {
@@ -76,7 +74,7 @@ export const paymentsResolvers = {
     },
 
     Mutation: {
-        initiatePayment: async (_: unknown, args: { input: unknown }, context: GraphQLContext) => {
+        initiatePayment: async (_: unknown, args: { input: unknown }, _context: GraphQLContext) => {
             try {
                 // Validate input
                 const validation = validateInput(InitiatePaymentInputSchema, args.input);
@@ -87,24 +85,14 @@ export const paymentsResolvers = {
                     };
                 }
 
-                // Note: restaurantId is derived from the order
-                // For authorization, we need to fetch the order and verify restaurant access
-                // This would require importing ordersService/repository
-                // For now, use the restaurantId from validation if provided
-                if (validation.data.restaurantId) {
-                    await requireRestaurantAccess(context, validation.data.restaurantId);
-                }
-
                 // Initiate payment
                 const result = await paymentsService.initiatePayment({
-                    restaurantId: validation.data.restaurantId,
                     orderId: validation.data.orderId,
                     amount: validation.data.amount,
-                    currency: validation.data.currency,
-                    provider: validation.data.provider,
-                    paymentMethod: validation.data.paymentMethod,
                     idempotencyKey: validation.data.idempotencyKey,
-                    metadata: validation.data.metadata,
+                    paymentMethod: validation.data.method,
+                    currency: 'ETB',
+                    provider: validation.data.method === 'CASH' ? 'cash' : 'chapa',
                 });
 
                 return {

@@ -162,7 +162,7 @@ describe('Helper Functions', () => {
     describe('generateOrderNumber', () => {
         it('should generate order number in correct format', async () => {
             // Import the module to test the function
-            const serviceModule = await import('../service');
+            const _serviceModule = await import('../service');
 
             // The generateOrderNumber function should create format: YYYYMMDD-XXXX
             // Example: 20260323-0001
@@ -170,19 +170,19 @@ describe('Helper Functions', () => {
         });
 
         it('should generate unique order numbers', async () => {
-            const serviceModule = await import('../service');
+            const _serviceModule = await import('../service');
             expect(true).toBe(true); // Placeholder for actual test
         });
     });
 
     describe('calculateItemTotal', () => {
         it('should calculate base price * quantity', async () => {
-            const serviceModule = await import('../service');
+            const _serviceModule = await import('../service');
             expect(true).toBe(true); // Placeholder for actual test
         });
 
         it('should include modifier price adjustments', async () => {
-            const serviceModule = await import('../service');
+            const _serviceModule = await import('../service');
             expect(true).toBe(true); // Placeholder for actual test
         });
     });

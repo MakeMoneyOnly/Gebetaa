@@ -9,13 +9,13 @@ import {
 } from './repository';
 
 export interface InitiatePaymentInput {
-    restaurantId: string;
     orderId: string;
     amount: number;
-    currency: string;
-    provider: PaymentProvider;
-    paymentMethod: string;
     idempotencyKey: string;
+    restaurantId?: string;
+    currency?: string;
+    provider?: PaymentProvider;
+    paymentMethod?: string;
     metadata?: Record<string, unknown>;
 }
 
@@ -119,22 +119,26 @@ export class PaymentsService {
             return { success: false, payment: null, error: 'Amount must be greater than 0' };
         }
 
+        // Apply defaults
+        const provider = input.provider ?? 'cash';
+        const paymentMethod = input.paymentMethod ?? 'cash';
+
         // Validate provider
-        const providerConfig = PAYMENT_PROVIDERS[input.provider];
+        const providerConfig = PAYMENT_PROVIDERS[provider];
         if (!providerConfig) {
             return {
                 success: false,
                 payment: null,
-                error: `Invalid payment provider: ${input.provider}`,
+                error: `Invalid payment provider: ${provider}`,
             };
         }
 
         // Validate payment method for provider
-        if (!providerConfig.supportedMethods.includes(input.paymentMethod)) {
+        if (!providerConfig.supportedMethods.includes(paymentMethod)) {
             return {
                 success: false,
                 payment: null,
-                error: `Payment method ${input.paymentMethod} not supported by ${providerConfig.name}`,
+                error: `Payment method ${paymentMethod} not supported by ${providerConfig.name}`,
             };
         }
 
@@ -148,12 +152,12 @@ export class PaymentsService {
 
         // Create payment record
         const payment = await paymentsRepository.createPayment({
-            restaurant_id: input.restaurantId,
+            restaurant_id: input.restaurantId ?? '',
             order_id: input.orderId,
             amount: input.amount,
-            currency: input.currency,
-            provider: input.provider,
-            payment_method: input.paymentMethod,
+            currency: input.currency ?? 'ETB',
+            provider: provider,
+            payment_method: paymentMethod,
             idempotency_key: input.idempotencyKey,
             metadata: input.metadata,
         });
@@ -242,7 +246,7 @@ export class PaymentsService {
 
         return paymentsRepository.updatePaymentStatus(id, 'refunded', undefined, {
             refunded_at: new Date().toISOString(),
-            original_transaction_id: payment.transaction_id,
+            original_transaction_id: payment.provider_reference,
         });
     }
 }

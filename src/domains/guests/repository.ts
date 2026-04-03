@@ -109,14 +109,14 @@ export class GuestsRepository {
             .insert({
                 restaurant_id: data.restaurant_id,
                 name: data.name,
-                phone: data.phone ?? null,
-                email: data.email ?? null,
+                phone_hash: data.phone ?? null,
+                email_hash: data.email ?? null,
                 notes: data.notes ?? null,
                 tags: data.tags ?? [],
                 visit_count: 0,
-                total_spent: 0,
-                first_visit_at: new Date().toISOString(),
-                last_visit_at: new Date().toISOString(),
+                identity_key: `guest_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                first_seen_at: new Date().toISOString(),
+                last_seen_at: new Date().toISOString(),
             })
             .select()
             .single();
@@ -174,7 +174,7 @@ export class GuestsRepository {
             .from('guests')
             .update({
                 visit_count: (current.visit_count ?? 0) + 1,
-                total_spent: (current.total_spent ?? 0) + amountSpent,
+                lifetime_value: (current.lifetime_value ?? 0) + amountSpent,
                 last_visit_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             })
