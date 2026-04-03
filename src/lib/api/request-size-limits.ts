@@ -129,7 +129,7 @@ export async function checkRequestSize(
         }
 
         return { isValid: true, size };
-    } catch (error) {
+    } catch (_error) {
         // If we can't read the body, allow the request to proceed
         // The route handler will handle any actual issues
         return { isValid: true };

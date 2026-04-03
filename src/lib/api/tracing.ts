@@ -175,7 +175,7 @@ export function withTraceContext<T>(context: TraceContext, fn: () => T): T {
 /**
  * Create a child span for a sub-operation
  */
-export function createChildSpan(operationName: string): TraceContext {
+export function createChildSpan(_operationName: string): TraceContext {
     const parent = getCurrentTraceContext();
 
     if (parent) {

@@ -23,7 +23,21 @@ export {
 export type { SupportedApiVersion, ApiVersionInfo, VersionMiddlewareResult } from './versioning';
 
 // Response Helpers
-export { apiSuccess, apiError } from './response';
+export { apiSuccess, apiError, handleApiError } from './response';
+export type { ApiErrorResponse } from './response';
+
+// Error Handling (HIGH-023)
+export {
+    withErrorHandling,
+    withApiErrorHandler,
+    validationError,
+    authenticationError,
+    authorizationError,
+    notFoundError,
+    rateLimitError,
+    extractRequestContext,
+} from './error-handler';
+export type { RequestContext } from './error-handler';
 
 // Authorization
 export { getDeviceContext } from './authz';

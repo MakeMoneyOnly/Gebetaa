@@ -3,6 +3,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { apiError } from '@/lib/api/response';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { logSecurityEvent } from '@/lib/security/securityEvents';
+import { verifyDeviceTokenFromRequest } from '@/lib/auth/device-token-cookies';
+import { logger } from '@/lib/logger';
 import type { HardwareDeviceType } from '@/lib/devices/config';
 
 type PilotPhase = 'p0' | 'p1' | 'p2';
@@ -146,16 +148,40 @@ export async function getAuthorizedRestaurantContext(
 
 /**
  * Authenticate a request from a paired hardware device (POS/KDS).
- * Devices have no Supabase auth session — they use a long-lived device_token
- * stored in localStorage after pairing and sent via the X-Device-Token header.
+ *
+ * HIGH-009: Device tokens are now verified via httpOnly cookies (preferred)
+ * or via the X-Device-Token header (legacy support).
+ *
+ * Cookie-based authentication provides XSS protection since the token
+ * is not accessible via JavaScript.
+ *
+ * Security properties:
+ * - httpOnly cookies: Token not accessible via JavaScript (XSS protection)
+ * - Signed cookies: HMAC signature prevents tampering
+ * - Header fallback: Backward compatibility with existing clients
  */
 export async function getDeviceContext(request: Request) {
-    const token = request.headers.get('x-device-token');
-    if (!token) {
-        return {
-            ok: false as const,
-            response: apiError('Missing device token', 401, 'DEVICE_UNAUTHORIZED'),
-        };
+    // HIGH-009: Check for secure cookie-based token first
+    const cookieResult = verifyDeviceTokenFromRequest(request);
+
+    let token: string;
+    let tokenSource: 'cookie' | 'header';
+
+    if (cookieResult.valid && cookieResult.token) {
+        // Cookie-based authentication (preferred, more secure)
+        token = cookieResult.token;
+        tokenSource = 'cookie';
+    } else {
+        // Fall back to header-based authentication (legacy)
+        const headerToken = request.headers.get('x-device-token');
+        if (!headerToken) {
+            return {
+                ok: false as const,
+                response: apiError('Missing device token', 401, 'DEVICE_UNAUTHORIZED'),
+            };
+        }
+        token = headerToken;
+        tokenSource = 'header';
     }
 
     const admin = createServiceRoleClient();
@@ -172,6 +198,13 @@ export async function getDeviceContext(request: Request) {
             ok: false as const,
             response: apiError('Invalid device token', 401, 'DEVICE_UNAUTHORIZED'),
         };
+    }
+
+    // Log token source for auditing (helps track migration to cookie-based auth)
+    if (tokenSource === 'header') {
+        logger.info(
+            `Device ${device.id} using header-based auth. Consider migrating to cookie-based auth.`
+        );
     }
 
     return { ok: true as const, device, restaurantId: device.restaurant_id as string, admin };
