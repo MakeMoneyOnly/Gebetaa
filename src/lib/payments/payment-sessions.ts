@@ -66,9 +66,32 @@ export interface PaymentSessionRecord {
     updated_at: string;
 }
 
+type DbResult<T> = Promise<{ data: T | null; error: { message: string } | null }>;
+
+type DbQueryBuilder<T> = {
+    eq(column: string, value: string | number | boolean): DbQueryBuilder<T>;
+    order(column: string, options?: { ascending?: boolean }): DbQueryBuilder<T>;
+    limit(count: number): DbQueryBuilder<T>;
+    maybeSingle(): DbResult<T>;
+    single(): DbResult<T>;
+};
+
+type DbInsertBuilder<T> = {
+    select(columns: string): { single(): DbResult<T> };
+};
+
+type DbUpdateBuilder<T> = {
+    eq(column: string, value: string): { select(columns: string): { single(): DbResult<T> } };
+};
+
+type DbFromBuilder = {
+    select(columns: string): DbQueryBuilder<Record<string, unknown>>;
+    insert(payload: Record<string, unknown>): DbInsertBuilder<Record<string, unknown>>;
+    update(payload: Record<string, unknown>): DbUpdateBuilder<Record<string, unknown>>;
+};
+
 type DbLike = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    from(table: string): any;
+    from(table: string): DbFromBuilder;
 };
 
 export function getSurfaceForOrderMode(isOnlineOrder: boolean): PaymentSessionSurface {
@@ -163,7 +186,7 @@ export async function createPaymentSession(
         throw new Error(error?.message ?? 'Failed to create payment session');
     }
 
-    return data as PaymentSessionRecord;
+    return data as unknown as PaymentSessionRecord;
 }
 
 export async function updatePaymentSession(
@@ -185,7 +208,7 @@ export async function updatePaymentSession(
         throw new Error(error?.message ?? 'Failed to update payment session');
     }
 
-    return data as PaymentSessionRecord;
+    return data as unknown as PaymentSessionRecord;
 }
 
 export async function findLatestPaymentSessionForOrder(
@@ -281,6 +304,8 @@ export async function initiateHostedPaymentSession(params: {
         throw new Error(paymentInsert.error?.message ?? 'Failed to create pending payment');
     }
 
+    const paymentId = String(paymentInsert.data.id);
+
     const paymentSession = await updatePaymentSession(params.db, params.paymentSessionId, {
         status: 'pending_provider',
         selected_method: resolvedProvider,
@@ -289,16 +314,16 @@ export async function initiateHostedPaymentSession(params: {
         provider_transaction_id: initiation.result.transactionReference,
         metadata: {
             ...(params.metadata ?? {}),
-            payment_id: paymentInsert.data.id,
+            payment_id: paymentId,
             payment_session_id: params.paymentSessionId,
             provider_attempts: initiation.attempts,
             fallback_applied: initiation.fallbackApplied,
-        } as Json,
+        } as unknown as Json,
     });
 
     return {
         paymentSession,
-        paymentId: paymentInsert.data.id,
+        paymentId: paymentId,
         checkoutUrl: initiation.result.checkoutUrl,
         provider: resolvedProvider,
         transactionReference: initiation.result.transactionReference,

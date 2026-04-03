@@ -16,7 +16,7 @@ import {
     PaymentProviderName,
     PaymentVerifyResponse,
 } from './types';
-import { createHmac, createHash } from 'crypto';
+import { createHmac, createHash as _createHash } from 'crypto';
 
 const TELEBIRR_API_URL = 'https://api.telebirr.com/v1';
 const TELEBIRR_APP_ID = process.env.TELEBIRR_APP_ID;
@@ -25,7 +25,7 @@ const TELEBIRR_APP_KEY = process.env.TELEBIRR_APP_KEY;
 /**
  * Telebirr payment request payload
  */
-interface TelebirrPaymentRequest {
+interface _TelebirrPaymentRequest {
     appId: string;
     appKey: string;
     amount: string;

@@ -1,6 +1,7 @@
 import type { PaymentLifecycleEvent } from '@/lib/events/contracts';
 import { writeAuditLog } from '@/lib/api/audit';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import type { Json } from '@/types/database';
 
 export interface PaymentEventProcessingResult {
     ok: boolean;
@@ -10,14 +11,39 @@ export interface PaymentEventProcessingResult {
     paymentSessionId?: string | null;
 }
 
+type PaymentSessionRow = {
+    id: string;
+    restaurant_id: string;
+    order_id: string | null;
+    surface: string;
+    channel: string;
+    intent_type: string;
+    status: string;
+    selected_method: string | null;
+    selected_provider: string | null;
+    amount: number;
+    currency: string;
+    checkout_url: string | null;
+    provider_transaction_id: string | null;
+    provider_reference: string | null;
+    metadata: Json;
+    authorized_at: string | null;
+    captured_at: string | null;
+    expires_at: string | null;
+    created_at: string;
+    updated_at: string;
+};
+
+type PaymentSessionUpdateResult = {
+    error: { message: string } | null;
+};
+
 export async function processPaymentLifecycleEvent(
     event: PaymentLifecycleEvent
 ): Promise<PaymentEventProcessingResult> {
     const admin = createServiceRoleClient();
     const { payload } = event;
     const now = new Date().toISOString();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adminAny = admin as any;
 
     const { data: resolvedOrder } = payload.order_id
         ? await admin
@@ -28,20 +54,20 @@ export async function processPaymentLifecycleEvent(
         : { data: null };
 
     const { data: resolvedPaymentSession } = payload.payment_session_id
-        ? await adminAny
-              .from('payment_sessions')
+        ? ((await admin
+              .from('payment_sessions' as string)
               .select('*')
               .eq('id', payload.payment_session_id)
-              .maybeSingle()
+              .maybeSingle()) as { data: PaymentSessionRow | null })
         : payload.provider_transaction_id
-          ? await adminAny
-                .from('payment_sessions')
+          ? ((await admin
+                .from('payment_sessions' as string)
                 .select('*')
                 .eq('selected_provider', payload.provider)
                 .eq('provider_transaction_id', payload.provider_transaction_id)
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .maybeSingle()
+                .maybeSingle()) as { data: PaymentSessionRow | null })
           : { data: null };
 
     const { data: existingPayment } = await admin
@@ -146,8 +172,8 @@ export async function processPaymentLifecycleEvent(
             payment_id: paymentId,
         };
 
-        const { error: paymentSessionError } = await adminAny
-            .from('payment_sessions')
+        const { error: paymentSessionError } = (await admin
+            .from('payment_sessions' as string)
             .update({
                 status: paymentSessionStatus,
                 selected_provider: payload.provider,
@@ -157,7 +183,7 @@ export async function processPaymentLifecycleEvent(
                 metadata: sessionMetadata,
                 updated_at: now,
             })
-            .eq('id', paymentSessionId);
+            .eq('id', paymentSessionId)) as PaymentSessionUpdateResult;
 
         if (paymentSessionError) {
             throw new Error(paymentSessionError.message);

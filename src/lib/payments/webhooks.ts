@@ -3,7 +3,7 @@ import type { PaymentEventStatus, PaymentLifecycleEventPayload } from '@/lib/eve
 import { createPaymentLifecycleEvent } from '@/lib/events/contracts';
 import { enqueueInternalJob, publishEvent } from '@/lib/events/runtime';
 import {
-    createServiceRoleClient,
+    createServiceRoleClient as _createServiceRoleClient,
     createAuditedServiceRoleClient,
 } from '@/lib/supabase/service-role';
 
