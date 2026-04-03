@@ -12,7 +12,7 @@
  * @module lib/api/circuit-breaker
  */
 
-import { logger } from '../logger';
+import { logger } from '@/lib/logger';
 
 /**
  * Circuit breaker states

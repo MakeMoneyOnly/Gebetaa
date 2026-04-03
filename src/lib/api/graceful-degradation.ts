@@ -7,7 +7,7 @@
  * @module lib/api/graceful-degradation
  */
 
-import { logger } from '../logger';
+import { logger } from '@/lib/logger';
 import { CircuitBreaker, CircuitBreakerError } from './circuit-breaker';
 
 /**

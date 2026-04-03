@@ -25,8 +25,8 @@ type SuccessBody<T> = {
     data: T;
 };
 
-export function apiSuccess<T>(data: T, status: number = 200) {
-    return NextResponse.json<SuccessBody<T>>({ data }, { status });
+export function apiSuccess<T>(data: T, status: number = 200, headers?: HeadersInit) {
+    return NextResponse.json<SuccessBody<T>>({ data }, { status, headers });
 }
 
 /**

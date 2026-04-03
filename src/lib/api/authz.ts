@@ -6,6 +6,10 @@ import { logSecurityEvent } from '@/lib/security/securityEvents';
 import { verifyDeviceTokenFromRequest } from '@/lib/auth/device-token-cookies';
 import { logger } from '@/lib/logger';
 import type { HardwareDeviceType } from '@/lib/devices/config';
+import {
+    hydrateEnterpriseDeviceRecord,
+    isEnterpriseDeviceSchemaError,
+} from '@/lib/devices/schema-compat';
 
 type PilotPhase = 'p0' | 'p1' | 'p2';
 
@@ -185,13 +189,34 @@ export async function getDeviceContext(request: Request) {
     }
 
     const admin = createServiceRoleClient();
-    const { data: device, error } = await admin
-        .from('hardware_devices')
-        .select(
-            'id, restaurant_id, location_id, device_type, device_profile, name, assigned_zones, status, metadata, last_active_at, pairing_state, management_provider, management_device_id'
-        )
-        .eq('device_token', token)
-        .single();
+    const fetchEnterpriseDevice = () =>
+        admin
+            .from('hardware_devices')
+            .select(
+                'id, restaurant_id, location_id, device_type, device_profile, name, assigned_zones, status, metadata, last_active_at, pairing_state, management_provider, management_device_id, app_version, target_app_version, ota_status'
+            )
+            .eq('device_token', token)
+            .single();
+
+    let device: Record<string, unknown> | null = null;
+    let error: { message: string } | null = null;
+
+    const enterpriseResult = await fetchEnterpriseDevice();
+    device = (enterpriseResult.data as Record<string, unknown> | null) ?? null;
+    error = enterpriseResult.error;
+
+    if (error && isEnterpriseDeviceSchemaError(error.message)) {
+        const legacyResult = await admin
+            .from('hardware_devices')
+            .select(
+                'id, restaurant_id, device_type, name, assigned_zones, status, metadata, last_active_at'
+            )
+            .eq('device_token', token)
+            .single();
+
+        device = (legacyResult.data as Record<string, unknown> | null) ?? null;
+        error = legacyResult.error;
+    }
 
     if (error || !device) {
         return {
@@ -207,7 +232,12 @@ export async function getDeviceContext(request: Request) {
         );
     }
 
-    return { ok: true as const, device, restaurantId: device.restaurant_id as string, admin };
+    return {
+        ok: true as const,
+        device: hydrateEnterpriseDeviceRecord(device as Record<string, unknown> as any),
+        restaurantId: device.restaurant_id as string,
+        admin,
+    };
 }
 
 export async function getScopedDeviceContext(request: Request, allowedTypes: HardwareDeviceType[]) {
