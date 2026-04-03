@@ -1,0 +1,122 @@
+name: Migration Sync Check
+
+on:
+    push:
+        branches:
+            - main
+            - develop
+        paths:
+            - 'supabase/migrations/**'
+    pull_request:
+        branches:
+            - main
+            - develop
+        paths:
+            - 'supabase/migrations/**'
+
+jobs:
+    check-migrations:
+        name: Check Migration Sync
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+
+            - name: Install Supabase CLI
+              uses: supabase/setup-cli@v1
+              with:
+                  version: latest
+
+            - name: Check for missing migrations
+              id: check-migrations
+              run: |
+                  echo "Checking for migration sync issues..."
+
+                  # List all local migrations
+                  LOCAL_MIGRATIONS=$(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | sort)
+
+                  # Check if missing_migrations.json exists and has entries
+                  if [ -f "missing_migrations.json" ]; then
+                    MISSING_COUNT=$(jq 'length' missing_migrations.json)
+                    
+                    if [ "$MISSING_COUNT" -gt 0 ]; then
+                      echo "⚠️ Found $MISSING_COUNT migrations marked as missing"
+                      echo "Missing migrations:"
+                      jq -r '.[]' missing_migrations.json
+                      
+                      # Check if any are actually missing locally
+                      for migration in $(jq -r '.[]' missing_migrations.json); do
+                        if [ -f "supabase/migrations/$migration" ]; then
+                          echo "✅ $migration exists locally - can be removed from missing_migrations.json"
+                        else
+                          echo "❌ $migration is genuinely missing"
+                        fi
+                      done
+                      
+                      echo ""
+                      echo "::warning::Some migrations are marked as missing in missing_migrations.json. Please reconcile with remote database."
+                    else
+                      echo "✅ No missing migrations recorded"
+                    fi
+                  else
+                    echo "✅ No missing_migrations.json file found"
+                  fi
+
+            - name: Validate migration file naming
+              run: |
+                  echo "Validating migration file naming conventions..."
+
+                  INVALID_COUNT=0
+                  for file in supabase/migrations/*.sql; do
+                    filename=$(basename "$file")
+                    
+                    # Check if filename matches pattern: YYYYMMDDHHMMSS_description.sql
+                    if [[ ! "$filename" =~ ^[0-9]{8,14}_[a-z0-9_]+\.sql$ ]]; then
+                      echo "::warning::Invalid naming: $filename"
+                      ((INVALID_COUNT++))
+                    fi
+                  done
+
+                  if [ "$INVALID_COUNT" -gt 0 ]; then
+                    echo "::warning::Found $INVALID_COUNT migrations with non-standard naming"
+                  else
+                    echo "✅ All migrations follow naming conventions"
+                  fi
+
+            - name: Check for duplicate migration timestamps
+              run: |
+                  echo "Checking for duplicate migration timestamps..."
+
+                  # Extract timestamps (first 8-14 digits) and check for duplicates
+                  TIMESTAMPS=$(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | sed 's/_[^_]*$//' | sort)
+
+                  DUPLICATES=$(echo "$TIMESTAMPS" | uniq -d)
+
+                  if [ -n "$DUPLICATES" ]; then
+                    echo "::error::Duplicate migration timestamps found: $DUPLICATES"
+                    exit 1
+                  else
+                    echo "✅ No duplicate timestamps found"
+                  fi
+
+            - name: Summary
+              run: |
+                  echo "## Migration Sync Check Summary" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+
+                  MIGRATION_COUNT=$(ls supabase/migrations/*.sql 2>/dev/null | wc -l)
+                  echo "- **Total migrations:** $MIGRATION_COUNT" >> $GITHUB_STEP_SUMMARY
+
+                  if [ -f "missing_migrations.json" ]; then
+                    MISSING_COUNT=$(jq 'length' missing_migrations.json)
+                    echo "- **Marked as missing:** $MISSING_COUNT" >> $GITHUB_STEP_SUMMARY
+                  fi
+
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "✅ Migration sync check completed" >> $GITHUB_STEP_SUMMARY
