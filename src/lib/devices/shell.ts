@@ -4,6 +4,7 @@ import {
     getDeviceProfileLabel,
     getDeviceTypeLabel,
     resolveDeviceProfile,
+    type DeviceProfile,
 } from '@/lib/devices/config';
 
 export interface StoredShellSessionLike {
@@ -20,7 +21,7 @@ export function resolveDeviceShellPath(session: StoredShellSessionLike): string 
     }
 
     const profile = DeviceProfileSchema.safeParse(session.device_profile).success
-        ? session.device_profile
+        ? (session.device_profile as DeviceProfile)
         : resolveDeviceProfile(
               session.device_type === 'terminal' ||
                   session.device_type === 'kds' ||

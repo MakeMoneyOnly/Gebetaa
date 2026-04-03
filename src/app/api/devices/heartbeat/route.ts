@@ -2,6 +2,11 @@ import { z } from 'zod';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getDeviceContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
+import {
+    isEnterpriseDeviceSchemaError,
+    mergeEnterpriseShellMetadata,
+} from '@/lib/devices/schema-compat';
+import { resolveOtaStatus } from '@/lib/devices/ota';
 
 const HeartbeatSchema = z.object({
     route: z.string().trim().max(120).optional(),
@@ -63,17 +68,92 @@ export async function POST(request: Request) {
               },
           }
         : runtimeMetadata;
+    const currentManagement =
+        typeof currentMetadata.management === 'object' && currentMetadata.management !== null
+            ? (currentMetadata.management as Record<string, unknown>)
+            : {};
+    const appVersion = parsed.data.native_version ?? null;
+    const targetAppVersion =
+        typeof currentManagement.target_app_version === 'string'
+            ? currentManagement.target_app_version
+            : (((ctx.device as Record<string, unknown>).target_app_version as
+                  | string
+                  | null
+                  | undefined) ?? null);
+    const otaStatus = resolveOtaStatus({
+        currentVersion: appVersion,
+        targetVersion: targetAppVersion,
+        existingStatus:
+            ((ctx.device as Record<string, unknown>).ota_status as
+                | 'current'
+                | 'queued'
+                | 'installing'
+                | 'failed'
+                | 'outdated'
+                | null
+                | undefined) ??
+            (typeof currentManagement.ota_status === 'string'
+                ? (currentManagement.ota_status as
+                      | 'current'
+                      | 'queued'
+                      | 'installing'
+                      | 'failed'
+                      | 'outdated')
+                : null),
+    });
+    const persistedMetadata = {
+        ...nextMetadata,
+        management: {
+            ...currentManagement,
+            ota_status: otaStatus,
+            app_channel:
+                typeof currentManagement.app_channel === 'string'
+                    ? currentManagement.app_channel
+                    : (((ctx.device as Record<string, unknown>).app_channel as
+                          | string
+                          | null
+                          | undefined) ?? 'stable'),
+            target_app_version: targetAppVersion,
+            ota_completed_at: otaStatus === 'current' && targetAppVersion ? now : null,
+            ota_error: otaStatus === 'failed' ? (currentManagement.ota_error ?? null) : null,
+        },
+    };
 
-    const { error } = await ctx.admin
+    let { error } = await ctx.admin
         .from('hardware_devices')
         .update({
             last_active_at: now,
             last_boot_at: now,
             hardware_fingerprint: parsed.data.device_uuid ?? null,
-            metadata: nextMetadata,
+            app_version: appVersion,
+            ota_status: otaStatus,
+            ota_completed_at: otaStatus === 'current' && targetAppVersion ? now : null,
+            metadata: persistedMetadata,
         })
         .eq('id', ctx.device.id)
         .eq('restaurant_id', ctx.restaurantId);
+
+    if (error && isEnterpriseDeviceSchemaError(error.message)) {
+        const legacyMetadata = mergeEnterpriseShellMetadata(persistedMetadata, {
+            device_profile: ctx.device.device_profile,
+            location_id: ctx.device.location_id ?? null,
+            pairing_state: ctx.device.pairing_state,
+            management_provider: ctx.device.management_provider,
+            management_device_id: ctx.device.management_device_id ?? null,
+            hardware_fingerprint: parsed.data.device_uuid ?? null,
+        });
+
+        const legacyResult = await ctx.admin
+            .from('hardware_devices')
+            .update({
+                last_active_at: now,
+                metadata: legacyMetadata,
+            })
+            .eq('id', ctx.device.id)
+            .eq('restaurant_id', ctx.restaurantId);
+
+        error = legacyResult.error;
+    }
 
     if (error) {
         return apiError(

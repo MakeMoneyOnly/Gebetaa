@@ -3,8 +3,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import { writeAuditLog } from '@/lib/api/audit';
-import { dispatchEsperDeviceAction } from '@/lib/integrations/esper';
+import { queueAndDispatchManagedDeviceAction } from '@/lib/devices/management';
 
 const DeviceManagementActionSchema = z.object({
     action: z.enum(['reboot', 'wipe', 'push_update']),
@@ -55,79 +54,23 @@ export async function POST(
         );
     }
 
-    const { data: queuedAction, error: queueError } = await admin
-        .from('device_management_actions')
-        .insert({
-            restaurant_id: context.restaurantId,
-            hardware_device_id: device.id,
-            requested_by: auth.user.id,
-            provider: 'esper',
-            action_type: parsed.data.action,
-            status: 'queued',
-            request_payload: {
-                package_name: parsed.data.package_name ?? null,
-                app_version: parsed.data.app_version ?? null,
-            },
-        })
-        .select('id')
-        .single();
-
-    if (queueError || !queuedAction) {
-        return apiError(
-            'Failed to queue device action',
-            500,
-            'DEVICE_ACTION_QUEUE_FAILED',
-            queueError?.message
-        );
-    }
-
     try {
-        const result = await dispatchEsperDeviceAction({
-            managementDeviceId: device.management_device_id,
+        const result = await queueAndDispatchManagedDeviceAction({
+            admin,
+            restaurantId: context.restaurantId,
+            userId: auth.user.id,
+            device: device as Record<string, unknown>,
             action: parsed.data.action,
             packageName: parsed.data.package_name,
             appVersion: parsed.data.app_version,
         });
 
-        await admin
-            .from('device_management_actions')
-            .update({
-                status: 'dispatched',
-                provider_job_id: result.commandId ?? null,
-                response_payload: result.raw ?? {},
-            })
-            .eq('id', queuedAction.id);
-
-        await writeAuditLog(admin, {
-            restaurant_id: context.restaurantId,
-            user_id: auth.user.id,
-            action: 'device_management_action_dispatched',
-            entity_type: 'hardware_devices',
-            entity_id: device.id,
-            metadata: {
-                action: parsed.data.action,
-                provider: 'esper',
-                provider_job_id: result.commandId ?? null,
-            },
-        });
-
         return apiSuccess({
-            action_id: queuedAction.id,
-            provider_job_id: result.commandId ?? null,
-            status: 'dispatched',
+            action_id: result.actionId,
+            provider_job_id: result.providerJobId,
+            status: result.status,
         });
     } catch (error) {
-        await admin
-            .from('device_management_actions')
-            .update({
-                status: 'failed',
-                response_payload: {
-                    error: error instanceof Error ? error.message : 'dispatch_failed',
-                },
-                completed_at: new Date().toISOString(),
-            })
-            .eq('id', queuedAction.id);
-
         return apiError(
             'Failed to dispatch remote device action',
             502,

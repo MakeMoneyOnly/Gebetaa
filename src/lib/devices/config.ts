@@ -27,6 +27,9 @@ export type ManagementProvider = z.infer<typeof ManagementProviderSchema>;
 export const FiscalModeSchema = z.enum(['stub', 'mor_live', 'mor_pending']);
 export type FiscalMode = z.infer<typeof FiscalModeSchema>;
 
+export const OtaStatusSchema = z.enum(['current', 'queued', 'installing', 'failed', 'outdated']);
+export type OtaStatus = z.infer<typeof OtaStatusSchema>;
+
 export const DeviceRuntimeMetadataSchema = z
     .object({
         route: z.string().trim().max(120).nullable().optional(),
@@ -64,6 +67,12 @@ export const DeviceManagementMetadataSchema = z
         kiosk_mode: z.boolean().nullable().optional(),
         status_bar_locked: z.boolean().nullable().optional(),
         navigation_locked: z.boolean().nullable().optional(),
+        app_channel: z.string().trim().max(40).nullable().optional(),
+        ota_status: OtaStatusSchema.nullable().optional(),
+        target_app_version: z.string().trim().max(40).nullable().optional(),
+        ota_requested_at: z.string().datetime().nullable().optional(),
+        ota_completed_at: z.string().datetime().nullable().optional(),
+        ota_error: z.string().trim().max(240).nullable().optional(),
     })
     .passthrough();
 
