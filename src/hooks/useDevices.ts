@@ -4,6 +4,7 @@ import type {
     DeviceProfile,
     HardwareDeviceMetadata,
     HardwareDeviceType,
+    ManagementProvider,
 } from '@/lib/devices/config';
 
 export type HardwareDevice = {
@@ -89,8 +90,8 @@ export function useDevices(initialData?: HardwareDevice[]) {
             setDevices(prev => [...prev, result.data.device]);
             toast.success('Device provisioned successfully.');
             return result.data.device as HardwareDevice;
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to provision device.');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to provision device.');
             return null;
         }
     };
@@ -106,8 +107,8 @@ export function useDevices(initialData?: HardwareDevice[]) {
             }
             toast.success('Device removed.');
             return true;
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to delete device.');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to delete device.');
             // Re-fetch to restore correct state
             void fetchDevices();
             return false;

@@ -122,8 +122,9 @@ export async function provisionDevice(data: {
         }
 
         return { success: true, redirectTo: `${target}?restaurantId=${invite.restaurant_id}` };
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Server provisioning failed';
         console.error('Provisioning Error:', e);
-        return { error: e.message || 'Server provisioning failed', redirectTo: '/auth/login' };
+        return { error: message, redirectTo: '/auth/login' };
     }
 }

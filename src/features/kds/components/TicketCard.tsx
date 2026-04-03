@@ -3,11 +3,17 @@ import { Clock, CheckCircle, ChevronRight, AlertCircle } from 'lucide-react';
 import { differenceInMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+type TicketItemModifier =
+    | {
+          name?: string;
+      }
+    | string;
+
 type TicketItem = {
     id: string;
     quantity: number;
     name: string;
-    modifiers?: any[];
+    modifiers?: TicketItemModifier[];
     notes?: string;
     status: 'pending' | 'cooking' | 'ready';
     category?: string;
@@ -132,14 +138,18 @@ export const TicketCard = ({
                                 </p>
                                 {item.modifiers && item.modifiers.length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-1">
-                                        {item.modifiers.map((mod: any, i: number) => (
-                                            <span
-                                                key={i}
-                                                className="rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600"
-                                            >
-                                                {mod.name || mod}
-                                            </span>
-                                        ))}
+                                        {item.modifiers.map(
+                                            (mod: TicketItemModifier, i: number) => (
+                                                <span
+                                                    key={i}
+                                                    className="rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600"
+                                                >
+                                                    {typeof mod === 'string'
+                                                        ? mod
+                                                        : (mod?.name ?? '')}
+                                                </span>
+                                            )
+                                        )}
                                     </div>
                                 )}
                                 {item.notes && (

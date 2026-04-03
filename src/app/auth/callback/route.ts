@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 // The client you created from the Server-Side Auth instructions
 import { createClient } from '@/lib/supabase/server';
+import { validateForwardedHost } from '@/lib/security/host-validation';
 
 /**
  * Validates redirect path to prevent open redirect attacks (CRIT-002)
@@ -28,34 +29,17 @@ export async function GET(request: Request) {
         const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-            // Validate x-forwarded-host to prevent host header injection (HIGH-002)
-            const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
-            const isLocalEnv = process.env.NODE_ENV === 'development';
-
-            // Allowed hosts list - only trust these values from x-forwarded-host
-            const allowedHosts: string[] = [
-                'gebetamenu.com',
-                process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL,
-            ].filter((host): host is string => Boolean(host));
+            // HIGH-008: Validate x-forwarded-host using centralized validation
+            const forwardedHost = request.headers.get('x-forwarded-host');
+            const validation = validateForwardedHost(forwardedHost, request);
 
             // Determine the safe host to use
-            let safeHost: string | null = null;
-            if (isLocalEnv) {
-                // Development: use origin directly
-                safeHost = null;
-            } else if (forwardedHost && allowedHosts.includes(forwardedHost)) {
-                // Only use forwardedHost if it's in the allowlist
-                safeHost = forwardedHost;
+            if (validation.valid && validation.host) {
+                // Use validated forwarded host
+                return NextResponse.redirect(`https://${validation.host}${next}`);
             } else {
-                // Not in allowlist - fall back to origin (will use the request's host)
-                safeHost = null;
-            }
-
-            if (isLocalEnv || !safeHost) {
-                // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
+                // Fall back to origin (uses request's validated host)
                 return NextResponse.redirect(`${origin}${next}`);
-            } else {
-                return NextResponse.redirect(`https://${safeHost}${next}`);
             }
         }
     }

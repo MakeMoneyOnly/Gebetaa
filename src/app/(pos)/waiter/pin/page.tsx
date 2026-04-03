@@ -55,8 +55,8 @@ function WaiterPinContent() {
 
             toast.success(`Welcome, ${data.data.staff.name || 'Waitstaff'}`);
             router.push(`/waiter?restaurantId=${restaurantId}`);
-        } catch (err: any) {
-            toast.error(err.message || 'Verification failed');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Verification failed');
             setPin(''); // Reset on failure
         } finally {
             setLoading(false);

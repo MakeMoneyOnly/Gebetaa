@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { MapPin, _Clock, Phone, Info, _ChevronLeft, Navigation } from 'lucide-react';
+import { MapPin, Phone, Info, Navigation } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { isAbortError } from '@/hooks/useSafeFetch';
 

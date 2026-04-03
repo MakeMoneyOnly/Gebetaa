@@ -54,8 +54,9 @@ function DeviceProvisioningContent() {
                 toast.success('Device Provisioned Successfully!');
                 window.location.replace(result.redirectTo);
             }
-        } catch (err: any) {
-            toast.error(err.message || 'Setup failed');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Setup failed';
+            toast.error(message);
         } finally {
             setLoading(false);
         }

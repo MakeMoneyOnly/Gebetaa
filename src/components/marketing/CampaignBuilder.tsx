@@ -9,9 +9,22 @@
 
 import { useState } from 'react';
 
+interface CampaignData {
+    id?: string;
+    name: string;
+    campaign_type: string;
+    channel: string;
+    subject?: string;
+    email_html?: string;
+    sms_body?: string;
+    target_criteria?: Record<string, unknown>;
+    scheduled_at?: string;
+    is_automated: boolean;
+}
+
 interface CampaignBuilderProps {
     restaurantId: string;
-    onSave: (campaign: any) => void;
+    onSave: (campaign: CampaignData) => void;
     onCancel: () => void;
 }
 

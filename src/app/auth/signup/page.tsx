@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Building2, Lock, Mail, Eye, EyeOff } from 'lucide-react';
@@ -78,10 +79,13 @@ export default function SignUpPage() {
                     href="/"
                     className="absolute top-8 left-8 flex h-8 w-24 items-center pl-1 lg:top-12 lg:left-12"
                 >
-                    <img
+                    <Image
                         src="/logo-black.svg"
                         alt="Lole"
+                        width={96}
+                        height={90}
                         className="pointer-events-none absolute top-1/2 left-0 h-[74px] w-auto max-w-none origin-left -translate-y-1/2 md:h-[90px]"
+                        priority
                     />
                 </Link>
 

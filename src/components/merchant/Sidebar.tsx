@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
     LayoutGrid,
@@ -20,7 +21,6 @@ import {
     Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useRole } from '@/hooks/useRole';
 
 const MENU_ITEMS = [
     { label: 'Dashboard', href: '/merchant', icon: LayoutGrid },
@@ -43,10 +43,13 @@ export function Sidebar() {
                 {/* Logo */}
                 <div className="flex w-full items-center justify-start px-2 pt-4 pb-2">
                     <div className="relative flex h-8 w-24 items-center justify-start pl-1">
-                        <img
+                        <Image
                             src="/logo-black.svg"
                             alt="Lole"
+                            width={96}
+                            height={90}
                             className="pointer-events-none absolute top-1/2 left-0 h-[74px] w-auto max-w-none origin-left -translate-y-1/2 md:h-[90px]"
+                            priority
                         />
                     </div>
                 </div>

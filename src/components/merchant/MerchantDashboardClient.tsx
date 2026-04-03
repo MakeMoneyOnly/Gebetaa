@@ -17,10 +17,8 @@
  * - Realtime updates for live metrics
  */
 
-import { type ComponentType, useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { formatETBCurrency } from '@/lib/format/et';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
-    Bell,
     CalendarCheck,
     CheckCircle,
     ChevronDown,
@@ -40,7 +38,6 @@ import { RevenueChart } from '@/components/merchant/RevenueChart';
 
 import { AlertRuleBuilderDrawer } from '@/components/merchant/command-center/AlertRuleBuilderDrawer';
 import {
-    AttentionItem,
     CommandCenterRange,
     CommandCenterMetrics,
 } from '@/components/merchant/command-center/types';
@@ -63,7 +60,7 @@ const EMPTY_METRICS: CommandCenterMetrics = {
     unique_tables_today: 0,
 };
 
-function nextOrderStatus(status: string) {
+function _nextOrderStatus(status: string) {
     switch (status) {
         case 'pending':
             return 'acknowledged';

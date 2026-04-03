@@ -198,20 +198,44 @@ export function MenuPageClient({ initialData }: MenuPageClientProps) {
         }
 
         // Filter out categories with no items if needed, and format items
-        const formatted = (data ?? []).map((cat: any) => ({
-            id: cat.id,
-            name: cat.name,
-            order_index: cat.order_index ?? 0,
-            items: (cat.menu_items ?? cat.items ?? []).map((item: any) => ({
-                id: item.id,
-                name: item.name,
-                price: item.price,
-                description: item.description,
-                is_available: item.is_available ?? true,
-                category_id: item.category_id,
-                image_url: item.image_url,
-            })),
-        }));
+        const formatted = (data ?? []).map(
+            (cat: {
+                id: string;
+                name: string;
+                order_index: number | null;
+                menu_items?: {
+                    id: string;
+                    name: string;
+                    price: number | null;
+                    description: string | null;
+                    is_available: boolean | null;
+                    category_id: string;
+                    image_url: string | null;
+                }[];
+                items?: {
+                    id: string;
+                    name: string;
+                    price: number | null;
+                    description: string | null;
+                    is_available: boolean | null;
+                    category_id: string;
+                    image_url: string | null;
+                }[];
+            }) => ({
+                id: cat.id,
+                name: cat.name,
+                order_index: cat.order_index ?? 0,
+                items: (cat.menu_items ?? cat.items ?? []).map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    description: item.description,
+                    is_available: item.is_available ?? true,
+                    category_id: item.category_id,
+                    image_url: item.image_url,
+                })),
+            })
+        );
 
         setCategories(formatted);
         return formatted;

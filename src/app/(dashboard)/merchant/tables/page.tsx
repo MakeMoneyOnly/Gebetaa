@@ -236,14 +236,15 @@ export default function TablesPage() {
             resetForm();
             toast.success('Table created.');
             void fetchTables();
-        } catch (err: any) {
-            toast.error('Error adding table: ' + (err.message || 'Unknown error'));
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
+            toast.error('Error adding table: ' + message);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const openEditTableModal = (table: any) => {
+    const openEditTableModal = (table: TableGridRow) => {
         setTableToEdit(table);
         setTableNumberInput(table.table_number);
         setCapacityInput(String(table.capacity || 4));
@@ -280,8 +281,9 @@ export default function TablesPage() {
             resetForm();
             toast.success('Table updated.');
             void fetchTables();
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Error updating table.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Error updating table.';
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -299,8 +301,9 @@ export default function TablesPage() {
             setTables(prev => prev.filter(table => table.id !== tableToDelete.id));
             setTableToDelete(null);
             toast.success('Table deleted.');
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Error deleting table.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Error deleting table.';
+            toast.error(message);
         } finally {
             setIsDeleting(false);
         }
@@ -346,8 +349,9 @@ export default function TablesPage() {
             }
             toast.success('Table seated successfully.');
             void fetchTables();
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Failed to seat table.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to seat table.';
+            toast.error(message);
         } finally {
             setIsSessionActionLoading(false);
         }
@@ -369,8 +373,9 @@ export default function TablesPage() {
             }
             toast.success('Table session closed.');
             void fetchTables();
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Failed to close session.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to close session.';
+            toast.error(message);
         } finally {
             setIsSessionActionLoading(false);
         }
@@ -401,8 +406,9 @@ export default function TablesPage() {
             toast.success('Session transferred.');
             setTransferTargetTableId('');
             void fetchTables();
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Failed to transfer session.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to transfer session.';
+            toast.error(message);
         } finally {
             setIsSessionActionLoading(false);
         }
@@ -424,8 +430,9 @@ export default function TablesPage() {
                 throw new Error('Signed QR URL missing from response.');
             }
             setSelectedTableQrUrl(qrUrl);
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Failed to generate QR.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to generate QR.';
+            toast.error(message);
         } finally {
             setIsQrLoading(false);
         }
@@ -453,8 +460,10 @@ export default function TablesPage() {
 
             setBatchQrEntries(results.filter(entry => Boolean(entry.url)));
             setIsBatchQrModalOpen(true);
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Failed to generate batch QR sheet.');
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : 'Failed to generate batch QR sheet.';
+            toast.error(message);
         } finally {
             setIsBatchQrLoading(false);
         }
@@ -520,8 +529,10 @@ export default function TablesPage() {
                 throw new Error(error.message || 'Failed to fetch session state.');
             }
             setSessionDrawerData(data ?? null);
-        } catch (error: any) {
-            toast.error(error?.message ?? 'Could not load session state.');
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : 'Could not load session state.';
+            toast.error(message);
         } finally {
             setSessionDrawerLoading(false);
         }

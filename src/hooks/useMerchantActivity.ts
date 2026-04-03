@@ -82,42 +82,46 @@ export function useMerchantActivity() {
                 }
 
                 // Transform orders to activities
-                const orderActivities: ActivityItem[] = (data.orders || []).map((order: any) => ({
-                    id: `order-${order.id}`,
-                    type: 'order' as ActivityType,
-                    user: `Order ${order.order_number?.startsWith('ORD-') ? order.order_number.split('-').slice(1).join('-') : `#${order.order_number}`}`,
-                    action: 'placed for',
-                    target: `Table ${order.table_number}`,
-                    time: new Date(order.created_at).toLocaleTimeString([], {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                    }),
-                    timestamp: new Date(order.created_at),
-                    hasMessage: !!order.notes,
-                    message: order.notes ? `Note: '${order.notes}'` : undefined,
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`,
-                }));
+                const orderActivities: ActivityItem[] = (data.orders || []).map(
+                    (order: Record<string, unknown>) => ({
+                        id: `order-${order.id}`,
+                        type: 'order' as ActivityType,
+                        user: `Order ${(order.order_number as string)?.startsWith('ORD-') ? (order.order_number as string).split('-').slice(1).join('-') : `#${order.order_number}`}`,
+                        action: 'placed for',
+                        target: `Table ${order.table_number}`,
+                        time: new Date(order.created_at as string).toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                        }),
+                        timestamp: new Date(order.created_at as string),
+                        hasMessage: !!order.notes,
+                        message: order.notes ? `Note: '${order.notes}'` : undefined,
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`,
+                    })
+                );
 
                 // Transform requests to activities
-                const requestActivities: ActivityItem[] = (data.requests || []).map((req: any) => ({
-                    id: `req-${req.id}`,
-                    type: 'request' as ActivityType,
-                    user: `Table ${req.table_number}`,
-                    action: 'requested',
-                    target:
-                        req.request_type === 'waiter'
-                            ? 'Waiter Assistance'
-                            : req.request_type === 'bill'
-                              ? 'Bill'
-                              : req.request_type,
-                    time: new Date(req.created_at).toLocaleTimeString([], {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                    }),
-                    timestamp: new Date(req.created_at),
-                    hasMessage: false,
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`,
-                }));
+                const requestActivities: ActivityItem[] = (data.requests || []).map(
+                    (req: Record<string, unknown>) => ({
+                        id: `req-${req.id}`,
+                        type: 'request' as ActivityType,
+                        user: `Table ${req.table_number}`,
+                        action: 'requested',
+                        target:
+                            req.request_type === 'waiter'
+                                ? 'Waiter Assistance'
+                                : req.request_type === 'bill'
+                                  ? 'Bill'
+                                  : (req.request_type as string),
+                        time: new Date(req.created_at as string).toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                        }),
+                        timestamp: new Date(req.created_at as string),
+                        hasMessage: false,
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`,
+                    })
+                );
 
                 // Combine and sort
                 const combined = [...orderActivities, ...requestActivities].sort(
@@ -164,41 +168,45 @@ export function useMerchantActivity() {
             const data = await response.json();
 
             // Re-process the data (same logic as above)
-            const orderActivities: ActivityItem[] = (data.orders || []).map((order: any) => ({
-                id: `order-${order.id}`,
-                type: 'order' as ActivityType,
-                user: `Order ${order.order_number?.startsWith('ORD-') ? order.order_number.split('-').slice(1).join('-') : `#${order.order_number}`}`,
-                action: 'placed for',
-                target: `Table ${order.table_number}`,
-                time: new Date(order.created_at).toLocaleTimeString([], {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                }),
-                timestamp: new Date(order.created_at),
-                hasMessage: !!order.notes,
-                message: order.notes ? `Note: '${order.notes}'` : undefined,
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`,
-            }));
+            const orderActivities: ActivityItem[] = (data.orders || []).map(
+                (order: Record<string, unknown>) => ({
+                    id: `order-${order.id}`,
+                    type: 'order' as ActivityType,
+                    user: `Order ${(order.order_number as string)?.startsWith('ORD-') ? (order.order_number as string).split('-').slice(1).join('-') : `#${order.order_number}`}`,
+                    action: 'placed for',
+                    target: `Table ${order.table_number}`,
+                    time: new Date(order.created_at as string).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                    }),
+                    timestamp: new Date(order.created_at as string),
+                    hasMessage: !!order.notes,
+                    message: order.notes ? `Note: '${order.notes}'` : undefined,
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Order${order.id}`,
+                })
+            );
 
-            const requestActivities: ActivityItem[] = (data.requests || []).map((req: any) => ({
-                id: `req-${req.id}`,
-                type: 'request' as ActivityType,
-                user: `Table ${req.table_number}`,
-                action: 'requested',
-                target:
-                    req.request_type === 'waiter'
-                        ? 'Waiter Assistance'
-                        : req.request_type === 'bill'
-                          ? 'Bill'
-                          : req.request_type,
-                time: new Date(req.created_at).toLocaleTimeString([], {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                }),
-                timestamp: new Date(req.created_at),
-                hasMessage: false,
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`,
-            }));
+            const requestActivities: ActivityItem[] = (data.requests || []).map(
+                (req: Record<string, unknown>) => ({
+                    id: `req-${req.id}`,
+                    type: 'request' as ActivityType,
+                    user: `Table ${req.table_number}`,
+                    action: 'requested',
+                    target:
+                        req.request_type === 'waiter'
+                            ? 'Waiter Assistance'
+                            : req.request_type === 'bill'
+                              ? 'Bill'
+                              : req.request_type,
+                    time: new Date(req.created_at as string).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                    }),
+                    timestamp: new Date(req.created_at as string),
+                    hasMessage: false,
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Req${req.id}`,
+                })
+            );
 
             const combined = [...orderActivities, ...requestActivities].sort(
                 (a, b) => b.timestamp.getTime() - a.timestamp.getTime()

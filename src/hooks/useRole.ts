@@ -56,7 +56,7 @@ export function useRole(restaurantId: string | null) {
                     .select('role, restaurant_id, is_active')
                     .eq('user_id', activeUser.id);
 
-                const { data: roleFromRpc, error: rpcError } = await (supabase.rpc as any)(
+                const { data: roleFromRpc, error: rpcError } = await supabase.rpc(
                     'get_my_staff_role',
                     {
                         p_restaurant_id: restaurantId,

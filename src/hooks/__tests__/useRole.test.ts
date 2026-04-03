@@ -2,7 +2,7 @@
  * Tests for useRole hook
  * HIGH-008: Add tests for critical hooks
  */
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, waitFor, act as _act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useRole } from '../useRole';
 

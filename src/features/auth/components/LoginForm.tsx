@@ -58,8 +58,8 @@ export const LoginForm = () => {
             } else {
                 router.push('/merchant');
             }
-        } catch (err: any) {
-            setError(err.message || 'Failed to sign in');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to sign in');
         } finally {
             setLoading(false);
         }

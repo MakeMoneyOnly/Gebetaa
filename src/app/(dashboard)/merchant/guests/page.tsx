@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getGuestsPageData, resolveRestaurantId } from '@/lib/services/dashboardDataService';
+import { resolveRestaurantId } from '@/lib/services/dashboardDataService';
 import { GuestsPageClient } from '@/components/merchant/GuestsPageClient';
 
 // Force dynamic rendering - guest data changes frequently
@@ -16,9 +16,7 @@ export default async function GuestsPage() {
         redirect('/auth/signin?error=no_restaurant');
     }
 
-    // Fetch initial data on the server
-    const initialData = await getGuestsPageData(100);
-
-    // Pass server-fetched data to Client Component
-    return <GuestsPageClient initialData={initialData} />;
+    // Guest data is fetched client-side by GuestsPageClient
+    // The initialData prop is optional and not used by the component
+    return <GuestsPageClient />;
 }

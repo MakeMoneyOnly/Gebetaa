@@ -95,7 +95,7 @@ function WaiterPosContent() {
     const router = useRouter();
 
     // Staff Context State
-    const [staffContext, setStaffContext] = useState<any>(null);
+    const [staffContext, setStaffContext] = useState<Record<string, unknown> | null>(null);
 
     // Resolve restaurantId: prefer query param > localStorage device info > role hook
     // (Waiter POS devices have no Supabase auth session — they use a device token)
@@ -199,14 +199,16 @@ function WaiterPosContent() {
 
             if (!response.ok) throw new Error(payload.error || 'Failed to load tables');
 
-            const fetchedTables = (payload.data?.tables || []).map((t: any) => ({
-                id: t.id,
-                table_number: t.table_number,
-                status: t.status,
-                active_order_id: t.active_order_id,
-                capacity: t.capacity,
-                zone: t.zone,
-            }));
+            const fetchedTables = (payload.data?.tables || []).map(
+                (t: Record<string, unknown>) => ({
+                    id: t.id,
+                    table_number: t.table_number,
+                    status: t.status,
+                    active_order_id: t.active_order_id,
+                    capacity: t.capacity,
+                    zone: t.zone,
+                })
+            );
 
             setTables(fetchedTables);
         } catch (err) {
@@ -653,9 +655,11 @@ function WaiterPosContent() {
                     }
                 }
                 setSplitItemAssignments(assignments);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('Split config load error:', err);
-                toast.error(err.message || 'Failed to load split configuration');
+                toast.error(
+                    err instanceof Error ? err.message : 'Failed to load split configuration'
+                );
             } finally {
                 setIsLoadingSplitConfig(false);
             }
@@ -771,9 +775,9 @@ function WaiterPosContent() {
             }
             toast.success('Split configuration saved');
             await fetchSplitPayload(selectedSettlementOrderId);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Split config save error:', err);
-            toast.error(err.message || 'Failed to save split configuration');
+            toast.error(err instanceof Error ? err.message : 'Failed to save split configuration');
         } finally {
             setIsSavingSplitConfig(false);
         }
@@ -812,9 +816,9 @@ function WaiterPosContent() {
             }
             toast.success('Split payment captured');
             await fetchSplitPayload(selectedSettlementOrderId);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Split payment capture error:', err);
-            toast.error(err.message || 'Failed to capture split payment');
+            toast.error(err instanceof Error ? err.message : 'Failed to capture split payment');
         } finally {
             setCapturingSplitId(null);
         }
@@ -875,9 +879,9 @@ function WaiterPosContent() {
             void fetchTableOrders(selectedTable.table_number); // Refresh table orders
             void fetchTables(); // Refresh status
             void fetchActiveOrders(); // Update kitchen tab
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Submit order error:', err);
-            toast.error(err.message || 'Failed to submit order');
+            toast.error(err instanceof Error ? err.message : 'Failed to submit order');
         } finally {
             setIsSubmitting(false);
         }
@@ -981,9 +985,9 @@ function WaiterPosContent() {
             setViewMode('list');
             setOrderSubTab('new');
             await Promise.all([fetchTables(), fetchActiveOrders(), fetchServiceRequests()]);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Close table error:', err);
-            toast.error(err.message || 'Failed to close table');
+            toast.error(err instanceof Error ? err.message : 'Failed to close table');
         } finally {
             setIsClosingTable(false);
         }
@@ -1024,9 +1028,9 @@ function WaiterPosContent() {
                       }
                     : prev
             );
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Request bill error:', err);
-            toast.error(err.message || 'Failed to request bill');
+            toast.error(err instanceof Error ? err.message : 'Failed to request bill');
         } finally {
             setIsRequestingBill(false);
         }
@@ -1878,7 +1882,12 @@ function WaiterPosContent() {
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             {(Array.isArray(order.items)
-                                                ? (order.items as any[])
+                                                ? (order.items as Array<{
+                                                      id: string;
+                                                      name: string;
+                                                      quantity: number;
+                                                      price: number;
+                                                  }>)
                                                 : []
                                             ).map((item, idx) => (
                                                 <div
@@ -2133,7 +2142,12 @@ function WaiterPosContent() {
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             {(Array.isArray(order.items)
-                                                ? (order.items as any[])
+                                                ? (order.items as Array<{
+                                                      id: string;
+                                                      name: string;
+                                                      quantity: number;
+                                                      price: number;
+                                                  }>)
                                                 : []
                                             ).map((item, idx) => (
                                                 <div

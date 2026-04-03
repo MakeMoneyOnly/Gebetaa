@@ -20,5 +20,5 @@ export default async function ChannelsPage() {
     const initialData = await getChannelsPageData();
 
     // Pass server-fetched data to Client Component
-    return <ChannelsPageClient initialData={initialData} />;
+    return <ChannelsPageClient initialData={initialData as unknown as Record<string, unknown>} />;
 }

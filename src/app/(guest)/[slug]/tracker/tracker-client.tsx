@@ -21,7 +21,6 @@ import {
     ArrowLeft,
     RefreshCw,
 } from 'lucide-react';
-import { _formatETBCurrency } from '@/lib/format/et';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

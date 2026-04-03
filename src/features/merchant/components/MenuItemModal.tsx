@@ -91,8 +91,9 @@ export function MenuItemModal({
             const { data } = supabase.storage.from('menu-items').getPublicUrl(filePath);
 
             setImageUrl(data.publicUrl);
-        } catch (error: any) {
-            toast.error(error?.message || 'Failed to upload image.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to upload image.';
+            toast.error(message);
         } finally {
             setUploading(false);
         }
@@ -139,8 +140,9 @@ export function MenuItemModal({
             onSuccess();
             onClose();
             toast.success(itemToEdit ? 'Menu item updated.' : 'Menu item created.');
-        } catch (error: any) {
-            toast.error(error?.message || 'Failed to save menu item.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to save menu item.';
+            toast.error(message);
         } finally {
             setLoading(false);
         }

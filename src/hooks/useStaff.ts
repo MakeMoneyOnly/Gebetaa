@@ -183,8 +183,8 @@ export function useStaff(initialData?: StaffMember[]) {
             setStaff(prev => [...prev, result.data.staff]);
             toast.success('Staff member added.');
             return true;
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to add staff member.');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to add staff member.');
             return false;
         } finally {
             setLoading(false);
@@ -202,8 +202,8 @@ export function useStaff(initialData?: StaffMember[]) {
             }
             toast.success('Staff member removed.');
             return true;
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to remove staff member.');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to remove staff member.');
             void fetchStaff();
             return false;
         }

@@ -15,7 +15,7 @@ interface GuestProfile {
     visit_count: number;
 }
 
-function sanitizeNextPath(rawNext: string | null): string {
+function _sanitizeNextPath(rawNext: string | null): string {
     if (!rawNext || rawNext.trim().length === 0) return '/';
     return rawNext.startsWith('/') ? rawNext : '/';
 }
@@ -108,7 +108,7 @@ function AccountContent() {
             if (updateError) throw updateError;
 
             setGuest({ ...guest, phone: phone.trim() || null });
-        } catch (err) {
+        } catch (_err) {
             setError('Failed to save phone number');
         } finally {
             setSavingPhone(false);

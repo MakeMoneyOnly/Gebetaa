@@ -7,7 +7,10 @@ import { useRole } from '@/hooks/useRole';
 import { useDevices } from '@/hooks/useDevices';
 import { RolePermissionDrawer } from '@/components/merchant/RolePermissionDrawer';
 import { AddPinStaffModal } from '@/components/merchant/AddPinStaffModal';
-import { ProvisionDeviceModal } from '@/components/merchant/ProvisionDeviceModal';
+import {
+    ProvisionDeviceModal,
+    type ProvisionedDeviceResult,
+} from '@/components/merchant/ProvisionDeviceModal';
 import { MetricCard } from '@/components/merchant/MetricCard';
 import { Users, Tablet, Plus, MoreHorizontal, UserCheck, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,7 +28,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
         handleActiveToggle,
         handleAddPinStaff,
         handleDeleteStaff,
-    } = useStaff(initialData?.staff as any);
+    } = useStaff(initialData?.staff as StaffMember[] | undefined);
 
     const { restaurantId } = useRole(null);
     const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
@@ -39,7 +42,9 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
         loading: devicesDataLoading,
         handleProvisionDevice,
         handleDeleteDevice,
-    } = useDevices(initialData?.devices as any);
+    } = useDevices(
+        initialData?.devices as import('@/hooks/useDevices').HardwareDevice[] | undefined
+    );
 
     const { loading: pageLoading, markLoaded } = usePageLoadGuard('staff');
 
@@ -85,7 +90,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
 
                 if (tablesRes.ok && tablesResult.data && tablesResult.data.tables) {
                     const tableZones = tablesResult.data.tables
-                        .map((t: any) => t.zone)
+                        .map((t: { zone?: string }) => t.zone)
                         .filter(Boolean);
                     combinedZones = [...new Set([...combinedZones, ...tableZones])];
                 }
@@ -590,7 +595,7 @@ export function StaffPageClient({ initialData }: { initialData?: StaffPageData |
                 onClose={() => setAddDeviceOpen(false)}
                 onProvision={async payload => {
                     const device = await handleProvisionDevice(payload);
-                    return device;
+                    return device as unknown as ProvisionedDeviceResult | null;
                 }}
             />
 

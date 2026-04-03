@@ -22,7 +22,12 @@ import { getP2Copy } from '@/lib/i18n/p2';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 
 interface GuestsPageClientProps {
-    initialData?: any;
+    initialData?: {
+        guests: GuestDirectoryRow[];
+        loyalty_programs: LoyaltyProgramRow[];
+        campaigns: CampaignRow[];
+        segments: SegmentOption[];
+    } | null;
 }
 
 type Segment = 'all' | 'vip' | 'returning' | 'new';
@@ -360,8 +365,8 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
             }
             toast.success('Program removed');
             setRefreshToken(v => v + 1);
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to remove program');
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to remove program');
         }
     };
 
@@ -378,8 +383,8 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
             }
             toast.success(`Program ${status}`);
             setRefreshToken(v => v + 1);
-        } catch (error: any) {
-            toast.error(error.message || `Failed to ${status} program`);
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : `Failed to ${status} program`);
         }
     };
 
@@ -392,12 +397,12 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
             }
             toast.success('Campaign removed');
             setRefreshToken(v => v + 1);
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to remove campaign');
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to remove campaign');
         }
     };
 
-    const handleEdit = (type: string, id: string) => {
+    const handleEdit = (type: string, _id: string) => {
         toast.success(`Opening edit mode for ${type}...`);
         // Implementation for opening edit modals would go here
     };
@@ -498,7 +503,9 @@ export function GuestsPageClient(_props: GuestsPageClientProps) {
                         ].map(tab => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveGrowthTab(tab.id as any)}
+                                onClick={() =>
+                                    setActiveGrowthTab(tab.id as 'loyalty' | 'campaigns')
+                                }
                                 className={cn(
                                     'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all',
                                     activeGrowthTab === tab.id

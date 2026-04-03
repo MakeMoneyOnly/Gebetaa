@@ -66,8 +66,9 @@ export default function OnboardingPage() {
             toast.success('Profile updated!');
             // Force a hard refresh/navigation to ensure the session update is picked up by server components
             window.location.href = '/merchant/staff/schedule';
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'An error occurred';
+            toast.error(message);
             setLoading(false);
         }
     };

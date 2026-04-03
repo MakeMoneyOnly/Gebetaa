@@ -8,37 +8,21 @@ import {
     BookOpen,
     Calendar,
     ChevronDown,
-    _ChevronLeft,
-    _ChevronRight,
     Clock,
-    _CreditCard,
     Flame,
-    _Gift,
     Inbox,
-    _KeyRound,
     MessageSquare,
     PauseCircle,
     Pencil,
-    _Percent,
     Plus,
     Printer,
     RotateCcw,
     Search,
     Send,
-    _Split,
     Trash2,
     User,
-    _UserPlus,
-    _Users,
     X,
     CheckCircle2,
-    _ArrowRight,
-    _QrCode,
-    _Scan,
-    _Coins,
-    _Receipt,
-    _Handshake,
-    _ArrowLeftRight,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -46,13 +30,13 @@ export default function WaiterPosPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showFireMenu, setShowFireMenu] = useState(false);
     const [showSplitPayment, setShowSplitPayment] = useState(false);
-    const [_payFlow, setPayFlow] = useState<
+    const [_payFlow, _setPayFlow] = useState<
         'MODE_SELECT' | 'SINGLE_QR' | 'SPLIT_AVATARS' | 'SPLIT_QR'
     >('MODE_SELECT');
     const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID'>('PENDING');
-    const [_isGuestMode, setIsGuestMode] = useState(false);
+    const [_isGuestMode, _setIsGuestMode] = useState(false);
     const [activeGuestId, setActiveGuestId] = useState(1);
-    const [_guestList, setGuestList] = useState([
+    const [_guestList, _setGuestList] = useState([
         { id: 1, name: 'Guest 1', color: 'bg-blue-100', paid: false },
         { id: 2, name: 'Guest 2', color: 'bg-emerald-100', paid: false },
     ]);
@@ -185,10 +169,11 @@ export default function WaiterPosPage() {
                             {/* Card 1 */}
                             <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200">
                                 <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&amp;fit=crop&amp;q=80&amp;w=600"
+                                    <Image
+                                        src="https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&q=80&w=600"
                                         alt="Butter Chicken"
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
                                 </div>
@@ -214,10 +199,11 @@ export default function WaiterPosPage() {
                                     x1 in Cart
                                 </div>
                                 <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&amp;fit=crop&amp;q=80&amp;w=600"
+                                    <Image
+                                        src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&q=80&w=600"
                                         alt="French Fries"
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
                                 </div>
@@ -239,10 +225,11 @@ export default function WaiterPosPage() {
                             {/* Card 3 */}
                             <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md transition-all duration-200">
                                 <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&amp;fit=crop&amp;q=80&amp;w=600"
+                                    <Image
+                                        src="https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&q=80&w=600"
                                         alt="Roast Beef"
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
                                 </div>
@@ -265,10 +252,11 @@ export default function WaiterPosPage() {
                             {/* Card 4 */}
                             <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200">
                                 <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&amp;fit=crop&amp;q=80&amp;w=600"
+                                    <Image
+                                        src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=600"
                                         alt="Sauerkraut"
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
                                 </div>
@@ -291,10 +279,11 @@ export default function WaiterPosPage() {
                             {/* Card 5 (Unavailable) */}
                             <div className="group relative flex cursor-not-allowed flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white opacity-[0.85] shadow-sm grayscale-[20%] transition-all duration-200">
                                 <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&amp;fit=crop&amp;q=80&amp;w=600"
+                                    <Image
+                                        src="https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&q=80&w=600"
                                         alt="Beef Kebab"
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
                                 </div>
@@ -317,10 +306,11 @@ export default function WaiterPosPage() {
                             {/* Card 6 */}
                             <div className="group active:border-brand-accent/50 relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200">
                                 <div className="relative h-32 w-full shrink-0 bg-gray-50">
-                                    <img
+                                    <Image
                                         src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg"
                                         alt="Fish and Chips"
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-black/20 to-transparent"></div>
                                 </div>
@@ -363,7 +353,7 @@ export default function WaiterPosPage() {
                                             <h3 className="text-2xl font-bold tracking-tight text-black/80">
                                                 {splitMode === 'full'
                                                     ? 'ORDER #B12309'
-                                                    : 'ORDER #B12309 | _Split Payment'}
+                                                    : 'ORDER #B12309 | Split Payment'}
                                             </h3>
                                         </div>
 
@@ -389,7 +379,7 @@ export default function WaiterPosPage() {
                                                         : 'text-gray-400 hover:text-gray-600'
                                                 }`}
                                             >
-                                                _Split Bill
+                                                Split Bill
                                             </button>
                                         </div>
 
@@ -410,7 +400,7 @@ export default function WaiterPosPage() {
                                                         </div>
                                                     </div>
                                                     <p className="text-base font-semibold text-gray-400">
-                                                        _Scan to pay
+                                                        Scan to pay
                                                     </p>
                                                 </div>
                                                 <button
@@ -472,7 +462,7 @@ export default function WaiterPosPage() {
                                                 {/* Right Column: QR & Context */}
                                                 <div className="flex flex-1 flex-col items-center">
                                                     <h4 className="mb-5 text-center text-xl font-bold tracking-tight text-black/90">
-                                                        _Scan for Guest {activeGuestId} <br />
+                                                        Scan for Guest {activeGuestId} <br />
                                                         <span className="text-base font-semibold text-gray-500">
                                                             (
                                                             {(2322.0 / splitCount).toLocaleString(
@@ -569,10 +559,12 @@ export default function WaiterPosPage() {
                                     {/* Item 1 */}
                                     <div className="group relative flex cursor-pointer items-start gap-4 border-b border-gray-100/50 pb-6 last:border-0">
                                         <div className="relative">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&amp;fit=crop&amp;q=80&amp;w=200"
+                                            <Image
+                                                src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&q=80&w=200"
                                                 alt="French Fries"
-                                                className="h-[60px] w-[60px] shrink-0 rounded-[1rem] object-cover shadow-sm"
+                                                width={60}
+                                                height={60}
+                                                className="shrink-0 rounded-[1rem] object-cover shadow-sm"
                                             />
                                             <div className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black text-[10px] font-bold text-white shadow-sm">
                                                 1
@@ -631,10 +623,12 @@ export default function WaiterPosPage() {
                                     {/* Item 2 */}
                                     <div className="group relative flex cursor-pointer items-start gap-4 border-b border-gray-100/50 pb-6 last:border-0">
                                         <div className="relative">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&amp;fit=crop&amp;q=80&amp;w=200"
+                                            <Image
+                                                src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&q=80&w=200"
                                                 alt="Wagyu Steak"
-                                                className="h-[60px] w-[60px] shrink-0 rounded-[1rem] object-cover shadow-sm"
+                                                width={60}
+                                                height={60}
+                                                className="shrink-0 rounded-[1rem] object-cover shadow-sm"
                                             />
                                             <div className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black text-[10px] font-bold text-white shadow-sm">
                                                 2
@@ -683,10 +677,12 @@ export default function WaiterPosPage() {
                                     {/* Item 3 */}
                                     <div className="group relative flex cursor-pointer items-start gap-4 pb-4 last:border-0">
                                         <div className="relative">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&amp;fit=crop&amp;q=80&amp;w=200"
+                                            <Image
+                                                src="https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&q=80&w=200"
                                                 alt="Chicken Ramen"
-                                                className="h-[60px] w-[60px] shrink-0 rounded-[1rem] object-cover shadow-sm"
+                                                width={60}
+                                                height={60}
+                                                className="shrink-0 rounded-[1rem] object-cover shadow-sm"
                                             />
                                             <div className="absolute -top-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-black text-[10px] font-bold text-white shadow-sm">
                                                 1
@@ -861,7 +857,7 @@ export default function WaiterPosPage() {
                         <div className="mt-4 grid w-full grid-cols-2 gap-4 px-6">
                             <button className="flex h-20 items-center justify-center gap-3 rounded-[30px] bg-black text-lg font-bold text-white shadow-2xl transition-all hover:bg-gray-900 active:scale-95">
                                 <Printer className="text-brand-accent h-6 w-6" />
-                                <span>Print _Receipt</span>
+                                <span> Print Receipt</span>
                             </button>
                             <button
                                 onClick={() => setPaymentStatus('PENDING')}

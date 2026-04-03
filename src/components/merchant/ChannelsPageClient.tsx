@@ -12,7 +12,11 @@ import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import { useRole } from '@/hooks/useRole';
 
 interface ChannelsPageClientProps {
-    initialData?: any;
+    initialData?: {
+        summary?: ChannelSummary;
+        settings?: Record<string, unknown>;
+        orders?: ExternalOrder[];
+    };
 }
 
 type ChannelSummary = {

@@ -17,7 +17,7 @@ import { useDeviceHeartbeat } from '@/hooks/useDeviceHeartbeat';
 import type { SupportedPaymentMethod } from '@/lib/devices/config';
 import { getDeviceTypeLabel } from '@/lib/devices/config';
 import { formatCurrencyCompact } from '@/lib/utils/monetary';
-import { getStoredDeviceSession } from '@/lib/mobile/device-storage';
+import { getStoredDeviceSession, type StoredDeviceSession } from '@/lib/mobile/device-storage';
 import {
     buildReceiptFromPaymentPayload,
     handleApprovedTransactionReceipt,
@@ -102,7 +102,7 @@ function getProviderForMethod(method: SupportedPaymentMethod): string {
 
 export default function TerminalPage() {
     const [deviceToken, setDeviceToken] = useState<string | null>(null);
-    const [deviceInfo, setDeviceInfo] = useState<any>(null);
+    const [deviceInfo, setDeviceInfo] = useState<StoredDeviceSession | null>(null);
     const [loading, setLoading] = useState(true);
     const [overview, setOverview] = useState<TerminalOverview | null>(null);
     const [selectedTableNumber, setSelectedTableNumber] = useState<string | null>(null);

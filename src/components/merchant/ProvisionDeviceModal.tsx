@@ -30,7 +30,7 @@ interface ProvisionDeviceModalProps {
     }) => Promise<ProvisionedDeviceResult | null>;
 }
 
-interface ProvisionedDeviceResult {
+export interface ProvisionedDeviceResult {
     pairing_code: string;
     device_profile?: DeviceProfile | null;
     pairing_code_expires_at?: string | null;

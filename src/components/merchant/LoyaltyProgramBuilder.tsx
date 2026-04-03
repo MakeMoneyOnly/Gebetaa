@@ -1,20 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-    Star,
-    Loader2,
-    Plus,
-    Crown,
-    Edit2,
-    Pause,
-    Play,
-    Trash2,
-    Repeat,
-    Power,
-    PlayCircle,
-    PauseCircle,
-} from 'lucide-react';
+import { Loader2, Plus, Crown, Edit2, Pause, Play, Trash2 } from 'lucide-react';
 import { formatLocalizedDate } from '@/lib/format/et';
 import type { AppLocale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
@@ -53,7 +40,7 @@ export function LoyaltyProgramBuilder({
     onCreate,
     onStatusChange,
     onDelete,
-    onEdit,
+    onEdit: _onEdit,
 }: LoyaltyProgramBuilderProps) {
     const [name, setName] = useState('');
     const [status, setStatus] = useState<LoyaltyProgramRow['status']>('draft');
@@ -105,7 +92,7 @@ export function LoyaltyProgramBuilder({
                 points_per_currency_unit: earn,
                 currency_unit: spend,
             },
-        } as any);
+        });
 
         if (editingId) {
             setEditingId(null);

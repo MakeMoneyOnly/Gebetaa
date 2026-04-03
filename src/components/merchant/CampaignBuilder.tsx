@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Megaphone, Loader2, Plus, Edit2, Trash2, Repeat } from 'lucide-react';
+import { Megaphone, Loader2, Edit2, Trash2, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type CampaignRow = {
@@ -52,7 +52,7 @@ export function CampaignBuilder({
     onCreate,
     onLaunch,
     onDelete,
-    onEdit,
+    onEdit: _onEdit,
 }: CampaignBuilderProps) {
     const [name, setName] = useState('');
     const [channel, setChannel] = useState<CampaignRow['channel']>('sms');
@@ -145,7 +145,9 @@ export function CampaignBuilder({
                             </label>
                             <select
                                 value={channel}
-                                onChange={event => setChannel(event.target.value as any)}
+                                onChange={event =>
+                                    setChannel(event.target.value as CampaignRow['channel'])
+                                }
                                 className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold transition-all outline-none focus:border-gray-400"
                             >
                                 <option value="sms">SMS</option>

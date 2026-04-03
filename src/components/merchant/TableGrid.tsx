@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Edit2, Plus, QrCode, RefreshCcw, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export type TableGridRow = {
     id: string;
@@ -24,7 +23,7 @@ interface TableGridProps {
     onRefreshTable: (table: TableGridRow) => void;
 }
 
-const getStatusColor = (status: TableGridRow['status']) => {
+const _getStatusColor = (status: TableGridRow['status']) => {
     switch (status) {
         case 'available':
             return 'bg-state-success-bg/30 text-state-success ring-1 ring-state-success/10';
