@@ -59,7 +59,7 @@ export function useRole(restaurantId: string | null) {
                 const { data: roleFromRpc, error: rpcError } = await supabase.rpc(
                     'get_my_staff_role',
                     {
-                        p_restaurant_id: restaurantId,
+                        p_restaurant_id: restaurantId ?? undefined,
                     }
                 );
 

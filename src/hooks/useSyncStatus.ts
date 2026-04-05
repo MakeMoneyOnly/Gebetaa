@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getSyncQueueStatus, getSyncWorker, type SyncProgress } from '@/lib/sync';
+import { getSyncQueueStatus, getSyncWorker } from '@/lib/sync';
 import { getUnresolvedConflictsCount } from '@/lib/sync/conflict-resolution';
 
 /**
