@@ -195,3 +195,98 @@ A task is not done until all applicable items pass:
 - Reliability: rollback path and flags considered for risky changes.
 - Tests: appropriate unit/integration/e2e coverage updated.
 - Docs: update relevant docs when behavior/contracts/operations change.
+
+## Code Quality Standards
+
+These rules are enforced by ESLint and TypeScript. All code written must comply:
+
+### TypeScript Strict Typing
+
+- **NEVER use `any` type** in production code (`src/` except `*.test.*`).
+- If a type is unknown, use `unknown` and narrow it with type guards.
+- If interfacing with untyped third-party code, create a proper type assertion.
+- For table types not in generated schema, add them to `src/types/database.ts` rather than using `any`.
+- Test files (`*.test.ts`, `*.test.tsx`, `__tests__/**`) are exempted for mocking flexibility.
+
+### Unused Variables and Imports
+
+- **Remove all unused imports** before committing.
+- **Prefix intentionally unused variables with `_`** (e.g., `_event`, `_index`).
+- This includes:
+    - Unused function parameters
+    - Unused destructured variables
+    - Unused imports
+- ESLint rule: `@typescript-eslint/no-unused-vars` with `argsIgnorePattern: '^_'`
+
+### Image Optimization
+
+- **ALWAYS use Next.js `<Image />` component** instead of `<img>`.
+- Required props for `<Image />`:
+    - `width` and `height` for fixed-size images
+    - `fill` with `className="object-cover"` for responsive images in relative containers
+- External images require domain configuration in `next.config.ts` under `images.remotePatterns`.
+- ESLint rule: `@next/next/no-img-element`
+
+### Console Logging
+
+- **NEVER use `console.log`, `console.info`, `console.debug`, or `console.table`** in production code.
+- Use the structured logger at `src/lib/logger.ts` instead:
+    - `logger.info()` for informational messages
+    - `logger.warn()` for warnings
+    - `logger.error()` for errors
+    - `logger.debug()` for debug messages (dev only)
+- `console.warn` and `console.error` are allowed for CLI scripts and critical error surfacing.
+- ESLint rule: `no-console` with `allow: ['warn', 'error']`
+
+### Variable Declaration
+
+- **Prefer `const` over `let`** when a variable is never reassigned.
+- Only use `let` when the variable will be reassigned.
+- ESLint rule: `prefer-const`
+
+### Database Type Safety
+
+- **Keep `src/types/database.ts` in sync** with the Supabase schema.
+- When adding new tables via migration, immediately add corresponding types.
+- Use `Tables<'table_name'>`, `TablesInsert<'table_name'>`, `TablesUpdate<'table_name'>` utility types.
+- For RPC functions, add types to the `Functions` section in database.ts.
+
+### Quick Reference: ESLint Rules
+
+| Rule                                 | Level | Description                           |
+| ------------------------------------ | ----- | ------------------------------------- |
+| `@typescript-eslint/no-explicit-any` | error | No `any` in production code           |
+| `@typescript-eslint/no-unused-vars`  | warn  | Unused vars must be prefixed with `_` |
+| `@next/next/no-img-element`          | warn  | Use `<Image />` instead of `<img>`    |
+| `no-console`                         | error | Only `warn` and `error` allowed       |
+| `prefer-const`                       | error | Use `const` when not reassigned       |
+
+### Pre-Commit Checklist
+
+Before committing, ensure:
+
+1. `pnpm run lint` passes with 0 errors (warnings acceptable but should be reviewed)
+2. `npx tsc --noEmit` passes with 0 errors
+3. No `any` types introduced (except in test files)
+4. All new images use `<Image />` component
+5. All logging uses `src/lib/logger.ts` (not `console.*`)
+6. Database types updated for any new tables/columns
+
+### Automated Enforcement
+
+Pre-commit hooks (via Husky) automatically run on every commit:
+
+1. **Formatting**: Prettier formats staged files
+2. **Linting**: ESLint checks and fixes staged files
+3. **Type checking**: TypeScript validates all code
+4. **Security**: Pre-commit security audit
+5. **Quality checks**: Warns about `any` types, `console.log`, `<img>` elements
+
+CI pipeline (GitHub Actions) runs on every push/PR:
+
+1. **lint**: ESLint validation
+2. **typecheck**: TypeScript compilation
+3. **test**: Unit tests with coverage
+4. **security**: Dependency audit
+
+These checks are non-negotiable. If they fail, the commit/PR cannot proceed.
