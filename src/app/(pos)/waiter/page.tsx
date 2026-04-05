@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
     Banknote,
     Bell,
@@ -21,6 +22,8 @@ import {
     Send,
     Trash2,
     User,
+    Sun,
+    Moon,
     X,
     CheckCircle2,
     AlertCircle,
@@ -39,10 +42,41 @@ type CategoryData = Database['public']['Tables']['categories']['Row'];
 type MenuItemData = Database['public']['Tables']['menu_items']['Row'];
 
 export default function WaiterPosPage() {
+    const router = useRouter();
     const managedDevice = useManagedDeviceSession({
         route: '/waiter',
         expectedProfiles: ['waiter'],
     });
+
+    const [staffSession, setStaffSession] = useState<{ id: string; name: string; role: string; user_id: string } | null>(null);
+    const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false);
+    const headerDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (headerDropdownRef.current && !headerDropdownRef.current.contains(event.target as Node)) {
+                setIsHeaderDropdownOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Enforce Staff PIN Session Guard
+    useEffect(() => {
+        const ctxStr = sessionStorage.getItem('gebata_waiter_context');
+        if (ctxStr) {
+            try {
+                setStaffSession(JSON.parse(ctxStr));
+            } catch (e) {
+                console.error('Invalid staff session structure, requiring PIN relogin.', e);
+                router.replace(`/waiter/pin?restaurantId=${managedDevice.session?.restaurant_id || ''}`);
+            }
+        } else if (managedDevice.session?.restaurant_id) {
+            // Once device knows the restaurant but no staff session exists, lock the terminal.
+            router.replace(`/waiter/pin?restaurantId=${managedDevice.session.restaurant_id}`);
+        }
+    }, [router, managedDevice.session?.restaurant_id]);
 
     const [restaurant, setRestaurant] = useState<RestaurantData | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -52,7 +86,13 @@ export default function WaiterPosPage() {
     const [categories, setCategories] = useState<CategoryData[]>([]);
     const [menuItems, setMenuItems] = useState<MenuItemData[]>([]);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
+    const [tables, setTables] = useState<Database['public']['Tables']['tables']['Row'][]>([]);
     const [isLoadingMenu, setIsLoadingMenu] = useState(false);
+
+    const [orderType, setOrderType] = useState<'Dine-in' | 'Takeaway' | 'Delivery'>('Dine-in');
+    const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+    const [showOrderTypeDropdown, setShowOrderTypeDropdown] = useState(false);
+    const [showTableDropdown, setShowTableDropdown] = useState(false);
 
     const cart = useCart();
 
@@ -108,6 +148,19 @@ export default function WaiterPosPage() {
 
                         if (itemsData && !itemsError) {
                             setMenuItems(itemsData);
+                        }
+                    }
+
+                    // 4. Fetch Tables
+                    const { data: tablesData, error: tablesError } = await supabase
+                        .from('tables')
+                        .select('*')
+                        .eq('restaurant_id', restaurantId as string);
+
+                    if (tablesData && !tablesError) {
+                        setTables(tablesData);
+                        if (tablesData.length > 0 && !selectedTableId) {
+                            setSelectedTableId(tablesData[0].id);
                         }
                     }
                 }
@@ -185,7 +238,7 @@ export default function WaiterPosPage() {
             {/* Main Wrapper */}
             <main className="flex min-w-0 flex-1 flex-col bg-[#fbfbfb]">
                 {/* Top Bar */}
-                <header className="z-10 flex h-20 shrink-0 items-center justify-between border-b border-[#F1F1F1] bg-white px-8">
+                <header className="z-40 flex h-20 shrink-0 items-center justify-between border-b border-[#F1F1F1] bg-white px-8 relative">
                     {/* Left Header */}
                     <div className="flex items-center gap-6">
                         <div className="flex h-11 cursor-pointer items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 transition-colors hover:bg-gray-100">
@@ -217,6 +270,11 @@ export default function WaiterPosPage() {
 
                     {/* Right Header */}
                     <div className="flex items-center gap-6">
+                        <div className="flex h-11 items-center gap-2.5 rounded-xl bg-emerald-50 px-4 text-emerald-600">
+                            <Banknote className="h-4 w-4" />
+                            <span className="text-sm font-semibold">0.00 Br. Tips</span>
+                        </div>
+
                         <div className="flex h-11 items-center gap-2.5 rounded-xl bg-gray-50 px-4 text-gray-600">
                             <Calendar className="h-4 w-4" />
                             <span className="text-sm font-semibold">{formattedDate}</span>
@@ -231,12 +289,45 @@ export default function WaiterPosPage() {
                             <span className="absolute top-3 right-3 h-1.5 w-1.5 rounded-full bg-red-500"></span>
                         </button>
 
-                        <div className="flex h-11 cursor-pointer items-center gap-3 rounded-xl bg-white px-3 shadow-sm transition-all hover:shadow-md">
-                            <User className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm font-semibold text-[#000000]">
-                                Michael Olise
-                            </span>
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
+                        <div className="relative" ref={headerDropdownRef}>
+                            <button 
+                                onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
+                                className="flex h-11 cursor-pointer items-center gap-3 rounded-xl bg-white px-3 shadow-sm transition-all hover:shadow-md text-left"
+                            >
+                                <User className="h-4 w-4 text-gray-500" />
+                                <span className="text-sm font-semibold text-[#000000]">
+                                    {staffSession?.name || 'Waitstaff'}
+                                </span>
+                                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isHeaderDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isHeaderDropdownOpen && (
+                                <div className="absolute right-0 top-[calc(100%+8px)] w-56 rounded-xl border border-gray-100 bg-white p-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] z-100 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="flex w-full items-center justify-between px-3 py-3 mb-1">
+                                        <span className="text-sm font-bold text-gray-700">Theme</span>
+                                        <div className="flex items-center gap-1 rounded-lg bg-gray-50 p-1 border border-gray-100">
+                                            <button className="flex h-7 w-7 items-center justify-center rounded-md bg-white shadow-sm border border-gray-100 text-amber-500">
+                                                <Sun className="h-4 w-4" />
+                                            </button>
+                                            <button className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:text-gray-600 transition-colors">
+                                                <Moon className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="border-b border-gray-50"></div>
+                                    <button 
+                                        onClick={() => {
+                                            sessionStorage.removeItem('gebata_waiter_context');
+                                            setIsHeaderDropdownOpen(false);
+                                            router.replace(`/waiter/pin?restaurantId=${managedDevice.session?.restaurant_id || ''}`);
+                                        }}
+                                        className="flex w-full items-center gap-3 rounded-lg mt-1 px-3 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                        Logout
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>
@@ -600,40 +691,100 @@ export default function WaiterPosPage() {
 
                         {/* Options */}
                         <div className="flex flex-col gap-3 border-b border-[#F1F1F1] px-6 pb-4">
-                            <div className="text-body-sm flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:border-gray-200">
-                                <span className="font-semibold text-gray-600">Order Type</span>
-                                <div className="flex items-center gap-2 font-bold text-[#000000]">
-                                    Dine-in
-                                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                            <div className="relative">
+                                <div
+                                    onClick={() => {
+                                        setShowOrderTypeDropdown(!showOrderTypeDropdown);
+                                        setShowTableDropdown(false);
+                                    }}
+                                    className="text-body-sm flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:border-gray-200"
+                                >
+                                    <span className="font-semibold text-gray-600">Order Type</span>
+                                    <div className="flex items-center gap-2 font-bold text-[#000000]">
+                                        {orderType}
+                                        <ChevronDown
+                                            className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${showOrderTypeDropdown ? 'rotate-180' : ''}`}
+                                        />
+                                    </div>
                                 </div>
+                                {showOrderTypeDropdown && (
+                                    <div className="animate-in fade-in slide-in-from-top-1 absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl">
+                                        {['Dine-in', 'Takeaway', 'Delivery'].map(type => (
+                                            <button
+                                                key={type}
+                                                onClick={() => {
+                                                    setOrderType(type as 'Dine-in' | 'Takeaway' | 'Delivery');
+                                                    setShowOrderTypeDropdown(false);
+                                                }}
+                                                className="flex w-full px-4 py-3 text-left text-sm font-semibold hover:bg-gray-50"
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="text-body-sm flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:border-gray-200">
-                                <span className="font-semibold text-gray-600">Select Table</span>
-                                <div className="flex items-center gap-2 font-bold text-[#000000]">
-                                    A-12B
-                                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                            <div className="relative">
+                                <div
+                                    onClick={() => {
+                                        setShowTableDropdown(!showTableDropdown);
+                                        setShowOrderTypeDropdown(false);
+                                    }}
+                                    className="text-body-sm flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:border-gray-200"
+                                >
+                                    <span className="font-semibold text-gray-600">Select Table</span>
+                                    <div className="flex items-center gap-2 font-bold text-[#000000]">
+                                        {tables.find(t => t.id === selectedTableId)?.table_number ||
+                                            'A-12B'}
+                                        <ChevronDown
+                                            className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${showTableDropdown ? 'rotate-180' : ''}`}
+                                        />
+                                    </div>
                                 </div>
+                                {showTableDropdown && (
+                                    <div className="animate-in fade-in slide-in-from-top-1 no-scrollbar absolute top-full left-0 z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-gray-100 bg-white shadow-xl">
+                                        {tables.length > 0 ? (
+                                            tables.map(table => (
+                                                <button
+                                                    key={table.id}
+                                                    onClick={() => {
+                                                        setSelectedTableId(table.id);
+                                                        setShowTableDropdown(false);
+                                                    }}
+                                                    className="flex w-full px-4 py-3 text-left text-sm font-semibold hover:bg-gray-50"
+                                                >
+                                                    Table {table.table_number}{' '}
+                                                    {table.zone ? `(${table.zone})` : ''}
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-3 text-sm text-gray-400">
+                                                No tables found
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Order Items - Grouped by Course */}
-                        <div className="bg-surface-50 flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-2">
+                        <div className="bg-surface-50 flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-2">
                             {Object.entries(groupedCartItems).map(([course, items]) => (
-                                <div key={course} className="flex flex-col gap-4 pt-4">
+                                <div key={course} className="flex flex-col gap-2 pt-2">
                                     <div className="flex items-center">
                                         <h3 className="text-base leading-tight font-bold text-[#000000]">
                                             {course}
                                         </h3>
                                     </div>
-                                    <div className="flex flex-col gap-6">
+                                    <div className="flex flex-col gap-3">
                                         {items.map(item => (
                                             <div
                                                 key={item.uniqueId}
-                                                className="group relative flex cursor-pointer items-start gap-4 border-b border-gray-100/50 pb-6 last:border-0"
+                                                className="group relative flex cursor-pointer items-start gap-4 border-b border-gray-100/50 pb-4 last:border-0"
                                             >
                                                 {/* Fixed image wrapper - Fixes "messed up" issue */}
-                                                <div className="relative h-15 w-15 shrink-0 overflow-hidden rounded-[1rem] shadow-sm">
+                                                <div className="relative h-13 w-13 shrink-0 overflow-hidden rounded-[1rem] shadow-sm">
                                                     <Image
                                                         src={
                                                             item.image ||

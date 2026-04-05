@@ -73,16 +73,16 @@ function WaiterPinContent() {
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900 px-4">
-            <div className="w-full max-w-sm rounded-2xl bg-gray-800 p-8 shadow-2xl">
+        <main className="flex min-h-screen flex-col items-center justify-center bg-[#fbfbfb] px-4 font-manrope antialiased">
+            <div className="w-full max-w-[420px] rounded-2xl border border-gray-100 bg-white p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <div className="mb-8 flex flex-col items-center text-center">
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-gray-700">
-                        <Tablet className="h-8 w-8 text-white" />
+                    <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 border border-gray-100 shadow-sm">
+                        <Tablet className="h-8 w-8 text-gray-700" />
                     </div>
-                    <h1 className="text-2xl font-bold tracking-tight text-white">
+                    <h1 className="text-[26px] font-bold tracking-tight text-gray-900">
                         Terminal Locked
                     </h1>
-                    <p className="mt-2 text-sm text-gray-400">
+                    <p className="mt-2.5 text-body font-medium text-gray-500">
                         Enter your 4-digit PIN to access the POS
                     </p>
                 </div>
@@ -91,24 +91,24 @@ function WaiterPinContent() {
                     {Array.from({ length: 4 }).map((_, i) => (
                         <div
                             key={i}
-                            className={`flex h-12 w-12 items-center justify-center rounded-xl border-2 transition-all ${
+                            className={`flex h-[52px] w-[52px] items-center justify-center rounded-xl border-2 transition-all duration-200 ${
                                 i < pin.length
-                                    ? 'border-white bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)]'
-                                    : 'border-gray-600 bg-gray-700'
+                                    ? 'border-gray-900 bg-white shadow-sm'
+                                    : 'border-gray-100 bg-gray-50'
                             }`}
                         >
-                            {i < pin.length && <div className="h-3 w-3 rounded-full bg-black" />}
+                            {i < pin.length && <div className="h-3.5 w-3.5 rounded-full bg-gray-900" />}
                         </div>
                     ))}
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                     {numbers.map(num => (
                         <button
                             key={num}
                             onClick={() => handleNumberClick(num)}
                             disabled={loading || pin.length >= 4}
-                            className="flex h-16 items-center justify-center rounded-xl bg-gray-700 text-2xl font-semibold text-white transition-all hover:bg-gray-600 active:scale-95 disabled:opacity-50"
+                            className="flex h-[68px] items-center justify-center rounded-xl border border-gray-100 bg-white text-[26px] font-bold text-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.97] disabled:opacity-50"
                         >
                             {num}
                         </button>
@@ -117,14 +117,14 @@ function WaiterPinContent() {
                     <button
                         onClick={() => handleNumberClick(0)}
                         disabled={loading || pin.length >= 4}
-                        className="flex h-16 items-center justify-center rounded-xl bg-gray-700 text-2xl font-semibold text-white transition-all hover:bg-gray-600 active:scale-95 disabled:opacity-50"
+                        className="flex h-[68px] items-center justify-center rounded-xl border border-gray-100 bg-white text-[26px] font-bold text-gray-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.97] disabled:opacity-50"
                     >
                         0
                     </button>
                     <button
                         onClick={handleDelete}
                         disabled={loading || pin.length === 0}
-                        className="flex h-16 items-center justify-center rounded-xl bg-gray-700 text-xl font-semibold text-white transition-all hover:bg-red-500 hover:text-white active:scale-95 disabled:opacity-20"
+                        className="flex h-[68px] items-center justify-center rounded-xl border border-red-50 bg-white text-lg font-bold text-red-500 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-red-50 hover:text-red-600 hover:shadow-md active:scale-[0.97] disabled:opacity-30 disabled:hover:bg-white"
                     >
                         Clear
                     </button>
@@ -132,11 +132,11 @@ function WaiterPinContent() {
 
                 {loading && (
                     <div className="mt-8 flex justify-center">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-gray-200 border-t-gray-900" />
                     </div>
                 )}
             </div>
-        </div>
+        </main>
     );
 }
 
@@ -144,9 +144,9 @@ export default function WaiterPinPage() {
     return (
         <Suspense
             fallback={
-                <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-                    <p>Loading terminal...</p>
-                </div>
+                <main className="flex min-h-screen items-center justify-center bg-[#fbfbfb] font-manrope font-bold text-gray-900">
+                    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gray-200 border-t-gray-900" />
+                </main>
             }
         >
             <WaiterPinContent />

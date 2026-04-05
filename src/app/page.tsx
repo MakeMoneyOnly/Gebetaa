@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
     ChevronDown,
@@ -16,13 +17,12 @@ import {
     Globe,
     Check,
     Play,
-    Star,
     X,
 } from 'lucide-react';
 import { useScroll, useMotionValueEvent } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 
-const Counter = dynamic(() => import('@/components/landing/Counter').then(mod => mod.Counter), {
+const _Counter = dynamic(() => import('@/components/landing/Counter').then(mod => mod.Counter), {
     ssr: false,
     loading: () => <span>...</span>,
 });
@@ -128,7 +128,7 @@ const SPHERE_MATH = {
     },
 };
 
-const SphereImageGrid: React.FC<SphereImageGridProps> = ({
+const _SphereImageGrid: React.FC<SphereImageGridProps> = ({
     images = [],
     containerSize = 400,
     sphereRadius = 200,
@@ -136,7 +136,7 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
     momentumDecay = 0.95,
     maxRotationSpeed = 5,
     baseImageScale = 0.12,
-    hoverScale = 1.2,
+    hoverScale: _hoverScale = 1.2,
     perspective = 1000,
     autoRotate = false,
     autoRotateSpeed = 0.3,
@@ -399,10 +399,11 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
                     onClick={() => setSelectedImage(image)}
                 >
                     <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white/20 shadow-lg">
-                        <img
+                        <Image
                             src={image.src}
                             alt={image.alt}
-                            className="h-full w-full object-cover"
+                            fill
+                            className="object-cover"
                             draggable={false}
                             loading={index < 3 ? 'eager' : 'lazy'}
                         />
@@ -468,10 +469,11 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
                         style={{ animation: 'scaleIn 0.3s ease-out' }}
                     >
                         <div className="relative aspect-square">
-                            <img
+                            <Image
                                 src={selectedImage.src}
                                 alt={selectedImage.alt}
-                                className="h-full w-full object-cover"
+                                fill
+                                className="object-cover"
                             />
                             <button
                                 onClick={() => setSelectedImage(null)}
@@ -527,7 +529,7 @@ export default function LandingPage() {
         }
     };
 
-    const features = [
+    const _features = [
         {
             title: 'Manage orders and payments with fewer taps.',
             cards: [
@@ -692,9 +694,11 @@ export default function LandingPage() {
                                 href="/"
                                 className="relative flex h-8 w-24 translate-x-[20px] items-center transition-opacity hover:opacity-90 md:h-10 md:w-32"
                             >
-                                <img
+                                <Image
                                     src="/logo.svg"
                                     alt="Lole"
+                                    width={128}
+                                    height={90}
                                     className="absolute top-1/2 left-0 h-[74px] w-auto max-w-none origin-left -translate-y-1/2 md:h-[90px]"
                                 />
                             </Link>
@@ -886,10 +890,11 @@ export default function LandingPage() {
                                     key={idx}
                                     className="group relative h-[550px] min-w-[432px] cursor-pointer overflow-hidden rounded-[32px] shadow-xl shadow-black/5 md:h-[550px] md:min-w-[732px] lg:h-[620px] lg:min-w-[862px]"
                                 >
-                                    <img
+                                    <Image
                                         src={op.image}
                                         alt={op.name}
-                                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                                        fill
+                                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
 
@@ -1001,10 +1006,11 @@ export default function LandingPage() {
                                     key={idx}
                                     className="group relative h-[460px] min-w-[342px] cursor-pointer overflow-hidden rounded-[32px] shadow-2xl md:h-[550px] md:min-w-[422px] lg:h-[500px] lg:min-w-[382px]"
                                 >
-                                    <img
+                                    <Image
                                         src={item.image}
                                         alt={item.name}
-                                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        fill
+                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-70 transition-opacity group-hover:opacity-90" />
 
@@ -1053,10 +1059,11 @@ export default function LandingPage() {
                         <div className="col-span-4 grid gap-6">
                             {/* Card 1: Point of Sale */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2070&auto=format&fit=crop"
                                     alt="Point of Sale"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1078,10 +1085,11 @@ export default function LandingPage() {
 
                             {/* Card 2: Reservations */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1550966841-3ee7adac1af8?q=80&w=2070&auto=format&fit=crop"
                                     alt="Reservations"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1104,10 +1112,11 @@ export default function LandingPage() {
 
                             {/* Card 3: Payments */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=600&auto=format&fit=crop"
                                     alt="Payments"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1130,10 +1139,11 @@ export default function LandingPage() {
 
                             {/* Card 4: QR Ordering */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1595113316349-9fa4ee24f884?q=80&w=2070&auto=format&fit=crop"
                                     alt="QR Ordering"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1156,10 +1166,11 @@ export default function LandingPage() {
 
                             {/* Card 5: Inventory */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1621415263409-225965ed2a72?q=80&w=2070&auto=format&fit=crop"
                                     alt="Inventory"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1185,10 +1196,11 @@ export default function LandingPage() {
                         <div className="sticky top-0 col-span-4 grid h-screen grid-rows-3 gap-6">
                             {/* Sticky Card 1: Kitchen Display */}
                             <figure className="group relative h-full w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1551218808-94e2183e1622?q=80&w=2070&auto=format&fit=crop"
                                     alt="Kitchen Display"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1210,10 +1222,11 @@ export default function LandingPage() {
 
                             {/* Sticky Card 2: Insights */}
                             <figure className="group relative h-full w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop"
                                     alt="Insights"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1236,10 +1249,11 @@ export default function LandingPage() {
 
                             {/* Sticky Card 3: Offline Sync */}
                             <figure className="group relative h-full w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1622675363211-6e79b139749a?q=80&w=2070&auto=format&fit=crop"
                                     alt="Offline Sync"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1264,10 +1278,11 @@ export default function LandingPage() {
                         <div className="col-span-4 grid gap-6">
                             {/* Card 1: Guest Profiles */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?q=80&w=2070&auto=format&fit=crop"
                                     alt="Guest Profiles"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1290,10 +1305,11 @@ export default function LandingPage() {
 
                             {/* Card 2: Table Management */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop"
                                     alt="Table Management"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1315,10 +1331,11 @@ export default function LandingPage() {
 
                             {/* Card 3: Staff & Shifts */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1505935428862-770b6f24f629?q=80&w=2071&auto=format&fit=crop"
                                     alt="Staff & Shifts"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1341,10 +1358,11 @@ export default function LandingPage() {
 
                             {/* Card 4: Menu Builder */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=2070&auto=format&fit=crop"
                                     alt="Menu Builder"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1366,10 +1384,11 @@ export default function LandingPage() {
 
                             {/* Card 5: Multi-Location */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
-                                <img
+                                <Image
                                     src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=2070&auto=format&fit=crop"
                                     alt="Multi-Location"
-                                    className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                                    fill
+                                    className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute right-0 bottom-0 left-0 flex flex-col gap-2 p-6">
@@ -1666,9 +1685,11 @@ export default function LandingPage() {
                                             href="/"
                                             className="relative block h-[90px] w-[300px] -translate-x-[25px] transition-opacity hover:opacity-90"
                                         >
-                                            <img
+                                            <Image
                                                 src="/logo.svg"
                                                 alt="Lole"
+                                                width={300}
+                                                height={350}
                                                 className="absolute top-1/2 left-0 h-[350px] w-auto max-w-none origin-left -translate-y-1/2"
                                             />
                                         </Link>
