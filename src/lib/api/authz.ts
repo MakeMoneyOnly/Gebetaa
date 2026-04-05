@@ -234,7 +234,9 @@ export async function getDeviceContext(request: Request) {
 
     return {
         ok: true as const,
-        device: hydrateEnterpriseDeviceRecord(device as Record<string, unknown> as any),
+        device: hydrateEnterpriseDeviceRecord(
+            device as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
+        ),
         restaurantId: device.restaurant_id as string,
         admin,
     };

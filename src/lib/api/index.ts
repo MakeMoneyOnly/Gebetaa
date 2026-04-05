@@ -26,15 +26,53 @@ export type { SupportedApiVersion, ApiVersionInfo, VersionMiddlewareResult } fro
 export { apiSuccess, apiError, handleApiError } from './response';
 export type { ApiErrorResponse } from './response';
 
+// Error Classes (MED-021)
+export {
+    AppError,
+    ValidationError,
+    UnauthorizedError,
+    ForbiddenError,
+    NotFoundError,
+    ConflictError,
+    RateLimitError,
+    InternalError,
+    ERROR_STATUS_MAP,
+    type ErrorCode,
+} from './errors';
+
+// Error Factory Functions (MED-021)
+export {
+    notFound,
+    validationErrorFromZod,
+    validationError,
+    unauthorized,
+    forbidden,
+    conflict,
+    rateLimited,
+    internalError,
+} from './errors';
+
+// Error Type Guards (MED-021)
+export {
+    isAppError,
+    isValidationError,
+    isUnauthorizedError,
+    isForbiddenError,
+    isNotFoundError,
+    isConflictError,
+    isRateLimitError,
+    toAppError,
+} from './errors';
+
 // Error Handling (HIGH-023)
 export {
     withErrorHandling,
     withApiErrorHandler,
-    validationError,
+    validationError as validationErrorResponse,
     authenticationError,
     authorizationError,
-    notFoundError,
-    rateLimitError,
+    notFoundError as notFoundErrorResponse,
+    rateLimitError as rateLimitErrorResponse,
     extractRequestContext,
 } from './error-handler';
 export type { RequestContext } from './error-handler';

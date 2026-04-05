@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { sanitizeErrorMessage, logAndSanitize } from '@/lib/errors/sanitize';
+import {
+    AppError,
+    isAppError,
+    toAppError,
+    ERROR_STATUS_MAP,
+    type ErrorCode,
+} from './errors';
 
 /**
  * HIGH-023: Standardized error response format
@@ -88,6 +95,7 @@ export function apiError(
 
 /**
  * Create an API error from an unknown error with automatic sanitization
+ * MED-021: Now supports AppError for consistent error handling
  *
  * @param error - Unknown error to handle
  * @param context - Context for logging
@@ -101,45 +109,13 @@ export function handleApiError(
         restaurantId?: string;
     }
 ): NextResponse<ApiErrorResponse> {
-    // Determine appropriate status code
-    let status = 500;
-    let code = 'INTERNAL_ERROR';
+    // Convert to AppError if needed
+    const appError = isAppError(error) ? error : toAppError(error);
 
-    if (error instanceof Error) {
-        // Check for known error types
-        if (error.name === 'ValidationError') {
-            status = 400;
-            code = 'VALIDATION_ERROR';
-        } else if (error.name === 'UnauthorizedError' || error.name === 'AuthenticationError') {
-            status = 401;
-            code = 'UNAUTHORIZED';
-        } else if (error.name === 'ForbiddenError' || error.name === 'AuthorizationError') {
-            status = 403;
-            code = 'FORBIDDEN';
-        } else if (error.name === 'NotFoundError') {
-            status = 404;
-            code = 'NOT_FOUND';
-        } else if (error.name === 'RateLimitError') {
-            status = 429;
-            code = 'RATE_LIMITED';
-        }
-    }
+    // Use AppError properties directly
+    const status = appError.statusCode;
+    const code = appError.code;
+    const details = appError.details;
 
-    // Check for PostgreSQL error codes
-    const errorWithCode = error as Record<string, unknown>;
-    if (typeof errorWithCode?.code === 'string') {
-        const pgCode = errorWithCode.code;
-        if (pgCode === '23505') {
-            status = 409;
-            code = 'DUPLICATE';
-        } else if (pgCode === '23503') {
-            status = 400;
-            code = 'FOREIGN_KEY_VIOLATION';
-        } else if (pgCode === '23502') {
-            status = 400;
-            code = 'NOT_NULL_VIOLATION';
-        }
-    }
-
-    return apiError(error, status, code, undefined, context);
+    return apiError(appError, status, code, details, context);
 }
