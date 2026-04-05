@@ -323,37 +323,78 @@ Errors are automatically tagged with:
 
 ### Overview
 
-The platform includes a comprehensive Grafana dashboard for production monitoring. The dashboard provides real-time visibility into API performance, database metrics, infrastructure health, and business KPIs.
+The platform includes a comprehensive Grafana dashboard for production monitoring. The dashboard provides real-time visibility into API performance, database metrics, infrastructure health, business KPIs, realtime subscriptions, KDS performance, and payment gateway metrics.
 
 ### Dashboard Features
 
-The Grafana dashboard includes the following panels:
+The Grafana dashboard includes the following panels organized by category:
 
 #### API Performance Overview
 
-- **API P95 Latency** - Current P95 response time in milliseconds
-- **API Error Rate (5xx)** - Percentage of 5xx errors
-- **API Requests/sec** - Request throughput
-- **DB Connection Pool %** - Database connection utilization
-- **API Latency by Endpoint** - P50/P95/P99 latency trends by route
-- **API Requests by Status** - Request count by HTTP status code
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| API P95 Latency | Current P95 response time | ≤ 500ms | Warning: 500ms, Critical: 1000ms |
+| API Error Rate (5xx) | Percentage of 5xx errors | < 1% | Warning: 1%, Critical: 5% |
+| API Requests/sec | Request throughput | N/A | N/A |
+| DB Connection Pool % | Database connection utilization | < 80% | Warning: 60%, Critical: 80% |
+| API Latency by Endpoint | P50/P95/P99 latency trends by route | Per-endpoint SLOs | Route-specific |
+| API Requests by Status | Request count by HTTP status code | N/A | N/A |
 
 #### Database Performance
 
-- **Database Query Latency** - P50/P95/P99 query execution time
-- **Database Active Connections** - Active, idle, and idle-in-transaction connections
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| Database Query Latency | P50/P95/P99 query execution time | P95 ≤ 300ms | Warning: 300ms, Critical: 500ms |
+| Database Active Connections | Active, idle, and idle-in-transaction connections | N/A | Monitor for idle-in-transaction |
 
 #### Infrastructure Metrics
 
-- **Container Memory Usage** - Memory utilization percentage
-- **Container CPU Usage** - CPU utilization percentage
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| Container Memory Usage | Memory utilization percentage | < 90% | Warning: 70%, Critical: 90% |
+| Container CPU Usage | CPU utilization percentage | < 90% | Warning: 70%, Critical: 90% |
 
 #### Business Metrics
 
-- **Total Orders (24h)** - Order count for the last 24 hours
-- **Payment Failure Rate** - Percentage of failed payments
-- **Active Sessions** - Currently active table sessions
-- **Active Restaurants** - Number of restaurants with activity
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| Total Orders (24h) | Order count for the last 24 hours | N/A | N/A |
+| Payment Failure Rate | Percentage of failed payments | < 2% | Warning: 2%, Critical: 5% |
+| Active Sessions | Currently active table sessions | N/A | N/A |
+| Active Restaurants | Number of restaurants with activity | N/A | N/A |
+
+#### Realtime & Order Flow
+
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| Realtime P95 Latency | P95 realtime event propagation time | ≤ 2000ms | Warning: 1000ms, Critical: 2000ms |
+| Realtime Propagation by Channel | P50/P95 latency by channel (orders, sessions) | ≤ 2000ms | Per-channel monitoring |
+| Orders/min | Current order throughput rate | N/A | N/A |
+| Order Completion Time P95 | Time from order creation to completion | ≤ 5min typical | Warning: 5min, Critical: 10min |
+
+#### KDS Performance
+
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| KDS Queue Depth | Number of orders waiting to be processed | < 10 | Warning: 10, Critical: 20 |
+| KDS Processing Time P95 | Time for KDS to process an order item | ≤ 30s | Warning: 30s, Critical: 60s |
+| KDS Queue Depth by Restaurant | Queue depth per restaurant | < 10 per restaurant | Restaurant-specific |
+
+#### Payment Gateway
+
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| Payment Gateway P95 Latency | P95 payment processing time | ≤ 5000ms | Warning: 2000ms, Critical: 5000ms |
+| Payment Failure Rate | Overall payment failure percentage | < 2% | Warning: 2%, Critical: 5% |
+| Payment Gateway Latency by Provider | P50/P95 latency by provider (Telebirr, Chapa) | Provider-specific | Per-provider thresholds |
+| Payment Requests by Provider & Status | Request volume by provider and status | N/A | Monitor for anomalies |
+
+#### Error Rates by Endpoint
+
+| Panel | Description | SLO Target | Alert Threshold |
+|-------|-------------|------------|-----------------|
+| 5xx Error Rate by Endpoint | Server error rate per endpoint | < 1% | Warning: 1%, Critical: 5% |
+| 4xx Errors by Endpoint | Client error rate per endpoint | N/A | Monitor for spikes |
 
 ### Importing the Dashboard
 
@@ -447,17 +488,153 @@ If using Datadog instead of Grafana:
 
 ### Alert Rules for Grafana
 
-Configure the following alert rules in Grafana:
+Configure the following alert rules in Grafana based on SLO targets from [`performance-slos.md`](../../08-reports/performance/performance-slos.md):
+
+#### API Performance Alerts
+
+| Alert                | Condition              | Severity | SLO Reference |
+| -------------------- | ---------------------- | -------- | ------------- |
+| API High Latency     | P95 > 500ms for 5m     | Warning  | P95 ≤ 500ms   |
+| API Critical Latency | P95 > 1s for 5m        | Critical | P95 ≤ 500ms   |
+| High Error Rate      | Error rate > 1% for 5m | Warning  | Error < 1%    |
+| Critical Error Rate  | Error rate > 5% for 5m | Critical | Error < 1%    |
+
+#### Database Alerts
+
+| Alert                | Condition                   | Severity | SLO Reference |
+| -------------------- | --------------------------- | -------- | ------------- |
+| DB Connection Pool   | Pool > 60%                  | Warning  | < 80%         |
+| DB Connection Pool   | Pool > 80%                  | Critical | < 80%         |
+| DB Query Latency     | P95 > 300ms for 5m          | Warning  | P95 ≤ 300ms   |
+| DB Query Latency     | P95 > 500ms for 5m          | Critical | P95 ≤ 300ms   |
+
+#### Infrastructure Alerts
 
 | Alert                | Condition              | Severity |
 | -------------------- | ---------------------- | -------- |
-| API High Latency     | P95 > 1s for 5m        | Warning  |
-| API Critical Latency | P95 > 2s for 5m        | Critical |
-| High Error Rate      | Error rate > 1% for 5m | Warning  |
-| Critical Error Rate  | Error rate > 5% for 5m | Critical |
-| DB Connection Pool   | Pool > 80%             | Critical |
+| High Memory          | Memory > 70%           | Warning  |
 | High Memory          | Memory > 90%           | Critical |
+| High CPU             | CPU > 70%              | Warning  |
 | High CPU             | CPU > 90%              | Critical |
+
+#### Realtime Alerts
+
+| Alert                      | Condition                    | Severity | SLO Reference |
+| -------------------------- | ---------------------------- | -------- | ------------- |
+| Realtime High Latency      | P95 > 1s for 5m              | Warning  | P95 ≤ 2s      |
+| Realtime Critical Latency  | P95 > 2s for 5m              | Critical | P95 ≤ 2s      |
+| Realtime Event Lag         | Event lag > 5s               | Critical | P95 ≤ 2s      |
+
+#### KDS Alerts
+
+| Alert                      | Condition                    | Severity | SLO Reference |
+| -------------------------- | ---------------------------- | -------- | ------------- |
+| KDS Queue Depth High       | Queue depth > 10             | Warning  | < 10          |
+| KDS Queue Depth Critical   | Queue depth > 20             | Critical | < 10          |
+| KDS Processing Slow        | P95 > 30s for 5m             | Warning  | P95 ≤ 30s     |
+| KDS Processing Critical    | P95 > 60s for 5m             | Critical | P95 ≤ 30s     |
+
+#### Payment Gateway Alerts
+
+| Alert                      | Condition                    | Severity | SLO Reference |
+| -------------------------- | ---------------------------- | -------- | ------------- |
+| Payment Latency High       | P95 > 2s for 5m              | Warning  | P95 ≤ 5s      |
+| Payment Latency Critical   | P95 > 5s for 5m              | Critical | P95 ≤ 5s      |
+| Payment Failure High       | Failure rate > 2% for 5m     | Warning  | < 2%          |
+| Payment Failure Critical   | Failure rate > 5% for 5m     | Critical | < 5%          |
+
+#### Order Flow Alerts
+
+| Alert                      | Condition                    | Severity | SLO Reference |
+| -------------------------- | ---------------------------- | -------- | ------------- |
+| Order Completion Slow      | P95 > 5min for 15m           | Warning  | Typical ≤ 5min|
+| Order Completion Critical  | P95 > 10min for 15m          | Critical | Typical ≤ 5min|
+
+### Alert Rule Configuration Examples
+
+```yaml
+# Grafana Alerting Rules (alerting_rules.yml)
+groups:
+  - name: gebeta-api
+    rules:
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="gebeta-api"}[5m])) by (le)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API P95 latency exceeds 500ms"
+          description: "API P95 latency is {{ $value }}s"
+
+      - alert: APICriticalLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="gebeta-api"}[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API P95 latency exceeds 1s"
+          description: "API P95 latency is {{ $value }}s"
+
+  - name: gebeta-realtime
+    rules:
+      - alert: RealtimeHighLatency
+        expr: histogram_quantile(0.95, sum(rate(gebeta_realtime_propagation_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Realtime P95 latency exceeds 1s"
+          description: "Realtime propagation P95 latency is {{ $value }}s"
+
+      - alert: RealtimeCriticalLatency
+        expr: histogram_quantile(0.95, sum(rate(gebeta_realtime_propagation_seconds_bucket[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Realtime P95 latency exceeds 2s SLO"
+          description: "Realtime propagation P95 latency is {{ $value }}s"
+
+  - name: gebeta-kds
+    rules:
+      - alert: KDSQueueDepthHigh
+        expr: gebeta_kds_queue_depth > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "KDS queue depth exceeds 10"
+          description: "KDS queue depth is {{ $value }}"
+
+      - alert: KDSQueueDepthCritical
+        expr: gebeta_kds_queue_depth > 20
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "KDS queue depth critical"
+          description: "KDS queue depth is {{ $value }}"
+
+  - name: gebeta-payments
+    rules:
+      - alert: PaymentFailureHigh
+        expr: sum(rate(gebeta_payment_requests_total{status="failed"}[5m])) / sum(rate(gebeta_payment_requests_total[5m])) > 0.02
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Payment failure rate exceeds 2%"
+          description: "Payment failure rate is {{ $value | humanizePercentage }}"
+
+      - alert: PaymentFailureCritical
+        expr: sum(rate(gebeta_payment_requests_total{status="failed"}[5m])) / sum(rate(gebeta_payment_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Payment failure rate exceeds 5%"
+          description: "Payment failure rate is {{ $value | humanizePercentage }}"
+```
 
 ---
 

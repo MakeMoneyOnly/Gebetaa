@@ -1,20 +1,63 @@
 # Load Testing Documentation
 
-Last updated: 2026-03-20
+Last updated: 2026-04-04
 
 ## Overview
 
 This document describes how to run load tests for the Gebeta Restaurant OS platform. Load tests validate that critical API endpoints meet their SLO targets under peak load conditions.
 
+The test suite covers:
+- **Core API endpoints** - Command center, orders, order status updates
+- **Peak hour simulations** - Lunch and dinner rush scenarios
+- **KDS high-volume** - Kitchen display system under load
+- **Payment gateway stress** - Payment processing capacity
+- **Concurrent sessions** - Table session management
+
 ## SLO Targets
 
 The following endpoints are tested with their respective performance thresholds:
+
+### Core API Endpoints
 
 | Endpoint                       | Method | P95 Latency | Error Rate |
 | ------------------------------ | ------ | ----------- | ---------- |
 | `/api/merchant/command-center` | GET    | ≤ 500ms     | < 1%       |
 | `/api/orders`                  | GET    | ≤ 400ms     | < 1%       |
 | `/api/orders/:id/status`       | PATCH  | ≤ 300ms     | < 0.5%     |
+
+### Peak Hour Ordering
+
+| Endpoint          | Method | P95 Latency | Error Rate |
+| ----------------- | ------ | ----------- | ---------- |
+| `/api/orders`     | POST   | ≤ 500ms     | < 1%       |
+
+### KDS Performance
+
+| Endpoint                | Method | P95 Latency | Error Rate |
+| ----------------------- | ------ | ----------- | ---------- |
+| `/api/kds/queue`        | GET    | ≤ 300ms     | < 1%       |
+| `/api/kds/items/:id/status` | PATCH | ≤ 200ms   | < 1%       |
+
+### Payment Gateway
+
+| Endpoint          | Method | P95 Latency | Error Rate | Success Rate |
+| ----------------- | ------ | ----------- | ---------- | ------------ |
+| `/api/payments`   | POST   | ≤ 2000ms    | < 2%       | > 95%        |
+| `/api/payments/webhook` | POST | ≤ 500ms   | < 1%       | N/A          |
+
+### Table Sessions
+
+| Endpoint                    | Method | P95 Latency | Error Rate |
+| --------------------------- | ------ | ----------- | ---------- |
+| `/api/sessions`             | POST   | ≤ 400ms     | < 1%       |
+| `/api/sessions/:id/heartbeat` | POST | ≤ 200ms    | < 1%       |
+
+### Realtime Propagation
+
+| Metric                      | Target |
+| --------------------------- | ------ |
+| Order state propagation     | P95 ≤ 2000ms |
+| Table/session state propagation | P95 ≤ 2000ms |
 
 ## Prerequisites
 
@@ -100,6 +143,58 @@ k6 run k6/peak-flow-scenarios.js \
 | `K6_AUTH_TOKEN`      | Bearer token for authentication  | (none)                  |
 | `K6_USE_BYPASS_AUTH` | Use `x-e2e-bypass-auth` header   | `false`                 |
 | `K6_ORDER_ID`        | Order ID for status update tests | `test-order-id`         |
+| `K6_RESTAURANT_ID`   | Restaurant ID for multi-tenant tests | `test-restaurant-id` |
+| `K6_TABLE_ID`        | Table ID for session tests       | `test-table-id`         |
+
+## Running Specific Test Scenarios
+
+### Run Only Core API Tests
+
+```bash
+k6 run k6/peak-flow-scenarios.js \
+  --env K6_BASE_URL=http://localhost:3000 \
+  --env K6_USE_BYPASS_AUTH=true \
+  --include-scenarios command_center,orders_list,order_status_update
+```
+
+### Run Peak Hour Simulation
+
+```bash
+k6 run k6/peak-flow-scenarios.js \
+  --env K6_BASE_URL=http://localhost:3000 \
+  --env K6_USE_BYPASS_AUTH=true \
+  --env K6_RESTAURANT_ID=your-restaurant-id \
+  --include-scenarios peak_hour_lunch,peak_hour_dinner
+```
+
+### Run KDS Tests
+
+```bash
+k6 run k6/peak-flow-scenarios.js \
+  --env K6_BASE_URL=http://localhost:3000 \
+  --env K6_USE_BYPASS_AUTH=true \
+  --env K6_RESTAURANT_ID=your-restaurant-id \
+  --include-scenarios kds_high_volume,kds_status_updates
+```
+
+### Run Payment Gateway Tests
+
+```bash
+k6 run k6/peak-flow-scenarios.js \
+  --env K6_BASE_URL=http://localhost:3000 \
+  --env K6_USE_BYPASS_AUTH=true \
+  --include-scenarios payment_stress,payment_webhook
+```
+
+### Run Table Session Tests
+
+```bash
+k6 run k6/peak-flow-scenarios.js \
+  --env K6_BASE_URL=http://localhost:3000 \
+  --env K6_USE_BYPASS_AUTH=true \
+  --env K6_RESTAURANT_ID=your-restaurant-id \
+  --include-scenarios concurrent_sessions,session_heartbeat
+```
 
 ## CI Integration
 
@@ -121,26 +216,100 @@ To manually trigger a load test:
 
 ## Test Scenarios
 
-### Command Center Test
+### Core API Tests
+
+#### Command Center Test
 
 - **Endpoint**: `GET /api/merchant/command-center?range=today`
 - **Virtual Users**: 20
 - **Duration**: 2 minutes
 - **SLO**: P95 ≤ 500ms, error rate < 1%
 
-### Orders List Test
+#### Orders List Test
 
 - **Endpoint**: `GET /api/orders`
 - **Virtual Users**: 25
 - **Duration**: 2 minutes
 - **SLO**: P95 ≤ 400ms, error rate < 1%
 
-### Order Status Update Test
+#### Order Status Update Test
 
 - **Endpoint**: `PATCH /api/orders/:id/status`
 - **Virtual Users**: 15
 - **Duration**: 2 minutes
 - **SLO**: P95 ≤ 300ms, error rate < 0.5%
+
+### Peak Hour Simulations
+
+#### Lunch Rush Test
+
+- **Endpoint**: `POST /api/orders`
+- **Virtual Users**: 30 → 50 → 30 (ramping)
+- **Duration**: 7.5 minutes total
+- **SLO**: P95 ≤ 500ms, error rate < 1%
+- **Description**: Simulates typical lunch rush (12:00-14:00) with rapid order volume increase
+
+#### Dinner Rush Test
+
+- **Endpoint**: `POST /api/orders`
+- **Virtual Users**: 40 → 60 → 20 (ramping)
+- **Duration**: 8.5 minutes total
+- **SLO**: P95 ≤ 500ms, error rate < 1%
+- **Description**: Simulates dinner rush (18:00-21:00) with higher peak than lunch
+
+### KDS High-Volume Tests
+
+#### KDS Queue Test
+
+- **Endpoint**: `GET /api/kds/queue`
+- **Virtual Users**: 20 → 40 (ramping)
+- **Duration**: 4 minutes
+- **SLO**: P95 ≤ 300ms, error rate < 1%
+- **Description**: Tests KDS queue retrieval under high load
+
+#### KDS Status Updates Test
+
+- **Endpoint**: `PATCH /api/kds/items/:id/status`
+- **Rate**: 50 updates/second
+- **Duration**: 2 minutes
+- **SLO**: P95 ≤ 200ms, error rate < 1%
+- **Description**: Simulates kitchen staff marking items as completed
+
+### Payment Gateway Stress Tests
+
+#### Payment Processing Test
+
+- **Endpoint**: `POST /api/payments`
+- **Virtual Users**: 15 → 50 → 15 (ramping)
+- **Duration**: 3 minutes
+- **SLO**: P95 ≤ 2000ms, success rate > 95%
+- **Description**: Tests payment processing capacity with Telebirr and Chapa providers
+
+#### Payment Webhook Test
+
+- **Endpoint**: `POST /api/payments/webhook`
+- **Rate**: 20 webhooks/second
+- **Duration**: 1 minute
+- **SLO**: P95 ≤ 500ms, error rate < 1%
+- **Description**: Tests webhook processing throughput
+
+### Concurrent Table Session Tests
+
+#### Table Session Test
+
+- **Endpoint**: `POST /api/sessions`
+- **Virtual Users**: 30 → 50 (ramping)
+- **Duration**: 4 minutes
+- **SLO**: P95 ≤ 400ms, error rate < 1%
+- **Description**: Tests table session creation and management
+
+#### Session Heartbeat Test
+
+- **Endpoint**: `POST /api/sessions/:id/heartbeat`
+- **Rate**: 100 heartbeats/second
+- **Duration**: 2 minutes
+- **SLO**: P95 ≤ 200ms, error rate < 1%
+- **Description**: Tests session keep-alive under high concurrency
 
 ## Interpreting Results
 
