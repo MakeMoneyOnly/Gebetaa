@@ -127,23 +127,35 @@ export function hydrateEnterpriseDeviceRecord<
     const fallback = readEnterpriseShellMetadata(record.metadata, deviceType);
     const parsedProfile = DeviceProfileSchema.safeParse(record.device_profile);
 
+    const pairingState =
+        record.pairing_state === 'ready' ||
+        record.pairing_state === 'paired' ||
+        record.pairing_state === 'revoked' ||
+        record.pairing_state === 'expired'
+            ? record.pairing_state
+            : fallback.pairing_state;
+
+    const managementProvider =
+        record.management_provider === 'esper' || record.management_provider === 'none'
+            ? record.management_provider
+            : fallback.management_provider;
+
     return {
         ...record,
         device_profile: parsedProfile.success ? parsedProfile.data : fallback.device_profile,
         location_id: record.location_id ?? fallback.location_id,
-        pairing_state:
-            record.pairing_state === 'ready' ||
-            record.pairing_state === 'paired' ||
-            record.pairing_state === 'revoked' ||
-            record.pairing_state === 'expired'
-                ? record.pairing_state
-                : fallback.pairing_state,
+        pairing_state: pairingState,
         pairing_code_expires_at: record.pairing_code_expires_at ?? fallback.pairing_code_expires_at,
         pairing_completed_at: record.pairing_completed_at ?? fallback.pairing_completed_at,
-        management_provider:
-            record.management_provider === 'esper' || record.management_provider === 'none'
-                ? record.management_provider
-                : fallback.management_provider,
+        management_provider: managementProvider,
         management_device_id: record.management_device_id ?? fallback.management_device_id,
+    } as T & {
+        device_profile: DeviceProfile;
+        location_id: string | null;
+        pairing_state: 'ready' | 'paired' | 'revoked' | 'expired';
+        pairing_code_expires_at: string | null;
+        pairing_completed_at: string | null;
+        management_provider: 'none' | 'esper';
+        management_device_id: string | null;
     };
 }

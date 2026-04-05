@@ -21,7 +21,7 @@ export async function queueAndDispatchManagedDeviceAction(args: {
     appChannel?: string | null;
 }) {
     const now = new Date().toISOString();
-    const db = args.admin as any;
+    const db = args.admin;
     const currentMetadata = readRecord(args.device.metadata);
     const currentManagement = readRecord(currentMetadata.management);
     const appChannel =
@@ -171,7 +171,7 @@ export async function queueAndDispatchManagedDeviceAction(args: {
             .eq('id', queuedAction.id);
 
         if (args.action === 'push_update') {
-            let { error: otaError } = await db
+            const { error: otaError } = await db
                 .from('hardware_devices')
                 .update({
                     ota_status: 'failed',
