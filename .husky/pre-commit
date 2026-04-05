@@ -1,2 +1,16 @@
-pnpm format
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run security precommit check
 pnpm security:precommit
+
+# Run lint-staged for staged files
+pnpm lint-staged
+
+# Run type check on production code
+echo "📋 Type checking..."
+pnpm type-check
+
+echo "✅ Pre-commit checks passed!"

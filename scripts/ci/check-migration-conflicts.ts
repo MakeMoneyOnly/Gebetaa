@@ -61,7 +61,7 @@ function checkMigrationConflicts(): Conflict[] {
 const conflicts = checkMigrationConflicts();
 
 if (conflicts.length === 0) {
-    console.log('✅ No migration timestamp conflicts found');
+    process.stdout.write('✅ No migration timestamp conflicts found\n');
     process.exit(0);
 }
 
