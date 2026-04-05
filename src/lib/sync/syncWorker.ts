@@ -129,7 +129,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
     let isRunning = false;
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let lastSyncAt: string | null = null;
-    let conflictsDetected = 0;
+    const conflictsDetected = 0;
 
     /**
      * HIGH-005: Emit sync event for UI updates

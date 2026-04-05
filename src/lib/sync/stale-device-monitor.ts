@@ -27,7 +27,7 @@ export interface StaleDeviceConfig {
     maxDevicesPerRun: number;
 }
 
-const DEFAULT_CONFIG: StaleDeviceConfig = {
+export const DEFAULT_CONFIG: StaleDeviceConfig = {
     warningThresholdMinutes: 30,
     criticalThresholdMinutes: 60,
     businessHoursOnly: true,

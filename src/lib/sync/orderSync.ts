@@ -10,7 +10,6 @@
 import { getPowerSync } from './powersync-config';
 import { generateIdempotencyKey, queueSyncOperation } from './idempotency';
 import {
-    detectConflict,
     resolveConflict,
     logConflictResolution,
     getConflictType,

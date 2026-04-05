@@ -10,7 +10,6 @@
 import { getPowerSync } from './powersync-config';
 import { queueSyncOperation, generateIdempotencyKey } from './idempotency';
 import {
-    detectConflict,
     resolveConflict,
     logConflictResolution,
     getConflictType,
@@ -362,7 +361,7 @@ export async function resolveKdsConflict(
         );
 
         // Update local record with resolved data
-        const now = new Date().toISOString();
+        const _now = new Date().toISOString();
         await db.execute(
             `UPDATE kds_items SET
                 status = ?,
