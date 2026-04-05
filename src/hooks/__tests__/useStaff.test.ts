@@ -3,8 +3,7 @@
  * HIGH-008: Add tests for critical hooks
  */
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useStaff } from '../useStaff';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
@@ -14,13 +13,36 @@ vi.mock('react-hot-toast', () => ({
     },
 }));
 
-// Mock fetch
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+// Create mock fetch function at module scope with a default implementation
+// that returns a valid Response to prevent "Cannot read properties of undefined" errors
+const mockFetch = vi.fn(() =>
+    Promise.resolve(
+        new Response(JSON.stringify({ data: { staff: [] } }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        })
+    )
+);
+
+// Stub global fetch before any imports that use it
+vi.stubGlobal('fetch', mockFetch);
+
+// Dynamic import to ensure mock is set up first
+const { useStaff } = await import('../useStaff');
 
 describe('useStaff', () => {
     beforeEach(() => {
-        vi.clearAllMocks();
+        // Clear call counts but keep a default implementation
+        mockFetch.mockClear();
+        // Set default implementation that returns empty staff
+        mockFetch.mockImplementation(() =>
+            Promise.resolve(
+                new Response(JSON.stringify({ data: { staff: [] } }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                })
+            )
+        );
     });
 
     it('should fetch staff list on mount', async () => {
@@ -43,13 +65,16 @@ describe('useStaff', () => {
             },
         ];
 
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: () =>
-                Promise.resolve({
-                    data: { staff: mockStaff },
-                }),
-        });
+        // Override default mock for this specific test - use mockImplementation for precedence
+        mockFetch.mockImplementation(() =>
+            Promise.resolve(
+                new Response(JSON.stringify({ data: { staff: mockStaff } }), {
+                    status: 200,
+                    statusText: 'OK',
+                    headers: { 'Content-Type': 'application/json' },
+                })
+            )
+        );
 
         const { result } = renderHook(() => useStaff());
 
@@ -63,12 +88,13 @@ describe('useStaff', () => {
     });
 
     it('should handle fetch error', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-            statusText: 'Internal Server Error',
-            json: () => Promise.resolve({ error: 'Server error' }),
-        });
+        mockFetch.mockResolvedValueOnce(
+            new Response(JSON.stringify({ error: 'Server error' }), {
+                status: 500,
+                statusText: 'Internal Server Error',
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
 
         const { result } = renderHook(() => useStaff());
 
@@ -81,13 +107,12 @@ describe('useStaff', () => {
     });
 
     it('should handle invite creation', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: () =>
-                Promise.resolve({
-                    data: { staff: [] },
-                }),
-        });
+        mockFetch.mockResolvedValueOnce(
+            new Response(JSON.stringify({ data: { staff: [] } }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
 
         const { result } = renderHook(() => useStaff());
 
@@ -95,13 +120,12 @@ describe('useStaff', () => {
             expect(result.current.loading).toBe(false);
         });
 
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: () =>
-                Promise.resolve({
-                    data: { invite_url: 'https://example.com/invite/abc123' },
-                }),
-        });
+        mockFetch.mockResolvedValueOnce(
+            new Response(JSON.stringify({ data: { invite_url: 'https://example.com/invite/abc123' } }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
 
         let inviteResult: boolean;
         await act(async () => {
@@ -116,13 +140,12 @@ describe('useStaff', () => {
     });
 
     it('should handle invite error', async () => {
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: () =>
-                Promise.resolve({
-                    data: { staff: [] },
-                }),
-        });
+        mockFetch.mockResolvedValueOnce(
+            new Response(JSON.stringify({ data: { staff: [] } }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
 
         const { result } = renderHook(() => useStaff());
 
@@ -130,10 +153,13 @@ describe('useStaff', () => {
             expect(result.current.loading).toBe(false);
         });
 
-        mockFetch.mockResolvedValueOnce({
-            ok: false,
-            json: () => Promise.resolve({ error: 'Invite failed' }),
-        });
+        mockFetch.mockResolvedValueOnce(
+            new Response(JSON.stringify({ error: 'Invite failed' }), {
+                status: 400,
+                statusText: 'Bad Request',
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
 
         let inviteResult: boolean;
         await act(async () => {
@@ -156,13 +182,12 @@ describe('useStaff', () => {
             created_at: '2024-01-01T00:00:00Z',
         };
 
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: () =>
-                Promise.resolve({
-                    data: { staff: [mockStaffMember] },
-                }),
-        });
+        mockFetch.mockResolvedValueOnce(
+            new Response(JSON.stringify({ data: { staff: [mockStaffMember] } }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
 
         const { result } = renderHook(() => useStaff());
 
@@ -170,16 +195,12 @@ describe('useStaff', () => {
             expect(result.current.loading).toBe(false);
         });
 
-        mockFetch.mockResolvedValueOnce({
-            ok: true,
-            json: () =>
-                Promise.resolve({
-                    data: {
-                        id: 'staff-1',
-                        is_active: false,
-                    },
-                }),
-        });
+        mockFetch.mockResolvedValueOnce(
+            new Response(JSON.stringify({ data: { id: 'staff-1', is_active: false } }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
 
         await act(async () => {
             await result.current.handleActiveToggle(mockStaffMember);

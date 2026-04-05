@@ -1,6 +1,40 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createDataLoaders, DataLoaders } from '../dataloaders';
 
+// Use vi.hoisted to define mock functions that can be accessed in vi.mock factory
+// This follows Vitest best practices for module mocking
+const createMockSupabaseClient = vi.hoisted(() => {
+    // Create chainable query builder that returns empty array by default
+    // This is important: verifyTenantOwnership expects an array, not null
+    const createQuery = () => {
+        const query = {
+            select: vi.fn(() => query),
+            insert: vi.fn(() => query),
+            update: vi.fn(() => query),
+            delete: vi.fn(() => query),
+            eq: vi.fn(() => query),
+            neq: vi.fn(() => query),
+            // Return empty array for .in() queries - verifyTenantOwnership expects array
+            in: vi.fn(() => Promise.resolve({ data: [], error: null })),
+            order: vi.fn(() => query),
+            limit: vi.fn(() => query),
+            single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+            maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        };
+        return query;
+    };
+
+    // Return a client factory that has a .from() method
+    return vi.fn(() => ({
+        from: vi.fn(() => createQuery()),
+    }));
+});
+
+// Mock the Supabase service role client - must be before other mocks
+vi.mock('@/lib/supabase/service-role', () => ({
+    createServiceRoleClient: createMockSupabaseClient,
+}));
+
 // Mock the repositories
 vi.mock('@/domains/menu/repository', () => ({
     menuRepository: {
@@ -26,6 +60,8 @@ describe('DataLoaders', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        // The mock Supabase client is automatically created by the mock
+        // It returns empty arrays by default for HIGH-021 loaders
         loaders = createDataLoaders({ restaurantId: testRestaurantId });
     });
 

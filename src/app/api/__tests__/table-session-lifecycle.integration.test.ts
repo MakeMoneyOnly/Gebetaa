@@ -245,7 +245,8 @@ describe('Table session lifecycle integration', () => {
         const body = await response.json();
 
         expect(response.status).toBe(409);
-        expect(body.code).toBe('TABLE_SESSION_ALREADY_OPEN');
+        // Response has nested error object: { error: { code, message, requestId } }
+        expect(body.error?.code).toBe('TABLE_SESSION_ALREADY_OPEN');
     });
 
     it('rejects transfer when destination table already has open session', async () => {
@@ -289,6 +290,7 @@ describe('Table session lifecycle integration', () => {
         const body = await response.json();
 
         expect(response.status).toBe(409);
-        expect(body.code).toBe('DESTINATION_TABLE_OCCUPIED');
+        // Response has nested error object: { error: { code, message, requestId } }
+        expect(body.error?.code).toBe('DESTINATION_TABLE_OCCUPIED');
     });
 });

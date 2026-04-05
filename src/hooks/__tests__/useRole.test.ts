@@ -23,11 +23,19 @@ const mockEq = vi.fn();
 const mockMaybeSingle = vi.fn();
 const mockOrder = vi.fn();
 const mockLimit = vi.fn();
+const mockOnAuthStateChange = vi.fn(() => ({
+    data: {
+        subscription: {
+            unsubscribe: vi.fn(),
+        },
+    },
+}));
 
 vi.mock('@/lib/supabase/client', () => ({
     getSupabaseClient: () => ({
         auth: {
             getUser: mockGetUser,
+            onAuthStateChange: mockOnAuthStateChange,
         },
         rpc: mockRpc,
         from: mockFrom,
