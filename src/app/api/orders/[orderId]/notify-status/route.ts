@@ -59,7 +59,7 @@ export async function POST(
     const db = context.supabase as SupabaseClient<Database>;
 
     // Fetch the order with customer details
-    const { data: order, error: orderError } = await db
+    const { data: order, error: orderError } = (await db
         .from('orders')
         .select(
             `
@@ -81,7 +81,25 @@ export async function POST(
         )
         .eq('id', orderIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
-        .maybeSingle();
+        .maybeSingle()) as {
+        data: {
+            id: string;
+            order_number: string;
+            status: string | null;
+            customer_phone: string | null;
+            customer_name: string | null;
+            restaurant_id: string;
+            table_sessions: {
+                id: string;
+                guests: {
+                    id: string;
+                    phone: string | null;
+                    user_id: string | null;
+                } | null;
+            } | null;
+        } | null;
+        error: { message: string } | null;
+    };
 
     if (orderError) {
         return apiError('Failed to fetch order', 500, 'ORDER_FETCH_FAILED', orderError.message);

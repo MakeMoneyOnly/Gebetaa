@@ -63,7 +63,7 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
                 supabase
                     .from('orders')
                     .select(
-                        'id, restaurant_id, table_id, status, total_amount, currency, customer_name, customer_phone, notes, idempotency_key, created_at, updated_at'
+                        'id, restaurant_id, table_number, status, total_price, customer_name, customer_phone, notes, idempotency_key, created_at, updated_at'
                     )
                     .eq('restaurant_id', restaurantId)
                     .eq('id', orderId)

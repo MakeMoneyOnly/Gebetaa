@@ -5,6 +5,7 @@ import { parseJsonBody, parseQuery } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import type { Json } from '@/types/database';
 
 const ScheduleQuerySchema = z.object({
     start_date: z
@@ -286,7 +287,7 @@ export async function POST(request: Request) {
             source: 'merchant_dashboard',
             idempotency_key: idempotencyKey,
         },
-        new_value: inserted as Record<string, unknown>,
+        new_value: inserted as unknown as Json,
     });
 
     return apiSuccess({ shift: inserted, idempotency_key: idempotencyKey }, 201);

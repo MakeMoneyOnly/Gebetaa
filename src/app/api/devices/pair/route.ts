@@ -188,7 +188,9 @@ export async function POST(request: Request) {
         return apiError('Failed to pair device', 500, 'DEVICE_PAIR_FAILED', updateError.message);
     }
 
-    const hydratedDevice = hydrateEnterpriseDeviceRecord(device as Record<string, unknown> as any);
+    const hydratedDevice = hydrateEnterpriseDeviceRecord(
+        device as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
+    );
 
     const boot_path = getDeviceBootPathFromRecord({
         device_profile: hydratedDevice.device_profile,

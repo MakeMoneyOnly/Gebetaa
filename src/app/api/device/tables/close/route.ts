@@ -16,8 +16,6 @@ import { isChapaConfigured, verifyChapaTransaction } from '@/lib/services/chapaS
 import { ensurePaymentSessionForRecordedPayment } from '@/lib/payments/payment-sessions';
 import { createGebetaEvent } from '@/lib/events/contracts';
 import { enqueueInternalJob } from '@/lib/events/runtime';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 
 const CloseTableSchema = z.object({
     table_id: z.string().uuid().optional(),
@@ -301,7 +299,7 @@ export async function POST(request: Request) {
     const finalizableOrderIds = finalizableOrders.map(order => order.id);
 
     const paymentSession = await ensurePaymentSessionForRecordedPayment(
-        admin as SupabaseClient<Database>,
+        admin as unknown as Parameters<typeof ensurePaymentSessionForRecordedPayment>[0],
         {
             restaurantId: ctx.restaurantId,
             orderId: null,

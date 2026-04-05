@@ -8,7 +8,7 @@ import {
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import { resolveIdempotencyKey } from '@/lib/api/idempotency';
-import type { Json } from '@/types/database';
+import type { Json, TablesInsert } from '@/types/database';
 import { redisRateLimiters } from '@/lib/security';
 import type { NextRequest } from 'next/server';
 import { createClient as _createClient } from '@/lib/supabase/server';
@@ -87,7 +87,7 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
     }
 
     const { data: splits, error: splitsError } = await db
-        .from('order_check_splits' as unknown as never)
+        .from('order_check_splits')
         .select('*')
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId)
@@ -132,7 +132,7 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
             { data: splitPaymentsData, error: splitPaymentsError },
         ] = await Promise.all([
             db
-                .from('order_check_split_items' as unknown as never)
+                .from('order_check_split_items')
                 .select('*')
                 .eq('restaurant_id', restaurantId)
                 .eq('order_id', orderId),
@@ -265,7 +265,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }
 
     const { error: deleteItemsError } = await db
-        .from('order_check_split_items' as unknown as never)
+        .from('order_check_split_items')
         .delete()
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId);
@@ -280,7 +280,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }
 
     const { error: deleteSplitsError } = await db
-        .from('order_check_splits' as unknown as never)
+        .from('order_check_splits')
         .delete()
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId);
@@ -294,7 +294,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         );
     }
 
-    const splitRowsToInsert = computed.plan.map(split => ({
+    const splitRowsToInsert: TablesInsert<'order_check_splits'>[] = computed.plan.map(split => ({
         restaurant_id: restaurantId,
         order_id: orderId,
         split_index: split.split_index,
@@ -307,7 +307,7 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     }));
 
     const { data: insertedSplits, error: insertSplitsError } = await db
-        .from('order_check_splits' as unknown as never)
+        .from('order_check_splits')
         .insert(splitRowsToInsert)
         .select('*')
         .order('split_index', { ascending: true });
@@ -330,21 +330,23 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         }
     }
 
-    const splitItemRows = computed.plan.flatMap(split =>
-        split.item_ids.map(orderItemId => ({
+    const splitItemRows = computed.plan.flatMap(split => {
+        const splitId = splitIdByIndex.get(split.split_index);
+        if (!splitId) return [];
+        return split.item_ids.map(orderItemId => ({
             restaurant_id: restaurantId,
             order_id: orderId,
-            split_id: splitIdByIndex.get(split.split_index),
+            split_id: splitId,
             order_item_id: orderItemId,
-            quantity: 1,
+            quantity: 1 as number,
             line_amount: computed.itemAmountById.get(orderItemId) ?? 0,
-        }))
-    );
+        }));
+    }) as TablesInsert<'order_check_split_items'>[];
 
     let insertedSplitItems: Array<Record<string, unknown>> = [];
     if (splitItemRows.length > 0) {
         const { data: insertItemsData, error: insertItemsError } = await db
-            .from('order_check_split_items' as unknown as never)
+            .from('order_check_split_items')
             .insert(splitItemRows)
             .select('*');
 

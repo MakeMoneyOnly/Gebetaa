@@ -4,7 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
+import type { Database, Json } from '@/types/database';
 
 const CreateSupportTicketSchema = z.object({
     subject: z.string().trim().min(3).max(140),
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
             description: parsed.data.description,
             priority: parsed.data.priority,
             status: 'open',
-            diagnostics_json: (parsed.data.diagnostics_json ?? {}) as Record<string, unknown>,
+            diagnostics_json: (parsed.data.diagnostics_json ?? {}) as Json,
             created_by: auth.user.id,
         })
         .select('*')

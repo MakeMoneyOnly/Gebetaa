@@ -3,6 +3,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
+import type { Json } from '@/types/database';
 
 const PresetSchema = z.enum(['owner', 'manager', 'kitchen_lead']);
 
@@ -122,11 +123,8 @@ export async function PATCH(request: Request) {
         action: 'dashboard_preset_updated',
         entity_type: 'restaurant_settings',
         entity_id: context.restaurantId,
-        old_value: { dashboard_preset: currentSettings.dashboard_preset ?? null } as Record<
-            string,
-            unknown
-        >,
-        new_value: { dashboard_preset: parsed.data.preset } as Record<string, unknown>,
+        old_value: { dashboard_preset: currentSettings.dashboard_preset ?? null } as Json,
+        new_value: { dashboard_preset: parsed.data.preset } as Json,
         metadata: { source: 'merchant_dashboard' },
     });
 

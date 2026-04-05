@@ -127,7 +127,9 @@ export async function POST(request: Request) {
     return apiSuccess(
         {
             device: data
-                ? hydrateEnterpriseDeviceRecord(data as Record<string, unknown> as any)
+                ? hydrateEnterpriseDeviceRecord(
+                      data as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
+                  )
                 : data,
         },
         201

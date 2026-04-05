@@ -4,7 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
+import type { Database, Json } from '@/types/database';
 
 const UpdateGiftCardSchema = z.object({
     status: z.enum(['active', 'redeemed', 'expired', 'archived', 'voided']).optional(),
@@ -39,12 +39,14 @@ export async function PATCH(
         return apiError('Gift card not found', 404, 'GIFT_CARD_NOT_FOUND');
     }
 
+    const updateData = {
+        ...parsed.data,
+        metadata: parsed.data.metadata ? (parsed.data.metadata as Json) : undefined,
+        updated_at: new Date().toISOString(),
+    };
     const { data, error } = await db
         .from('gift_cards')
-        .update({
-            ...parsed.data,
-            updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', giftCardId)
         .select('*')
         .single();

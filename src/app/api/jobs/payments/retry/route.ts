@@ -15,6 +15,7 @@ import { createPaymentLifecycleEvent } from '@/lib/events/contracts';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { verifyChapaTransaction } from '@/lib/services/chapaService';
 import { processPaymentLifecycleEvent } from '@/lib/payments/payment-event-consumer';
+import type { Json } from '@/types/database';
 
 const PaymentRetryJobSchema = z.object({
     payment_session_id: z.string().uuid().optional(),
@@ -77,7 +78,7 @@ async function verifyAndProcessChapaPayment(
                 retry: true,
                 verified_at: new Date().toISOString(),
             },
-            raw_payload: data || {},
+            raw_payload: (data || {}) as Record<string, unknown>,
         });
 
         await processPaymentLifecycleEvent(event);
@@ -123,7 +124,8 @@ async function checkRetryEligibility(paymentSessionId: string): Promise<{
         return { eligible: false, reason: 'Payment already completed' };
     }
 
-    const previousAttempts = (session.metadata as Record<string, unknown>)?.retry_count || 0;
+    const previousAttempts =
+        Number((session.metadata as Record<string, unknown>)?.retry_count) || 0;
     if (previousAttempts >= 5) {
         return { eligible: false, reason: 'Max retry attempts reached' };
     }
@@ -133,7 +135,7 @@ async function checkRetryEligibility(paymentSessionId: string): Promise<{
         txRef: session.provider_reference,
         orderId: session.order_id,
         restaurantId: session.restaurant_id,
-        previousAttempts,
+        previousAttempts: previousAttempts as number,
     };
 }
 
@@ -247,7 +249,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 .maybeSingle();
 
             const currentRetryCount =
-                (session?.metadata as Record<string, unknown>)?.retry_count || 0;
+                Number((session?.metadata as Record<string, unknown>)?.retry_count) || 0;
 
             await admin
                 .from('payment_sessions')
@@ -257,7 +259,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                         retry_count: currentRetryCount + 1,
                         last_retry_at: new Date().toISOString(),
                         last_retry_status: result.status,
-                    },
+                    } as Json,
                 })
                 .eq('id', payment_session_id);
         }

@@ -4,7 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
+import type { Database, Json } from '@/types/database';
 
 const UpdateProgramSchema = z.object({
     name: z.string().trim().min(2).max(120).optional(),
@@ -40,12 +40,19 @@ export async function PATCH(
         return apiError('Program not found', 404, 'LOYALTY_PROGRAM_NOT_FOUND');
     }
 
+    const updateData = {
+        ...parsed.data,
+        points_rule_json: parsed.data.points_rule_json
+            ? (parsed.data.points_rule_json as Json)
+            : undefined,
+        tier_rule_json: parsed.data.tier_rule_json
+            ? (parsed.data.tier_rule_json as Json)
+            : undefined,
+        updated_at: new Date().toISOString(),
+    };
     const { data, error } = await db
         .from('loyalty_programs')
-        .update({
-            ...parsed.data,
-            updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', programId)
         .select('*')
         .single();

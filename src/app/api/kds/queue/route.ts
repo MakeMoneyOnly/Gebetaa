@@ -17,6 +17,7 @@ import {
     getDeviceContext,
 } from '@/lib/api/authz';
 import { parseQuery } from '@/lib/api/validation';
+import type { TablesInsert } from '@/types/database';
 
 type StationFilter = 'all' | 'kitchen' | 'bar' | 'dessert' | 'coffee' | 'expeditor';
 type SlaFilter = 'on_track' | 'at_risk' | 'breached';
@@ -516,7 +517,7 @@ export async function GET(request: Request) {
         const hydrationBuilder = db.from('kds_order_items');
         if (typeof hydrationBuilder?.insert === 'function') {
             const { data: hydratedItems } = await hydrationBuilder
-                .insert(hydrationRows)
+                .insert(hydrationRows as TablesInsert<'kds_order_items'>[])
                 .select(
                     'id, order_id, order_item_id, name, quantity, notes, station, status, modifiers'
                 );

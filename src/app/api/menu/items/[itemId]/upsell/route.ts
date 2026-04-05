@@ -20,7 +20,7 @@ interface UpsellRecommendation {
     category_name: string;
     reason: 'complementary' | 'popular' | 'category_based' | 'personalized';
     reason_text: string;
-    order_count?: number;
+    order_count: number | null;
 }
 
 /**
@@ -217,23 +217,25 @@ export async function GET(request: Request, routeContext: { params: Promise<{ it
                 // Get items from these orders
                 const { data: orderItems } = await db
                     .from('order_items')
-                    .select('menu_item_id, count:count(*)')
+                    .select('item_id')
                     .in('order_id', orderIds)
                     .not(
-                        'menu_item_id',
+                        'item_id',
                         'in',
                         `(${Array.from(addedItemIds)
                             .map(id => `'${id}'`)
                             .join(',')})`
-                    )
-                    .group('menu_item_id')
-                    .order('count', { ascending: false })
-                    .limit(limit - recommendations.length);
+                    );
 
                 if (orderItems && orderItems.length > 0) {
-                    const menuItemIds = orderItems.map(
-                        (oi: { menu_item_id: string }) => oi.menu_item_id
-                    );
+                    // Group and count in JavaScript since Supabase doesn't have typed .group()
+                    const itemCounts = orderItems.reduce<Record<string, number>>((acc, oi) => {
+                        acc[oi.item_id] = (acc[oi.item_id] ?? 0) + 1;
+                        return acc;
+                    }, {});
+                    const menuItemIds = Object.keys(itemCounts)
+                        .sort((a, b) => itemCounts[b] - itemCounts[a])
+                        .slice(0, limit - recommendations.length);
 
                     const { data: guestFavoriteItems } = await db
                         .from('menu_items')
@@ -271,8 +273,10 @@ export async function GET(request: Request, routeContext: { params: Promise<{ it
                     recommended_items: recommendations.map(r => r.id),
                     created_at: new Date().toISOString(),
                 })
-                .then(() => {})
-                .catch(() => {});
+                .then(
+                    () => {},
+                    () => {}
+                );
         }
 
         return apiSuccess({
