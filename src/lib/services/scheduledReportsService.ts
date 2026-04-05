@@ -589,7 +589,8 @@ async function completeExecution(
     fileSize: number | null,
     errorMessage: string | null
 ): Promise<void> {
-    await db.rpc('complete_report_execution' as never, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any).rpc('complete_report_execution', {
         p_execution_id: executionId,
         p_status: status,
         p_file_url: fileUrl,
@@ -612,5 +613,10 @@ async function getExecution(
     executionId: string
 ): Promise<ReportExecution | null> {
     const { data } = await db.from('report_executions').select('*').eq('id', executionId).single();
-    return data;
+    if (!data) return null;
+    return {
+        ...data,
+        status: data.status as ExecutionStatus,
+        email_sent: data.email_sent ?? false,
+    };
 }

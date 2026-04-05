@@ -176,8 +176,9 @@ export async function createCampaign(
             return { success: false, error: 'SMS body is required for SMS campaigns' };
         }
 
-        const { data: campaign, error } = await supabase
-            .from('marketing_campaigns' as unknown as keyof Database['public']['Tables'])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table not in generated schema
+        const { data: campaign, error } = await (supabase as any)
+            .from('marketing_campaigns')
             .insert({
                 restaurant_id: restaurantId,
                 name: input.name,

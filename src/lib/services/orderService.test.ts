@@ -34,19 +34,31 @@ describe('orderService', () => {
     });
 
     describe('generateGuestFingerprint', () => {
-        it('generates fingerprint from ip and user agent', () => {
+        it('generates SHA-256 hash fingerprint from ip and user agent', () => {
             const fp = generateGuestFingerprint('192.168.1.1', 'Mozilla/5.0');
-            expect(fp).toBe('192.168.1.1-Mozilla/5.0');
+            // HIGH-003: Returns SHA-256 hash (64 hex characters) for security
+            expect(fp).toMatch(/^[a-f0-9]{64}$/);
+            // Same inputs should produce same hash (deterministic)
+            const fp2 = generateGuestFingerprint('192.168.1.1', 'Mozilla/5.0');
+            expect(fp).toBe(fp2);
         });
 
         it('uses "unknown" when user agent is null', () => {
             const fp = generateGuestFingerprint('10.0.0.1', null);
-            expect(fp).toBe('10.0.0.1-unknown');
+            // Should still return a valid SHA-256 hash
+            expect(fp).toMatch(/^[a-f0-9]{64}$/);
+            // Should be deterministic
+            const fp2 = generateGuestFingerprint('10.0.0.1', null);
+            expect(fp).toBe(fp2);
         });
 
         it('uses "unknown" when user agent is empty string', () => {
             const fp = generateGuestFingerprint('10.0.0.1', '');
-            expect(fp).toBe('10.0.0.1-unknown');
+            // Should still return a valid SHA-256 hash
+            expect(fp).toMatch(/^[a-f0-9]{64}$/);
+            // Empty string and null should produce the same result
+            const fpNull = generateGuestFingerprint('10.0.0.1', null);
+            expect(fp).toBe(fpNull);
         });
     });
 

@@ -6,7 +6,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
+import type { Database, Json, TablesInsert } from '@/types/database';
 
 type DbClient = SupabaseClient<Database>;
 
@@ -14,7 +14,7 @@ type DbClient = SupabaseClient<Database>;
 // Type Definitions
 // =========================================================
 
-export type SyncStatus = 'pending' | 'syncing' | 'synced' | 'failed' | 'partial';
+export type SyncStatus = 'pending' | 'syncing' | 'synced' | 'failed' | 'partial' | null;
 
 export interface MenuLocation {
     id: string;
@@ -33,7 +33,7 @@ export interface MenuChange {
     entity_type: 'category' | 'menu_item' | 'modifier_group' | 'modifier_option';
     entity_id: string;
     location_ids: string[];
-    change_data: Record<string, unknown>;
+    change_data: Json;
     status: 'pending' | 'applied' | 'failed';
     applied_at: string | null;
     applied_to: string[];
@@ -130,7 +130,7 @@ export async function getMenuLocations(
                 is_primary: link.is_primary,
                 sync_enabled: link.sync_enabled,
                 last_sync_at: link.last_sync_at,
-                sync_status: link.sync_status,
+                sync_status: link.sync_status as SyncStatus,
                 pending_changes: link.pending_changes,
             })
         );
@@ -558,7 +558,7 @@ async function syncMenuToLocation(
 
                     const { error } = await db
                         .from('menu_items')
-                        .upsert(itemData, { onConflict: 'id' });
+                        .upsert(itemData as TablesInsert<'menu_items'>, { onConflict: 'id' });
 
                     if (error) {
                         errors.push(`Item ${item.name}: ${error.message}`);
@@ -625,7 +625,9 @@ async function syncMenuToLocation(
 
                     const { error } = await db
                         .from('modifier_options')
-                        .upsert(optionData, { onConflict: 'id' });
+                        .upsert(optionData as TablesInsert<'modifier_options'>, {
+                            onConflict: 'id',
+                        });
 
                     if (error) {
                         errors.push(`Modifier option ${option.name}: ${error.message}`);
@@ -711,7 +713,7 @@ export async function recordMenuChange(
             entity_type: change.entity_type,
             entity_id: change.entity_id,
             location_ids: typedLinks.map(l => l.restaurant_id),
-            change_data: change.change_data,
+            change_data: change.change_data as Json,
             status: 'pending',
             created_by: userId,
         });
@@ -760,7 +762,7 @@ export async function getPendingChanges(
             return [];
         }
 
-        return data ?? [];
+        return (data ?? []) as MenuChange[];
     } catch (error) {
         console.error('[CentralizedMenu] Error:', error);
         return [];
