@@ -451,6 +451,56 @@ export type Database = {
                     },
                 ];
             };
+            delivery_aggregator_configs: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    aggregator_name: string;
+                    api_key: string | null;
+                    api_secret_ref: string | null;
+                    webhook_url: string | null;
+                    settings_json: Json;
+                    status: string;
+                    last_sync_at: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    aggregator_name: string;
+                    api_key?: string | null;
+                    api_secret_ref?: string | null;
+                    webhook_url?: string | null;
+                    settings_json?: Json;
+                    status?: string;
+                    last_sync_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    aggregator_name?: string;
+                    api_key?: string | null;
+                    api_secret_ref?: string | null;
+                    webhook_url?: string | null;
+                    settings_json?: Json;
+                    status?: string;
+                    last_sync_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'delivery_aggregator_configs_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             device_sync_status: {
                 Row: {
                     created_at: string | null;
@@ -1832,6 +1882,60 @@ export type Database = {
                     },
                 ];
             };
+            notification_logs: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    order_id: string | null;
+                    type: string;
+                    recipient: string | null;
+                    status: string;
+                    provider: string | null;
+                    error_message: string | null;
+                    metadata: Json;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    order_id?: string | null;
+                    type: string;
+                    recipient?: string | null;
+                    status?: string;
+                    provider?: string | null;
+                    error_message?: string | null;
+                    metadata?: Json;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    order_id?: string | null;
+                    type?: string;
+                    recipient?: string | null;
+                    status?: string;
+                    provider?: string | null;
+                    error_message?: string | null;
+                    metadata?: Json;
+                    created_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'notification_logs_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'notification_logs_order_id_fkey';
+                        columns: ['order_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'orders';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             order_check_split_items: {
                 Row: {
                     created_at: string;
@@ -2522,6 +2626,60 @@ export type Database = {
                     },
                 ];
             };
+            push_tokens: {
+                Row: {
+                    id: string;
+                    restaurant_id: string | null;
+                    phone: string | null;
+                    guest_id: string | null;
+                    token: string;
+                    platform: string | null;
+                    is_active: boolean;
+                    created_at: string;
+                    updated_at: string;
+                    last_used_at: string | null;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id?: string | null;
+                    phone?: string | null;
+                    guest_id?: string | null;
+                    token: string;
+                    platform?: string | null;
+                    is_active?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                    last_used_at?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string | null;
+                    phone?: string | null;
+                    guest_id?: string | null;
+                    token?: string;
+                    platform?: string | null;
+                    is_active?: boolean;
+                    created_at?: string;
+                    updated_at?: string;
+                    last_used_at?: string | null;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'push_tokens_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'push_tokens_guest_id_fkey';
+                        columns: ['guest_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'guests';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             rate_limit_logs: {
                 Row: {
                     action: string;
@@ -2883,6 +3041,149 @@ export type Database = {
                 };
                 Relationships: [];
             };
+            report_executions: {
+                Row: {
+                    id: string;
+                    scheduled_report_id: string;
+                    restaurant_id: string;
+                    status: string;
+                    started_at: string;
+                    completed_at: string | null;
+                    duration_ms: number | null;
+                    report_period_start: string | null;
+                    report_period_end: string | null;
+                    data_row_count: number | null;
+                    file_url: string | null;
+                    file_size_bytes: number | null;
+                    file_format: string | null;
+                    email_sent: boolean | null;
+                    email_sent_at: string | null;
+                    email_error: string | null;
+                    error_message: string | null;
+                    error_stack: string | null;
+                    metadata: Json;
+                };
+                Insert: {
+                    id?: string;
+                    scheduled_report_id: string;
+                    restaurant_id: string;
+                    status: string;
+                    started_at?: string;
+                    completed_at?: string | null;
+                    duration_ms?: number | null;
+                    report_period_start?: string | null;
+                    report_period_end?: string | null;
+                    data_row_count?: number | null;
+                    file_url?: string | null;
+                    file_size_bytes?: number | null;
+                    file_format?: string | null;
+                    email_sent?: boolean | null;
+                    email_sent_at?: string | null;
+                    email_error?: string | null;
+                    error_message?: string | null;
+                    error_stack?: string | null;
+                    metadata?: Json;
+                };
+                Update: {
+                    id?: string;
+                    scheduled_report_id?: string;
+                    restaurant_id?: string;
+                    status?: string;
+                    started_at?: string;
+                    completed_at?: string | null;
+                    duration_ms?: number | null;
+                    report_period_start?: string | null;
+                    report_period_end?: string | null;
+                    data_row_count?: number | null;
+                    file_url?: string | null;
+                    file_size_bytes?: number | null;
+                    file_format?: string | null;
+                    email_sent?: boolean | null;
+                    email_sent_at?: string | null;
+                    email_error?: string | null;
+                    error_message?: string | null;
+                    error_stack?: string | null;
+                    metadata?: Json;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'report_executions_scheduled_report_id_fkey';
+                        columns: ['scheduled_report_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'scheduled_reports';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'report_executions_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            report_templates: {
+                Row: {
+                    id: string;
+                    restaurant_id: string | null;
+                    name: string;
+                    description: string | null;
+                    report_type: string;
+                    columns: Json;
+                    filters: Json;
+                    group_by: string[] | null;
+                    order_by: string[] | null;
+                    sql_template: string | null;
+                    chart_config: Json | null;
+                    is_active: boolean | null;
+                    is_system: boolean | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id?: string | null;
+                    name: string;
+                    description?: string | null;
+                    report_type: string;
+                    columns?: Json;
+                    filters?: Json;
+                    group_by?: string[] | null;
+                    order_by?: string[] | null;
+                    sql_template?: string | null;
+                    chart_config?: Json | null;
+                    is_active?: boolean | null;
+                    is_system?: boolean | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string | null;
+                    name?: string;
+                    description?: string | null;
+                    report_type?: string;
+                    columns?: Json;
+                    filters?: Json;
+                    group_by?: string[] | null;
+                    order_by?: string[] | null;
+                    sql_template?: string | null;
+                    chart_config?: Json | null;
+                    is_active?: boolean | null;
+                    is_system?: boolean | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'report_templates_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             reviews: {
                 Row: {
                     comment: string | null;
@@ -2921,6 +3222,62 @@ export type Database = {
                     },
                     {
                         foreignKeyName: 'reviews_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            scheduled_reports: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    name: string;
+                    report_type: string;
+                    schedule_cron: string;
+                    recipient_emails: string[];
+                    delivery_method: string;
+                    is_active: boolean | null;
+                    last_run_at: string | null;
+                    next_run_at: string | null;
+                    created_by: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    name: string;
+                    report_type: string;
+                    schedule_cron: string;
+                    recipient_emails?: string[];
+                    delivery_method: string;
+                    is_active?: boolean | null;
+                    last_run_at?: string | null;
+                    next_run_at?: string | null;
+                    created_by?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    name?: string;
+                    report_type?: string;
+                    schedule_cron?: string;
+                    recipient_emails?: string[];
+                    delivery_method?: string;
+                    is_active?: boolean | null;
+                    last_run_at?: string | null;
+                    next_run_at?: string | null;
+                    created_by?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'scheduled_reports_restaurant_id_fkey';
                         columns: ['restaurant_id'];
                         isOneToOne: false;
                         referencedRelation: 'restaurants';
@@ -3976,6 +4333,16 @@ export type Database = {
             is_agency_admin: { Args: never; Returns: boolean };
             mark_stale_devices_offline: { Args: never; Returns: undefined };
             santim_to_birr: { Args: { santim_value: number }; Returns: number };
+            complete_report_execution: {
+                Args: {
+                    p_execution_id: string;
+                    p_status: string;
+                    p_file_url: string | null;
+                    p_file_size_bytes: number | null;
+                    p_error_message: string | null;
+                };
+                Returns: undefined;
+            };
             user_has_restaurant_access: {
                 Args: { p_restaurant_id: string };
                 Returns: boolean;
