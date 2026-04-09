@@ -1,174 +1,176 @@
-/**
- * API Versioning Tests
- *
- * Tests for the API versioning utilities
- */
-
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
+    getApiVersionInfo,
     parseVersionFromHeader,
-    detectApiVersion,
     hasExplicitVersionHeader,
     getVersionedHeaders,
-    getApiVersionInfo,
+    getDeprecationHeaders,
+    processApiVersion,
     isSupportedVersion,
     getLatestVersion,
-    SUPPORTED_API_VERSIONS,
-} from '../versioning';
+    detectApiVersion,
+} from '@/lib/api/versioning';
 import { NextRequest } from 'next/server';
 
-// Helper to create mock NextRequest
-function createMockRequest(options: {
-    url?: string;
-    headers?: Record<string, string>;
-}): NextRequest {
-    const url = options.url || 'http://localhost:3000/api/orders';
-    const headers = options.headers || {};
-
-    // Create a mock request-like object
-    const mockHeaders = new Map<string, string>();
-    for (const [key, value] of Object.entries(headers)) {
-        mockHeaders.set(key, value);
-    }
-
-    return {
-        url,
-        nextUrl: new URL(url),
-        headers: {
-            get: (key: string) => mockHeaders.get(key) || null,
-            entries: () => mockHeaders.entries(),
-        },
-    } as unknown as NextRequest;
-}
-
-describe('parseVersionFromHeader', () => {
-    it('should return v1 for explicit v1 header', () => {
-        expect(parseVersionFromHeader('application/vnd.gebeta.v1+json')).toBe('v1');
-    });
-
-    it('should return null for generic json header', () => {
-        expect(parseVersionFromHeader('application/json')).toBeNull();
-    });
-
-    it('should return null for null header', () => {
-        expect(parseVersionFromHeader(null)).toBeNull();
-    });
-
-    it('should return null for unsupported version', () => {
-        expect(parseVersionFromHeader('application/vnd.gebeta.v2+json')).toBeNull();
-    });
-
-    it('should return null for invalid header format', () => {
-        expect(parseVersionFromHeader('text/html')).toBeNull();
-    });
-});
-
-describe('detectApiVersion', () => {
-    it('should detect version from Accept header', () => {
-        const request = createMockRequest({
-            url: 'http://localhost:3000/api/orders',
-            headers: { accept: 'application/vnd.gebeta.v1+json' },
+describe('API versioning', () => {
+    describe('getApiVersionInfo', () => {
+        it('should return v1 info', () => {
+            const info = getApiVersionInfo('v1');
+            expect(info.version).toBe('v1');
+            expect(info.deprecated).toBe(false);
+            expect(info.docsUrl).toBe('/docs/api/v1');
         });
-        expect(detectApiVersion(request)).toBe('v1');
-    });
 
-    it('should detect version from URL path', () => {
-        const request = createMockRequest({
-            url: 'http://localhost:3000/api/v1/orders',
-        });
-        expect(detectApiVersion(request)).toBe('v1');
-    });
-
-    it('should default to v1 when no version specified', () => {
-        const request = createMockRequest({
-            url: 'http://localhost:3000/api/orders',
-        });
-        expect(detectApiVersion(request)).toBe('v1');
-    });
-
-    it('should prefer header over URL path', () => {
-        const request = createMockRequest({
-            url: 'http://localhost:3000/api/v1/orders',
-            headers: { accept: 'application/vnd.gebeta.v1+json' },
-        });
-        expect(detectApiVersion(request)).toBe('v1');
-    });
-
-    it('should return v1 for unsupported URL version', () => {
-        const request = createMockRequest({
-            url: 'http://localhost:3000/api/v99/orders',
-        });
-        expect(detectApiVersion(request)).toBe('v1');
-    });
-});
-
-describe('hasExplicitVersionHeader', () => {
-    it('should return true for explicit version header', () => {
-        const request = createMockRequest({
-            headers: { accept: 'application/vnd.gebeta.v1+json' },
-        });
-        expect(hasExplicitVersionHeader(request)).toBe(true);
-    });
-
-    it('should return false for generic json header', () => {
-        const request = createMockRequest({
-            headers: { accept: 'application/json' },
-        });
-        expect(hasExplicitVersionHeader(request)).toBe(false);
-    });
-
-    it('should return false for null header', () => {
-        const request = createMockRequest({});
-        expect(hasExplicitVersionHeader(request)).toBe(false);
-    });
-});
-
-describe('getVersionedHeaders', () => {
-    it('should return version headers for v1', () => {
-        const headers = getVersionedHeaders('v1');
-        expect(headers).toEqual({
-            'API-Version': 'v1',
-            'Content-Type': 'application/vnd.gebeta.v1+json',
-            'X-API-Version': 'v1',
-        });
-    });
-});
-
-describe('getApiVersionInfo', () => {
-    it('should return version info for v1', () => {
-        const info = getApiVersionInfo('v1');
-        expect(info).toEqual({
-            version: 'v1',
-            deprecated: false,
-            docsUrl: '/docs/api/v1',
+        it('should default to v1 when no version provided', () => {
+            const info = getApiVersionInfo();
+            expect(info.version).toBe('v1');
         });
     });
 
-    it('should return default version info for unknown version', () => {
-        const info = getApiVersionInfo('v99' as never);
-        expect(info.version).toBe('v1');
-    });
-});
+    describe('parseVersionFromHeader', () => {
+        it('should return null for null header', () => {
+            expect(parseVersionFromHeader(null)).toBeNull();
+        });
 
-describe('isSupportedVersion', () => {
-    it('should return true for v1', () => {
-        expect(isSupportedVersion('v1')).toBe(true);
+        it('should parse v1 from vendor header', () => {
+            expect(parseVersionFromHeader('application/vnd.gebeta.v1+json')).toBe('v1');
+        });
+
+        it('should return null for unsupported version', () => {
+            expect(parseVersionFromHeader('application/vnd.gebeta.v2+json')).toBeNull();
+        });
+
+        it('should return null for plain json header', () => {
+            expect(parseVersionFromHeader('application/json')).toBeNull();
+        });
+
+        it('should return null for empty string', () => {
+            expect(parseVersionFromHeader('')).toBeNull();
+        });
     });
 
-    it('should return false for unsupported versions', () => {
-        expect(isSupportedVersion('v2')).toBe(false);
-        expect(isSupportedVersion('v0')).toBe(false);
-    });
-});
+    describe('detectApiVersion', () => {
+        it('should detect version from Accept header', () => {
+            const req = new NextRequest(new URL('http://localhost/api/orders'), {
+                headers: { accept: 'application/vnd.gebeta.v1+json' },
+            });
+            expect(detectApiVersion(req)).toBe('v1');
+        });
 
-describe('getLatestVersion', () => {
-    it('should return v1 as latest version', () => {
-        expect(getLatestVersion()).toBe('v1');
-    });
-});
+        it('should detect version from URL path', () => {
+            const req = new NextRequest(new URL('http://localhost/api/v1/orders'));
+            expect(detectApiVersion(req)).toBe('v1');
+        });
 
-describe('SUPPORTED_API_VERSIONS', () => {
-    it('should include v1', () => {
-        expect(SUPPORTED_API_VERSIONS).toContain('v1');
+        it('should default to v1 when no version info', () => {
+            const req = new NextRequest(new URL('http://localhost/api/orders'));
+            expect(detectApiVersion(req)).toBe('v1');
+        });
+
+        it('should prefer header over URL path', () => {
+            const req = new NextRequest(new URL('http://localhost/api/v2/orders'), {
+                headers: { accept: 'application/vnd.gebeta.v1+json' },
+            });
+            expect(detectApiVersion(req)).toBe('v1');
+        });
+
+        it('should default to v1 for unsupported URL version', () => {
+            const req = new NextRequest(new URL('http://localhost/api/v99/orders'));
+            expect(detectApiVersion(req)).toBe('v1');
+        });
+    });
+
+    describe('hasExplicitVersionHeader', () => {
+        it('should return true when vendor header is present', () => {
+            const req = new NextRequest(new URL('http://localhost/api/orders'), {
+                headers: { accept: 'application/vnd.gebeta.v1+json' },
+            });
+            expect(hasExplicitVersionHeader(req)).toBe(true);
+        });
+
+        it('should return false when no accept header', () => {
+            const req = new NextRequest(new URL('http://localhost/api/orders'));
+            expect(hasExplicitVersionHeader(req)).toBe(false);
+        });
+
+        it('should return false for plain json accept header', () => {
+            const req = new NextRequest(new URL('http://localhost/api/orders'), {
+                headers: { accept: 'application/json' },
+            });
+            expect(hasExplicitVersionHeader(req)).toBe(false);
+        });
+    });
+
+    describe('getVersionedHeaders', () => {
+        it('should return versioned headers for v1', () => {
+            const headers = getVersionedHeaders('v1');
+            expect(headers['API-Version']).toBe('v1');
+            expect(headers['X-API-Version']).toBe('v1');
+            expect(headers['Content-Type']).toBe('application/vnd.gebeta.v1+json');
+        });
+
+        it('should default to v1', () => {
+            const headers = getVersionedHeaders();
+            expect(headers['API-Version']).toBe('v1');
+        });
+    });
+
+    describe('getDeprecationHeaders', () => {
+        it('should return deprecation headers', () => {
+            const headers = getDeprecationHeaders('2025-12-31', '/docs/api/v1');
+            expect(headers.Deprecation).toBe('Sunset="2025-12-31"');
+            expect(headers.Link).toBe('</docs/api/v1>; rel="deprecation"');
+        });
+    });
+
+    describe('processApiVersion', () => {
+        it('should return version and redirect info for unversioned API route', () => {
+            const req = new NextRequest(new URL('http://localhost/api/orders'));
+            const result = processApiVersion(req);
+            expect(result.version).toBe('v1');
+            expect(result.shouldRedirect).toBe(false);
+            expect(result.isExplicitVersion).toBe(false);
+        });
+
+        it('should detect explicit version header', () => {
+            const req = new NextRequest(new URL('http://localhost/api/orders'), {
+                headers: { accept: 'application/vnd.gebeta.v1+json' },
+            });
+            const result = processApiVersion(req);
+            expect(result.isExplicitVersion).toBe(true);
+        });
+
+        it('should handle versioned URL path', () => {
+            const req = new NextRequest(new URL('http://localhost/api/v1/orders'));
+            const result = processApiVersion(req);
+            expect(result.version).toBe('v1');
+            expect(result.shouldRedirect).toBe(false);
+        });
+
+        it('should not redirect for non-API routes', () => {
+            const req = new NextRequest(new URL('http://localhost/dashboard'));
+            const result = processApiVersion(req);
+            expect(result.shouldRedirect).toBe(false);
+        });
+    });
+
+    describe('isSupportedVersion', () => {
+        it('should return true for v1', () => {
+            expect(isSupportedVersion('v1')).toBe(true);
+        });
+
+        it('should return false for unsupported version', () => {
+            expect(isSupportedVersion('v2')).toBe(false);
+        });
+
+        it('should return false for empty string', () => {
+            expect(isSupportedVersion('')).toBe(false);
+        });
+    });
+
+    describe('getLatestVersion', () => {
+        it('should return v1', () => {
+            expect(getLatestVersion()).toBe('v1');
+        });
     });
 });

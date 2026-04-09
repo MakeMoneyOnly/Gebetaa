@@ -5,6 +5,7 @@ import {
     requireRestaurantAccess,
     withRestaurantAccess,
     verifyTenantIsolation,
+    requireRole,
     AuthorizedContext,
 } from '../authz';
 import { GraphQLContext } from '../context';
@@ -253,6 +254,113 @@ describe('GraphQL Authorization', () => {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect((error as GraphQLError).message).toBe('Access denied to this resource');
                 expect((error as GraphQLError).extensions?.code).toBe('FORBIDDEN');
+            }
+        });
+    });
+
+    describe('requireRole', () => {
+        it('should not throw when user has an allowed role', () => {
+            const context: AuthorizedContext = {
+                user: { id: 'user-1', restaurantId: 'rest-1', role: 'admin' },
+                token: 'token',
+                guestSession: null,
+                dataLoaders: mockDataLoaders,
+            };
+
+            expect(() => requireRole(context, ['admin', 'manager'])).not.toThrow();
+        });
+
+        it('should not throw when user has the first allowed role', () => {
+            const context: AuthorizedContext = {
+                user: { id: 'user-1', restaurantId: 'rest-1', role: 'admin' },
+                token: 'token',
+                guestSession: null,
+                dataLoaders: mockDataLoaders,
+            };
+
+            expect(() => requireRole(context, ['admin'])).not.toThrow();
+        });
+
+        it('should throw FORBIDDEN when user role is not in allowed roles', () => {
+            const context: AuthorizedContext = {
+                user: { id: 'user-1', restaurantId: 'rest-1', role: 'staff' },
+                token: 'token',
+                guestSession: null,
+                dataLoaders: mockDataLoaders,
+            };
+
+            expect(() => requireRole(context, ['admin', 'manager'])).toThrow(GraphQLError);
+
+            try {
+                requireRole(context, ['admin', 'manager']);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect((error as GraphQLError).extensions?.code).toBe('FORBIDDEN');
+                expect(
+                    ((error as GraphQLError).extensions?.http as { status?: number })?.status
+                ).toBe(403);
+                expect((error as GraphQLError).extensions?.requiredRoles).toEqual([
+                    'admin',
+                    'manager',
+                ]);
+            }
+        });
+
+        it('should throw FORBIDDEN when user has no role', () => {
+            const context: AuthorizedContext = {
+                user: { id: 'user-1', restaurantId: 'rest-1' },
+                token: 'token',
+                guestSession: null,
+                dataLoaders: mockDataLoaders,
+            };
+
+            expect(() => requireRole(context, ['admin'])).toThrow(GraphQLError);
+
+            try {
+                requireRole(context, ['admin']);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect((error as GraphQLError).extensions?.code).toBe('FORBIDDEN');
+            }
+        });
+
+        it('should throw FORBIDDEN when user role is null', () => {
+            const context: AuthorizedContext = {
+                user: { id: 'user-1', restaurantId: 'rest-1', role: null },
+                token: 'token',
+                guestSession: null,
+                dataLoaders: mockDataLoaders,
+            } as unknown as AuthorizedContext;
+
+            expect(() => requireRole(context, ['admin'])).toThrow(GraphQLError);
+        });
+
+        it('should throw FORBIDDEN when user role is undefined', () => {
+            const context: AuthorizedContext = {
+                user: { id: 'user-1', restaurantId: 'rest-1', role: undefined },
+                token: 'token',
+                guestSession: null,
+                dataLoaders: mockDataLoaders,
+            } as unknown as AuthorizedContext;
+
+            expect(() => requireRole(context, ['admin'])).toThrow(GraphQLError);
+        });
+
+        it('should include requiredRoles in error extensions', () => {
+            const context: AuthorizedContext = {
+                user: { id: 'user-1', restaurantId: 'rest-1', role: 'viewer' },
+                token: 'token',
+                guestSession: null,
+                dataLoaders: mockDataLoaders,
+            };
+
+            try {
+                requireRole(context, ['admin', 'manager']);
+            } catch (error) {
+                expect((error as GraphQLError).extensions?.requiredRoles).toEqual([
+                    'admin',
+                    'manager',
+                ]);
             }
         });
     });

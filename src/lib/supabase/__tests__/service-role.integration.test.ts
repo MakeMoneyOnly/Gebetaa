@@ -8,18 +8,22 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createServiceRoleClient, createAuditedServiceRoleClient } from '../service-role';
+
+// Use vi.hoisted to define mock functions before module mocking
+const mockLogServiceRoleAudit = vi.hoisted(() => vi.fn().mockResolvedValue({ error: null }));
+const mockCreateClient = vi.hoisted(() => vi.fn());
 
 // Mock the audit module to prevent actual audit logging during tests
 vi.mock('@/lib/audit', () => ({
-    logServiceRoleAudit: vi.fn().mockResolvedValue({ error: null }),
+    logServiceRoleAudit: mockLogServiceRoleAudit,
 }));
 
 // Mock createClient at module level before import
-const mockCreateClient = vi.fn();
 vi.mock('@supabase/supabase-js', () => ({
     createClient: (...args: unknown[]) => mockCreateClient(...args),
 }));
+
+import { createServiceRoleClient, createAuditedServiceRoleClient } from '../service-role';
 
 // Mock environment variables
 const mockEnv = {
@@ -287,6 +291,386 @@ describe('service-role integration tests', () => {
                     }),
                 })
             );
+        });
+    });
+
+    describe('createAuditedServiceRoleClient proxy functionality', () => {
+        it('should wrap method calls with audit logging', async () => {
+            // Create a mock client with a method that returns a promise
+            const mockMethod = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+
+            // Call a method through the proxy
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            // Verify audit was called
+            expect(mockLogServiceRoleAudit).toHaveBeenCalled();
+        });
+
+        it('should log successful operations with success: true', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            // Check that audit was called with success: true
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.success).toBe(true);
+            expect(auditCall.source).toBe('test-source');
+        });
+
+        it('should log failed operations with success: false', async () => {
+            const mockMethod = vi.fn().mockRejectedValue(new Error('Database error'));
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+
+            // Call should throw but still log
+            await expect(
+                (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                    'orders'
+                )
+            ).rejects.toThrow('Database error');
+
+            // Check that audit was called with success: false
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.success).toBe(false);
+        });
+
+        it('should include duration in metadata', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.metadata._duration_ms).toBeDefined();
+            expect(typeof auditCall.metadata._duration_ms).toBe('number');
+        });
+
+        it('should include operation name in metadata', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.metadata._operation).toBe('from');
+        });
+
+        it('should include default params in audit logs', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const defaultParams = {
+                userId: 'user-123',
+                restaurantId: 'restaurant-456',
+                ipAddress: '192.168.1.1',
+            };
+
+            const auditedClient = createAuditedServiceRoleClient('test-source', defaultParams);
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.userId).toBe('user-123');
+            expect(auditCall.restaurantId).toBe('restaurant-456');
+            expect(auditCall.ipAddress).toBe('192.168.1.1');
+        });
+
+        it('should extract resource type from first argument', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceType).toBe('orders');
+        });
+
+        it('should extract resource ID from second argument', async () => {
+            // Test using rpc method which takes two arguments: (functionName, params)
+            const mockRpc = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                rpc: mockRpc,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+            await (
+                auditedClient as unknown as {
+                    rpc: (fnName: string, params: Record<string, unknown>) => Promise<unknown>;
+                }
+            ).rpc('create_order', { id: 'order-123', restaurant_id: 'rest-1' });
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceId).toBe('order-123');
+        });
+
+        it('should handle non-function properties', () => {
+            mockCreateClient.mockReturnValue({
+                someProperty: 'value',
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+
+            // Access non-function property
+            const prop = (auditedClient as unknown as { someProperty: string }).someProperty;
+            expect(prop).toBe('value');
+        });
+
+        it('should handle multiple sequential operations', async () => {
+            const mockFrom = vi.fn().mockResolvedValue({ data: [], error: null });
+            const mockInsert = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockFrom,
+                insert: mockInsert,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+            await (
+                auditedClient as unknown as {
+                    insert: (data: Record<string, unknown>) => Promise<unknown>;
+                }
+            ).insert({ id: '123' });
+
+            expect(mockLogServiceRoleAudit).toHaveBeenCalledTimes(2);
+        });
+
+        it('should include error message in metadata for failed operations', async () => {
+            const mockMethod = vi.fn().mockRejectedValue(new Error('Connection timeout'));
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+
+            await expect(
+                (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                    'orders'
+                )
+            ).rejects.toThrow();
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.metadata._error).toBe('Connection timeout');
+        });
+
+        it('should handle operations with no arguments', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                rpc: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test-source');
+            await (auditedClient as unknown as { rpc: () => Promise<unknown> }).rpc();
+
+            expect(mockLogServiceRoleAudit).toHaveBeenCalled();
+        });
+
+        it('should merge default metadata with operation metadata', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: { id: '123' }, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const defaultParams = {
+                userId: 'user-123',
+                metadata: { customField: 'customValue' },
+            };
+
+            const auditedClient = createAuditedServiceRoleClient('test-source', defaultParams);
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.metadata.customField).toBe('customValue');
+            expect(auditCall.metadata._operation).toBe('from');
+        });
+    });
+
+    describe('extractResourceType function', () => {
+        it('should extract table name from first string argument', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'menu_items'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceType).toBe('menu_items');
+        });
+
+        it('should return unknown for non-string first argument', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                customMethod: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (
+                auditedClient as unknown as { customMethod: (arg: unknown) => Promise<unknown> }
+            ).customMethod({ table: 'orders' });
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceType).toBe('unknown');
+        });
+    });
+
+    describe('extractResourceId function', () => {
+        it('should return undefined when no second argument exists', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            // extractResourceId returns undefined when args.length <= 1
+            expect(auditCall.resourceId).toBeUndefined();
+        });
+
+        it('should extract id from second argument object', async () => {
+            // Test the extractResourceId function behavior directly by simulating
+            // a method call with two arguments where second has 'id' property
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                rpc: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            // RPC methods can have multiple arguments
+            await (
+                auditedClient as unknown as {
+                    rpc: (fnName: string, params: Record<string, unknown>) => Promise<unknown>;
+                }
+            ).rpc('some_function', { id: 'order-123' });
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceId).toBe('order-123');
+        });
+
+        it('should extract ids array from second argument', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                rpc: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (
+                auditedClient as unknown as {
+                    rpc: (fnName: string, params: Record<string, unknown>) => Promise<unknown>;
+                }
+            ).rpc('delete_items', { ids: ['id-1', 'id-2', 'id-3'] });
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceId).toBe('id-1,id-2,id-3');
+        });
+
+        it('should extract order_id from second argument', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                rpc: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (
+                auditedClient as unknown as {
+                    rpc: (fnName: string, params: Record<string, unknown>) => Promise<unknown>;
+                }
+            ).rpc('update_order', { order_id: 'order-456' });
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceId).toBe('order-456');
+        });
+
+        it('should extract restaurant_id from second argument', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                rpc: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (
+                auditedClient as unknown as {
+                    rpc: (fnName: string, params: Record<string, unknown>) => Promise<unknown>;
+                }
+            ).rpc('update_restaurant', { restaurant_id: 'rest-789' });
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.resourceId).toBe('rest-789');
+        });
+    });
+
+    describe('summarizeArgs function', () => {
+        it('should summarize arguments for audit log', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                from: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (auditedClient as unknown as { from: (table: string) => Promise<unknown> }).from(
+                'orders'
+            );
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.metadata._args_summary).toBeDefined();
+        });
+
+        it('should handle empty arguments', async () => {
+            const mockMethod = vi.fn().mockResolvedValue({ data: null, error: null });
+            mockCreateClient.mockReturnValue({
+                rpc: mockMethod,
+            });
+
+            const auditedClient = createAuditedServiceRoleClient('test');
+            await (auditedClient as unknown as { rpc: () => Promise<unknown> }).rpc();
+
+            const auditCall = mockLogServiceRoleAudit.mock.calls[0][0];
+            expect(auditCall.metadata._args_summary).toBe('[]');
         });
     });
 });

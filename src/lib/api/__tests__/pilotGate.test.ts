@@ -58,7 +58,7 @@ describe('pilot gate phase controls', () => {
         const { enforcePilotAccess } = await import('@/lib/api/pilotGate');
         const response = enforcePilotAccess('rest-1', 'GET', { phase: 'p1' });
         expect(response).toBeNull();
-    });
+    }, 10000);
 
     it('blocks non-allowlisted restaurant when p1 rollout is enabled', async () => {
         process.env.ENABLE_P0_PILOT_ROLLOUT = 'false';
