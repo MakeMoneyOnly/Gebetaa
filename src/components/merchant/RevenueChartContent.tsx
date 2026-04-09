@@ -48,8 +48,10 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                         fontSize: '12px',
                         fontWeight: 'bold',
                         boxShadow: '0 8px 24px 0 rgba(23, 18, 11, 0.08)',
+                        fontFamily: 'var(--font-inter)',
+                        letterSpacing: '-0.07em',
                     }}
-                    itemStyle={{ color: '#17120B' }}
+                    itemStyle={{ color: '#17120B', fontFamily: 'var(--font-inter)', letterSpacing: '-0.07em' }}
                     cursor={{ stroke: '#8A887A', strokeWidth: 1, strokeDasharray: '3 3' }}
                     formatter={(value, name) => {
                         const numValue = typeof value === 'number' ? value : 0;
@@ -58,19 +60,19 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                             name === 'income' ? 'Current Period' : 'Previous Period',
                         ];
                     }}
-                    labelStyle={{ color: '#8A887A', marginBottom: '8px' }}
+                    labelStyle={{ color: '#8A887A', marginBottom: '8px', fontFamily: 'var(--font-inter)', letterSpacing: '-0.07em' }}
                 />
                 <XAxis
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500 }}
+                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-inter)', letterSpacing: '-0.07em' }}
                     dy={10}
                 />
                 <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500 }}
+                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-inter)', letterSpacing: '-0.07em' }}
                     tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
                     domain={[0, 'auto']}
                     width={40}

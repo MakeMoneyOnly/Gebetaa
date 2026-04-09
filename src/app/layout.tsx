@@ -34,12 +34,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body
                 className={`${inter.variable} ${manrope.variable} font-inter text-brand-ink bg-brand-canvas overflow-x-clip overscroll-none antialiased`}
             >
-                <ServiceWorkerCleanup />
-                <SkipLink href="#main-content">Skip to main content</SkipLink>
-                <OfflineIndicator position="top" showSyncStatus={true} />
-                <LenisRoot>
-                    <QueryProvider>
-                        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+                <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+                    <ServiceWorkerCleanup />
+                    <SkipLink href="#main-content">Skip to main content</SkipLink>
+                    <OfflineIndicator position="top" showSyncStatus={true} />
+                    <LenisRoot>
+                        <QueryProvider>
                             <div className="fixed top-6 right-6 z-50 hidden md:flex">
                                 {/* Theme Switcher Logic */}
                             </div>
@@ -63,9 +63,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                                     },
                                 }}
                             />
-                        </ThemeProvider>
-                    </QueryProvider>
-                </LenisRoot>
+                        </QueryProvider>
+                    </LenisRoot>
+                </ThemeProvider>
             </body>
         </html>
     );
