@@ -122,7 +122,7 @@ When guidance conflicts, follow this order:
     - e2e (critical user paths).
 - Release cadence and gates: `docs/implementation/release-cadence.md`.
 - P0 readiness and rollback controls: `docs/implementation/p0-release-readiness-and-rollback.md`.
-- Incident handling and severity model: `docs/implementation/incident-triage-rubric.md`.
+- Incident handling and severity model: `docs/09-runbooks/incident-triage-rubric.md`.
 - No release if Sev1/Sev2 blockers exist in changed scope.
 
 ## Skill Activation Matrix (Use When Relevant)

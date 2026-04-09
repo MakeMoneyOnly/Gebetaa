@@ -492,7 +492,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `docs/implementation/release-cadence.md`
     - `docs/implementation/performance-slos.md`
     - `docs/implementation/security-endpoint-checklist.md`
-    - `docs/implementation/incident-triage-rubric.md`
+    - `docs/09-runbooks/incident-triage-rubric.md`
     - `docs/implementation/weekly-delivery-review.md`
 - Added implementation and standards docs:
     - `docs/api/template.md`
