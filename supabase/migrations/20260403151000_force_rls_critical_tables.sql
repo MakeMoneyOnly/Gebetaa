@@ -10,13 +10,14 @@ BEGIN;
 -- Force RLS on restaurants (core tenant table)
 ALTER TABLE public.restaurants FORCE ROW LEVEL SECURITY;
 
--- Force RLS on TimescaleDB analytics tables
-ALTER TABLE public.hourly_sales FORCE ROW LEVEL SECURITY;
-ALTER TABLE public.daily_sales FORCE ROW LEVEL SECURITY;
+-- NOTE: hourly_sales and daily_sales tables are created by the reconciliation
+-- migration. FORCE RLS for those tables will be applied there.
+-- The following statements are kept for documentation but commented out:
+-- ALTER TABLE public.hourly_sales FORCE ROW LEVEL SECURITY;
+-- ALTER TABLE public.daily_sales FORCE ROW LEVEL SECURITY;
 
 -- Add comments documenting the security rationale
 COMMENT ON TABLE public.restaurants IS 'Core tenant table. FORCE RLS ensures all queries respect tenant isolation policies.';
-COMMENT ON TABLE public.hourly_sales IS 'TimescaleDB hypertable for hourly sales analytics. FORCE RLS ensures tenant isolation.';
-COMMENT ON TABLE public.daily_sales IS 'TimescaleDB hypertable for daily sales analytics. FORCE RLS ensures tenant isolation.';
+-- Comments for TimescaleDB tables will be added in reconciliation migration
 
 COMMIT;

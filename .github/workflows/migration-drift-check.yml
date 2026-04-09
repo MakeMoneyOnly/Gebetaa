@@ -1,0 +1,81 @@
+name: Migration Drift Check
+
+on:
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main]
+    schedule:
+        - cron: '0 6 * * 1'
+
+jobs:
+    check-migrations:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Supabase CLI
+              uses: supabase/setup-cli@v1
+
+            - name: Check for migration drift
+              env:
+                  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+                  SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+              run: |
+                  echo "=== Checking migration drift between local and remote ==="
+
+                  # Link to project
+                  npx supabase link --project-ref $SUPABASE_PROJECT_REF
+
+                  # List migrations and check for drift
+                  MIGRATION_OUTPUT=$(npx supabase migration list 2>&1)
+                  echo "$MIGRATION_OUTPUT"
+
+                  # Check if there are local migrations not in remote
+                  if echo "$MIGRATION_OUTPUT" | grep -q "LOCAL:"; then
+                    LOCAL_COUNT=$(echo "$MIGRATION_OUTPUT" | grep "LOCAL:" | wc -l)
+                    echo "::error::Migration drift detected! $LOCAL_COUNT local migrations not in remote."
+                    echo "::error::Run 'supabase db push' to sync or review migrations."
+                    exit 1
+                  fi
+
+                  # Check if there are remote migrations not in local
+                  if echo "$MIGRATION_OUTPUT" | grep -q "REMOTE:"; then
+                    REMOTE_COUNT=$(echo "$MIGRATION_OUTPUT" | grep "REMOTE:" | wc -l)
+                    echo "::warning::$REMOTE_COUNT remote migrations not in local. Pull with 'supabase db pull'."
+                  fi
+
+                  echo "=== Migration check passed ==="
+
+            - name: Validate migration files
+              run: |
+                  echo "=== Validating migration file naming ==="
+
+                  # Check for proper timestamp naming
+                  for file in supabase/migrations/*.sql; do
+                    filename=$(basename "$file")
+                    if [[ ! "$filename" =~ ^[0-9]{8,14}_[a-z0-9_]+\.sql$ ]]; then
+                      echo "::error::Invalid migration filename: $filename"
+                      echo "::error::Expected format: YYYYMMDDHHMMSS_description.sql"
+                      exit 1
+                    fi
+                  done
+
+                  echo "=== Migration filenames validated ==="
+
+            - name: Check for SQL syntax
+              run: |
+                  echo "=== Checking for common SQL issues ==="
+
+                  # Check for common issues
+                  grep -r "DROP TABLE" supabase/migrations/*.sql && {
+                    echo "::warning::DROP TABLE found in migrations. Review carefully."
+                  } || true
+
+                  # Check for unquoted reserved words
+                  grep -rE "CREATE TABLE (user|order|group|table)" supabase/migrations/*.sql && {
+                    echo "::error::Reserved word used as table name without quotes."
+                    exit 1
+                  } || true
+
+                  echo "=== SQL syntax check passed ==="

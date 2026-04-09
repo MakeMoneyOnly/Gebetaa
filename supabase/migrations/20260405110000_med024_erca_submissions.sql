@@ -44,7 +44,7 @@ CREATE POLICY "Staff can view ERCA submissions for their restaurant"
     USING (
         restaurant_id IN (
             SELECT restaurant_id FROM restaurant_staff
-            WHERE staff_id = auth.uid()
+            WHERE user_id = auth.uid()
         )
     );
 

@@ -68,11 +68,11 @@ CREATE INDEX IF NOT EXISTS idx_payments_order_id
 -- Menu Hot Path Indexes
 -- ============================================================================
 
--- Menu items by restaurant for menu queries
-CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant_id
-    ON public.menu_items (restaurant_id);
+-- NOTE: menu_items does NOT have restaurant_id column directly.
+-- Menu items are scoped to restaurants via category_id -> categories.restaurant_id
+-- The idx_menu_items_category_only index already exists for this relationship.
 
--- Categories by restaurant
+-- Categories by restaurant (already exists, idempotent)
 CREATE INDEX IF NOT EXISTS idx_categories_restaurant_id
     ON public.categories (restaurant_id);
 

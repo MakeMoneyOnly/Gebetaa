@@ -25,7 +25,7 @@ DECLARE
     v_delivery_count INTEGER := 0;
 BEGIN
     -- Aggregate order data for the hour
-    SELECT 
+    SELECT
         COUNT(*) AS total_orders,
         COUNT(*) FILTER (WHERE status IN ('served', 'completed')) AS completed_orders,
         COUNT(*) FILTER (WHERE status = 'cancelled') AS cancelled_orders,
@@ -54,14 +54,14 @@ BEGIN
     ) sub;
 
     -- Get top items
-    SELECT jsonb_agg(jsonb_build_object(
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
         'name', item_name,
         'quantity', total_qty,
         'revenue', total_revenue
-    ) ORDER BY total_qty DESC LIMIT 10)
+    )), '[]')
     INTO v_item_sales
     FROM (
-        SELECT 
+        SELECT
             oi.name AS item_name,
             SUM(oi.quantity) AS total_qty,
             SUM(oi.quantity * oi.price) AS total_revenue
@@ -71,6 +71,8 @@ BEGIN
           AND o.created_at >= p_hour_start
           AND o.created_at < p_hour_end
         GROUP BY oi.name
+        ORDER BY SUM(oi.quantity) DESC
+        LIMIT 10
     ) sub;
 
     -- Upsert hourly sales record
@@ -95,7 +97,7 @@ BEGIN
         v_payment_breakdown, v_item_sales,
         NOW(), NOW()
     )
-    ON CONFLICT (restaurant_id, hour_start) 
+    ON CONFLICT (restaurant_id, hour_start)
     DO UPDATE SET
         total_orders = EXCLUDED.total_orders,
         completed_orders = EXCLUDED.completed_orders,
@@ -137,7 +139,7 @@ BEGIN
     v_hour_end := (p_date + 1)::timestamptz;
 
     -- Aggregate from hourly_sales
-    SELECT 
+    SELECT
         SUM(total_orders) AS total_orders,
         SUM(completed_orders) AS completed_orders,
         SUM(cancelled_orders) AS cancelled_orders,
@@ -148,8 +150,8 @@ BEGIN
         SUM(dine_in_orders) AS dine_in_orders,
         SUM(takeout_orders) AS takeout_orders,
         SUM(delivery_orders) AS delivery_orders,
-        CASE WHEN SUM(total_orders) > 0 
-             THEN SUM(total_revenue) / SUM(total_orders) 
+        CASE WHEN SUM(total_orders) > 0
+             THEN SUM(total_revenue) / SUM(total_orders)
              ELSE 0 END AS avg_order_value
     INTO v_daily_data
     FROM hourly_sales
@@ -158,8 +160,8 @@ BEGIN
       AND hour_start < v_hour_end;
 
     -- Build hourly distribution
-    FOR v_hour_data IN 
-        SELECT 
+    FOR v_hour_data IN
+        SELECT
             EXTRACT(HOUR FROM hour_start) AS hour,
             total_orders,
             total_revenue
@@ -182,7 +184,7 @@ BEGIN
     SELECT COALESCE(jsonb_object_agg(key, value), '{}')
     INTO v_payment_breakdown
     FROM (
-        SELECT 
+        SELECT
             key,
             SUM(value::bigint) AS value
         FROM hourly_sales,
@@ -194,10 +196,10 @@ BEGIN
     ) sub;
 
     -- Get top items from hourly data
-    SELECT COALESCE(jsonb_agg(item ORDER BY revenue DESC LIMIT 10), '[]')
+    SELECT COALESCE(jsonb_agg(item), '[]')
     INTO v_top_items
     FROM (
-        SELECT 
+        SELECT
             item->>'name' AS name,
             SUM((item->>'quantity')::int) AS quantity,
             SUM((item->>'revenue')::bigint) AS revenue
@@ -207,6 +209,8 @@ BEGIN
           AND hour_start >= v_hour_start
           AND hour_start < v_hour_end
         GROUP BY item->>'name'
+        ORDER BY SUM((item->>'revenue')::bigint) DESC
+        LIMIT 10
     ) sub;
 
     -- Get orders by status
@@ -248,7 +252,7 @@ BEGIN
         v_top_items, v_orders_by_status,
         NOW(), NOW()
     )
-    ON CONFLICT (restaurant_id, date) 
+    ON CONFLICT (restaurant_id, date)
     DO UPDATE SET
         total_orders = EXCLUDED.total_orders,
         completed_orders = EXCLUDED.completed_orders,
