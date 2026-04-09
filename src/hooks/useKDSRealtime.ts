@@ -31,7 +31,7 @@ const DEDUP_CONFIG = {
 /**
  * Calculate exponential backoff delay with jitter
  */
-function calculateReconnectDelay(retryCount: number): number {
+export function calculateReconnectDelay(retryCount: number): number {
     const delay = Math.min(
         RECONNECT_CONFIG.baseDelayMs * Math.pow(2, retryCount),
         RECONNECT_CONFIG.maxDelayMs
@@ -45,7 +45,7 @@ function calculateReconnectDelay(retryCount: number): number {
  * MED-003: Generate a unique message ID from realtime payload
  * Uses table, event type, and record ID to create a deterministic identifier
  */
-function generateMessageId(
+export function generateMessageId(
     table: string,
     eventType: 'INSERT' | 'UPDATE' | 'DELETE',
     recordId: string
@@ -57,7 +57,7 @@ function generateMessageId(
  * MED-003: Message deduplication tracker
  * Tracks processed message IDs within a time window to prevent duplicate processing
  */
-class MessageDeduplicator {
+export class MessageDeduplicator {
     private processedMessages: Map<string, number> = new Map();
     private cleanupInterval: ReturnType<typeof setInterval> | null = null;
 

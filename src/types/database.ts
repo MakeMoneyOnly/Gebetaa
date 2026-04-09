@@ -2955,6 +2955,7 @@ export type Database = {
                     location: string | null;
                     logo_url: string | null;
                     name: string;
+                    name_am: string | null;
                     onboarding_completed: boolean;
                     owner_telegram_chat_id: string | null;
                     platform_fee_percentage: number;
@@ -2963,7 +2964,9 @@ export type Database = {
                     slug: string;
                     social: Json | null;
                     telegram_chat_id: string | null;
+                    tin_number: string | null;
                     updated_at: string | null;
+                    vat_number: string | null;
                 };
                 Insert: {
                     brand_color?: string | null;
@@ -2992,6 +2995,7 @@ export type Database = {
                     location?: string | null;
                     logo_url?: string | null;
                     name: string;
+                    name_am?: string | null;
                     onboarding_completed?: boolean;
                     owner_telegram_chat_id?: string | null;
                     platform_fee_percentage?: number;
@@ -3000,7 +3004,9 @@ export type Database = {
                     slug: string;
                     social?: Json | null;
                     telegram_chat_id?: string | null;
+                    tin_number?: string | null;
                     updated_at?: string | null;
+                    vat_number?: string | null;
                 };
                 Update: {
                     brand_color?: string | null;
@@ -3037,7 +3043,9 @@ export type Database = {
                     slug?: string;
                     social?: Json | null;
                     telegram_chat_id?: string | null;
+                    tin_number?: string | null;
                     updated_at?: string | null;
+                    vat_number?: string | null;
                 };
                 Relationships: [];
             };
@@ -4174,6 +4182,36 @@ export type Database = {
                     },
                 ];
             };
+            user_profiles: {
+                Row: {
+                    email: string | null;
+                    first_name: string | null;
+                    full_name: string | null;
+                    id: string;
+                    last_name: string | null;
+                    name: string | null;
+                    updated_at: string;
+                };
+                Insert: {
+                    email?: string | null;
+                    first_name?: string | null;
+                    full_name?: string | null;
+                    id: string;
+                    last_name?: string | null;
+                    name?: string | null;
+                    updated_at?: string;
+                };
+                Update: {
+                    email?: string | null;
+                    first_name?: string | null;
+                    full_name?: string | null;
+                    id?: string;
+                    last_name?: string | null;
+                    name?: string | null;
+                    updated_at?: string;
+                };
+                Relationships: [];
+            };
             workflow_audit_logs: {
                 Row: {
                     created_at: string | null;
@@ -4208,6 +4246,210 @@ export type Database = {
                         columns: ['tenant_id'];
                         isOneToOne: false;
                         referencedRelation: 'tenants';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
+            hourly_sales: {
+                Row: {
+                    id: number;
+                    restaurant_id: string;
+                    hour_start: string;
+                    hour_end: string;
+                    total_orders: number;
+                    completed_orders: number;
+                    cancelled_orders: number;
+                    total_revenue: number;
+                    total_discounts: number;
+                    total_tips: number;
+                    dine_in_orders: number;
+                    takeout_orders: number;
+                    delivery_orders: number;
+                    payment_method_breakdown: Json;
+                    top_items: Json;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: number;
+                    restaurant_id: string;
+                    hour_start: string;
+                    hour_end: string;
+                    total_orders?: number;
+                    completed_orders?: number;
+                    cancelled_orders?: number;
+                    total_revenue?: number;
+                    total_discounts?: number;
+                    total_tips?: number;
+                    dine_in_orders?: number;
+                    takeout_orders?: number;
+                    delivery_orders?: number;
+                    payment_method_breakdown?: Json;
+                    top_items?: Json;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: number;
+                    restaurant_id?: string;
+                    hour_start?: string;
+                    hour_end?: string;
+                    total_orders?: number;
+                    completed_orders?: number;
+                    cancelled_orders?: number;
+                    total_revenue?: number;
+                    total_discounts?: number;
+                    total_tips?: number;
+                    dine_in_orders?: number;
+                    takeout_orders?: number;
+                    delivery_orders?: number;
+                    payment_method_breakdown?: Json;
+                    top_items?: Json;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [];
+            };
+            daily_sales: {
+                Row: {
+                    id: number;
+                    restaurant_id: string;
+                    date: string;
+                    total_orders: number;
+                    completed_orders: number;
+                    cancelled_orders: number;
+                    total_revenue: number;
+                    total_discounts: number;
+                    total_tips: number;
+                    net_revenue: number;
+                    dine_in_orders: number;
+                    takeout_orders: number;
+                    delivery_orders: number;
+                    avg_order_value: number;
+                    payment_method_breakdown: Json;
+                    hourly_distribution: Json;
+                    top_items: Json;
+                    orders_by_status: Json;
+                    new_customers: number;
+                    returning_customers: number;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: number;
+                    restaurant_id: string;
+                    date: string;
+                    total_orders?: number;
+                    completed_orders?: number;
+                    cancelled_orders?: number;
+                    total_revenue?: number;
+                    total_discounts?: number;
+                    total_tips?: number;
+                    net_revenue?: number;
+                    dine_in_orders?: number;
+                    takeout_orders?: number;
+                    delivery_orders?: number;
+                    avg_order_value?: number;
+                    payment_method_breakdown?: Json;
+                    hourly_distribution?: Json;
+                    top_items?: Json;
+                    orders_by_status?: Json;
+                    new_customers?: number;
+                    returning_customers?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: number;
+                    restaurant_id?: string;
+                    date?: string;
+                    total_orders?: number;
+                    completed_orders?: number;
+                    cancelled_orders?: number;
+                    total_revenue?: number;
+                    total_discounts?: number;
+                    total_tips?: number;
+                    net_revenue?: number;
+                    dine_in_orders?: number;
+                    takeout_orders?: number;
+                    delivery_orders?: number;
+                    avg_order_value?: number;
+                    payment_method_breakdown?: Json;
+                    hourly_distribution?: Json;
+                    top_items?: Json;
+                    orders_by_status?: Json;
+                    new_customers?: number;
+                    returning_customers?: number;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [];
+            };
+            erca_submissions: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    order_id: string;
+                    invoice_number: string;
+                    vat_amount_santim: number | null;
+                    grand_total_santim: number | null;
+                    erca_invoice_id: string | null;
+                    qr_payload: string | null;
+                    digital_signature: string | null;
+                    status: string;
+                    error_message: string | null;
+                    retry_count: number;
+                    submitted_at: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    order_id: string;
+                    invoice_number: string;
+                    vat_amount_santim?: number | null;
+                    grand_total_santim?: number | null;
+                    erca_invoice_id?: string | null;
+                    qr_payload?: string | null;
+                    digital_signature?: string | null;
+                    status?: string;
+                    error_message?: string | null;
+                    retry_count?: number;
+                    submitted_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    order_id?: string;
+                    invoice_number?: string;
+                    vat_amount_santim?: number | null;
+                    grand_total_santim?: number | null;
+                    erca_invoice_id?: string | null;
+                    qr_payload?: string | null;
+                    digital_signature?: string | null;
+                    status?: string;
+                    error_message?: string | null;
+                    retry_count?: number;
+                    submitted_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'erca_submissions_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'erca_submissions_order_id_fkey';
+                        columns: ['order_id'];
+                        isOneToOne: true;
+                        referencedRelation: 'orders';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -4489,6 +4731,7 @@ export type Station = Database['public']['Tables']['stations']['Row'];
 export type AgencyUser = Database['public']['Tables']['agency_users']['Row'];
 export type ServiceRequest = Database['public']['Tables']['service_requests']['Row'];
 export type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
+export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
 // Restaurant settings type
 export interface RestaurantSettings {

@@ -59,9 +59,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             );
 
             if (existingIndex >= 0) {
-                // Update quantity
+                // Update quantity - create new object to avoid mutation
                 const updated = [...prev];
-                updated[existingIndex].quantity += newItem.quantity;
+                updated[existingIndex] = {
+                    ...updated[existingIndex],
+                    quantity: updated[existingIndex].quantity + newItem.quantity,
+                };
                 return updated;
             }
 

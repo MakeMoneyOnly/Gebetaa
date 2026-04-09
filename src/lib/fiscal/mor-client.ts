@@ -95,9 +95,14 @@ export async function submitFiscalTransaction(
         transaction_number: String(
             payload?.transaction_number ?? payload?.invoice_number ?? request.transaction_number
         ),
-        qr_payload: payload?.qr_payload !== undefined ? String(payload.qr_payload) : null,
+        qr_payload:
+            payload?.qr_payload !== undefined && payload?.qr_payload !== null
+                ? String(payload.qr_payload)
+                : null,
         digital_signature:
-            payload?.digital_signature !== undefined ? String(payload.digital_signature) : null,
+            payload?.digital_signature !== undefined && payload?.digital_signature !== null
+                ? String(payload.digital_signature)
+                : null,
         raw: payload,
     };
 }
