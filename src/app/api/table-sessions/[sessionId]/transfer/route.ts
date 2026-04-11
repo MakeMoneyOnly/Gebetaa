@@ -27,7 +27,10 @@ export async function POST(request: Request, context: { params: Promise<{ sessio
     const { sessionId } = await context.params;
     const { data: session, error: sessionError } = await restaurantContext.supabase
         .from('table_sessions')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_id, status, guest_count, assigned_staff_id, notes, metadata, opened_at, closed_at, created_at, updated_at'
+        )
         .eq('id', sessionId)
         .eq('restaurant_id', restaurantContext.restaurantId)
         .eq('status', 'open')
@@ -98,7 +101,10 @@ export async function POST(request: Request, context: { params: Promise<{ sessio
                 transferred_at: now,
             },
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_id, status, guest_count, assigned_staff_id, notes, metadata, opened_at, closed_at, created_at, updated_at'
+        )
         .single();
 
     if (newSessionError) {

@@ -30,7 +30,10 @@ export async function PATCH(
 
     const { data: giftCard, error: fetchError } = await db
         .from('gift_cards')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, code, currency, initial_balance, current_balance, status, expires_at, metadata, created_by, created_at, updated_at'
+        )
         .eq('id', giftCardId)
         .eq('restaurant_id', context.restaurantId)
         .single();
@@ -48,7 +51,10 @@ export async function PATCH(
         .from('gift_cards')
         .update(updateData)
         .eq('id', giftCardId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, code, currency, initial_balance, current_balance, status, expires_at, metadata, created_by, created_at, updated_at'
+        )
         .single();
 
     if (error) {

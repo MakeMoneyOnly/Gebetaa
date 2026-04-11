@@ -33,7 +33,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ table
         .update(parsed.data)
         .eq('id', tableId)
         .eq('restaurant_id', restaurantContext.restaurantId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_number, status, capacity, zone, qr_code_url, qr_version, active_order_id, is_active, created_at, updated_at'
+        )
         .maybeSingle();
 
     if (error) {

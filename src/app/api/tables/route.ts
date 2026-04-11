@@ -28,7 +28,10 @@ export async function GET() {
 
     const { data, error } = await context.supabase
         .from('tables')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_number, status, capacity, zone, qr_code_url, qr_version, active_order_id, is_active, created_at, updated_at'
+        )
         .eq('restaurant_id', context.restaurantId)
         .order('table_number');
 
@@ -84,7 +87,10 @@ export async function POST(request: Request) {
             zone: parsed.data.zone ?? null,
             qr_code_url: qr.url,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_number, status, capacity, zone, qr_code_url, qr_version, active_order_id, is_active, created_at, updated_at'
+        )
         .single();
 
     if (error) {

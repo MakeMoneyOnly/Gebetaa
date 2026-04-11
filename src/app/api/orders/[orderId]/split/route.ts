@@ -86,9 +86,12 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
         return apiError('Order not found', 404, 'ORDER_NOT_FOUND');
     }
 
+    // HIGH-013: Explicit column selection
     const { data: splits, error: splitsError } = await db
         .from('order_check_splits')
-        .select('*')
+        .select(
+            'id, restaurant_id, order_id, split_index, split_label, requested_amount, computed_amount, status, metadata, created_by, created_at, updated_at'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId)
         .order('split_index', { ascending: true });
@@ -133,7 +136,9 @@ export async function GET(_request: Request, context: { params: Promise<{ orderI
         ] = await Promise.all([
             db
                 .from('order_check_split_items')
-                .select('*')
+                .select(
+                    'id, restaurant_id, order_id, split_id, order_item_id, quantity, line_amount, idempotency_key, created_at'
+                )
                 .eq('restaurant_id', restaurantId)
                 .eq('order_id', orderId),
             db
@@ -306,10 +311,13 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         created_by: actorUserId,
     }));
 
+    // HIGH-013: Explicit column selection
     const { data: insertedSplits, error: insertSplitsError } = await db
         .from('order_check_splits')
         .insert(splitRowsToInsert)
-        .select('*')
+        .select(
+            'id, restaurant_id, order_id, split_index, split_label, requested_amount, computed_amount, status, metadata, created_by, created_at, updated_at'
+        )
         .order('split_index', { ascending: true });
 
     if (insertSplitsError) {
@@ -345,10 +353,13 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
 
     let insertedSplitItems: Array<Record<string, unknown>> = [];
     if (splitItemRows.length > 0) {
+        // HIGH-013: Explicit column selection
         const { data: insertItemsData, error: insertItemsError } = await db
             .from('order_check_split_items')
             .insert(splitItemRows)
-            .select('*');
+            .select(
+                'id, restaurant_id, order_id, split_id, order_item_id, quantity, line_amount, idempotency_key, created_at'
+            );
 
         if (insertItemsError) {
             return apiError(

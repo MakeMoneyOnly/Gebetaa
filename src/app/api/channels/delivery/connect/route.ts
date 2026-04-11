@@ -49,7 +49,10 @@ export async function POST(request: Request) {
     const { data, error } = await context.supabase
         .from('delivery_partners')
         .upsert(payload, { onConflict: 'restaurant_id,provider' })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, provider, display_name, status, credentials_ref, settings_json, api_key, last_sync_at, created_by, created_at, updated_at'
+        )
         .single();
 
     if (error) {

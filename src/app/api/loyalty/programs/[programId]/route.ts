@@ -31,7 +31,10 @@ export async function PATCH(
 
     const { data: program, error: fetchError } = await db
         .from('loyalty_programs')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, points_rule_json, tier_rule_json, status, created_at, updated_at'
+        )
         .eq('id', programId)
         .eq('restaurant_id', context.restaurantId)
         .single();
@@ -54,7 +57,10 @@ export async function PATCH(
         .from('loyalty_programs')
         .update(updateData)
         .eq('id', programId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, points_rule_json, tier_rule_json, status, created_at, updated_at'
+        )
         .single();
 
     if (error) {

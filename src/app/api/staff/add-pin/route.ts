@@ -41,7 +41,8 @@ export async function POST(request: Request) {
             assigned_zones: parsed.data.assigned_zones ?? [],
             is_active: true,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select('id, restaurant_id, name, role, pin_code, assigned_zones, is_active, user_id, created_at')
         .single();
 
     if (error) {

@@ -14,7 +14,10 @@ export async function GET(request: Request) {
 
     const { data, error } = await admin
         .from('service_requests')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_number, request_type, status, notes, completed_at, idempotency_key, created_at'
+        )
         .eq('restaurant_id', ctx.restaurantId)
         .in('status', ['pending', 'acknowledged'])
         .order('created_at', { ascending: false });

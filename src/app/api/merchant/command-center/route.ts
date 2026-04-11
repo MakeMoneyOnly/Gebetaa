@@ -4,6 +4,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { getCacheHeaders, CACHE_PRESETS } from '@/lib/api/cache';
+import { monitoredQuery } from '@/lib/services/queryMonitor';
 
 type AttentionItem = {
     id: string;
@@ -138,42 +139,49 @@ export async function GET(request: NextRequest) {
         const rangeParam = request.nextUrl.searchParams.get('range');
         const { range, sinceIso } = resolveSince(rangeParam);
 
-        const [ordersRes, requestsRes, tablesRes, alertsRes, prevOrdersRes] = await Promise.all([
-            supabase
-                .from('orders')
-                .select(
-                    'id, order_number, status, table_number, created_at, completed_at, total_price'
-                )
-                .eq('restaurant_id', restaurantId)
-                .gte('created_at', sinceIso)
-                .order('created_at', { ascending: false })
-                .limit(200),
-            supabase
-                .from('service_requests')
-                .select('id, request_type, status, table_number, created_at')
-                .eq('restaurant_id', restaurantId)
-                .gte('created_at', sinceIso)
-                .order('created_at', { ascending: false })
-                .limit(200),
-            supabase
-                .from('tables')
-                .select('id, status, is_active')
-                .eq('restaurant_id', restaurantId),
-            supabase
-                .from('alert_events')
-                .select('id, entity_type, entity_id, status, severity, created_at, resolved_at')
-                .eq('restaurant_id', restaurantId)
-                .is('resolved_at', null)
-                .gte('created_at', sinceIso)
-                .order('created_at', { ascending: false })
-                .limit(50),
-            supabase
-                .from('orders')
-                .select('total_price, created_at')
-                .eq('restaurant_id', restaurantId)
-                .gte('created_at', resolvePreviousRange(rangeParam).sinceIso)
-                .lt('created_at', resolvePreviousRange(rangeParam).untilIso),
-        ]);
+        const [ordersRes, requestsRes, tablesRes, alertsRes, prevOrdersRes] = await monitoredQuery(
+            'command-center:fetch-dashboard',
+            () =>
+                Promise.all([
+                    supabase
+                        .from('orders')
+                        .select(
+                            'id, order_number, status, table_number, created_at, completed_at, total_price'
+                        )
+                        .eq('restaurant_id', restaurantId)
+                        .gte('created_at', sinceIso)
+                        .order('created_at', { ascending: false })
+                        .limit(200),
+                    supabase
+                        .from('service_requests')
+                        .select('id, request_type, status, table_number, created_at')
+                        .eq('restaurant_id', restaurantId)
+                        .gte('created_at', sinceIso)
+                        .order('created_at', { ascending: false })
+                        .limit(200),
+                    supabase
+                        .from('tables')
+                        .select('id, status, is_active')
+                        .eq('restaurant_id', restaurantId),
+                    supabase
+                        .from('alert_events')
+                        .select(
+                            'id, entity_type, entity_id, status, severity, created_at, resolved_at'
+                        )
+                        .eq('restaurant_id', restaurantId)
+                        .is('resolved_at', null)
+                        .gte('created_at', sinceIso)
+                        .order('created_at', { ascending: false })
+                        .limit(50),
+                    supabase
+                        .from('orders')
+                        .select('total_price, created_at')
+                        .eq('restaurant_id', restaurantId)
+                        .gte('created_at', resolvePreviousRange(rangeParam).sinceIso)
+                        .lt('created_at', resolvePreviousRange(rangeParam).untilIso),
+                ]),
+            { restaurantId }
+        );
 
         if (ordersRes.error) {
             responseStatus = 500;

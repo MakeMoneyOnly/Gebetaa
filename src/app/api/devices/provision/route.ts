@@ -69,7 +69,10 @@ export async function POST(request: Request) {
                 assigned_zones: parsed.data.assigned_zones ?? [],
                 metadata: normalizedMetadata,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, device_type, device_profile, status, pairing_code, pairing_code_expires_at, pairing_state, management_provider, management_status, management_device_id, assigned_zones, metadata, last_active_at, created_at, updated_at'
+            )
             .single();
 
     let { data, error } = await insertEnterprise();
@@ -94,7 +97,10 @@ export async function POST(request: Request) {
                 assigned_zones: parsed.data.assigned_zones ?? [],
                 metadata: legacyMetadata,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, device_type, device_profile, status, pairing_code, pairing_code_expires_at, pairing_state, management_provider, management_status, management_device_id, assigned_zones, metadata, last_active_at, created_at, updated_at'
+            )
             .single();
 
         data = legacyResult.data;

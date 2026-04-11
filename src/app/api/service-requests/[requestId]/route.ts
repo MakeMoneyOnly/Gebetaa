@@ -109,7 +109,10 @@ export async function PATCH(
         .from('service_requests')
         .update(updatePayload)
         .eq('id', requestRow.id)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_number, request_type, status, notes, completed_at, idempotency_key, created_at'
+        )
         .single();
 
     if (updateError || !updatedRequest) {

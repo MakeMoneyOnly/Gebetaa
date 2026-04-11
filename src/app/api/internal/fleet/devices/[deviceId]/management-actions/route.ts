@@ -37,7 +37,10 @@ export async function POST(
     const admin = createServiceRoleClient();
     const { data: device, error: deviceError } = await admin
         .from('hardware_devices')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, device_type, device_profile, status, pairing_code, pairing_code_expires_at, pairing_state, management_provider, management_status, management_device_id, assigned_zones, metadata, last_active_at, created_at, updated_at'
+        )
         .eq('id', deviceId)
         .in('restaurant_id', access.restaurantIds ?? [])
         .maybeSingle();

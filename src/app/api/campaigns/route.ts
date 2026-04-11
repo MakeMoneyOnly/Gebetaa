@@ -63,7 +63,10 @@ export async function GET(request: Request) {
 
     let campaignQuery = db
         .from('campaigns')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, channel, segment_id, status, template_json, scheduled_at, launched_at, created_by, created_at, updated_at'
+        )
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false })
         .limit(parsed.data.limit);
@@ -245,7 +248,10 @@ export async function POST(request: Request) {
             scheduled_at: parsed.data.scheduled_at ?? null,
             created_by: auth.user.id,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, channel, segment_id, status, template_json, scheduled_at, launched_at, created_by, created_at, updated_at'
+        )
         .single();
 
     if (error) {

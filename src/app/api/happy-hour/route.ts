@@ -46,7 +46,10 @@ export async function GET() {
         const db = context.supabase;
         const { data, error } = await db
             .from('happy_hour_schedules')
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, name_am, description, description_am, is_active, schedule_days, schedule_start_time, schedule_end_time, discount_percentage, discount_fixed_amount, applies_to, target_category_id, target_menu_item_ids, priority, requires_manager_pin, created_by, created_at, updated_at'
+            )
             .eq('restaurant_id', context.restaurantId)
             .order('priority', { ascending: false })
             .order('created_at', { ascending: false });
@@ -118,7 +121,10 @@ export async function POST(request: Request) {
             created_by: auth.user.id,
             ...parsed.data,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, name_am, description, description_am, is_active, schedule_days, schedule_start_time, schedule_end_time, discount_percentage, discount_fixed_amount, applies_to, target_category_id, target_menu_item_ids, priority, requires_manager_pin, created_by, created_at, updated_at'
+        )
         .single();
 
     if (error || !data) {

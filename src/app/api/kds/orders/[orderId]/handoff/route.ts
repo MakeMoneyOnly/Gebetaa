@@ -129,7 +129,10 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
         .eq('id', order.id)
         .eq('restaurant_id', restaurantContext.restaurantId)
         .eq('status', currentStatus)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, order_number, table_number, customer_name, status, order_type, total_price, discount_amount, notes, items, metadata, created_at, updated_at'
+        )
         .single();
 
     if (updateError || !updatedOrder) {

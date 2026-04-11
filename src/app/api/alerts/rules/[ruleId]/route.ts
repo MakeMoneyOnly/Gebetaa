@@ -86,7 +86,10 @@ export async function PATCH(
         .update(updatePayload)
         .eq('id', parsedRuleId.data)
         .eq('restaurant_id', context.restaurantId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, severity, enabled, condition_json, target_json, created_at, updated_at'
+        )
         .single();
 
     if (updateError) {

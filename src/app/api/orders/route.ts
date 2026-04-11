@@ -104,6 +104,7 @@ import { createClient } from '@/lib/supabase/server';
 import { CreateOrderSchema } from '@/lib/validators/order';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { logger } from '@/lib/logger';
+import { monitoredQuery } from '@/lib/services/queryMonitor';
 import {
     checkRateLimit,
     createOrder,
@@ -252,27 +253,33 @@ export async function GET(request: NextRequest) {
             return apiError('Invalid query params', 400, 'INVALID_QUERY', parsed.error.flatten());
         }
 
-        let query = supabase
-            .from('orders')
-            .select('*', { count: 'exact' })
-            .eq('restaurant_id', restaurantId)
-            .order('created_at', { ascending: false })
-            .range(parsed.data.offset, parsed.data.offset + parsed.data.limit - 1);
+        const { data, error, count } = await monitoredQuery(
+            'orders:list-active',
+            async () => {
+                let q = supabase
+                    .from('orders')
+                    .select('*', { count: 'exact' })
+                    .eq('restaurant_id', restaurantId)
+                    .order('created_at', { ascending: false })
+                    .range(parsed.data.offset, parsed.data.offset + parsed.data.limit - 1);
 
-        if (parsed.data.status && parsed.data.status !== 'all') {
-            query = query.eq('status', parsed.data.status);
-        }
+                if (parsed.data.status && parsed.data.status !== 'all') {
+                    q = q.eq('status', parsed.data.status);
+                }
 
-        if (parsed.data.search) {
-            const search = parsed.data.search.trim();
-            if (search.length > 0) {
-                query = query.or(
-                    `table_number.ilike.%${search}%,order_number.ilike.%${search}%,customer_name.ilike.%${search}%`
-                );
-            }
-        }
+                if (parsed.data.search) {
+                    const s = parsed.data.search.trim();
+                    if (s.length > 0) {
+                        q = q.or(
+                            `table_number.ilike.%${s}%,order_number.ilike.%${s}%,customer_name.ilike.%${s}%`
+                        );
+                    }
+                }
 
-        const { data, error, count } = await query;
+                return q;
+            },
+            { restaurantId }
+        );
 
         if (error) {
             responseStatus = 500;

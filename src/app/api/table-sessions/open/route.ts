@@ -69,7 +69,10 @@ export async function POST(request: Request) {
             notes: parsed.data.notes ?? null,
             status: 'open',
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, table_id, status, guest_count, assigned_staff_id, notes, metadata, opened_at, closed_at, created_at, updated_at'
+        )
         .single();
 
     if (sessionError) {

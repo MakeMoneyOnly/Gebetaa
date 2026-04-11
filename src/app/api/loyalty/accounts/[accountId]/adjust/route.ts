@@ -110,7 +110,10 @@ export async function POST(
         })
         .eq('id', account.id)
         .eq('restaurant_id', context.restaurantId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, guest_id, program_id, restaurant_id, points_balance, tier, status, total_visits, total_points_earned, last_visit_at, created_at, updated_at'
+        )
         .single()) as { data: LoyaltyAccountRow | null; error: { message?: string } | null };
 
     if (updateError) {
@@ -140,7 +143,9 @@ export async function POST(
             } as Json,
             created_by: auth.user.id,
         })
-        .select('*')
+        .select(
+            'id, account_id, restaurant_id, order_id, points_delta, balance_after, transaction_type, reason, metadata, created_by, created_at'
+        )
         .single()) as { data: { id: string } | null; error: { message?: string } | null };
 
     if (txError) {

@@ -66,7 +66,10 @@ export async function POST(
 
     const { data: giftCard, error: giftCardError } = (await db
         .from('gift_cards')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, code, currency, initial_balance, current_balance, status, expires_at, metadata, created_by, created_at, updated_at'
+        )
         .eq('id', giftCardIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
         .maybeSingle()) as { data: GiftCardRecord | null; error: unknown };
@@ -107,7 +110,10 @@ export async function POST(
         })
         .eq('id', giftCard.id)
         .eq('restaurant_id', context.restaurantId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, code, currency, initial_balance, current_balance, status, expires_at, metadata, created_by, created_at, updated_at'
+        )
         .single()) as { data: GiftCardRecord | null; error: unknown };
 
     if (updateError) {
@@ -135,7 +141,10 @@ export async function POST(
             } as Json,
             created_by: auth.user.id,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, gift_card_id, order_id, amount_delta, balance_after, type, metadata, created_by, created_at'
+        )
         .single()) as { data: { id: string } | null; error: unknown };
 
     if (txError) {

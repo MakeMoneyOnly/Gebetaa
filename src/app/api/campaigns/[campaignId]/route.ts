@@ -33,7 +33,10 @@ export async function PATCH(
 
     const { data: campaign, error: fetchError } = await db
         .from('campaigns')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, channel, segment_id, status, template_json, scheduled_at, launched_at, created_by, created_at, updated_at'
+        )
         .eq('id', campaignId)
         .eq('restaurant_id', context.restaurantId)
         .single();
@@ -49,7 +52,10 @@ export async function PATCH(
             updated_at: new Date().toISOString(),
         })
         .eq('id', campaignId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, channel, segment_id, status, template_json, scheduled_at, launched_at, created_by, created_at, updated_at'
+        )
         .single();
 
     if (error) {

@@ -98,7 +98,10 @@ export async function POST(
 
     const { data: campaign, error: campaignError } = await db
         .from('campaigns')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, channel, segment_id, status, launched_at, template_json, scheduled_at, created_by, created_at, updated_at'
+        )
         .eq('id', campaignIdParsed.data)
         .eq('restaurant_id', context.restaurantId)
         .maybeSingle();
@@ -211,7 +214,10 @@ export async function POST(
         })
         .eq('id', campaign.id)
         .eq('restaurant_id', context.restaurantId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, channel, segment_id, status, launched_at, template_json, scheduled_at, created_by, created_at, updated_at'
+        )
         .single();
 
     if (updateError) {

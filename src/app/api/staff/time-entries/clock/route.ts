@@ -90,7 +90,10 @@ export async function POST(request: Request) {
                 shift_id: parsed.data.shift_id || null,
                 clock_in_at: occurredAt,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, staff_id, shift_id, clock_in_at, clock_out_at, status, source, metadata, created_by, created_at, updated_at'
+            )
             .single();
 
         if (insertError) {
@@ -144,7 +147,10 @@ export async function POST(request: Request) {
         })
         .eq('id', openEntry.id)
         .eq('restaurant_id', context.restaurantId)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, staff_id, shift_id, clock_in_at, clock_out_at, status, source, metadata, created_by, created_at, updated_at'
+        )
         .single();
 
     if (updateError) {

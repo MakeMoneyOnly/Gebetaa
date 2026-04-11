@@ -86,7 +86,10 @@ export async function POST(request: Request) {
             restaurant_id: context.restaurantId,
             ...parsed.data,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, name_am, type, value, applies_to, target_menu_item_id, target_category_id, requires_manager_pin, max_uses_per_day, valid_from, valid_until, is_active, created_at, updated_at'
+        )
         .single();
 
     if (error || !data) {

@@ -43,7 +43,10 @@ export async function POST(request: Request) {
             expires_at: expiresAt,
             status: 'pending',
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, code, email, role, restaurant_id, created_by, expires_at, status, pin_code, created_at, updated_at'
+        )
         .single();
 
     if (error) {

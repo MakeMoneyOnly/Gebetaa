@@ -54,7 +54,10 @@ export async function GET(request: Request) {
 
     let query = db
         .from('gift_cards')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, code, currency, initial_balance, current_balance, status, expires_at, metadata, created_by, created_at, updated_at'
+        )
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false })
         .limit(parsed.data.limit);
@@ -120,7 +123,10 @@ export async function POST(request: Request) {
             metadata: (parsed.data.metadata ?? {}) as Json,
             created_by: auth.user.id,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, code, currency, initial_balance, current_balance, status, expires_at, metadata, created_by, created_at, updated_at'
+        )
         .single();
 
     if (error) {

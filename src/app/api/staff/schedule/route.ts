@@ -267,10 +267,13 @@ export async function POST(request: Request) {
         created_by: auth.user.id,
     };
 
+    // HIGH-013: Explicit column selection
     const { data: inserted, error: insertError } = await context.supabase
         .from('shifts')
         .insert(row)
-        .select('*')
+        .select(
+            'id, restaurant_id, staff_id, shift_date, start_time, end_time, role, station, notes, status, created_by, created_at, updated_at'
+        )
         .single();
 
     if (insertError) {

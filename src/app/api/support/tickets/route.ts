@@ -75,7 +75,10 @@ export async function POST(request: Request) {
             diagnostics_json: (parsed.data.diagnostics_json ?? {}) as Json,
             created_by: auth.user.id,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, subject, description, priority, source, status, diagnostics_json, created_by, created_at, updated_at'
+        )
         .single();
 
     if (error) {

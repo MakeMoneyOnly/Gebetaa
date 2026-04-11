@@ -36,7 +36,10 @@ export async function POST(request: Request) {
     // Get the tip pool with shares
     const { data: tipPool, error: poolError } = await db
         .from('tip_pools')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, name_am, description, description_am, is_active, pool_type, pool_value, calculated_from, valid_from, valid_until, allocation_mode, created_by, created_at, updated_at'
+        )
         .eq('id', tip_pool_id)
         .eq('restaurant_id', context.restaurantId)
         .single();
@@ -52,7 +55,8 @@ export async function POST(request: Request) {
     // Get shares
     const { data: shares, error: sharesError } = await db
         .from('tip_pool_shares')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select('id, tip_pool_id, restaurant_id, role, percentage, created_at, updated_at')
         .eq('tip_pool_id', tip_pool_id);
 
     if (sharesError || !shares || shares.length === 0) {
@@ -99,7 +103,10 @@ export async function POST(request: Request) {
             status: 'calculated',
             created_by: auth.user.id,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, tip_pool_id, shift_id, period_date, period_start, period_end, total_tips_collected, total_tips_pooled, total_tips_distributed, distribution, status, created_by, created_at, updated_at'
+        )
         .single();
 
     if (allocationError) {

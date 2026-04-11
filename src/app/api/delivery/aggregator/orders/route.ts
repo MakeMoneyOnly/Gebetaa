@@ -271,7 +271,10 @@ export async function GET(request: NextRequest) {
         // Get aggregator status
         const { data: configs, error } = await (supabase as SupabaseClient<Database>)
             .from('delivery_aggregator_configs')
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, aggregator_name, api_key, api_secret_ref, webhook_url, settings_json, status, last_sync_at, created_at, updated_at'
+            )
             .eq('restaurant_id', restaurantId);
 
         if (error) {

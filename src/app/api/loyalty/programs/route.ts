@@ -31,7 +31,10 @@ export async function GET() {
 
     const { data, error } = await db
         .from('loyalty_programs')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, points_rule_json, tier_rule_json, status, created_by, created_at, updated_at'
+        )
         .eq('restaurant_id', context.restaurantId)
         .order('created_at', { ascending: false });
 
@@ -86,7 +89,14 @@ export async function POST(request: Request) {
         created_by: auth.user.id,
     };
 
-    const { data, error } = await db.from('loyalty_programs').insert(payload).select('*').single();
+    const { data, error } = await db
+        .from('loyalty_programs')
+        .insert(payload)
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, points_rule_json, tier_rule_json, status, created_by, created_at, updated_at'
+        )
+        .single();
 
     if (error) {
         return apiError(

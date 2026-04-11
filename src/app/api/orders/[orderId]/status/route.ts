@@ -8,6 +8,7 @@ import { sendOrderStatusSms } from '@/lib/notifications/sms';
 import { createGebetaEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
 import { redisRateLimiters } from '@/lib/security';
+import { monitoredQuery } from '@/lib/services/queryMonitor';
 
 const UpdateOrderStatusSchema = z.object({
     status: z.enum([
@@ -75,14 +76,19 @@ export async function PATCH(
                 error: userError,
             },
             { data: order, error: orderError },
-        ] = await Promise.all([
-            supabase.auth.getUser(),
-            supabase
-                .from('orders')
-                .select('id, restaurant_id, status')
-                .eq('id', orderId)
-                .maybeSingle(),
-        ]);
+        ] = await monitoredQuery(
+            'orders:update-status:fetch-order',
+            () =>
+                Promise.all([
+                    supabase.auth.getUser(),
+                    supabase
+                        .from('orders')
+                        .select('id, restaurant_id, status')
+                        .eq('id', orderId)
+                        .maybeSingle(),
+                ]),
+            { orderId }
+        );
 
         if (userError || !user) {
             responseStatus = 401;
@@ -150,14 +156,21 @@ export async function PATCH(
             updatePayload.kitchen_status = parsed.data.status;
         }
 
-        const { data: updatedOrder, error: updateError } = await supabase
-            .from('orders')
-            .update(updatePayload)
-            .eq('id', order.id)
-            .select(
-                'id, restaurant_id, status, kitchen_status, order_number, customer_phone, acknowledged_at, completed_at, created_at, updated_at'
-            )
-            .single();
+        const { data: updatedOrder, error: updateError } = await monitoredQuery(
+            'orders:update-status',
+            async () => {
+                const result = await supabase
+                    .from('orders')
+                    .update(updatePayload)
+                    .eq('id', order.id)
+                    .select(
+                        'id, restaurant_id, status, kitchen_status, order_number, customer_phone, acknowledged_at, completed_at, created_at, updated_at'
+                    )
+                    .single();
+                return result;
+            },
+            { orderId: order.id, newStatus: parsed.data.status }
+        );
 
         if (updateError || !updatedOrder) {
             responseStatus = 500;

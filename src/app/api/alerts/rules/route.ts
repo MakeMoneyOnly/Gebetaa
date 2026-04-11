@@ -77,7 +77,10 @@ export async function POST(request: Request) {
     const { data: inserted, error: insertError } = await context.supabase
         .from('alert_rules')
         .insert(payload)
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, severity, enabled, condition_json, target_json, created_at, updated_at'
+        )
         .single();
 
     if (insertError) {
