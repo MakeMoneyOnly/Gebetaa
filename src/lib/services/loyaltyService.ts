@@ -207,9 +207,12 @@ export async function recordGuestVisit(params: {
 
     try {
         // Get or create loyalty account
+        // HIGH-013: Explicit column selection
         const accountResult = await db
             .from('loyalty_accounts')
-            .select('*')
+            .select(
+                'id, guest_id, restaurant_id, points_balance, tier, total_visits, total_points_earned, status, last_visit_at'
+            )
             .eq('guest_id', guestId)
             .eq('restaurant_id', restaurantId)
             .maybeSingle();
@@ -239,7 +242,10 @@ export async function recordGuestVisit(params: {
                     total_points_earned: 0,
                     status: 'active',
                 })
-                .select('*')
+                // HIGH-013: Explicit column selection
+                .select(
+                    'id, guest_id, restaurant_id, points_balance, tier, total_visits, total_points_earned, status, last_visit_at'
+                )
                 .single();
 
             if (createError) {
@@ -515,7 +521,9 @@ export async function processBirthdayReward(params: {
                 expires_at: expiresAt.toISOString(),
                 status: 'available',
             })
-            .select('*')
+            .select(
+                'id, restaurant_id, guest_id, reward_type, reward_value, name, source, expires_at, status, created_at'
+            )
             .single();
 
         if (rewardError) {
@@ -698,9 +706,12 @@ export async function awardOrderPoints(params: {
         });
 
         // Get current account
+        // HIGH-013: Explicit column selection
         const accountResult = await db
             .from('loyalty_accounts')
-            .select('*')
+            .select(
+                'id, guest_id, restaurant_id, points_balance, tier, total_visits, total_points_earned, status'
+            )
             .eq('guest_id', guestId)
             .eq('restaurant_id', restaurantId)
             .maybeSingle();
@@ -731,7 +742,10 @@ export async function awardOrderPoints(params: {
                     total_points_earned: pointsCalc.totalPoints,
                     status: 'active',
                 })
-                .select('*')
+                // HIGH-013: Explicit column selection
+                .select(
+                    'id, guest_id, restaurant_id, points_balance, tier, total_visits, total_points_earned, status'
+                )
                 .single();
 
             if (createError) {
@@ -873,9 +887,12 @@ export async function redeemReward(params: {
 
     try {
         // Get the reward
+        // HIGH-013: Explicit column selection
         const { data: reward, error: rewardError } = await db
             .from('guest_rewards')
-            .select('*')
+            .select(
+                'id, restaurant_id, guest_id, reward_type, reward_value, name, source, expires_at, status, created_at'
+            )
             .eq('id', rewardId)
             .eq('restaurant_id', restaurantId)
             .eq('guest_id', guestId)

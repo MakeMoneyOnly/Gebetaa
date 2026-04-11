@@ -507,7 +507,13 @@ export async function getUpsellAnalytics(
     const db = supabase as any;
 
     try {
-        let query = db.from('upsell_analytics').select('*').eq('restaurant_id', restaurantId);
+        // HIGH-013: Explicit column selection
+        let query = db
+            .from('upsell_analytics')
+            .select(
+                'id, restaurant_id, guest_id, item_viewed, recommended_items, source, clicked_item, clicked_at, added_to_cart, added_item, converted_at, created_at'
+            )
+            .eq('restaurant_id', restaurantId);
 
         if (dateRange) {
             query = query

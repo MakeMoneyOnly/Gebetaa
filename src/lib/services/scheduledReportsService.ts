@@ -164,11 +164,13 @@ export async function createScheduledReport(
                 next_run_at: nextRunAt,
                 created_by: userId,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, description, report_type, frequency, run_at_time, timezone, day_of_week, day_of_month, date_range, custom_date_range_days, filters, format, include_charts, include_comparison, delivery_method, recipient_emails, email_subject, email_body, is_active, last_run_at, last_run_status, next_run_at, total_runs, successful_runs, failed_runs, created_at, created_by'
+            )
             .single();
 
         if (error) {
-            console.error('[ScheduledReports] Failed to create:', error);
             return { success: false, error: 'Failed to create scheduled report' };
         }
 
@@ -192,7 +194,10 @@ export async function getScheduledReports(
 
     let query = db
         .from('scheduled_reports')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, description, report_type, frequency, run_at_time, timezone, day_of_week, day_of_month, date_range, custom_date_range_days, filters, format, include_charts, include_comparison, delivery_method, recipient_emails, email_subject, email_body, is_active, last_run_at, last_run_status, next_run_at, total_runs, successful_runs, failed_runs, created_at, created_by'
+        )
         .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });
 
@@ -232,9 +237,10 @@ export async function updateScheduledReport(
             updates.day_of_week ||
             updates.day_of_month
         ) {
+            // HIGH-013: Explicit column selection
             const current = await db
                 .from('scheduled_reports')
-                .select('*')
+                .select('id, frequency, run_at_time, day_of_week, day_of_month, timezone')
                 .eq('id', reportId)
                 .single();
 
@@ -263,7 +269,10 @@ export async function updateScheduledReport(
             .update(updateData)
             .eq('id', reportId)
             .eq('restaurant_id', restaurantId)
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, description, report_type, frequency, run_at_time, timezone, day_of_week, day_of_month, date_range, custom_date_range_days, filters, format, include_charts, include_comparison, delivery_method, recipient_emails, email_subject, email_body, is_active, last_run_at, last_run_status, next_run_at, total_runs, successful_runs, failed_runs, created_at, created_by'
+            )
             .single();
 
         if (error) {
@@ -314,9 +323,12 @@ export async function getReportsDueForExecution(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
+    // HIGH-013: Explicit column selection
     const { data, error } = await db
         .from('scheduled_reports')
-        .select('*')
+        .select(
+            'id, restaurant_id, name, description, report_type, frequency, run_at_time, timezone, day_of_week, day_of_month, date_range, custom_date_range_days, filters, format, include_charts, include_comparison, delivery_method, recipient_emails, email_subject, email_body, is_active, last_run_at, last_run_status, next_run_at, total_runs, successful_runs, failed_runs, created_at, created_by'
+        )
         .eq('is_active', true)
         .lte('next_run_at', new Date().toISOString());
 
@@ -351,7 +363,14 @@ export async function executeScheduledReport(
         const executionId = execution.execution_id;
 
         // Get report configuration
-        const report = await db.from('scheduled_reports').select('*').eq('id', reportId).single();
+        // HIGH-013: Explicit column selection
+        const report = await db
+            .from('scheduled_reports')
+            .select(
+                'id, restaurant_id, report_type, date_range, custom_date_range_days, filters, delivery_method, frequency, run_at_time, day_of_week, day_of_month, timezone, recipient_emails'
+            )
+            .eq('id', reportId)
+            .single();
 
         if (!report) {
             await completeExecution(db, executionId, 'failed', null, null, 'Report not found');
@@ -407,9 +426,12 @@ export async function getExecutionHistory(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
+    // HIGH-013: Explicit column selection
     const { data, error } = await db
         .from('report_executions')
-        .select('*')
+        .select(
+            'id, scheduled_report_id, restaurant_id, status, started_at, completed_at, duration_ms, report_period_start, report_period_end, data_row_count, file_url, file_size_bytes, file_format, email_sent, email_sent_at, email_error, error_message'
+        )
         .eq('scheduled_report_id', reportId)
         .eq('restaurant_id', restaurantId)
         .order('started_at', { ascending: false })
@@ -612,7 +634,14 @@ async function getExecution(
     db: SupabaseClient<Database>,
     executionId: string
 ): Promise<ReportExecution | null> {
-    const { data } = await db.from('report_executions').select('*').eq('id', executionId).single();
+    // HIGH-013: Explicit column selection
+    const { data } = await db
+        .from('report_executions')
+        .select(
+            'id, scheduled_report_id, restaurant_id, status, started_at, completed_at, duration_ms, report_period_start, report_period_end, data_row_count, file_url, file_size_bytes, file_format, email_sent, email_sent_at, email_error, error_message'
+        )
+        .eq('id', executionId)
+        .single();
     if (!data) return null;
     return {
         ...data,

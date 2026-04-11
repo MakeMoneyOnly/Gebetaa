@@ -95,7 +95,10 @@ export async function getActivePartners(
 
     const { data, error } = await db
         .from('delivery_partners')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, partner_name, display_name, is_active, auto_accept_orders, prep_time_minutes, last_menu_sync_at, menu_sync_status'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('is_active', true);
 
@@ -138,7 +141,10 @@ export async function registerPartner(
                 prep_time_minutes: partner.prep_time_minutes ?? 30,
                 is_active: true,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, partner_name, display_name, is_active, auto_accept_orders, prep_time_minutes, last_menu_sync_at, menu_sync_status'
+            )
             .single();
 
         if (error) {
@@ -219,7 +225,10 @@ export async function receiveExternalOrder(
                 status: 'pending',
                 placed_at: externalOrder.placed_at ?? new Date().toISOString(),
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, delivery_partner_id, external_order_id, external_order_number, internal_order_id, raw_order_data, customer_name, customer_phone, delivery_address, delivery_latitude, delivery_longitude, delivery_notes, items, subtotal, delivery_fee, platform_fee, total, status, placed_at, estimated_pickup_at, estimated_delivery_at'
+            )
             .single();
 
         if (error) {
@@ -291,7 +300,10 @@ export async function getPendingAggregatorOrders(
 
     const { data, error } = await db
         .from('aggregator_orders')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, delivery_partner_id, external_order_id, external_order_number, internal_order_id, raw_order_data, customer_name, customer_phone, delivery_address, delivery_latitude, delivery_longitude, delivery_notes, items, subtotal, delivery_fee, platform_fee, total, status, placed_at, estimated_pickup_at, estimated_delivery_at'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('status', 'pending')
         .order('placed_at', { ascending: true });
@@ -365,7 +377,10 @@ export async function syncMenuToPartners(
     // Get partners to sync
     let partnersQuery = db
         .from('delivery_partners')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, partner_name, display_name, is_active, auto_accept_orders, prep_time_minutes, last_menu_sync_at, menu_sync_status'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('is_active', true);
 

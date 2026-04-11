@@ -127,9 +127,10 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
     const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
 
+    // HIGH-013: Explicit column selection (head: true, no data returned)
     const { count, error } = await supabase
         .from('orders')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('guest_fingerprint', guestFingerprint)
         .gt('created_at', windowStart);
 
@@ -191,9 +192,12 @@ export async function createOrder(
     const existingOrder = await checkDuplicateOrder(supabase, orderData.idempotency_key);
     if (existingOrder) {
         // Fetch full order data for the duplicate
+        // HIGH-013: Explicit column selection
         const { data: fullOrder } = await supabase
             .from('orders')
-            .select('*')
+            .select(
+                'id, restaurant_id, order_number, table_number, guest_name, guest_phone, status, order_type, subtotal_santim, discount_santim, vat_santim, total_santim, notes, idempotency_key, guest_fingerprint, created_at, updated_at'
+            )
             .eq('id', existingOrder.id)
             .single();
         if (fullOrder) {

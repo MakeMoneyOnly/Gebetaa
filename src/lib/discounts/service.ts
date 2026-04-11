@@ -56,7 +56,10 @@ export async function listActiveDiscountsForRestaurant(
     const db = supabase as any;
     const { data, error } = await db
         .from('discounts')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, name_am, type, value, applies_to, target_menu_item_id, target_category_id, requires_manager_pin, max_uses_per_day, valid_from, valid_until, is_active'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -82,7 +85,10 @@ export async function getDiscountById(
     const db = supabase as any;
     const { data, error } = await db
         .from('discounts')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, name, name_am, type, value, applies_to, target_menu_item_id, target_category_id, requires_manager_pin, max_uses_per_day, valid_from, valid_until, is_active'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('id', discountId)
         .maybeSingle();

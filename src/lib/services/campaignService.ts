@@ -314,9 +314,10 @@ export async function sendCampaign(
     const supabase = createServiceRoleClient();
 
     // Get campaign to track stats
+    // HIGH-013: Explicit column selection
     const { data: campaign } = await supabase
         .from('marketing_campaigns')
-        .select('*')
+        .select('id, restaurant_id, status, channel, total_recipients, emails_sent, sms_sent')
         .eq('id', campaignId)
         .single();
 
@@ -387,7 +388,12 @@ export async function sendVerificationCode(
 ): Promise<{ success: boolean; error?: string }> {
     const supabase = createServiceRoleClient();
 
-    const { data: guest } = await supabase.from('guests').select('*').eq('id', guestId).single();
+    // HIGH-013: Explicit column selection
+    const { data: guest } = await supabase
+        .from('guests')
+        .select('id, phone, email, metadata')
+        .eq('id', guestId)
+        .single();
 
     if (!guest) {
         return { success: false, error: 'Guest not found' };
@@ -449,7 +455,12 @@ export async function verifyContact(
 ): Promise<{ success: boolean; error?: string; contactType?: string }> {
     const supabase = createServiceRoleClient();
 
-    const { data: guest } = await supabase.from('guests').select('*').eq('id', guestId).single();
+    // HIGH-013: Explicit column selection
+    const { data: guest } = await supabase
+        .from('guests')
+        .select('id, phone, email, metadata')
+        .eq('id', guestId)
+        .single();
 
     if (!guest) {
         return { success: false, error: 'Guest not found' };

@@ -194,7 +194,10 @@ export async function createPriceOverride(
                 staff_id: input.staffId,
                 approved_by: input.approvedBy ?? null,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, order_item_id, original_price, new_price, reason_code, reason_notes, staff_id, approved_by, created_at'
+            )
             .single();
 
         if (overrideError) {
@@ -233,9 +236,12 @@ export async function getPriceOverridesForOrder(
     const db = supabase as any;
 
     try {
+        // HIGH-013: Explicit column selection
         const { data, error } = await db
             .from('price_overrides')
-            .select(`*, order_items!inner(order_id)`)
+            .select(
+                `id, order_item_id, original_price, new_price, reason_code, reason_notes, staff_id, approved_by, created_at, order_items!inner(order_id)`
+            )
             .eq('order_items.order_id', orderId)
             .order('created_at', { ascending: false });
 

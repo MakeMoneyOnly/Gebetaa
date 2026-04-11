@@ -156,7 +156,10 @@ export async function addToWaitlist(params: AddWaitlistParams): Promise<Waitlist
             estimated_wait_minutes: estimatedWaitMinutes,
             notes: notes ?? null,
         })
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, guest_name, guest_phone, guest_count, status, position, estimated_wait_minutes, notified_at, seated_at, notes, created_at, updated_at'
+        )
         .single();
 
     if (error || !data) {
@@ -185,7 +188,13 @@ export async function getWaitlist(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    let query = db.from('table_waitlist').select('*').eq('restaurant_id', restaurantId);
+    let query = db
+        .from('table_waitlist')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, guest_name, guest_phone, guest_count, status, position, estimated_wait_minutes, notified_at, seated_at, notes, created_at, updated_at'
+        )
+        .eq('restaurant_id', restaurantId);
 
     if (status) {
         query = query.eq('status', status);
@@ -211,7 +220,10 @@ export async function getWaitlistEntry(waitlistId: string): Promise<WaitlistEntr
 
     const { data, error } = await db
         .from('table_waitlist')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, guest_name, guest_phone, guest_count, status, position, estimated_wait_minutes, notified_at, seated_at, notes, created_at, updated_at'
+        )
         .eq('id', waitlistId)
         .maybeSingle();
 

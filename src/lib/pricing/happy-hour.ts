@@ -40,9 +40,12 @@ export async function getActiveHappyHour(
     const _now = new Date();
 
     // Get all active happy hours for this restaurant
+    // HIGH-013: Explicit column selection
     const { data: schedules, error } = await supabase
         .from('happy_hour_schedules')
-        .select('*')
+        .select(
+            'id, restaurant_id, name, schedule_days, schedule_start_time, schedule_end_time, discount_percentage, discount_fixed_amount, is_active, priority, created_at, updated_at'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('is_active', true)
         .order('priority', { ascending: false })

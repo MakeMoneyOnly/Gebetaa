@@ -199,7 +199,10 @@ export async function createCampaign(
                 trigger_config: input.trigger_config ?? {},
                 created_by: userId,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, description, campaign_type, channel, target_segment_id, target_criteria, subject, preheader, email_html, email_text, sms_body, status, scheduled_at, sent_at, total_recipients, emails_sent, emails_opened, emails_clicked, sms_sent, sms_delivered, is_automated, trigger_event, trigger_config, created_at, updated_at, created_by'
+            )
             .single();
 
         if (error) {
@@ -228,9 +231,12 @@ export async function getCampaigns(
     }
 ): Promise<MarketingCampaign[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // HIGH-013: Explicit column selection
     let query = (supabase as any)
         .from('marketing_campaigns')
-        .select('*')
+        .select(
+            'id, restaurant_id, name, description, campaign_type, channel, target_segment_id, target_criteria, subject, preheader, email_html, email_text, sms_body, status, scheduled_at, sent_at, total_recipients, emails_sent, emails_opened, emails_clicked, sms_sent, sms_delivered, is_automated, trigger_event, trigger_config, created_at, updated_at, created_by'
+        )
         .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });
 
@@ -269,9 +275,12 @@ export async function getCampaign(
     campaignId: string
 ): Promise<MarketingCampaign | null> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // HIGH-013: Explicit column selection
     const { data, error } = await (supabase as any)
         .from('marketing_campaigns')
-        .select('*')
+        .select(
+            'id, restaurant_id, name, description, campaign_type, channel, target_segment_id, target_criteria, subject, preheader, email_html, email_text, sms_body, status, scheduled_at, sent_at, total_recipients, emails_sent, emails_opened, emails_clicked, sms_sent, sms_delivered, is_automated, trigger_event, trigger_config, created_at, updated_at, created_by'
+        )
         .eq('id', campaignId)
         .eq('restaurant_id', restaurantId)
         .maybeSingle();
@@ -303,7 +312,10 @@ export async function updateCampaign(
             })
             .eq('id', campaignId)
             .eq('restaurant_id', restaurantId)
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, description, campaign_type, channel, target_segment_id, target_criteria, subject, preheader, email_html, email_text, sms_body, status, scheduled_at, sent_at, total_recipients, emails_sent, emails_opened, emails_clicked, sms_sent, sms_delivered, is_automated, trigger_event, trigger_config, created_at, updated_at, created_by'
+            )
             .single();
 
         if (error) {
@@ -650,9 +662,12 @@ export async function getEmailTemplates(
     restaurantId: string
 ): Promise<EmailTemplate[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // HIGH-013: Explicit column selection
     const { data, error } = await (supabase as any)
         .from('email_templates')
-        .select('*')
+        .select(
+            'id, restaurant_id, name, description, template_type, subject, preheader, html_content, text_content, available_variables, is_active, is_default, created_at, updated_at, created_by'
+        )
         .or(`restaurant_id.eq.${restaurantId},is_system.eq.true`)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -702,7 +717,10 @@ export async function createEmailTemplate(
                 ],
                 created_by: userId,
             })
-            .select('*')
+            // HIGH-013: Explicit column selection
+            .select(
+                'id, restaurant_id, name, description, template_type, subject, preheader, html_content, text_content, available_variables, is_active, is_default, created_at, updated_at, created_by'
+            )
             .single();
 
         if (error) {

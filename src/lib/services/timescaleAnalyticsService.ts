@@ -200,9 +200,12 @@ export async function getDailySalesData(
         );
 
         // Fallback to hypertable
+        // HIGH-013: Explicit column selection
         const { data, error } = await supabase
             .from('daily_sales')
-            .select('*')
+            .select(
+                'date, restaurant_id, total_orders, completed_orders, total_revenue, total_discounts, total_tips, net_revenue, avg_order_value, payment_method_breakdown, hourly_distribution, top_items, orders_by_status'
+            )
             .eq('restaurant_id', restaurantId)
             .gte('date', startDate.toISOString().split('T')[0])
             .order('date', { ascending: true });
@@ -410,9 +413,12 @@ export async function getEODReportFromTimescale(
     restaurantId: string,
     date: string
 ): Promise<DailySalesData | null> {
+    // HIGH-013: Explicit column selection
     const { data, error } = await supabase
         .from('daily_sales')
-        .select('*')
+        .select(
+            'date, restaurant_id, total_orders, completed_orders, total_revenue, total_discounts, total_tips, net_revenue, avg_order_value, payment_method_breakdown, hourly_distribution, top_items, orders_by_status'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('date', date)
         .single();

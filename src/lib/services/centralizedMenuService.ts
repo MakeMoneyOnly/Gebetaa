@@ -235,9 +235,12 @@ export async function pushMenuToLocations(
 
     try {
         // Get config
+        // HIGH-013: Explicit column selection
         const { data: config } = await db
             .from('centralized_menu_configs')
-            .select('*')
+            .select(
+                'id, primary_restaurant_id, name, description, sync_categories, sync_items, sync_modifiers, sync_pricing, sync_availability, auto_sync_enabled, sync_schedule, created_at, updated_at'
+            )
             .eq('primary_restaurant_id', primaryRestaurantId)
             .maybeSingle();
 
@@ -429,9 +432,10 @@ async function _getFullMenuData(
     modifierOptions: ModifierOptionRow[];
 }> {
     // Get categories
+    // HIGH-013: Explicit column selection
     const { data: categories } = await db
         .from('categories')
-        .select('*')
+        .select('id, restaurant_id, name, name_am, order_index, section, created_at, updated_at')
         .eq('restaurant_id', restaurantId)
         .order('order_index');
 
@@ -440,22 +444,28 @@ async function _getFullMenuData(
         .from('menu_items')
         .select(
             `
-            *,
+            id, category_id, name, name_am, description, description_am, image_url, is_available, is_chef_special, is_fasting, allergens, dietary_tags, station, course, connected_stations, price,
             categories!inner(restaurant_id)
         `
         )
         .eq('categories.restaurant_id', restaurantId);
 
     // Get modifier groups
+    // HIGH-013: Explicit column selection
     const { data: modifierGroups } = await db
         .from('modifier_groups')
-        .select('*')
+        .select(
+            'id, restaurant_id, menu_item_id, name, name_am, required, multi_select, min_select, max_select, sort_order, is_active, created_at, updated_at'
+        )
         .eq('restaurant_id', restaurantId);
 
     // Get modifier options
+    // HIGH-013: Explicit column selection (continued)
     const { data: modifierOptions } = await db
         .from('modifier_options')
-        .select('*')
+        .select(
+            'id, restaurant_id, modifier_group_id, name, name_am, sort_order, is_available, price_adjustment, created_at'
+        )
         .eq('restaurant_id', restaurantId);
 
     return {
@@ -750,9 +760,12 @@ export async function getPendingChanges(
             return [];
         }
 
+        // HIGH-013: Explicit column selection
         const { data, error } = await db
             .from('menu_change_queue')
-            .select('*')
+            .select(
+                'id, menu_config_id, change_type, entity_type, entity_id, location_ids, change_data, status, applied_at, applied_to, failed_at, error_message, created_at, created_by'
+            )
             .eq('menu_config_id', config.id)
             .eq('status', 'pending')
             .order('created_at', { ascending: true });

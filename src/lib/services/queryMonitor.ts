@@ -88,7 +88,7 @@ class QueryMonitorService {
      * ```ts
      * const result = await monitor.executeMonitored(
      *   'fetch_restaurant_menu',
-     *   () => supabase.from('menu_items').select('*').eq('restaurant_id', id),
+     *   () => supabase.from('menu_items').select('id, name, price').eq('restaurant_id', id),
      *   { restaurantId: id }
      * );
      * ```
@@ -303,7 +303,7 @@ export function getQueryMonitor(config?: Partial<QueryMonitorConfig>): QueryMoni
  * ```ts
  * const menuItems = await monitoredQuery(
  *   'fetch_menu_items',
- *   () => supabase.from('menu_items').select('*'),
+ *   () => supabase.from('menu_items').select('id, name, price'),
  *   { restaurantId: '123' }
  * );
  * ```
