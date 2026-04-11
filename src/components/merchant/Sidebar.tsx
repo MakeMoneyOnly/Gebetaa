@@ -80,7 +80,7 @@ export function Sidebar() {
                 <nav className="space-y-8 px-1">
                     {SECTIONS.map(section => (
                         <div key={section.title} className="space-y-3">
-                            <h3 className="px-4 text-micro font-bold tracking-[-0.07em] text-gray-400 uppercase">
+                            <h3 className="px-4 text-micro font-bold tracking-[-0.04em] text-gray-400 uppercase">
                                 {section.title}
                             </h3>
                             <div className="space-y-1">
@@ -114,7 +114,7 @@ export function Sidebar() {
                                                 />
                                                 <span
                                                     className={cn(
-                                                        'text-base truncate tracking-[-0.07em] transition-colors',
+                                                        'text-base truncate tracking-[-0.04em] transition-colors',
                                                         isActive
                                                             ? 'font-semibold text-black'
                                                             : 'font-medium text-gray-500 group-hover:text-black'
@@ -154,7 +154,7 @@ export function Sidebar() {
                             />
                             <span
                                 className={cn(
-                                    'transition-colors text-sm font-medium tracking-[-0.07em]',
+                                    'transition-colors text-sm font-medium tracking-[-0.04em]',
                                     pathname === link.href ? 'font-semibold text-black' : 'text-gray-500 group-hover:text-black'
                                 )}
                             >
@@ -171,7 +171,7 @@ export function Sidebar() {
                 >
                     <div className="flex items-center gap-4">
                         <User className="h-[22px] w-[22px] shrink-0 text-gray-400 transition-colors group-hover:text-red-400" strokeWidth={1.5} />
-                        <span className="text-sm font-medium tracking-[-0.07em] text-gray-500 transition-colors group-hover:text-red-500">
+                        <span className="text-sm font-medium tracking-[-0.04em] text-gray-500 transition-colors group-hover:text-red-500">
                             Logout
                         </span>
                     </div>

@@ -22,7 +22,6 @@ interface SalesPerformanceChartProps {
 
 export const SalesPerformanceChart = ({ totalSales, averageSales }: SalesPerformanceChartProps) => {
     const [mounted, setMounted] = useState(false);
-
     useEffect(() => setMounted(true), []);
 
     if (!mounted) return <ChartSkeleton />;

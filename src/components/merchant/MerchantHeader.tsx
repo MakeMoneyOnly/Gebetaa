@@ -2,25 +2,18 @@
 
 import React from 'react';
 import { 
-  Search, 
   Bell, 
   Plus, 
   Download 
 } from 'lucide-react';
 import Image from 'next/image';
+import { LocationSwitcher } from '@/components/merchant/LocationSwitcher';
 
 export function MerchantHeader() {
   return (
     <header className="sticky top-0 z-40 flex h-[88px] w-full items-center justify-between border-b border-[#F1F1F1] bg-white px-6 lg:px-10">
-      {/* 1. Moved Search Bar from Sidebar */}
-      <div className="group relative w-full max-w-[400px]">
-        <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-black" />
-        <input
-          type="text"
-          placeholder="Search"
-          className="w-full h-12 rounded-xl border border-gray-100 bg-gray-50 pr-4 pl-12 text-sm font-medium transition-all placeholder:text-gray-400 focus:border-brand-accent/20 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-accent/5"
-        />
-      </div>
+      {/* 1. Location Switcher (Replaced Search) */}
+      <LocationSwitcher />
 
       {/* 2. Right Side: Avatars, Notifications, Export */}
       <div className="flex items-center gap-6">

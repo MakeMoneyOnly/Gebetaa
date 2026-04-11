@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  SlidersHorizontal, LayoutDashboard, ChevronDown, 
-  Info, ArrowUp, ArrowDown, ArrowRight, MoreHorizontal, Users, 
-  Plus, Trello
+import {
+  SlidersHorizontal, LayoutDashboard, ChevronDown,
+  Info, ArrowUp, ArrowDown, ArrowRight, MoreHorizontal, Users,
+  Plus, Trello, Search, ArrowUpRight, Monitor, BarChart3
 } from 'lucide-react';
 import { RevenueChart } from '@/components/merchant/RevenueChart';
 import { SalesPerformanceChart } from '@/components/merchant/SalesPerformanceChart';
@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const rawName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Partner';
   const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-  
+
   const hour = new Date().getHours();
   let timeGreeting = 'Welcome';
   if (hour < 12) timeGreeting = 'Good morning';
@@ -28,13 +28,23 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex min-h-full w-full flex-col bg-white py-4 lg:py-6 tracking-[-0.07em]">
-      
+    <div className="flex min-h-full w-full flex-col bg-white py-4 lg:py-6 tracking-[-0.04em]">
+
       {/* Page Title Area */}
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-6">
         <div className="pl-5">
             <h1 className="text-2xl font-bold text-gray-900 mb-1">{greeting}</h1>
-            <p className="text-sm text-gray-500">Here is how your restaurant is performing today.</p>
+            <p className="text-sm text-gray-500 mb-6">Here is how your restaurant is performing today.</p>
+
+            {/* Search Bar (Moved from Header) */}
+            <div className="group relative w-[520px]">
+              <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-black" />
+              <input
+                type="text"
+                placeholder="What are you looking for?"
+                className="w-full h-11 rounded-xl border-none bg-gray-50 pr-4 pl-12 text-sm font-medium transition-all placeholder:text-gray-400 focus:bg-gray-50 focus:outline-none focus:ring-0 shadow-none appearance-none"
+              />
+            </div>
         </div>
         <div className="flex items-center gap-3 pr-5">
               <button className="flex items-center gap-2 h-11 bg-gray-50 hover:bg-gray-100 px-5 rounded-xl text-sm font-bold text-gray-700 transition-colors outline-none">
@@ -49,75 +59,69 @@ export default async function DashboardPage() {
       </div>
 
       {/* Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
-          
-          {/* Row 1: Top Metrics */}
-          <div className="col-span-1 lg:col-span-6 bg-white border border-gray-100 rounded-3xl p-6 flex flex-col justify-between min-h-[200px]">
-              <div className="flex justify-between items-center h-11 mb-0 -mt-2.5">
-                  <div className="flex items-center gap-2">
-                      <h3 className="text-base font-medium text-gray-400">Product overview</h3>
-                      <Info strokeWidth={1.5} className="w-4 h-4 text-gray-300" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 px-5 pb-10">
+
+          {/* Left Column: Quick Actions */}
+          <div className="col-span-1 lg:col-span-6 bg-white border border-gray-100 rounded-3xl p-6 flex flex-col justify-between h-full">
+              <div>
+                  <div className="flex justify-between items-center h-11 mb-4 -mt-2.5">
+                      <div className="flex items-center gap-2">
+                          <h3 className="text-base font-medium text-gray-400">Quick actions</h3>
+                          <Info strokeWidth={1.5} className="w-4 h-4 text-gray-300" />
+                      </div>
                   </div>
-                  <button className="flex items-center gap-1 h-11 bg-gray-50 hover:bg-gray-100 rounded-xl px-4 text-sm font-bold text-gray-700 transition-colors outline-none">
-                      This month
-                      <ChevronDown strokeWidth={2} className="w-3.5 h-3.5 text-gray-400" />
-                  </button>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                      {[
+                          { label: 'Manage menu', icon: LayoutDashboard, desc: 'Update items & prices' },
+                          { label: 'Daily Reconciliation', icon: BarChart3, desc: 'End-of-day reports' },
+                          { label: 'Open terminal', icon: Plus, desc: 'Quickly open POS' },
+                          { label: 'Staff roster', icon: Users, desc: 'View shift schedules' }
+                      ].map((action, i) => (
+                          <button key={i} className="group relative flex flex-col items-start gap-3 p-4 bg-gray-50/50 hover:bg-[#DDF853] rounded-3xl transition-all duration-300 text-left outline-none border border-transparent hover:border-[#DDF853]/20 overflow-hidden">
+                              <div className="flex w-full justify-between items-start">
+                                  <div className="p-2 bg-white rounded-xl shadow-sm group-hover:bg-black/5 transition-colors">
+                                      <action.icon className="w-5 h-5 text-gray-900" />
+                                  </div>
+                                  <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-black transition-colors" />
+                              </div>
+                              <div>
+                                  <div className="text-body font-bold text-gray-900">{action.label}</div>
+                              </div>
+                          </button>
+                      ))}
+                  </div>
               </div>
-              <div className="flex items-baseline gap-1.5 -mt-2">
-                  <span className="text-3xl font-normal text-gray-400">Br.</span>
-                  <span className="text-3xl font-bold text-black">43,630</span>
-                  <span className="text-sm font-medium text-gray-400 ml-2">Total sales</span>
-              </div>
-              <div className="flex flex-col gap-4 mt-auto">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-400">Select by product</span>
-                    <span className="text-sm font-medium text-gray-400">New sales: <span className="text-gray-900 font-semibold">453</span> <ChevronDown strokeWidth={2} className="inline w-3.5 h-3.5 ml-0.5" /></span>
-                </div>
-                <div className="flex gap-1">
-                    <button className="flex-1 h-11 bg-brand-accent text-gray-900 rounded-xl px-4 flex items-center justify-between text-xs font-bold shadow-sm transition-transform hover:scale-[0.99] active:scale-[0.97] outline-none relative overflow-hidden group">
-                        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,rgba(255,255,255,1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,1)_50%,rgba(255,255,255,1)_75%,transparent_75%,transparent)] bg-size-[4px_4px]"></div>
-                        <span className="relative z-10">Gebeta Food</span>
-                        <div className="relative z-10 w-4 h-4 rounded-full bg-black/5 flex items-center justify-center">
-                            <Info strokeWidth={2.5} className="w-2.5 h-2.5 text-black" />
-                        </div>
-                    </button>
-                    <button className="flex-1 h-11 bg-brand-accent/20 text-gray-700/60 rounded-xl px-4 flex items-center justify-between text-xs font-bold hover:bg-brand-accent/30 transition-all active:scale-[0.97] outline-none relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,rgba(255,255,255,1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,1)_50%,rgba(255,255,255,1)_75%,transparent_75%,transparent)] bg-size-[4px_4px]"></div>
-                        <span className="relative z-10">Table Service</span>
-                        <div className="relative z-10 w-4 h-4 rounded-full bg-gray-400/10 flex items-center justify-center">
-                            <Info strokeWidth={2.5} className="w-2.5 h-2.5 text-gray-400" />
-                        </div>
-                    </button>
-                    <button className="flex-1 h-11 bg-brand-accent/[0.07] text-gray-400 rounded-xl px-4 flex items-center justify-between text-xs font-bold hover:bg-brand-accent/12 transition-all active:scale-[0.97] outline-none relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(45deg,rgba(255,255,255,1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,1)_50%,rgba(255,255,255,1)_75%,transparent_75%,transparent)] bg-size-[4px_4px]"></div>
-                        <span className="relative z-10 truncate">Delivery</span>
-                        <div className="relative z-10 w-4 h-4 rounded-full bg-gray-400/5 flex items-center justify-center">
-                            <Info strokeWidth={2.5} className="w-2.5 h-2.5 text-gray-300" />
-                        </div>
-                    </button>
-                </div>
+
+              <div className="mt-6">
+                <button className="w-full h-12 flex items-center justify-between gap-1.5 rounded-xl bg-[#DDF853] px-6 text-body-sm leading-[21px] font-bold text-black transition-all hover:brightness-105 active:scale-[0.98] group">
+                    View all activities
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </button>
               </div>
           </div>
 
-          {/* Combined Sales & Revenue Card */}
-          <div className="col-span-1 lg:col-span-6 bg-white border border-gray-100 rounded-3xl flex flex-col min-h-[200px]">
+          {/* Right Column: Metrics Stack */}
+          <div className="col-span-1 lg:col-span-6 flex flex-col gap-6">
+              {/* Combined Sales & Revenue Card */}
+              <div className="bg-white border border-gray-100 rounded-3xl flex flex-col min-h-[200px]">
               <div className="flex flex-1">
                   {/* Active Sales Half */}
                   <div className="flex-1 p-6 flex flex-col border-r border-gray-50">
                       <div>
                           <div className="flex items-center gap-2 h-11 mb-0 -mt-2.5">
-                              <h3 className="text-base font-medium text-gray-400">Active sales</h3>
+                              <h3 className="text-base font-medium text-gray-400">Net Sales</h3>
                               <Info strokeWidth={1.5} className="w-4 h-4 text-gray-300" />
                           </div>
-                          
+
                           <div className="flex justify-between items-end">
                               <div className="flex flex-col gap-2">
-                                  <div className="flex items-baseline gap-1.5 -mt-2">
-                                    <span className="text-3xl font-normal text-gray-400">Br.</span>
-                                    <span className="text-3xl font-bold text-black">27,064</span>
-                                  </div>
+                                   <div className="flex items-baseline gap-1.5 -mt-2">
+                                       <span className="text-3xl font-normal text-gray-400">Br.</span>
+                                       <span className="text-3xl font-bold text-black">27,064</span>
+                                   </div>
                                   <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                                      vs last month
+                                      vs yesterday
                                       <span className="flex items-center gap-0.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-lg text-[10px] font-bold">
                                           <ArrowUp strokeWidth={2.5} className="w-2.5 h-2.5" /> 12%
                                       </span>
@@ -137,39 +141,112 @@ export default async function DashboardPage() {
                   <div className="flex-1 p-6 flex flex-col">
                       <div>
                           <div className="flex items-center gap-2 h-11 mb-0 -mt-2.5">
-                              <h3 className="text-base font-medium text-gray-400">Product Revenue</h3>
+                              <h3 className="text-base font-medium text-gray-400">Total Orders</h3>
                               <Info strokeWidth={1.5} className="w-4 h-4 text-gray-300" />
                           </div>
 
                           <div className="flex justify-between items-end">
                               <div className="flex flex-col gap-2">
-                                  <div className="flex items-baseline gap-1.5 -mt-2">
-                                    <span className="text-3xl font-normal text-gray-400">Br.</span>
-                                    <span className="text-3xl font-bold text-black">16,568</span>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                                      vs last month
+                                   <div className="flex items-baseline gap-1.5 -mt-2">
+                                       <span className="text-3xl font-bold text-black">453</span>
+                                   </div>
+                                   <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                       vs yesterday
                                       <span className="flex items-center gap-0.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-lg text-[10px] font-bold">
                                           <ArrowUp strokeWidth={2.5} className="w-2.5 h-2.5" /> 7%
                                       </span>
                                   </div>
                               </div>
-                              <div className="w-10 h-10 rounded-full border-[4px] border-brand-accent/10 relative">
-                                  <div className="absolute inset-[-4px] rounded-full border-[4px] border-transparent border-t-brand-accent border-r-brand-accent rotate-45"></div>
+                              <div className="w-10 h-10 rounded-full border-4 border-brand-accent/10 relative">
+                                  <div className="absolute -inset-1 rounded-full border-4 border-transparent border-t-brand-accent border-r-brand-accent rotate-45"></div>
                               </div>
                           </div>
                       </div>
                   </div>
               </div>
-              
+
               <div className="flex border-t border-gray-50">
-                  <button className="flex-1 py-3 text-xs font-bold text-gray-400/80 hover:text-gray-900 flex justify-center items-center gap-2 rounded-bl-3xl hover:bg-gray-50 transition-all outline-none border-r border-gray-50 opacity-80 hover:opacity-100">
-                      See details <ArrowRight strokeWidth={2} className="w-3.5 h-3.5" />
+                  <button className="group flex-1 py-3 text-xs font-bold text-gray-900 bg-gray-50/50 flex justify-center items-center gap-2 rounded-bl-3xl hover:bg-gray-100 transition-all outline-none border-r border-gray-50">
+                      See details <ArrowRight strokeWidth={2} className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12" />
                   </button>
-                  <button className="flex-1 py-3 text-xs font-bold text-gray-400/80 hover:text-gray-900 flex justify-center items-center gap-2 rounded-br-3xl hover:bg-gray-50 transition-all outline-none opacity-80 hover:opacity-100">
-                      See details <ArrowRight strokeWidth={2} className="w-3.5 h-3.5" />
+                  <button className="group flex-1 py-3 text-xs font-bold text-gray-900 bg-gray-50/50 flex justify-center items-center gap-2 rounded-br-3xl hover:bg-gray-100 transition-all outline-none">
+                      See details <ArrowRight strokeWidth={2} className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12" />
                   </button>
               </div>
+          </div>
+
+          {/* Product Overview Card */}
+          <div className="bg-white border border-gray-100 rounded-3xl flex flex-col min-h-[200px]">
+              <div className="flex flex-1">
+                  {/* Total Sales Half */}
+                  <div className="flex-1 p-6 flex flex-col border-r border-gray-50">
+                      <div>
+                          <div className="flex items-center gap-2 h-11 mb-0 -mt-2.5">
+                              <h3 className="text-base font-medium text-gray-400">Avg. Guest Spend</h3>
+                              <Info strokeWidth={1.5} className="w-4 h-4 text-gray-300" />
+                          </div>
+
+                          <div className="flex justify-between items-end">
+                              <div className="flex flex-col gap-2">
+                                   <div className="flex items-baseline gap-1.5 -mt-2">
+                                       <span className="text-3xl font-normal text-gray-400">Br.</span>
+                                       <span className="text-3xl font-bold text-black">3,240</span>
+                                   </div>
+                                   <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                       vs yesterday
+                                      <span className="flex items-center gap-0.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+                                          <ArrowUp strokeWidth={2.5} className="w-2.5 h-2.5" /> 14%
+                                      </span>
+                                  </div>
+                              </div>
+                              <div className="flex items-end gap-1.5 h-10">
+                                  <div className="w-2 h-3 bg-brand-accent/30 rounded-t-sm"></div>
+                                  <div className="w-2 h-6 bg-brand-accent/30 rounded-t-sm"></div>
+                                  <div className="w-2 h-9 bg-brand-accent rounded-t-sm"></div>
+                                  <div className="w-2 h-4 bg-brand-accent/30 rounded-t-sm"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Avg Order Value Half */}
+                  <div className="flex-1 p-6 flex flex-col">
+                      <div>
+                          <div className="flex items-center gap-2 h-11 mb-0 -mt-2.5">
+                              <h3 className="text-base font-medium text-gray-400">Labor Cost</h3>
+                              <Info strokeWidth={1.5} className="w-4 h-4 text-gray-300" />
+                          </div>
+
+                          <div className="flex justify-between items-end">
+                              <div className="flex flex-col gap-2">
+                                   <div className="flex items-baseline gap-1.5 -mt-2">
+                                       <span className="text-3xl font-normal text-gray-400">Br.</span>
+                                       <span className="text-3xl font-bold text-black">12,402</span>
+                                   </div>
+                                  <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                      vs yesterday
+                                       <span className="flex items-center gap-0.5 text-red-600 bg-red-50 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+                                           <ArrowDown strokeWidth={2.5} className="w-2.5 h-2.5" /> 5%
+                                      </span>
+                                  </div>
+                              </div>
+                              <div className="w-10 h-10 rounded-full border-4 border-brand-accent/10 relative">
+                                  <div className="absolute -inset-1 rounded-full border-4 border-transparent border-t-brand-accent border-l-brand-accent rotate-12"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <div className="flex border-t border-gray-50">
+                  <button className="group flex-1 py-3 text-xs font-bold text-gray-900 bg-gray-50/50 flex justify-center items-center gap-2 rounded-bl-3xl hover:bg-gray-100 transition-all outline-none border-r border-gray-50">
+                      See details <ArrowRight strokeWidth={2} className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12" />
+                  </button>
+                  <button className="group flex-1 py-3 text-xs font-bold text-gray-900 bg-gray-50/50 flex justify-center items-center gap-2 rounded-br-3xl hover:bg-gray-100 transition-all outline-none">
+                      See details <ArrowRight strokeWidth={2} className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12" />
+                  </button>
+              </div>
+          </div>
           </div>
 
 
@@ -234,23 +311,23 @@ export default async function DashboardPage() {
                       <h3 className="text-lg font-medium text-gray-400">Sales Performance</h3>
                       <Info strokeWidth={1.5} className="w-4 h-4 text-gray-300" />
                   </div>
-                  
+
                   <div className="relative w-full aspect-square grow flex items-center justify-center">
                       <div className="absolute inset-0">
                           <SalesPerformanceChart totalSales={75} averageSales={40} />
                       </div>
-                      
+
                       <div className="absolute inset-0 flex flex-col items-center justify-center pt-36">
                           <div className="flex items-center gap-2">
                               <span className="text-display-2 font-bold text-gray-900">17.9%</span>
-                              <div className="bg-green-500 rounded-full p-1 shadow-sm flex items-center justify-center">
+                              <div className="bg-brand-accent rounded-full p-1 shadow-sm flex items-center justify-center">
                                 <ArrowUp strokeWidth={3} className="w-3.5 h-3.5 text-white" />
                               </div>
                           </div>
                           <span className="text-sm font-medium text-gray-400 mt-1">Since yesterday</span>
                       </div>
                   </div>
-                  
+
                   <div className="mt-8 space-y-4">
                       <div className="flex items-center justify-between text-xs font-bold">
                           <div className="flex items-center gap-3 text-gray-400/80">
