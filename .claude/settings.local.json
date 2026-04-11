@@ -1,6 +1,12 @@
 {
-    "permissions": {
-        "allow": ["mcp__playwright", "Bash(pnpm type-check:*)", "Bash(cd:*)"],
-        "deny": []
-    }
+  "permissions": {
+    "allow": [
+      "mcp__playwright",
+      "Bash(pnpm type-check:*)",
+      "Bash(cd:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm run:*)"
+    ],
+    "deny": []
+  }
 }
