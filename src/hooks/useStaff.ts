@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { toast } from 'react-hot-toast';
 
 export type StaffRole = 'owner' | 'admin' | 'manager' | 'kitchen' | 'waiter' | 'bar' | 'runner';
@@ -28,7 +28,32 @@ export const ROLE_BADGE: Record<string, string> = {
     runner: 'bg-white text-gray-400 border border-gray-100',
 };
 
-export function useStaff(initialData?: StaffMember[]) {
+export interface UseStaffResult {
+    staff: StaffMember[];
+    loading: boolean;
+    error: string | null;
+    activeUpdatingId: string | null;
+    inviteLoading: boolean;
+    inviteUrl: string | null;
+    setInviteUrl: Dispatch<SetStateAction<string | null>>;
+    fetchStaff: () => Promise<void>;
+    handleInvite: (payload: {
+        email: string | null;
+        role: StaffRole;
+        label?: string | null;
+    }) => Promise<boolean>;
+    handleRoleUpdate: (staffId: string, role: StaffRole) => Promise<boolean>;
+    handleActiveToggle: (member: StaffMember) => Promise<boolean>;
+    handleAddPinStaff: (payload: {
+        name: string;
+        role: StaffRole;
+        pin_code: string;
+        assigned_zones?: string[];
+    }) => Promise<boolean>;
+    handleDeleteStaff: (staffId: string) => Promise<boolean>;
+}
+
+export function useStaff(initialData?: StaffMember[]): UseStaffResult {
     const [staff, setStaff] = useState<StaffMember[]>(initialData ?? []);
     const [loading, setLoading] = useState(!initialData);
     const [error, setError] = useState<string | null>(null);

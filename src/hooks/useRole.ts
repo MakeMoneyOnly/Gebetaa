@@ -4,7 +4,15 @@ import { UserRole } from '@/types/models';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
-export function useRole(restaurantId: string | null) {
+export interface UseRoleResult {
+    role: UserRole | null;
+    loading: boolean;
+    user: User | null;
+    restaurantId: string | null;
+    requireRole: (allowedRoles: UserRole[], redirectUrl?: string) => void;
+}
+
+export function useRole(restaurantId: string | null): UseRoleResult {
     const [role, setRole] = useState<UserRole | null>(null);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<User | null>(null);

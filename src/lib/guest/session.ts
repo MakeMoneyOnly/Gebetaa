@@ -151,7 +151,10 @@ export async function createGuestSession(params: CreateSessionParams): Promise<G
             expires_at: expiresAt.toISOString(),
             last_used_at: now.toISOString(),
         })
-        .select()
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, guest_fingerprint, phone, hmac_secret, expires_at, last_used_at, created_at'
+        )
         .single();
 
     if (error) {
@@ -201,9 +204,12 @@ export async function validateSession(token: string): Promise<SessionValidationR
     const supabase = getSupabaseAdmin();
 
     // Fetch the session from database
+    // HIGH-013: Explicit column selection
     const { data: session, error } = await supabase
         .from('guest_sessions')
-        .select('*')
+        .select(
+            'id, restaurant_id, guest_fingerprint, phone, hmac_secret, expires_at, last_used_at, created_at'
+        )
         .eq('id', parsed.sessionId)
         .single();
 
@@ -267,7 +273,10 @@ export async function refreshSession(
             last_used_at: now.toISOString(),
         })
         .eq('id', sessionId)
-        .select()
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, guest_fingerprint, phone, hmac_secret, expires_at, last_used_at, created_at'
+        )
         .single();
 
     if (error || !session) {
@@ -323,9 +332,12 @@ export async function getSessionByFingerprint(
 ): Promise<GuestSession | null> {
     const supabase = getSupabaseAdmin();
 
+    // HIGH-013: Explicit column selection
     const { data: session, error } = await supabase
         .from('guest_sessions')
-        .select('*')
+        .select(
+            'id, restaurant_id, guest_fingerprint, phone, hmac_secret, expires_at, last_used_at, created_at'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('guest_fingerprint', guestFingerprint)
         .gt('expires_at', new Date().toISOString())

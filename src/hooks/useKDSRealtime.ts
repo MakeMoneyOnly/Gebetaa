@@ -211,15 +211,17 @@ export function useKDSRealtime({
                 }
             }
 
-            const order = payload.new;
+            // For DELETE events, payload.new is empty; use payload.old for restaurant_id check
+            const relevantRecord = payload.eventType === 'DELETE' ? payload.old : payload.new;
 
             // Filter by restaurant_id
-            if (order.restaurant_id !== restaurantId) {
+            if (relevantRecord.restaurant_id !== restaurantId) {
                 return;
             }
 
             switch (payload.eventType) {
-                case 'INSERT':
+                case 'INSERT': {
+                    const order = payload.new;
                     onNewOrder?.({
                         id: order.id as string,
                         order_type: 'dine-in',
@@ -228,7 +230,9 @@ export function useKDSRealtime({
                         created_at: order.created_at as string,
                     });
                     break;
-                case 'UPDATE':
+                }
+                case 'UPDATE': {
+                    const order = payload.new;
                     onOrderUpdate?.({
                         id: order.id as string,
                         order_type: 'dine-in',
@@ -237,6 +241,7 @@ export function useKDSRealtime({
                         created_at: order.created_at as string,
                     });
                     break;
+                }
                 case 'DELETE':
                     onOrderDelete?.(payload.old.id as string);
                     break;
@@ -259,13 +264,21 @@ export function useKDSRealtime({
                 }
             }
 
-            const order = payload.new;
+            // For DELETE events, payload.new is empty; use payload.old for restaurant_id check
+            const relevantRecord = payload.eventType === 'DELETE' ? payload.old : payload.new;
 
             // Filter by restaurant_id
-            if (order.restaurant_id !== restaurantId) {
+            if (relevantRecord.restaurant_id !== restaurantId) {
                 return;
             }
 
+            // DELETE events have no payload.new data
+            if (payload.eventType === 'DELETE') {
+                onOrderDelete?.(payload.old.id as string);
+                return;
+            }
+
+            const order = payload.new;
             const provider = order.provider as string;
             const payloadJson = order.payload_json as Record<string, unknown> | null;
             const fulfillmentType = payloadJson?.fulfillment_type as string;
@@ -288,9 +301,6 @@ export function useKDSRealtime({
                         status: order.normalized_status as ExternalOrderStatus,
                         created_at: order.created_at as string,
                     });
-                    break;
-                case 'DELETE':
-                    onOrderDelete?.(payload.old.id as string);
                     break;
             }
         },

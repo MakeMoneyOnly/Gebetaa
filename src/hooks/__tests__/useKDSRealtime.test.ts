@@ -180,10 +180,7 @@ describe('useKDSRealtime', () => {
         }
     });
 
-    // TODO: Fix hook implementation - DELETE events have empty `new` object so restaurant_id filter fails
-    // The hook filters by `order.restaurant_id !== restaurantId` but for DELETE events,
-    // `payload.new` is empty, so `order.restaurant_id` is undefined and the filter returns early.
-    it.skip('should call onOrderDelete callback for DELETE events', async () => {
+    it('should call onOrderDelete callback for DELETE events', async () => {
         const onOrderDelete = vi.fn();
 
         renderHook(() =>
@@ -200,7 +197,6 @@ describe('useKDSRealtime', () => {
 
         const ordersOnCall = mockChannel.on.mock.calls.find(call => call[1]?.table === 'orders');
 
-        // Assert that we found the orders table subscription
         expect(ordersOnCall).toBeDefined();
 
         const payload = {
@@ -208,6 +204,7 @@ describe('useKDSRealtime', () => {
             new: {},
             old: {
                 id: 'order-789',
+                restaurant_id: 'restaurant-123',
             },
             schema: 'public',
             table: 'orders',
