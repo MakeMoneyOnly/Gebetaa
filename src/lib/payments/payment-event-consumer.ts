@@ -56,13 +56,19 @@ export async function processPaymentLifecycleEvent(
     const { data: resolvedPaymentSession } = payload.payment_session_id
         ? ((await admin
               .from('payment_sessions' as string)
-              .select('*')
+              // HIGH-013: Explicit column selection
+              .select(
+                  'id, restaurant_id, order_id, surface, channel, intent_type, status, selected_method, selected_provider, amount, currency, checkout_url, provider_transaction_id, provider_reference, metadata, authorized_at, captured_at, expires_at, created_at, updated_at'
+              )
               .eq('id', payload.payment_session_id)
               .maybeSingle()) as { data: PaymentSessionRow | null })
         : payload.provider_transaction_id
           ? ((await admin
                 .from('payment_sessions' as string)
-                .select('*')
+                // HIGH-013: Explicit column selection
+                .select(
+                    'id, restaurant_id, order_id, surface, channel, intent_type, status, selected_method, selected_provider, amount, currency, checkout_url, provider_transaction_id, provider_reference, metadata, authorized_at, captured_at, expires_at, created_at, updated_at'
+                )
                 .eq('selected_provider', payload.provider)
                 .eq('provider_transaction_id', payload.provider_transaction_id)
                 .order('created_at', { ascending: false })

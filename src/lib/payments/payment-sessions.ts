@@ -179,7 +179,9 @@ export async function createPaymentSession(
             created_by: input.created_by ?? null,
             updated_at: now,
         })
-        .select('*')
+        .select(
+            'id, restaurant_id, order_id, surface, channel, intent_type, status, selected_method, selected_provider, amount, currency, checkout_url, provider_transaction_id, provider_reference, metadata, authorized_at, captured_at, expires_at, created_at, updated_at'
+        )
         .single();
 
     if (error || !data) {
@@ -201,7 +203,9 @@ export async function updatePaymentSession(
             updated_at: new Date().toISOString(),
         })
         .eq('id', paymentSessionId)
-        .select('*')
+        .select(
+            'id, restaurant_id, order_id, surface, channel, intent_type, status, selected_method, selected_provider, amount, currency, checkout_url, provider_transaction_id, provider_reference, metadata, authorized_at, captured_at, expires_at, created_at, updated_at'
+        )
         .single();
 
     if (error || !data) {
@@ -218,7 +222,10 @@ export async function findLatestPaymentSessionForOrder(
 ): Promise<PaymentSessionRecord | null> {
     const { data, error } = await db
         .from('payment_sessions')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, order_id, surface, channel, intent_type, status, selected_method, selected_provider, amount, currency, checkout_url, provider_transaction_id, provider_reference, metadata, authorized_at, captured_at, expires_at, created_at, updated_at'
+        )
         .eq('restaurant_id', restaurantId)
         .eq('order_id', orderId)
         .order('created_at', { ascending: false })

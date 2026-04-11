@@ -208,9 +208,12 @@ export async function verifyOffPremisePayment(
 ): Promise<PaymentVerificationResult> {
     const supabase = await createClient();
 
+    // HIGH-013: Explicit column selection
     const { data: payment, error } = await supabase
         .from('payments')
-        .select('*')
+        .select(
+            'id, restaurant_id, order_id, amount, currency, method, provider, status, provider_reference, tip_amount, metadata, captured_at, created_at'
+        )
         .eq('id', paymentId)
         .maybeSingle();
 
