@@ -24,7 +24,7 @@ export async function fetchReviews(
 ): Promise<{ data: Tables['reviews']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('reviews')
-        .select('*')
+        .select('id, item_id, rating, title, content, author_name, created_at, updated_at')
         .eq('item_id', itemId)
         .order('created_at', { ascending: false })
         .returns<Tables['reviews']['Row'][]>();
@@ -45,7 +45,9 @@ export async function fetchOrdersSince(
 ): Promise<{ data: Tables['orders']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('orders')
-        .select('*')
+        .select(
+            'id, restaurant_id, order_number, table_number, guest_name, guest_phone, status, order_type, subtotal_santim, discount_santim, vat_santim, total_santim, notes, idempotency_key, guest_fingerprint, created_at, updated_at'
+        )
         .eq('restaurant_id', restaurantId)
         .gt('created_at', since)
         .order('created_at', { ascending: false })
@@ -65,7 +67,9 @@ export async function fetchPendingServiceRequests(
 ): Promise<{ data: Tables['service_requests']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('service_requests')
-        .select('*')
+        .select(
+            'id, restaurant_id, table_id, session_id, request_type, status, notes, created_at, updated_at'
+        )
         .eq('restaurant_id', restaurantId)
         .neq('status', 'completed')
         .order('created_at', { ascending: false })
@@ -85,7 +89,9 @@ export async function fetchItemsByCategory(
 ): Promise<{ data: Tables['menu_items']['Row'][] | null; error: Error | null }> {
     return supabase
         .from('menu_items')
-        .select('*')
+        .select(
+            'id, category_id, name, name_am, description, description_am, price_santim, is_available, image_url, station, course, preparation_time_minutes, sort_order, created_at, updated_at'
+        )
         .eq('category_id', categoryId)
         .eq('is_available', true)
         .order('name', { ascending: true })
@@ -107,10 +113,10 @@ export async function fetchRestaurantWithMenu(
         .from('restaurants')
         .select(
             `
-            *,
+            id, name, slug, description, image_url, is_active, default_locale, currency, phone, email, address, created_at, updated_at,
             categories:categories(
-                *,
-                items:menu_items(*)
+                id, name, name_am, order_index, section, is_active, restaurant_id, created_at, updated_at,
+                items:menu_items(id, category_id, name, name_am, description, description_am, price_santim, is_available, image_url, station, course, preparation_time_minutes, sort_order, created_at, updated_at)
             )
         `
         )

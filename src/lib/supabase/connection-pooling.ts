@@ -152,7 +152,13 @@ export async function checkPoolHealth(): Promise<PoolHealthStatus> {
 /**
  * Configuration for Supabase client with connection pooling
  */
-export function getSupabasePoolerConfig() {
+export interface SupabasePoolerConfig {
+    db: { schema: string };
+    auth: { autoRefreshToken: boolean; persistSession: boolean };
+    global: { headers: { 'x-connection-mode': 'transaction' | 'session' } };
+}
+
+export function getSupabasePoolerConfig(): SupabasePoolerConfig {
     const config = getConnectionPoolConfig();
 
     return {
