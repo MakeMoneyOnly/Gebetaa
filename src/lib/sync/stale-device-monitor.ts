@@ -12,6 +12,7 @@
 
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { Alerts, sendWarningAlert } from '@/lib/monitoring/alerts';
+import { logger } from '@/lib/logger';
 
 /**
  * Configuration for stale device detection
@@ -108,7 +109,9 @@ export async function findStaleDevices(config: StaleDeviceConfig = DEFAULT_CONFI
         .limit(config.maxDevicesPerRun);
 
     if (error) {
-        console.error('[stale-device-monitor] Error querying devices:', error);
+        logger.error('[stale-device-monitor] Error querying devices', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return { warning: [], critical: [] };
     }
 

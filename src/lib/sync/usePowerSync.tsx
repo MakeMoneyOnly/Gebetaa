@@ -16,6 +16,7 @@ import React, {
     type ReactNode,
 } from 'react';
 import { initPowerSync, type PowerSyncDatabase } from './powersync-config';
+import { logger } from '@/lib/logger';
 
 // Use unknown since @powersync/core types may not be available yet
 type PowerSyncDb = PowerSyncDatabase | null;
@@ -73,7 +74,9 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
                     setIsInitialized(true);
                 }
             } catch (err) {
-                console.error('[PowerSync] Failed to initialize:', err);
+                logger.error('[PowerSync] Failed to initialize', {
+                    error: err instanceof Error ? err.message : String(err),
+                });
                 setError(err instanceof Error ? err : new Error(String(err)));
             }
         }

@@ -181,7 +181,9 @@ export async function createOfflineOrder(
 
         return { success: true, order: order! };
     } catch (error) {
-        console.error('[OrderSync] Failed to create offline order:', error);
+        logger.error('[OrderSync] Failed to create offline order', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return { success: false, error: String(error) };
     }
 }
@@ -245,7 +247,9 @@ export async function updateOfflineOrderStatus(
 
         return true;
     } catch (error) {
-        console.error('[OrderSync] Failed to update order status:', error);
+        logger.error('[OrderSync] Failed to update order status', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return false;
     }
 }
@@ -270,7 +274,9 @@ export async function deleteOfflineOrder(orderId: string): Promise<boolean> {
 
         return true;
     } catch (error) {
-        console.error('[OrderSync] Failed to delete order:', error);
+        logger.error('[OrderSync] Failed to delete order', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return false;
     }
 }

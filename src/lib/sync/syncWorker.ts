@@ -11,6 +11,8 @@ import {
     markSyncOperationFailed,
     getSyncQueueStatus,
 } from './idempotency';
+import { logger } from '@/lib/logger';
+import { handleSyncConflict, detectConflict, reconcileWithServer } from './conflict-resolution';
 
 /**
  * Sync operation row type from the database
@@ -123,13 +125,21 @@ const DEFAULT_CONFIG: SyncWorkerConfig = {
 /**
  * Create a sync worker
  */
-export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
+export interface SyncWorker {
+    start: () => void;
+    stop: () => void;
+    syncOnce: () => Promise<SyncProgress>;
+    getStatus: () => Promise<SyncProgress>;
+    readonly isRunning: boolean;
+}
+
+export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}): SyncWorker {
     const cfg = { ...DEFAULT_CONFIG, ...config };
 
     let isRunning = false;
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let lastSyncAt: string | null = null;
-    const conflictsDetected = 0;
+    let conflictsDetected = 0;
 
     /**
      * HIGH-005: Emit sync event for UI updates
@@ -206,9 +216,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
 
             if (!response.ok) {
                 // Batch failed - fall back to individual operations
-                console.warn(
-                    '[SyncWorker] Batch sync failed, falling back to individual operations'
-                );
+                logger.info('Batch sync failed, falling back to individual operations');
                 for (const op of operations) {
                     const result = await executeSyncOperation(op);
                     results.set(op.id, result);
@@ -216,6 +224,13 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                         succeeded++;
                     } else {
                         failed++;
+                    }
+                    if (result.conflict) {
+                        emitEvent('sync:conflict', {
+                            operationId: op.id,
+                            tableName: op.table_name,
+                            recordId: op.record_id,
+                        });
                     }
                 }
                 return { succeeded, failed, results };
@@ -235,13 +250,21 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                         } else {
                             failed++;
                         }
+                        if (result.conflict || result.error?.includes('conflict')) {
+                            conflictsDetected++;
+                            emitEvent('sync:conflict', {
+                                operationId: op.id,
+                                tableName: op.table_name,
+                                recordId: op.record_id,
+                            });
+                        }
                     }
                 }
             }
 
             return { succeeded, failed, results };
         } catch (error) {
-            console.error('[SyncWorker] Batch sync error:', error);
+            logger.error('Batch sync error', error);
             // Fall back to individual operations
             for (const op of operations) {
                 const result = await executeSyncOperation(op);
@@ -250,6 +273,13 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                     succeeded++;
                 } else {
                     failed++;
+                }
+                if (result.conflict) {
+                    emitEvent('sync:conflict', {
+                        operationId: op.id,
+                        tableName: op.table_name,
+                        recordId: op.record_id,
+                    });
                 }
             }
             return { succeeded, failed, results };
@@ -261,11 +291,11 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
      */
     async function executeSyncOperation(
         op: SyncOperationRow
-    ): Promise<{ success: boolean; error?: string }> {
+    ): Promise<{ success: boolean; error?: string; conflict?: boolean }> {
         const endpoint = SYNC_ENDPOINTS[op.table_name];
 
         if (!endpoint) {
-            console.warn(`[SyncWorker] No endpoint configured for table: ${op.table_name}`);
+            logger.info('No endpoint configured for table', { tableName: op.table_name });
             return { success: false, error: `Unknown table: ${op.table_name}` };
         }
 
@@ -289,12 +319,41 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                 body: method !== 'DELETE' ? op.payload : undefined,
             });
 
+            const responseData = (await response.json().catch(() => ({}))) as {
+                error?: { message?: string } | string;
+                data?: Record<string, unknown>;
+            };
+
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
+                if (response.status === 409) {
+                    conflictsDetected++;
+                    return {
+                        success: false,
+                        error: `Conflict detected for ${op.table_name}/${op.record_id}`,
+                        conflict: true,
+                    };
+                }
+                const errorMessage =
+                    typeof responseData.error === 'object'
+                        ? responseData.error?.message || `HTTP ${response.status}`
+                        : responseData.error || `HTTP ${response.status}`;
                 return {
                     success: false,
-                    error: errorData.error?.message || errorData.error || `HTTP ${response.status}`,
+                    error: errorMessage,
                 };
+            }
+
+            // HIGH-006: Reconcile local data with server response
+            if (responseData?.data && method !== 'DELETE') {
+                try {
+                    await reconcileWithServer({
+                        entityType: op.table_name,
+                        entityId: op.record_id,
+                        serverData: responseData.data,
+                    });
+                } catch {
+                    // Reconciliation failure is non-critical - the sync succeeded
+                }
             }
 
             return { success: true };
@@ -321,7 +380,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
             return { processed: 0, succeeded: 0, failed: 0 };
         }
 
-        console.warn(`[SyncWorker] Processing ${operations.length} operations via batch sync`);
+        logger.info('Processing operations via batch sync', { count: operations.length });
 
         // Use batch sync for efficiency
         const { succeeded, failed, results } = await executeBatchSync(operations);
@@ -341,6 +400,75 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         }
 
         return { processed: operations.length, succeeded, failed };
+    }
+
+    /**
+     * HIGH-006: Process detected conflicts using the conflict resolution engine
+     */
+    async function processConflicts(
+        operations: SyncOperationRow[]
+    ): Promise<{ resolved: number; failed: number }> {
+        let resolved = 0;
+        let failed = 0;
+
+        for (const op of operations) {
+            try {
+                const endpoint = SYNC_ENDPOINTS[op.table_name];
+                if (!endpoint) continue;
+
+                const response = await fetch(`${endpoint}/${op.record_id}`, {
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!response.ok) continue;
+
+                const serverResult = (await response.json()) as {
+                    data?: Record<string, unknown>;
+                    version?: number;
+                } & Record<string, unknown>;
+                const serverRecord = serverResult?.data ?? serverResult;
+
+                if (!serverRecord || !serverRecord.version) continue;
+
+                const result = await handleSyncConflict({
+                    entityType: op.table_name,
+                    entityId: op.record_id,
+                    clientData: {
+                        version: op.attempts || 0,
+                        last_modified: op.created_at,
+                        ...((): Record<string, unknown> => {
+                            try {
+                                return JSON.parse(op.payload) as Record<string, unknown>;
+                            } catch {
+                                return {};
+                            }
+                        })(),
+                    },
+                    serverData: serverRecord as Record<string, unknown> & {
+                        version: number;
+                        last_modified: string;
+                    },
+                });
+
+                if (result.resolved) {
+                    resolved++;
+                    logger.info('[SyncWorker] Conflict resolved', {
+                        operationId: op.id,
+                        entityType: op.table_name,
+                    });
+                } else {
+                    failed++;
+                }
+            } catch (error) {
+                failed++;
+                logger.error('[SyncWorker] Conflict resolution failed', {
+                    operationId: op.id,
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        }
+
+        return { resolved, failed };
     }
 
     /**
@@ -364,9 +492,12 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
             const retryCount = op.attempts || 0;
 
             try {
-                console.warn(
-                    `[SyncWorker] Processing ${op.operation} on ${op.table_name}/${op.record_id} (attempt ${retryCount + 1})`
-                );
+                logger.info('Processing sync operation', {
+                    operation: op.operation,
+                    table: op.table_name,
+                    recordId: op.record_id,
+                    attempt: retryCount + 1,
+                });
 
                 // HIGH-013: Execute actual API call
                 const result = await executeSyncOperation(op);
@@ -374,14 +505,17 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                 if (result.success) {
                     await markSyncOperationCompleted(op.id);
                     succeeded++;
-                    console.warn(`[SyncWorker] Successfully synced operation ${op.id}`);
+                    logger.info('Successfully synced operation', { operationId: op.id });
                 } else {
                     // Check if we should retry
                     if (retryCount < MAX_RETRIES) {
                         const delay = calculateBackoffDelay(retryCount);
-                        console.warn(
-                            `[SyncWorker] Operation ${op.id} failed, scheduling retry ${retryCount + 1}/${MAX_RETRIES} in ${delay}ms`
-                        );
+                        logger.info('Operation failed, scheduling retry', {
+                            operationId: op.id,
+                            retry: retryCount + 1,
+                            maxRetries: MAX_RETRIES,
+                            delay,
+                        });
 
                         // Schedule retry with exponential backoff
                         setTimeout(async () => {
@@ -391,9 +525,11 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
 
                         failed++;
                     } else {
-                        console.error(
-                            `[SyncWorker] Operation ${op.id} failed after ${MAX_RETRIES} retries: ${result.error}`
-                        );
+                        logger.error('Operation failed after max retries', {
+                            operationId: op.id,
+                            maxRetries: MAX_RETRIES,
+                            error: result.error,
+                        });
                         await markSyncOperationFailed(
                             op.id,
                             result.error || 'Max retries exceeded'
@@ -403,7 +539,10 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
                     }
                 }
             } catch (error) {
-                console.error(`[SyncWorker] Unexpected error for operation ${op.id}:`, error);
+                logger.error('Unexpected error for operation', {
+                    operationId: op.id,
+                    error,
+                });
                 await markSyncOperationFailed(op.id, String(error));
                 failed++;
                 cfg.onError?.(new Error(String(error)));
@@ -450,12 +589,12 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
      */
     async function syncOnce(): Promise<SyncProgress> {
         if (!navigator.onLine) {
-            console.warn('[SyncWorker] Offline - skipping sync');
+            logger.info('Offline - skipping sync');
             emitEvent('sync:offline', { reason: 'navigator.offline' });
             return getStatus();
         }
 
-        console.warn('[SyncWorker] Starting sync cycle');
+        logger.info('Starting sync cycle');
         emitEvent('sync:start', { timestamp: new Date().toISOString() });
 
         try {
@@ -486,9 +625,10 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
             const status = await getStatus();
             cfg.onSyncProgress?.(status);
 
-            console.warn(
-                `[SyncWorker] Sync complete: ${syncResult.succeeded} succeeded, ${syncResult.failed} failed`
-            );
+            logger.info('Sync complete', {
+                succeeded: syncResult.succeeded,
+                failed: syncResult.failed,
+            });
 
             emitEvent('sync:complete', {
                 succeeded: syncResult.succeeded,
@@ -500,7 +640,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
             return status;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error('[SyncWorker] Sync error:', errorMessage);
+            logger.error('Sync error', errorMessage);
 
             emitEvent('sync:error', {
                 error: errorMessage,
@@ -525,7 +665,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         // Run immediately on start
         syncOnce();
 
-        console.warn('[SyncWorker] Started');
+        logger.info('SyncWorker started');
     }
 
     /**
@@ -540,7 +680,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}) {
         }
 
         isRunning = false;
-        console.warn('[SyncWorker] Stopped');
+        logger.info('SyncWorker stopped');
     }
 
     return {
@@ -562,7 +702,7 @@ let syncWorker: ReturnType<typeof createSyncWorker> | null = null;
 /**
  * Get the sync worker instance
  */
-export function getSyncWorker() {
+export function getSyncWorker(): SyncWorker {
     if (!syncWorker) {
         syncWorker = createSyncWorker();
     }
@@ -572,7 +712,7 @@ export function getSyncWorker() {
 /**
  * Start the global sync worker
  */
-export function startGlobalSync() {
+export function startGlobalSync(): void {
     const worker = getSyncWorker();
     worker.start();
 }
@@ -580,7 +720,7 @@ export function startGlobalSync() {
 /**
  * Stop the global sync worker
  */
-export function stopGlobalSync() {
+export function stopGlobalSync(): void {
     const worker = getSyncWorker();
     worker.stop();
 }

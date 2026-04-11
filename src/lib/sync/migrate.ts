@@ -7,6 +7,7 @@
 
 import { getPowerSync } from './powersync-config';
 import { generateIdempotencyKey } from './idempotency';
+import { logger } from '@/lib/logger';
 
 // Import Dexie types for migration (if Dexie is still installed)
 
@@ -255,8 +256,10 @@ export async function clearLegacyStorage(): Promise<void> {
         // Clear waiter context (session-specific, but clear anyway)
         localStorage.removeItem('gebata_waiter_context');
 
-        console.warn('[Migration] Legacy storage cleared');
+        logger.warn('[Migration] Legacy storage cleared');
     } catch (error) {
-        console.error('[Migration] Failed to clear legacy storage:', error);
+        logger.error('[Migration] Failed to clear legacy storage', {
+            error: error instanceof Error ? error.message : String(error),
+        });
     }
 }

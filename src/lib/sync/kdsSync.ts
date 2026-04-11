@@ -92,7 +92,9 @@ export async function createKdsItem(
         const item = await getKdsItem(kdsId);
         return item;
     } catch (error) {
-        console.error('[KdsSync] Failed to create KDS item:', error);
+        logger.error('[KdsSync] Failed to create KDS item', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return null;
     }
 }
@@ -228,7 +230,9 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
 
         return true;
     } catch (error) {
-        console.error('[KdsSync] Failed to execute KDS action:', error);
+        logger.error('[KdsSync] Failed to execute KDS action', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return false;
     }
 }

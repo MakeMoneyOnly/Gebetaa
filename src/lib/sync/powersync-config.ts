@@ -9,6 +9,8 @@
  * - POWERSYNC_API_KEY: API key for PowerSync authentication
  */
 
+import { logger } from '@/lib/logger';
+
 // Define types locally to avoid dependency on @powersync packages
 // These will be replaced with actual imports when packages are installed
 interface PowerSyncDatabase {
@@ -174,7 +176,7 @@ export function getPowerSyncConfig(): PowerSyncConfig {
     const apiKey = process.env.POWERSYNC_API_KEY;
 
     if (!endpoint || !apiKey) {
-        console.warn('[PowerSync] Missing configuration - running in offline-only mode');
+        logger.warn('[PowerSync] Missing configuration - running in offline-only mode');
         return {
             endpoint: '',
             apiKey: '',
@@ -212,7 +214,7 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
     const config = getPowerSyncConfig();
 
     if (!config.endpoint || !config.apiKey) {
-        console.warn('[PowerSync] Not configured - offline mode only');
+        logger.warn('[PowerSync] Not configured - offline mode only');
         return null;
     }
 
@@ -238,7 +240,7 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
         }
 
         if (!webModule || !reactModule) {
-            console.warn('[PowerSync] Packages not available - running in offline-only mode');
+            logger.warn('[PowerSync] Packages not available - running in offline-only mode');
             return null;
         }
 
@@ -253,13 +255,15 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
         });
 
         if (config.debug) {
-            console.warn('[PowerSync] Database initialized successfully');
+            logger.info('[PowerSync] Database initialized successfully');
         }
 
         return powerSyncDb;
     } catch (error) {
         // Packages not installed yet - run in offline-only mode
-        console.warn('[PowerSync] Packages not available - running in offline-only mode:', error);
+        logger.warn('[PowerSync] Packages not available - running in offline-only mode', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return null;
     }
 }

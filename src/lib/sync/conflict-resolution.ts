@@ -53,10 +53,11 @@ export interface SyncConflictLog {
 const ENTITY_STRATEGIES: Record<string, ConflictStrategy> = {
     orders: 'last_write_wins',
     order_items: 'last_write_wins',
-    kds_items: 'server_wins', // KDS status should reflect actual kitchen state
-    menu_items: 'server_wins', // Menu changes should come from server
+    kds_items: 'server_wins',
+    menu_items: 'server_wins',
     tables: 'last_write_wins',
     guests: 'last_write_wins',
+    payments: 'server_wins',
 };
 
 /**
@@ -418,4 +419,106 @@ export async function batchResolveConflicts(
     });
 
     return { resolved, failed, errors };
+}
+
+/**
+ * Reconcile local data with server data after a successful sync.
+ * Updates the local PowerSync record with the server's current version
+ * to prevent future false conflicts.
+ *
+ * HIGH-006: Server reconciliation on sync completion
+ */
+export async function reconcileWithServer(params: {
+    entityType: string;
+    entityId: string;
+    serverData: Record<string, unknown>;
+}): Promise<{ success: boolean; error?: string }> {
+    const db = getPowerSync();
+    if (!db) {
+        return { success: false, error: 'PowerSync not initialized' };
+    }
+
+    try {
+        const { entityType, entityId, serverData } = params;
+        const now = new Date().toISOString();
+
+        const tableMap: Record<string, string> = {
+            orders: 'orders',
+            order_items: 'order_items',
+            kds_items: 'kds_items',
+            kds_order_items: 'kds_items',
+            menu_items: 'menu_items',
+            tables: 'tables',
+            guests: 'guests',
+            payments: 'payments',
+        };
+
+        const tableName = tableMap[entityType];
+        if (!tableName) {
+            logger.warn('[ConflictResolution] Unknown entity type for reconciliation', {
+                entityType,
+            });
+            return { success: false, error: `Unknown entity type: ${entityType}` };
+        }
+
+        const excludedFields = ['id', 'created_at', 'restaurant_id'];
+        const updateFields: string[] = [];
+        const updateValues: unknown[] = [];
+
+        for (const [key, value] of Object.entries(serverData)) {
+            if (excludedFields.includes(key)) continue;
+            updateFields.push(`${key} = ?`);
+            updateValues.push(value);
+        }
+
+        if (updateFields.length === 0) {
+            return { success: true };
+        }
+
+        if (serverData.version !== undefined) {
+            const versionIdx = updateFields.findIndex(f => f.startsWith('version'));
+            if (versionIdx >= 0) {
+                updateValues[versionIdx] = serverData.version;
+            } else {
+                updateFields.push('version = ?');
+                updateValues.push(serverData.version);
+            }
+        }
+
+        const lastModIdx = updateFields.findIndex(f => f.startsWith('last_modified'));
+        if (lastModIdx >= 0) {
+            updateValues[lastModIdx] = serverData.last_modified ?? now;
+        } else {
+            updateFields.push('last_modified = ?');
+            updateValues.push(serverData.last_modified ?? now);
+        }
+
+        updateFields.push('updated_at = ?');
+        updateValues.push(now);
+
+        updateValues.push(entityId);
+
+        await db.execute(
+            `UPDATE ${tableName} SET ${updateFields.join(', ')} WHERE id = ?`,
+            updateValues
+        );
+
+        logger.info('[ConflictResolution] Reconciled with server', {
+            entityType,
+            entityId,
+            fieldsUpdated: updateFields.length,
+        });
+
+        return { success: true };
+    } catch (error) {
+        logger.error('[ConflictResolution] Failed to reconcile with server', {
+            entityType: params.entityType,
+            entityId: params.entityId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        };
+    }
 }

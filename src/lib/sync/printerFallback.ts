@@ -6,6 +6,7 @@
  */
 
 import { getPowerSync } from './powersync-config';
+import { logger } from '@/lib/logger';
 
 /**
  * Printer job status
@@ -72,7 +73,9 @@ export async function createPrintJob(
         const job = await getPrintJob(jobId);
         return job;
     } catch (error) {
-        console.error('[PrinterFallback] Failed to create print job:', error);
+        logger.error('[PrinterFallback] Failed to create print job', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return null;
     }
 }
@@ -135,7 +138,9 @@ export async function startPrintJob(jobId: string): Promise<boolean> {
         );
         return true;
     } catch (error) {
-        console.error('[PrinterFallback] Failed to start print job:', error);
+        logger.error('[PrinterFallback] Failed to start print job', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return false;
     }
 }
@@ -156,7 +161,9 @@ export async function completePrintJob(jobId: string): Promise<boolean> {
         );
         return true;
     } catch (error) {
-        console.error('[PrinterFallback] Failed to complete print job:', error);
+        logger.error('[PrinterFallback] Failed to complete print job', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return false;
     }
 }
@@ -175,7 +182,9 @@ export async function failPrintJob(jobId: string, error: string): Promise<boolea
         ]);
         return true;
     } catch (err) {
-        console.error('[PrinterFallback] Failed to mark print job as failed:', err);
+        logger.error('[PrinterFallback] Failed to mark print job as failed', {
+            error: err instanceof Error ? err.message : String(err),
+        });
         return false;
     }
 }
@@ -194,7 +203,9 @@ export async function retryPrintJob(jobId: string): Promise<boolean> {
         );
         return true;
     } catch (error) {
-        console.error('[PrinterFallback] Failed to retry print job:', error);
+        logger.error('[PrinterFallback] Failed to retry print job', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return false;
     }
 }

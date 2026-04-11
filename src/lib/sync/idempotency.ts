@@ -6,6 +6,7 @@
  */
 
 import { getPowerSync } from './powersync-config';
+import { logger } from '@/lib/logger';
 
 /**
  * Generate a unique idempotency key
@@ -64,7 +65,7 @@ export async function queueSyncOperation(
 ): Promise<string> {
     const db = getPowerSync();
     if (!db) {
-        console.warn('[SyncQueue] PowerSync not initialized');
+        logger.warn('[SyncQueue] PowerSync not initialized');
         return '';
     }
 

@@ -30,6 +30,13 @@ vi.mock('../idempotency', () => ({
     getSyncQueueStatus: vi.fn(),
 }));
 
+// Mock the conflict-resolution module
+vi.mock('../conflict-resolution', () => ({
+    handleSyncConflict: vi.fn(),
+    detectConflict: vi.fn(),
+    reconcileWithServer: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -637,6 +644,169 @@ describe('SyncWorker', () => {
             expect(events.some(e => e.type === 'sync:start')).toBe(true);
             expect(events.some(e => e.type === 'operation:success')).toBe(true);
             expect(events.some(e => e.type === 'sync:complete')).toBe(true);
+        });
+    });
+
+    describe('conflict detection', () => {
+        it('should detect conflict from batch sync response', async () => {
+            const mockOperations = [
+                {
+                    id: 1,
+                    operation: 'INSERT',
+                    table_name: 'orders',
+                    record_id: 'order-1',
+                    payload: JSON.stringify({ restaurant_id: 'rest-1' }),
+                    idempotency_key: 'key-1',
+                    attempts: 0,
+                    last_error: null,
+                    created_at: new Date().toISOString(),
+                },
+            ];
+
+            mockedGetPendingSyncOperations.mockResolvedValue(mockOperations);
+
+            mockFetch.mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    data: {
+                        results: [{ success: false, conflict: true, error: 'Version mismatch' }],
+                    },
+                }),
+            });
+
+            const onSyncEvent = vi.fn();
+            worker = createSyncWorker({ onSyncEvent });
+            await worker.syncOnce();
+
+            expect(onSyncEvent).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'sync:conflict',
+                })
+            );
+        });
+
+        it('should detect conflict from HTTP 409 response', async () => {
+            const mockOperations = [
+                {
+                    id: 1,
+                    operation: 'UPDATE',
+                    table_name: 'orders',
+                    record_id: 'order-1',
+                    payload: JSON.stringify({ restaurant_id: 'rest-1' }),
+                    idempotency_key: 'key-1',
+                    attempts: 0,
+                    last_error: null,
+                    created_at: new Date().toISOString(),
+                },
+            ];
+
+            mockedGetPendingSyncOperations.mockResolvedValue(mockOperations);
+
+            mockFetch
+                .mockResolvedValueOnce({
+                    ok: false,
+                    status: 500,
+                })
+                .mockResolvedValueOnce({
+                    ok: false,
+                    status: 409,
+                    json: async () => ({ error: { message: 'Conflict' } }),
+                });
+
+            const onSyncEvent = vi.fn();
+            worker = createSyncWorker({ onSyncEvent });
+            await worker.syncOnce();
+
+            expect(onSyncEvent).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: 'sync:conflict',
+                })
+            );
+        });
+
+        it('should include conflictsDetected in sync:complete event', async () => {
+            const mockOperations = [
+                {
+                    id: 1,
+                    operation: 'INSERT',
+                    table_name: 'orders',
+                    record_id: 'order-1',
+                    payload: JSON.stringify({ restaurant_id: 'rest-1' }),
+                    idempotency_key: 'key-1',
+                    attempts: 0,
+                    last_error: null,
+                    created_at: new Date().toISOString(),
+                },
+            ];
+
+            mockedGetPendingSyncOperations.mockResolvedValue(mockOperations);
+
+            mockFetch.mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    data: {
+                        results: [{ success: false, conflict: true, error: 'Version mismatch' }],
+                    },
+                }),
+            });
+
+            const onSyncEvent = vi.fn();
+            worker = createSyncWorker({ onSyncEvent });
+            await worker.syncOnce();
+
+            const completeEvent = onSyncEvent.mock.calls.find(
+                (call: Array<SyncEvent>) => call[0].type === 'sync:complete'
+            );
+            expect(completeEvent).toBeDefined();
+            expect(completeEvent![0].data?.conflictsDetected).toBeGreaterThan(0);
+        });
+
+        it('should call reconcileWithServer after successful individual sync', async () => {
+            const mockOperations = [
+                {
+                    id: 1,
+                    operation: 'INSERT',
+                    table_name: 'orders',
+                    record_id: 'order-1',
+                    payload: JSON.stringify({ restaurant_id: 'rest-1' }),
+                    idempotency_key: 'key-1',
+                    attempts: 0,
+                    last_error: null,
+                    created_at: new Date().toISOString(),
+                },
+            ];
+
+            mockedGetPendingSyncOperations.mockResolvedValue(mockOperations);
+
+            // Batch fails, individual succeeds with server data
+            mockFetch
+                .mockResolvedValueOnce({
+                    ok: false,
+                    status: 500,
+                })
+                .mockResolvedValueOnce({
+                    ok: true,
+                    json: async () => ({
+                        data: { id: 'order-1', version: 2, total: 100 },
+                    }),
+                });
+
+            const { reconcileWithServer } = await import('../conflict-resolution');
+            const mockedReconcile = vi.mocked(reconcileWithServer);
+
+            worker = createSyncWorker();
+            await worker.syncOnce();
+
+            expect(mockedReconcile).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    entityType: 'orders',
+                    entityId: 'order-1',
+                    serverData: expect.objectContaining({
+                        id: 'order-1',
+                        version: 2,
+                    }),
+                })
+            );
         });
     });
 });

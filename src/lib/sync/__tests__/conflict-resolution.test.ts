@@ -298,7 +298,9 @@ describe('Conflict Resolution', () => {
 
         it('should do nothing when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { logConflictResolution } = await import('../conflict-resolution');
             await logConflictResolution({
@@ -345,7 +347,9 @@ describe('Conflict Resolution', () => {
 
         it('should return error when PowerSync is not available for logging', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { handleSyncConflict } = await import('../conflict-resolution');
             const result = await handleSyncConflict({
@@ -397,12 +401,18 @@ describe('Conflict Resolution', () => {
             const { getConflictHistory } = await import('../conflict-resolution');
             await getConflictHistory('orders', 'order-123', 5);
 
-            expect(mockGetAllAsync).toHaveBeenCalledWith(expect.any(String), ['orders', 'order-123', 5]);
+            expect(mockGetAllAsync).toHaveBeenCalledWith(expect.any(String), [
+                'orders',
+                'order-123',
+                5,
+            ]);
         });
 
         it('should return empty array when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getConflictHistory } = await import('../conflict-resolution');
             const result = await getConflictHistory('orders', 'order-123');
@@ -432,7 +442,9 @@ describe('Conflict Resolution', () => {
 
         it('should return 0 when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getUnresolvedConflictsCount } = await import('../conflict-resolution');
             const result = await getUnresolvedConflictsCount();
@@ -449,14 +461,30 @@ describe('Conflict Resolution', () => {
                 {
                     entityType: 'orders',
                     entityId: 'order-1',
-                    clientData: { id: 'order-1', version: 1, last_modified: '2024-01-01T10:00:00Z' },
-                    serverData: { id: 'order-1', version: 2, last_modified: '2024-01-01T11:00:00Z' },
+                    clientData: {
+                        id: 'order-1',
+                        version: 1,
+                        last_modified: '2024-01-01T10:00:00Z',
+                    },
+                    serverData: {
+                        id: 'order-1',
+                        version: 2,
+                        last_modified: '2024-01-01T11:00:00Z',
+                    },
                 },
                 {
                     entityType: 'orders',
                     entityId: 'order-2',
-                    clientData: { id: 'order-2', version: 1, last_modified: '2024-01-01T10:00:00Z' },
-                    serverData: { id: 'order-2', version: 2, last_modified: '2024-01-01T11:00:00Z' },
+                    clientData: {
+                        id: 'order-2',
+                        version: 1,
+                        last_modified: '2024-01-01T10:00:00Z',
+                    },
+                    serverData: {
+                        id: 'order-2',
+                        version: 2,
+                        last_modified: '2024-01-01T11:00:00Z',
+                    },
                 },
             ]);
 
@@ -468,7 +496,9 @@ describe('Conflict Resolution', () => {
         it('should track failed resolutions', async () => {
             // Mock handleSyncConflict to fail by making logConflictResolution fail
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { batchResolveConflicts } = await import('../conflict-resolution');
 
@@ -476,8 +506,16 @@ describe('Conflict Resolution', () => {
                 {
                     entityType: 'orders',
                     entityId: 'order-1',
-                    clientData: { id: 'order-1', version: 1, last_modified: '2024-01-01T10:00:00Z' },
-                    serverData: { id: 'order-1', version: 2, last_modified: '2024-01-01T11:00:00Z' },
+                    clientData: {
+                        id: 'order-1',
+                        version: 1,
+                        last_modified: '2024-01-01T10:00:00Z',
+                    },
+                    serverData: {
+                        id: 'order-1',
+                        version: 2,
+                        last_modified: '2024-01-01T11:00:00Z',
+                    },
                 },
             ]);
 
@@ -485,6 +523,174 @@ describe('Conflict Resolution', () => {
             // So this should resolve successfully
             expect(result.resolved).toBe(1);
             expect(result.failed).toBe(0);
+        });
+    });
+
+    describe('reconcileWithServer', () => {
+        it('should update local record with server data', async () => {
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            const result = await reconcileWithServer({
+                entityType: 'orders',
+                entityId: 'order-123',
+                serverData: {
+                    status: 'completed',
+                    total_santim: 5000,
+                    version: 3,
+                    last_modified: '2024-01-01T12:00:00Z',
+                },
+            });
+
+            expect(result.success).toBe(true);
+            expect(mockExecute).toHaveBeenCalledWith(
+                expect.stringContaining('UPDATE orders SET'),
+                expect.arrayContaining([
+                    'completed',
+                    5000,
+                    3,
+                    '2024-01-01T12:00:00Z',
+                    expect.any(String),
+                    'order-123',
+                ])
+            );
+        });
+
+        it('should return error when PowerSync is not available', async () => {
+            const { getPowerSync } = await import('../powersync-config');
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
+
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            const result = await reconcileWithServer({
+                entityType: 'orders',
+                entityId: 'order-123',
+                serverData: { version: 2 },
+            });
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('PowerSync not initialized');
+        });
+
+        it('should return error for unknown entity type', async () => {
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            const result = await reconcileWithServer({
+                entityType: 'unknown_entity',
+                entityId: 'entity-123',
+                serverData: { version: 2 },
+            });
+
+            expect(result.success).toBe(false);
+            expect(result.error).toContain('Unknown entity type');
+        });
+
+        it('should exclude id, created_at, and restaurant_id from SET fields', async () => {
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            await reconcileWithServer({
+                entityType: 'orders',
+                entityId: 'order-123',
+                serverData: {
+                    id: 'new-id',
+                    created_at: '2024-01-01T00:00:00Z',
+                    restaurant_id: 'rest-new',
+                    status: 'pending',
+                    version: 2,
+                },
+            });
+
+            const sql = mockExecute.mock.calls[0][0] as string;
+            const setClause = sql.split('WHERE')[0];
+            expect(setClause).not.toContain('id = ?');
+            expect(setClause).not.toContain('created_at = ?');
+            expect(setClause).not.toContain('restaurant_id = ?');
+            expect(setClause).toContain('status = ?');
+        });
+
+        it('should always set last_modified and updated_at', async () => {
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            await reconcileWithServer({
+                entityType: 'orders',
+                entityId: 'order-123',
+                serverData: {
+                    status: 'preparing',
+                    version: 5,
+                    last_modified: '2024-06-01T10:00:00Z',
+                },
+            });
+
+            const sql = mockExecute.mock.calls[0][0] as string;
+            expect(sql).toContain('last_modified = ?');
+            expect(sql).toContain('updated_at = ?');
+        });
+
+        it('should use current timestamp when serverData.last_modified is absent', async () => {
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            await reconcileWithServer({
+                entityType: 'orders',
+                entityId: 'order-123',
+                serverData: {
+                    status: 'preparing',
+                    version: 2,
+                },
+            });
+
+            const callArgs = mockExecute.mock.calls[0];
+            const values = callArgs[1] as unknown[];
+            const lastModIdx = (callArgs[0] as string)
+                .split(', ')
+                .findIndex(f => f.startsWith('last_modified'));
+            expect(lastModIdx).toBeGreaterThanOrEqual(0);
+            expect(new Date(values[lastModIdx] as string).getTime()).not.toBeNaN();
+        });
+
+        it('should return success with no-op when no updatable fields', async () => {
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            const result = await reconcileWithServer({
+                entityType: 'orders',
+                entityId: 'order-123',
+                serverData: {
+                    id: 'order-123',
+                    created_at: '2024-01-01T00:00:00Z',
+                    restaurant_id: 'rest-1',
+                },
+            });
+
+            expect(result.success).toBe(true);
+            expect(mockExecute).not.toHaveBeenCalled();
+        });
+
+        it('should map kds_order_items to kds_items table', async () => {
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            await reconcileWithServer({
+                entityType: 'kds_order_items',
+                entityId: 'kds-123',
+                serverData: { status: 'ready', version: 2 },
+            });
+
+            const sql = mockExecute.mock.calls[0][0] as string;
+            expect(sql).toContain('UPDATE kds_items SET');
+        });
+
+        it('should handle database errors gracefully', async () => {
+            mockExecute.mockRejectedValueOnce(new Error('Database locked'));
+
+            const { reconcileWithServer } = await import('../conflict-resolution');
+
+            const result = await reconcileWithServer({
+                entityType: 'orders',
+                entityId: 'order-123',
+                serverData: { status: 'pending', version: 2 },
+            });
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Database locked');
         });
     });
 });
