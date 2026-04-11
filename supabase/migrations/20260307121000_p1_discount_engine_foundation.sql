@@ -1,3 +1,14 @@
+-- ============================================================================
+-- P1 Discount Engine Foundation
+-- Date: 2026-03-07
+-- Purpose: Creates the discounts table with RLS policies (staff read, manager write),
+--          and adds discount_id and discount_amount columns to the orders table.
+-- Impact: public.discounts (new table), public.orders (discount_id, discount_amount columns)
+-- Rollback: DROP TABLE IF EXISTS public.discounts;
+--           ALTER TABLE public.orders DROP COLUMN IF EXISTS discount_id;
+--           ALTER TABLE public.orders DROP COLUMN IF EXISTS discount_amount;
+-- ============================================================================
+
 create table if not exists public.discounts (
     id uuid primary key default gen_random_uuid(),
     restaurant_id uuid not null references public.restaurants(id) on delete cascade,

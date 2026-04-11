@@ -1,3 +1,15 @@
+-- ============================================================================
+-- Enterprise Device OTA Status
+-- Date: 2026-04-03
+-- Purpose: Adds over-the-air update tracking columns to hardware_devices for fleet
+--          management via Esper, including target version, OTA status, and timestamps.
+-- Impact: public.hardware_devices (target_app_version, ota_status, ota_requested_at,
+--         ota_completed_at, ota_error columns + ota_status_check constraint)
+-- Rollback: ALTER TABLE public.hardware_devices DROP COLUMN IF EXISTS target_app_version,
+--             DROP COLUMN IF EXISTS ota_status, DROP COLUMN IF EXISTS ota_requested_at,
+--             DROP COLUMN IF EXISTS ota_completed_at, DROP COLUMN IF EXISTS ota_error;
+-- ============================================================================
+
 BEGIN;
 
 ALTER TABLE public.hardware_devices

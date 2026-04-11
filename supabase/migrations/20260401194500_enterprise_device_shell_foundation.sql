@@ -1,3 +1,26 @@
+-- ============================================================================
+-- Enterprise Device Shell Foundation
+-- Date: 2026-04-01
+-- Purpose: Extends hardware_devices with device management, pairing, printer config,
+--          MDM (Esper), and fiscal mode columns. Creates device_management_actions and
+--          fiscal_submission_queue tables with RLS policies, indexes, and triggers.
+-- Impact: public.hardware_devices (new columns + constraints),
+--         public.device_management_actions (new table),
+--         public.fiscal_submission_queue (new table)
+-- Rollback: DROP TABLE IF EXISTS public.fiscal_submission_queue;
+--           DROP TABLE IF EXISTS public.device_management_actions;
+--           ALTER TABLE public.hardware_devices DROP COLUMN IF EXISTS device_profile,
+--             DROP COLUMN IF EXISTS location_id, DROP COLUMN IF EXISTS pairing_state,
+--             DROP COLUMN IF EXISTS pairing_code_expires_at, DROP COLUMN IF EXISTS pairing_completed_at,
+--             DROP COLUMN IF EXISTS hardware_fingerprint, DROP COLUMN IF EXISTS printer_connection_type,
+--             DROP COLUMN IF EXISTS printer_device_id, DROP COLUMN IF EXISTS printer_device_name,
+--             DROP COLUMN IF EXISTS printer_mac_address, DROP COLUMN IF EXISTS printer_preferences,
+--             DROP COLUMN IF EXISTS management_provider, DROP COLUMN IF EXISTS management_device_id,
+--             DROP COLUMN IF EXISTS management_status, DROP COLUMN IF EXISTS app_channel,
+--             DROP COLUMN IF EXISTS app_version, DROP COLUMN IF EXISTS last_boot_at,
+--             DROP COLUMN IF EXISTS fiscal_mode;
+-- ============================================================================
+
 BEGIN;
 
 ALTER TABLE public.hardware_devices ENABLE ROW LEVEL SECURITY;
