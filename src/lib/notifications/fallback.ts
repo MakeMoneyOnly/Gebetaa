@@ -322,7 +322,10 @@ export async function getGuestPushPreference(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (db as any)
         .from('guest_push_preferences')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'guest_id, restaurant_id, push_enabled, push_opt_in_at, push_opt_out_at, preferred_channel, created_at, updated_at'
+        )
         .eq('guest_id', guestId)
         .single();
 
@@ -448,7 +451,10 @@ export async function processSmsFailuresForPush(limit: number = 50): Promise<num
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: failedSms, error } = await (supabase as any)
         .from('notification_queue')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, guest_id, guest_phone, notification_type, channel, status, message_en, message_am, retry_count, metadata'
+        )
         .eq('channel', 'sms')
         .eq('status', 'failed')
         .eq('retry_count', 3) // Exhausted SMS retries

@@ -476,7 +476,10 @@ export async function processPendingNotifications(limit: number = 100): Promise<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: pending, error } = await (supabase as any)
         .from('notification_queue')
-        .select('*')
+        // HIGH-013: Explicit column selection
+        .select(
+            'id, restaurant_id, guest_id, guest_phone, notification_type, channel, status, priority, message_am, message_en, retry_count, max_retries, next_retry_at, sent_at, error_message, provider_response, idempotency_key, metadata, created_at, updated_at'
+        )
         .eq('status', 'pending')
         .or(`next_retry_at.is.null,next_retry_at.lte.${now}`)
         .lte('retry_count', RETRY_CONFIG.DEFAULT_MAX_RETRIES)
