@@ -6,6 +6,7 @@
  * - Business metrics (orders, payments, sessions)
  * - Database performance monitoring
  * - Custom application metrics
+ * - Prometheus-compatible metrics for Grafana
  *
  * @see docs/implementation/observability-setup.md
  */
@@ -13,6 +14,7 @@
 import * as Sentry from '@sentry/nextjs';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/database';
+import { recordOrderEvent, recordPaymentEvent } from './prometheus';
 
 // Metric action types
 export const METRIC_ACTIONS = {
@@ -229,6 +231,13 @@ export async function trackOrderMetric(
                     } as Json,
                 });
 
+                // Record to Prometheus metrics (non-blocking)
+                try {
+                    recordOrderEvent(params.restaurantId, params.event);
+                } catch {
+                    // Silently ignore Prometheus recording errors
+                }
+
                 span.setStatus({ code: error ? SPAN_STATUS_ERROR : SPAN_STATUS_OK });
                 return { error };
             } catch (e) {
@@ -290,6 +299,13 @@ export async function trackPaymentMetric(
                         amount: params.amount,
                     } as Json,
                 });
+
+                // Record to Prometheus metrics (non-blocking)
+                try {
+                    recordPaymentEvent(params.provider, params.event);
+                } catch {
+                    // Silently ignore Prometheus recording errors
+                }
 
                 span.setStatus({ code: error ? SPAN_STATUS_ERROR : SPAN_STATUS_OK });
                 return { error };

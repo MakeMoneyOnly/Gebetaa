@@ -1,0 +1,105 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": { "unit": "percentunit" },
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+            "id": 1,
+            "title": "Payment Success Rate by Provider",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "sum(rate(gebeta_payments_processed_total{status=\"success\"}[5m])) by (provider) / sum(rate(gebeta_payments_processed_total[5m])) by (provider)",
+                    "legendFormat": "{{provider}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": { "unit": "s" },
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+            "id": 2,
+            "title": "Payment Processing Time",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.5, sum(rate(gebeta_payment_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "P50",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(gebeta_payment_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "P95",
+                    "refId": "B"
+                }
+            ]
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": { "unit": "currencyETB" },
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+            "id": 3,
+            "title": "Revenue by Payment Method",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "sum(rate(gebeta_payments_processed_total{status=\"success\"}[1h])) by (provider)",
+                    "legendFormat": "{{provider}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+            "id": 4,
+            "title": "Payment Failure Reasons",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "sum(rate(gebeta_payments_processed_total{status=\"failed\"}[5m])) by (reason)",
+                    "legendFormat": "{{reason}}",
+                    "refId": "A"
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 39,
+    "tags": ["gebeta"],
+    "templating": {
+        "list": [
+            {
+                "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+                "hide": 0,
+                "name": "DS_PROMETHEUS",
+                "options": [],
+                "query": "prometheus",
+                "type": "datasource"
+            }
+        ]
+    },
+    "time": { "from": "now-1h", "to": "now" },
+    "title": "Gebeta - Payments",
+    "uid": "gebeta-payments",
+    "version": 1
+}

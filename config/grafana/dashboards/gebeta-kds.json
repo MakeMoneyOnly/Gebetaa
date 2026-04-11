@@ -1,0 +1,105 @@
+{
+    "annotations": { "list": [] },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+            "id": 1,
+            "title": "KDS Items by Status",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "gebeta_kds_items_queued_total",
+                    "legendFormat": "{{status}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": { "unit": "s" },
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+            "id": 2,
+            "title": "Average Cooking Time by Station",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.5, sum(rate(gebeta_kds_cooking_duration_seconds_bucket[5m])) by (le, station))",
+                    "legendFormat": "{{station}} P50",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(gebeta_kds_cooking_duration_seconds_bucket[5m])) by (le, station))",
+                    "legendFormat": "{{station}} P95",
+                    "refId": "B"
+                }
+            ]
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+            "id": 3,
+            "title": "Queue Depth by Station",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "gebeta_kds_queue_depth",
+                    "legendFormat": "{{station}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": { "unit": "ops" },
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+            "id": 4,
+            "title": "Kitchen Throughput (items/hour)",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "rate(gebeta_kds_items_queued_total{status=\"bumped\"}[1h]) * 3600",
+                    "legendFormat": "items/hour",
+                    "refId": "A"
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 39,
+    "tags": ["gebeta"],
+    "templating": {
+        "list": [
+            {
+                "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+                "hide": 0,
+                "name": "DS_PROMETHEUS",
+                "options": [],
+                "query": "prometheus",
+                "type": "datasource"
+            }
+        ]
+    },
+    "time": { "from": "now-1h", "to": "now" },
+    "title": "Gebeta - KDS",
+    "uid": "gebeta-kds",
+    "version": 1
+}

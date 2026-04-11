@@ -1,0 +1,96 @@
+groups:
+    - name: gebeta-critical
+      rules:
+          - alert: HighErrorRate
+            expr: |
+                sum(rate(gebeta_http_requests_total{status_code=~"5.."}[5m]))
+                /
+                sum(rate(gebeta_http_requests_total[5m])) > 0.05
+            for: 5m
+            labels:
+                severity: critical
+                team: on-call
+            annotations:
+                summary: 'High error rate detected'
+                description: 'Error rate is {{ $value | humanizePercentage }} over 5 minutes (threshold: 5%)'
+
+          - alert: OrderProcessingDown
+            expr: rate(gebeta_orders_created_total[10m]) == 0
+            for: 10m
+            labels:
+                severity: critical
+                team: on-call
+            annotations:
+                summary: 'Order processing appears down'
+                description: 'No orders created in the last 10 minutes during business hours'
+
+          - alert: PaymentFailures
+            expr: |
+                sum(rate(gebeta_payments_processed_total{status="failed"}[5m]))
+                /
+                sum(rate(gebeta_payments_processed_total[5m])) > 0.10
+            for: 5m
+            labels:
+                severity: critical
+                team: on-call
+            annotations:
+                summary: 'High payment failure rate'
+                description: 'Payment failure rate is {{ $value | humanizePercentage }} over 5 minutes (threshold: 10%)'
+
+          - alert: DatabaseConnectionPoolHigh
+            expr: |
+                gebeta_db_connections_active
+                /
+                (gebeta_db_connections_active + gebeta_db_connections_idle) > 0.80
+            for: 5m
+            labels:
+                severity: warning
+                team: platform
+            annotations:
+                summary: 'Database connection pool utilization high'
+                description: 'Pool utilization is {{ $value | humanizePercentage }} (threshold: 80%)'
+
+    - name: gebeta-warnings
+      rules:
+          - alert: SlowResponseTime
+            expr: |
+                histogram_quantile(0.95,
+                  sum(rate(gebeta_http_request_duration_seconds_bucket[5m])) by (le)
+                ) > 1.0
+            for: 5m
+            labels:
+                severity: warning
+                team: platform
+            annotations:
+                summary: 'Slow response times detected'
+                description: 'P95 response time is {{ $value }}s (threshold: 1s)'
+
+          - alert: SyncQueueBacklog
+            expr: gebeta_sync_queue_size > 100
+            for: 5m
+            labels:
+                severity: warning
+                team: platform
+            annotations:
+                summary: 'Sync queue backlog building'
+                description: 'Sync queue has {{ $value }} pending operations (threshold: 100)'
+
+          - alert: KDSQueueDepth
+            expr: gebeta_kds_queue_depth > 50
+            for: 5m
+            labels:
+                severity: warning
+                team: operations
+            annotations:
+                summary: 'KDS queue depth high'
+                description: 'KDS queue depth is {{ $value }} items per station (threshold: 50)'
+
+          - alert: HighMemoryUsage
+            expr: process_resident_memory_bytes / process_memory_limit_bytes > 0.85
+            for: 5m
+            labels:
+                severity: warning
+                team: platform
+            annotations:
+                summary: 'High memory usage'
+                description: 'Memory utilization is {{ $value | humanizePercentage }} (threshold: 85%)'
