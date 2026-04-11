@@ -2,8 +2,11 @@
  * Error Message Sanitization
  *
  * LOW-009: Sanitize error messages before returning to clients
- * Prevents exposure of internal system details, file paths, and sensitive data
+ * HIGH-023: Prevents exposure of internal system details, file paths, and sensitive data
+ * MED-021: Consistent error handling with Amharic localization support
  */
+
+import { logger } from '@/lib/logger';
 
 /**
  * Patterns that indicate sensitive information in error messages
@@ -56,6 +59,72 @@ const GENERIC_MESSAGES: Record<string, string> = {
     payment: 'Payment processing failed. Please try again.',
     webhook: 'Webhook processing failed.',
 };
+
+const GENERIC_MESSAGES_AM: Record<string, string> = {
+    database: 'የውሂብ ቤዝ ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።',
+    connection: 'አገልግሎቱን ማግኘት አልተቻለም። እባክዎ እንደገና ይሞክሩ።',
+    authentication: 'ማረጋገጥ አልተሳካም። እባክዎ መረጃዎን ያረጋግጡ።',
+    authorization: 'ይህንን ተግባር ለመፈጸም ፍቃድ የለዎትም።',
+    validation: 'ልክ ያልሆነ መረጃ ተሰጥቷል። እባክዎ ጥያቄዎን ያረጋግጡ።',
+    not_found: 'የፈለግኩት ነገር አልተገኘም።',
+    rate_limit: 'ብዙ ጥያቄዎች። እባክዎ ጠብቀው እንደገና ይሞክሩ።',
+    internal: 'ውስጣዊ ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።',
+    timeout: 'ጥያቄው ሰዓት አልፎታል። እባክዎ እንደገና ይሞክሩ።',
+    payment: 'ክፍያ አልተሳካም። እባክዎ እንደገና ይሞክሩ።',
+    webhook: 'ዌብሁክ አልተሳካም።',
+};
+
+/**
+ * Map error codes/categories to Amharic message keys
+ */
+const ERROR_CODE_TO_CATEGORY: Record<string, string> = {
+    VALIDATION_ERROR: 'validation',
+    UNAUTHORIZED: 'authentication',
+    FORBIDDEN: 'authorization',
+    NOT_FOUND: 'not_found',
+    CONFLICT: 'validation',
+    RATE_LIMITED: 'rate_limit',
+    INTERNAL_ERROR: 'internal',
+};
+
+const STATUS_CODE_TO_CATEGORY: Record<number, string> = {
+    400: 'validation',
+    401: 'authentication',
+    403: 'authorization',
+    404: 'not_found',
+    409: 'validation',
+    429: 'rate_limit',
+    504: 'timeout',
+};
+
+/**
+ * Determine error category from error object or options
+ */
+function getErrorCategory(
+    error: unknown,
+    options?: { code?: string; statusCode?: number }
+): string {
+    if (error instanceof Error) {
+        if (error.name === 'ValidationError') return 'validation';
+        if (error.name === 'UnauthorizedError' || error.name === 'AuthenticationError')
+            return 'authentication';
+        if (error.name === 'ForbiddenError' || error.name === 'AuthorizationError')
+            return 'authorization';
+        if (error.name === 'NotFoundError') return 'not_found';
+        if (error.name === 'TimeoutError') return 'timeout';
+        if (error.name === 'RateLimitError') return 'rate_limit';
+    }
+
+    const code = options?.code;
+    if (code && ERROR_CODE_TO_CATEGORY[code]) return ERROR_CODE_TO_CATEGORY[code];
+
+    const statusCode = options?.statusCode;
+    if (statusCode && STATUS_CODE_TO_CATEGORY[statusCode])
+        return STATUS_CODE_TO_CATEGORY[statusCode];
+    if (statusCode && statusCode >= 500) return 'internal';
+
+    return 'internal';
+}
 
 /**
  * Map error codes to generic messages
@@ -253,6 +322,7 @@ export interface SanitizedErrorResponse {
     error: {
         code: string;
         message: string;
+        messageAm?: string;
         details?: unknown[];
     };
 }
@@ -278,10 +348,14 @@ export function createSanitizedErrorResponse(
         resource: options?.resource,
     });
 
+    const category = getErrorCategory(error, options);
+    const messageAm = GENERIC_MESSAGES_AM[category] ?? GENERIC_MESSAGES_AM.internal;
+
     return {
         error: {
             code: options?.code ?? 'INTERNAL_ERROR',
             message,
+            messageAm,
         },
     };
 }
@@ -302,20 +376,11 @@ export function logAndSanitize(
         requestId?: string;
     }
 ): string {
-    // Log full error server-side
-    console.error('[Error]', {
+    logger.error('[Error]', error, {
         operation: context.operation,
         userId: context.userId,
         restaurantId: context.restaurantId,
         requestId: context.requestId,
-        error:
-            error instanceof Error
-                ? {
-                      name: error.name,
-                      message: error.message,
-                      stack: error.stack,
-                  }
-                : error,
     });
 
     // Return sanitized message

@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { recordHttpRequest } from '@/lib/monitoring/prometheus';
 
 /**
  * Header names for tracing
@@ -62,6 +63,28 @@ function generateTraceId(): string {
 function generateSpanId(): string {
     // Generate a 16-character hex string (8 bytes)
     return crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+}
+
+/**
+ * Normalize path for metrics cardinality
+ * Replaces dynamic segments with placeholders to reduce label explosion
+ *
+ * @example
+ * normalizePath('/api/orders/123') // '/api/orders/:id'
+ * normalizePath('/api/restaurants/abc-123/menu') // '/api/restaurants/:id/menu'
+ */
+function normalizePath(path: string): string {
+    return (
+        path
+            // Replace UUIDs
+            .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':uuid')
+            // Replace numeric IDs
+            .replace(/\/\d+(?=\/|$)/g, '/:id')
+            // Replace alphanumeric IDs (but not common static paths)
+            .replace(/\/[a-zA-Z0-9_-]{20,}(?=\/|$)/g, '/:id')
+            // Replace remaining dynamic segments that look like IDs
+            .replace(/\/[a-f0-9]{16,}(?=\/|$)/gi, '/:id')
+    );
 }
 
 /**
@@ -260,6 +283,20 @@ export function tracingMiddleware(request: NextRequest): {
             // Add timing header
             const duration = Date.now() - context.startTime;
             response.headers.set('x-response-time', `${duration}ms`);
+
+            // Record Prometheus metrics for request duration and count
+            try {
+                const method = request.method;
+                const path = request.nextUrl.pathname;
+                const statusCode = response.status;
+
+                // Normalize path for metrics (replace dynamic segments with placeholders)
+                const normalizedPath = normalizePath(path);
+
+                recordHttpRequest(method, normalizedPath, statusCode, duration);
+            } catch {
+                // Silently ignore Prometheus recording errors to not affect response
+            }
         },
     };
 }

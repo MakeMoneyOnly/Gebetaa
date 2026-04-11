@@ -61,6 +61,15 @@ export async function middleware(request: NextRequest) {
         rateLimitResponse.headers.set('x-request-id', traceContext.requestId);
         rateLimitResponse.headers.set('x-trace-id', traceContext.traceId);
 
+        // Add API versioning headers for API routes even on rate-limited responses
+        if (request.nextUrl.pathname.startsWith('/api/')) {
+            const version = detectApiVersion(request);
+            const versionHeaders = getVersionedHeaders(version);
+            for (const [key, value] of Object.entries(versionHeaders)) {
+                rateLimitResponse.headers.set(key, value);
+            }
+        }
+
         return rateLimitResponse;
     }
 

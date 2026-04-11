@@ -7,9 +7,13 @@
  * P0 Security Requirement: Rate limiting on all mutation endpoints
  */
 
+import { createHash } from 'crypto';
+
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from './logger';
+import { incrementCounter } from './monitoring/metrics';
+import { logSecurityEvent } from './security/securityEvents';
 
 // Rate limit configuration types
 export interface RateLimitConfig {
@@ -281,7 +285,8 @@ function getMemoryStore(): InMemoryRateLimitStore {
 async function checkRedisRateLimit(
     key: string,
     limit: number,
-    windowSeconds: number
+    windowSeconds: number,
+    endpoint?: string
 ): Promise<RateLimitResult> {
     const redis = getOrCreateRedisClient();
     const now = Date.now();
@@ -289,6 +294,12 @@ async function checkRedisRateLimit(
 
     // If Redis is not available, fall back to in-memory
     if (!redis) {
+        logger.warn('Rate limiter falling back to in-memory store', {
+            action: 'rate_limit:redis_fallback',
+            endpoint: endpoint ?? key,
+            reason: 'redis_not_configured',
+        });
+
         const store = getMemoryStore();
         const currentCount = store.get(key, windowSeconds);
 
@@ -355,6 +366,12 @@ async function checkRedisRateLimit(
         // Log error and fall back to in-memory on Redis failure
         logger.error('[RateLimit] Redis error, falling back to in-memory', error);
 
+        logger.warn('Rate limiter falling back to in-memory store', {
+            action: 'rate_limit:redis_fallback',
+            endpoint: endpoint ?? key,
+            reason: 'redis_error',
+        });
+
         const store = getMemoryStore();
         const currentCount = store.get(key, windowSeconds);
 
@@ -395,12 +412,106 @@ function getClientIP(request: NextRequest): string {
         return realIP;
     }
 
-    // Fallback to a default value (in production, this should be handled by the server)
-    return (
-        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-        request.headers.get('x-real-ip') ||
-        '127.0.0.1'
-    );
+    // Fallback: generate a fingerprint from user-agent and accept-language
+    // instead of using 127.0.0.1 which would share a single rate limit bucket
+    const userAgent = request.headers.get('user-agent') || '';
+    const acceptLang = request.headers.get('accept-language') || '';
+    const fingerprint = createHash('sha256')
+        .update(`${userAgent}:${acceptLang}`)
+        .digest('hex')
+        .substring(0, 16);
+    return `fp-${fingerprint}`;
+}
+
+const ABUSE_THRESHOLD = 5;
+const ABUSE_WINDOW_SECONDS = 300;
+
+export async function checkRateLimitAbuse(ip: string, endpoint: string): Promise<boolean> {
+    const redis = getOrCreateRedisClient();
+
+    if (redis) {
+        try {
+            const abuseKey = `rl:abuse:${ip}`;
+            const count = await redis.incr(abuseKey);
+
+            if (count === 1) {
+                await redis.expire(abuseKey, ABUSE_WINDOW_SECONDS);
+            }
+
+            if (count > ABUSE_THRESHOLD) {
+                logger.warn('Rate limit abuse detected', {
+                    action: 'rate_limit:abuse_detected',
+                    clientIp: ip,
+                    endpoint,
+                    abuseCount: count,
+                    windowSeconds: ABUSE_WINDOW_SECONDS,
+                });
+
+                void logSecurityEvent({
+                    type: 'brute_force_detected',
+                    severity: 'high',
+                    ipAddress: ip,
+                    userAgent: 'unknown',
+                    metadata: {
+                        abuse_type: 'rate_limit_abuse',
+                        endpoint,
+                        abuse_count: count,
+                        window_seconds: ABUSE_WINDOW_SECONDS,
+                        threshold: ABUSE_THRESHOLD,
+                    },
+                    timestamp: new Date(),
+                });
+
+                incrementCounter('rate_limit.abuse_detected', 1, {
+                    endpoint,
+                });
+
+                return true;
+            }
+        } catch (error) {
+            logger.error('[RateLimit] Failed to check abuse pattern', error);
+        }
+    } else {
+        const store = getMemoryStore();
+        const abuseKey = `rl:abuse:${ip}:${endpoint}`;
+        const currentCount = store.get(abuseKey, ABUSE_WINDOW_SECONDS);
+
+        if (currentCount + 1 > ABUSE_THRESHOLD) {
+            logger.warn('Rate limit abuse detected (in-memory)', {
+                action: 'rate_limit:abuse_detected',
+                clientIp: ip,
+                endpoint,
+                abuseCount: currentCount + 1,
+                windowSeconds: ABUSE_WINDOW_SECONDS,
+            });
+
+            void logSecurityEvent({
+                type: 'brute_force_detected',
+                severity: 'high',
+                ipAddress: ip,
+                userAgent: 'unknown',
+                metadata: {
+                    abuse_type: 'rate_limit_abuse',
+                    endpoint,
+                    abuse_count: currentCount + 1,
+                    window_seconds: ABUSE_WINDOW_SECONDS,
+                    threshold: ABUSE_THRESHOLD,
+                    store: 'in_memory',
+                },
+                timestamp: new Date(),
+            });
+
+            incrementCounter('rate_limit.abuse_detected', 1, {
+                endpoint,
+            });
+
+            return true;
+        }
+
+        await store.increment(abuseKey, ABUSE_WINDOW_SECONDS);
+    }
+
+    return false;
 }
 
 /**
@@ -443,11 +554,27 @@ export async function checkRateLimit(
     const clientIP = getClientIP(request);
     const path = request.nextUrl.pathname;
 
-    // Create unique key: prefix:ip:path
     const key = `${config.keyPrefix || 'rl'}:${clientIP}:${path}`;
 
-    // Use Redis-backed rate limiting (with in-memory fallback)
-    return checkRedisRateLimit(key, config.limit, config.windowSeconds);
+    const result = await checkRedisRateLimit(key, config.limit, config.windowSeconds, path);
+
+    const category = config.keyPrefix?.replace('rl:', '') ?? 'unknown';
+    const status = result.success ? 'allowed' : 'rejected';
+
+    incrementCounter('rate_limit.check', 1, {
+        category,
+        result: status,
+        endpoint: path,
+    });
+
+    if (!result.success) {
+        incrementCounter('rate_limit.rejected', 1, {
+            category,
+            endpoint: path,
+        });
+    }
+
+    return result;
 }
 
 /**
@@ -479,6 +606,31 @@ export async function rateLimitMiddleware(request: NextRequest): Promise<NextRes
 
     // If rate limited, return 429
     if (!result.success) {
+        const clientIp = getClientIP(request);
+
+        logger.warn('Rate limit exceeded', {
+            action: 'rate_limit:exceeded',
+            clientIp,
+            endpoint: path,
+            limit: config.limit,
+            windowSeconds: config.windowSeconds,
+        });
+
+        void logSecurityEvent({
+            type: 'rate_limit_exceeded',
+            severity: 'medium',
+            ipAddress: clientIp,
+            userAgent: request.headers.get('user-agent') || 'unknown',
+            metadata: {
+                endpoint: path,
+                limit: config.limit,
+                windowSeconds: config.windowSeconds,
+            },
+            timestamp: new Date(),
+        });
+
+        void checkRateLimitAbuse(clientIp, path);
+
         return NextResponse.json(
             {
                 error: {
@@ -499,7 +651,7 @@ export async function rateLimitMiddleware(request: NextRequest): Promise<NextRes
         );
     }
 
-    return null; // Continue to next middleware/handler
+    return null;
 }
 
 /**
@@ -514,6 +666,31 @@ export function withRateLimit<T extends (...args: unknown[]) => unknown>(
         const result = await checkRateLimit(request, config);
 
         if (!result.success) {
+            const clientIp = getClientIP(request);
+
+            logger.warn('Rate limit exceeded', {
+                action: 'rate_limit:exceeded',
+                clientIp,
+                endpoint: request.nextUrl.pathname,
+                limit: config.limit,
+                windowSeconds: config.windowSeconds,
+            });
+
+            void logSecurityEvent({
+                type: 'rate_limit_exceeded',
+                severity: 'medium',
+                ipAddress: clientIp,
+                userAgent: request.headers.get('user-agent') || 'unknown',
+                metadata: {
+                    endpoint: request.nextUrl.pathname,
+                    limit: config.limit,
+                    windowSeconds: config.windowSeconds,
+                },
+                timestamp: new Date(),
+            });
+
+            void checkRateLimitAbuse(clientIp, request.nextUrl.pathname);
+
             return NextResponse.json(
                 {
                     error: {

@@ -35,9 +35,10 @@ export async function provisionDevice(data: {
 
     try {
         // 1. Verify Invite Code
+        // HIGH-013: Explicit column selection
         const { data: invite, error: inviteError } = await adminClient
             .from('staff_invites')
-            .select('*')
+            .select('id, restaurant_id, email, role, status')
             .eq('code', data.code) // Query by the Invite Code (token), not the ID
             // In a real production app, we'd use a separate secure token, but ID is okay for MVP if UUID
             .single();

@@ -20,9 +20,10 @@ export async function acceptInvite(code: string) {
     }
 
     // 1. Fetch the invite
+    // HIGH-013: Explicit column selection
     const { data: invite, error: inviteError } = await supabase
         .from('staff_invites')
-        .select('*')
+        .select('id, restaurant_id, role, status, expires_at')
         .eq('code', code)
         .single();
 

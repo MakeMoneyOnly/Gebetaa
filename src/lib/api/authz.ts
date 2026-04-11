@@ -5,15 +5,50 @@ import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { logSecurityEvent } from '@/lib/security/securityEvents';
 import { verifyDeviceTokenFromRequest } from '@/lib/auth/device-token-cookies';
 import { logger } from '@/lib/logger';
-import type { HardwareDeviceType } from '@/lib/devices/config';
+import type { HardwareDeviceType, DeviceProfile } from '@/lib/devices/config';
 import {
     hydrateEnterpriseDeviceRecord,
     isEnterpriseDeviceSchemaError,
 } from '@/lib/devices/schema-compat';
+import type { User } from '@supabase/supabase-js';
 
 type PilotPhase = 'p0' | 'p1' | 'p2';
 
-export async function getAuthenticatedUser() {
+export type GetAuthenticatedUserResult =
+    | { ok: true; user: User; supabase: Awaited<ReturnType<typeof createClient>> }
+    | { ok: false; response: ReturnType<typeof apiError> };
+
+interface HydratedDeviceRecord {
+    id: string;
+    restaurant_id: string;
+    location_id: string | null;
+    device_type: string;
+    device_profile: DeviceProfile;
+    name: string;
+    assigned_zones: string[] | null;
+    status: string;
+    metadata: Record<string, unknown> | null;
+    last_active_at: string | null;
+    pairing_state: 'ready' | 'paired' | 'revoked' | 'expired';
+    pairing_code_expires_at: string | null;
+    pairing_completed_at: string | null;
+    management_provider: 'none' | 'esper';
+    management_device_id: string | null;
+    app_version: string | null;
+    target_app_version: string | null;
+    ota_status: string | null;
+}
+
+export type GetDeviceContextResult =
+    | {
+          ok: true;
+          device: HydratedDeviceRecord;
+          restaurantId: string;
+          admin: ReturnType<typeof createServiceRoleClient>;
+      }
+    | { ok: false; response: ReturnType<typeof apiError> };
+
+export async function getAuthenticatedUser(): Promise<GetAuthenticatedUserResult> {
     const supabase = await createClient();
 
     // =========================================================
@@ -56,7 +91,10 @@ export async function getAuthenticatedUser() {
                 email: 'e2e@example.com',
                 aud: 'authenticated',
                 role: 'authenticated',
-            },
+                app_metadata: {},
+                user_metadata: {},
+                created_at: new Date().toISOString(),
+            } as User,
             supabase,
         };
     }
@@ -164,7 +202,7 @@ export async function getAuthorizedRestaurantContext(
  * - Signed cookies: HMAC signature prevents tampering
  * - Header fallback: Backward compatibility with existing clients
  */
-export async function getDeviceContext(request: Request) {
+export async function getDeviceContext(request: Request): Promise<GetDeviceContextResult> {
     // HIGH-009: Check for secure cookie-based token first
     const cookieResult = verifyDeviceTokenFromRequest(request);
 
@@ -236,13 +274,16 @@ export async function getDeviceContext(request: Request) {
         ok: true as const,
         device: hydrateEnterpriseDeviceRecord(
             device as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
-        ),
+        ) as HydratedDeviceRecord,
         restaurantId: device.restaurant_id as string,
         admin,
     };
 }
 
-export async function getScopedDeviceContext(request: Request, allowedTypes: HardwareDeviceType[]) {
+export async function getScopedDeviceContext(
+    request: Request,
+    allowedTypes: HardwareDeviceType[]
+): Promise<GetDeviceContextResult> {
     const context = await getDeviceContext(request);
     if (!context.ok) {
         return context;

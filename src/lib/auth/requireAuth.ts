@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 import type { Database } from '@/types/database';
 
 type AgencyUser = Database['public']['Tables']['agency_users']['Row'];
@@ -73,15 +74,22 @@ export async function requireAuth(redirectTo: string = '/agency-admin/login'): P
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+        logger.warn('Authentication failed: no valid session', { userId: user?.id, redirectTo });
         redirect(redirectTo);
     }
 
     // Check if user is an agency user
     const { data: agencyUser } = await supabase
         .from('agency_users')
-        .select('*')
+        .select('id, user_id, role, restaurant_ids, created_at')
         .eq('user_id', user.id)
         .single();
+
+    logger.info('Agency user authenticated', {
+        userId: user.id,
+        agencyRole: agencyUser?.role ?? null,
+        restaurantCount: agencyUser?.restaurant_ids?.length ?? 0,
+    });
 
     return {
         user: {
@@ -100,6 +108,10 @@ export async function requireAdmin(): Promise<AuthResult> {
     const auth = await requireAuth();
 
     if (!auth.agencyUser || auth.agencyUser.role !== 'admin') {
+        logger.warn('Unauthorized admin access attempt', {
+            userId: auth.user.id,
+            agencyRole: auth.agencyUser?.role ?? null,
+        });
         redirect('/agency-admin/unauthorized');
     }
 
@@ -118,6 +130,10 @@ export async function requireAdminOrManager(): Promise<AuthResult> {
         !auth.agencyUser.role ||
         !['admin', 'manager'].includes(auth.agencyUser.role)
     ) {
+        logger.warn('Unauthorized role access attempt', {
+            userId: auth.user.id,
+            agencyRole: auth.agencyUser?.role ?? null,
+        });
         redirect('/agency-admin/unauthorized');
     }
 
@@ -141,6 +157,13 @@ export async function requireRestaurantAccess(restaurantId: string): Promise<Aut
         !auth.agencyUser?.restaurant_ids ||
         !auth.agencyUser.restaurant_ids.includes(restaurantId)
     ) {
+        logger.warn('Tenant isolation boundary violation attempt', {
+            action: 'security:tenant_isolation_violation',
+            userId: auth.user.id,
+            agencyRole: auth.agencyUser?.role ?? null,
+            requestedRestaurantId: restaurantId,
+            assignedRestaurantIds: auth.agencyUser?.restaurant_ids ?? [],
+        });
         redirect('/agency-admin/unauthorized');
     }
 

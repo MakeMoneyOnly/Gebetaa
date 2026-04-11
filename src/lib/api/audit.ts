@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/database';
 
 type AuditParams = {
@@ -12,7 +12,10 @@ type AuditParams = {
     new_value?: Json | null;
 };
 
-export async function writeAuditLog(supabase: SupabaseClient<Database>, params: AuditParams) {
+export async function writeAuditLog(
+    supabase: SupabaseClient<Database>,
+    params: AuditParams
+): Promise<{ error: PostgrestError | null }> {
     const { error } = await supabase.from('audit_logs').insert({
         restaurant_id: params.restaurant_id ?? null,
         user_id: params.user_id ?? null,
