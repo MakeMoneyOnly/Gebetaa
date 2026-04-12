@@ -8,6 +8,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
+import type { User } from '@supabase/supabase-js';
 
 const mockRestaurantId = '12345678-1234-1234-1234-123456789012';
 const mockUserId = '87654321-4321-4321-4321-210987654321';
@@ -31,10 +32,12 @@ function createSupabaseChainMock(overrides?: {
     const selfReturning = () => vi.fn(() => chain);
 
     // Terminal method that resolves with data
-    chain.maybeSingle = overrides?.maybeSingle ?? vi.fn().mockResolvedValue({
-        data: overrides?.data ?? null,
-        error: overrides?.error ?? null,
-    });
+    chain.maybeSingle =
+        overrides?.maybeSingle ??
+        vi.fn().mockResolvedValue({
+            data: overrides?.data ?? null,
+            error: overrides?.error ?? null,
+        });
 
     // Chainable methods
     chain.eq = selfReturning();
@@ -51,7 +54,9 @@ function createSupabaseChainMock(overrides?: {
 /**
  * Creates a mock Supabase service role client
  */
-function createMockServiceRoleClient(tableMocks?: Record<string, ReturnType<typeof createSupabaseChainMock>>) {
+function createMockServiceRoleClient(
+    tableMocks?: Record<string, ReturnType<typeof createSupabaseChainMock>>
+) {
     return {
         from: vi.fn((table: string) => {
             if (tableMocks?.[table]) {
@@ -77,7 +82,10 @@ vi.mock('@/lib/api/validation', () => ({
             const body = await request.json();
             return { success: true, data: body };
         } catch {
-            return { success: false, response: Response.json({ error: 'Invalid JSON' }, { status: 400 }) };
+            return {
+                success: false,
+                response: Response.json({ error: 'Invalid JSON' }, { status: 400 }),
+            };
         }
     }),
 }));
@@ -132,7 +140,13 @@ describe('Sync API Endpoint', () => {
             vi.mocked(getDeviceContext).mockResolvedValue({
                 ok: false,
                 response: NextResponse.json(
-                    { error: { code: 'DEVICE_UNAUTHORIZED', message: 'Device unauthorized', requestId: 'test' } },
+                    {
+                        error: {
+                            code: 'DEVICE_UNAUTHORIZED',
+                            message: 'Device unauthorized',
+                            requestId: 'test',
+                        },
+                    },
                     { status: 401 }
                 ),
             });
@@ -160,7 +174,13 @@ describe('Sync API Endpoint', () => {
             vi.mocked(getDeviceContext).mockResolvedValue({
                 ok: false,
                 response: NextResponse.json(
-                    { error: { code: 'DEVICE_UNAUTHORIZED', message: 'Device unauthorized', requestId: 'test' } },
+                    {
+                        error: {
+                            code: 'DEVICE_UNAUTHORIZED',
+                            message: 'Device unauthorized',
+                            requestId: 'test',
+                        },
+                    },
                     { status: 401 }
                 ),
             });
@@ -172,7 +192,7 @@ describe('Sync API Endpoint', () => {
                     email: 'test@example.com',
                     aud: 'authenticated',
                     role: 'authenticated',
-                },
+                } as unknown as User,
                 supabase: {} as never,
             });
 
@@ -182,9 +202,11 @@ describe('Sync API Endpoint', () => {
             });
 
             vi.mock('@/lib/supabase/service-role', () => ({
-                createServiceRoleClient: vi.fn(() => createMockServiceRoleClient({
-                    restaurant_staff: restaurantStaffChain,
-                })),
+                createServiceRoleClient: vi.fn(() =>
+                    createMockServiceRoleClient({
+                        restaurant_staff: restaurantStaffChain,
+                    })
+                ),
             }));
 
             const { GET } = await import('../route');
@@ -204,7 +226,13 @@ describe('Sync API Endpoint', () => {
             vi.mocked(getDeviceContext).mockResolvedValue({
                 ok: false,
                 response: NextResponse.json(
-                    { error: { code: 'DEVICE_UNAUTHORIZED', message: 'Device unauthorized', requestId: 'test' } },
+                    {
+                        error: {
+                            code: 'DEVICE_UNAUTHORIZED',
+                            message: 'Device unauthorized',
+                            requestId: 'test',
+                        },
+                    },
                     { status: 401 }
                 ),
             });
@@ -216,7 +244,7 @@ describe('Sync API Endpoint', () => {
                     email: 'test@example.com',
                     aud: 'authenticated',
                     role: 'authenticated',
-                },
+                } as unknown as User,
                 supabase: {} as never,
             });
 

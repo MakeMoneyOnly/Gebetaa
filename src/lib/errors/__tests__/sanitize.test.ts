@@ -8,8 +8,19 @@
  * - API response creation
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sanitizeErrorMessage, createSanitizedErrorResponse, logAndSanitize } from '../sanitize';
+
+vi.mock('../../logger', () => ({
+    logger: {
+        error: vi.fn(),
+        warn: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
+    },
+}));
+
+import { logger } from '../../logger';
 
 describe('Error Message Sanitization', () => {
     describe('sanitizeErrorMessage', () => {
@@ -309,14 +320,8 @@ describe('Error Message Sanitization', () => {
     });
 
     describe('logAndSanitize', () => {
-        let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-
         beforeEach(() => {
-            consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        });
-
-        afterEach(() => {
-            consoleErrorSpy.mockRestore();
+            vi.clearAllMocks();
         });
 
         it('should log error and return sanitized message', () => {
@@ -325,19 +330,21 @@ describe('Error Message Sanitization', () => {
             });
 
             expect(result).toBe('Test error');
-            expect(consoleErrorSpy).toHaveBeenCalled();
+            expect(logger.error).toHaveBeenCalled();
         });
 
         it('should log with all context fields', () => {
-            logAndSanitize(new Error('Test error'), {
+            const error = new Error('Test error');
+            logAndSanitize(error, {
                 operation: 'testOperation',
                 userId: 'user-123',
                 restaurantId: 'restaurant-456',
                 requestId: 'request-789',
             });
 
-            expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect(logger.error).toHaveBeenCalledWith(
                 '[Error]',
+                error,
                 expect.objectContaining({
                     operation: 'testOperation',
                     userId: 'user-123',
@@ -351,17 +358,17 @@ describe('Error Message Sanitization', () => {
             const error = new Error('Test error');
             logAndSanitize(error, { operation: 'testOperation' });
 
-            const loggedData = consoleErrorSpy.mock.calls[0][1];
-            expect(loggedData.error).toHaveProperty('name', 'Error');
-            expect(loggedData.error).toHaveProperty('message', 'Test error');
-            expect(loggedData.error).toHaveProperty('stack');
+            const loggedError = (logger.error as ReturnType<typeof vi.fn>).mock.calls[0][1];
+            expect(loggedError).toHaveProperty('name', 'Error');
+            expect(loggedError).toHaveProperty('message', 'Test error');
+            expect(loggedError).toHaveProperty('stack');
         });
 
         it('should log non-Error objects directly', () => {
             logAndSanitize('String error', { operation: 'testOperation' });
 
-            const loggedData = consoleErrorSpy.mock.calls[0][1];
-            expect(loggedData.error).toBe('String error');
+            const loggedError = (logger.error as ReturnType<typeof vi.fn>).mock.calls[0][1];
+            expect(loggedError).toBe('String error');
         });
 
         it('should sanitize sensitive data in returned message', () => {

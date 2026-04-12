@@ -436,9 +436,7 @@ describe('N+1 Query Detection', () => {
                 }),
             };
             createMockSupabaseClient.mockReturnValue(
-                clientInstance as unknown as ReturnType<
-                    typeof createMockSupabaseClient extends vi.fn ? never : never
-                >
+                clientInstance as unknown as ReturnType<typeof createMockSupabaseClient>
             );
 
             const loaders = createDataLoaders(TENANT_CONTEXT);

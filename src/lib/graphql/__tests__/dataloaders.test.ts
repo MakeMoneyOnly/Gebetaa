@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createDataLoaders, DataLoaders } from '../dataloaders';
+import type { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 // Use vi.hoisted to define mock functions that can be accessed in vi.mock factory
 // This follows Vitest best practices for module mocking
@@ -874,16 +875,14 @@ describe('DataLoaders', () => {
                     select: vi.fn().mockReturnThis(),
                     in: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } }),
                 })),
-            }));
+            })) as unknown as typeof createServiceRoleClient;
 
             vi.mocked(await import('@/lib/supabase/service-role')).createServiceRoleClient =
-                mockErrorClient;
+                mockErrorClient as never;
 
             // Create new loaders with the error client
             const errorLoaders = createDataLoaders({
                 restaurantId: testRestaurantId,
-                userId: 'test-user',
-                role: 'staff',
             });
 
             const result = await errorLoaders.restaurants.load('rest-1');
@@ -897,15 +896,13 @@ describe('DataLoaders', () => {
                     eq: vi.fn().mockReturnThis(),
                     in: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } }),
                 })),
-            }));
+            })) as unknown as typeof createServiceRoleClient;
 
             vi.mocked(await import('@/lib/supabase/service-role')).createServiceRoleClient =
-                mockErrorClient;
+                mockErrorClient as never;
 
             const errorLoaders = createDataLoaders({
                 restaurantId: testRestaurantId,
-                userId: 'test-user',
-                role: 'staff',
             });
 
             const result = await errorLoaders.guests.load('guest-1');
@@ -919,15 +916,13 @@ describe('DataLoaders', () => {
                     eq: vi.fn().mockReturnThis(),
                     in: vi.fn().mockResolvedValue({ data: null, error: { message: 'DB error' } }),
                 })),
-            }));
+            })) as unknown as typeof createServiceRoleClient;
 
             vi.mocked(await import('@/lib/supabase/service-role')).createServiceRoleClient =
-                mockErrorClient;
+                mockErrorClient as never;
 
             const errorLoaders = createDataLoaders({
                 restaurantId: testRestaurantId,
-                userId: 'test-user',
-                role: 'staff',
             });
 
             const result = await errorLoaders.payments.load('payment-1');

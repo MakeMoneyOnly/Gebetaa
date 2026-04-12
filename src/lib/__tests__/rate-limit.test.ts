@@ -26,6 +26,10 @@ vi.mock('../logger', () => ({
     },
 }));
 
+vi.mock('../security/securityEvents', () => ({
+    logSecurityEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Mock Redis to test fallback behavior
 const mockRedis = {
     pipeline: vi.fn(() => ({
