@@ -17,8 +17,8 @@ on:
     workflow_dispatch:
 
 env:
-    NODE_VERSION: '20'
-    PNPM_VERSION: '9.0.0'
+    NODE_VERSION: '22'
+    PNPM_VERSION: '10'
 
 jobs:
     # ============================================
@@ -33,7 +33,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: pnpm/action-setup@v3
+            - uses: pnpm/action-setup@v4
               with:
                   version: ${{ env.PNPM_VERSION }}
 
@@ -119,7 +119,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: pnpm/action-setup@v3
+            - uses: pnpm/action-setup@v4
               with:
                   version: ${{ env.PNPM_VERSION }}
 
@@ -191,7 +191,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: pnpm/action-setup@v3
+            - uses: pnpm/action-setup@v4
               with:
                   version: ${{ env.PNPM_VERSION }}
 
