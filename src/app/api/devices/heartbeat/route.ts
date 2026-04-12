@@ -76,15 +76,12 @@ export async function POST(request: Request) {
     const targetAppVersion =
         typeof currentManagement.target_app_version === 'string'
             ? currentManagement.target_app_version
-            : (((ctx.device as Record<string, unknown>).target_app_version as
-                  | string
-                  | null
-                  | undefined) ?? null);
+            : (ctx.device.target_app_version ?? null);
     const otaStatus = resolveOtaStatus({
         currentVersion: appVersion,
         targetVersion: targetAppVersion,
         existingStatus:
-            ((ctx.device as Record<string, unknown>).ota_status as
+            (ctx.device.ota_status as
                 | 'current'
                 | 'queued'
                 | 'installing'
@@ -109,10 +106,7 @@ export async function POST(request: Request) {
             app_channel:
                 typeof currentManagement.app_channel === 'string'
                     ? currentManagement.app_channel
-                    : (((ctx.device as Record<string, unknown>).app_channel as
-                          | string
-                          | null
-                          | undefined) ?? 'stable'),
+                    : 'stable',
             target_app_version: targetAppVersion,
             ota_completed_at: otaStatus === 'current' && targetAppVersion ? now : null,
             ota_error: otaStatus === 'failed' ? (currentManagement.ota_error ?? null) : null,

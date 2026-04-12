@@ -189,8 +189,8 @@ export async function POST(request: Request) {
     }
 
     const hydratedDevice = hydrateEnterpriseDeviceRecord(
-        device as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
-    );
+        device as unknown as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
+    ) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     const boot_path = getDeviceBootPathFromRecord({
         device_profile: hydratedDevice.device_profile,

@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import {
-    sanitizeErrorMessage,
-    logAndSanitize,
-    createSanitizedErrorResponse,
-} from '@/lib/errors/sanitize';
-import { AppError, isAppError, toAppError, ERROR_STATUS_MAP, type ErrorCode } from './errors';
-import { logger } from '@/lib/logger';
+import { sanitizeErrorMessage, logAndSanitize } from '@/lib/errors/sanitize';
+import { isAppError, toAppError } from './errors';
 
 /**
  * HIGH-023: Standardized error response format
