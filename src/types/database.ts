@@ -501,6 +501,69 @@ export type Database = {
                     },
                 ];
             };
+            device_management_actions: {
+                Row: {
+                    id: string;
+                    restaurant_id: string;
+                    hardware_device_id: string;
+                    requested_by: string | null;
+                    provider: string;
+                    action_type: string;
+                    status: string;
+                    request_payload: Json | null;
+                    provider_job_id: string | null;
+                    response_payload: Json | null;
+                    completed_at: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    restaurant_id: string;
+                    hardware_device_id: string;
+                    requested_by?: string | null;
+                    provider: string;
+                    action_type: string;
+                    status?: string;
+                    request_payload?: Json | null;
+                    provider_job_id?: string | null;
+                    response_payload?: Json | null;
+                    completed_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    restaurant_id?: string;
+                    hardware_device_id?: string;
+                    requested_by?: string | null;
+                    provider?: string;
+                    action_type?: string;
+                    status?: string;
+                    request_payload?: Json | null;
+                    provider_job_id?: string | null;
+                    response_payload?: Json | null;
+                    completed_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: 'device_management_actions_restaurant_id_fkey';
+                        columns: ['restaurant_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'restaurants';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'device_management_actions_hardware_device_id_fkey';
+                        columns: ['hardware_device_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'hardware_devices';
+                        referencedColumns: ['id'];
+                    },
+                ];
+            };
             device_sync_status: {
                 Row: {
                     created_at: string | null;

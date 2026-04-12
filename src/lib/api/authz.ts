@@ -39,6 +39,25 @@ interface HydratedDeviceRecord {
     ota_status: string | null;
 }
 
+interface EnterpriseDeviceRow {
+    id: string;
+    restaurant_id: string;
+    location_id?: string | null;
+    device_type?: string | null;
+    device_profile?: string | null;
+    name: string;
+    assigned_zones?: string[] | null;
+    status: string;
+    metadata?: Record<string, unknown> | null;
+    last_active_at?: string | null;
+    pairing_state?: string | null;
+    management_provider?: string | null;
+    management_device_id?: string | null;
+    app_version?: string | null;
+    target_app_version?: string | null;
+    ota_status?: string | null;
+}
+
 export type GetDeviceContextResult =
     | {
           ok: true;
@@ -236,11 +255,11 @@ export async function getDeviceContext(request: Request): Promise<GetDeviceConte
             .eq('device_token', token)
             .single();
 
-    let device: Record<string, unknown> | null = null;
+    let device: EnterpriseDeviceRow | null = null;
     let error: { message: string } | null = null;
 
     const enterpriseResult = await fetchEnterpriseDevice();
-    device = (enterpriseResult.data as Record<string, unknown> | null) ?? null;
+    device = (enterpriseResult.data as EnterpriseDeviceRow | null) ?? null;
     error = enterpriseResult.error;
 
     if (error && isEnterpriseDeviceSchemaError(error.message)) {
@@ -252,7 +271,7 @@ export async function getDeviceContext(request: Request): Promise<GetDeviceConte
             .eq('device_token', token)
             .single();
 
-        device = (legacyResult.data as Record<string, unknown> | null) ?? null;
+        device = (legacyResult.data as EnterpriseDeviceRow | null) ?? null;
         error = legacyResult.error;
     }
 
@@ -272,9 +291,7 @@ export async function getDeviceContext(request: Request): Promise<GetDeviceConte
 
     return {
         ok: true as const,
-        device: hydrateEnterpriseDeviceRecord(
-            device as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
-        ) as HydratedDeviceRecord,
+        device: hydrateEnterpriseDeviceRecord(device) as HydratedDeviceRecord,
         restaurantId: device.restaurant_id as string,
         admin,
     };
