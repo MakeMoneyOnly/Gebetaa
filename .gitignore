@@ -83,5 +83,25 @@ SKILLS/*
 !SKILLS/enterprise/
 .vercel
 
-# Added by ggshield
+# AI/IDE tool configs — contain secrets or are per-user
+.kilo/
+.kilocode/
+.claude/
+.qoder/
+.roo/
+.clinerules
+.cursorrules
+
+# Generated/cache artifacts
+.ruff_cache/
 .cache_ggshield
+skills-lock.json
+missing_migrations.json
+
+# Seed data — contains PII, not for version control
+seed-data*.sql
+
+# Local scratch plans
+plans/
+
+# Added by ggshield
