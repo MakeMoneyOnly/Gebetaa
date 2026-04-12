@@ -230,8 +230,7 @@ export async function getCampaigns(
         offset?: number;
     }
 ): Promise<MarketingCampaign[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // HIGH-013: Explicit column selection
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- HIGH-013: Explicit column selection
     let query = (supabase as any)
         .from('marketing_campaigns')
         .select(
@@ -274,8 +273,7 @@ export async function getCampaign(
     restaurantId: string,
     campaignId: string
 ): Promise<MarketingCampaign | null> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // HIGH-013: Explicit column selection
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- HIGH-013: Explicit column selection
     const { data, error } = await (supabase as any)
         .from('marketing_campaigns')
         .select(
@@ -661,8 +659,7 @@ export async function getEmailTemplates(
     supabase: ExtendedSupabaseClient,
     restaurantId: string
 ): Promise<EmailTemplate[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // HIGH-013: Explicit column selection
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- HIGH-013: Explicit column selection
     const { data, error } = await (supabase as any)
         .from('email_templates')
         .select(

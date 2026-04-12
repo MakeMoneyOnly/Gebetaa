@@ -44,7 +44,7 @@ export async function getActiveHappyHour(
     const { data: schedules, error } = await supabase
         .from('happy_hour_schedules')
         .select(
-            'id, restaurant_id, name, schedule_days, schedule_start_time, schedule_end_time, discount_percentage, discount_fixed_amount, is_active, priority, created_at, updated_at'
+            'id, restaurant_id, name, name_am, description, description_am, applies_to, schedule_days, schedule_start_time, schedule_end_time, discount_percentage, discount_fixed_amount, is_active, priority, requires_manager_pin, target_category_id, target_menu_item_ids, created_by, created_at, updated_at'
         )
         .eq('restaurant_id', restaurantId)
         .eq('is_active', true)

@@ -12,7 +12,7 @@ import {
     getSyncQueueStatus,
 } from './idempotency';
 import { logger } from '@/lib/logger';
-import { handleSyncConflict, detectConflict, reconcileWithServer } from './conflict-resolution';
+import { handleSyncConflict, reconcileWithServer } from './conflict-resolution';
 
 /**
  * Sync operation row type from the database
@@ -405,7 +405,7 @@ export function createSyncWorker(config: Partial<SyncWorkerConfig> = {}): SyncWo
     /**
      * HIGH-006: Process detected conflicts using the conflict resolution engine
      */
-    async function processConflicts(
+    async function _processConflicts(
         operations: SyncOperationRow[]
     ): Promise<{ resolved: number; failed: number }> {
         let resolved = 0;

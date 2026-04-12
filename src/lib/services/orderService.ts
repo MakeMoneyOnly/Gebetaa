@@ -196,12 +196,12 @@ export async function createOrder(
         const { data: fullOrder } = await supabase
             .from('orders')
             .select(
-                'id, restaurant_id, order_number, table_number, guest_name, guest_phone, status, order_type, subtotal_santim, discount_santim, vat_santim, total_santim, notes, idempotency_key, guest_fingerprint, created_at, updated_at'
+                'id, restaurant_id, order_number, table_number, customer_name, customer_phone, status, order_type, discount_amount, total_price, notes, idempotency_key, guest_fingerprint, created_at, updated_at'
             )
             .eq('id', existingOrder.id)
             .single();
         if (fullOrder) {
-            return { success: true, order: fullOrder };
+            return { success: true, order: fullOrder as Order };
         }
     }
 
