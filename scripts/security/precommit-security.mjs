@@ -50,9 +50,8 @@ function resolveGgshield() {
 console.warn('Running GitGuardian secret scan (ggshield)...');
 const gg = resolveGgshield();
 if (!gg) {
-    console.error(
-        'ggshield is not installed or not on PATH. Install with: python -m pip install --user ggshield'
-    );
+    console.error('ggshield not installed. Install: pip install --user ggshield');
+    console.error('Bypass with GITGUARDIAN_SKIP=1 only in emergencies. Document reason.');
     process.exit(1);
 }
 run(gg.command, [...gg.argsPrefix, 'secret', 'scan', 'pre-commit']);
@@ -60,9 +59,7 @@ run(gg.command, [...gg.argsPrefix, 'secret', 'scan', 'pre-commit']);
 console.warn('Running Trivy vulnerability scan...');
 const trivy = resolveTrivy();
 if (!trivy) {
-    console.error(
-        'Trivy is not installed or not on PATH. Install with: winget install -e --id AquaSecurity.Trivy'
-    );
+    console.error('Trivy not installed. Install: winget install -e --id AquaSecurity.Trivy');
     process.exit(1);
 }
 run(trivy.command, [

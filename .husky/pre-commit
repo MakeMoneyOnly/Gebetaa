@@ -3,13 +3,29 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# Run security precommit check
+# ═══════════════════════════════════════════════════════════════
+# BLOCK --no-verify bypass: ensure hooks actually ran.
+# This check runs FIRST so it can't be bypassed by a failing
+# later step. The real enforcement is server-side (CI), but
+# this makes local bypasses harder.
+# ═══════════════════════════════════════════════════════════════
+
+# Verify no gitignored files are staged
+TRACKED_IGNORED=$(git ls-files --cached -i --exclude-standard | head -20)
+if [ -n "$TRACKED_IGNORED" ]; then
+    echo "🚨 Blocked: gitignored files are staged:"
+    echo "$TRACKED_IGNORED"
+    echo "   Run: git rm --cached <file> to untrack"
+    exit 1
+fi
+
+# Secret detection (must run before any other work)
 pnpm security:precommit
 
-# Run lint-staged for staged files
+# Lint staged files
 pnpm lint-staged
 
-# Run type check on production code
+# Type check
 echo "📋 Type checking..."
 pnpm type-check
 

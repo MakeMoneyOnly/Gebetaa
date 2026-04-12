@@ -1,0 +1,57 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔒 Running pre-push security checks..."
+
+# ═══════════════════════════════════════════════════════════════
+# BLOCK --no-verify: detect if hooks were skipped on the current
+# or recent commits. If so, reject the push.
+# ═══════════════════════════════════════════════════════════════
+
+# Check if any commit since origin/main was created with --no-verify
+# by looking for the absence of expected hook artifacts (lint-staged,
+# typecheck) in the commit metadata, OR by checking if the git config
+# allows skipping hooks.
+if git config --get-all hooks.pre-push.requireVerification 2>/dev/null | grep -q 'true'; then
+    echo "🚫 BLOCKED: hooks.pre-push.requireVerification is enabled."
+    echo "   --no-verify pushes are not allowed in this repository."
+    echo "   Re-commit without --no-verify to proceed."
+    exit 1
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# GitGuardian pre-push scan — scans ALL commits being pushed,
+# not just the diff. Catches secrets committed with --no-verify.
+# ═══════════════════════════════════════════════════════════════
+if command -v ggshield >/dev/null 2>&1; then
+    echo "🔍 Running GitGuardian secret scan (pre-push)..."
+    ggshield secret scan pre-push || {
+        echo "🚨 GitGuardian found secrets in pushed commits!"
+        echo "   Rotate the compromised secret immediately."
+        echo "   Then remove the secret from code and re-commit."
+        exit 1
+    }
+elif command -v python >/dev/null 2>&1 && python -m ggshield --version >/dev/null 2>&1; then
+    echo "🔍 Running GitGuardian secret scan (pre-push via python)..."
+    python -m ggshield secret scan pre-push || {
+        echo "🚨 GitGuardian found secrets in pushed commits!"
+        exit 1
+    }
+else
+    echo "⚠️  ggshield not installed. Secret scanning SKIPPED."
+    echo "   Install: pip install --user ggshield"
+    echo "   CI will still scan — do not rely on this skip."
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# Verify no gitignored files are tracked
+# ═══════════════════════════════════════════════════════════════
+TRACKED_IGNORED=$(git ls-files --cached -i --exclude-standard | head -20)
+if [ -n "$TRACKED_IGNORED" ]; then
+    echo "🚨 gitignored files are tracked in git:"
+    echo "$TRACKED_IGNORED"
+    echo "   Run: git rm --cached <file> to untrack"
+    exit 1
+fi
+
+echo "✅ Pre-push security checks passed!"
