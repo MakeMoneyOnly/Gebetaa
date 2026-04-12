@@ -16,6 +16,11 @@ const eslintConfig = defineConfig([
         'SKILLS/**',
         '.ts',
         'lint_output.txt',
+        'clear-templates.js',
+        'fix-scaffold.js',
+        'scaffold-dashboard.js',
+        'tests/load/**',
+        'tests/performance/**',
     ]),
     {
         rules: {
@@ -53,10 +58,11 @@ const eslintConfig = defineConfig([
         },
     },
     {
-        files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*', 'e2e/**/*'],
+        files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*', 'e2e/**/*', 'tests/**'],
         rules: {
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-unused-vars': 'off',
+            'no-console': 'off',
         },
     },
 ]);
