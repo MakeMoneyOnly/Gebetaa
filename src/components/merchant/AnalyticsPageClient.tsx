@@ -17,7 +17,7 @@ import {
     Users,
 } from 'lucide-react';
 import { MetricCard } from '@/components/merchant/MetricCard';
-import { RevenueChart } from '@/components/merchant/RevenueChart';
+import RevenueChart from '@/components/merchant/RevenueChart';
 import { useAppLocale } from '@/hooks/useAppLocale';
 import { formatETBCurrency } from '@/lib/format/et';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
@@ -250,7 +250,7 @@ export function AnalyticsPageClient({ initialData }: AnalyticsPageClientProps) {
 
                 {/* Weekly Bar Chart using Recharts */}
                 <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                         <BarChart
                             data={[
                                 { day: 'Sun', orders: 85 },

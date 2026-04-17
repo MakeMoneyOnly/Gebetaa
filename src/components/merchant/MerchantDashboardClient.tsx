@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 
 import { MetricCard } from '@/components/merchant/MetricCard';
-import { RevenueChart } from '@/components/merchant/RevenueChart';
+import RevenueChart from '@/components/merchant/RevenueChart';
 
 import { AlertRuleBuilderDrawer } from '@/components/merchant/command-center/AlertRuleBuilderDrawer';
 import {

@@ -10,13 +10,10 @@ const ChartSkeleton = () => (
 
 // Lazy load the entire chart component to reduce initial bundle by ~300KB
 // This uses Next.js dynamic import which handles code splitting automatically
-const RevenueChartContent = dynamic(
-    () => import('./RevenueChartContent').then(mod => mod.RevenueChartContent),
-    {
-        loading: () => <ChartSkeleton />,
-        ssr: false, // Chart doesn't need SSR - saves server resources
-    }
-);
+const RevenueChartContent = dynamic(() => import('./RevenueChartContent'), {
+    loading: () => <ChartSkeleton />,
+    ssr: false, // Chart doesn't need SSR - saves server resources
+});
 
 interface ChartPoint {
     label: string;
@@ -28,7 +25,7 @@ interface RevenueChartProps {
     data?: ChartPoint[];
 }
 
-export const RevenueChart = ({ data = [] }: RevenueChartProps) => {
+const RevenueChart = ({ data = [] }: RevenueChartProps) => {
     const [mounted, setMounted] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [chartSize, setChartSize] = useState({ width: 0, height: 0 });
@@ -66,3 +63,5 @@ export const RevenueChart = ({ data = [] }: RevenueChartProps) => {
         </div>
     );
 };
+
+export default RevenueChart;

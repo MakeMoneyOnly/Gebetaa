@@ -15,8 +15,8 @@ import {
     ArrowUpRight,
     BarChart3,
 } from 'lucide-react';
-import { RevenueChart } from '@/components/merchant/RevenueChart';
-import { SalesPerformanceChart } from '@/components/merchant/SalesPerformanceChart';
+import RevenueChart from '@/components/merchant/RevenueChart';
+import SalesPerformanceChart from '@/components/merchant/SalesPerformanceChart';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function DashboardPage() {
@@ -364,10 +364,6 @@ export default async function DashboardPage() {
                                     className="h-3.5 w-3.5 text-gray-400"
                                 />
                             </button>
-                            <button className="flex h-11 items-center gap-2 rounded-xl bg-gray-50 px-4 text-sm font-bold text-gray-700 transition-colors outline-none hover:bg-gray-100">
-                                <SlidersHorizontal strokeWidth={2} className="h-3.5 w-3.5" />
-                                Filters
-                            </button>
                         </div>
                     </div>
 
@@ -413,9 +409,20 @@ export default async function DashboardPage() {
 
                 <div className="col-span-1 flex min-h-[500px] flex-col justify-between rounded-3xl border border-gray-100 bg-white lg:col-span-4">
                     <div className="flex h-full flex-col p-8">
-                        <div className="mb-8 flex items-center gap-2">
-                            <h3 className="text-lg font-medium text-gray-400">Sales Performance</h3>
-                            <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
+                        <div className="mb-8 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-medium text-gray-400">
+                                    Sales Performance
+                                </h3>
+                                <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
+                            </div>
+                            <button className="flex h-11 items-center gap-1 rounded-xl bg-gray-50 px-4 text-sm font-bold text-gray-700 transition-colors outline-none hover:bg-gray-100">
+                                Today
+                                <ChevronDown
+                                    strokeWidth={2}
+                                    className="h-3.5 w-3.5 text-gray-400"
+                                />
+                            </button>
                         </div>
 
                         <div className="relative flex aspect-square w-full grow items-center justify-center">
@@ -423,7 +430,7 @@ export default async function DashboardPage() {
                                 <SalesPerformanceChart totalSales={75} averageSales={40} />
                             </div>
 
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pt-36">
+                            <div className="absolute inset-0 flex flex-col items-center justify-end pb-12">
                                 <div className="flex items-center gap-2">
                                     <span className="text-display-2 font-bold text-gray-900">
                                         17.9%
@@ -459,8 +466,12 @@ export default async function DashboardPage() {
                             </div>
                         </div>
                     </div>
-                    <button className="flex w-full items-center justify-center gap-2 rounded-b-3xl border-t border-gray-50 py-4 text-xs font-bold text-gray-400/80 opacity-80 transition-all outline-none hover:bg-gray-50 hover:text-gray-900 hover:opacity-100">
-                        See details <ArrowRight strokeWidth={2} className="h-4 w-4" />
+                    <button className="group flex w-full items-center justify-center gap-2 rounded-b-3xl border-t border-gray-50 bg-gray-50 py-4 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                        See details{' '}
+                        <ArrowRight
+                            strokeWidth={2}
+                            className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
+                        />
                     </button>
                 </div>
 

@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { RevenueChart } from './RevenueChart';
+import RevenueChart from './RevenueChart';
 
 // Mock next/dynamic to return a simple component
 vi.mock('next/dynamic', () => ({

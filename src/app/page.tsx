@@ -894,6 +894,7 @@ export default function LandingPage() {
                                         src={op.image}
                                         alt={op.name}
                                         fill
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         className="object-cover transition-transform duration-1000 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
@@ -1010,6 +1011,7 @@ export default function LandingPage() {
                                         src={item.image}
                                         alt={item.name}
                                         fill
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-70 transition-opacity group-hover:opacity-90" />
@@ -1063,6 +1065,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2070&auto=format&fit=crop"
                                     alt="Point of Sale"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1086,9 +1089,10 @@ export default function LandingPage() {
                             {/* Card 2: Reservations */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1550966841-3ee7adac1af8?q=80&w=2070&auto=format&fit=crop"
+                                    src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=2070&auto=format&fit=crop"
                                     alt="Reservations"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1116,6 +1120,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=600&auto=format&fit=crop"
                                     alt="Payments"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1140,9 +1145,10 @@ export default function LandingPage() {
                             {/* Card 4: QR Ordering */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1595113316349-9fa4ee24f884?q=80&w=2070&auto=format&fit=crop"
+                                    src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=2070&auto=format&fit=crop"
                                     alt="QR Ordering"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1167,9 +1173,10 @@ export default function LandingPage() {
                             {/* Card 5: Inventory */}
                             <figure className="group relative h-96 w-full cursor-pointer overflow-hidden rounded-[16px]">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1621415263409-225965ed2a72?q=80&w=2070&auto=format&fit=crop"
+                                    src="https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1974&auto=format&fit=crop"
                                     alt="Inventory"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1197,9 +1204,10 @@ export default function LandingPage() {
                             {/* Sticky Card 1: Kitchen Display */}
                             <figure className="group relative h-full w-full cursor-pointer overflow-hidden rounded-[16px]">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1551218808-94e2183e1622?q=80&w=2070&auto=format&fit=crop"
+                                    src="https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1974&auto=format&fit=crop"
                                     alt="Kitchen Display"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1226,6 +1234,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop"
                                     alt="Insights"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1250,9 +1259,10 @@ export default function LandingPage() {
                             {/* Sticky Card 3: Offline Sync */}
                             <figure className="group relative h-full w-full cursor-pointer overflow-hidden rounded-[16px]">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1622675363211-6e79b139749a?q=80&w=2070&auto=format&fit=crop"
+                                    src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2047&auto=format&fit=crop"
                                     alt="Offline Sync"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1282,6 +1292,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?q=80&w=2070&auto=format&fit=crop"
                                     alt="Guest Profiles"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1309,6 +1320,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop"
                                     alt="Table Management"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1335,6 +1347,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1505935428862-770b6f24f629?q=80&w=2071&auto=format&fit=crop"
                                     alt="Staff & Shifts"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1362,6 +1375,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=2070&auto=format&fit=crop"
                                     alt="Menu Builder"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1388,6 +1402,7 @@ export default function LandingPage() {
                                     src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=2070&auto=format&fit=crop"
                                     alt="Multi-Location"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

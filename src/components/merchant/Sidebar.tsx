@@ -9,7 +9,6 @@ import {
     ShoppingBag,
     UtensilsCrossed,
     QrCode,
-    User,
     Users,
     Settings,
     LogOut,
@@ -18,12 +17,17 @@ import {
     Megaphone,
     ChefHat,
     Plug,
+    Wallet,
+    CreditCard,
+    Landmark,
+    Store,
+    User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SECTIONS = [
     {
-        title: 'MAIN MENU',
+        title: 'OVERVIEW',
         items: [
             { label: 'Home', href: '/merchant', icon: LayoutGrid },
             { label: 'Reports', href: '/merchant/reports', icon: BarChart3 },
@@ -32,18 +36,28 @@ const SECTIONS = [
     {
         title: 'OPERATIONS',
         items: [
-            { label: 'Menus', href: '/merchant/menu', icon: UtensilsCrossed },
-            { label: 'Front of House', href: '/merchant/foh', icon: QrCode },
-            { label: 'Back of House', href: '/merchant/boh', icon: ChefHat },
+            { label: 'Menus', href: '/merchant/menus', icon: UtensilsCrossed },
             { label: 'Takeout & Delivery', href: '/merchant/takeout', icon: ShoppingBag },
+            { label: 'Front of House', href: '/merchant/foh', icon: QrCode },
+            { label: 'Kitchen', href: '/merchant/kitchen', icon: ChefHat },
         ],
     },
     {
-        title: 'PEOPLE & GROWTH',
+        title: 'PEOPLE & FINANCE',
         items: [
-            { label: 'Team', href: '/merchant/team', icon: Users },
-            { label: 'Guests', href: '/merchant/guests', icon: User },
-            { label: 'Marketing', href: '/merchant/marketing', icon: Megaphone },
+            { label: 'Employees', href: '/merchant/employees', icon: Users },
+            { label: 'Payroll', href: '/merchant/payroll', icon: Wallet },
+            { label: 'Payments', href: '/merchant/payments', icon: CreditCard },
+        ],
+    },
+    {
+        title: 'GROWTH',
+        items: [{ label: 'Marketing', href: '/merchant/marketing', icon: Megaphone }],
+    },
+    {
+        title: 'PLATFORM',
+        items: [
+            { label: 'Financial Products', href: '/merchant/financial', icon: Landmark },
             { label: 'Integrations', href: '/merchant/integrations', icon: Plug },
         ],
     },
@@ -65,6 +79,7 @@ export function Sidebar() {
                             width={110}
                             height={100}
                             className="pointer-events-none absolute top-1/2 left-0 h-20 w-auto max-w-none origin-left -translate-y-1/2"
+                            style={{ width: 'auto' }}
                             priority
                         />
                     </div>
@@ -73,9 +88,9 @@ export function Sidebar() {
                 {/* Search Bar Moved to Header */}
 
                 {/* Navigation */}
-                <nav className="space-y-8 px-1">
+                <nav className="space-y-6 px-1">
                     {SECTIONS.map(section => (
-                        <div key={section.title} className="space-y-3">
+                        <div key={section.title} className="space-y-1.5">
                             <h3 className="text-micro px-4 font-bold tracking-[-0.04em] text-gray-400 uppercase">
                                 {section.title}
                             </h3>
@@ -92,13 +107,13 @@ export function Sidebar() {
                                             key={item.label}
                                             href={item.href}
                                             className={cn(
-                                                'group flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200 ease-in-out',
+                                                'group flex items-center justify-between rounded-xl px-4 py-2.5 transition-all duration-200 ease-in-out',
                                                 isActive
                                                     ? 'bg-gray-100 text-black shadow-none'
                                                     : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                                             )}
                                         >
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-3">
                                                 <Icon
                                                     className={cn(
                                                         'h-[22px] w-[22px] transition-colors',
@@ -110,7 +125,7 @@ export function Sidebar() {
                                                 />
                                                 <span
                                                     className={cn(
-                                                        'truncate text-base tracking-[-0.04em] transition-colors',
+                                                        'truncate text-sm tracking-[-0.04em] transition-colors',
                                                         isActive
                                                             ? 'font-semibold text-black'
                                                             : 'font-medium text-gray-500 group-hover:text-black'
@@ -128,16 +143,17 @@ export function Sidebar() {
                 </nav>
             </div>
 
-            {/* Bottom Section (Reverted to old style) */}
+            {/* Bottom Section */}
             <div className="mt-auto space-y-1 border-t border-[#F1F1F1] pt-6">
                 {[
-                    { href: '/merchant/setup', icon: Settings, label: 'Settings' },
+                    { href: '/merchant/shop', icon: Store, label: 'Shop' },
                     { href: '/merchant/help', icon: HelpCircle, label: 'Help & Support' },
+                    { href: '/merchant/setup', icon: Settings, label: 'Settings' },
                 ].map(link => (
                     <Link key={link.href} href={link.href} className="block w-full">
                         <div
                             className={cn(
-                                'group flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 hover:bg-gray-50',
+                                'group flex items-center gap-3 rounded-xl px-4 py-2.5 transition-all duration-200 hover:bg-gray-50',
                                 pathname === link.href ? 'bg-gray-100 text-black' : 'text-gray-500'
                             )}
                         >
@@ -166,12 +182,12 @@ export function Sidebar() {
 
                 {/* Logout row */}
                 <button
-                    className="group flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition-all duration-200 hover:bg-red-50"
+                    className="group flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-left transition-all duration-200 hover:bg-red-50"
                     onClick={() => {
                         window.location.href = '/auth/login';
                     }}
                 >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <User
                             className="h-[22px] w-[22px] shrink-0 text-gray-400 transition-colors group-hover:text-red-400"
                             strokeWidth={1.5}

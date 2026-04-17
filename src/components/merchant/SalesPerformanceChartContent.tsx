@@ -1,36 +1,31 @@
 'use client';
 
 import React from 'react';
-import {
-    PieChart,
-    Pie,
-    Cell,
-    ResponsiveContainer
-} from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 interface SalesPerformanceChartContentProps {
     data: {
         totalSales: number;
         averageSales: number;
-    }
+    };
 }
 
-export const SalesPerformanceChartContent = ({ data }: SalesPerformanceChartContentProps) => {
-    // We create gauge segments. 
+const SalesPerformanceChartContent = ({ data }: SalesPerformanceChartContentProps) => {
+    // We create gauge segments.
     // Total Sales arc
     const totalSalesData = [
         { value: data.totalSales, color: '#D9FF43' }, // Active part
-        { value: 100 - data.totalSales, color: '#F8FAFC' } // Background part
+        { value: 100 - data.totalSales, color: '#F8FAFC' }, // Background part
     ];
 
     // Average Sales arc (inner)
     const averageSalesData = [
         { value: data.averageSales, color: '#D9FF4366' }, // Active part (faded)
-        { value: 100 - data.averageSales, color: '#F8FAFC' } // Background part
+        { value: 100 - data.averageSales, color: '#F8FAFC' }, // Background part
     ];
 
     return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 {/* Outer Arc (Total Sales) */}
                 <Pie
@@ -75,3 +70,5 @@ export const SalesPerformanceChartContent = ({ data }: SalesPerformanceChartCont
         </ResponsiveContainer>
     );
 };
+
+export default SalesPerformanceChartContent;

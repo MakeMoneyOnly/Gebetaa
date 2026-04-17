@@ -87,6 +87,7 @@ export default function LoginPage() {
                         width={96}
                         height={90}
                         className="pointer-events-none absolute top-1/2 left-0 h-[74px] w-auto max-w-none origin-left -translate-y-1/2 md:h-[90px]"
+                        style={{ width: 'auto' }}
                         priority
                     />
                 </Link>

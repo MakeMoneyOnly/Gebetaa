@@ -24,9 +24,9 @@ interface RevenueChartContentProps {
 
 // This component is lazy-loaded via Next.js dynamic import
 // to reduce the initial bundle size by ~300KB (recharts library)
-export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
+const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
     return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <AreaChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                 <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
@@ -51,7 +51,11 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                         fontFamily: 'var(--font-inter)',
                         letterSpacing: '-0.04em',
                     }}
-                    itemStyle={{ color: '#17120B', fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
+                    itemStyle={{
+                        color: '#17120B',
+                        fontFamily: 'var(--font-inter)',
+                        letterSpacing: '-0.04em',
+                    }}
                     cursor={{ stroke: '#8A887A', strokeWidth: 1, strokeDasharray: '3 3' }}
                     formatter={(value, name) => {
                         const numValue = typeof value === 'number' ? value : 0;
@@ -60,19 +64,36 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                             name === 'income' ? 'Current Period' : 'Previous Period',
                         ];
                     }}
-                    labelStyle={{ color: '#8A887A', marginBottom: '8px', fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
+                    labelStyle={{
+                        color: '#8A887A',
+                        marginBottom: '8px',
+                        fontFamily: 'var(--font-inter)',
+                        letterSpacing: '-0.04em',
+                    }}
                 />
                 <XAxis
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
+                    tick={{
+                        fill: '#8A887A',
+                        fontSize: 12,
+                        fontWeight: 500,
+                        fontFamily: 'var(--font-inter)',
+                        letterSpacing: '-0.04em',
+                    }}
                     dy={10}
                 />
                 <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
+                    tick={{
+                        fill: '#8A887A',
+                        fontSize: 12,
+                        fontWeight: 500,
+                        fontFamily: 'var(--font-inter)',
+                        letterSpacing: '-0.04em',
+                    }}
                     tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
                     domain={[0, 'auto']}
                     width={40}
@@ -103,3 +124,5 @@ export const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
         </ResponsiveContainer>
     );
 };
+
+export default RevenueChartContent;
