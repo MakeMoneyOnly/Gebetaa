@@ -106,10 +106,16 @@ Gebetaa/
 ├── supabase/
 │   └── migrations/             # Database migrations
 ├── docs/                       # Documentation
-│   ├── PRODUCT/                # Product documentation
-│   ├── TECHNICAL/              # Technical documentation
-│   ├── STANDARDS/              # Coding standards
-│   └── OPERATIONS/             # Operational runbooks
+│   ├── 01-foundation/          # Architecture, PRD, tech stack
+│   ├── 02-security/            # Security standards
+│   ├── 03-product/            # Product documentation
+│   ├── 04-operations/          # Operational guides
+│   ├── 05-infrastructure/     # Infrastructure docs
+│   ├── 06-integrations/       # Integration guides
+│   ├── 07-audits/             # Compliance audits
+│   ├── 09-runbooks/           # Incident runbooks
+│   ├── api/                   # API endpoint reference
+│   └── implementation/        # Implementation guides
 ├── e2e/                        # E2E tests
 └── scripts/                    # Utility scripts
 ```
@@ -134,17 +140,17 @@ Gebetaa/
 
 ## 📚 Documentation
 
-> **⚠️ Start Here:** For the authoritative platform blueprint, technical decisions, and architecture, see [Engineering Foundation](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md)
+> **⚠️ Start Here:** For the authoritative platform blueprint, technical decisions, and architecture, see [Architecture](docs/01-foundation/architecture.md)
 
-### Engineering Foundation (Primary)
+### Foundation (Primary)
 
-- [0. Enterprise Master Blueprint](docs/1/Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md) — Master blueprint, Toast comparison, 12 laws
-- [1. Product Requirements](docs/1/Engineering%20Foundation/1.%20PRD.md) — Feature requirements
-- [2. Tech Stack](docs/1/Engineering%20Foundation/2.%20Tech_Stack.md) — Technology decisions
-- [3. System Architecture](docs/1/Engineering%20Foundation/3.%20System_Architecure.md) — Architecture diagrams
-- [4. Database Schema](docs/1/Engineering%20Foundation/4.%20Database_Schema.md) — Schema reference
-- [5. API Design Guide](docs/1/Engineering%20Foundation/5.%20API_Design_Guide.md) — API conventions
-- [6. Engineering Runbook](docs/1/Engineering%20Foundation/6.%20ENGINEERING_RUNOOK.md) — Operations & deployment
+- [Architecture](docs/01-foundation/architecture.md) — Master blueprint, Toast comparison, 12 laws
+- [Product Requirements](docs/01-foundation/product-requirements.md) — Feature requirements
+- [Tech Stack](docs/01-foundation/tech-stack.md) — Technology decisions
+- [System Architecture](docs/01-foundation/system-architecture.md) — Architecture diagrams
+- [Database Schema](docs/01-foundation/database-schema.md) — Schema reference
+- [API Design Guide](docs/01-foundation/api-design.md) — API conventions
+- [Engineering Runbook](docs/01-foundation/engineering-runbook.md) — Operations & deployment
 
 ### Execution
 
@@ -152,7 +158,15 @@ Gebetaa/
 
 ### Reference
 
-- [Coding Standards](docs/STANDARDS/)
+- [Security](docs/02-security/) — Security standards and audits
+- [Product](docs/03-product/) — Product documentation
+- [Operations](docs/04-operations/) — Operational runbooks
+- [Infrastructure](docs/05-infrastructure/) — Infrastructure docs
+- [Integrations](docs/06-integrations/) — Integration guides
+- [Audits](docs/07-audits/) — Feature and compliance audits
+- [Runbooks](docs/09-runbooks/) — Incident and operational runbooks
+- [API](docs/api/) — API endpoint reference
+- [Implementation](docs/implementation/) — Implementation guides and audits
 - [Toast Feature Audit](TOAST_FEATURE_AUDIT.md) — Detailed Toast feature comparison
 
 ---

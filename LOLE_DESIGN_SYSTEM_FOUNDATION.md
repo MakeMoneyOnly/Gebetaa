@@ -23,18 +23,18 @@ This is not a mood board. It is the operating spec for building a branded compan
 
 Visual inputs, in order:
 
-1. [src/app/page.tsx](c:/Users/user/Desktop/Gebetaa/src/app/page.tsx) as the current visual source of truth for the rebrand
-2. [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) for company vision, mission, positioning, and messaging only
-3. Existing shared primitives in [src/components/ui/Button.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Button.tsx), [src/components/ui/Card.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Card.tsx), and [src/components/ui/Input.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Input.tsx)
-4. Existing global token layer in [src/app/globals.css](c:/Users/user/Desktop/Gebetaa/src/app/globals.css)
+1. [src/app/page.tsx](src/app/page.tsx) as the current visual source of truth for the rebrand
+2. [Brand.md](Brand.md) for company vision, mission, positioning, and messaging only
+3. Existing shared primitives in [src/components/ui/Button.tsx](src/components/ui/Button.tsx), [src/components/ui/Card.tsx](src/components/ui/Card.tsx), and [src/components/ui/Input.tsx](src/components/ui/Input.tsx)
+4. Existing global token layer in [src/app/globals.css](src/app/globals.css)
 
 Important:
 
 - Canonical brand name is `Lole`
 - Legacy names `Gebeta`, `Gebetaa`, and stylistic casing `LoLe` must be retired from product-facing surfaces
-- [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) is a legacy strategic document and must not be used as a visual source for colors, typography, layout, motion, or component styling
+- [Brand.md](Brand.md) is a legacy strategic document and must not be used as a visual source for colors, typography, layout, motion, or component styling
 - The current landing page visual direction is the only visual source of truth for the rebrand
-- The strategic parts of [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) remain useful and should be preserved where they align
+- The strategic parts of [Brand.md](Brand.md) remain useful and should be preserved where they align
 
 ## Task 1: Brand Lock
 
@@ -190,7 +190,7 @@ The landing page already contains the rebrand direction. It is not yet a system,
    Product UI needs clear success, warning, destructive, syncing, offline, and urgent state colors, not just brand colors.
 
 5. The brand doc and landing page diverge.
-   [Brand.md](c:/Users/user/Desktop/Gebetaa/Brand.md) describes a green-led identity, while the current landing page is lime, espresso, mist, and ember. That conflict would cause drift if we do not explicitly resolve it here.
+   [Brand.md](Brand.md) describes a green-led identity, while the current landing page is lime, espresso, mist, and ember. That conflict would cause drift if we do not explicitly resolve it here.
 
 ### Current Gaps In The Application
 
@@ -199,8 +199,8 @@ The app shell and shared components do not yet inherit the landing-page aestheti
 Observed gaps:
 
 - `Lole` is not the canonical name everywhere yet
-- the root layout still carries `Gebeta` metadata in [src/app/layout.tsx](c:/Users/user/Desktop/Gebetaa/src/app/layout.tsx)
-- the global token layer in [src/app/globals.css](c:/Users/user/Desktop/Gebetaa/src/app/globals.css) mixes multiple unrelated palettes
+- the root layout still carries `Gebeta` metadata in [src/app/layout.tsx](src/app/layout.tsx)
+- the global token layer in [src/app/globals.css](src/app/globals.css) mixes multiple unrelated palettes
 - shared primitives exist, but many product screens still use raw one-off Tailwind classes
 - dashboard surfaces use inconsistent gray palettes, radii, borders, and shadows
 - product surfaces do not yet feel visually related to the marketing site
@@ -287,7 +287,7 @@ Proposed product semantics:
 Decision:
 
 - Marketing and product should converge on `Inter` as the primary system font
-- Existing multi-font setup in [src/app/layout.tsx](c:/Users/user/Desktop/Gebetaa/src/app/layout.tsx) should be simplified during implementation
+- Existing multi-font setup in [src/app/layout.tsx](src/app/layout.tsx) should be simplified during implementation
 
 #### Type Roles
 
@@ -510,12 +510,12 @@ The design system needs a governed inventory, not ad hoc components.
 
 Existing reusable code we can evolve:
 
-- [src/components/ui/Button.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Button.tsx)
-- [src/components/ui/Card.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Card.tsx)
-- [src/components/ui/Input.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Input.tsx)
-- [src/components/ui/Modal.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Modal.tsx)
-- [src/components/ui/Table.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Table.tsx)
-- [src/components/ui/Toast.tsx](c:/Users/user/Desktop/Gebetaa/src/components/ui/Toast.tsx)
+- [src/components/ui/Button.tsx](src/components/ui/Button.tsx)
+- [src/components/ui/Card.tsx](src/components/ui/Card.tsx)
+- [src/components/ui/Input.tsx](src/components/ui/Input.tsx)
+- [src/components/ui/Modal.tsx](src/components/ui/Modal.tsx)
+- [src/components/ui/Table.tsx](src/components/ui/Table.tsx)
+- [src/components/ui/Toast.tsx](src/components/ui/Toast.tsx)
 
 These should become canonical primitives. Screens should stop hand-rolling replacements.
 
@@ -617,9 +617,9 @@ This rollout should happen in phases.
 
 ### Phase 1: Token Infrastructure
 
-- clean [src/app/globals.css](c:/Users/user/Desktop/Gebetaa/src/app/globals.css)
+- clean [src/app/globals.css](src/app/globals.css)
 - establish canonical semantic tokens
-- align root typography in [src/app/layout.tsx](c:/Users/user/Desktop/Gebetaa/src/app/layout.tsx)
+- align root typography in [src/app/layout.tsx](src/app/layout.tsx)
 - remove conflicting legacy color tokens
 
 ### Phase 2: Shared Primitives

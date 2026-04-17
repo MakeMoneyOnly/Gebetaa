@@ -65,6 +65,7 @@ jobs:
             - name: GitGuardian ggshield scan
               uses: GitGuardian/ggshield-action@master
               env:
+                  GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
                   GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
                   GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
                   GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -82,9 +83,20 @@ jobs:
                   severity: HIGH,CRITICAL
                   exit-code: 1
 
+            - name: Check Trivy SARIF output
+              id: trivy-check
+              if: always()
+              run: |
+                  if [ -f "trivy-secrets.sarif" ]; then
+                    echo "sarif_exists=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "sarif_exists=false" >> $GITHUB_OUTPUT
+                    echo "::warning::Trivy did not generate trivy-secrets.sarif"
+                  fi
+
             - name: Upload Trivy Secret Results
               uses: github/codeql-action/upload-sarif@v3
-              if: always()
+              if: steps.trivy-check.outputs.sarif_exists == 'true'
               with:
                   sarif_file: trivy-secrets.sarif
                   category: trivy-secrets
@@ -166,29 +178,3 @@ jobs:
               with:
                   sarif_file: trivy-vuln.sarif
                   category: trivy-vulnerabilities
-
-    # ═══════════════════════════════════════════════════════════════════════════
-    # SECURITY SUMMARY - Aggregate results
-    # ═══════════════════════════════════════════════════════════════════════════
-    security-summary:
-        name: Security Summary
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        needs: [secret-scan, trivy]
-        if: always()
-        steps:
-            - name: Check Security Results
-              run: |
-                  echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
-                  echo "" >> $GITHUB_STEP_SUMMARY
-                  echo "| Scan | Status |" >> $GITHUB_STEP_SUMMARY
-                  echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-                  echo "| CodeQL | (handled by GitHub default) |" >> $GITHUB_STEP_SUMMARY
-                  echo "| Secret Scan | ${{ needs.secret-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-                  echo "| Trivy Vuln | ${{ needs.trivy.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-                  echo "" >> $GITHUB_STEP_SUMMARY
-                  echo "View detailed results in the Security tab." >> $GITHUB_STEP_SUMMARY
-
-            - name: Fail if critical scans failed
-              if: needs.secret-scan.result == 'failure'
-              run: exit 1

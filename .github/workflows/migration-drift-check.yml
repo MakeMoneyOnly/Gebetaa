@@ -25,6 +25,20 @@ jobs:
               run: |
                   echo "=== Checking migration drift between local and remote ==="
 
+                  # Validate required secrets before attempting to connect
+                  if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
+                    echo "::warning::Required Supabase secrets are not configured. Skipping migration drift check."
+                    echo "::warning::Configure SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, and SUPABASE_DB_PASSWORD as repository secrets."
+                    echo "=== Migration drift check skipped ==="
+                    exit 0
+                  fi
+
+                  # Validate project ref format (should be alphanumeric, ~20 chars)
+                  if ! echo "$SUPABASE_PROJECT_REF" | grep -qE '^[a-z0-9]{16,}$'; then
+                    echo "::error::SUPABASE_PROJECT_REF format is invalid. Expected alphanumeric string (16+ chars). Got: '${SUPABASE_PROJECT_REF:0:3}...'"
+                    exit 1
+                  fi
+
                   # Link to project
                   npx supabase link --project-ref $SUPABASE_PROJECT_REF --db-password "$SUPABASE_DB_PASSWORD"
 

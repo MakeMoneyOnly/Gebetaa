@@ -58,8 +58,8 @@ terraform/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/gebeta.git
-cd gebeta/terraform
+git clone https://github.com/MakeMoneyOnly/Gebetaa.git
+cd Gebetaa/terraform
 ```
 
 ### 2. Configure your environment
@@ -145,7 +145,7 @@ terraform apply -var-file="example.tfvars"
 
 ### Vercel Module
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Node Version**: 20
 - **Build Command**: `pnpm build`
 - **Install Command**: `pnpm install`
@@ -225,4 +225,4 @@ export AWS_SECRET_ACCESS_KEY=your-secret-key
 
 ## License
 
-MIT License - See LICENSE file in project root.
+Proprietary - All rights reserved. See project root for details.
