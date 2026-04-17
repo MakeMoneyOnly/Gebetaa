@@ -1,14 +1,21 @@
 /**
- * Telegram Alert System
+ * Telegram + PagerDuty Alert System
  *
  * Addresses CRIT-08 from ENTERPRISE_MASTER_BLUEPRINT Section 13
- * Provides critical alerting via Telegram for production incidents.
+ * Provides critical alerting via Telegram and PagerDuty for production incidents.
  *
  * Alert Types:
- * - Critical: POS offline, payment failures, database down
- * - Warning: High latency, queue backlog, low stock
+ * - Critical: POS offline, payment failures, database down (Telegram + PagerDuty)
+ * - Warning: High latency, queue backlog, low stock (Telegram only)
+ * - Info: Deployment notifications, scheduled maintenance (Telegram only)
  *
- * @see docs/1. Engineering Foundation/0. ENTERPRISE_MASTER_BLUEPRINT.md - Sprint 1.7
+ * Escalation Policy (Sev1):
+ * 1. Telegram notification to ops channel
+ * 2. PagerDuty triggers on-call engineer
+ * 3. If no ack in 5min, escalates to secondary
+ * 4. If no ack in 15min, escalates to engineering manager
+ *
+ * @see docs/09-runbooks/incident-triage-rubric.md
  */
 
 /**
@@ -22,6 +29,11 @@ export type AlertLevel = 'critical' | 'warning' | 'info';
 export interface AlertContext {
     [key: string]: string | number | boolean | undefined;
 }
+
+/**
+ * Import PagerDuty for critical alert escalation
+ */
+import { sendPagerDutyAlert, isPagerDutyEnabled } from './pagerduty';
 
 /**
  * Configuration for Telegram alerts
@@ -93,7 +105,7 @@ function escapeMarkdown(text: string): string {
 }
 
 /**
- * Send alert to Telegram
+ * Send alert to Telegram (and PagerDuty for critical alerts)
  *
  * @param level - Alert severity level
  * @param message - Alert message
@@ -101,7 +113,7 @@ function escapeMarkdown(text: string): string {
  * @returns Promise<boolean> - Whether the alert was sent successfully
  *
  * @example
- * // Critical alert for POS offline
+ * // Critical alert for POS offline (sends to Telegram + PagerDuty)
  * await sendAlert('critical', 'POS device has not synced for 5 minutes', {
  *   restaurant_id: 'rest-123',
  *   restaurant_name: 'Saba Grill',
@@ -115,41 +127,63 @@ export async function sendAlert(
     context?: AlertContext
 ): Promise<boolean> {
     const config = getTelegramConfig();
+    let telegramSuccess = false;
+    let pagerdutySuccess = false;
 
-    if (!config.enabled) {
-        // Log to console if Telegram is not configured
+    // Send to Telegram
+    if (config.enabled) {
+        try {
+            const text = formatAlertMessage(level, message, context);
+
+            const response = await fetch(
+                `https://api.telegram.org/bot${config.botToken}/sendMessage`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: config.chatId,
+                        text,
+                        parse_mode: 'Markdown',
+                        disable_web_page_preview: true,
+                    }),
+                }
+            );
+
+            if (response.ok) {
+                telegramSuccess = true;
+            } else {
+                const errorText = await response.text();
+                console.error(`Failed to send Telegram alert: ${response.status} ${errorText}`);
+            }
+        } catch (error) {
+            console.error('Failed to send Telegram alert:', error);
+        }
+    } else {
         console.warn(
             `[ALERT ${level.toUpperCase()}] Telegram alerts not configured. Message: ${message}`,
             context
         );
-        return false;
     }
 
-    try {
-        const text = formatAlertMessage(level, message, context);
-
-        const response = await fetch(`https://api.telegram.org/bot${config.botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: config.chatId,
-                text,
-                parse_mode: 'Markdown',
-                disable_web_page_preview: true,
-            }),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Failed to send Telegram alert: ${response.status} ${errorText}`);
-            return false;
+    // Send to PagerDuty for critical alerts only
+    if (level === 'critical' && isPagerDutyEnabled()) {
+        try {
+            const result = await sendPagerDutyAlert(level, message, context);
+            pagerdutySuccess = result.success;
+            if (!result.success) {
+                console.error('[PagerDuty] Failed to send alert:', result.error);
+            }
+        } catch (error) {
+            console.error('[PagerDuty] Exception sending alert:', error);
         }
-
-        return true;
-    } catch (error) {
-        console.error('Failed to send Telegram alert:', error);
-        return false;
     }
+
+    // Return true if at least one channel succeeded
+    // For critical alerts, we want both channels; for others, Telegram only
+    if (level === 'critical') {
+        return telegramSuccess || pagerdutySuccess;
+    }
+    return telegramSuccess;
 }
 
 /**
@@ -320,40 +354,84 @@ export const Alerts = {
 } as const;
 
 /**
- * Check if alerts are enabled
+ * Check if alerts are enabled (Telegram or PagerDuty)
  */
 export function areAlertsEnabled(): boolean {
-    return getTelegramConfig().enabled;
+    return getTelegramConfig().enabled || isPagerDutyEnabled();
 }
 
 /**
- * Test alert system (sends a test message)
- * Use this to verify Telegram configuration
+ * Check if PagerDuty escalation is enabled
+ */
+export function isEscalationEnabled(): boolean {
+    return isPagerDutyEnabled();
+}
+
+/**
+ * Test alert system (sends test messages to all configured channels)
+ * Use this to verify Telegram and PagerDuty configuration
  */
 export async function testAlerts(): Promise<{
     success: boolean;
     message: string;
+    details: {
+        telegram: boolean;
+        pagerduty: boolean;
+    };
 }> {
-    const config = getTelegramConfig();
+    const telegramConfig = getTelegramConfig();
+    const pagerdutyEnabled = isPagerDutyEnabled();
 
-    if (!config.enabled) {
+    const details = {
+        telegram: false,
+        pagerduty: false,
+    };
+
+    // Test Telegram
+    if (telegramConfig.enabled) {
+        details.telegram = await sendInfoAlert('Test alert from Gebeta monitoring', {
+            test: true,
+            timestamp: new Date().toISOString(),
+        });
+    }
+
+    // Test PagerDuty (sends a warning, not critical)
+    if (pagerdutyEnabled) {
+        const result = await sendPagerDutyAlert('warning', 'Test alert from Gebeta monitoring', {
+            test: true,
+            timestamp: new Date().toISOString(),
+        });
+        details.pagerduty = result.success;
+    }
+
+    const anySuccess = details.telegram || details.pagerduty;
+    const messages: string[] = [];
+
+    if (!telegramConfig.enabled && !pagerdutyEnabled) {
         return {
             success: false,
             message:
-                'Telegram alerts not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_ALERT_CHAT_ID.',
+                'No alert channels configured. Set TELEGRAM_BOT_TOKEN + TELEGRAM_ALERT_CHAT_ID and/or PAGERDUTY_ROUTING_KEY.',
+            details,
         };
     }
 
-    const success = await sendInfoAlert('Test alert from Gebeta monitoring', {
-        test: true,
-        timestamp: new Date().toISOString(),
-    });
+    if (details.telegram) messages.push('Telegram: OK');
+    if (details.pagerduty) messages.push('PagerDuty: OK');
+
+    // If Telegram is configured but failed
+    if (telegramConfig.enabled && !details.telegram) {
+        messages.push('Telegram: FAILED');
+    }
+    // If PagerDuty is configured but failed
+    if (pagerdutyEnabled && !details.pagerduty) {
+        messages.push('PagerDuty: FAILED');
+    }
 
     return {
-        success,
-        message: success
-            ? 'Test alert sent successfully'
-            : 'Failed to send test alert. Check bot token and chat ID.',
+        success: anySuccess,
+        message: messages.join(' | '),
+        details,
     };
 }
 
@@ -364,6 +442,7 @@ const alertSystem = {
     sendInfoAlert,
     Alerts,
     areAlertsEnabled,
+    isEscalationEnabled,
     testAlerts,
 };
 

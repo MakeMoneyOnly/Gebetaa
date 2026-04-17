@@ -7,8 +7,6 @@
  * P0 Security Requirement: Rate limiting on all mutation endpoints
  */
 
-import { createHash } from 'crypto';
-
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from './logger';
@@ -398,7 +396,7 @@ async function checkRedisRateLimit(
 /**
  * Get client IP from request
  */
-function getClientIP(request: NextRequest): string {
+async function getClientIP(request: NextRequest): Promise<string> {
     // Check for forwarded headers (when behind proxy/load balancer)
     const forwarded = request.headers.get('x-forwarded-for');
     if (forwarded) {
@@ -413,12 +411,15 @@ function getClientIP(request: NextRequest): string {
     }
 
     // Fallback: generate a fingerprint from user-agent and accept-language
-    // instead of using 127.0.0.1 which would share a single rate limit bucket
+    // using Web Crypto API (Edge Runtime compatible)
     const userAgent = request.headers.get('user-agent') || '';
     const acceptLang = request.headers.get('accept-language') || '';
-    const fingerprint = createHash('sha256')
-        .update(`${userAgent}:${acceptLang}`)
-        .digest('hex')
+    const data = new TextEncoder().encode(`${userAgent}:${acceptLang}`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const fingerprint = hashArray
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
         .substring(0, 16);
     return `fp-${fingerprint}`;
 }
@@ -551,7 +552,7 @@ export async function checkRateLimit(
     request: NextRequest,
     config: RateLimitConfig
 ): Promise<RateLimitResult> {
-    const clientIP = getClientIP(request);
+    const clientIP = await getClientIP(request);
     const path = request.nextUrl.pathname;
 
     const key = `${config.keyPrefix || 'rl'}:${clientIP}:${path}`;
@@ -606,7 +607,7 @@ export async function rateLimitMiddleware(request: NextRequest): Promise<NextRes
 
     // If rate limited, return 429
     if (!result.success) {
-        const clientIp = getClientIP(request);
+        const clientIp = await getClientIP(request);
 
         logger.warn('Rate limit exceeded', {
             action: 'rate_limit:exceeded',
@@ -666,7 +667,7 @@ export function withRateLimit<T extends (...args: unknown[]) => unknown>(
         const result = await checkRateLimit(request, config);
 
         if (!result.success) {
-            const clientIp = getClientIP(request);
+            const clientIp = await getClientIP(request);
 
             logger.warn('Rate limit exceeded', {
                 action: 'rate_limit:exceeded',

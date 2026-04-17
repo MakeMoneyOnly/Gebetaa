@@ -276,7 +276,7 @@ describe('Telegram Alert System', () => {
             const result = await testAlerts();
 
             expect(result.success).toBe(false);
-            expect(result.message).toContain('not configured');
+            expect(result.message).toContain('No alert channels configured');
         });
 
         it('sends test alert when configured', async () => {
@@ -291,7 +291,7 @@ describe('Telegram Alert System', () => {
             const result = await testAlerts();
 
             expect(result.success).toBe(true);
-            expect(result.message).toContain('successfully');
+            expect(result.message).toContain('Telegram: OK');
 
             // Cleanup
             delete process.env.TELEGRAM_BOT_TOKEN;
