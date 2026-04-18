@@ -51,12 +51,9 @@ const SECTIONS = [
         ],
     },
     {
-        title: 'GROWTH',
-        items: [{ label: 'Marketing', href: '/merchant/marketing', icon: Megaphone }],
-    },
-    {
-        title: 'PLATFORM',
+        title: 'GROWTH & PLATFORM',
         items: [
+            { label: 'Marketing', href: '/merchant/marketing', icon: Megaphone },
             { label: 'Financial Products', href: '/merchant/financial', icon: Landmark },
             { label: 'Integrations', href: '/merchant/integrations', icon: Plug },
         ],

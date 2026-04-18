@@ -68,7 +68,7 @@ export const LoginForm = () => {
     return (
         <Card className="bg-surface-0/80 border-surface-200 w-full max-w-md border p-8 shadow-2xl backdrop-blur-xl">
             <div className="mb-8 text-center">
-                <h1 className="mb-2 text-3xl font-bold text-black">Gebeta</h1>
+                <h1 className="mb-2 text-3xl font-bold text-black">lole</h1>
                 <p className="text-text-secondary">Restaurant Operations Platform</p>
             </div>
 

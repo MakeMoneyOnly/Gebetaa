@@ -1,11 +1,36 @@
-'use client';
-
-import React from 'react';
-import { ShieldCheck, Smartphone, Lock, LogOut, Clock, History, AlertTriangle } from 'lucide-react';
-
+import React, { useState } from 'react';
+import {
+    ShieldCheck,
+    Smartphone,
+    Lock,
+    LogOut,
+    Clock,
+    History as HistoryIcon,
+    AlertTriangle,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ModernSelect } from './ModernSelect';
+import { getSupabaseClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 export function SecurityTab() {
+    const router = useRouter();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+            const supabase = getSupabaseClient();
+            await supabase.auth.signOut();
+            router.refresh();
+            router.push('/login');
+        } catch (err) {
+            logger.error('Logout failed', { error: err });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             <div className="flex items-center justify-between">
@@ -80,7 +105,15 @@ export function SecurityTab() {
                                     Lock dashboard after inactivity.
                                 </p>
                             </div>
-                            <ModernSelect options={[]} />
+                            <ModernSelect
+                                options={[
+                                    { value: '5m', label: '5 minutes' },
+                                    { value: '15m', label: '15 minutes' },
+                                    { value: '30m', label: '30 minutes' },
+                                    { value: '1h', label: '1 hour' },
+                                    { value: 'never', label: 'Never' },
+                                ]}
+                            />
                         </div>
                     </div>
                 </div>
@@ -91,12 +124,19 @@ export function SecurityTab() {
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
-                            <History className="h-5 w-5" />
+                            <HistoryIcon className="h-5 w-5" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-900">Logged-in Devices</h3>
                     </div>
-                    <button className="text-[11px] font-bold text-red-600 transition-colors hover:text-red-700">
-                        Log out of all devices
+                    <button
+                        onClick={() => handleLogout()}
+                        disabled={isLoggingOut}
+                        className={cn(
+                            'text-[11px] font-bold text-red-600 transition-colors hover:text-red-700',
+                            isLoggingOut && 'cursor-not-allowed opacity-50'
+                        )}
+                    >
+                        {isLoggingOut ? 'Logging out...' : 'Log out of all devices'}
                     </button>
                 </div>
 
@@ -104,13 +144,13 @@ export function SecurityTab() {
                     {[
                         {
                             device: 'MacBook Pro 14" (Current)',
-                            location: 'Addis Ababa, ET',
+                            location: 'Addis Ababa',
                             time: 'Active now',
                             ip: '197.156.12.XXX',
                         },
                         {
                             device: 'Samsung Galaxy S24 Ultra',
-                            location: 'Addis Ababa, ET',
+                            location: 'Addis Ababa',
                             time: '2 hours ago',
                             ip: '196.188.1.XXX',
                         },
@@ -142,7 +182,11 @@ export function SecurityTab() {
                                     {session.time}
                                 </span>
                                 {i !== 0 && (
-                                    <button className="rounded-lg border border-gray-100 bg-white p-2 text-gray-400 transition-all hover:text-red-500">
+                                    <button
+                                        onClick={() => handleLogout()}
+                                        disabled={isLoggingOut}
+                                        className="rounded-lg border border-gray-100 bg-white p-2 text-gray-400 transition-all hover:text-red-500"
+                                    >
                                         <LogOut className="h-4 w-4" />
                                     </button>
                                 )}

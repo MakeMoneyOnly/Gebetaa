@@ -12,7 +12,7 @@ export function useAppLocale(): AppLocale {
         if (queryLocale !== DEFAULT_APP_LOCALE) return queryLocale;
 
         if (typeof window !== 'undefined') {
-            const stored = normalizeLocale(window.localStorage.getItem('gebeta:locale'));
+            const stored = normalizeLocale(window.localStorage.getItem('lole:locale'));
             if (stored !== DEFAULT_APP_LOCALE) {
                 return stored;
             }

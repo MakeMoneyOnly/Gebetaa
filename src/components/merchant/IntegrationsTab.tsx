@@ -12,6 +12,7 @@ import {
     Clock,
     Info,
     AlertCircle,
+    Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,7 +41,7 @@ const INTEGRATIONS: Integration[] = [
         id: 'ethswitch',
         name: 'EthSwitch P2M',
         description:
-            'National interbank switch for Person-to-Merchant card payments. Enables Visa, MasterCard, and local Ethiopian bank card acceptance across all Cbe, Awash, and Dashen Pos terminals.',
+            'National interbank switch for Person-to-Merchant card payments. Enables Visa, MasterCard, and local bank card acceptance across all Cbe, Awash, and Dashen Pos terminals.',
         category: 'Local API Connectors',
         status: 'connected',
         lastSync: '2024-04-16T12:00:00Z',
@@ -69,7 +70,7 @@ const INTEGRATIONS: Integration[] = [
         id: 'chapa',
         name: 'Chapa Payment Gateway',
         description:
-            'Ethiopian-built payment gateway supporting ETB, USD payments via cards, bank transfers, and mobile money. Integrated with your Supabase payment sessions.',
+            'Ethiopian-built payment gateway supporting, USD payments via cards, bank transfers, and mobile money. Integrated with your Supabase payment sessions.',
         category: 'Payment Processing',
         status: 'connected',
         lastSync: '2024-04-16T12:05:00Z',
@@ -79,7 +80,7 @@ const INTEGRATIONS: Integration[] = [
         id: 'fayda',
         name: 'Fayda — Nidp Identity Verification',
         description:
-            'National Identity Digital Platform for verifying Ethiopian national IDs. Used for Kyc/Aml compliance during employee and control-person onboarding.',
+            'National Identity Digital Platform for verifying national IDs. Used for Kyc/Aml compliance during employee and control-person onboarding.',
         category: 'Identity & Compliance',
         status: 'pending',
         docsUrl: 'https://id.gov.et',
@@ -88,7 +89,7 @@ const INTEGRATIONS: Integration[] = [
         id: 'erca',
         name: 'Erca e-Tax Portal',
         description:
-            'Electronic Tax Receipt submission to the Ethiopian Revenue and Customs Authority. Every transaction generates a signed fiscal receipt. Failure to connect results in non-compliance penalties.',
+            'Electronic Tax Receipt submission to the Revenue and Customs Authority. Every transaction generates a signed fiscal receipt. Failure to connect results in non-compliance penalties.',
         category: 'Tax Compliance',
         status: 'connected',
         lastSync: '2024-04-16T09:30:00Z',
@@ -196,7 +197,7 @@ function IntegrationCard({
                         {integration.lastSync && (
                             <div className="mt-2 flex items-center gap-1 text-[10px] text-gray-400">
                                 <Clock className="h-3 w-3" />
-                                Last sync: {new Date(integration.lastSync).toLocaleString('en-ET')}
+                                Last sync: {new Date(integration.lastSync).toLocaleString()}
                             </div>
                         )}
                     </div>
@@ -327,6 +328,101 @@ export function IntegrationsTab() {
                     </div>
                 </div>
             ))}
+
+            {/* Developer Tools */}
+            <div className="mt-8 rounded-4xl bg-white p-8">
+                <div className="mb-8 flex items-center justify-between border-b border-gray-50 pb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
+                            <Zap
+                                className="h-5 w-5 fill-[#DDF853] stroke-black"
+                                strokeWidth={2.5}
+                            />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900">Developer Tools</h3>
+                            <p className="text-xs text-gray-400">
+                                Configure API access and webhook integrations.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 px-2 py-1 text-[10px] font-bold text-gray-400">
+                        DEV MODE
+                    </div>
+                </div>
+
+                <div className="space-y-10">
+                    {/* API Key Management */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold tracking-wider text-gray-900 uppercase">
+                                Merchant API Keys
+                            </h4>
+                            <button className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-gray-800">
+                                Generate Key
+                            </button>
+                        </div>
+                        <div className="group relative flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50/30 px-5 py-4 transition-all hover:bg-white hover:shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-100 bg-white text-gray-400">
+                                    <Lock className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-[11px] font-bold text-gray-900">
+                                        Production Key (Live)
+                                    </p>
+                                    <code className="font-mono text-[10px] tracking-tight text-gray-400">
+                                        pk_live_************************5678
+                                    </code>
+                                </div>
+                            </div>
+                            <button className="text-[11px] font-bold text-blue-600 italic opacity-0 transition-opacity group-hover:opacity-100">
+                                Reveal Key
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Webhook Configuration */}
+                    <div className="space-y-4 border-t border-gray-50 pt-6">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold tracking-wider text-gray-900 uppercase">
+                                Webhook Endpoints
+                            </h4>
+                            <button className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-900 transition-all hover:bg-gray-50">
+                                Add URL
+                            </button>
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50/30 px-5 py-4">
+                            <div className="flex items-center gap-4">
+                                <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-gray-100 bg-white">
+                                    <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                                </div>
+                                <div>
+                                    <p className="text-[11px] font-bold text-gray-900">
+                                        https://api.cafelucia.com/v1/webhook
+                                    </p>
+                                    <div className="mt-0.5 flex items-center gap-2">
+                                        <span className="cursor-default rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold text-gray-400 uppercase">
+                                            order.paid
+                                        </span>
+                                        <span className="cursor-default rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold text-gray-400 uppercase">
+                                            order.cancelled
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <button className="text-[11px] font-bold text-gray-400 italic hover:text-gray-600">
+                                    Test
+                                </button>
+                                <button className="rounded-lg border border-gray-100 bg-white p-2 text-gray-300 transition-all hover:text-red-500">
+                                    <AlertTriangle className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

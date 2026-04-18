@@ -25,7 +25,7 @@ export async function generateMetadata({
 
         if (error || !restaurant) {
             return {
-                title: 'Order Tracker | Gebeta',
+                title: 'Order Tracker | lole',
                 description: 'Track your order in real-time',
                 robots: { index: false, follow: false },
             };
@@ -38,7 +38,7 @@ export async function generateMetadata({
     } catch (error) {
         console.error('Error generating metadata:', error);
         return {
-            title: 'Order Tracker | Gebeta',
+            title: 'Order Tracker | lole',
             description: 'Track your order in real-time',
             robots: { index: false, follow: false },
         };

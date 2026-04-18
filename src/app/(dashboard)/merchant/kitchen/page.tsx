@@ -16,7 +16,7 @@ export default function KitchenPage() {
                         Kitchen Module Under Construction
                     </h3>
                     <p className="mt-1 text-xs text-gray-500">
-                        This module is part of the Gebeta Merchant Blueprint.
+                        This module is part of the lole Merchant Blueprint.
                     </p>
                 </div>
             </div>

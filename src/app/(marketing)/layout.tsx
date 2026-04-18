@@ -12,7 +12,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
 
             {/* Example: A simple footer for public pages */}
             <footer className="text-text-tertiary py-6 text-center text-xs">
-                <p>© 2026 Gebeta. All rights reserved.</p>
+                <p>© 2026 lole. All rights reserved.</p>
             </footer>
         </div>
     );

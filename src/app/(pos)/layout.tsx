@@ -14,7 +14,7 @@ export default function PosLayout({ children }: { children: React.ReactNode }) {
 }
 
 export const metadata = {
-    title: 'Gebeta POS',
+    title: 'lole POS',
     description: 'Point of Sale Terminal',
     themeColor: '#000000',
     viewport: {

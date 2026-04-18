@@ -37,7 +37,7 @@ export default async function DashboardPage() {
 
     const topItems = [
         {
-            name: 'Gebeta Platters',
+            name: 'lole Platters',
             sales: 127,
             rev: 'Br. 1,890',
             stock: '120',

@@ -10,7 +10,7 @@ import { generatePageMetadata } from '@/lib/seo';
 export const metadata = generatePageMetadata({
     title: 'Accessibility Statement',
     description:
-        'Gebeta Restaurant OS commitment to accessibility and WCAG 2.1 AA compliance. Learn about our accessibility features and how to report issues.',
+        'lole Restaurant OS commitment to accessibility and WCAG 2.1 AA compliance. Learn about our accessibility features and how to report issues.',
     path: '/accessibility',
 });
 
@@ -31,7 +31,7 @@ export default function AccessibilityPage() {
                             Our Commitment
                         </h2>
                         <p className="mb-4 text-gray-700">
-                            Gebeta Restaurant OS is committed to ensuring digital accessibility for
+                            lole Restaurant OS is committed to ensuring digital accessibility for
                             people with disabilities. We are continually improving the user
                             experience for everyone and applying the relevant accessibility
                             standards.
@@ -68,9 +68,9 @@ export default function AccessibilityPage() {
                             Technical Specifications
                         </h2>
                         <p className="mb-4 text-gray-700">
-                            Accessibility of Gebeta Restaurant OS relies on the following
-                            technologies to work with the particular combination of web browser and
-                            any assistive technologies or plugins installed on your computer:
+                            Accessibility of lole Restaurant OS relies on the following technologies
+                            to work with the particular combination of web browser and any assistive
+                            technologies or plugins installed on your computer:
                         </p>
                         <ul className="mb-4 list-inside list-disc space-y-1 text-gray-700">
                             <li>HTML5 (WAI-ARIA 1.1)</li>
@@ -152,7 +152,7 @@ export default function AccessibilityPage() {
                     <section className="mb-8">
                         <h2 className="mb-4 text-2xl font-semibold text-gray-900">Feedback</h2>
                         <p className="mb-4 text-gray-700">
-                            We welcome your feedback on the accessibility of Gebeta Restaurant OS.
+                            We welcome your feedback on the accessibility of lole Restaurant OS.
                             Please let us know if you encounter accessibility barriers:
                         </p>
                         <div className="mb-4 rounded-lg bg-gray-100 p-4">
@@ -161,10 +161,10 @@ export default function AccessibilityPage() {
                                 <li>
                                     <strong>Email:</strong>{' '}
                                     <a
-                                        href="mailto:accessibility@gebeta.app"
+                                        href="mailto:accessibility@lole.app"
                                         className="text-blue-600 hover:underline"
                                     >
-                                        accessibility@gebeta.app
+                                        accessibility@lole.app
                                     </a>
                                 </li>
                                 <li>
@@ -192,7 +192,7 @@ export default function AccessibilityPage() {
                             Assessment Approach
                         </h2>
                         <p className="mb-4 text-gray-700">
-                            Gebeta Restaurant OS assessed the accessibility of this website by:
+                            lole Restaurant OS assessed the accessibility of this website by:
                         </p>
                         <ul className="list-inside list-disc space-y-1 text-gray-700">
                             <li>Self-evaluation using WCAG 2.1 checklist</li>

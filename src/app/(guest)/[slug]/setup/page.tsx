@@ -80,7 +80,7 @@ export default function DeviceSetupPage() {
         }
 
         if (!slug) {
-            return 'Gebeta Device';
+            return 'lole Device';
         }
 
         return slug.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
@@ -170,7 +170,7 @@ export default function DeviceSetupPage() {
                             {title}
                         </p>
                         <h1 className="max-w-xl text-4xl font-black tracking-[-0.04em] text-black md:text-6xl">
-                            Welcome this device into the Gebeta fleet.
+                            Welcome this device into the lole fleet.
                         </h1>
                         <p className="max-w-lg text-base font-medium text-black/65 md:text-lg">
                             Enter the pairing code from your merchant dashboard. This tablet will

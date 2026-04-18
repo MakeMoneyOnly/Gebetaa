@@ -274,8 +274,8 @@ function StepSettlement({
                     Add your payout destination.
                 </h2>
                 <p className="mt-2 font-medium text-gray-500">
-                    Gebeta will create and manage your Chapa settlement subaccount and route
-                    eligible Chapa-hosted payouts to the bank or wallet destination you choose here.
+                    lole will create and manage your Chapa settlement subaccount and route eligible
+                    Chapa-hosted payouts to the bank or wallet destination you choose here.
                 </p>
             </div>
 
@@ -631,9 +631,9 @@ export default function OnboardingPage() {
 
             // ✅ Prime the sessionStorage cache BEFORE navigation
             // so the dashboard shows the real name instantly
-            sessionStorage.setItem('gebeta_restaurant_name', data.restaurant_name.trim());
+            sessionStorage.setItem('lole_restaurant_name', data.restaurant_name.trim());
             sessionStorage.setItem(
-                'gebeta_restaurant_handle',
+                'lole_restaurant_handle',
                 `@${data.restaurant_name.toLowerCase().replace(/\s+/g, '')}_admin`
             );
 
@@ -659,7 +659,7 @@ export default function OnboardingPage() {
                             G
                         </div>
                         <span className="font-manrope text-lg font-bold text-gray-900">
-                            Gebeta OS
+                            lole OS
                         </span>
                     </div>
 
@@ -806,7 +806,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <p className="mt-6 text-center text-xs font-medium text-gray-400">
-                    © 2026 Gebeta Inc. · Enterprise Restaurant OS
+                    © 2026 lole Inc. · Enterprise Restaurant OS
                 </p>
             </div>
         </main>

@@ -1,16 +1,8 @@
 'use client';
 
 import React from 'react';
-import {
-    CreditCard,
-    Landmark,
-    Wallet,
-    Calculator,
-    Calendar,
-    ArrowUpRight,
-    TrendingUp,
-} from 'lucide-react';
-
+import { Landmark, Calculator, Calendar, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ModernSelect } from './ModernSelect';
 
 export function FinancialsTab() {
@@ -35,12 +27,11 @@ export function FinancialsTab() {
                         icon: TrendingUp,
                         color: 'text-black',
                         bg: 'bg-[#DDF853] text-black',
-                        bg: 'bg-[#DDF853] text-black',
                     },
                 ].map((stat, i) => (
                     <div
                         key={i}
-                        className="hover: rounded-4xl border-b border-gray-100 bg-white p-5 transition-all"
+                        className="rounded-4xl border-b border-gray-100 bg-white p-5 transition-all"
                     >
                         <div className="mb-3 flex items-center justify-between">
                             <div
@@ -211,6 +202,122 @@ export function FinancialsTab() {
                                 label: 'Poessa Automated deductions',
                                 desc: 'Auto-calculate monthly pension contributions.',
                                 checked: true,
+                            },
+                        ].map((item, i) => (
+                            <label
+                                key={i}
+                                className="flex cursor-pointer gap-4 rounded-xl border border-gray-50 bg-gray-50/30 p-4 transition-all hover:bg-gray-50"
+                            >
+                                <div className="relative mt-1 inline-flex h-5 w-9 shrink-0 cursor-pointer items-center">
+                                    <input
+                                        type="checkbox"
+                                        defaultChecked={item.checked}
+                                        className="peer sr-only"
+                                    />
+                                    <div className="h-full w-full rounded-full bg-gray-200 text-black transition-all peer-checked:bg-[#DDF853]" />
+                                    <div className="absolute left-0.5 h-4 w-4 rounded-full bg-white transition-all peer-checked:translate-x-4" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">{item.label}</p>
+                                    <p className="text-[11px] leading-tight font-medium text-gray-500">
+                                        {item.desc}
+                                    </p>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* ERCA & Payment Configurations */}
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                {/* ERCA Fiscal Receipt Config */}
+                <div className="rounded-4xl border-b border-gray-100 bg-white p-8">
+                    <div className="mb-6 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
+                            <Calculator className="h-5 w-5" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">Erca Fiscal Receipt</h3>
+                    </div>
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-400">
+                                Fiscal Receipt Prefix
+                            </label>
+                            <input
+                                type="text"
+                                className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50/30 px-4 text-sm font-semibold text-gray-900 transition-all outline-none focus:border-[#DDF853] focus:ring-1 focus:ring-[#DDF853]"
+                                placeholder="e.g. FS"
+                                defaultValue="AA-FS"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-400">
+                                Next Receipt Series Number
+                            </label>
+                            <input
+                                type="text"
+                                className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50/30 px-4 text-sm font-semibold text-gray-900 transition-all outline-none focus:border-[#DDF853] focus:ring-1 focus:ring-[#DDF853]"
+                                placeholder="000001"
+                                defaultValue="014022"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-gray-50 bg-gray-50/30 px-5 py-4">
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">
+                                    Digital Signature Status
+                                </p>
+                                <p className="text-[11px] font-medium text-green-600">
+                                    Active • MoR Verified
+                                </p>
+                            </div>
+                            <button className="text-xs font-bold text-blue-600 hover:underline">
+                                Renew
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Payments & Tips */}
+                <div className="rounded-4xl border-b border-gray-100 bg-white p-8">
+                    <div className="mb-6 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
+                            <Landmark className="h-5 w-5" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">Payment Rules & Tips</h3>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between rounded-xl border border-gray-50 bg-gray-50/30 px-5 py-4">
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">Tip Options</p>
+                                <p className="text-[11px] font-medium text-gray-500">
+                                    Show suggested tips on payment screens
+                                </p>
+                            </div>
+                            <ModernSelect
+                                options={[
+                                    { value: 'none', label: 'No Tip Prompt' },
+                                    { value: 'flat', label: 'Flat Amounts (10, 20, 50)' },
+                                    { value: 'percentage', label: 'Percentage (5%, 10%, 15%)' },
+                                ]}
+                            />
+                        </div>
+
+                        {[
+                            {
+                                label: 'Split Payments',
+                                desc: 'Allow customers to split bill by items or amount.',
+                                checked: true,
+                            },
+                            {
+                                label: 'Surcharge Disclosure',
+                                desc: 'Print NBE-mandated card surcharge warning.',
+                                checked: true,
+                            },
+                            {
+                                label: 'Cash Discount Program',
+                                desc: 'Apply automatic discount for cash payments.',
+                                checked: false,
                             },
                         ].map((item, i) => (
                             <label

@@ -56,7 +56,7 @@ export async function provisionDevice(data: {
         // For this MVP, we assume invite has Email.
         const email =
             invite.email ??
-            `device-${String(invite.role)}-${String(invite.id).slice(0, 8)}@provisioned.gebeta.local`;
+            `device-${String(invite.role)}-${String(invite.id).slice(0, 8)}@provisioned.lole.local`;
 
         // 3. Create Auth User (or Sign In if we had password, but here we arc Creating)
         // We use Admin API to creating user without email confirmation for device setup speed

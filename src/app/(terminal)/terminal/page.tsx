@@ -330,7 +330,7 @@ export default function TerminalPage() {
             const shouldAutoPrint = overview?.device.metadata?.receipt_mode === 'auto';
             if (shouldAutoPrint) {
                 const receipt = buildReceiptFromPaymentPayload({
-                    restaurantName: deviceInfo?.name ?? overview?.device.name ?? 'Gebeta',
+                    restaurantName: deviceInfo?.name ?? overview?.device.name ?? 'lole',
                     restaurantTin: null,
                     transactionNumber:
                         payload?.data?.transaction_number ??

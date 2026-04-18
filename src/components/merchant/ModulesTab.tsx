@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Smartphone, CheckCircle, Info, Star } from 'lucide-react';
+import { Smartphone, CheckCircle, Info, Star, CreditCard, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const MODULES = [
@@ -27,7 +27,7 @@ const MODULES = [
         status: 'Add-on',
         enabled: false,
         locked: false,
-        description: 'Ethiopian-compliant PAYE & pension filing.',
+        description: 'Compliant PAYE & pension filing.',
     },
     {
         id: 'takeout',
@@ -105,9 +105,56 @@ export function ModulesTab() {
                         Enable or disable core platform capabilities as your business grows.
                     </p>
                 </div>
-                <div className="bg-brand-accent border-brand-accent/20 flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold text-black">
+                <div className="flex items-center gap-2 rounded-full border border-[#DDF853]/20 bg-[#DDF853] px-3 py-1 text-[11px] font-bold text-black">
                     <Star className="h-3 w-3 fill-black" />
                     Premium Plan
+                </div>
+            </div>
+
+            {/* Billing & Subscription */}
+            <div className="rounded-4xl border-b border-gray-100 bg-white p-8">
+                <div className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
+                            <Star className="h-5 w-5 fill-black" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900">Current Plan</h3>
+                            <p className="text-[11px] font-medium text-gray-500">
+                                Billed monthly • Next invoice on May 1st
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-900 transition-all hover:bg-gray-50">
+                            View Invoices
+                        </button>
+                        <button className="rounded-xl bg-black px-4 py-2 text-xs font-bold text-white transition-all hover:bg-gray-800">
+                            Manage Plan
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div className="rounded-xl border border-gray-50 bg-gray-50/30 p-4">
+                        <p className="text-[11px] font-medium text-gray-400">Plan</p>
+                        <p className="mt-1 text-base font-bold text-gray-900">Premium Tier</p>
+                        <p className="mt-2 text-[10px] font-medium text-gray-500">
+                            Includes core modules + 3 add-ons
+                        </p>
+                    </div>
+                    <div className="rounded-xl border border-gray-50 bg-gray-50/30 p-4">
+                        <p className="text-[11px] font-medium text-gray-400">Price</p>
+                        <div className="mt-1 flex items-baseline gap-1">
+                            <p className="text-lg font-bold text-gray-900">1,500</p>
+                            <p className="text-[10px] font-medium text-gray-500">/ month</p>
+                        </div>
+                    </div>
+                    <div className="rounded-xl border border-gray-50 bg-gray-50/30 p-4">
+                        <p className="text-[11px] font-medium text-gray-400">Payment Method</p>
+                        <p className="mt-1 text-sm font-bold text-gray-900">Telebirr Auto-Pay</p>
+                        <p className="mt-2 text-[10px] font-medium text-green-600">Active</p>
+                    </div>
                 </div>
             </div>
 

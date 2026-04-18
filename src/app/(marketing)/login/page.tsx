@@ -4,7 +4,7 @@ import { generateAuthMetadata } from '@/lib/seo';
 
 export const metadata = generateAuthMetadata(
     'Login',
-    "Staff login for Gebeta Restaurant Platform - Ethiopia's leading restaurant operating system"
+    "Staff login for lole Restaurant Platform - Ethiopia's leading restaurant operating system"
 );
 
 export default function LoginPage() {

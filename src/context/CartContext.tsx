@@ -33,7 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // Load cart from local storage on mount
     useEffect(() => {
-        const savedCart = localStorage.getItem('gebeta-cart');
+        const savedCart = localStorage.getItem('lole-cart');
         if (savedCart) {
             try {
                 setItems(JSON.parse(savedCart));
@@ -45,7 +45,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // Save cart to local storage whenever it changes
     useEffect(() => {
-        localStorage.setItem('gebeta-cart', JSON.stringify(items));
+        localStorage.setItem('lole-cart', JSON.stringify(items));
     }, [items]);
 
     const addToCart = (newItem: Omit<CartItem, 'uniqueId'>) => {
@@ -101,7 +101,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const clearCart = () => {
         setItems([]);
-        localStorage.removeItem('gebeta-cart');
+        localStorage.removeItem('lole-cart');
     };
 
     const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);

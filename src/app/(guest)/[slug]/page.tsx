@@ -26,7 +26,7 @@ export async function generateMetadata({
 
         if (error || !restaurant) {
             return {
-                title: 'Restaurant Menu | Gebeta',
+                title: 'Restaurant Menu | lole',
                 description: 'Order food online from the best restaurants in Addis Ababa',
             };
         }
@@ -41,7 +41,7 @@ export async function generateMetadata({
     } catch (error) {
         console.error('Error generating metadata:', error);
         return {
-            title: 'Restaurant Menu | Gebeta',
+            title: 'Restaurant Menu | lole',
             description: 'Order food online from the best restaurants in Addis Ababa',
         };
     }

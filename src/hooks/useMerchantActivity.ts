@@ -27,13 +27,13 @@ export function useMerchantActivity() {
     // Initialize from sessionStorage instantly to prevent "Hello, Restaurant" flash
     const [restaurantName, setRestaurantName] = useState<string>(() => {
         if (typeof window !== 'undefined') {
-            return sessionStorage.getItem('gebeta_restaurant_name') ?? 'Restaurant';
+            return sessionStorage.getItem('lole_restaurant_name') ?? 'Restaurant';
         }
         return 'Restaurant';
     });
     const [restaurantHandle, setRestaurantHandle] = useState<string>(() => {
         if (typeof window !== 'undefined') {
-            return sessionStorage.getItem('gebeta_restaurant_handle') ?? '@restaurant_admin';
+            return sessionStorage.getItem('lole_restaurant_handle') ?? '@restaurant_admin';
         }
         return '@restaurant_admin';
     });
@@ -77,8 +77,8 @@ export function useMerchantActivity() {
                     setRestaurantName(name);
                     setRestaurantHandle(handle);
                     // Persist so minimize/restore doesn't flash "Restaurant"
-                    sessionStorage.setItem('gebeta_restaurant_name', name);
-                    sessionStorage.setItem('gebeta_restaurant_handle', handle);
+                    sessionStorage.setItem('lole_restaurant_name', name);
+                    sessionStorage.setItem('lole_restaurant_handle', handle);
                 }
 
                 // Transform orders to activities

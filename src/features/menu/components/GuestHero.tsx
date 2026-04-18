@@ -42,7 +42,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
         { label: 'Home', href: '#' },
         { label: 'My Orders', href: '#' },
         { label: 'Special Offers', href: '#' },
-        { label: 'About Gebeta', href: '#' },
+        { label: 'About lole', href: '#' },
         { label: 'For Restaurants', href: '#' },
         { label: 'Support', href: '#' },
     ];
@@ -69,7 +69,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                             <div className="relative h-10 w-32">
                                 <Image
                                     src="/Logo.gif"
-                                    alt="Gebeta Logo"
+                                    alt="lole Logo"
                                     fill
                                     className="object-contain object-left brightness-0 invert"
                                     unoptimized
@@ -122,7 +122,7 @@ export function GuestHero({ activeTab, onTabChange }: GuestHeroProps) {
                     <div className="relative h-10 w-32">
                         <Image
                             src="/Logo.gif"
-                            alt="Gebeta Logo"
+                            alt="lole Logo"
                             fill
                             className="object-contain object-left brightness-0 invert"
                             unoptimized

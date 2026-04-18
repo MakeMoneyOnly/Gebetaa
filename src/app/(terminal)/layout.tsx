@@ -5,7 +5,7 @@ export default function TerminalLayout({ children }: { children: React.ReactNode
 }
 
 export const metadata = {
-    title: 'Gebeta Terminal',
+    title: 'lole Terminal',
     description: 'Cashier and settlement workspace',
     themeColor: '#111111',
 };

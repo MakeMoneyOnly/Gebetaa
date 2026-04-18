@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import OfflineContent from '@/components/offline/OfflineContent';
 
 export const metadata: Metadata = {
-    title: 'Offline - Gebeta',
+    title: 'Offline - lole',
     description: 'You appear to be offline. Some features may be limited.',
 };
 

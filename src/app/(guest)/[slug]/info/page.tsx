@@ -24,7 +24,7 @@ export async function generateMetadata({
 
         if (error || !restaurant) {
             return {
-                title: 'Restaurant Info | Gebeta',
+                title: 'Restaurant Info | lole',
                 description: 'View restaurant location, hours, and contact information',
             };
         }
@@ -39,7 +39,7 @@ export async function generateMetadata({
     } catch (error) {
         console.error('Error generating metadata:', error);
         return {
-            title: 'Restaurant Info | Gebeta',
+            title: 'Restaurant Info | lole',
             description: 'View restaurant location, hours, and contact information',
         };
     }

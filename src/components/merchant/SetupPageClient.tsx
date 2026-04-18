@@ -19,7 +19,10 @@ import { FinancialsTab } from './FinancialsTab';
 import { LocationsTab } from './LocationsTab';
 import { SecurityTab } from './SecurityTab';
 import { DevicesTab } from './DevicesTab';
+import { IntegrationsTab } from './IntegrationsTab';
 import { ModulesTab } from './ModulesTab';
+import { NotificationsTab } from './NotificationsTab';
+import { Bell } from 'lucide-react';
 
 const TABS = [
     { id: 'business', label: 'Business Info', icon: Building2 },
@@ -28,7 +31,9 @@ const TABS = [
     { id: 'locations', label: 'Locations', icon: Globe },
     { id: 'security', label: 'Security', icon: ShieldCheck },
     { id: 'devices', label: 'Devices', icon: Printer },
-    { id: 'modules', label: 'Modules', icon: Smartphone },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'integrations', label: 'Integrations', icon: Zap },
+    { id: 'modules', label: 'Plan & Modules', icon: Smartphone },
 ];
 
 export function SetupPageClient() {
@@ -118,6 +123,8 @@ export function SetupPageClient() {
                 {activeTab === 'locations' && <LocationsTab />}
                 {activeTab === 'security' && <SecurityTab />}
                 {activeTab === 'devices' && <DevicesTab />}
+                {activeTab === 'notifications' && <NotificationsTab />}
+                {activeTab === 'integrations' && <IntegrationsTab />}
                 {activeTab === 'modules' && <ModulesTab />}
             </div>
         </div>

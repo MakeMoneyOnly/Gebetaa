@@ -14,7 +14,7 @@ export default function ShopPage() {
                 <div className="text-center">
                     <h3 className="text-sm font-semibold text-gray-900">Shop Under Construction</h3>
                     <p className="mt-1 text-xs text-gray-500">
-                        Official Gebeta POS hardware catalog coming soon.
+                        Official lole POS hardware catalog coming soon.
                     </p>
                 </div>
             </div>
