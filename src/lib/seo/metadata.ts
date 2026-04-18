@@ -1,5 +1,5 @@
 /**
- * SEO Metadata Utilities for Gebeta Restaurant OS
+ * SEO Metadata Utilities for lole Restaurant OS
  *
  * Provides reusable functions for generating consistent metadata across pages.
  * Supports i18n (English/Amharic) and Open Graph/Twitter cards.
@@ -11,10 +11,10 @@ import type { Metadata } from 'next';
  * Base site configuration
  */
 export const SITE_CONFIG = {
-    name: 'Gebeta',
+    name: 'lole',
     description:
         "Ethiopia's leading restaurant platform - Order food online from the best restaurants in Addis Ababa",
-    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://gebeta.app',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://lole.app',
     locale: 'en_ET',
     alternateLocale: 'am_ET',
 } as const;
@@ -36,13 +36,13 @@ export const defaultMetadata: Metadata = {
         'food delivery',
         'online ordering',
         'Ethiopian food',
-        'Gebeta',
+        'lole',
         'ምግብ ቤት',
         'መጋበሻ',
     ],
-    authors: [{ name: 'Gebeta' }],
-    creator: 'Gebeta',
-    publisher: 'Gebeta',
+    authors: [{ name: 'lole' }],
+    creator: 'lole',
+    publisher: 'lole',
     formatDetection: {
         email: false,
         address: false,
@@ -180,7 +180,7 @@ export function generateRestaurantMetadata(options: RestaurantMetadataOptions): 
     };
 
     const title = `${name} ${pathMap[path]} | ${SITE_CONFIG.name}`;
-    const defaultDescription = `Order delicious food from ${name}'s menu on Gebeta - Ethiopia's leading restaurant platform`;
+    const defaultDescription = `Order delicious food from ${name}'s menu on lole - Ethiopia's leading restaurant platform`;
     const metaDescription = description || defaultDescription;
 
     return generatePageMetadata({
@@ -217,7 +217,7 @@ export function generateOrderTrackerMetadata(options: OrderTrackerMetadataOption
 
     return generatePageMetadata({
         title,
-        description: `Track your order from ${restaurantName} in real-time on Gebeta`,
+        description: `Track your order from ${restaurantName} in real-time on lole`,
         path: `/${slug}/tracker`,
         noIndex: true, // Don't index order tracking pages
     });
@@ -276,7 +276,7 @@ export function generateRestaurantSchema(restaurant: {
         '@context': 'https://schema.org',
         '@type': 'Restaurant',
         name: restaurant.name,
-        description: restaurant.description || `${restaurant.name} - Order on Gebeta`,
+        description: restaurant.description || `${restaurant.name} - Order on lole`,
         image: restaurant.logoUrl,
         address: {
             '@type': 'PostalAddress',

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Gebeta Restaurant OS - Unused Overrides Checker
+ * lole Restaurant OS - Unused Overrides Checker
  *
  * This script checks for unused pnpm overrides in package.json.
  * Overrides that no longer apply to any dependency should be removed.
@@ -120,7 +120,7 @@ function checkOverrideInUse(overrideKey, _overrideValue) {
 }
 
 function main() {
-    log('\n📦 Gebeta Restaurant OS - Unused Overrides Checker\n', 'cyan');
+    log('\n📦 lole Restaurant OS - Unused Overrides Checker\n', 'cyan');
 
     const packageJson = getPackageJson();
     const overrides = packageJson.pnpm?.overrides || {};

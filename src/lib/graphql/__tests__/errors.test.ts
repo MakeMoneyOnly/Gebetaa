@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
-    GebetaGraphQLError,
+    loleGraphQLError,
     createErrorResult,
     handleResolverError,
     NOT_IMPLEMENTED_ERROR,
@@ -15,18 +15,18 @@ import {
 } from '../errors';
 
 describe('GraphQL Errors', () => {
-    describe('GebetaGraphQLError', () => {
+    describe('loleGraphQLError', () => {
         it('should create error with code and message', () => {
-            const error = new GebetaGraphQLError('Test error', 'NOT_FOUND');
+            const error = new loleGraphQLError('Test error', 'NOT_FOUND');
 
-            expect(error).toBeInstanceOf(GebetaGraphQLError);
+            expect(error).toBeInstanceOf(loleGraphQLError);
             expect(error.message).toBe('Test error');
             expect(error.code).toBe('NOT_FOUND');
         });
 
         it('should create error with details', () => {
             const details = { resourceId: '123', resourceType: 'Order' };
-            const error = new GebetaGraphQLError('Resource not found', 'NOT_FOUND', details);
+            const error = new loleGraphQLError('Resource not found', 'NOT_FOUND', details);
 
             expect(error.details).toEqual(details);
             expect(error.extensions?.resourceId).toBe('123');
@@ -34,7 +34,7 @@ describe('GraphQL Errors', () => {
         });
 
         it('should include code in extensions', () => {
-            const error = new GebetaGraphQLError('Unauthorized access', 'UNAUTHORIZED');
+            const error = new loleGraphQLError('Unauthorized access', 'UNAUTHORIZED');
 
             expect(error.extensions?.code).toBe('UNAUTHORIZED');
         });
@@ -52,7 +52,7 @@ describe('GraphQL Errors', () => {
             ];
 
             codes.forEach(code => {
-                const error = new GebetaGraphQLError(`Error for ${code}`, code);
+                const error = new loleGraphQLError(`Error for ${code}`, code);
                 expect(error.code).toBe(code);
             });
         });
@@ -101,8 +101,8 @@ describe('GraphQL Errors', () => {
             consoleErrorSpy.mockRestore();
         });
 
-        it('should handle GebetaGraphQLError', () => {
-            const error = new GebetaGraphQLError('Test error', 'NOT_FOUND');
+        it('should handle loleGraphQLError', () => {
+            const error = new loleGraphQLError('Test error', 'NOT_FOUND');
             const result = handleResolverError(error);
 
             expect(result.error.code).toBe('NOT_FOUND');
@@ -110,8 +110,8 @@ describe('GraphQL Errors', () => {
             expect(consoleErrorSpy).not.toHaveBeenCalled();
         });
 
-        it('should handle GebetaGraphQLError with details', () => {
-            const error = new GebetaGraphQLError('Validation failed', 'VALIDATION_ERROR', {
+        it('should handle loleGraphQLError with details', () => {
+            const error = new loleGraphQLError('Validation failed', 'VALIDATION_ERROR', {
                 field: 'email',
             });
             const result = handleResolverError(error);

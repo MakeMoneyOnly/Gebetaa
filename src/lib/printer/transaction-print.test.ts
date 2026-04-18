@@ -40,7 +40,7 @@ describe('handleApprovedTransactionReceipt', () => {
             transactionNumber: 'TX-1',
             isOnline: true,
             receipt: {
-                restaurant_name: 'Gebeta',
+                restaurant_name: 'lole',
                 transaction_number: 'TX-1',
                 printed_at: '2026-04-03T12:00:00.000Z',
                 items: [],
@@ -79,7 +79,7 @@ describe('handleApprovedTransactionReceipt', () => {
             transactionNumber: 'TX-2',
             isOnline: false,
             receipt: {
-                restaurant_name: 'Gebeta',
+                restaurant_name: 'lole',
                 transaction_number: 'TX-2',
                 printed_at: '2026-04-03T12:00:00.000Z',
                 items: [],

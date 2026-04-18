@@ -1,6 +1,6 @@
 {
-    "name": "Gebeta - Restaurant Operating System",
-    "short_name": "Gebeta",
+    "name": "lole - Restaurant Operating System",
+    "short_name": "lole",
     "description": "Toast for Addis Ababa - Restaurant Operating System for Ethiopia. Manage orders, menus, KDS, and payments offline-first.",
     "start_url": "/",
     "display": "standalone",

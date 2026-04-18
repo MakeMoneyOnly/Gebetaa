@@ -19,12 +19,14 @@ describe('prometheus monitoring', () => {
 
     it('should clear registry in non-production environment', () => {
         const originalEnv = process.env.NODE_ENV;
+        // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
         process.env.NODE_ENV = 'development';
         vi.resetModules();
 
         return import('../prometheus').then(async mod => {
             const result = await mod.getPrometheusMetrics();
             expect(result).toBeDefined();
+            // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
             process.env.NODE_ENV = originalEnv;
             vi.resetModules();
         });
@@ -33,11 +35,11 @@ describe('prometheus monitoring', () => {
     it('should export metrics object with all metric instances', () => {
         expect(metrics.httpRequestDurationSeconds).toBeInstanceOf(client.Histogram);
         expect(metrics.httpRequestsTotal).toBeInstanceOf(client.Counter);
-        expect(metrics.gebetaOrdersTotal).toBeInstanceOf(client.Counter);
-        expect(metrics.gebetaPaymentsTotal).toBeInstanceOf(client.Counter);
-        expect(metrics.gebetaPaymentFailureRate).toBeInstanceOf(client.Gauge);
-        expect(metrics.gebetaActiveSessions).toBeInstanceOf(client.Gauge);
-        expect(metrics.gebetaActiveRestaurants).toBeInstanceOf(client.Gauge);
+        expect(metrics.loleOrdersTotal).toBeInstanceOf(client.Counter);
+        expect(metrics.lolePaymentsTotal).toBeInstanceOf(client.Counter);
+        expect(metrics.lolePaymentFailureRate).toBeInstanceOf(client.Gauge);
+        expect(metrics.lolectiveSessions).toBeInstanceOf(client.Gauge);
+        expect(metrics.lolectiveRestaurants).toBeInstanceOf(client.Gauge);
     });
 
     describe('recordHttpRequest', () => {
@@ -105,7 +107,7 @@ describe('prometheus monitoring', () => {
         it('should increment order counter with correct labels', async () => {
             recordOrderEvent('rest-123', 'completed');
 
-            const values = await metrics.gebetaOrdersTotal.get();
+            const values = await metrics.loleOrdersTotal.get();
             const matched = values.values.find(
                 v => v.labels.restaurant_id === 'rest-123' && v.labels.status === 'completed'
             );
@@ -118,7 +120,7 @@ describe('prometheus monitoring', () => {
             recordOrderEvent('rest-456', 'cancelled');
             recordOrderEvent('rest-456', 'cancelled');
 
-            const values = await metrics.gebetaOrdersTotal.get();
+            const values = await metrics.loleOrdersTotal.get();
             const matched = values.values.find(
                 v => v.labels.restaurant_id === 'rest-456' && v.labels.status === 'cancelled'
             );
@@ -131,7 +133,7 @@ describe('prometheus monitoring', () => {
         it('should increment payment counter with correct labels', async () => {
             recordPaymentEvent('telebirr', 'success');
 
-            const values = await metrics.gebetaPaymentsTotal.get();
+            const values = await metrics.lolePaymentsTotal.get();
             const matched = values.values.find(
                 v => v.labels.provider === 'telebirr' && v.labels.status === 'success'
             );
@@ -143,7 +145,7 @@ describe('prometheus monitoring', () => {
             recordPaymentEvent('amole', 'success');
             recordPaymentEvent('cbe', 'failed');
 
-            const values = await metrics.gebetaPaymentsTotal.get();
+            const values = await metrics.lolePaymentsTotal.get();
             const amoleSuccess = values.values.find(
                 v => v.labels.provider === 'amole' && v.labels.status === 'success'
             );
@@ -161,7 +163,7 @@ describe('prometheus monitoring', () => {
         it('should set the active sessions gauge to the given value', async () => {
             setActiveSessions(42);
 
-            const values = await metrics.gebetaActiveSessions.get();
+            const values = await metrics.lolectiveSessions.get();
             expect(values.values[0]?.value).toBe(42);
         });
 
@@ -169,14 +171,14 @@ describe('prometheus monitoring', () => {
             setActiveSessions(10);
             setActiveSessions(5);
 
-            const values = await metrics.gebetaActiveSessions.get();
+            const values = await metrics.lolectiveSessions.get();
             expect(values.values[0]?.value).toBe(5);
         });
 
         it('should accept zero', async () => {
             setActiveSessions(0);
 
-            const values = await metrics.gebetaActiveSessions.get();
+            const values = await metrics.lolectiveSessions.get();
             expect(values.values[0]?.value).toBe(0);
         });
     });
@@ -185,7 +187,7 @@ describe('prometheus monitoring', () => {
         it('should set the active restaurants gauge to the given value', async () => {
             setActiveRestaurants(7);
 
-            const values = await metrics.gebetaActiveRestaurants.get();
+            const values = await metrics.lolectiveRestaurants.get();
             expect(values.values[0]?.value).toBe(7);
         });
 
@@ -193,7 +195,7 @@ describe('prometheus monitoring', () => {
             setActiveRestaurants(20);
             setActiveRestaurants(15);
 
-            const values = await metrics.gebetaActiveRestaurants.get();
+            const values = await metrics.lolectiveRestaurants.get();
             expect(values.values[0]?.value).toBe(15);
         });
     });
@@ -232,7 +234,7 @@ describe('prometheus monitoring', () => {
             recordPaymentEvent('amole', 'success');
 
             const result = (await getMetricsJson()) as Array<{ name: string }>;
-            const paymentMetric = result.find(m => m.name === 'gebeta_payments_total');
+            const paymentMetric = result.find(m => m.name === 'lole_payments_total');
             expect(paymentMetric).toBeDefined();
         });
     });

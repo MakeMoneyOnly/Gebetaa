@@ -34,8 +34,8 @@ export default defineConfig({
             ),
             SUPABASE_SECRET_KEY: getEnv('SUPABASE_SECRET_KEY', 'placeholder-secret'),
             SUPABASE_DB_URL: getEnv('SUPABASE_DB_URL'),
-            NEXT_PUBLIC_APP_URL: getEnv('NEXT_PUBLIC_APP_URL', 'https://gebeta.app'),
-            NEXT_PUBLIC_APP_NAME: getEnv('NEXT_PUBLIC_APP_NAME', 'Gebeta'),
+            NEXT_PUBLIC_APP_URL: getEnv('NEXT_PUBLIC_APP_URL', 'https://lole.app'),
+            NEXT_PUBLIC_APP_NAME: getEnv('NEXT_PUBLIC_APP_NAME', 'lole'),
             QR_HMAC_SECRET: getEnv(
                 'QR_HMAC_SECRET',
                 '0000000000000000000000000000000000000000000000000000000000000000'

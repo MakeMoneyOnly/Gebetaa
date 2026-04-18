@@ -116,7 +116,7 @@ export async function middleware(request: NextRequest) {
 
         // Add Content-Type based on Accept header or default to v1
         const acceptHeader = request.headers.get('accept');
-        if (acceptHeader?.includes('application/vnd.gebeta')) {
+        if (acceptHeader?.includes('application/vnd.lole')) {
             supabaseResponse.headers.set('Content-Type', acceptHeader);
         }
     }

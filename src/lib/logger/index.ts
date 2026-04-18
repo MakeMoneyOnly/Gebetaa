@@ -59,7 +59,7 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
  * Default logger configuration
  */
 const defaultConfig: LoggerConfig = {
-    service: process.env.NEXT_PUBLIC_APP_NAME || 'gebeta-api',
+    service: process.env.NEXT_PUBLIC_APP_NAME || 'lole-api',
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     minLevel: (process.env.LOG_LEVEL as LogLevel) || 'info',

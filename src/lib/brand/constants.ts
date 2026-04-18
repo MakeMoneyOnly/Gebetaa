@@ -1,11 +1,11 @@
 /**
- * GEBETA BRAND IDENTITY & DESIGN SYSTEM
+ * lole BRAND IDENTITY & DESIGN SYSTEM
  * Hospitality Operating System - Built for Speed & Resilience
  */
 
 // Brand Strategy
 export const BRAND_PURPOSE =
-    'To provide the invisible, bulletproof infrastructure that powers the heartbeat of hospitality. Gebeta exists to eliminate operational chaos, allowing restaurateurs to focus on the art of service rather than the friction of technology.';
+    'To provide the invisible, bulletproof infrastructure that powers the heartbeat of hospitality. lole exists to eliminate operational chaos, allowing restaurateurs to focus on the art of service rather than the friction of technology.';
 
 export const MISSION_STATEMENT =
     'To empower hospitality businesses with a unified, resilient, and intelligent operating system that optimizes every touchpoint—from the kitchen line to the customer’s table.';
@@ -29,7 +29,7 @@ export const BRAND_POSITIONING = {
     CATEGORY: 'Restaurant Operating System (ROS) / Hospitality Tech',
     TARGET: 'Ambitious café chains, high-volume dining, and multi-branch hospitality groups',
     DIFFERENTIATION:
-        "Gebeta is not a 'tool'; it is the nervous system. We win by offering deep vertical integration (Consumer > KDS > POS > Admin) on a single, resilient enterprise-grade light-themed architecture.",
+        "lole is not a 'tool'; it is the nervous system. We win by offering deep vertical integration (Consumer > KDS > POS > Admin) on a single, resilient enterprise-grade light-themed architecture.",
 };
 
 // Brand Personality
@@ -41,9 +41,9 @@ export const BRAND_PERSONALITY = {
     PRECISE: 'Engineering-grade accuracy in all data reporting',
 };
 
-// Visual Identity - The Gebeta Volt Palette
+// Visual Identity - The lole Volt Palette
 // Visual Identity - Cafe Lucia Enterprise Palette
-export const GEBETA_COLORS = {
+export const lole_COLORS = {
     PRIMARY: {
         hex: '#A81818', // Crimson Red
         rgb: '168, 24, 24',
@@ -155,7 +155,7 @@ export const SAMPLE_COPY = {
     WEBSITE_HERO: 'The Operating System for Modern Hospitality',
     EMPTY_STATE: 'Your heat-map will appear here once orders start flowing',
     SYSTEM_ALERT: 'Connection Lost. Retrying in 3s...',
-    TAGLINE: 'Gebeta: Built for the Rush. Scaled for the Future.',
+    TAGLINE: 'lole: Built for the Rush. Scaled for the Future.',
 };
 
 // Brand Voice Guidelines

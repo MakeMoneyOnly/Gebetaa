@@ -14,7 +14,7 @@ export const CATEGORIES: Category[] = [
 const SUPABASE_STORAGE_URL =
     'https://axuegixbqsvztdraenkz.supabase.co/storage/v1/object/public/food-images';
 const PLACEHOLDER_IMAGE =
-    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220"%3E%3Crect width="400" height="220" fill="%23DC143C"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="20" fill="white"%3EGebeta%3C/text%3E%3C/svg%3E';
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="220"%3E%3Crect width="400" height="220" fill="%23DC143C"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="20" fill="white"%3Elole%3C/text%3E%3C/svg%3E';
 
 export const FOOD_ITEMS: FoodItem[] = [
     {

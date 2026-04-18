@@ -69,7 +69,7 @@ export class OrderDatabase extends Dexie {
     sync_conflict_logs!: Table<SyncConflictLog>;
 
     constructor() {
-        super('GebetaOrders');
+        super('loleOrders');
         this.version(2).stores({
             pending_orders: '++id, idempotency_key, restaurant_id, status, version',
             sync_conflict_logs: '++id, idempotency_key, resolved_at',

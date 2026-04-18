@@ -1,6 +1,6 @@
 # CI Scripts
 
-This directory contains CI/CD validation scripts for the Gebeta project.
+This directory contains CI/CD validation scripts for the lole project.
 
 ## Scripts
 

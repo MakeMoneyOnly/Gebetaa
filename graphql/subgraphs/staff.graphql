@@ -211,7 +211,7 @@ type PageInfo @shareable {
     endCursor: String @shareable
 }
 
-type GebetaError @shareable {
+type loleError @shareable {
     """
     Error code for programmatic error handling
     """
@@ -500,7 +500,7 @@ type StaffResult {
     """
     Error details if the operation failed
     """
-    error: GebetaError
+    error: loleError
 }
 
 """
@@ -519,5 +519,5 @@ type PinVerificationResult {
     """
     Error details if verification failed
     """
-    error: GebetaError
+    error: loleError
 }

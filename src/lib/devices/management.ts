@@ -38,7 +38,7 @@ export async function queueAndDispatchManagedDeviceAction(args: {
         args.packageName?.trim() ||
         process.env.ESPER_APP_PACKAGE_NAME?.trim() ||
         process.env.CAPACITOR_APP_ID?.trim() ||
-        'com.gebeta.device';
+        'com.lole.device';
 
     const { data: queuedAction, error: queueError } = await db
         .from('device_management_actions')

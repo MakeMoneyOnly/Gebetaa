@@ -65,7 +65,7 @@ function formatAlertMessage(level: AlertLevel, message: string, context?: AlertC
     const emoji = level === 'critical' ? '🔴' : level === 'warning' ? '🟡' : 'ℹ️';
     const levelText = level === 'critical' ? 'CRITICAL' : level === 'warning' ? 'Warning' : 'Info';
 
-    const lines: string[] = [`${emoji} *Gebeta ${levelText}*`, '', message];
+    const lines: string[] = [`${emoji} *lole ${levelText}*`, '', message];
 
     // Add context if provided
     if (context && Object.keys(context).length > 0) {
@@ -389,7 +389,7 @@ export async function testAlerts(): Promise<{
 
     // Test Telegram
     if (telegramConfig.enabled) {
-        details.telegram = await sendInfoAlert('Test alert from Gebeta monitoring', {
+        details.telegram = await sendInfoAlert('Test alert from lole monitoring', {
             test: true,
             timestamp: new Date().toISOString(),
         });
@@ -397,7 +397,7 @@ export async function testAlerts(): Promise<{
 
     // Test PagerDuty (sends a warning, not critical)
     if (pagerdutyEnabled) {
-        const result = await sendPagerDutyAlert('warning', 'Test alert from Gebeta monitoring', {
+        const result = await sendPagerDutyAlert('warning', 'Test alert from lole monitoring', {
             test: true,
             timestamp: new Date().toISOString(),
         });

@@ -149,7 +149,7 @@ type RevenueByMethod {
     count: Int!
 }
 
-type GebetaError @shareable {
+type loleError @shareable {
     """
     Error code for programmatic error handling
     """
@@ -375,7 +375,7 @@ type TelebirrPaymentResult {
     """
     Error details if initiation failed
     """
-    error: GebetaError
+    error: loleError
 }
 
 """
@@ -398,7 +398,7 @@ type ChapaPaymentResult {
     """
     Error details if initiation failed
     """
-    error: GebetaError
+    error: loleError
 }
 
 """
@@ -417,7 +417,7 @@ type PaymentResult {
     """
     Error details if the operation failed
     """
-    error: GebetaError
+    error: loleError
 }
 
 """
@@ -436,5 +436,5 @@ type RefundResult {
     """
     Error details if the refund failed
     """
-    error: GebetaError
+    error: loleError
 }

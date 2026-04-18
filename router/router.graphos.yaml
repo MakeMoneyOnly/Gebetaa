@@ -3,7 +3,7 @@
 #
 # Required Environment Variables:
 #   APOLLO_KEY: Your Apollo GraphOS API key
-#   APOLLO_GRAPH_REF: graph-name@variant (e.g., gebeta-production@current)
+#   APOLLO_GRAPH_REF: graph-name@variant (e.g., lole-production@current)
 #   SUPABASE_JWT_SECRET: Supabase JWT secret for token verification
 #   NEXT_PUBLIC_APP_URL: Base URL for subgraph endpoints
 
@@ -24,10 +24,10 @@ apollo:
 # CORS configuration
 cors:
     origins:
-        - 'https://gebeta.app'
-        - 'https://www.gebeta.app'
-        - 'https://gebetamenu.com'
-        - 'https://www.gebetamenu.com'
+        - 'https://lole.app'
+        - 'https://www.lole.app'
+        - 'https://lolemenu.com'
+        - 'https://www.lolemenu.com'
         - 'http://localhost:3000'
         - 'http://localhost:3001'
     methods:
@@ -38,7 +38,7 @@ cors:
         - authorization
         - content-type
         - x-guest-session
-        - x-gebeta-request-id
+        - x-lole-request-id
         - x-restaurant-id
     credentials: true
 
@@ -103,7 +103,7 @@ headers:
             - propagate:
                   named: 'authorization'
             - propagate:
-                  named: 'x-gebeta-request-id'
+                  named: 'x-lole-request-id'
             - propagate:
                   named: 'x-guest-session'
             - propagate:
@@ -126,15 +126,15 @@ headers:
                       claim: 'restaurant_id'
         response:
             - set:
-                  named: 'x-gebeta-router-version'
+                  named: 'x-lole-router-version'
                   value: '2.1.0'
 
 # Telemetry and observability
 telemetry:
     tracing:
         trace_config:
-            service_name: 'gebeta-router'
-            service_namespace: 'gebeta'
+            service_name: 'lole-router'
+            service_namespace: 'lole'
         otlp:
             endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4317}
             protocol: grpc

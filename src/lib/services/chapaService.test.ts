@@ -23,17 +23,17 @@ describe('chapaService', () => {
 
     // ── generateChapaTransactionRef ──────────────────────────────────────────
     describe('generateChapaTransactionRef', () => {
-        it('returns a string starting with gebeta-', () => {
+        it('returns a string starting with lole-', () => {
             const ref = generateChapaTransactionRef('addiskitchen');
             // Slug is truncated to 8 chars: 'addiskit'
-            expect(ref).toMatch(/^gebeta-addiskit-/);
+            expect(ref).toMatch(/^lole-addiskit-/);
         });
 
         it('strips special characters from restaurant slug', () => {
             const ref = generateChapaTransactionRef('addis kitchen!');
             expect(ref).not.toContain(' ');
             expect(ref).not.toContain('!');
-            expect(ref).toMatch(/^gebeta-/);
+            expect(ref).toMatch(/^lole-/);
         });
 
         it('truncates restaurant slug to 8 chars', () => {

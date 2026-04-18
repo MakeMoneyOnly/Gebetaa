@@ -1,6 +1,6 @@
 # Script to recover VS Code local history files from today
 $historyPath = "$env:APPDATA\Code\User\History"
-$recoveryPath = "c:\Users\user\Desktop\Gebetaa\recovered_files"
+$recoveryPath = "c:\Users\user\Desktop\lole\recovered_files"
 $today = Get-Date -Format 'yyyy-MM-dd'
 
 # Create recovery directory
@@ -33,7 +33,7 @@ foreach ($entryFile in $entries) {
                 # Create a descriptive filename
                 $timeStamp = $ts.ToString('HH-mm-ss')
                 $originalName = Split-Path $decodedPath -Leaf
-                $relativePath = $decodedPath -replace '^[A-Za-z]:/Users/user/Desktop/Gebetaa/', ''
+                $relativePath = $decodedPath -replace '^[A-Za-z]:/Users/user/Desktop/lole/', ''
                 $relativePath = $relativePath -replace '/', '_'
                 
                 $recoveryName = "${timeStamp}_${relativePath}"

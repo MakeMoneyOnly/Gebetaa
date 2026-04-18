@@ -73,7 +73,7 @@ describe('PaymentAdapterRegistry', () => {
 
         const response = await registry.initiateWithFallback({
             preferredProvider: 'chapa',
-            input: { amount: 10, currency: 'ETB', email: 'ops@gebeta.app' },
+            input: { amount: 10, currency: 'ETB', email: 'ops@lole.app' },
         });
 
         expect(response.result.provider).toBe('chapa');
@@ -89,7 +89,7 @@ describe('PaymentAdapterRegistry', () => {
         await expect(
             registry.initiateWithFallback({
                 preferredProvider: 'chapa',
-                input: { amount: 10, currency: 'ETB', email: 'ops@gebeta.app' },
+                input: { amount: 10, currency: 'ETB', email: 'ops@lole.app' },
             })
         ).rejects.toThrow('Provider chapa is not registered');
     });

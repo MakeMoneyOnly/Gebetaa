@@ -116,10 +116,10 @@ export async function sendPagerDutyAlert(
         routing_key: config.routingKey!,
         event_action: 'trigger',
         dedup_key: dedupKey,
-        client: 'Gebeta Restaurant OS',
-        client_url: process.env.NEXT_PUBLIC_APP_URL || 'https://gebeta.app',
+        client: 'lole Restaurant OS',
+        client_url: process.env.NEXT_PUBLIC_APP_URL || 'https://lole.app',
         severity: mapSeverity(level),
-        source: 'gebeta-api',
+        source: 'lole-api',
         timestamp: new Date().toISOString(),
         custom_details: context as Record<string, string | number | boolean>,
     };
@@ -185,7 +185,7 @@ export async function acknowledgePagerDutyIncident(dedupKey: string): Promise<bo
         event_action: 'acknowledge',
         dedup_key: dedupKey,
         severity: 'info',
-        source: 'gebeta-api',
+        source: 'lole-api',
     };
 
     try {
@@ -218,7 +218,7 @@ export async function resolvePagerDutyIncident(dedupKey: string): Promise<boolea
         event_action: 'resolve',
         dedup_key: dedupKey,
         severity: 'info',
-        source: 'gebeta-api',
+        source: 'lole-api',
     };
 
     try {

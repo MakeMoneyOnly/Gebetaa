@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Gebeta Rollback Script - Windows PowerShell
+    lole Rollback Script - Windows PowerShell
 
 .DESCRIPTION
     Local script to rollback Vercel deployments.
@@ -61,8 +61,8 @@ param(
 
 # Configuration
 $ProjectNames = @{
-    "production" = "gebeta"
-    "staging" = "gebeta-staging"
+    "production" = "lole"
+    "staging" = "lole-staging"
 }
 
 # Colors for output
@@ -83,7 +83,7 @@ function Write-ColorOutput {
 
 function Show-Help {
     @"
-Gebeta Rollback Script
+lole Rollback Script
 
 Usage:
     .\rollback.ps1 [options]
@@ -190,7 +190,7 @@ function Get-TargetDeployment {
 }
 
 # Main script execution
-Write-ColorOutput "=== Gebeta Rollback Script ===" -Color Blue
+Write-ColorOutput "=== lole Rollback Script ===" -Color Blue
 Write-Host ""
 
 # Validate inputs

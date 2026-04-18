@@ -228,7 +228,7 @@ describe('SMS notifications', () => {
         });
 
         it('should include sender ID when configured', async () => {
-            process.env.AFRICAS_TALKING_SENDER_ID = 'GEBETA';
+            process.env.AFRICAS_TALKING_SENDER_ID = 'lole';
 
             mockFetch.mockResolvedValueOnce({
                 ok: true,
@@ -244,7 +244,7 @@ describe('SMS notifications', () => {
 
             const callBody = mockFetch.mock.calls[0][1];
             const params = new URLSearchParams(callBody.body);
-            expect(params.get('from')).toBe('GEBETA');
+            expect(params.get('from')).toBe('lole');
         });
 
         it('should not include from when sender ID is not configured', async () => {

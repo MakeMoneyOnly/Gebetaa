@@ -3,7 +3,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ordersRepository, OrderRow, OrderItemRow } from './repository';
 import { Database } from '@/types/database';
-import { GebetaGraphQLError } from '@/lib/graphql/errors';
+import { loleGraphQLError } from '@/lib/graphql/errors';
 import { publishEvent } from '@/lib/events/publisher';
 
 export interface CreateOrderInput {
@@ -178,8 +178,8 @@ export class OrdersService {
                 selectedModifierIds
             );
             if (!validation.isValid) {
-                // Use GebetaGraphQLError for proper error handling
-                const graphQLError = new GebetaGraphQLError(
+                // Use loleGraphQLError for proper error handling
+                const graphQLError = new loleGraphQLError(
                     validation.errorMessage || 'Required modifiers not selected',
                     'BAD_USER_INPUT',
                     {

@@ -1,5 +1,5 @@
 /**
- * Locale Configuration for Gebeta Restaurant OS
+ * Locale Configuration for lole Restaurant OS
  *
  * LOW-001: Default locale detection for Ethiopian market
  * - Supports browser header detection

@@ -3,10 +3,10 @@
 #
 # Environment Variables Required:
 #   APOLLO_KEY: Your Apollo GraphOS API key
-#   APOLLO_GRAPH_REF: graph-name@variant (e.g., gebeta-production@current)
+#   APOLLO_GRAPH_REF: graph-name@variant (e.g., lole-production@current)
 #
-# Build: docker build -t gebeta-router .
-# Run: docker run -p 4000:4000 -e APOLLO_KEY -e APOLLO_GRAPH_REF gebeta-router
+# Build: docker build -t lole-router .
+# Run: docker run -p 4000:4000 -e APOLLO_KEY -e APOLLO_GRAPH_REF lole-router
 
 FROM ghcr.io/apollographql/router:v2.1.0
 

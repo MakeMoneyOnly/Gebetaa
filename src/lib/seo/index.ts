@@ -1,5 +1,5 @@
 /**
- * SEO utilities for Gebeta Restaurant OS
+ * SEO utilities for lole Restaurant OS
  */
 export {
     SITE_CONFIG,

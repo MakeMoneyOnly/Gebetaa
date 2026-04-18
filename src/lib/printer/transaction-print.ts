@@ -127,6 +127,6 @@ export function buildReceiptFromPaymentPayload(input: {
         taxes: input.taxSummary ?? [],
         subtotal,
         total,
-        footer_lines: ['Gebeta Restaurant OS'],
+        footer_lines: ['lole Restaurant OS'],
     };
 }

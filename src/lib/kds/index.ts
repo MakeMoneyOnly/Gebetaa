@@ -1,6 +1,6 @@
 /**
  * Kitchen Display System Library
- * Gebeta - Restaurant Operating System v2.0
+ * lole - Restaurant Operating System v2.0
  *
  * Core KDS utilities and smart queue management.
  */

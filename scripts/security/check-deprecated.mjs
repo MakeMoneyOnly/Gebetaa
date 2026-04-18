@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Gebeta Restaurant OS - Deprecated Dependencies Checker
+ * lole Restaurant OS - Deprecated Dependencies Checker
  *
  * This script checks for deprecated packages in the dependency tree
  * by analyzing the pnpm-lock.yaml file and running pnpm list.
@@ -161,7 +161,7 @@ function checkPackageJsonForDeprecated() {
 }
 
 function main() {
-    log('\n📦 Gebeta Restaurant OS - Deprecated Dependencies Check\n', 'cyan');
+    log('\n📦 lole Restaurant OS - Deprecated Dependencies Check\n', 'cyan');
 
     let _hasWarnings = false;
     let _hasErrors = false;

@@ -204,7 +204,7 @@ export class TelebirrProvider implements PaymentProvider {
             appId: this.appId,
             amount: Math.ceil(amount).toString(), // Telebirr uses integer amounts
             currency: currency || 'ETB',
-            subject: (metadata?.subject as string) || 'Gebeta Order',
+            subject: (metadata?.subject as string) || 'lole Order',
             body: (metadata?.body as string) || 'Payment for order',
             outTradeNo,
             notifyUrl: callbackUrl || `${this.appUrl}/api/webhooks/telebirr`,

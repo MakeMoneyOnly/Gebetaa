@@ -1,5 +1,5 @@
 # Apollo GraphOS Subgraph Publishing Script
-# Run this from the Gebetaa project root directory
+# Run this from the lole project root directory
 #
 # Usage:
 #   1. Set your Apollo API key: $env:APOLLO_KEY = "your-key"
@@ -14,8 +14,8 @@ if (-not $env:APOLLO_KEY) {
     exit 1
 }
 
-$GRAPH_REF = "gebeta-production-tj1sjiw@current"
-$ROUTING_URL = "https://gebeta.app/api/graphql"
+$GRAPH_REF = "lole-production-tj1sjiw@current"
+$ROUTING_URL = "https://lole.app/api/graphql"
 
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "Publishing subgraphs to Apollo GraphOS" -ForegroundColor Cyan

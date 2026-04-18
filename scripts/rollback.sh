@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Gebeta Rollback Script
+# lole Rollback Script
 # =============================================================================
 # Local script to rollback Vercel deployments.
 # Requires Vercel CLI to be installed: npm i -g vercel
@@ -53,8 +53,8 @@ SKIP_CONFIRM=false
 
 # Project names per environment
 declare -A PROJECT_NAMES
-PROJECT_NAMES["production"]="gebeta"
-PROJECT_NAMES["staging"]="gebeta-staging"
+PROJECT_NAMES["production"]="lole"
+PROJECT_NAMES["staging"]="lole-staging"
 
 # -----------------------------------------------------------------------------
 # Helper Functions

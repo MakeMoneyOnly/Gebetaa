@@ -167,7 +167,7 @@ type Category @key(fields: "id") {
     items: [MenuItem!]!
 }
 
-type GebetaError @shareable {
+type loleError @shareable {
     """
     Error code for programmatic error handling
     """
@@ -419,5 +419,5 @@ type MenuItemResult {
     """
     Error details if the operation failed
     """
-    error: GebetaError
+    error: loleError
 }

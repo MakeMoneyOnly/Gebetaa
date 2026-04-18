@@ -19,5 +19,5 @@ def check_duplicates(file_path):
     except Exception as e:
         print(f"Error in {file_path}: {e}")
 
-check_duplicates('c:/Users/user/Desktop/Gebetaa/.github/workflows/ci.yml')
-check_duplicates('c:/Users/user/Desktop/Gebetaa/.github/workflows/policy-hardening-integration-tests.yml')
+check_duplicates('c:/Users/user/Desktop/lole/.github/workflows/ci.yml')
+check_duplicates('c:/Users/user/Desktop/lole/.github/workflows/policy-hardening-integration-tests.yml')

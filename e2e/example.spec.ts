@@ -4,7 +4,7 @@ test.describe('Core web journeys', () => {
     test('landing page renders hero and routes merchant CTA to login', async ({ page }) => {
         await page.goto('/');
 
-        await expect(page).toHaveTitle(/Gebeta/i);
+        await expect(page).toHaveTitle(/lole/i);
         // Heading h1 contains nested span so check visible text across the element
         await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
 

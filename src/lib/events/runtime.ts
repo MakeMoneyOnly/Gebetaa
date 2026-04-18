@@ -1,6 +1,6 @@
 import { Client as QStashClient } from '@upstash/qstash';
 import { Redis } from '@upstash/redis';
-import type { GebetaEvent } from '@/lib/events/contracts';
+import type { loleEvent } from '@/lib/events/contracts';
 import { getAppUrl } from '@/lib/config/env';
 
 export interface PublishEventResult {
@@ -31,10 +31,10 @@ function getQStashClient(): QStashClient | null {
 }
 
 function toStreamName(eventName: string): string {
-    return `gebeta:events:${eventName.replaceAll('.', ':')}`;
+    return `lole:events:${eventName.replaceAll('.', ':')}`;
 }
 
-export async function publishEvent(event: GebetaEvent): Promise<PublishEventResult> {
+export async function publishEvent(event: loleEvent): Promise<PublishEventResult> {
     const streamName = toStreamName(event.name);
     const redis = getRedisClient();
     let streamEntryId: string | undefined;
@@ -82,7 +82,7 @@ export async function enqueueInternalJob<TBody extends Record<string, unknown>>(
         body: params.body,
         retries: 5,
         headers: {
-            'x-gebeta-job-key': process.env.QSTASH_TOKEN ?? '',
+            'x-lole-job-key': process.env.QSTASH_TOKEN ?? '',
         },
         contentBasedDeduplication: false,
         deduplicationId: params.deduplicationKey,

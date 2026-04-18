@@ -1,6 +1,6 @@
 /**
  * Smart Queue Management System
- * Gebeta - Restaurant Operating System v2.0
+ * lole - Restaurant Operating System v2.0
  *
  * AI-powered order prioritization, ETA calculation, and course-based routing
  * for the Kitchen Display System (KDS)

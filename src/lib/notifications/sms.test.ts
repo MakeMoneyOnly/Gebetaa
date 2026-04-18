@@ -144,7 +144,7 @@ describe('sms', () => {
         it('includes senderId when configured', async () => {
             process.env.AFRICAS_TALKING_API_KEY = 'key';
             process.env.AFRICAS_TALKING_USERNAME = 'user';
-            process.env.AFRICAS_TALKING_SENDER_ID = 'GEBETA';
+            process.env.AFRICAS_TALKING_SENDER_ID = 'lole';
             fetchSpy.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
@@ -156,7 +156,7 @@ describe('sms', () => {
             await sendSms('+251911234567', 'Message');
 
             const bodyStr = (fetchSpy.mock.calls[0][1] as RequestInit).body as string;
-            expect(bodyStr).toContain('from=GEBETA');
+            expect(bodyStr).toContain('from=lole');
         });
 
         it('accepts africas-talking hyphenated variant', async () => {

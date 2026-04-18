@@ -64,7 +64,7 @@ export function formatETBCurrency(
  * Format ETB currency from santim value (integer)
  *
  * This is the preferred function for displaying monetary values stored in the database.
- * All monetary values in Gebeta are stored as integers in santim (100 santim = 1 ETB).
+ * All monetary values in lole are stored as integers in santim (100 santim = 1 ETB).
  *
  * @param santim - Amount in santim (integer, e.g., 1550 for 15.50 ETB)
  * @param options - Formatting options

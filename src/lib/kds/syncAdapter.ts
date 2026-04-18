@@ -30,7 +30,7 @@ export async function getOfflineKdsQueueCount(): Promise<number> {
     if (typeof window === 'undefined') return 0;
 
     try {
-        const stored = window.localStorage.getItem('gebeta_kds_offline_queue_v1');
+        const stored = window.localStorage.getItem('lole_kds_offline_queue_v1');
         if (!stored) return 0;
         const parsed = JSON.parse(stored);
         return Array.isArray(parsed.pendingActions) ? parsed.pendingActions.length : 0;
@@ -97,7 +97,7 @@ export async function getPendingKdsActions(): Promise<
     if (typeof window === 'undefined') return [];
 
     try {
-        const stored = window.localStorage.getItem('gebeta_kds_offline_queue_v1');
+        const stored = window.localStorage.getItem('lole_kds_offline_queue_v1');
         if (!stored) return [];
         const parsed = JSON.parse(stored);
         return parsed.pendingActions || [];
@@ -146,7 +146,7 @@ export async function addKdsActionToQueue(action: {
     if (typeof window === 'undefined') return;
 
     try {
-        const STORAGE_KEY = 'gebeta_kds_offline_queue_v1';
+        const STORAGE_KEY = 'lole_kds_offline_queue_v1';
         const stored = window.localStorage.getItem(STORAGE_KEY);
         const state = stored
             ? JSON.parse(stored)
@@ -188,7 +188,7 @@ export async function clearSyncedKdsActions(): Promise<void> {
     if (typeof window === 'undefined') return;
 
     try {
-        const STORAGE_KEY = 'gebeta_kds_offline_queue_v1';
+        const STORAGE_KEY = 'lole_kds_offline_queue_v1';
         window.localStorage.setItem(
             STORAGE_KEY,
             JSON.stringify({

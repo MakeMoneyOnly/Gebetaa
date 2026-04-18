@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Gebeta Restaurant OS - Skills Cleanup Script
+# lole Restaurant OS - Skills Cleanup Script
 # This script removes unnecessary skills from the SKILLS folder
 # based on the comprehensive audit for a SaaS restaurant platform
 
 SKILLS_DIR="SKILLS"
 
 echo "==================================================="
-echo "  Gebeta Restaurant OS - Skills Cleanup Script"
+echo "  lole Restaurant OS - Skills Cleanup Script"
 echo "==================================================="
 echo ""
 echo "This script will remove unnecessary skills while keeping"

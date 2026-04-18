@@ -1,4 +1,4 @@
-// Apollo Server Configuration for Gebeta GraphQL API
+// Apollo Server Configuration for lole GraphQL API
 // Note: This is a placeholder. For production, use Apollo Router.
 // Federation schemas are defined in graphql/subgraphs/ and published via CI.
 

@@ -1,11 +1,11 @@
 /**
  * API Versioning Utilities
  *
- * Provides version detection and handling for the Gebeta API.
+ * Provides version detection and handling for the lole API.
  * Supports both URL-based versioning (/api/v1/) and header-based versioning.
  *
  * Header-based versioning:
- * - Accept: application/vnd.gebeta.v1+json (explicit v1)
+ * - Accept: application/vnd.lole.v1+json (explicit v1)
  * - Accept: application/json (default, latest v1)
  *
  * @see docs/01-foundation/api-design.md
@@ -14,7 +14,7 @@
 import { NextRequest } from 'next/server';
 
 export const API_VERSION = 'v1';
-export const API_VERSION_HEADER = 'application/vnd.gebeta.v1+json';
+export const API_VERSION_HEADER = 'application/vnd.lole.v1+json';
 export const API_DEFAULT_HEADER = 'application/json';
 
 /**
@@ -51,8 +51,8 @@ export function getApiVersionInfo(version: SupportedApiVersion = 'v1'): ApiVersi
 /**
  * Parse Accept header to extract API version
  * Supports:
- * - application/vnd.gebeta.v1+json
- * - application/vnd.gebeta+json (default to latest)
+ * - application/vnd.lole.v1+json
+ * - application/vnd.lole+json (default to latest)
  * - application/json (default to latest)
  */
 export function parseVersionFromHeader(acceptHeader: string | null): SupportedApiVersion | null {
@@ -60,8 +60,8 @@ export function parseVersionFromHeader(acceptHeader: string | null): SupportedAp
         return null;
     }
 
-    // Match custom vendor header: application/vnd.gebeta.v{version}+json
-    const vendorMatch = acceptHeader.match(/application\/vnd\.gebeta\.v(\d+)\+json/);
+    // Match custom vendor header: application/vnd.lole.v{version}+json
+    const vendorMatch = acceptHeader.match(/application\/vnd\.lole\.v(\d+)\+json/);
     if (vendorMatch) {
         const version = `v${vendorMatch[1]}` as SupportedApiVersion;
         if (SUPPORTED_API_VERSIONS.includes(version)) {
@@ -106,7 +106,7 @@ export function hasExplicitVersionHeader(request: NextRequest): boolean {
     if (!acceptHeader) {
         return false;
     }
-    return acceptHeader.includes('application/vnd.gebeta.v');
+    return acceptHeader.includes('application/vnd.lole.v');
 }
 
 /**

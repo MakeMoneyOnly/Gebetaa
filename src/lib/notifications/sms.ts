@@ -27,18 +27,18 @@ function normalizePhone(phone: string): string {
 function buildOrderStatusMessage(input: OrderStatusSmsInput): string {
     const status = input.status.toLowerCase();
     if (status === 'preparing') {
-        return `Gebeta: Order ${input.orderNumber} is now being prepared.`;
+        return `lole: Order ${input.orderNumber} is now being prepared.`;
     }
     if (status === 'ready') {
-        return `Gebeta: Order ${input.orderNumber} is ready for pickup/service.`;
+        return `lole: Order ${input.orderNumber} is ready for pickup/service.`;
     }
     if (status === 'served' || status === 'completed') {
-        return `Gebeta: Order ${input.orderNumber} has been completed. Thank you.`;
+        return `lole: Order ${input.orderNumber} has been completed. Thank you.`;
     }
     if (status === 'cancelled') {
-        return `Gebeta: Order ${input.orderNumber} was cancelled.`;
+        return `lole: Order ${input.orderNumber} was cancelled.`;
     }
-    return `Gebeta: Order ${input.orderNumber} status is now ${input.status}.`;
+    return `lole: Order ${input.orderNumber} status is now ${input.status}.`;
 }
 
 /**

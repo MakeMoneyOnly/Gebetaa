@@ -417,7 +417,7 @@ export async function sendVerificationCode(
         .eq('id', guestId);
 
     // Send verification code
-    const message = `Your Gebeta verification code is: ${code}. This code expires in 10 minutes.`;
+    const message = `Your lole verification code is: ${code}. This code expires in 10 minutes.`;
 
     if (channel === 'sms' && guest.phone) {
         const result = await sendSms(guest.phone, message);

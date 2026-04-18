@@ -1,7 +1,7 @@
 /**
  * Monetary Utilities - Santim Handling
  *
- * All monetary values in the Gebeta platform are stored as INTEGER in santim.
+ * All monetary values in the lole platform are stored as INTEGER in santim.
  * 100 santim = 1 ETB (Ethiopian Birr)
  *
  * This module provides utilities for:

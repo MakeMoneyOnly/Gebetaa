@@ -60,11 +60,11 @@ describe('kds printer bridge', () => {
 
         const [, requestInit] = fetchMock.mock.calls[0];
         const headers = requestInit.headers as Record<string, string>;
-        expect(headers['x-gebeta-event']).toBe('kds.ticket.print.v1');
-        expect(headers['x-gebeta-signature-version']).toBe('v1');
-        expect(headers['x-gebeta-signature-sha256']).toMatch(/^[a-f0-9]{64}$/);
-        expect(headers['x-gebeta-body-sha256']).toMatch(/^[a-f0-9]{64}$/);
-        expect(headers['x-gebeta-idempotency-key']).toBe(headers['x-gebeta-event-id']);
+        expect(headers['x-lole-event']).toBe('kds.ticket.print.v1');
+        expect(headers['x-lole-signature-version']).toBe('v1');
+        expect(headers['x-lole-signature-sha256']).toMatch(/^[a-f0-9]{64}$/);
+        expect(headers['x-lole-body-sha256']).toMatch(/^[a-f0-9]{64}$/);
+        expect(headers['x-lole-idempotency-key']).toBe(headers['x-lole-event-id']);
     });
 
     it('retries retryable status and succeeds', async () => {

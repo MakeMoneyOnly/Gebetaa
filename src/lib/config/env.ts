@@ -16,7 +16,7 @@ const envSchema = z.object({
 
     // Application
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-    NEXT_PUBLIC_APP_NAME: z.string().default('Gebeta'),
+    NEXT_PUBLIC_APP_NAME: z.string().default('lole'),
 
     // Supabase - Required
     NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),

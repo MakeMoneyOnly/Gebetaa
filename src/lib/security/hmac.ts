@@ -82,7 +82,7 @@ function getBaseUrl(): string {
     const url =
         process.env.NEXT_PUBLIC_APP_URL ||
         process.env.NEXT_PUBLIC_SITE_URL ||
-        'https://gebetamenu.com';
+        'https://lolemenu.com';
 
     // Clean up trailing slash if any
     return url.replace(/\/$/, '');

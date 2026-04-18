@@ -89,8 +89,8 @@ export async function mockMerchantDashboardAuth(page: Page) {
                 },
             })
         );
-        window.sessionStorage.setItem('gebeta_restaurant_name', 'Saba Grill');
-        window.sessionStorage.setItem('gebeta_restaurant_handle', '@saba-grill_admin');
+        window.sessionStorage.setItem('lole_restaurant_name', 'Saba Grill');
+        window.sessionStorage.setItem('lole_restaurant_handle', '@saba-grill_admin');
     });
 }
 

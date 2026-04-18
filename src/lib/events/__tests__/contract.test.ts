@@ -2,21 +2,21 @@
  * Event Contract Tests
  *
  * CRIT-03: Contract tests for event bus payloads
- * Ensures all events conform to the GebetaEvent contract
+ * Ensures all events conform to the loleEvent contract
  */
 
 import { describe, it, expect } from 'vitest';
 import {
-    GebetaEventName,
+    loleEventName,
     PaymentLifecycleEventPayload,
-    createGebetaEvent,
+    createloleEvent,
     createPaymentLifecycleEvent,
 } from '@/lib/events/contracts';
 
 describe('Event Contract Tests', () => {
     describe('Event Type Validation', () => {
         it('should have valid event names', () => {
-            const validEventNames: GebetaEventName[] = [
+            const validEventNames: loleEventName[] = [
                 'order.created',
                 'order.completed',
                 'payment.completed',
@@ -100,7 +100,7 @@ describe('Event Contract Tests', () => {
         it('should have unique event IDs', () => {
             const ids = new Set<string>();
             for (let i = 0; i < 100; i++) {
-                const event = createGebetaEvent('order.created', { test: i });
+                const event = createloleEvent('order.created', { test: i });
                 ids.add(event.id);
             }
 
@@ -111,7 +111,7 @@ describe('Event Contract Tests', () => {
         it('should have unique trace IDs', () => {
             const traceIds = new Set<string>();
             for (let i = 0; i < 100; i++) {
-                const event = createGebetaEvent('order.created', { test: i });
+                const event = createloleEvent('order.created', { test: i });
                 traceIds.add(event.trace_id);
             }
 
@@ -207,13 +207,13 @@ describe('Event Contract Tests', () => {
     });
 
     describe('Event Creation', () => {
-        it('should create event with createGebetaEvent helper', () => {
+        it('should create event with createloleEvent helper', () => {
             const payload = {
                 order_id: 'order_123',
                 total_santim: 5000,
             };
 
-            const event = createGebetaEvent('order.created', payload);
+            const event = createloleEvent('order.created', payload);
 
             expect(event.id).toBeDefined();
             expect(event.name).toBe('order.created');
@@ -259,7 +259,7 @@ describe('Event Contract Tests', () => {
                 item_name_am: 'ቡና',
             };
 
-            const event = createGebetaEvent('order.created', payload);
+            const event = createloleEvent('order.created', payload);
 
             const serialized = JSON.stringify(event);
             const deserialized = JSON.parse(serialized) as typeof event;

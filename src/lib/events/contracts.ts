@@ -56,7 +56,7 @@ export interface NotificationRetryScheduledPayload {
     next_retry_at: string;
 }
 
-export type NotificationLifecycleEvent = GebetaEvent<
+export type NotificationLifecycleEvent = loleEvent<
     NotificationEventName,
     | NotificationQueuedPayload
     | NotificationSentPayload
@@ -64,7 +64,7 @@ export type NotificationLifecycleEvent = GebetaEvent<
     | NotificationRetryScheduledPayload
 >;
 
-export type GebetaEventName =
+export type loleEventName =
     | 'order.created'
     | 'order.status_changed'
     | 'order.completed'
@@ -96,7 +96,7 @@ export interface PaymentLifecycleEventPayload {
     raw_payload: Record<string, unknown>;
 }
 
-export interface GebetaEvent<TName extends GebetaEventName = GebetaEventName, TPayload = unknown> {
+export interface loleEvent<TName extends loleEventName = loleEventName, TPayload = unknown> {
     id: string;
     version: 1;
     name: TName;
@@ -105,15 +105,15 @@ export interface GebetaEvent<TName extends GebetaEventName = GebetaEventName, TP
     payload: TPayload;
 }
 
-export type PaymentLifecycleEvent = GebetaEvent<
+export type PaymentLifecycleEvent = loleEvent<
     'payment.completed' | 'payment.failed',
     PaymentLifecycleEventPayload
 >;
 
-export function createGebetaEvent<TName extends GebetaEventName, TPayload>(
+export function createloleEvent<TName extends loleEventName, TPayload>(
     name: TName,
     payload: TPayload
-): GebetaEvent<TName, TPayload> {
+): loleEvent<TName, TPayload> {
     return {
         id: randomUUID(),
         version: 1,
@@ -128,7 +128,7 @@ export function createPaymentLifecycleEvent(
     status: PaymentEventStatus,
     payload: PaymentLifecycleEventPayload
 ): PaymentLifecycleEvent {
-    return createGebetaEvent(
+    return createloleEvent(
         status === 'completed' ? 'payment.completed' : 'payment.failed',
         payload
     );
@@ -140,24 +140,24 @@ export function createPaymentLifecycleEvent(
 
 export function createNotificationQueuedEvent(
     payload: NotificationQueuedPayload
-): GebetaEvent<'notification.queued', NotificationQueuedPayload> {
-    return createGebetaEvent('notification.queued', payload);
+): loleEvent<'notification.queued', NotificationQueuedPayload> {
+    return createloleEvent('notification.queued', payload);
 }
 
 export function createNotificationSentEvent(
     payload: NotificationSentPayload
-): GebetaEvent<'notification.sent', NotificationSentPayload> {
-    return createGebetaEvent('notification.sent', payload);
+): loleEvent<'notification.sent', NotificationSentPayload> {
+    return createloleEvent('notification.sent', payload);
 }
 
 export function createNotificationFailedEvent(
     payload: NotificationFailedPayload
-): GebetaEvent<'notification.failed', NotificationFailedPayload> {
-    return createGebetaEvent('notification.failed', payload);
+): loleEvent<'notification.failed', NotificationFailedPayload> {
+    return createloleEvent('notification.failed', payload);
 }
 
 export function createNotificationRetryScheduledEvent(
     payload: NotificationRetryScheduledPayload
-): GebetaEvent<'notification.retry_scheduled', NotificationRetryScheduledPayload> {
-    return createGebetaEvent('notification.retry_scheduled', payload);
+): loleEvent<'notification.retry_scheduled', NotificationRetryScheduledPayload> {
+    return createloleEvent('notification.retry_scheduled', payload);
 }

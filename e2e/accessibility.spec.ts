@@ -6,7 +6,7 @@ import { mockDashboardAuth } from './fixtures/dashboard-auth';
  * Accessibility Tests using axe-core
  *
  * These tests ensure WCAG compliance and identify accessibility issues
- * across the Gebeta Restaurant OS platform.
+ * across the lole Restaurant OS platform.
  */
 
 test.describe('Accessibility Tests', () => {

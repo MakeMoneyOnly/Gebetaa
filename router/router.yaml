@@ -1,5 +1,5 @@
 # Apollo Router Configuration
-# GraphQL Federation 2 Router for Gebeta
+# GraphQL Federation 2 Router for lole
 # Deployed to Railway as always-on container
 
 # Supergraph configuration
@@ -9,12 +9,12 @@ supergraph:
 # CORS configuration
 cors:
     origins:
-        - 'https://gebeta.app'
-        - 'https://www.gebeta.app'
-        - 'https://gebeta-menu.com'
-        - 'https://www.gebeta-menu.com'
-        - 'https://gebetamenu.com'
-        - 'https://www.gebetamenu.com'
+        - 'https://lole.app'
+        - 'https://www.lole.app'
+        - 'https://lole-menu.com'
+        - 'https://www.lole-menu.com'
+        - 'https://lolemenu.com'
+        - 'https://www.lolemenu.com'
         - 'http://localhost:3000'
         - 'http://localhost:3001'
     methods:
@@ -25,7 +25,7 @@ cors:
         - authorization
         - content-type
         - x-guest-session
-        - x-gebeta-request-id
+        - x-lole-request-id
     credentials: true
 
 # Authentication - JWT validation
@@ -65,8 +65,8 @@ include_subgraph_errors:
 # In production, these would point to separate services
 # For now, they point to the Next.js GraphQL endpoint
 subgraphs:
-    gebeta:
-        routing_url: https://gebeta-app.vercel.app/api/graphql
+    lole:
+        routing_url: https://lole-app.vercel.app/api/graphql
         # Introspection disabled for security in production
         # Set APOLLO_ROUTER_INTROSPECTION=true to enable in development
         introspection: ${APOLLO_ROUTER_INTROSPECTION:-false}
@@ -81,10 +81,10 @@ headers:
     all:
         request:
             - propagate:
-                  named: 'x-gebeta-request-id'
+                  named: 'x-lole-request-id'
             - propagate:
                   named: 'x-guest-session'
         response:
             - set:
-                  named: 'x-gebeta-router-version'
+                  named: 'x-lole-router-version'
                   value: '2.1.0'

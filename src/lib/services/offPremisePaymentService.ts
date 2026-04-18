@@ -165,7 +165,7 @@ async function initializeChapaPayment(params: {
             body: JSON.stringify({
                 amount: params.amount,
                 currency: params.currency ?? 'ETB',
-                email: params.customerEmail ?? 'guest@gebetaa.et',
+                email: params.customerEmail ?? 'guest@lole.et',
                 first_name: params.customerName.split(' ')[0] ?? 'Guest',
                 last_name: params.customerName.split(' ').slice(1).join(' ') ?? '',
                 phone_number: params.customerPhone,
@@ -173,7 +173,7 @@ async function initializeChapaPayment(params: {
                 callback_url: params.webhookUrl,
                 return_url: params.returnUrl,
                 customization: {
-                    title: 'Gebetaa Order',
+                    title: 'lole Order',
                     description: `Payment for order ${params.orderId}`,
                 },
                 meta: {

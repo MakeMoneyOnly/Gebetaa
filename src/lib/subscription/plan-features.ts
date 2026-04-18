@@ -1,5 +1,5 @@
 /**
- * Gebeta Subscription Plan Feature Definitions
+ * lole Subscription Plan Feature Definitions
  *
  * Based on enterprise architecture from Check.md and user requirements:
  * - Free: Digital Menu only (no POS, no orders) - for restaurants testing the system

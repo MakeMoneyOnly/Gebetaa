@@ -10,7 +10,7 @@
  * - reservation.reminder: Send reservation reminder
  */
 
-import type { GebetaEvent } from '@/lib/events/contracts';
+import type { loleEvent } from '@/lib/events/contracts';
 import { enqueueNotification } from '@/lib/notifications/queue';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { writeAuditLog } from '@/lib/api/audit';
@@ -93,7 +93,7 @@ const WAITLIST_MESSAGE_AM = '� хорошие новости! ጠርጤ እን
  * Reservation reminder messages
  */
 const RESERVATION_MESSAGE_EN =
-    'Reminder: Your reservation at Gebeta is scheduled for {time}. Party size: {size}. See you soon!';
+    'Reminder: Your reservation at lole is scheduled for {time}. Party size: {size}. See you soon!';
 const RESERVATION_MESSAGE_AM = 'ማስታወሻ: በገበታ የተያዘው ስብሰባዎ ለ{time} ታቅዷል። ቁጥር: {size}። በቅርብ እናያለን!';
 
 // =========================================================
@@ -128,7 +128,7 @@ function buildOrderStatusMessage(
  * Handle order status changed event
  */
 async function handleOrderStatusChanged(
-    event: GebetaEvent<'order.status_changed', OrderStatusChangedPayload>
+    event: loleEvent<'order.status_changed', OrderStatusChangedPayload>
 ): Promise<{ success: boolean; notificationId?: string; error?: string }> {
     const { payload } = event;
 
@@ -179,7 +179,7 @@ async function handleOrderStatusChanged(
  * Handle waitlist notification event
  */
 async function handleWaitlistNotify(
-    event: GebetaEvent<'table.waitlist.notify', WaitlistNotifyPayload>
+    event: loleEvent<'table.waitlist.notify', WaitlistNotifyPayload>
 ): Promise<{ success: boolean; notificationId?: string; error?: string }> {
     const { payload } = event;
 
@@ -220,7 +220,7 @@ async function handleWaitlistNotify(
  * Handle reservation reminder event
  */
 async function handleReservationReminder(
-    event: GebetaEvent<'reservation.reminder', ReservationReminderPayload>
+    event: loleEvent<'reservation.reminder', ReservationReminderPayload>
 ): Promise<{ success: boolean; notificationId?: string; error?: string }> {
     const { payload } = event;
 
@@ -284,7 +284,7 @@ async function handleReservationReminder(
  * @param event - The event to process
  * @returns Processing result
  */
-export async function processNotificationEvent(event: GebetaEvent): Promise<{
+export async function processNotificationEvent(event: loleEvent): Promise<{
     handled: boolean;
     success: boolean;
     notificationId?: string;
@@ -293,21 +293,21 @@ export async function processNotificationEvent(event: GebetaEvent): Promise<{
     switch (event.name) {
         case 'order.status_changed': {
             const result = await handleOrderStatusChanged(
-                event as GebetaEvent<'order.status_changed', OrderStatusChangedPayload>
+                event as loleEvent<'order.status_changed', OrderStatusChangedPayload>
             );
             return { handled: true, ...result };
         }
 
         case 'table.waitlist.notify': {
             const result = await handleWaitlistNotify(
-                event as GebetaEvent<'table.waitlist.notify', WaitlistNotifyPayload>
+                event as loleEvent<'table.waitlist.notify', WaitlistNotifyPayload>
             );
             return { handled: true, ...result };
         }
 
         case 'reservation.reminder': {
             const result = await handleReservationReminder(
-                event as GebetaEvent<'reservation.reminder', ReservationReminderPayload>
+                event as loleEvent<'reservation.reminder', ReservationReminderPayload>
             );
             return { handled: true, ...result };
         }

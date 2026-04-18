@@ -96,7 +96,7 @@ describe('ChapaProvider', () => {
             });
 
             const callBody = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
-            expect(callBody.email).toBe('guest@gebeta.app');
+            expect(callBody.email).toBe('guest@lole.app');
             expect(callBody.first_name).toBe('Guest');
             expect(callBody.last_name).toBe('User');
         });

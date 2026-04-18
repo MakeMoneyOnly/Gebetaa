@@ -180,9 +180,9 @@ export async function createOrder(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Gebeta-Partner-ID': config.partnerId,
-                'X-Gebeta-Timestamp': timestamp,
-                'X-Gebeta-Signature': signature,
+                'X-lole-Partner-ID': config.partnerId,
+                'X-lole-Timestamp': timestamp,
+                'X-lole-Signature': signature,
             },
             body,
         });
@@ -201,7 +201,7 @@ export async function createOrder(
 
         return {
             success: true,
-            esoora_order_id: data.gebeta_order_id || data.order_id,
+            esoora_order_id: data.lole_order_id || data.order_id,
             partner_order_id: order.partner_order_id,
             status: data.status,
             estimated_ready_at: data.estimated_ready_at,
@@ -235,9 +235,9 @@ export async function updateOrderStatus(
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Gebeta-Partner-ID': config.partnerId,
-                'X-Gebeta-Timestamp': timestamp,
-                'X-Gebeta-Signature': signature,
+                'X-lole-Partner-ID': config.partnerId,
+                'X-lole-Timestamp': timestamp,
+                'X-lole-Signature': signature,
             },
             body,
         });
@@ -296,9 +296,9 @@ export async function getDeliveryFee(
         const response = await fetch(`${config.baseUrl}/fee?${params}`, {
             method: 'GET',
             headers: {
-                'X-Gebeta-Partner-ID': config.partnerId,
-                'X-Gebeta-Timestamp': timestamp,
-                'X-Gebeta-Signature': signature,
+                'X-lole-Partner-ID': config.partnerId,
+                'X-lole-Timestamp': timestamp,
+                'X-lole-Signature': signature,
             },
         });
 
@@ -346,7 +346,7 @@ export async function sendStatusWebhook(
     try {
         const body = JSON.stringify({
             event,
-            gebeta_order_id: orderId,
+            lole_order_id: orderId,
             ...payload,
         });
         const { timestamp, signature } = signRequest(config.apiSecret, body);
@@ -355,9 +355,9 @@ export async function sendStatusWebhook(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Gebeta-Partner-ID': config.partnerId,
-                'X-Gebeta-Timestamp': timestamp,
-                'X-Gebeta-Signature': signature,
+                'X-lole-Partner-ID': config.partnerId,
+                'X-lole-Timestamp': timestamp,
+                'X-lole-Signature': signature,
             },
             body,
         });
@@ -388,13 +388,13 @@ export async function sendStatusWebhook(
 export function verifyWebhookSignature(
     rawBody: string,
     headers: {
-        'x-gebeta-partner-id'?: string;
-        'x-gebeta-timestamp'?: string;
-        'x-gebeta-signature'?: string;
+        'x-lole-partner-id'?: string;
+        'x-lole-timestamp'?: string;
+        'x-lole-signature'?: string;
     },
     partnerSecret: string
 ): boolean {
-    const timestamp = headers['x-gebeta-timestamp'];
+    const timestamp = headers['x-lole-timestamp'];
     if (!timestamp) return false;
 
     // Replay attack prevention: reject timestamps older than 5 minutes
@@ -404,12 +404,12 @@ export function verifyWebhookSignature(
     }
 
     const bodyHash = createHash('sha256').update(rawBody, 'utf8').digest('hex');
-    const message = `${headers['x-gebeta-partner-id']}\n${timestamp}\n${bodyHash}`;
+    const message = `${headers['x-lole-partner-id']}\n${timestamp}\n${bodyHash}`;
     const expectedSignature = createHmac('sha256', partnerSecret).update(message).digest('hex');
 
     // Timing-safe comparison
     return (
-        Buffer.from(headers['x-gebeta-signature'] || '', 'hex').toString() ===
+        Buffer.from(headers['x-lole-signature'] || '', 'hex').toString() ===
         Buffer.from(expectedSignature, 'hex').toString()
     );
 }
@@ -438,9 +438,9 @@ export function parseWebhookEvent(rawBody: string): {
 // =========================================================
 
 /**
- * Map Esoora order status to Gebeta status
+ * Map Esoora order status to lole status
  */
-export function mapStatusToGebeta(status: string): EsooraOrderStatus {
+export function mapStatusTolole(status: string): EsooraOrderStatus {
     const statusMap: Record<string, EsooraOrderStatus> = {
         pending: 'pending_confirmation',
         new: 'pending_confirmation',
@@ -461,9 +461,9 @@ export function mapStatusToGebeta(status: string): EsooraOrderStatus {
 }
 
 /**
- * Map Gebeta status to Esoora status
+ * Map lole status to Esoora status
  */
-export function mapStatusToEsoora(gebetaStatus: EsooraOrderStatus): string {
+export function mapStatusToEsoora(loleStatus: EsooraOrderStatus): string {
     const statusMap: Record<string, string> = {
         pending_confirmation: 'pending',
         confirmed: 'confirmed',
@@ -474,5 +474,5 @@ export function mapStatusToEsoora(gebetaStatus: EsooraOrderStatus): string {
         cancelled: 'cancelled',
     };
 
-    return statusMap[gebetaStatus] || 'pending';
+    return statusMap[loleStatus] || 'pending';
 }

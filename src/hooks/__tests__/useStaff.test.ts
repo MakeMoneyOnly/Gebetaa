@@ -54,6 +54,7 @@ describe('useStaff', () => {
                 is_active: true,
                 name: 'John Doe',
                 email: 'john@example.com',
+                created_at: '2024-01-01T00:00:00Z',
             },
             {
                 id: 'staff-2',
@@ -62,6 +63,7 @@ describe('useStaff', () => {
                 is_active: true,
                 name: 'Jane Smith',
                 email: 'jane@example.com',
+                created_at: '2024-01-01T00:00:00Z',
             },
         ];
 
@@ -281,6 +283,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         const staffResponse = new Response(JSON.stringify({ data: { staff: [mockStaffMember] } }), {
@@ -313,6 +316,7 @@ describe('useStaff', () => {
             role: 'waiter',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -358,6 +362,7 @@ describe('useStaff', () => {
             role: 'waiter',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -399,6 +404,7 @@ describe('useStaff', () => {
             role: 'waiter',
             is_active: false,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -442,6 +448,7 @@ describe('useStaff', () => {
             role: 'waiter',
             is_active: null,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -485,6 +492,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -619,6 +627,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -673,6 +682,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -726,6 +736,7 @@ describe('useStaff', () => {
                 role: 'admin',
                 is_active: true,
                 name: 'John Doe',
+                created_at: '2024-01-01T00:00:00Z',
             },
         ];
 
@@ -781,6 +792,7 @@ describe('useStaff', () => {
             role: 'waiter',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -817,6 +829,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -884,6 +897,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>
@@ -931,6 +945,7 @@ describe('useStaff', () => {
             role: 'admin',
             is_active: true,
             name: 'John Doe',
+            created_at: '2024-01-01T00:00:00Z',
         };
 
         mockFetch.mockImplementation(() =>

@@ -27,8 +27,8 @@ export function getAllowedHosts(): string[] {
     }
 
     // Default production hosts
-    hosts.push('gebetamenu.com');
-    hosts.push('www.gebetamenu.com');
+    hosts.push('lolemenu.com');
+    hosts.push('www.lolemenu.com');
 
     // Remove duplicates using Array.from for compatibility
     return Array.from(new Set(hosts));
@@ -65,7 +65,7 @@ export function validateHost(
     // Check against allowlist (case-insensitive)
     const isAllowed = allowedHosts.some(allowed => {
         const normalizedAllowed = allowed.toLowerCase().trim();
-        // Support wildcard subdomains (e.g., *.gebetamenu.com)
+        // Support wildcard subdomains (e.g., *.lolemenu.com)
         if (normalizedAllowed.startsWith('*.')) {
             const domain = normalizedAllowed.slice(2);
             return normalizedHost === domain || normalizedHost.endsWith('.' + domain);

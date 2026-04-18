@@ -30,7 +30,7 @@ export type AdjustPointsInput = {
 
 export type CancelOrderResult = {
     __typename?: 'CancelOrderResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     order?: Maybe<Order>;
     success: Scalars['Boolean']['output'];
 };
@@ -50,7 +50,7 @@ export type Category = {
 export type ChapaPaymentResult = {
     __typename?: 'ChapaPaymentResult';
     checkoutUrl?: Maybe<Scalars['String']['output']>;
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     payment?: Maybe<Payment>;
     success: Scalars['Boolean']['output'];
 };
@@ -95,7 +95,7 @@ export type CreateOrderInput = {
 
 export type CreateOrderResult = {
     __typename?: 'CreateOrderResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     order?: Maybe<Order>;
     success: Scalars['Boolean']['output'];
 };
@@ -125,8 +125,8 @@ export type EnrollLoyaltyInput = {
     restaurantId: Scalars['ID']['input'];
 };
 
-export type GebetaError = {
-    __typename?: 'GebetaError';
+export type loleError = {
+    __typename?: 'loleError';
     code: Scalars['String']['output'];
     message: Scalars['String']['output'];
     messageAm?: Maybe<Scalars['String']['output']>;
@@ -160,7 +160,7 @@ export type GuestEdge = {
 
 export type GuestResult = {
     __typename?: 'GuestResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     guest?: Maybe<Guest>;
     success: Scalars['Boolean']['output'];
 };
@@ -194,7 +194,7 @@ export type LoyaltyAccount = {
 export type LoyaltyResult = {
     __typename?: 'LoyaltyResult';
     account?: Maybe<LoyaltyAccount>;
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     success: Scalars['Boolean']['output'];
     transaction?: Maybe<LoyaltyTransaction>;
 };
@@ -228,7 +228,7 @@ export type MenuItem = {
 
 export type MenuItemResult = {
     __typename?: 'MenuItemResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     menuItem?: Maybe<MenuItem>;
     success: Scalars['Boolean']['output'];
 };
@@ -459,7 +459,7 @@ export type PaymentMethod = 'AMOLE' | 'CASH' | 'CBE_BIRR' | 'CHAPA' | 'TELEBIRR'
 
 export type PaymentResult = {
     __typename?: 'PaymentResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     payment?: Maybe<Payment>;
     success: Scalars['Boolean']['output'];
 };
@@ -468,7 +468,7 @@ export type PaymentStatus = 'CAPTURED' | 'FAILED' | 'PENDING' | 'REFUNDED';
 
 export type PinVerificationResult = {
     __typename?: 'PinVerificationResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     staff?: Maybe<Staff>;
     success: Scalars['Boolean']['output'];
 };
@@ -631,7 +631,7 @@ export type RedeemPointsInput = {
 
 export type RefundResult = {
     __typename?: 'RefundResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     refund?: Maybe<Payment>;
     success: Scalars['Boolean']['output'];
 };
@@ -685,7 +685,7 @@ export type StaffEdge = {
 
 export type StaffResult = {
     __typename?: 'StaffResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     staff?: Maybe<Staff>;
     success: Scalars['Boolean']['output'];
 };
@@ -694,7 +694,7 @@ export type StaffRole = 'ADMIN' | 'BAR' | 'KITCHEN' | 'MANAGER' | 'OWNER' | 'WAI
 
 export type TelebirrPaymentResult = {
     __typename?: 'TelebirrPaymentResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     expiresAt?: Maybe<Scalars['String']['output']>;
     payment?: Maybe<Payment>;
     qrCode?: Maybe<Scalars['String']['output']>;
@@ -728,7 +728,7 @@ export type UpdateMenuItemInput = {
 
 export type UpdateOrderResult = {
     __typename?: 'UpdateOrderResult';
-    error?: Maybe<GebetaError>;
+    error?: Maybe<loleError>;
     order?: Maybe<Order>;
     success: Scalars['Boolean']['output'];
 };
@@ -857,7 +857,7 @@ export type ResolversTypes = ResolversObject<{
     DailyRevenueReport: ResolverTypeWrapper<DailyRevenueReport>;
     EnrollLoyaltyInput: EnrollLoyaltyInput;
     Float: ResolverTypeWrapper<Scalars['Float']['output']>;
-    GebetaError: ResolverTypeWrapper<GebetaError>;
+    loleError: ResolverTypeWrapper<loleError>;
     Guest: ResolverTypeWrapper<Guest>;
     GuestConnection: ResolverTypeWrapper<GuestConnection>;
     GuestEdge: ResolverTypeWrapper<GuestEdge>;
@@ -926,7 +926,7 @@ export type ResolversParentTypes = ResolversObject<{
     DailyRevenueReport: DailyRevenueReport;
     EnrollLoyaltyInput: EnrollLoyaltyInput;
     Float: Scalars['Float']['output'];
-    GebetaError: GebetaError;
+    loleError: loleError;
     Guest: Guest;
     GuestConnection: GuestConnection;
     GuestEdge: GuestEdge;
@@ -979,7 +979,7 @@ export type CancelOrderResultResolvers<
     ParentType extends ResolversParentTypes['CancelOrderResult'] =
         ResolversParentTypes['CancelOrderResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     order?: Resolver<Maybe<ResolversTypes['Order']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1006,7 +1006,7 @@ export type ChapaPaymentResultResolvers<
         ResolversParentTypes['ChapaPaymentResult'],
 > = ResolversObject<{
     checkoutUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     payment?: Resolver<Maybe<ResolversTypes['Payment']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1017,7 +1017,7 @@ export type CreateOrderResultResolvers<
     ParentType extends ResolversParentTypes['CreateOrderResult'] =
         ResolversParentTypes['CreateOrderResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     order?: Resolver<Maybe<ResolversTypes['Order']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1035,9 +1035,9 @@ export type DailyRevenueReportResolvers<
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type GebetaErrorResolvers<
+export type loleErrorResolvers<
     ContextType = GraphQLContext,
-    ParentType extends ResolversParentTypes['GebetaError'] = ResolversParentTypes['GebetaError'],
+    ParentType extends ResolversParentTypes['loleError'] = ResolversParentTypes['loleError'],
 > = ResolversObject<{
     code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
     message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1085,7 +1085,7 @@ export type GuestResultResolvers<
     ContextType = GraphQLContext,
     ParentType extends ResolversParentTypes['GuestResult'] = ResolversParentTypes['GuestResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     guest?: Resolver<Maybe<ResolversTypes['Guest']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1116,7 +1116,7 @@ export type LoyaltyResultResolvers<
         ResolversParentTypes['LoyaltyResult'],
 > = ResolversObject<{
     account?: Resolver<Maybe<ResolversTypes['LoyaltyAccount']>, ParentType, ContextType>;
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     transaction?: Resolver<Maybe<ResolversTypes['LoyaltyTransaction']>, ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1161,7 +1161,7 @@ export type MenuItemResultResolvers<
     ParentType extends ResolversParentTypes['MenuItemResult'] =
         ResolversParentTypes['MenuItemResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     menuItem?: Resolver<Maybe<ResolversTypes['MenuItem']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1428,7 +1428,7 @@ export type PaymentResultResolvers<
     ParentType extends ResolversParentTypes['PaymentResult'] =
         ResolversParentTypes['PaymentResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     payment?: Resolver<Maybe<ResolversTypes['Payment']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1439,7 +1439,7 @@ export type PinVerificationResultResolvers<
     ParentType extends ResolversParentTypes['PinVerificationResult'] =
         ResolversParentTypes['PinVerificationResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     staff?: Resolver<Maybe<ResolversTypes['Staff']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1587,7 +1587,7 @@ export type RefundResultResolvers<
     ContextType = GraphQLContext,
     ParentType extends ResolversParentTypes['RefundResult'] = ResolversParentTypes['RefundResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     refund?: Resolver<Maybe<ResolversTypes['Payment']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1661,7 +1661,7 @@ export type StaffResultResolvers<
     ContextType = GraphQLContext,
     ParentType extends ResolversParentTypes['StaffResult'] = ResolversParentTypes['StaffResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     staff?: Resolver<Maybe<ResolversTypes['Staff']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1672,7 +1672,7 @@ export type TelebirrPaymentResultResolvers<
     ParentType extends ResolversParentTypes['TelebirrPaymentResult'] =
         ResolversParentTypes['TelebirrPaymentResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
     payment?: Resolver<Maybe<ResolversTypes['Payment']>, ParentType, ContextType>;
     qrCode?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1701,7 +1701,7 @@ export type UpdateOrderResultResolvers<
     ParentType extends ResolversParentTypes['UpdateOrderResult'] =
         ResolversParentTypes['UpdateOrderResult'],
 > = ResolversObject<{
-    error?: Resolver<Maybe<ResolversTypes['GebetaError']>, ParentType, ContextType>;
+    error?: Resolver<Maybe<ResolversTypes['loleError']>, ParentType, ContextType>;
     order?: Resolver<Maybe<ResolversTypes['Order']>, ParentType, ContextType>;
     success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1713,7 +1713,7 @@ export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
     ChapaPaymentResult?: ChapaPaymentResultResolvers<ContextType>;
     CreateOrderResult?: CreateOrderResultResolvers<ContextType>;
     DailyRevenueReport?: DailyRevenueReportResolvers<ContextType>;
-    GebetaError?: GebetaErrorResolvers<ContextType>;
+    loleError?: loleErrorResolvers<ContextType>;
     Guest?: GuestResolvers<ContextType>;
     GuestConnection?: GuestConnectionResolvers<ContextType>;
     GuestEdge?: GuestEdgeResolvers<ContextType>;

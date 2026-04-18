@@ -16,7 +16,7 @@ export type ErrorCode =
 /**
  * Custom GraphQL error class with structured error codes and details
  */
-export class GebetaGraphQLError extends GraphQLError {
+export class loleGraphQLError extends GraphQLError {
     constructor(
         message: string,
         public code: ErrorCode,
@@ -66,7 +66,7 @@ export function createErrorResult(
  * Logs unexpected errors and returns a safe internal error message
  */
 export function handleResolverError(error: unknown): ErrorResult {
-    if (error instanceof GebetaGraphQLError) {
+    if (error instanceof loleGraphQLError) {
         return createErrorResult(error.code, error.message);
     }
 

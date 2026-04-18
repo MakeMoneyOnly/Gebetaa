@@ -1,5 +1,5 @@
 /**
- * GEBETA DESIGN SYSTEM TOKENS v4.0
+ * lole DESIGN SYSTEM TOKENS v4.0
  * Premium enterprise dashboard design system
  *
  * Color Scheme: Red (#E53935), Yellow (#FFC107), White

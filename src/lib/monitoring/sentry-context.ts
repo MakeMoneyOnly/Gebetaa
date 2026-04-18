@@ -11,7 +11,7 @@
 import * as Sentry from '@sentry/nextjs';
 
 // Storage key for restaurant context in localStorage (client-side)
-const RESTAURANT_CONTEXT_KEY = 'gebeta_restaurant_context';
+const RESTAURANT_CONTEXT_KEY = 'lole_restaurant_context';
 
 // Async local storage for server-side context (Edge/Runtime compatible)
 let serverRestaurantId: string | null = null;

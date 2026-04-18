@@ -497,7 +497,7 @@ describe('buildReceiptFromPaymentPayload', () => {
             transactionNumber: 'TXN-001',
         });
 
-        expect(receipt.footer_lines).toContain('Gebeta Restaurant OS');
+        expect(receipt.footer_lines).toContain('lole Restaurant OS');
     });
 
     it('should not include order_label when orderNumber is null', () => {

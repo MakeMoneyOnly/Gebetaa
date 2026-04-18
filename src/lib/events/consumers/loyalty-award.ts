@@ -5,7 +5,7 @@
  * Listens to 'order.completed' events and updates loyalty_accounts.
  */
 
-import type { GebetaEvent } from '@/lib/events/contracts';
+import type { loleEvent } from '@/lib/events/contracts';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { writeAuditLog } from '@/lib/api/audit';
 
@@ -76,7 +76,7 @@ function calculatePoints(totalSantim: number, config: LoyaltyConfig = DEFAULT_CO
  * 4. Records the transaction
  */
 export async function processLoyaltyAward(
-    event: GebetaEvent<'order.completed', OrderCompletedPayload>,
+    event: loleEvent<'order.completed', OrderCompletedPayload>,
     config: LoyaltyConfig = DEFAULT_CONFIG
 ): Promise<LoyaltyAwardResult> {
     const admin = createServiceRoleClient();

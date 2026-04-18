@@ -1,10 +1,10 @@
-# Gebeta Restaurant OS - Skills Cleanup Script V2
+# lole Restaurant OS - Skills Cleanup Script V2
 # This script removes the new redundant folders and cleans up remaining irrelevant skills
 
 $SkillsDir = "SKILLS"
 
 Write-Host "===================================================" -ForegroundColor Cyan
-Write-Host "  Gebeta Restaurant OS - Skills Cleanup Script V2" -ForegroundColor Cyan
+Write-Host "  lole Restaurant OS - Skills Cleanup Script V2" -ForegroundColor Cyan
 Write-Host "===================================================" -ForegroundColor Cyan
 Write-Host ""
 

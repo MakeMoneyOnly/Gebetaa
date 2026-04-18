@@ -1,6 +1,6 @@
 /**
  * Subscription Plan Types
- * Defines plan levels and feature availability for Gebeta subscription system
+ * Defines plan levels and feature availability for lole subscription system
  */
 
 export type PlanLevel = 'free' | 'pro' | 'enterprise';

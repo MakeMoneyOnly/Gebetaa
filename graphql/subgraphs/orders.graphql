@@ -227,10 +227,10 @@ type PageInfo @shareable {
 }
 
 """
-Standard error type for Gebeta GraphQL operations.
+Standard error type for lole GraphQL operations.
 Provides error codes and messages in both English and Amharic.
 """
-type GebetaError @key(fields: "code") @shareable {
+type loleError @key(fields: "code") @shareable {
     """
     Error code for programmatic error handling
     """
@@ -261,7 +261,7 @@ type CreateOrderResult {
     """
     Error details if the operation failed
     """
-    error: GebetaError
+    error: loleError
 }
 
 """
@@ -280,7 +280,7 @@ type UpdateOrderResult {
     """
     Error details if the operation failed
     """
-    error: GebetaError
+    error: loleError
 }
 
 """
@@ -299,7 +299,7 @@ type CancelOrderResult {
     """
     Error details if the operation failed
     """
-    error: GebetaError
+    error: loleError
 }
 
 """

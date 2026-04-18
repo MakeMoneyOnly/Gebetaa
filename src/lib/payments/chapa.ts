@@ -77,7 +77,7 @@ export class ChapaProvider implements PaymentProvider {
             body: JSON.stringify({
                 amount: amount.toString(),
                 currency,
-                email: email ?? 'guest@gebeta.app',
+                email: email ?? 'guest@lole.app',
                 first_name:
                     typeof metadata?.firstName === 'string' && metadata.firstName.trim().length > 0
                         ? metadata.firstName
@@ -90,7 +90,7 @@ export class ChapaProvider implements PaymentProvider {
                 callback_url: callbackUrl ?? `${this.appUrl}/api/webhooks/chapa`,
                 return_url: returnUrl ?? `${this.appUrl}/order/status?ref=${txRef}`,
                 customization: {
-                    title: 'Gebeta Order',
+                    title: 'lole Order',
                     description: 'Payment for order',
                 },
                 meta: metadata,

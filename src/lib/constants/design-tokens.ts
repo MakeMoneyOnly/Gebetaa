@@ -1,6 +1,6 @@
 /**
  * ENTERPRISE DESIGN TOKENS
- * Gebeta - Restaurant Operating System v2.0
+ * lole - Restaurant Operating System v2.0
  *
  * Unified design system for Agency Admin, Merchant Dashboard, and KDS
  * Based on WCAG 2.1 AA compliance standards

@@ -38,7 +38,7 @@ export interface OfflineKdsQueueState {
     conflictResolution: ConflictResolutionMode;
 }
 
-const STORAGE_KEY = 'gebeta_kds_offline_queue_v1';
+const STORAGE_KEY = 'lole_kds_offline_queue_v1';
 
 function defaultState(): OfflineKdsQueueState {
     return {

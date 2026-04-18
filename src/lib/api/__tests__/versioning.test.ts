@@ -33,11 +33,11 @@ describe('API versioning', () => {
         });
 
         it('should parse v1 from vendor header', () => {
-            expect(parseVersionFromHeader('application/vnd.gebeta.v1+json')).toBe('v1');
+            expect(parseVersionFromHeader('application/vnd.lole.v1+json')).toBe('v1');
         });
 
         it('should return null for unsupported version', () => {
-            expect(parseVersionFromHeader('application/vnd.gebeta.v2+json')).toBeNull();
+            expect(parseVersionFromHeader('application/vnd.lole.v2+json')).toBeNull();
         });
 
         it('should return null for plain json header', () => {
@@ -52,7 +52,7 @@ describe('API versioning', () => {
     describe('detectApiVersion', () => {
         it('should detect version from Accept header', () => {
             const req = new NextRequest(new URL('http://localhost/api/orders'), {
-                headers: { accept: 'application/vnd.gebeta.v1+json' },
+                headers: { accept: 'application/vnd.lole.v1+json' },
             });
             expect(detectApiVersion(req)).toBe('v1');
         });
@@ -69,7 +69,7 @@ describe('API versioning', () => {
 
         it('should prefer header over URL path', () => {
             const req = new NextRequest(new URL('http://localhost/api/v2/orders'), {
-                headers: { accept: 'application/vnd.gebeta.v1+json' },
+                headers: { accept: 'application/vnd.lole.v1+json' },
             });
             expect(detectApiVersion(req)).toBe('v1');
         });
@@ -83,7 +83,7 @@ describe('API versioning', () => {
     describe('hasExplicitVersionHeader', () => {
         it('should return true when vendor header is present', () => {
             const req = new NextRequest(new URL('http://localhost/api/orders'), {
-                headers: { accept: 'application/vnd.gebeta.v1+json' },
+                headers: { accept: 'application/vnd.lole.v1+json' },
             });
             expect(hasExplicitVersionHeader(req)).toBe(true);
         });
@@ -106,7 +106,7 @@ describe('API versioning', () => {
             const headers = getVersionedHeaders('v1');
             expect(headers['API-Version']).toBe('v1');
             expect(headers['X-API-Version']).toBe('v1');
-            expect(headers['Content-Type']).toBe('application/vnd.gebeta.v1+json');
+            expect(headers['Content-Type']).toBe('application/vnd.lole.v1+json');
         });
 
         it('should default to v1', () => {
@@ -134,7 +134,7 @@ describe('API versioning', () => {
 
         it('should detect explicit version header', () => {
             const req = new NextRequest(new URL('http://localhost/api/orders'), {
-                headers: { accept: 'application/vnd.gebeta.v1+json' },
+                headers: { accept: 'application/vnd.lole.v1+json' },
             });
             const result = processApiVersion(req);
             expect(result.isExplicitVersion).toBe(true);

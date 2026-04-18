@@ -103,7 +103,7 @@ describe('ChapaProvider', () => {
             expect(result.provider).toBe('chapa');
 
             const callBody = JSON.parse(mockFetch.mock.calls[0][1].body);
-            expect(callBody.email).toBe('guest@gebeta.app');
+            expect(callBody.email).toBe('guest@lole.app');
         });
 
         it('should use metadata firstName when valid string', async () => {

@@ -15,8 +15,8 @@
  * - sendStatusWebhook(): Push status updates to partner
  * - verifyWebhookSignature(): Verify incoming webhook signatures
  * - parseWebhookEvent(): Parse incoming webhook payloads
- * - mapStatusToGebeta(): Convert partner status to Gebeta status
- * - mapStatusToPartner(): Convert Gebeta status to partner status
+ * - mapStatusTolole(): Convert partner status to lole status
+ * - mapStatusToPartner(): Convert lole status to partner status
  */
 
 import * as BeuClient from './beu';
@@ -182,9 +182,9 @@ export const PROVIDER_CONFIGS = {
 // =========================================================
 
 /**
- * Map any provider status to Gebeta standard status
+ * Map any provider status to lole standard status
  */
-export function mapProviderStatusToGebeta(provider: DeliveryProvider, status: string): OrderStatus {
+export function mapProviderStatusTolole(provider: DeliveryProvider, status: string): OrderStatus {
     const statusMap: Record<string, OrderStatus> = {
         pending: 'pending_confirmation',
         new: 'pending_confirmation',
@@ -205,9 +205,9 @@ export function mapProviderStatusToGebeta(provider: DeliveryProvider, status: st
 }
 
 /**
- * Map Gebeta status to any provider status
+ * Map lole status to any provider status
  */
-export function mapGebetaStatusToProvider(provider: DeliveryProvider, status: OrderStatus): string {
+export function maploleStatusToProvider(provider: DeliveryProvider, status: OrderStatus): string {
     const statusMap: Record<string, string> = {
         pending_confirmation: 'pending',
         confirmed: 'confirmed',

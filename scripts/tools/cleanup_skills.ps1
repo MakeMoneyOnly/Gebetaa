@@ -1,11 +1,11 @@
-# Gebeta Restaurant OS - Skills Cleanup Script (PowerShell)
+# lole Restaurant OS - Skills Cleanup Script (PowerShell)
 # This script removes unnecessary skills from the SKILLS folder
 # based on the comprehensive audit for a SaaS restaurant platform
 
 $SkillsDir = "SKILLS"
 
 Write-Host "===================================================" -ForegroundColor Cyan
-Write-Host "  Gebeta Restaurant OS - Skills Cleanup Script" -ForegroundColor Cyan
+Write-Host "  lole Restaurant OS - Skills Cleanup Script" -ForegroundColor Cyan
 Write-Host "===================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "This script will remove unnecessary skills while keeping"

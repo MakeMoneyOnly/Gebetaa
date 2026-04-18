@@ -52,7 +52,7 @@ vi.mock('@/lib/events/publisher', () => ({
 }));
 
 vi.mock('@/lib/graphql/errors', () => ({
-    GebetaGraphQLError: class GebetaGraphQLError extends Error {
+    loleGraphQLError: class loleGraphQLError extends Error {
         code: string;
         details?: Record<string, unknown>;
         constructor(message: string, code: string, details?: Record<string, unknown>) {
@@ -272,7 +272,7 @@ describe('OrdersService', () => {
             });
         });
 
-        it('throws GebetaGraphQLError when modifier validation fails', async () => {
+        it('throws loleGraphQLError when modifier validation fails', async () => {
             const service = await importService();
             mockRpc.mockResolvedValue({
                 data: [

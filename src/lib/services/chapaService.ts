@@ -251,13 +251,13 @@ export async function verifyChapaTransaction(txRef: string): Promise<ChapaVerify
 
 /**
  * Generate a unique, sortable transaction reference for Chapa
- * Format: gebeta-{restaurant_prefix}-{timestamp}-{random}
+ * Format: lole-{restaurant_prefix}-{timestamp}-{random}
  */
 export function generateChapaTransactionRef(restaurantSlug: string): string {
     const prefix = restaurantSlug.replace(/[^a-z0-9]/gi, '').slice(0, 8);
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).slice(2, 6);
-    return `gebeta-${prefix}-${timestamp}-${random}`;
+    return `lole-${prefix}-${timestamp}-${random}`;
 }
 
 /**

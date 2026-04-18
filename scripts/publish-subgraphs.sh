@@ -3,7 +3,7 @@
 # Publishes all subgraph schemas to Apollo GraphOS
 #
 # Usage:
-#   APOLLO_KEY=your-api-key GRAPH_REF=gebeta-production-tj1sjiw@current ./scripts/publish-subgraphs.sh
+#   APOLLO_KEY=your-api-key GRAPH_REF=lole-production-tj1sjiw@current ./scripts/publish-subgraphs.sh
 #
 # Prerequisites:
 #   1. Install Rover: iwr 'https://rover.apollo.dev/win/latest' | iex
@@ -21,7 +21,7 @@ fi
 
 if [ -z "$GRAPH_REF" ]; then
     echo "Error: GRAPH_REF environment variable not set"
-    echo "Format: graph-name@variant (e.g., gebeta-production-tj1sjiw@current)"
+    echo "Format: graph-name@variant (e.g., lole-production-tj1sjiw@current)"
     exit 1
 fi
 
@@ -35,7 +35,7 @@ echo "Configuring Rover..."
 rover config auth $APOLLO_KEY
 
 # Base URL for the GraphQL endpoint (update this for production)
-ROUTING_URL="${ROUTING_URL:-https://gebeta.app/api/graphql}"
+ROUTING_URL="${ROUTING_URL:-https://lole.app/api/graphql}"
 
 # Publish each subgraph using subgraph publish command
 echo ""

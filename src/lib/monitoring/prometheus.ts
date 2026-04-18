@@ -7,10 +7,10 @@
  * Exposed Metrics:
  * - http_request_duration_seconds_bucket (histogram)
  * - http_requests_total (counter)
- * - gebeta_orders_total (counter)
- * - gebeta_payments_total (counter)
- * - gebeta_active_sessions (gauge)
- * - gebeta_active_restaurants (gauge)
+ * - lole_orders_total (counter)
+ * - lole_payments_total (counter)
+ * - lole_active_sessions (gauge)
+ * - lole_active_restaurants (gauge)
  *
  * @see docs/05-infrastructure/monitoring/grafana-dashboard.json
  * @see docs/implementation/observability-setup.md
@@ -54,8 +54,8 @@ const httpRequestsTotal = new client.Counter({
 /**
  * Orders total counter
  */
-const gebetaOrdersTotal = new client.Counter({
-    name: 'gebeta_orders_total',
+const loleOrdersTotal = new client.Counter({
+    name: 'lole_orders_total',
     help: 'Total orders processed',
     labelNames: ['restaurant_id', 'status'],
 });
@@ -63,8 +63,8 @@ const gebetaOrdersTotal = new client.Counter({
 /**
  * Payments total counter
  */
-const gebetaPaymentsTotal = new client.Counter({
-    name: 'gebeta_payments_total',
+const lolePaymentsTotal = new client.Counter({
+    name: 'lole_payments_total',
     help: 'Total payments processed',
     labelNames: ['provider', 'status'],
 });
@@ -73,8 +73,8 @@ const gebetaPaymentsTotal = new client.Counter({
  * Payment failure rate gauge
  * Calculated as: failed_payments / total_payments * 100
  */
-const gebetaPaymentFailureRate = new client.Gauge({
-    name: 'gebeta_payment_failure_rate',
+const lolePaymentFailureRate = new client.Gauge({
+    name: 'lole_payment_failure_rate',
     help: 'Payment failure rate percentage',
     labelNames: ['provider'],
 });
@@ -82,16 +82,16 @@ const gebetaPaymentFailureRate = new client.Gauge({
 /**
  * Active sessions gauge
  */
-const gebetaActiveSessions = new client.Gauge({
-    name: 'gebeta_active_sessions',
+const lolectiveSessions = new client.Gauge({
+    name: 'lole_active_sessions',
     help: 'Currently active table sessions',
 });
 
 /**
  * Active restaurants gauge
  */
-const gebetaActiveRestaurants = new client.Gauge({
-    name: 'gebeta_active_restaurants',
+const lolectiveRestaurants = new client.Gauge({
+    name: 'lole_active_restaurants',
     help: 'Number of restaurants with activity in the last hour',
 });
 
@@ -105,11 +105,11 @@ export const metrics = {
     httpRequestsTotal,
 
     // Business metrics
-    gebetaOrdersTotal,
-    gebetaPaymentsTotal,
-    gebetaPaymentFailureRate,
-    gebetaActiveSessions,
-    gebetaActiveRestaurants,
+    loleOrdersTotal,
+    lolePaymentsTotal,
+    lolePaymentFailureRate,
+    lolectiveSessions,
+    lolectiveRestaurants,
 };
 
 // ============================================================================
@@ -136,28 +136,28 @@ export function recordHttpRequest(
  * Record order event
  */
 export function recordOrderEvent(restaurantId: string, status: string): void {
-    gebetaOrdersTotal.labels(restaurantId, status).inc();
+    loleOrdersTotal.labels(restaurantId, status).inc();
 }
 
 /**
  * Record payment event
  */
 export function recordPaymentEvent(provider: string, status: string): void {
-    gebetaPaymentsTotal.labels(provider, status).inc();
+    lolePaymentsTotal.labels(provider, status).inc();
 }
 
 /**
  * Set active sessions count
  */
 export function setActiveSessions(count: number): void {
-    gebetaActiveSessions.set(count);
+    lolectiveSessions.set(count);
 }
 
 /**
  * Set active restaurants count
  */
 export function setActiveRestaurants(count: number): void {
-    gebetaActiveRestaurants.set(count);
+    lolectiveRestaurants.set(count);
 }
 
 /**
