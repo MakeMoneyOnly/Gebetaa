@@ -164,8 +164,8 @@ jobs:
             NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
             SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
             SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL || '' }}
-            NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
-            NEXT_PUBLIC_APP_NAME: 'Gebeta'
+            NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://lole.app' }}
+            NEXT_PUBLIC_APP_NAME: 'lole'
             NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || '' }}
             QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET || '0000000000000000000000000000000000000000000000000000000000000000' }}
             UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
@@ -231,8 +231,8 @@ jobs:
             NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
             SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
             SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL || '' }}
-            NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
-            NEXT_PUBLIC_APP_NAME: 'Gebeta'
+            NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://lole.app' }}
+            NEXT_PUBLIC_APP_NAME: 'lole'
             NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN || '' }}
             QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET || '0000000000000000000000000000000000000000000000000000000000000000' }}
             UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
@@ -350,8 +350,8 @@ jobs:
                   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
                   SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
                   SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-                  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
-                  NEXT_PUBLIC_APP_NAME: 'Gebeta'
+                  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://lole.app' }}
+                  NEXT_PUBLIC_APP_NAME: 'lole'
                   NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
                   QR_HMAC_SECRET: ${{ secrets.QR_HMAC_SECRET }}
                   UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
@@ -382,7 +382,7 @@ jobs:
             deployments: write
         environment:
             name: staging
-            url: https://staging.gebeta.app
+            url: https://staging.lole.app
         steps:
             - uses: actions/checkout@v4
 
@@ -422,7 +422,7 @@ jobs:
             deployments: write
         environment:
             name: production
-            url: https://gebeta.app
+            url: https://lole.app
         steps:
             - uses: actions/checkout@v4
 

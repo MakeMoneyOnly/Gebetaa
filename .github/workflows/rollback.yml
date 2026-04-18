@@ -100,9 +100,9 @@ jobs:
 
                   # Determine project name based on environment
                   if [ "${{ github.inputs.environment }}" = "production" ]; then
-                    PROJECT_NAME="gebeta"
+                    PROJECT_NAME="lole"
                   else
-                    PROJECT_NAME="gebeta-${{ github.inputs.environment }}"
+                    PROJECT_NAME="lole-${{ github.inputs.environment }}"
                   fi
 
                   echo "project_name=$PROJECT_NAME" >> $GITHUB_OUTPUT

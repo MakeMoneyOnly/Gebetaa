@@ -17,7 +17,7 @@ terraform {
 # Vercel Project
 # -----------------------------------------------------------------------------
 
-resource "vercel_project" "gebeta" {
+resource "vercel_project" "lole" {
   name = var.project_name
 
   # Git repository integration
@@ -43,7 +43,7 @@ resource "vercel_project" "gebeta" {
   protect_production = var.environment == "production"
 
   # Tags
-  tags = ["gebeta", var.environment]
+  tags = ["lole", var.environment]
 }
 
 # -----------------------------------------------------------------------------
@@ -53,7 +53,7 @@ resource "vercel_project" "gebeta" {
 resource "vercel_project_environment_variable" "public_vars" {
   for_each = var.env_vars
 
-  project_id = vercel_project.gebeta.id
+  project_id = vercel_project.lole.id
   key        = each.key
   value      = each.value
   target     = ["production", "preview", "development"]
@@ -66,7 +66,7 @@ resource "vercel_project_environment_variable" "public_vars" {
 resource "vercel_project_domain" "production" {
   for_each = toset(var.production_domains)
 
-  project_id = vercel_project.gebeta.id
+  project_id = vercel_project.lole.id
   domain     = each.value
 
   # Enable Vercel Edge Network
@@ -81,8 +81,8 @@ resource "vercel_project_domain" "production" {
 
 # Note: Vercel Analytics requires a paid plan
 # Uncomment if needed:
-# resource "vercel_project_analytics" "gebeta" {
-#   project_id = vercel_project.gebeta.id
+# resource "vercel_project_analytics" "lole" {
+#   project_id = vercel_project.lole.id
 # }
 
 # -----------------------------------------------------------------------------
@@ -90,9 +90,9 @@ resource "vercel_project_domain" "production" {
 # -----------------------------------------------------------------------------
 
 # If using Vercel KV instead of standalone Redis:
-# resource "vercel_kv" "gebeta" {
+# resource "vercel_kv" "lole" {
 #   count = var.enable_vercel_kv ? 1 : 0
-#   name  = "gebeta-${var.environment}"
+#   name  = "lole-${var.environment}"
 #   team_id = var.vercel_team_id
 # }
 
@@ -103,7 +103,7 @@ resource "vercel_project_domain" "production" {
 resource "vercel_project_deployment_protection" "production" {
   count = var.environment == "production" ? 1 : 0
 
-  project_id = vercel_project.gebeta.id
+  project_id = vercel_project.lole.id
 
   # Configure protection settings
   setting {

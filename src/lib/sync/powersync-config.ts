@@ -250,7 +250,7 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
         powerSyncDb = await PowerSyncDatabase.connect({
             schema: powerSyncSchema,
             adapter: new PowerSyncOpenSQLiteAdapter({
-                dbFilename: 'gebeta_offline.db',
+                dbFilename: 'lole_offline.db',
             }),
         });
 

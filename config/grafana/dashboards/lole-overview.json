@@ -18,7 +18,7 @@
             "type": "timeseries",
             "targets": [
                 {
-                    "expr": "rate(gebeta_orders_created_total[5m])",
+                    "expr": "rate(lole_orders_created_total[5m])",
                     "legendFormat": "orders/sec",
                     "refId": "A"
                 }
@@ -36,7 +36,7 @@
             "type": "timeseries",
             "targets": [
                 {
-                    "expr": "sum(rate(gebeta_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(gebeta_http_requests_total[5m]))",
+                    "expr": "sum(rate(lole_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(lole_http_requests_total[5m]))",
                     "legendFormat": "error rate",
                     "refId": "A"
                 }
@@ -54,17 +54,17 @@
             "type": "timeseries",
             "targets": [
                 {
-                    "expr": "histogram_quantile(0.5, sum(rate(gebeta_http_request_duration_seconds_bucket[5m])) by (le))",
+                    "expr": "histogram_quantile(0.5, sum(rate(lole_http_request_duration_seconds_bucket[5m])) by (le))",
                     "legendFormat": "P50",
                     "refId": "A"
                 },
                 {
-                    "expr": "histogram_quantile(0.95, sum(rate(gebeta_http_request_duration_seconds_bucket[5m])) by (le))",
+                    "expr": "histogram_quantile(0.95, sum(rate(lole_http_request_duration_seconds_bucket[5m])) by (le))",
                     "legendFormat": "P95",
                     "refId": "B"
                 },
                 {
-                    "expr": "histogram_quantile(0.99, sum(rate(gebeta_http_request_duration_seconds_bucket[5m])) by (le))",
+                    "expr": "histogram_quantile(0.99, sum(rate(lole_http_request_duration_seconds_bucket[5m])) by (le))",
                     "legendFormat": "P99",
                     "refId": "C"
                 }
@@ -82,17 +82,17 @@
             "type": "timeseries",
             "targets": [
                 {
-                    "expr": "gebeta_realtime_connections",
+                    "expr": "lole_realtime_connections",
                     "legendFormat": "realtime",
                     "refId": "A"
                 },
                 {
-                    "expr": "gebeta_db_connections_active",
+                    "expr": "lole_db_connections_active",
                     "legendFormat": "db_active",
                     "refId": "B"
                 },
                 {
-                    "expr": "gebeta_db_connections_idle",
+                    "expr": "lole_db_connections_idle",
                     "legendFormat": "db_idle",
                     "refId": "C"
                 }
@@ -110,7 +110,7 @@
             "type": "stat",
             "targets": [
                 {
-                    "expr": "gebeta_sync_queue_size",
+                    "expr": "lole_sync_queue_size",
                     "refId": "A"
                 }
             ]
@@ -127,14 +127,14 @@
             "type": "stat",
             "targets": [
                 {
-                    "expr": "gebeta_db_connections_active / (gebeta_db_connections_active + gebeta_db_connections_idle)",
+                    "expr": "lole_db_connections_active / (lole_db_connections_active + lole_db_connections_idle)",
                     "refId": "A"
                 }
             ]
         }
     ],
     "schemaVersion": 39,
-    "tags": ["gebeta"],
+    "tags": ["lole"],
     "templating": {
         "list": [
             {
@@ -148,7 +148,7 @@
         ]
     },
     "time": { "from": "now-1h", "to": "now" },
-    "title": "Gebeta - System Overview",
-    "uid": "gebeta-overview",
+    "title": "lole - System Overview",
+    "uid": "lole-overview",
     "version": 1
 }

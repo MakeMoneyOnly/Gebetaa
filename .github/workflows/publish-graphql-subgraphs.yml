@@ -21,8 +21,8 @@ concurrency:
     cancel-in-progress: true
 
 env:
-    APOLLO_GRAPH_ID: gebeta-production-tj1sjiw
-    ROUTING_URL: https://gebeta.app/api/graphql
+    APOLLO_GRAPH_ID: lole-production-tj1sjiw
+    ROUTING_URL: https://lole.app/api/graphql
 
 jobs:
     publish-subgraphs:

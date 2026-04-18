@@ -1,5 +1,5 @@
 # =============================================================================
-# Gebeta Restaurant OS - Terraform Variables
+# lole Restaurant OS - Terraform Variables
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ variable "vercel_team_id" {
 variable "vercel_project_name" {
   description = "Vercel project name"
   type        = string
-  default     = "gebeta"
+  default     = "lole"
 }
 
 variable "vercel_project_url" {
@@ -184,7 +184,7 @@ variable "database_port" {
 variable "database_name" {
   description = "External database name"
   type        = string
-  default     = "gebeta"
+  default     = "lole"
 }
 
 # -----------------------------------------------------------------------------

@@ -10,7 +10,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createGebetaEvent } from '@/lib/events/contracts';
+import { createloleEvent } from '@/lib/events/contracts';
 import { enqueueInternalJob, publishEvent } from '@/lib/events/runtime';
 import { accrueLoyaltyPointsForCompletedOrder } from '@/lib/services/guestLoyaltyService';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
@@ -38,7 +38,7 @@ function isAuthorizedJobRequest(request: NextRequest): boolean {
     if (!configuredKey) {
         return process.env.NODE_ENV !== 'production';
     }
-    return request.headers.get('x-gebeta-job-key') === configuredKey;
+    return request.headers.get('x-lole-job-key') === configuredKey;
 }
 
 /**
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     results.erca = { queued: true };
 
     // Publish completion event to stream for other consumers
-    const completionEvent = createGebetaEvent('order.completed', {
+    const completionEvent = createloleEvent('order.completed', {
         order_id,
         restaurant_id,
         completed_at: payload.completed_at ?? new Date().toISOString(),

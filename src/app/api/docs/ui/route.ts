@@ -14,7 +14,7 @@ export async function GET() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gebeta Restaurant OS API Documentation</title>
+    <title>lole Restaurant OS API Documentation</title>
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
     <style>
         body {
@@ -80,7 +80,7 @@ export async function GET() {
             background: #8b5cf6;
             border-color: #8b5cf6;
         }
-        .gebeta-badge {
+        .lole-badge {
             display: inline-block;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #fff;
@@ -119,11 +119,11 @@ export async function GET() {
                     }
                 ],
                 onComplete: function() {
-                    // Add Gebeta branding badge
+                    // Add lole branding badge
                     var info = document.querySelector('.info .title');
                     if (info) {
                         var badge = document.createElement('span');
-                        badge.className = 'gebeta-badge';
+                        badge.className = 'lole-badge';
                         badge.textContent = 'Restaurant OS';
                         info.appendChild(badge);
                     }

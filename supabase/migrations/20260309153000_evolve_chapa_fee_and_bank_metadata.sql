@@ -34,6 +34,6 @@ COMMENT ON COLUMN public.restaurants.platform_fee_percentage IS
     'Deprecated compatibility field. Use hosted_checkout_fee_percentage for Chapa-hosted guest checkout pricing.';
 
 COMMENT ON COLUMN public.restaurants.hosted_checkout_fee_percentage IS
-    'Current Gebeta fee applied to Chapa-hosted guest checkout flows.';
+    'Current lole fee applied to Chapa-hosted guest checkout flows.';
 
 COMMIT;

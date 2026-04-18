@@ -17,7 +17,7 @@
             "headers": [
                 {
                     "key": "Access-Control-Allow-Origin",
-                    "value": "https://gebeta.app https://staging.gebeta.app http://localhost:3000"
+                    "value": "https://lole.app https://staging.lole.app http://localhost:3000"
                 },
                 {
                     "key": "Access-Control-Allow-Methods",

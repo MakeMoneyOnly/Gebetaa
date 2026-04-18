@@ -1,4 +1,4 @@
--- Gebeta Initial Schema (Phase 2 Architecture)
+-- lole Initial Schema (Phase 2 Architecture)
 -- Date: 2026-02-04
 -- Description: Core Multi-tenant Schema with Offline support fields
 

@@ -115,7 +115,7 @@ import { resolveGuestContext } from '@/lib/security/guestContext';
 import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { isIdempotencyKeyValid } from '@/lib/api/idempotency';
-import { createGebetaEvent } from '@/lib/events/contracts';
+import { createloleEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { prepareOrderDiscount } from '@/lib/discounts/service';
@@ -542,7 +542,7 @@ export async function POST(request: NextRequest) {
         }
 
         await publishEvent(
-            createGebetaEvent('order.created', {
+            createloleEvent('order.created', {
                 restaurant_id: restaurantId,
                 order_id: result.order.id,
                 idempotency_key: idempotencyKey,

@@ -5,7 +5,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { sendOrderStatusSms } from '@/lib/notifications/sms';
-import { createGebetaEvent } from '@/lib/events/contracts';
+import { createloleEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
 import { redisRateLimiters } from '@/lib/security';
 import { monitoredQuery } from '@/lib/services/queryMonitor';
@@ -231,7 +231,7 @@ export async function PATCH(
             ...(parsed.data.status === 'completed' || parsed.data.status === 'served'
                 ? [
                       publishEvent(
-                          createGebetaEvent('order.completed', {
+                          createloleEvent('order.completed', {
                               restaurant_id: order.restaurant_id,
                               order_id: order.id,
                               previous_status: order.status,

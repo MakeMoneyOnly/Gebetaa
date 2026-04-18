@@ -79,10 +79,10 @@ export async function POST(request: Request) {
             const { data: emailData, error: emailError } = await resend.emails.send({
                 from: EMAIL_FROM,
                 to: parsed.data.email,
-                subject: `Provision access for ${restaurant?.name ?? 'Gebeta'}`,
+                subject: `Provision access for ${restaurant?.name ?? 'lole'}`,
                 html: StaffInviteEmail({
                     inviteUrl,
-                    restaurantName: restaurant?.name ?? 'Gebeta',
+                    restaurantName: restaurant?.name ?? 'lole',
                     role: parsed.data.role,
                 }),
             });

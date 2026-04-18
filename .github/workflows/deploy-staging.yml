@@ -9,7 +9,7 @@
 #   - Manual workflow dispatch
 #   - Scheduled (optional)
 #
-# Environment: Staging (https://staging.gebeta.app)
+# Environment: Staging (https://staging.lole.app)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 name: Deploy to Staging
@@ -180,8 +180,8 @@ jobs:
             SUPABASE_SECRET_KEY: ${{ secrets.STAGING_SUPABASE_SECRET_KEY || secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
 
             # Staging Application URL
-            NEXT_PUBLIC_APP_URL: ${{ secrets.STAGING_APP_URL || 'https://staging.gebeta.app' }}
-            NEXT_PUBLIC_APP_NAME: 'Gebeta Staging'
+            NEXT_PUBLIC_APP_URL: ${{ secrets.STAGING_APP_URL || 'https://staging.lole.app' }}
+            NEXT_PUBLIC_APP_NAME: 'lole Staging'
 
             # Staging Redis
             UPSTASH_REDIS_REST_URL: ${{ secrets.STAGING_UPSTASH_REDIS_REST_URL || secrets.UPSTASH_REDIS_REST_URL }}
@@ -286,8 +286,8 @@ jobs:
                   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
                   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_SUPABASE_PUBLISHABLE_KEY || secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
                   SUPABASE_SECRET_KEY: ${{ secrets.STAGING_SUPABASE_SECRET_KEY || secrets.SUPABASE_SECRET_KEY }}
-                  NEXT_PUBLIC_APP_URL: ${{ secrets.STAGING_APP_URL || 'https://staging.gebeta.app' }}
-                  NEXT_PUBLIC_APP_NAME: 'Gebeta Staging'
+                  NEXT_PUBLIC_APP_URL: ${{ secrets.STAGING_APP_URL || 'https://staging.lole.app' }}
+                  NEXT_PUBLIC_APP_NAME: 'lole Staging'
                   NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.STAGING_SENTRY_DSN || secrets.NEXT_PUBLIC_SENTRY_DSN }}
                   QR_HMAC_SECRET: ${{ secrets.STAGING_QR_HMAC_SECRET || secrets.QR_HMAC_SECRET }}
                   UPSTASH_REDIS_REST_URL: ${{ secrets.STAGING_UPSTASH_REDIS_REST_URL || secrets.UPSTASH_REDIS_REST_URL }}
@@ -318,7 +318,7 @@ jobs:
             deployments: write
         environment:
             name: staging
-            url: https://staging.gebeta.app
+            url: https://staging.lole.app
         steps:
             - uses: actions/checkout@v4
               with:

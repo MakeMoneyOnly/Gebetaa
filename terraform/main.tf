@@ -1,5 +1,5 @@
 # =============================================================================
-# Gebeta Restaurant OS - Terraform Main Configuration
+# lole Restaurant OS - Terraform Main Configuration
 # "Toast for Addis Ababa" - Infrastructure as Code
 # =============================================================================
 
@@ -28,11 +28,11 @@ terraform {
   # Use remote state in production, local for development
   # Uncomment and configure for production:
   # backend "s3" {
-  #   bucket         = "gebeta-terraform-state"
+  #   bucket         = "lole-terraform-state"
   #   key            = "production/terraform.tfstate"
   #   region         = "us-east-1"
   #   encrypt        = true
-  #   dynamodb_table = "gebeta-terraform-locks"
+  #   dynamodb_table = "lole-terraform-locks"
   # }
 }
 
@@ -57,7 +57,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "Gebeta"
+      Project     = "lole"
       Description = "Restaurant Operating System for Ethiopia"
       ManagedBy   = "Terraform"
     }
@@ -172,7 +172,7 @@ module "vercel" {
 #
 #   environment     = var.environment
 #   cluster_name    = var.kubernetes_cluster_name
-#   namespace       = "gebeta"
+#   namespace       = "lole"
 #
 #   # Database connection
 #   database_host   = var.database_host

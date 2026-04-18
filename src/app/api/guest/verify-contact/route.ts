@@ -68,7 +68,7 @@ export async function POST(request: Request) {
             const { sendSms } = await import('@/lib/notifications/sms');
             const result = await sendSms(
                 guest.phone,
-                `Your Gebeta verification code is: ${code}. This code expires in 10 minutes.`
+                `Your lole verification code is: ${code}. This code expires in 10 minutes.`
             );
 
             if (!result.success) {
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
                 await resend.emails.send({
                     from: EMAIL_FROM,
                     to: guest.email,
-                    subject: 'Verify your contact info - Gebeta',
+                    subject: 'Verify your contact info - lole',
                     html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #0D3B40;">Verify your contact</h1>

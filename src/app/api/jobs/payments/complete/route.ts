@@ -30,7 +30,7 @@ function isAuthorizedJobRequest(request: NextRequest): boolean {
         return process.env.NODE_ENV !== 'production';
     }
 
-    return request.headers.get('x-gebeta-job-key') === configuredKey;
+    return request.headers.get('x-lole-job-key') === configuredKey;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

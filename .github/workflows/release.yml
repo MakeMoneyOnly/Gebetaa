@@ -113,8 +113,8 @@ jobs:
                   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
                   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key' }}
                   SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'placeholder-secret' }}
-                  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://gebeta.app' }}
-                  NEXT_PUBLIC_APP_NAME: 'Gebeta'
+                  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://lole.app' }}
+                  NEXT_PUBLIC_APP_NAME: 'lole'
 
     # ═══════════════════════════════════════════════════════════════════════════
     # GENERATE CHANGELOG
@@ -188,7 +188,7 @@ jobs:
         needs: [validate, release]
         environment:
             name: production
-            url: https://gebeta.app
+            url: https://lole.app
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -207,7 +207,7 @@ jobs:
               run: |
                   echo "Waiting for deployment to be ready..."
                   sleep 30
-                  curl -sSf "https://gebeta.app/api/health" || echo "Health check warning"
+                  curl -sSf "https://lole.app/api/health" || echo "Health check warning"
                   echo "Deployment completed!"
 
             - name: Comment on Release
@@ -223,5 +223,5 @@ jobs:
                         owner: context.repo.owner,
                         repo: context.repo.repo,
                         release_id: release.data.id,
-                        body: '🚀 Deployed to production: https://gebeta.app'
+                        body: '🚀 Deployed to production: https://lole.app'
                       });

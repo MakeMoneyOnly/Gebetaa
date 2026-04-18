@@ -17,17 +17,17 @@ terraform {
 # and manage configuration through environment variables
 
 # Alternative: If using AWS ElastiCache instead:
-resource "aws_elasticache_subnet_group" "gebeta" {
+resource "aws_elasticache_subnet_group" "lole" {
   count = var.enable_cluster_mode ? 1 : 0
-  name       = "gebeta-${var.environment}-subnet"
+  name       = "lole-${var.environment}-subnet"
   subnet_ids = []  # Configure with your VPC subnet IDs
 
   tags = var.tags
 }
 
-resource "aws_elasticache_parameter_group" "gebeta" {
+resource "aws_elasticache_parameter_group" "lole" {
   count = var.enable_cluster_mode ? 1 : 0
-  name   = "gebeta-${var.environment}-params"
+  name   = "lole-${var.environment}-params"
 
   # Redis 7.x configuration
   family = "redis7"
@@ -40,11 +40,11 @@ resource "aws_elasticache_parameter_group" "gebeta" {
   tags = var.tags
 }
 
-resource "aws_elasticache_replication_group" "gebeta" {
+resource "aws_elasticache_replication_group" "lole" {
   count = var.enable_cluster_mode ? 1 : 0
 
-  replication_group_id       = "gebeta-${var.environment}"
-  replication_group_description = "Gebeta Redis Cluster - ${var.environment}"
+  replication_group_id       = "lole-${var.environment}"
+  replication_group_description = "lole Redis Cluster - ${var.environment}"
 
   # Node configuration
   node_type               = var.enable_cluster_mode ? "cache.t3.medium" : "cache.t3.micro"
@@ -55,10 +55,10 @@ resource "aws_elasticache_replication_group" "gebeta" {
   engine               = "redis"
   engine_version       = "7.0"
   port                = 6379
-  parameter_group_name = aws_elasticache_parameter_group.gebeta[0].name
+  parameter_group_name = aws_elasticache_parameter_group.lole[0].name
 
   # Network configuration
-  subnet_group_name         = aws_elasticache_subnet_group.gebeta[0].name
+  subnet_group_name         = aws_elasticache_subnet_group.lole[0].name
   # security_group_ids = []  # Configure with your security groups
 
   # Backup configuration
@@ -86,7 +86,7 @@ resource "aws_elasticache_replication_group" "gebeta" {
 resource "aws_dynamodb_table" "rate_limits" {
   count = !var.enable_cluster_mode ? 1 : 0
 
-  name           = "gebeta-rate-limits-${var.environment}"
+  name           = "lole-rate-limits-${var.environment}"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "key"
 
@@ -114,7 +114,7 @@ locals {
 
   # Redis connection info
   redis_host = var.enable_cluster_mode 
-    ? aws_elasticache_replication_group.gebeta[0].primary_endpoint_address
+    ? aws_elasticache_replication_group.lole[0].primary_endpoint_address
     : (local.use_upstash 
         ? "redis.upstash.io"  # Simplified for Upstash
         : "")

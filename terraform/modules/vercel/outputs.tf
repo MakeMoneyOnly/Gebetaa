@@ -4,17 +4,17 @@
 
 output "project_id" {
   description = "Vercel project ID"
-  value       = vercel_project.gebeta.id
+  value       = vercel_project.lole.id
 }
 
 output "project_name" {
   description = "Vercel project name"
-  value       = vercel_project.gebeta.name
+  value       = vercel_project.lole.name
 }
 
 output "project_url" {
   description = "Vercel project production URL"
-  value       = vercel_project.gebeta.url
+  value       = vercel_project.lole.url
 }
 
 output "deployment_id" {

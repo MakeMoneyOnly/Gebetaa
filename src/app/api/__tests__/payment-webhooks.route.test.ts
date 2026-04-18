@@ -94,7 +94,7 @@ describe('payment webhook routes', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-gebeta-job-key': 'job-key',
+                    'x-lole-job-key': 'job-key',
                 },
                 body: JSON.stringify({
                     id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',

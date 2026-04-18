@@ -23,7 +23,7 @@ function getDexieDatabase(): DexieDatabase | null {
         /* eslint-disable @typescript-eslint/no-require-imports */
         const Dexie = require('dexie');
         /* eslint-enable @typescript-eslint/no-require-imports */
-        return new Dexie('GebetaOrders');
+        return new Dexie('loleOrders');
     } catch {
         return null;
     }
@@ -117,7 +117,7 @@ export async function migrateKdsLocalStorageToPowerSync(): Promise<{
 
     try {
         // Read from localStorage
-        const STORAGE_KEY = 'gebeta_kds_offline_queue_v1';
+        const STORAGE_KEY = 'lole_kds_offline_queue_v1';
         const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
 
         if (!stored) {
@@ -176,7 +176,7 @@ export async function migrateCartLocalStorageToPowerSync(): Promise<{
     }
 
     try {
-        const CART_KEY = 'gebeta_cart';
+        const CART_KEY = 'lole_cart';
         const stored = typeof window !== 'undefined' ? localStorage.getItem(CART_KEY) : null;
 
         if (!stored) {
@@ -233,8 +233,8 @@ export async function isMigrationNeeded(): Promise<{
     let cartLocalStorage = false;
 
     if (typeof window !== 'undefined') {
-        kdsLocalStorage = !!localStorage.getItem('gebeta_kds_offline_queue_v1');
-        cartLocalStorage = !!localStorage.getItem('gebeta_cart');
+        kdsLocalStorage = !!localStorage.getItem('lole_kds_offline_queue_v1');
+        cartLocalStorage = !!localStorage.getItem('lole_cart');
     }
 
     return { dexieOrders, kdsLocalStorage, cartLocalStorage };
@@ -248,10 +248,10 @@ export async function clearLegacyStorage(): Promise<void> {
 
     try {
         // Clear KDS localStorage
-        localStorage.removeItem('gebeta_kds_offline_queue_v1');
+        localStorage.removeItem('lole_kds_offline_queue_v1');
 
         // Clear cart
-        localStorage.removeItem('gebeta_cart');
+        localStorage.removeItem('lole_cart');
 
         // Clear waiter context (session-specific, but clear anyway)
         localStorage.removeItem('gebata_waiter_context');

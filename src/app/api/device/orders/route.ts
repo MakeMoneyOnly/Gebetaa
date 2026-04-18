@@ -59,7 +59,7 @@ import { getDeviceContext } from '@/lib/api/authz';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { z } from 'zod';
 import { parseJsonBody } from '@/lib/api/validation';
-import { createGebetaEvent } from '@/lib/events/contracts';
+import { createloleEvent } from '@/lib/events/contracts';
 import { publishEvent } from '@/lib/events/runtime';
 import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempotency';
 import { prepareOrderDiscount } from '@/lib/discounts/service';
@@ -353,7 +353,7 @@ export async function POST(request: Request) {
     }
 
     await publishEvent(
-        createGebetaEvent('order.created', {
+        createloleEvent('order.created', {
             restaurant_id: ctx.restaurantId,
             order_id: order.id,
             idempotency_key: idempotencyKey,

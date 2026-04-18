@@ -85,7 +85,7 @@ jobs:
                     
                     # Run breaking change check
                     if [ -f base-schema.graphql ]; then
-                      npx @apollo/apollo service:check --graph=Gebeta --variant=current --schema=schema.graphql --baseSchema=base-schema.graphql 2>&1 || true
+                      npx @apollo/apollo service:check --graph=lole --variant=current --schema=schema.graphql --baseSchema=base-schema.graphql 2>&1 || true
                     else
                       echo "No base schema found, skipping breaking change check"
                     fi
@@ -96,7 +96,7 @@ jobs:
             - name: Validate Schema Composition
               run: |
                   # Basic schema validation
-                  npx apollo service:check --graph=Gebeta --schema=schema.graphql 2>&1 || echo "Schema validation requires Apollo Studio"
+                  npx apollo service:check --graph=lole --schema=schema.graphql 2>&1 || echo "Schema validation requires Apollo Studio"
 
             - name: Generate TypeScript Types
               run: pnpm codegen || echo "Codegen may need updates for new schema"

@@ -1,6 +1,6 @@
 /**
  * API Documentation Route
- * Serves OpenAPI 3.1 specification for the Gebeta Restaurant OS API
+ * Serves OpenAPI 3.1 specification for the lole Restaurant OS API
  *
  * This documentation covers:
  * - Order management endpoints
@@ -15,12 +15,12 @@ import { apiSuccess } from '@/lib/api/response';
 export const dynamic = 'force-dynamic';
 
 /**
- * OpenAPI Specification for Gebeta Restaurant OS
+ * OpenAPI Specification for lole Restaurant OS
  */
 const openApiSpec = {
     openapi: '3.1.0',
     info: {
-        title: 'Gebeta Restaurant OS API',
+        title: 'lole Restaurant OS API',
         version: '1.0.0',
         description: `
 ## Overview
@@ -55,12 +55,12 @@ This prevents duplicate operations when network errors occur.
 All monetary values are in Ethiopian Birr (ETB).
         `.trim(),
         contact: {
-            name: 'Gebeta Support',
-            email: 'support@gebeta.app',
+            name: 'lole Support',
+            email: 'support@lole.app',
         },
         license: {
             name: 'Proprietary',
-            url: 'https://gebeta.app/terms',
+            url: 'https://lole.app/terms',
         },
     },
     servers: [

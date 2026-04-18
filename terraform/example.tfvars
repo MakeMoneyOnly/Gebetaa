@@ -34,11 +34,11 @@ supabase_project_id_prod = "your-prod-project-ref"
 # Vercel Configuration
 # -----------------------------------------------------------------------------
 
-vercel_project_name = "gebeta"
-git_repo_url        = "https://github.com/your-org/gebeta"
+vercel_project_name = "lole"
+git_repo_url        = "https://github.com/your-org/lole"
 
 # Production domains (for production environment)
-# production_domains = ["gebeta.com", "www.gebeta.com"]
+# production_domains = ["lole.com", "www.lole.com"]
 
 # -----------------------------------------------------------------------------
 # Upstash/Redis Configuration

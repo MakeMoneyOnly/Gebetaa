@@ -14,7 +14,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { parseJsonBody } from '@/lib/api/validation';
 import { isChapaConfigured, verifyChapaTransaction } from '@/lib/services/chapaService';
 import { ensurePaymentSessionForRecordedPayment } from '@/lib/payments/payment-sessions';
-import { createGebetaEvent } from '@/lib/events/contracts';
+import { createloleEvent } from '@/lib/events/contracts';
 import { enqueueInternalJob } from '@/lib/events/runtime';
 
 const CloseTableSchema = z.object({
@@ -399,7 +399,7 @@ export async function POST(request: Request) {
         const jobQueuePromises = finalizableOrderIds.map(orderId =>
             enqueueInternalJob({
                 path: '/api/jobs/orders/completed',
-                body: createGebetaEvent('order.completed', {
+                body: createloleEvent('order.completed', {
                     order_id: orderId,
                     restaurant_id: ctx.restaurantId,
                     completed_at: now,

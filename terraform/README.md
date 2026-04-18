@@ -1,12 +1,12 @@
-# Gebeta Restaurant OS - Infrastructure as Code
+# lole Restaurant OS - Infrastructure as Code
 
-Terraform configurations for deploying and managing the Gebeta Restaurant Operating System ("Toast for Addis Ababa").
+Terraform configurations for deploying and managing the lole Restaurant Operating System ("Toast for Addis Ababa").
 
 ## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Gebeta Infrastructure                       │
+│                      lole Infrastructure                       │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐     │
@@ -58,8 +58,8 @@ terraform/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/MakeMoneyOnly/Gebetaa.git
-cd Gebetaa/terraform
+git clone https://github.com/MakeMoneyOnly/lole.git
+cd lole/terraform
 ```
 
 ### 2. Configure your environment

@@ -22,11 +22,11 @@ import { getPrometheusMetrics, getPrometheusContentType } from '@/lib/monitoring
  * Metrics exposed:
  * - http_request_duration_seconds_bucket
  * - http_requests_total
- * - gebeta_orders_total
- * - gebeta_payments_total
- * - gebeta_payment_failure_rate
- * - gebeta_active_sessions
- * - gebeta_active_restaurants
+ * - lole_orders_total
+ * - lole_payments_total
+ * - lole_payment_failure_rate
+ * - lole_active_sessions
+ * - lole_active_restaurants
  */
 export async function GET(): Promise<NextResponse> {
     try {
@@ -44,14 +44,11 @@ export async function GET(): Promise<NextResponse> {
         // Log error but return empty metrics to avoid breaking scrapers
         console.error('[PrometheusMetrics] Error generating metrics:', error);
 
-        return new NextResponse(
-            '# Error generating metrics\n# Please check application logs\n',
-            {
-                status: 500,
-                headers: {
-                    'Content-Type': getPrometheusContentType(),
-                },
-            }
-        );
+        return new NextResponse('# Error generating metrics\n# Please check application logs\n', {
+            status: 500,
+            headers: {
+                'Content-Type': getPrometheusContentType(),
+            },
+        });
     }
 }

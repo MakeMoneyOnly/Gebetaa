@@ -140,7 +140,7 @@ jobs:
               with:
                   format: spdx-json
                   output-file: sbom.spdx.json
-                  artifact-name: gebeta-sbom
+                  artifact-name: lole-sbom
 
             - name: Upload SBOM Artifact
               uses: actions/upload-artifact@v4

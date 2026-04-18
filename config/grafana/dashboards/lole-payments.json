@@ -9,17 +9,17 @@
         {
             "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
             "fieldConfig": {
-                "defaults": {},
+                "defaults": { "unit": "percentunit" },
                 "overrides": []
             },
             "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
             "id": 1,
-            "title": "KDS Items by Status",
+            "title": "Payment Success Rate by Provider",
             "type": "timeseries",
             "targets": [
                 {
-                    "expr": "gebeta_kds_items_queued_total",
-                    "legendFormat": "{{status}}",
+                    "expr": "sum(rate(lole_payments_processed_total{status=\"success\"}[5m])) by (provider) / sum(rate(lole_payments_processed_total[5m])) by (provider)",
+                    "legendFormat": "{{provider}}",
                     "refId": "A"
                 }
             ]
@@ -32,18 +32,36 @@
             },
             "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
             "id": 2,
-            "title": "Average Cooking Time by Station",
+            "title": "Payment Processing Time",
             "type": "timeseries",
             "targets": [
                 {
-                    "expr": "histogram_quantile(0.5, sum(rate(gebeta_kds_cooking_duration_seconds_bucket[5m])) by (le, station))",
-                    "legendFormat": "{{station}} P50",
+                    "expr": "histogram_quantile(0.5, sum(rate(lole_payment_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "P50",
                     "refId": "A"
                 },
                 {
-                    "expr": "histogram_quantile(0.95, sum(rate(gebeta_kds_cooking_duration_seconds_bucket[5m])) by (le, station))",
-                    "legendFormat": "{{station}} P95",
+                    "expr": "histogram_quantile(0.95, sum(rate(lole_payment_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "P95",
                     "refId": "B"
+                }
+            ]
+        },
+        {
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "fieldConfig": {
+                "defaults": { "unit": "currencyETB" },
+                "overrides": []
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+            "id": 3,
+            "title": "Revenue by Payment Method",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "sum(rate(lole_payments_processed_total{status=\"success\"}[1h])) by (provider)",
+                    "legendFormat": "{{provider}}",
+                    "refId": "A"
                 }
             ]
         },
@@ -53,39 +71,21 @@
                 "defaults": {},
                 "overrides": []
             },
-            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-            "id": 3,
-            "title": "Queue Depth by Station",
-            "type": "timeseries",
-            "targets": [
-                {
-                    "expr": "gebeta_kds_queue_depth",
-                    "legendFormat": "{{station}}",
-                    "refId": "A"
-                }
-            ]
-        },
-        {
-            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-            "fieldConfig": {
-                "defaults": { "unit": "ops" },
-                "overrides": []
-            },
             "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
             "id": 4,
-            "title": "Kitchen Throughput (items/hour)",
+            "title": "Payment Failure Reasons",
             "type": "timeseries",
             "targets": [
                 {
-                    "expr": "rate(gebeta_kds_items_queued_total{status=\"bumped\"}[1h]) * 3600",
-                    "legendFormat": "items/hour",
+                    "expr": "sum(rate(lole_payments_processed_total{status=\"failed\"}[5m])) by (reason)",
+                    "legendFormat": "{{reason}}",
                     "refId": "A"
                 }
             ]
         }
     ],
     "schemaVersion": 39,
-    "tags": ["gebeta"],
+    "tags": ["lole"],
     "templating": {
         "list": [
             {
@@ -99,7 +99,7 @@
         ]
     },
     "time": { "from": "now-1h", "to": "now" },
-    "title": "Gebeta - KDS",
-    "uid": "gebeta-kds",
+    "title": "lole - Payments",
+    "uid": "lole-payments",
     "version": 1
 }

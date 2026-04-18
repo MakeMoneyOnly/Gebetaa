@@ -36,10 +36,10 @@ output "dynamodb_rate_limits_table" {
 
 output "redis_cluster_endpoint" {
   description = "Redis cluster primary endpoint (production)"
-  value       = try(aws_elasticache_replication_group.gebeta[0].primary_endpoint_address, "")
+  value       = try(aws_elasticache_replication_group.lole[0].primary_endpoint_address, "")
 }
 
 output "redis_cluster_reader_endpoint" {
   description = "Redis cluster reader endpoint (production)"
-  value       = try(aws_elasticache_replication_group.gebeta[0].reader_endpoint_address, "")
+  value       = try(aws_elasticache_replication_group.lole[0].reader_endpoint_address, "")
 }

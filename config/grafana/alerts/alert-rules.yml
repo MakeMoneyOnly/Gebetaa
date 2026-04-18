@@ -1,11 +1,11 @@
 groups:
-    - name: gebeta-critical
+    - name: lole-critical
       rules:
           - alert: HighErrorRate
             expr: |
-                sum(rate(gebeta_http_requests_total{status_code=~"5.."}[5m]))
+                sum(rate(lole_http_requests_total{status_code=~"5.."}[5m]))
                 /
-                sum(rate(gebeta_http_requests_total[5m])) > 0.05
+                sum(rate(lole_http_requests_total[5m])) > 0.05
             for: 5m
             labels:
                 severity: critical
@@ -15,7 +15,7 @@ groups:
                 description: 'Error rate is {{ $value | humanizePercentage }} over 5 minutes (threshold: 5%)'
 
           - alert: OrderProcessingDown
-            expr: rate(gebeta_orders_created_total[10m]) == 0
+            expr: rate(lole_orders_created_total[10m]) == 0
             for: 10m
             labels:
                 severity: critical
@@ -26,9 +26,9 @@ groups:
 
           - alert: PaymentFailures
             expr: |
-                sum(rate(gebeta_payments_processed_total{status="failed"}[5m]))
+                sum(rate(lole_payments_processed_total{status="failed"}[5m]))
                 /
-                sum(rate(gebeta_payments_processed_total[5m])) > 0.10
+                sum(rate(lole_payments_processed_total[5m])) > 0.10
             for: 5m
             labels:
                 severity: critical
@@ -39,9 +39,9 @@ groups:
 
           - alert: DatabaseConnectionPoolHigh
             expr: |
-                gebeta_db_connections_active
+                lole_db_connections_active
                 /
-                (gebeta_db_connections_active + gebeta_db_connections_idle) > 0.80
+                (lole_db_connections_active + lole_db_connections_idle) > 0.80
             for: 5m
             labels:
                 severity: warning
@@ -50,12 +50,12 @@ groups:
                 summary: 'Database connection pool utilization high'
                 description: 'Pool utilization is {{ $value | humanizePercentage }} (threshold: 80%)'
 
-    - name: gebeta-warnings
+    - name: lole-warnings
       rules:
           - alert: SlowResponseTime
             expr: |
                 histogram_quantile(0.95,
-                  sum(rate(gebeta_http_request_duration_seconds_bucket[5m])) by (le)
+                  sum(rate(lole_http_request_duration_seconds_bucket[5m])) by (le)
                 ) > 1.0
             for: 5m
             labels:
@@ -66,7 +66,7 @@ groups:
                 description: 'P95 response time is {{ $value }}s (threshold: 1s)'
 
           - alert: SyncQueueBacklog
-            expr: gebeta_sync_queue_size > 100
+            expr: lole_sync_queue_size > 100
             for: 5m
             labels:
                 severity: warning
@@ -76,7 +76,7 @@ groups:
                 description: 'Sync queue has {{ $value }} pending operations (threshold: 100)'
 
           - alert: KDSQueueDepth
-            expr: gebeta_kds_queue_depth > 50
+            expr: lole_kds_queue_depth > 50
             for: 5m
             labels:
                 severity: warning

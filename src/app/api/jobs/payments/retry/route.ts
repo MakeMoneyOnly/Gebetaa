@@ -31,7 +31,7 @@ function isAuthorized(request: NextRequest): boolean {
     if (!configuredKey) {
         return process.env.NODE_ENV !== 'production';
     }
-    return request.headers.get('x-gebeta-job-key') === configuredKey;
+    return request.headers.get('x-lole-job-key') === configuredKey;
 }
 
 /**

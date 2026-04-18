@@ -16,7 +16,7 @@ variable "vercel_team_id" {
 variable "project_name" {
   description = "Vercel project name"
   type        = string
-  default     = "gebeta"
+  default     = "lole"
 }
 
 variable "git_repo_url" {
