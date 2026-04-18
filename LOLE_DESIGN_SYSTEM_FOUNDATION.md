@@ -31,7 +31,7 @@ Visual inputs, in order:
 Important:
 
 - Canonical brand name is `Lole`
-- Legacy names `Gebeta`, `Gebetaa`, and stylistic casing `LoLe` must be retired from product-facing surfaces
+- Legacy names `lole`, `lole`, and stylistic casing `LoLe` must be retired from product-facing surfaces
 - [Brand.md](Brand.md) is a legacy strategic document and must not be used as a visual source for colors, typography, layout, motion, or component styling
 - The current landing page visual direction is the only visual source of truth for the rebrand
 - The strategic parts of [Brand.md](Brand.md) remain useful and should be preserved where they align
@@ -199,7 +199,7 @@ The app shell and shared components do not yet inherit the landing-page aestheti
 Observed gaps:
 
 - `Lole` is not the canonical name everywhere yet
-- the root layout still carries `Gebeta` metadata in [src/app/layout.tsx](src/app/layout.tsx)
+- the root layout still carries `lole` metadata in [src/app/layout.tsx](src/app/layout.tsx)
 - the global token layer in [src/app/globals.css](src/app/globals.css) mixes multiple unrelated palettes
 - shared primitives exist, but many product screens still use raw one-off Tailwind classes
 - dashboard surfaces use inconsistent gray palettes, radii, borders, and shadows
@@ -683,7 +683,7 @@ Do not:
 - invent new hex colors inside feature screens
 - add one-off radii per page
 - use arbitrary shadows without token backing
-- mix `Gebeta`, `Gebetaa`, `LoLe`, and `Lole`
+- mix `lole`, `lole`, `LoLe`, and `Lole`
 
 ### Typography
 
@@ -721,7 +721,7 @@ To stop visual drift:
 2. No product page may create a new button, card, or form style if a system primitive can be extended.
 3. New screens must declare which shell type they belong to: marketing, dashboard, POS, KDS, guest, or public utility.
 4. All product states must use canonical semantic states.
-5. Rebrand work must remove legacy `Gebeta` naming in the changed scope.
+5. Rebrand work must remove legacy `lole` naming in the changed scope.
 
 ## Assets Needed From Design
 

@@ -3,7 +3,7 @@
  *
  * Addresses PLATFORM_AUDIT finding CODE-2: No component storybook
  *
- * This configuration sets up Storybook for the Gebeta Restaurant OS project
+ * This configuration sets up Storybook for the lole Restaurant OS project
  * with Next.js, Tailwind CSS, and TypeScript support.
  */
 

@@ -3,7 +3,7 @@
 ## Purpose
 
 This file defines project-specific operating rules for Codex in this repo.
-It is optimized for Gebeta's goal: building "Toast for Addis Ababa" with enterprise-grade reliability, security, and delivery discipline.
+It is optimized for lole's goal: building "Toast for Addis Ababa" with enterprise-grade reliability, security, and delivery discipline.
 
 ## Product Context
 
@@ -121,7 +121,7 @@ When guidance conflicts, follow this order:
     - integration (API/db boundary, tenant isolation),
     - e2e (critical user paths).
 - Release cadence and gates: `docs/implementation/release-cadence.md`.
-- P0 readiness and rollback controls: `docs/implementation/p0-release-readiness-and-rollback.md`.
+- P0 readiness and rollback controls: `docs/08-reports/rollout/p0-release-readiness-and-rollback.md`.
 - Incident handling and severity model: `docs/09-runbooks/incident-triage-rubric.md`.
 - No release if Sev1/Sev2 blockers exist in changed scope.
 

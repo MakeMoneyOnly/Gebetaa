@@ -14,7 +14,7 @@ Rebrand the entire platform around the landing page design language so every Lol
 - Do not restyle screens ad hoc
 - Move shared styles into tokens and primitives first
 - Product usability beats visual novelty on operational surfaces
-- Any touched scope must remove legacy `Gebeta` branding where safe
+- Any touched scope must remove legacy `lole` branding where safe
 
 ## Current Phase
 
@@ -36,7 +36,7 @@ Phase 3: Shared shell and navigation
 | P0-03 | Lock canonical brand name, casing, tone, and expression levels | todo   | Foundation doc sections completed                     |
 | P0-04 | Audit landing page and extract first-pass visual language      | todo   | Audit section in foundation doc                       |
 | P0-05 | Inventory current shared primitives and styling drift          | todo   | Component inventory and drift notes in foundation doc |
-| P0-06 | Identify legacy `Gebeta` / `LoLe` naming to retire over time   | todo   | Rebrand cleanup backlog                               |
+| P0-06 | Identify legacy `lole` / `LoLe` naming to retire over time     | todo   | Rebrand cleanup backlog                               |
 
 ## Phase 1: Token Infrastructure
 
@@ -144,12 +144,12 @@ Acceptance criteria:
 
 ## Phase 6: Rebrand Cleanup
 
-| ID    | Task                                                          | Status | Deliverable                   |
-| ----- | ------------------------------------------------------------- | ------ | ----------------------------- |
-| P6-01 | Replace `Gebeta` product-facing metadata and copy with `Lole` | todo   | Updated copy in touched scope |
-| P6-02 | Replace legacy logo/icon references                           | todo   | Canonical asset usage         |
-| P6-03 | Review docs and public-facing pages for brand consistency     | todo   | Rebrand cleanup pass          |
-| P6-04 | Review emails, receipts, invoices, and legal/support pages    | todo   | Company-wide consistency      |
+| ID    | Task                                                        | Status | Deliverable                   |
+| ----- | ----------------------------------------------------------- | ------ | ----------------------------- |
+| P6-01 | Replace `lole` product-facing metadata and copy with `Lole` | todo   | Updated copy in touched scope |
+| P6-02 | Replace legacy logo/icon references                         | todo   | Canonical asset usage         |
+| P6-03 | Review docs and public-facing pages for brand consistency   | todo   | Rebrand cleanup pass          |
+| P6-04 | Review emails, receipts, invoices, and legal/support pages  | todo   | Company-wide consistency      |
 
 Acceptance criteria:
 

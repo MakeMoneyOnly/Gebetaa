@@ -1,8 +1,8 @@
-# Gebeta - Restaurant Operating System for Ethiopia
+# lole - Restaurant Operating System for Ethiopia
 
 <div align="center">
 
-![Gebeta Logo](public/Logo.gif)
+![lole Logo](public/Logo.gif)
 
 **"Toast for Addis Ababa"**
 
@@ -19,7 +19,7 @@ A comprehensive, offline-first restaurant operating system built for Ethiopia.
 
 ## 🎯 Overview
 
-Gebeta is an enterprise-grade restaurant operating system designed specifically for the Ethiopian market. It provides restaurants in Addis Ababa with modern tools to manage orders, payments, staff, and guests - all optimized for local conditions like intermittent internet and mobile-first users.
+lole is an enterprise-grade restaurant operating system designed specifically for the Ethiopian market. It provides restaurants in Addis Ababa with modern tools to manage orders, payments, staff, and guests - all optimized for local conditions like intermittent internet and mobile-first users.
 
 ### Key Features
 
@@ -45,8 +45,8 @@ Gebeta is an enterprise-grade restaurant operating system designed specifically 
 
 ```bash
 # Clone the repository
-git clone https://github.com/MakeMoneyOnly/Gebetaa.git
-cd Gebetaa
+git clone https://github.com/MakeMoneyOnly/lole.git
+cd lole
 
 # Install dependencies
 pnpm install
@@ -83,7 +83,7 @@ REDIS_URL=your_redis_url
 ## 📁 Project Structure
 
 ```
-Gebetaa/
+lole/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (dashboard)/        # Merchant dashboard routes
@@ -198,7 +198,7 @@ pnpm validate
 
 ## 🔐 Security
 
-Gebeta is built with security-first principles:
+lole is built with security-first principles:
 
 - ✅ Row-Level Security (RLS) for multi-tenant isolation
 - ✅ HMAC signing for guest sessions
@@ -289,8 +289,8 @@ This project is proprietary software. All rights reserved.
 ## 🆘 Support
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/MakeMoneyOnly/Gebetaa/issues)
-- **Email**: support@gebeta.et
+- **Issues**: [GitHub Issues](https://github.com/MakeMoneyOnly/lole/issues)
+- **Email**: support@lole.et
 
 ---
 

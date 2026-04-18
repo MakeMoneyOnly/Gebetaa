@@ -1,4 +1,4 @@
-# Contributing to Gebeta
+# Contributing to lole
 
 ## Development Setup
 

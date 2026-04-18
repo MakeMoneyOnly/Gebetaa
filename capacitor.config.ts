@@ -5,8 +5,8 @@ const remoteServerUrl =
     process.env.NEXT_PUBLIC_CAPACITOR_SERVER_URL?.trim();
 
 const config: CapacitorConfig = {
-    appId: 'com.gebeta.device',
-    appName: 'Gebeta Device Shell',
+    appId: 'com.lole.device',
+    appName: 'lole Device Shell',
     // Capacitor requires a local web bundle with an index.html entrypoint.
     // The native shell assets are a branded bootstrap while we wire the full App Router bundle.
     webDir: 'native-shell',

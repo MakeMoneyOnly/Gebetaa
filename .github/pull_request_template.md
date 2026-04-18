@@ -1,5 +1,5 @@
 <!--
-  Gebeta Restaurant OS - Pull Request Template
+  lole Restaurant OS - Pull Request Template
   Based on github-workflow-automation SKILL best practices
 -->
 

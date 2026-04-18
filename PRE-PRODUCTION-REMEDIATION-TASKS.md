@@ -543,7 +543,7 @@
 - [x] **Remediation:** Implement `generateMetadata` for guest menu pages.
 - [x] **Fix Verified:** Dynamic SEO metadata already implemented in `src/app/(guest)/[slug]/page.tsx`:
     - `generateMetadata` function fetches restaurant data by slug
-    - Dynamic title: `${restaurant.name} Menu | Gebeta`
+    - Dynamic title: `${restaurant.name} Menu | lole`
     - Dynamic description from restaurant data
     - OpenGraph metadata with restaurant logo
     - Twitter card metadata
@@ -880,10 +880,10 @@
     3. Document monitoring setup
 - [x] **Fix Applied:**
     - Created `docs/implementation/monitoring-dashboards.md` with setup instructions, dashboard descriptions, alert rules, and metrics reference
-    - Created `config/grafana/dashboards/gebeta-overview.json` — system overview (order throughput, error rate, response times, connections)
-    - Created `config/grafana/dashboards/gebeta-orders.json` — orders by status, creation rate, completion time
-    - Created `config/grafana/dashboards/gebeta-kds.json` — items by status, cooking time, queue depth, throughput
-    - Created `config/grafana/dashboards/gebeta-payments.json` — success rate, processing time, revenue by method
+    - Created `config/grafana/dashboards/lole-overview.json` — system overview (order throughput, error rate, response times, connections)
+    - Created `config/grafana/dashboards/lole-orders.json` — orders by status, creation rate, completion time
+    - Created `config/grafana/dashboards/lole-kds.json` — items by status, cooking time, queue depth, throughput
+    - Created `config/grafana/dashboards/lole-payments.json` — success rate, processing time, revenue by method
     - Created `config/grafana/alerts/alert-rules.yml` — 4 critical + 4 warning alert rules
 - [x] **Status:** ✅ Completed (2026-04-11)
 
@@ -1025,7 +1025,7 @@
 - [x] **Remediation:** Add API version headers and deprecation notices.
 - [x] **Fix Verified:** API versioning already implemented in `src/lib/api/versioning.ts`:
     - `API-Version` and `X-API-Version` headers
-    - `Content-Type: application/vnd.gebeta.v1+json`
+    - `Content-Type: application/vnd.lole.v1+json`
     - `detectApiVersion()` for version detection
     - `getVersionedHeaders()` for response headers
     - `getDeprecationHeaders()` for sunset notices
@@ -1282,7 +1282,7 @@
     - Information collection, use, storage, sharing, retention, and rights sections
     - References Ethiopian law (Proc. 958/2016, 1072/2018, 983/2016)
     - Data breach notification (72 hours)
-    - Contact: privacy@gebeta.app
+    - Contact: privacy@lole.app
 - [x] **Status:** ✅ Completed (2026-04-09)
 
 ### LOW-019: Data Retention Policy
