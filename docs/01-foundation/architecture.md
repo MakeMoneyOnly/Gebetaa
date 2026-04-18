@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Enterprise Master Blueprint
+# ገበጣ lole — Enterprise Master Blueprint
 
 ## Toast-Grade Platform · Modern · Ethiopia-First
 
@@ -16,7 +16,7 @@
 
 ## How to Use This Document
 
-Feed this entire document to Claude Opus 4.6 at the start of every coding session. It is your system prompt for building Gebeta. Every sprint, every task, every architectural decision in this document is derived from:
+Feed this entire document to Claude Opus 4.6 at the start of every coding session. It is your system prompt for building lole. Every sprint, every task, every architectural decision in this document is derived from:
 
 1. Direct analysis of your live codebase (Q4–Q18 IDE audit)
 2. Verified research into Toast's actual production architecture
@@ -29,7 +29,7 @@ This is not generic advice. Every line is specific to what you have built and wh
 ## Table of Contents
 
 1. [Complete Platform Snapshot](#1-complete-platform-snapshot)
-2. [Toast vs Gebeta — Full Domain Matrix](#2-toast-vs-gebeta--full-domain-matrix)
+2. [Toast vs lole — Full Domain Matrix](#2-toast-vs-lole--full-domain-matrix)
 3. [POS App](#3-pos-app)
 4. [Backend](#4-backend)
 5. [API Layer — GraphQL Federation](#5-api-layer--graphql-federation)
@@ -120,13 +120,13 @@ This is not generic advice. Every line is specific to what you have built and wh
 
 ---
 
-## 2. Toast vs Gebeta — Full Domain Matrix
+## 2. Toast vs lole — Full Domain Matrix
 
-| Domain                     | Toast Production Stack                                                       | Gebeta Current State                                    | Gap                                                                                | Priority   |
+| Domain                     | Toast Production Stack                                                       | lole Current State                                      | Gap                                                                                | Priority   |
 | -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------- |
 | **POS App**                | Native Android, proprietary hardware ($600–900), Java/Kotlin                 | Next.js 16 PWA, any Android tablet (ETB 4,000–8,000)    | Discounts missing, Telebirr UI missing from POS                                    | P1         |
 | **KDS**                    | Native Android, multi-station, hardware-specific                             | PWA multi-station (5 stations), Supabase Realtime       | None significant — feature-complete                                                | ✅ Equal   |
-| **Guest Ordering**         | Browser PWA for QR (no app install). Loyalty prompt at checkout only         | Browser PWA, splash + loyalty + skip, HMAC-signed QR    | **Gebeta is better** — loyalty at entry point                                      | ✅ Better  |
+| **Guest Ordering**         | Browser PWA for QR (no app install). Loyalty prompt at checkout only         | Browser PWA, splash + loyalty + skip, HMAC-signed QR    | **lole is better** — loyalty at entry point                                        | ✅ Better  |
 | **Guest Tracker**          | Toast sends SMS with link                                                    | PWA `/[slug]/tracker`, Supabase Realtime                | —                                                                                  | ✅ Equal   |
 | **Backend**                | Java/Kotlin microservices, DropWizard, AWS ECS, containerized                | Next.js API Routes + Supabase Edge Functions            | No event bus, no job queue, no API contract                                        | P0         |
 | **API Layer**              | GraphQL Federation (Apollo Router), REST for webhooks                        | Ad-hoc REST routes, no schema, no versioning            | No contract surface for delivery apps                                              | P0         |
@@ -157,18 +157,18 @@ This is not generic advice. Every line is specific to what you have built and wh
 
 Toast runs a fully native Android application on **proprietary hardware** that costs $600–$900 per device. The OS is a locked-down custom Android fork. Printing uses native Android APIs. Offline uses SQLite with a custom sync protocol via RabbitMQ. Updates require APK distribution. Every terminal is a managed device.
 
-### Why Gebeta's PWA Strategy Wins in Ethiopia
+### Why lole's PWA Strategy Wins in Ethiopia
 
-| Factor                     | Toast                                    | Gebeta                                      | Verdict                 |
-| -------------------------- | ---------------------------------------- | ------------------------------------------- | ----------------------- |
-| Hardware cost per terminal | $600–900 (Toast-only)                    | ETB 4,000–8,000 any Android tablet          | ✅ Gebeta — 10x cheaper |
-| Offline capability         | SQLite native                            | PowerSync CRDT (target)                     | Equal                   |
-| Receipt printing           | Native Android API                       | Termux Node.js server                       | Equal                   |
-| Update deployment          | APK to every device                      | Instant PWA push to all                     | ✅ Gebeta               |
-| Play Store dependency      | Required                                 | None — browser-based                        | ✅ Gebeta               |
-| Dev talent in Addis        | Android/Kotlin (scarce)                  | React/Next.js (growing)                     | ✅ Gebeta               |
-| Hardware availability      | Toast hardware not available in Ethiopia | Sold everywhere in Addis Mercato            | ✅ Gebeta               |
-| Kiosk lockdown             | Full Android kiosk                       | PWA fullscreen + Android Kiosk mode via MDM | Equal at scale          |
+| Factor                     | Toast                                    | lole                                        | Verdict               |
+| -------------------------- | ---------------------------------------- | ------------------------------------------- | --------------------- |
+| Hardware cost per terminal | $600–900 (Toast-only)                    | ETB 4,000–8,000 any Android tablet          | ✅ lole — 10x cheaper |
+| Offline capability         | SQLite native                            | PowerSync CRDT (target)                     | Equal                 |
+| Receipt printing           | Native Android API                       | Termux Node.js server                       | Equal                 |
+| Update deployment          | APK to every device                      | Instant PWA push to all                     | ✅ lole               |
+| Play Store dependency      | Required                                 | None — browser-based                        | ✅ lole               |
+| Dev talent in Addis        | Android/Kotlin (scarce)                  | React/Next.js (growing)                     | ✅ lole               |
+| Hardware availability      | Toast hardware not available in Ethiopia | Sold everywhere in Addis Mercato            | ✅ lole               |
+| Kiosk lockdown             | Full Android kiosk                       | PWA fullscreen + Android Kiosk mode via MDM | Equal at scale        |
 
 ### Current POS Feature Audit (confirmed from Q12 codebase analysis)
 
@@ -239,7 +239,7 @@ The POS tablet IS the print server. No separate hardware needed for single-table
 # Step 3: Inside Termux
 pkg update && pkg upgrade -y
 pkg install nodejs-lts -y
-mkdir -p ~/gebeta-print && cd ~/gebeta-print
+mkdir -p ~/lole-print && cd ~/lole-print
 npm init -y
 npm install express node-thermal-printer
 
@@ -250,13 +250,13 @@ ls /dev/usb/    # usually /dev/usb/lp0 after connecting USB OTG
 mkdir -p ~/.termux/boot
 cat > ~/.termux/boot/start.sh << 'EOF'
 #!/data/data/com.termux/files/usr/bin/sh
-cd ~/gebeta-print && node server.js >> ~/print.log 2>&1 &
+cd ~/lole-print && node server.js >> ~/print.log 2>&1 &
 EOF
 chmod +x ~/.termux/boot/start.sh
 ```
 
 ```javascript
-// ~/gebeta-print/server.js — Bilingual ESC/POS receipt server
+// ~/lole-print/server.js — Bilingual ESC/POS receipt server
 const express = require('express');
 const { ThermalPrinter, PrinterTypes, CharacterSet } = require('node-thermal-printer');
 const app = express();
@@ -340,7 +340,7 @@ app.post('/print/receipt', async (req, res) => {
         printer.alignCenter();
         printer.println('ስለ ምርጫዎ እናመሰግናለን!');
         printer.println('Thank you for your visit!');
-        printer.println('Powered by Gebeta POS');
+        printer.println('Powered by lole POS');
         printer.cut();
 
         await printer.execute();
@@ -350,7 +350,7 @@ app.post('/print/receipt', async (req, res) => {
     }
 });
 
-app.listen(3001, '127.0.0.1', () => console.log('Gebeta Print Server ready on localhost:3001'));
+app.listen(3001, '127.0.0.1', () => console.log('lole Print Server ready on localhost:3001'));
 ```
 
 ---
@@ -361,7 +361,7 @@ app.listen(3001, '127.0.0.1', () => console.log('Gebeta Print Server ready on lo
 
 Toast runs **Java/Kotlin microservices** using the DropWizard framework, containerized on AWS ECS. Each service owns a complete domain — Orders, Payments, Menu, Inventory, Staff, Reporting. They communicate via Apache Pulsar (event bus) and gRPC (synchronous service calls). The API layer is GraphQL Federation served via Apollo Router. The platform required a decade and hundreds of engineers to reach this state.
 
-### Gebeta Target: Modular Monolith → Federated Services
+### lole Target: Modular Monolith → Federated Services
 
 **The rule:** Extract a service only when you hit a real bottleneck. A well-structured modular monolith with GraphQL Federation boundaries serves 500 restaurants without extraction. Premature microservices kill solo-builder velocity.
 
@@ -455,7 +455,7 @@ Toast uses **GraphQL Federation 2** via Apollo Router as their single API gatewa
 
 ### Why You Cannot Remain on REST Routes
 
-Your current ad-hoc REST routes have no contract. When BEU or Deliver Addis integrates with Gebeta, you give them an endpoint. You then refactor a route. Their integration breaks silently. At 500 restaurants with 4 delivery partners, this is unrecoverable. GraphQL Federation solves this permanently.
+Your current ad-hoc REST routes have no contract. When BEU or Deliver Addis integrates with lole, you give them an endpoint. You then refactor a route. Their integration breaks silently. At 500 restaurants with 4 delivery partners, this is unrecoverable. GraphQL Federation solves this permanently.
 
 ### Subgraph Map
 
@@ -499,10 +499,10 @@ limits:
 
 cors:
     origins:
-        - https://gebeta.app
-        - https://pos.gebeta.app
-        - https://gebetamenu.com
-        - https://dashboard.gebeta.app
+        - https://lole.app
+        - https://pos.lole.app
+        - https://lolemenu.com
+        - https://dashboard.lole.app
 ```
 
 ### Migration Path: REST Routes → GraphQL Resolvers
@@ -524,13 +524,13 @@ cors:
 
 React SPAs with TypeScript and GraphQL. Full merchant management interface. Role-based access with manager vs. owner views. Responsive for mobile use by owners checking sales on their phones.
 
-### Gebeta's Current Dashboard State
+### lole's Current Dashboard State
 
 Your dashboard already has **full feature parity with Toast's web dashboard** across 14 routes. The screenshot confirms production-quality UI with real-time sync ("IN SYNC" indicator), role-based dashboard presets (Owner/Manager/Kitchen Lead), Alert Rules engine, Command Bar (Ctrl+K), and ETB-denominated Income Tracker. This is well ahead of where it needs to be for 50 restaurants.
 
 ### Dashboard Feature Comparison
 
-| Feature                                  | Toast | Gebeta          | Status                                              |
+| Feature                                  | Toast | lole            | Status                                              |
 | ---------------------------------------- | ----- | --------------- | --------------------------------------------------- |
 | Revenue overview                         | ✅    | ✅              | Equal                                               |
 | Live orders (kanban view)                | ✅    | ✅              | Equal                                               |
@@ -545,7 +545,7 @@ Your dashboard already has **full feature parity with Toast's web dashboard** ac
 | Analytics — satisfaction/mood data       | ✅    | ✅              | Equal — confirmed Q15                               |
 | Analytics — API performance metrics      | ✅    | ✅              | Equal — confirmed Q15                               |
 | Role-based dashboard presets             | ✅    | ✅              | Equal                                               |
-| Command bar (Ctrl+K)                     | ❌    | ✅              | **Gebeta ahead of Toast**                           |
+| Command bar (Ctrl+K)                     | ❌    | ✅              | **lole ahead of Toast**                             |
 | Amharic UI                               | ❌    | ❌              | Critical gap — P0                                   |
 | KPI cards auto-refresh                   | ✅    | ⚠️              | Manual Refresh button — needs reactive subscription |
 | Subscription feature gating              | ✅    | ❌ UI only      | Phase 2                                             |
@@ -605,15 +605,15 @@ export function checkFeature(plan: string, feature: string): boolean {
 | Toast TakeOut | iOS + Android                         | End customers    | Online ordering + loyalty                             |
 | Toast Tables  | iOS                                   | Host staff       | Reservations, waitlist                                |
 
-### Gebeta Mobile Strategy
+### lole Mobile Strategy
 
-| App                | Technology                                     | Users                                  | Phase        |
-| ------------------ | ---------------------------------------------- | -------------------------------------- | ------------ |
-| **Gebeta POS**     | PWA on Android tablet                          | Waitstaff, cashiers                    | P0 — Live    |
-| **Gebeta KDS**     | PWA on tablet (same codebase, separate routes) | Kitchen, bar, coffee, dessert stations | P0 — Live    |
-| **Gebeta Guest**   | PWA in mobile browser (no install required)    | Dine-in customers                      | P0 — Live    |
-| **Gebeta Now**     | React Native (Expo)                            | Owners, managers                       | P1 — Phase 2 |
-| **Gebeta Loyalty** | Progressive enhancement of Guest PWA           | Repeat customers                       | P2 — Phase 3 |
+| App              | Technology                                     | Users                                  | Phase        |
+| ---------------- | ---------------------------------------------- | -------------------------------------- | ------------ |
+| **lole POS**     | PWA on Android tablet                          | Waitstaff, cashiers                    | P0 — Live    |
+| **lole KDS**     | PWA on tablet (same codebase, separate routes) | Kitchen, bar, coffee, dessert stations | P0 — Live    |
+| **lole Guest**   | PWA in mobile browser (no install required)    | Dine-in customers                      | P0 — Live    |
+| **lole Now**     | React Native (Expo)                            | Owners, managers                       | P1 — Phase 2 |
+| **lole Loyalty** | Progressive enhancement of Guest PWA           | Repeat customers                       | P2 — Phase 3 |
 
 ### Why No Native App for Guests — Ever (Phase 1 & 2)
 
@@ -641,7 +641,7 @@ Your splash screen with Login / Signup / **Skip to Menu** is strategically bette
 
 This doubles loyalty enrollment with zero disruption to the core guest flow.
 
-### Gebeta Now — Manager App (Phase 2)
+### lole Now — Manager App (Phase 2)
 
 **Technology:** React Native (Expo SDK 52) — one codebase for iOS and Android.  
 **Data source:** 100% from your existing GraphQL Federation endpoint — zero new backend work needed.  
@@ -690,7 +690,7 @@ Alerts (push notifications)
 
 Toast uses **Apache Pulsar** as their primary event bus (chosen over Kafka for its multi-tenancy model — each restaurant is a tenant). **Apache Camel** handles integration routing (delivery apps, accounting tools). **RabbitMQ** handles tablet-to-cloud sync for offline scenarios. This infrastructure requires a platform team to operate.
 
-### The Problem with Gebeta's Current Direct Coupling
+### The Problem with lole's Current Direct Coupling
 
 ```
 Current flow (fragile):
@@ -708,7 +708,7 @@ At 500 restaurants with 4 delivery partners:
   One network blip during webhook → payment never confirmed
 ```
 
-### Gebeta Event Architecture: Upstash Redis Streams
+### lole Event Architecture: Upstash Redis Streams
 
 Redis Streams gives 80% of Apache Pulsar's capability at 0% of the operational cost. No infrastructure team needed.
 
@@ -739,7 +739,7 @@ const redis = new Redis({
     token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
-export type GebetaEvent =
+export type loleEvent =
     | { type: 'order.created'; payload: OrderCreatedPayload }
     | { type: 'order.status_changed'; payload: OrderStatusPayload }
     | { type: 'order.completed'; payload: OrderCompletedPayload }
@@ -751,7 +751,7 @@ export type GebetaEvent =
     | { type: 'table.opened'; payload: TableOpenedPayload }
     | { type: 'table.closed'; payload: TableClosedPayload };
 
-export async function publishEvent(event: GebetaEvent): Promise<void> {
+export async function publishEvent(event: loleEvent): Promise<void> {
     await redis.xadd(`events:${event.type}`, '*', {
         type: event.type,
         payload: JSON.stringify(event.payload),
@@ -783,7 +783,7 @@ CORRECT:
 
 Toast uses **sharded Aurora PostgreSQL** on AWS RDS for transactional data and **DynamoDB** for high-frequency reads. Data is partitioned by restaurant/region. TimescaleDB (or equivalent time-series) for analytics. Full PITR (point-in-time recovery) on all production databases.
 
-### Gebeta Supabase PostgreSQL — Enterprise Configuration
+### lole Supabase PostgreSQL — Enterprise Configuration
 
 #### Scale Thresholds
 
@@ -1057,7 +1057,7 @@ Every menu display request on every POS tablet and every guest browser hits Post
 
 AWS DynamoDB for all high-frequency reads — menu items, pricing, session state, active table data. Millisecond reads at any scale with no connection pool concerns.
 
-### Gebeta: Upstash Redis as NoSQL Cache Layer
+### lole: Upstash Redis as NoSQL Cache Layer
 
 | Data                  | Key Pattern                  | TTL           | Invalidated By          |
 | --------------------- | ---------------------------- | ------------- | ----------------------- |
@@ -1120,7 +1120,7 @@ Query: {
 
 Apache Spark for large-scale analytics processing, Avro/Parquet for data warehouse storage, custom BI dashboards. Data engineering team of 5–10 people. Toast reports that 78% of restaurant owners check their analytics daily — it is the highest-value feature for retention.
 
-### Gebeta Current Analytics State (confirmed Q15)
+### lole Current Analytics State (confirmed Q15)
 
 Real Postgres queries powering `/merchant/analytics`. **Not mock data.** Three API endpoints confirmed:
 
@@ -1261,7 +1261,7 @@ export async function POST(req: Request) {
 
 AWS ECS (Elastic Container Service) for all microservices, ALB (Application Load Balancer), RDS Aurora for databases, ElastiCache for Redis, S3 for object storage, CloudFront CDN. Multiple availability zones in US regions. Estimated annual AWS spend: $2–5M.
 
-### Gebeta: Enterprise Reliability at Startup Cost
+### lole: Enterprise Reliability at Startup Cost
 
 | Service                       | Provider              | Role                                               | Cost (USD/mo)         |
 | ----------------------------- | --------------------- | -------------------------------------------------- | --------------------- |
@@ -1322,7 +1322,7 @@ export default {
 
 ```yaml
 # .github/workflows/deploy.yml
-name: Deploy Gebeta
+name: Deploy lole
 
 on:
     push:
@@ -1368,7 +1368,7 @@ jobs:
 
 Datadog for full APM and infrastructure monitoring (estimated $50K+/year). Splunk for security analytics. Internal alerting routed to PagerDuty for on-call engineers. You do not need this. You need enough visibility to never be surprised by an outage or a data problem.
 
-### Gebeta Observability Stack (Zero to Minimal Cost)
+### lole Observability Stack (Zero to Minimal Cost)
 
 | Layer             | Tool               | Catches                                             | Cost         |
 | ----------------- | ------------------ | --------------------------------------------------- | ------------ |
@@ -1400,7 +1400,7 @@ export async function sendAlert(
 ): Promise<void> {
     const emoji = level === 'critical' ? '🔴' : '🟡';
     const lines = [
-        `${emoji} *Gebeta ${level === 'critical' ? 'CRITICAL' : 'Warning'}*`,
+        `${emoji} *lole ${level === 'critical' ? 'CRITICAL' : 'Warning'}*`,
         '',
         message,
         '',
@@ -1663,7 +1663,7 @@ export async function POST(req: Request) {
 
 ### ERCA e-Invoice — Your Enterprise Sales Differentiator
 
-No POS system in Addis Ababa currently handles ERCA electronic invoicing natively. Every VAT-registered restaurant does this manually. When you build it, it becomes your primary reason enterprise restaurants switch to Gebeta.
+No POS system in Addis Ababa currently handles ERCA electronic invoicing natively. Every VAT-registered restaurant does this manually. When you build it, it becomes your primary reason enterprise restaurants switch to lole.
 
 ```typescript
 // src/domains/payments/erca-service.ts
@@ -1773,7 +1773,7 @@ export const Jobs = {
 From the codebase audit, your QR security is better than Toast's:
 
 ```
-URL: https://gebetamenu.com/{slug}?table={n}&sig={hmac}&exp={timestamp}
+URL: https://lolemenu.com/{slug}?table={n}&sig={hmac}&exp={timestamp}
 
 Security layers:
 1. HMAC-SHA256 signature (timing-safe comparison — prevents timing attacks) ✅
@@ -1927,7 +1927,7 @@ supabase
 
 Toast charges $69–$165/month per location (SaaS fee), plus 2.49% + $0.15 per digital payment transaction, plus proprietary hardware $600–$900/device. Multi-location volume discounts. This is a US-centric price point. Direct copy would price you out of the Ethiopian market.
 
-### Gebeta Pricing — Ethiopia Market
+### lole Pricing — Ethiopia Market
 
 | Plan           | Monthly (ETB) | USD Equiv | Targets                        | Gated Features                                                                          |
 | -------------- | ------------- | --------- | ------------------------------ | --------------------------------------------------------------------------------------- |
@@ -1988,7 +1988,7 @@ _Financial and legal risk. No dependencies. Do these before anything else._
 | 1.2 | Telebirr webhook endpoint      | Same pattern, Telebirr signature format (X-Telebirr-Signature header)                                                                                                                                                                                                     | Revenue is manually confirmed today                |
 | 1.3 | Santim monetary migration      | "Write Supabase migration converting `orders.total_price`, `payments.amount`, `order_items.unit_price` from DECIMAL to INTEGER santim (×100). Include verification query that must return 0 rows before rename step."                                                     | ETB float errors on receipts                       |
 | 1.4 | Upstash QStash job queue       | "Set up Upstash QStash client in Next.js 16 TypeScript. Define `Jobs` object with: `retryPayment` (exponential backoff 3 retries), `submitERCA` (5 retries), `scheduleEOD` (cron `0 19 * * *`), `awardLoyalty` (deduplicationId = `loyalty-{orderId}`), `reconcileSync`." | Payment retries lost on cold start                 |
-| 1.5 | Redis Streams event bus        | "Implement `publishEvent` function and `GebetaEvent` discriminated union using Upstash Redis `XADD`. Include all 11 event types from the blueprint."                                                                                                                      | Required by webhook handlers above                 |
+| 1.5 | Redis Streams event bus        | "Implement `publishEvent` function and `loleEvent` discriminated union using Upstash Redis `XADD`. Include all 11 event types from the blueprint."                                                                                                                        | Required by webhook handlers above                 |
 | 1.6 | Sentry + restaurant_id tagging | "Add Sentry to Next.js 16 App Router. In `beforeSend`, tag every event with `restaurant_id` from active session. Enable session replay on error (POS route only)."                                                                                                        | Flying blind in production                         |
 | 1.7 | Better Uptime health check     | "Create `GET /api/health` checking Supabase ping, Upstash Redis ping, QStash availability. Return `{status: 'healthy'                                                                                                                                                     | 'degraded', checks: {...}}` with HTTP 200 or 503." | Zero production awareness today |
 
@@ -2067,7 +2067,7 @@ _Standalone — no upstream dependencies. Do in parallel with Sprint 1._
 
 | #   | Task                           | Opus 4.6 Prompt Seed                                                                                                                                                                                       |
 | --- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 7.1 | Cloudflare DNS + WAF           | Cloudflare dashboard — proxy all gebeta.app and gebetamenu.com traffic. Enable WAF managed rules.                                                                                                          |
+| 7.1 | Cloudflare DNS + WAF           | Cloudflare dashboard — proxy all lole.app and lolemenu.com traffic. Enable WAF managed rules.                                                                                                              |
 | 7.2 | Cloudflare Worker — menu cache | "Deploy Cloudflare Worker from blueprint Section 12 to cache `GetMenuItems` GraphQL operations for 5 minutes at edge."                                                                                     |
 | 7.3 | Supabase pgBouncer             | Enable connection pooler in Supabase dashboard. Update all `DATABASE_URL` env vars to use pooler URL. Update Prisma/Supabase client config.                                                                |
 | 7.4 | TimescaleDB setup              | Execute SQL from blueprint Section 11 in Supabase SQL editor. Enable `timescaledb` extension first in Dashboard → Extensions.                                                                              |
@@ -2094,7 +2094,7 @@ _Standalone — no upstream dependencies. Do in parallel with Sprint 1._
 | #   | Task                     | Opus 4.6 Prompt Seed                                                                                                                                                               |
 | --- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 9.1 | Expo project init        | "Initialize Expo SDK 52 project with TypeScript, Apollo Client (pointing to our GraphQL Federation endpoint), Zustand, NativeWind, Expo Router."                                   |
-| 9.2 | Authentication           | "Build login screen for Gebeta Now using Supabase Auth. On login, store session in Expo SecureStore. Verify `restaurant_staff.role` is 'owner' or 'manager'."                      |
+| 9.2 | Authentication           | "Build login screen for lole Now using Supabase Auth. On login, store session in Expo SecureStore. Verify `restaurant_staff.role` is 'owner' or 'manager'."                        |
 | 9.3 | Home screen              | "Build home screen with live metrics via GraphQL: today's revenue (ETB), orders in flight, active tables count, clocked-in staff count. Auto-refresh every 30 seconds."            |
 | 9.4 | Quick actions            | "Build quick actions: mark item out of stock (set `menu_items.available=false`), pause online ordering (set `online_ordering_settings.is_active=false`), send broadcast to staff." |
 | 9.5 | Reports screen           | "Build reports screen with period selector. Query `hourly_sales` TimescaleDB view. Show revenue chart (ETB), top 10 items with `name_am`, payment method breakdown."               |
@@ -2185,6 +2185,6 @@ _These are non-negotiable. They do not bend as the platform grows._
 
 ---
 
-_Gebeta Enterprise Master Blueprint v4.1 — Final_  
+_lole Enterprise Master Blueprint v4.1 — Final_  
 _March 2026 · Addis Ababa, Ethiopia_  
 _All 18 IDE audit questions incorporated · 500 → 10,000+ Restaurants & Cafés_

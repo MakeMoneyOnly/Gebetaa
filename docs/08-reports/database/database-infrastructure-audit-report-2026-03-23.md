@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-23  
 **Scope:** Pre-Production Readiness Audit  
-**Platform:** Gebeta Restaurant OS - Multi-tenant SaaS
+**Platform:** lole Restaurant OS - Multi-tenant SaaS
 
 ---
 

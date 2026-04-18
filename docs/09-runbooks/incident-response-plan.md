@@ -1,11 +1,11 @@
 # Incident Response Plan
 
 Last updated: 2026-04-10
-Scope: All Gebeta production systems
+Scope: All lole production systems
 
 ## Purpose
 
-This document defines the end-to-end incident response process for Gebeta Restaurant OS. Use it when any production issue affects merchant operations, data integrity, or platform availability. It supplements the [Incident Triage Rubric](./incident-triage-rubric.md) with operational procedures, contact information, alerting configuration, and post-mortem guidelines.
+This document defines the end-to-end incident response process for lole Restaurant OS. Use it when any production issue affects merchant operations, data integrity, or platform availability. It supplements the [Incident Triage Rubric](./incident-triage-rubric.md) with operational procedures, contact information, alerting configuration, and post-mortem guidelines.
 
 **When to activate this plan:**
 
@@ -32,14 +32,14 @@ When in doubt, classify at the higher severity and downgrade as you learn more.
 
 ## Contact Information
 
-| Role             | Contact Method                     | Details                                             |
-| ---------------- | ---------------------------------- | --------------------------------------------------- |
-| On-call Engineer | PagerDuty schedule `gebeta-oncall` | Primary first responder                             |
-| Engineering Lead | Telegram + Phone                   | [NAME], Telegram: @[handle], Phone: [+251-XXX-XXXX] |
-| CTO              | Telegram + Phone                   | [NAME], Telegram: @[handle], Phone: [+251-XXX-XXXX] |
-| Supabase Support | Email                              | support@supabase.com                                |
-| Upstash Support  | Email                              | support@upstash.com                                 |
-| Vercel Support   | Web                                | vercel.com/support                                  |
+| Role             | Contact Method                   | Details                                             |
+| ---------------- | -------------------------------- | --------------------------------------------------- |
+| On-call Engineer | PagerDuty schedule `lole-oncall` | Primary first responder                             |
+| Engineering Lead | Telegram + Phone                 | [NAME], Telegram: @[handle], Phone: [+251-XXX-XXXX] |
+| CTO              | Telegram + Phone                 | [NAME], Telegram: @[handle], Phone: [+251-XXX-XXXX] |
+| Supabase Support | Email                            | support@supabase.com                                |
+| Upstash Support  | Email                            | support@upstash.com                                 |
+| Vercel Support   | Web                              | vercel.com/support                                  |
 
 **Escalation chain:** Primary on-call → Secondary on-call → Engineering Lead → CTO
 

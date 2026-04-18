@@ -2,7 +2,7 @@
 
 Event: `kds.ticket.print.v1`
 
-This endpoint is called by Gebeta when KDS printer fallback dispatches to `print_policy.provider = webhook`.
+This endpoint is called by lole when KDS printer fallback dispatches to `print_policy.provider = webhook`.
 
 ## Request
 
@@ -11,15 +11,15 @@ This endpoint is called by Gebeta when KDS printer fallback dispatches to `print
 
 ### Headers
 
-- `x-gebeta-event`: `kds.ticket.print.v1`
-- `x-gebeta-event-id`: UUID event id
-- `x-gebeta-idempotency-key`: UUID idempotency key (same as event id)
-- `x-gebeta-signature-version`: `v1`
-- `x-gebeta-signature-timestamp`: ISO-8601 timestamp
-- `x-gebeta-signature-nonce`: UUID nonce
-- `x-gebeta-body-sha256`: hex SHA-256 hash of raw request body
-- `x-gebeta-signature-sha256`: hex HMAC-SHA256 signature
-- `x-gebeta-attempt`: attempt number (`1..max_attempts`)
+- `x-lole-event`: `kds.ticket.print.v1`
+- `x-lole-event-id`: UUID event id
+- `x-lole-idempotency-key`: UUID idempotency key (same as event id)
+- `x-lole-signature-version`: `v1`
+- `x-lole-signature-timestamp`: ISO-8601 timestamp
+- `x-lole-signature-nonce`: UUID nonce
+- `x-lole-body-sha256`: hex SHA-256 hash of raw request body
+- `x-lole-signature-sha256`: hex HMAC-SHA256 signature
+- `x-lole-attempt`: attempt number (`1..max_attempts`)
 
 ### Body
 
@@ -55,21 +55,21 @@ This endpoint is called by Gebeta when KDS printer fallback dispatches to `print
 Shared secret: `KDS_PRINTER_WEBHOOK_SECRET` (fallback: `HMAC_SECRET`).
 
 1. Compute `body_sha256 = sha256(raw_body_bytes).hex`.
-2. Verify it equals `x-gebeta-body-sha256`.
+2. Verify it equals `x-lole-body-sha256`.
 3. Compute canonical string:
 
-`v1.{x-gebeta-signature-timestamp}.{x-gebeta-signature-nonce}.{x-gebeta-body-sha256}`
+`v1.{x-lole-signature-timestamp}.{x-lole-signature-nonce}.{x-lole-body-sha256}`
 
 4. Compute expected signature:
 
 `hmac_sha256(secret, canonical).hex`
 
-5. Compare with `x-gebeta-signature-sha256` using constant-time comparison.
+5. Compare with `x-lole-signature-sha256` using constant-time comparison.
 
 ## Idempotency and Retries
 
-- Deduplicate by `x-gebeta-idempotency-key` (or `event_id`).
-- Gebeta retries with exponential backoff + jitter for retryable failures:
+- Deduplicate by `x-lole-idempotency-key` (or `event_id`).
+- lole retries with exponential backoff + jitter for retryable failures:
     - HTTP `408`, `409`, `425`, `429`, and `5xx`
     - network/timeouts
 - Non-retryable: other `4xx`.

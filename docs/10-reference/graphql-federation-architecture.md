@@ -6,7 +6,7 @@
 
 ## Overview
 
-Gebeta Restaurant OS uses Apollo Federation 2 for GraphQL API composition. This document describes the federation architecture, subgraph organization, and development patterns.
+lole Restaurant OS uses Apollo Federation 2 for GraphQL API composition. This document describes the federation architecture, subgraph organization, and development patterns.
 
 ## Architecture Overview
 
@@ -173,7 +173,7 @@ rover supergraph compose --config graphql/supergraph.yaml
 3. Publish to Apollo GraphOS (production)
 
 ```bash
-rover subgraph publish gebeta-api@current \
+rover subgraph publish lole-api@current \
     --name orders \
     --schema graphql/subgraphs/orders.graphql
 ```

@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Database Schema
+# ገበጣ lole — Database Schema
 
 **Version 1.0 · March 2026**
 
@@ -565,7 +565,7 @@ CREATE TABLE external_orders (
   id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   restaurant_id           UUID NOT NULL REFERENCES restaurants(id),
   delivery_partner_id     UUID REFERENCES delivery_partners(id),
-  order_id                UUID REFERENCES orders(id),   -- linked Gebeta order
+  order_id                UUID REFERENCES orders(id),   -- linked lole order
   provider                TEXT NOT NULL,
   provider_order_id       TEXT NOT NULL,
   normalized_status       TEXT,
@@ -810,4 +810,4 @@ Run migrations in this exact sequence. Each migration depends on the previous.
 
 ---
 
-_Gebeta Database Schema v1.0 · March 2026_
+_lole Database Schema v1.0 · March 2026_

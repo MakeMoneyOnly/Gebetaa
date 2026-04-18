@@ -2,7 +2,7 @@
 
 **CRIT-08 Implementation** — Addresses ENTERPRISE_MASTER_BLUEPRINT Section 13
 
-This document describes the complete observability stack for Gebeta Restaurant OS, providing production visibility without a dedicated DevOps team.
+This document describes the complete observability stack for lole Restaurant OS, providing production visibility without a dedicated DevOps team.
 
 ---
 
@@ -130,7 +130,7 @@ Returns `200` if database is connected, `503` otherwise.
 
 1. Go to [betteruptime.com](https://betteruptime.com) and create a free account
 2. Create a new monitor:
-    - **URL**: `https://gebeta.app/api/health`
+    - **URL**: `https://lole.app/api/health`
     - **Check type**: HTTP
     - **Check frequency**: 60 seconds
     - **Timeout**: 30 seconds
@@ -240,7 +240,7 @@ console.log(result.message);
 Or via API:
 
 ```bash
-curl -X POST https://gebeta.app/api/test-alerts
+curl -X POST https://lole.app/api/test-alerts
 ```
 
 ---
@@ -298,7 +298,7 @@ Configure these alerts before signing your first restaurant:
 ### Payment Webhook Failing
 
 1. Check `/api/webhooks/chapa` or `/api/webhooks/telebirr` in logs
-2. Verify webhook URL in provider dashboard: `https://gebeta.app/api/webhooks/chapa`
+2. Verify webhook URL in provider dashboard: `https://lole.app/api/webhooks/chapa`
 3. Check `CHAPA_WEBHOOK_SECRET` env var matches dashboard
 4. Check QStash for failed jobs
 

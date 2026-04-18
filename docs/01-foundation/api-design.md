@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — API Design Guide
+# ገበጣ lole — API Design Guide
 
 **Version 1.0 · March 2026**
 
@@ -6,12 +6,12 @@
 
 ## API Architecture Overview
 
-Gebeta exposes one primary API surface to all clients:
+lole exposes one primary API surface to all clients:
 
 ```
-https://api.gebeta.app/graphql   — GraphQL Federation endpoint (all clients)
-https://gebeta.app/api/webhooks/ — REST webhooks (payment providers only)
-https://gebeta.app/api/health    — Health check (monitoring only)
+https://api.lole.app/graphql   — GraphQL Federation endpoint (all clients)
+https://lole.app/api/webhooks/ — REST webhooks (payment providers only)
+https://lole.app/api/health    — Health check (monitoring only)
 ```
 
 All business queries and mutations go through GraphQL. Webhooks stay as REST because payment providers (Telebirr, Chapa) cannot send GraphQL. Everything else is GraphQL.
@@ -158,10 +158,10 @@ query GetOrders($restaurantId: ID!, $first: Int = 20, $after: String, $status: O
 type CreateOrderResult {
     success: Boolean!
     order: Order
-    error: GebetaError
+    error: loleError
 }
 
-type GebetaError {
+type loleError {
     code: String! # Machine-readable: 'INVALID_MODIFIER', 'TABLE_OCCUPIED', etc.
     message: String! # English message
     messageAm: String # Amharic message for display to staff/guests
@@ -477,7 +477,7 @@ Chapa-Signature: sha256={hmac_signature}
 {
   "event": "charge.success",
   "data": {
-    "tx_ref": "gebeta-order-{orderId}",
+    "tx_ref": "lole-order-{orderId}",
     "amount": "450.50",
     "currency": "ETB",
     "status": "success"
@@ -562,11 +562,11 @@ Rate limit exceeded response:
 
 ## Third-Party Integration API (Delivery Partners)
 
-When BEU, Deliver Addis, Zmall, or Esoora integrate with Gebeta, they receive:
+When BEU, Deliver Addis, Zmall, or Esoora integrate with lole, they receive:
 
 ### Integration Credentials
 
-- GraphQL endpoint: `https://api.gebeta.app/graphql`
+- GraphQL endpoint: `https://api.lole.app/graphql`
 - API key scoped to their `delivery_partner_id`
 - Webhook endpoint for receiving order status updates
 
@@ -603,7 +603,7 @@ mutation CreateDeliveryOrder($input: CreateDeliveryOrderInput!) {
     }
 }
 
-# Delivery partners receive status updates via webhook (Gebeta → Partner):
+# Delivery partners receive status updates via webhook (lole → Partner):
 # POST {partner_webhook_url}
 # Body: { event: "order.status_changed", orderId, newStatus, restaurantId }
 ```
@@ -626,7 +626,7 @@ mutation CreateDeliveryOrder($input: CreateDeliveryOrderInput!) {
 // src/lib/graphql/client.ts
 import { GraphQLClient } from 'graphql-request';
 
-export function createGebetaClient(accessToken: string) {
+export function createloleClient(accessToken: string) {
     return new GraphQLClient(process.env.NEXT_PUBLIC_GRAPHQL_URL!, {
         headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -639,7 +639,7 @@ export function createGebetaClient(accessToken: string) {
 
 ```yaml
 # codegen.yml
-schema: https://api.gebeta.app/graphql
+schema: https://api.lole.app/graphql
 documents: 'src/**/*.graphql'
 generates:
     src/lib/graphql/generated.ts:
@@ -658,7 +658,7 @@ All GraphQL queries are in `.graphql` files co-located with the components that 
 
 ## API Versioning & Deprecation
 
-Gebeta follows GraphQL's deprecation-first approach. **Fields are never removed without a deprecation cycle.**
+lole follows GraphQL's deprecation-first approach. **Fields are never removed without a deprecation cycle.**
 
 ```graphql
 type Order {
@@ -681,7 +681,7 @@ type Order {
 
 ### REST API Versioning
 
-The Gebeta REST API supports two versioning strategies:
+The lole REST API supports two versioning strategies:
 
 #### 1. URL Path Versioning (Preferred)
 
@@ -702,7 +702,7 @@ Clients can also specify version via the `Accept` header:
 
 ```http
 # Explicit version
-Accept: application/vnd.gebeta.v1+json
+Accept: application/vnd.lole.v1+json
 
 # Default (latest v1)
 Accept: application/json
@@ -714,13 +714,13 @@ All API responses include version information:
 
 ```http
 API-Version: v1
-Content-Type: application/vnd.gebeta.v1+json
+Content-Type: application/vnd.lole.v1+json
 X-API-Version: v1
 ```
 
 **Version Detection Priority:**
 
-1. Accept header (`application/vnd.gebeta.v{version}+json`)
+1. Accept header (`application/vnd.lole.v{version}+json`)
 2. URL path (`/api/v{version}/`)
 3. Default to v1
 
@@ -733,4 +733,4 @@ X-API-Version: v1
 
 ---
 
-_Gebeta API Design Guide v1.0 · March 2026_
+_lole API Design Guide v1.0 · March 2026_

@@ -1,8 +1,8 @@
-# Gebeta — Data Retention Policy
+# lole — Data Retention Policy
 
 **Version 1.0 · April 2026**
 
-> This is an **operational document** for the Gebeta engineering and operations team. It defines what data we retain, for how long, the legal basis for each retention period, current implementation status, and what still needs to be built. This is NOT a customer-facing document — see `privacy-policy.md` for the public version.
+> This is an **operational document** for the lole engineering and operations team. It defines what data we retain, for how long, the legal basis for each retention period, current implementation status, and what still needs to be built. This is NOT a customer-facing document — see `privacy-policy.md` for the public version.
 
 ---
 
@@ -277,7 +277,7 @@ WHERE is_active = false
 
 When a legal investigation, audit, or regulatory request requires data beyond normal retention:
 
-1. **Legal hold is initiated** by Gebeta's legal counsel or a court order
+1. **Legal hold is initiated** by lole's legal counsel or a court order
 2. **Affected data is tagged** with a `legal_hold` flag or moved to a separate schema to prevent automated deletion
 3. **All automated retention jobs must skip** records under legal hold
 4. **Legal hold remains in place** until formally released by legal counsel
@@ -299,7 +299,7 @@ When a legal investigation, audit, or regulatory request requires data beyond no
 
 ### Cross-Border Data Transfer
 
-- Gebeta's Supabase instance is hosted on **AWS** in a region selected at account creation
+- lole's Supabase instance is hosted on **AWS** in a region selected at account creation
 - All data processing occurs within the Supabase infrastructure
 - Cloudflare (CDN/WAF) and Vercel (application hosting) may process requests at edge locations globally, but no data is persisted outside the primary database region
 - Ethiopian law does not currently impose data localization requirements, but this policy will be updated if such regulations are enacted
@@ -330,4 +330,4 @@ When a legal investigation, audit, or regulatory request requires data beyond no
 
 ---
 
-_Gebeta Data Retention Policy v1.0 · April 2026_
+_lole Data Retention Policy v1.0 · April 2026_

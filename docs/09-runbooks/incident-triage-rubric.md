@@ -2,29 +2,29 @@
 
 ## Overview
 
-This document defines incident handling procedures for Gebeta Restaurant OS. All team members should be familiar with these procedures before an incident occurs.
+This document defines incident handling procedures for lole Restaurant OS. All team members should be familiar with these procedures before an incident occurs.
 
 ---
 
 ## Severity Levels
 
-| Level | Name | Definition | Examples |
-|-------|------|------------|----------|
-| **Sev1** | Critical | Complete outage or data exposure affecting core ordering/payment operations | POS completely offline, all payment processing down, database inaccessible, guest data breach |
-| **Sev2** | Major | Significant degradation of core flows with no workaround | Single payment provider down, KDS not receiving orders, realtime sync broken, 3+ restaurants unable to process orders |
-| **Sev3** | Partial | Degradation with workaround available | Slow performance (>2s latency), single restaurant affected, offline mode fallback active |
-| **Sev4** | Minor | Low operational impact | Non-critical feature bug, cosmetic issues, single user reports |
+| Level    | Name     | Definition                                                                  | Examples                                                                                                              |
+| -------- | -------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Sev1** | Critical | Complete outage or data exposure affecting core ordering/payment operations | POS completely offline, all payment processing down, database inaccessible, guest data breach                         |
+| **Sev2** | Major    | Significant degradation of core flows with no workaround                    | Single payment provider down, KDS not receiving orders, realtime sync broken, 3+ restaurants unable to process orders |
+| **Sev3** | Partial  | Degradation with workaround available                                       | Slow performance (>2s latency), single restaurant affected, offline mode fallback active                              |
+| **Sev4** | Minor    | Low operational impact                                                      | Non-critical feature bug, cosmetic issues, single user reports                                                        |
 
 ---
 
 ## Response Time Targets
 
-| Severity | Acknowledge | Mitigation | Resolution |
-|----------|-------------|------------|------------|
-| Sev1 | 5 minutes | 30 minutes | 4 hours |
-| Sev2 | 15 minutes | 2 hours | 24 hours |
-| Sev3 | 60 minutes | Next business day | 1 week |
-| Sev4 | Next sprint | During sprint | Tracked in backlog |
+| Severity | Acknowledge | Mitigation        | Resolution         |
+| -------- | ----------- | ----------------- | ------------------ |
+| Sev1     | 5 minutes   | 30 minutes        | 4 hours            |
+| Sev2     | 15 minutes  | 2 hours           | 24 hours           |
+| Sev3     | 60 minutes  | Next business day | 1 week             |
+| Sev4     | Next sprint | During sprint     | Tracked in backlog |
 
 ---
 
@@ -34,15 +34,16 @@ This document defines incident handling procedures for Gebeta Restaurant OS. All
 
 1. **Primary On-Call**: Check PagerDuty/Opsgenie schedule for current on-call engineer
 2. **Fallback Chain**:
-   - Primary on-call → Secondary on-call
-   - Secondary → Engineering Lead
-   - Engineering Lead → CTO
+    - Primary on-call → Secondary on-call
+    - Secondary → Engineering Lead
+    - Engineering Lead → CTO
 
 ### Manual Assignment (for Sev1/Sev2)
 
 When an incident is declared Sev1 or Sev2, an **Incident Commander (IC)** must be assigned immediately:
 
 **IC Responsibilities:**
+
 - Own the incident from detection to post-mortem
 - Coordinate all responders
 - Make time-critical decisions
@@ -50,6 +51,7 @@ When an incident is declared Sev1 or Sev2, an **Incident Commander (IC)** must b
 - Ensure incident record is complete
 
 **IC Assignment Procedure:**
+
 1. First responder acknowledges and creates incident channel: `#incident-YYYYMMDD-brief`
 2. First responder posts: `@here SevX incident declared. I am Incident Commander until relieved.`
 3. If first responder cannot continue, hand off with: `@replacement You are now IC for this incident.`
@@ -79,12 +81,14 @@ For Sev1/Sev2, follow the IC assignment procedure above.
 ### Step 4: Mitigate Customer Impact
 
 **Priority order:**
+
 1. Stop data loss / security exposure
 2. Restore core ordering/payment functionality
 3. Restore secondary features
 4. Investigate root cause
 
 **Mitigation options:**
+
 - Feature flag disable
 - Rollback deployment
 - Failover to backup
@@ -93,6 +97,7 @@ For Sev1/Sev2, follow the IC assignment procedure above.
 ### Step 5: Communicate Updates
 
 Post updates at fixed intervals:
+
 - Sev1: Every 15 minutes
 - Sev2: Every 30 minutes
 - Sev3: Every 2 hours
@@ -108,6 +113,7 @@ Post updates at fixed intervals:
 ### Step 7: Post-Incident Summary
 
 Within 24 hours of Sev1/Sev2 resolution:
+
 - Publish post-incident summary
 - List action items with owners and due dates
 - Schedule blameless post-mortem (Sev1 only)
@@ -200,30 +206,30 @@ Thank you to all responders. IC signing off.
 
 Every incident must have these fields recorded:
 
-| Field | Description |
-|-------|-------------|
-| **Incident ID** | Format: `INC-YYYYMMDD-NNN` |
-| **Start Time** | When the incident was first detected |
-| **Detection Method** | Alert, user report, internal monitoring |
-| **Severity** | Sev1/2/3/4 |
-| **Impacted Components** | Services, APIs, database tables affected |
-| **User/Merchant Impact** | Number of affected restaurants, guests |
-| **Root Cause Summary** | Brief explanation of what caused it |
-| **Mitigation** | How customer impact was stopped |
-| **Permanent Fix** | Long-term resolution (or N/A if pending) |
-| **Action Items** | Follow-up tasks with owners and due dates |
-| **Post-Mortem Link** | Link to detailed post-mortem (Sev1 only) |
+| Field                    | Description                               |
+| ------------------------ | ----------------------------------------- |
+| **Incident ID**          | Format: `INC-YYYYMMDD-NNN`                |
+| **Start Time**           | When the incident was first detected      |
+| **Detection Method**     | Alert, user report, internal monitoring   |
+| **Severity**             | Sev1/2/3/4                                |
+| **Impacted Components**  | Services, APIs, database tables affected  |
+| **User/Merchant Impact** | Number of affected restaurants, guests    |
+| **Root Cause Summary**   | Brief explanation of what caused it       |
+| **Mitigation**           | How customer impact was stopped           |
+| **Permanent Fix**        | Long-term resolution (or N/A if pending)  |
+| **Action Items**         | Follow-up tasks with owners and due dates |
+| **Post-Mortem Link**     | Link to detailed post-mortem (Sev1 only)  |
 
 ---
 
 ## Escalation Contacts
 
-| Role | Contact Method | Response Time |
-|------|---------------|---------------|
-| Primary On-Call | PagerDuty | 5 min |
-| Secondary On-Call | PagerDuty | 15 min |
-| Engineering Lead | Telegram + Phone | 30 min |
-| CTO | Phone | 1 hour (Sev1 only) |
+| Role              | Contact Method   | Response Time      |
+| ----------------- | ---------------- | ------------------ |
+| Primary On-Call   | PagerDuty        | 5 min              |
+| Secondary On-Call | PagerDuty        | 15 min             |
+| Engineering Lead  | Telegram + Phone | 30 min             |
+| CTO               | Phone            | 1 hour (Sev1 only) |
 
 ---
 
@@ -234,9 +240,11 @@ Every incident must have these fields recorded:
 For incidents affecting merchants, prepare a status message:
 
 **English:**
+
 > We are currently experiencing issues with [service]. Our team is working to resolve this. Orders may be [delayed/unavailable]. We apologize for the inconvenience.
 
 **Amharic:**
+
 > በአሁኑ ጊዜ በ[አገልግሎት] ላይ ችግር እያጋጠምን ነው። ቡድናችን ለመፍትሄ እየሰራ ነው። ትዕዛዝ [ሊዘገው/ሊሆን የማይችል] ይሆናል። ለማስቸገራችሁ እንቃኙራለን።
 
 ---

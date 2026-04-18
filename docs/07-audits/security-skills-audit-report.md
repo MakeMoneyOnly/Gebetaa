@@ -1,4 +1,4 @@
-# Gebeta Restaurant OS - Comprehensive Security Audit Report
+# lole Restaurant OS - Comprehensive Security Audit Report
 
 **Audit Date:** March 20, 2026
 **Last Updated:** March 25, 2026
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This audit evaluated the Gebeta Restaurant OS codebase against OWASP Top 10 2025, Next.js security best practices, React security patterns, and API security standards. The codebase demonstrates **strong security posture** in many areas with all critical findings now resolved.
+This audit evaluated the lole Restaurant OS codebase against OWASP Top 10 2025, Next.js security best practices, React security patterns, and API security standards. The codebase demonstrates **strong security posture** in many areas with all critical findings now resolved.
 
 ### Overall Security Grade: **A (Excellent)** ✅
 
@@ -207,10 +207,9 @@ return NextResponse.redirect(`https://${forwardedHost}${next}`);
 **Fix:**
 
 ```typescript
-const allowedHosts = [
-    'gebetamenu.com',
-    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL,
-].filter(Boolean);
+const allowedHosts = ['lolemenu.com', process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL].filter(
+    Boolean
+);
 
 const forwardedHost = request.headers.get('x-forwarded-host');
 if (forwardedHost && allowedHosts.includes(forwardedHost)) {
@@ -533,7 +532,7 @@ return apiError('Failed to load orders', 500, 'ORDERS_FETCH_FAILED', error.messa
 
 ## Conclusion ✅
 
-The Gebeta Restaurant OS demonstrates a **mature security posture** with comprehensive implementations of authentication, authorization, input validation, and audit logging. The codebase follows Next.js and React security best practices in all areas.
+The lole Restaurant OS demonstrates a **mature security posture** with comprehensive implementations of authentication, authorization, input validation, and audit logging. The codebase follows Next.js and React security best practices in all areas.
 
 **All Critical and High Findings Resolved:**
 

@@ -1,15 +1,15 @@
-# ገበጣ Gebeta — Support Playbook
+# ገበጣ lole — Support Playbook
 
 **Version 1.0 · March 2026**
-**Internal — For Gebeta Support Staff**
+**Internal — For lole Support Staff**
 
-> This playbook scales Gebeta support from "founder answers every Telegram message" to a system that any team member can operate. Every known issue has a diagnosis flowchart and a resolution script. Every escalation path is defined.
+> This playbook scales lole support from "founder answers every Telegram message" to a system that any team member can operate. Every known issue has a diagnosis flowchart and a resolution script. Every escalation path is defined.
 
 ---
 
 ## Support Philosophy
 
-Gebeta's restaurants are running live businesses. When their POS breaks during a Friday dinner service, they are losing money every minute it is down. Support is not a back-office function — it is a revenue-protection function.
+lole's restaurants are running live businesses. When their POS breaks during a Friday dinner service, they are losing money every minute it is down. Support is not a back-office function — it is a revenue-protection function.
 
 **Three rules:**
 
@@ -68,10 +68,10 @@ This is the most common support message. "Not working" means many different thin
 ```
 "POS is not working"
         │
-        ├── Can you open the Gebeta POS app at all?
+        ├── Can you open the lole POS app at all?
         │     │
         │     ├── NO → App won't open
-        │     │         → Is Gebeta POS icon on the home screen?
+        │     │         → Is lole POS icon on the home screen?
         │     │              NO: reinstall PWA (Section A below)
         │     │              YES: Force close app → reopen
         │     │                   Still not opening: restart tablet
@@ -113,13 +113,13 @@ This is the most common support message. "Not working" means many different thin
 ```
 "Orders sent from POS but KDS shows nothing / missing orders"
         │
-        ├── Is the KDS tablet ON and showing the Gebeta KDS screen?
+        ├── Is the KDS tablet ON and showing the lole KDS screen?
         │     │
         │     ├── NO → Screen is off or showing wrong app
         │     │         → Wake up tablet (press power button)
-        │     │         → Open Gebeta KDS from home screen
+        │     │         → Open lole KDS from home screen
         │     │         → Confirm it shows the correct station URL:
-        │     │              gebeta.app/kds/[station]
+        │     │              lole.app/kds/[station]
         │     │
         │     └── YES → KDS is on and correct URL
         │                   ↓
@@ -143,7 +143,7 @@ This is the most common support message. "Not working" means many different thin
         │                    Fix: change category's KDS station
         │
         └── WORKAROUND if nothing works:
-              → Switch KDS tablet to: gebeta.app/merchant/orders (dashboard order view)
+              → Switch KDS tablet to: lole.app/merchant/orders (dashboard order view)
               → Kitchen can read orders from there until issue is resolved
 ```
 
@@ -170,7 +170,7 @@ This is the most common support message. "Not working" means many different thin
         │                   ↓
         │               Check: is this a webhook configuration issue?
         │               → Go to: Chapa/Telebirr merchant dashboard
-        │               → Confirm webhook URL = https://gebeta.app/api/webhooks/[provider]
+        │               → Confirm webhook URL = https://lole.app/api/webhooks/[provider]
         │               → NOT a localhost URL, NOT a preview URL
         │
         │               IMMEDIATE WORKAROUND (to release the guest):
@@ -197,7 +197,7 @@ This is the most common support message. "Not working" means many different thin
         │     ├── NO / Not sure → Open Termux app
         │     │         → Run: ps aux | grep node
         │     │              If no result: server is not running
-        │     │              → Run: cd ~/gebeta-print && node server.js
+        │     │              → Run: cd ~/lole-print && node server.js
         │     │              → Leave Termux open (do not close it)
         │     │
         │     └── YES → Termux is running
@@ -212,7 +212,7 @@ This is the most common support message. "Not working" means many different thin
         │     │
         │     └── Error / no response → server not accessible
         │               → Stop any running node: pkill node
-        │               → Restart: cd ~/gebeta-print && node server.js
+        │               → Restart: cd ~/lole-print && node server.js
         │
         ├── Printer is connected but prints garbled text / boxes?
         │     → Ethiopic (Amharic) character encoding issue
@@ -372,7 +372,7 @@ Restaurant wants annual plan:
 
 ```
 Owner forgot password:
-→ gebeta.app → Sign In → Forgot Password → enter email → reset link sent
+→ lole.app → Sign In → Forgot Password → enter email → reset link sent
 → If email is wrong/lost: verify owner identity via phone call → manually update email
    in Supabase Auth dashboard → send reset
 
@@ -429,15 +429,15 @@ Track these weekly. Report to founder on Monday mornings.
 
 ## Support Tooling
 
-| Tool                   | Purpose                                        | Access                        |
-| ---------------------- | ---------------------------------------------- | ----------------------------- |
-| **Telegram**           | Primary support channel                        | @GebetaSupport account        |
-| **Sentry**             | Error investigation — filter by restaurant_id  | sentry.io → Gebeta project    |
-| **Axiom**              | Log search — filter by restaurant_id, endpoint | app.axiom.co                  |
-| **Supabase Dashboard** | Direct DB lookup, account management           | supabase.com → Gebeta project |
-| **Better Uptime**      | Current system status, outage history          | betteruptime.com              |
-| **QStash Dashboard**   | Job queue status, failed jobs                  | console.upstash.com           |
-| **Vercel Dashboard**   | Deployment status, function logs               | vercel.com                    |
+| Tool                   | Purpose                                        | Access                      |
+| ---------------------- | ---------------------------------------------- | --------------------------- |
+| **Telegram**           | Primary support channel                        | @loleSupport account        |
+| **Sentry**             | Error investigation — filter by restaurant_id  | sentry.io → lole project    |
+| **Axiom**              | Log search — filter by restaurant_id, endpoint | app.axiom.co                |
+| **Supabase Dashboard** | Direct DB lookup, account management           | supabase.com → lole project |
+| **Better Uptime**      | Current system status, outage history          | betteruptime.com            |
+| **QStash Dashboard**   | Job queue status, failed jobs                  | console.upstash.com         |
+| **Vercel Dashboard**   | Deployment status, function logs               | vercel.com                  |
 
 ---
 
@@ -490,4 +490,4 @@ Complete for every P0 incident within 24 hours.
 
 ---
 
-_Gebeta Support Playbook v1.0 · March 2026 · Internal Only_
+_lole Support Playbook v1.0 · March 2026 · Internal Only_

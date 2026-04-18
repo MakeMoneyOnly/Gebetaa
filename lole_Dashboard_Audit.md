@@ -1,4 +1,4 @@
-# Gebeta Merchant Dashboard — Complete Blueprint
+# lole Merchant Dashboard — Complete Blueprint
 
 > **"Toast for Addis Ababa"** | Ethiopian Localization + Feature Parity Specification
 > Version: April 2026 | Status: Planning Reference
@@ -87,7 +87,7 @@ All legacy components and stubs have been removed to ensure an enterprise-grade 
 
 ### 2.1 Feature Parity Matrix
 
-| Toast Feature                 | Toast Tab          | Gebeta Status                                   | Priority        |
+| Toast Feature                 | Toast Tab          | lole Status                                     | Priority        |
 | ----------------------------- | ------------------ | ----------------------------------------------- | --------------- |
 | Weekly KPI dashboard          | Home               | ✅ Command Center built                         | P1              |
 | Toast Now mobile companion    | Home               | ❌ No mobile companion link                     | P3              |
@@ -281,7 +281,7 @@ HOME
 #### Missing / Enhancements Needed
 
 - [ ] Add "Quick Setup Checklist" banner for new accounts (Toast pattern)
-- [ ] Add Gebeta Now mobile app deep-link card
+- [ ] Add lole Now mobile app deep-link card
 - [ ] Weekly overview chart (not just today/week/month — add weekly bar chart)
 - [ ] Menu performance widget (top 5 items by sales today)
 
@@ -1199,7 +1199,7 @@ MARKETING
  │    ├── Description [T]
  │    ├── Description (Amharic) [T] 🇪🇹
  │    ├── Social Media Links (Telegram, Instagram, Facebook, TikTok) 🇪🇹
- │    └── Gebeta page URL (read-only, auto-generated)
+ │    └── lole page URL (read-only, auto-generated)
  │
  └── Hours & Services
       ├── Weekly Schedule
@@ -1515,11 +1515,11 @@ INTEGRATIONS
 ```
 SHOP
  ├── Software & Subscriptions
- │    ├── Gebeta Loyalty [card: price + subscribe]
- │    ├── Gebeta Marketing (SMS/Telegram campaigns) [card]
- │    ├── Gebeta Payroll [card]
- │    ├── Gebeta Reservations (coming soon) [card]
- │    ├── Gebeta Websites (coming soon) [card]
+ │    ├── lole Loyalty [card: price + subscribe]
+ │    ├── lole Marketing (SMS/Telegram campaigns) [card]
+ │    ├── lole Payroll [card]
+ │    ├── lole Reservations (coming soon) [card]
+ │    ├── lole Websites (coming soon) [card]
  │    └── API Access / Developer Plan [card]
  │
  ├── POS Hardware
@@ -1575,7 +1575,7 @@ HELP & SUPPORT
  │    └── [BTN] Submit a ticket (form)
  │
  ├── Community (Telegram group link) 🇪🇹
- │    └── "Gebeta Restaurant Partners" community group
+ │    └── "lole Restaurant Partners" community group
  │
  └── Release Notes
       └── Latest updates feed
@@ -1637,7 +1637,7 @@ SETTINGS (/merchant/setup)
 | Field                     | Type                                                | Notes                     |
 | ------------------------- | --------------------------------------------------- | ------------------------- |
 | Restaurant Name (English) | [T]                                                 |                           |
-| Restaurant Name (Amharic) | [T] 🇪🇹                                              | Required for Gebeta app   |
+| Restaurant Name (Amharic) | [T] 🇪🇹                                              | Required for lole app     |
 | Tagline                   | [T]                                                 |                           |
 | Logo                      | [IMG]                                               | min 400×400px             |
 | Banner Image              | [IMG]                                               | min 1200px wide           |

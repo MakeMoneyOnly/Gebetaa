@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Security Policy & Threat Model
+# ገበጣ lole — Security Policy & Threat Model
 
 **Version 1.0 · March 2026 · Confidential**
 
@@ -6,7 +6,7 @@
 
 ## Purpose
 
-This document defines Gebeta's security posture, maps every attack surface across the platform, and specifies the controls in place or required for each threat. It serves three audiences:
+This document defines lole's security posture, maps every attack surface across the platform, and specifies the controls in place or required for each threat. It serves three audiences:
 
 1. **The engineering team** — what to implement and why
 2. **Enterprise restaurant clients** — evidence that their data and revenue are protected
@@ -33,19 +33,19 @@ This document defines Gebeta's security posture, maps every attack surface acros
 
 **What it protects:** Table access, order attribution, preventing guests from accessing other restaurants' menus.
 
-| Threat                 | Risk                                                                 | Control                                                                                               | Status  |
-| ---------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------- |
-| QR code forgery        | Guest crafts URL for a table they don't have access to               | HMAC-SHA256 signature with `GEBETA_QR_HMAC_SECRET` — server rejects any URL whose `sig` doesn't match | ✅ Live |
-| QR code replay         | Guest reuses an old QR code from a previous visit                    | 24-hour expiry embedded in `exp` parameter and verified server-side                                   | ✅ Live |
-| Timing attack on HMAC  | Attacker probes response times to guess the HMAC secret byte-by-byte | `crypto.timingSafeEqual()` — constant-time comparison regardless of where strings diverge             | ✅ Live |
-| Table enumeration      | Attacker enumerates all table IDs for a restaurant                   | HMAC signature covers `{slug}:{tableNumber}:{exp}` — table number alone is not sufficient             | ✅ Live |
-| QR interception (MITM) | Attacker intercepts QR URL on open WiFi                              | HTTPS enforced everywhere. Cloudflare terminates TLS. No HTTP.                                        | ✅ Live |
-| Bulk QR brute force    | Attacker tries to forge valid QR codes exhaustively                  | `GEBETA_QR_HMAC_SECRET` is 256-bit random — computationally infeasible to brute force                 | ✅ Live |
+| Threat                 | Risk                                                                 | Control                                                                                             | Status  |
+| ---------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------- |
+| QR code forgery        | Guest crafts URL for a table they don't have access to               | HMAC-SHA256 signature with `lole_QR_HMAC_SECRET` — server rejects any URL whose `sig` doesn't match | ✅ Live |
+| QR code replay         | Guest reuses an old QR code from a previous visit                    | 24-hour expiry embedded in `exp` parameter and verified server-side                                 | ✅ Live |
+| Timing attack on HMAC  | Attacker probes response times to guess the HMAC secret byte-by-byte | `crypto.timingSafeEqual()` — constant-time comparison regardless of where strings diverge           | ✅ Live |
+| Table enumeration      | Attacker enumerates all table IDs for a restaurant                   | HMAC signature covers `{slug}:{tableNumber}:{exp}` — table number alone is not sufficient           | ✅ Live |
+| QR interception (MITM) | Attacker intercepts QR URL on open WiFi                              | HTTPS enforced everywhere. Cloudflare terminates TLS. No HTTP.                                      | ✅ Live |
+| Bulk QR brute force    | Attacker tries to forge valid QR codes exhaustively                  | `lole_QR_HMAC_SECRET` is 256-bit random — computationally infeasible to brute force                 | ✅ Live |
 
 **Secret rotation procedure:**
 
 ```
-If GEBETA_QR_HMAC_SECRET is compromised:
+If lole_QR_HMAC_SECRET is compromised:
 1. Generate new 32-byte random secret:  openssl rand -hex 32
 2. Update Vercel env var immediately
 3. Deploy:  vercel --prod  (takes ~60 seconds)
@@ -158,13 +158,13 @@ CREATE POLICY "staff_restaurant_isolation" ON orders
 | Threat                      | Risk                                                | Control                                                                                                  | Status       |
 | --------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------ |
 | Payment API key exposure    | `CHAPA_SECRET_KEY` leaked via client bundle or logs | All payment keys in server-side Vercel env only. `NEXT_PUBLIC_` prefix forbidden. Bundle analysis in CI. | ✅           |
-| Card data storage           | Gebeta inadvertently stores raw card numbers        | Gebeta never handles raw card data. Chapa and CBE Birr tokenize all card data on their side.             | ✅ By design |
+| Card data storage           | lole inadvertently stores raw card numbers          | lole never handles raw card data. Chapa and CBE Birr tokenize all card data on their side.               | ✅ By design |
 | Payment amount manipulation | Client sends modified amount to payment endpoint    | Payment amount always calculated server-side from `orders.total_price`. Client input rejected.           | ✅           |
 | Refund fraud                | Staff member processes unauthorized refunds         | Refunds require `manager` or `admin` role. Every refund logged with `initiated_by` staff ID.             | ✅           |
 | Unsourced payment capture   | Payment marked captured without verified webhook    | `status = 'captured'` only set by webhook handler after HMAC verification. No manual override.           | Sprint 1     |
 
 **PCI-DSS Scope note:**
-Gebeta is **outside PCI-DSS scope** for card data because Gebeta never transmits, processes, or stores primary account numbers (PAN). All card tokenization occurs inside Chapa's and CBE Birr's PCI-compliant environments. Gebeta stores only opaque `provider_transaction_id` tokens.
+lole is **outside PCI-DSS scope** for card data because lole never transmits, processes, or stores primary account numbers (PAN). All card tokenization occurs inside Chapa's and CBE Birr's PCI-compliant environments. lole stores only opaque `provider_transaction_id` tokens.
 
 ---
 
@@ -257,9 +257,9 @@ Secrets
 
 ## Vulnerability Disclosure
 
-**Contact:** security@gebeta.app  
+**Contact:** security@lole.app  
 **Response SLA:** Acknowledge within 24 hours. Patch P0/P1 within 72 hours.  
-**Scope:** All _.gebeta.app and _.gebetamenu.com endpoints  
+**Scope:** All _.lole.app and _.lolemenu.com endpoints  
 **Out of scope:** Social engineering, physical device access, third-party services (Supabase, Chapa, Telebirr infrastructure)
 
 ---
@@ -285,4 +285,4 @@ Secrets
 
 ---
 
-_Gebeta Security Policy & Threat Model v1.0 · March 2026 · Confidential_
+_lole Security Policy & Threat Model v1.0 · March 2026 · Confidential_

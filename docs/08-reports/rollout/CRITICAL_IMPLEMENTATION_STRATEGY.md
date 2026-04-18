@@ -1,6 +1,6 @@
 # Critical Implementation Strategy
 
-## Gebeta Restaurant OS — Enterprise Implementation Roadmap
+## lole Restaurant OS — Enterprise Implementation Roadmap
 
 **Version 1.0 · March 2026**
 
@@ -207,7 +207,7 @@ This consolidation simplifies integration and provides a single webhook endpoint
 ### Implementation Steps
 
 1. **Define Event Contract** (`src/lib/events/types.ts`)
-    - GebetaEvent discriminated union
+    - loleEvent discriminated union
     - All payload types with schema versioning
 
 2. **Implement Publisher** (`src/lib/events/publisher.ts`)
@@ -667,4 +667,4 @@ Update `CHANGELOG.md` for each completed implementation:
 
 ---
 
-_Gebeta Critical Implementation Strategy v1.0 · March 2026_
+_lole Critical Implementation Strategy v1.0 · March 2026_

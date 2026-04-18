@@ -47,11 +47,11 @@ rover --version
 ### Step 2: Create Graph in GraphOS
 
 1. Go to [Apollo GraphOS Studio](https://studio.apollographql.com/)
-2. Sign up and create an Organization (e.g., "Gebeta")
+2. Sign up and create an Organization (e.g., "lole")
 3. Click **New Graph**
-4. Name: `gebeta-production`
+4. Name: `lole-production`
 5. Graph type: **Cloud**
-6. Copy your **Graph Ref**: `gebeta-production@current`
+6. Copy your **Graph Ref**: `lole-production@current`
 
 ---
 
@@ -78,15 +78,15 @@ Run the publish script:
 
 ```powershell
 $env:APOLLO_KEY = "your-apollo-key"
-$env:GRAPH_REF = "gebeta-production@current"
-$env:ROUTING_URL = "https://gebeta.app/api/graphql"
+$env:GRAPH_REF = "lole-production@current"
+$env:ROUTING_URL = "https://lole.app/api/graphql"
 
 # Run each command (note: Rover syntax may vary by version):
 # For newer versions, use the subgraph publish format:
-rover subgraph publish gebeta-production@current --schema ./src/domains/orders/schema.graphql --routing-url https://gebeta.app/api/graphql
+rover subgraph publish lole-production@current --schema ./src/domains/orders/schema.graphql --routing-url https://lole.app/api/graphql
 
 # OR use the legacy format:
-rover graph publish gebeta-production@current --schema ./src/domains/orders/schema.graphql
+rover graph publish lole-production@current --schema ./src/domains/orders/schema.graphql
 ```
 
 Or use the script:
@@ -107,7 +107,7 @@ Or use the script:
 4. Connect your GitHub repository
 5. Add environment variables:
     - `APOLLO_KEY` = your Apollo API key
-    - `APOLLO_GRAPH_REF` = `gebeta-production@current`
+    - `APOLLO_GRAPH_REF` = `lole-production@current`
 6. Railway builds automatically from `router/Dockerfile`
 
 **Option B: Railway CLI**
@@ -117,7 +117,7 @@ npm install -g @railway/cli
 railway login
 railway init
 railway variables set APOLLO_KEY=your-apollo-key
-railway variables set APOLLO_GRAPH_REF=gebeta-production@current
+railway variables set APOLLO_GRAPH_REF=lole-production@current
 railway up
 ```
 
@@ -125,7 +125,7 @@ railway up
 
 ### Step 7: Verify Deployment
 
-1. Get Railway URL (e.g., `https://gebeta-router.up.railway.app`)
+1. Get Railway URL (e.g., `https://lole-router.up.railway.app`)
 2. Test GraphQL:
 
 ```graphql
@@ -205,15 +205,15 @@ query {
 
 ```env
 APOLLO_KEY=your-api-key
-GRAPH_REF=gebeta-production@current
-ROUTING_URL=https://gebeta.app/api/graphql
+GRAPH_REF=lole-production@current
+ROUTING_URL=https://lole.app/api/graphql
 ```
 
 ### For Railway
 
 ```env
 APOLLO_KEY=your-api-key
-APOLLO_GRAPH_REF=gebeta-production@current
+APOLLO_GRAPH_REF=lole-production@current
 ```
 
 ---

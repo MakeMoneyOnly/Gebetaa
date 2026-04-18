@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes how to deploy and operate the Apollo Router for Gebeta's GraphQL Federation architecture.
+This document describes how to deploy and operate the Apollo Router for lole's GraphQL Federation architecture.
 
 ## Architecture
 
@@ -24,7 +24,7 @@ This document describes how to deploy and operate the Apollo Router for Gebeta's
 
 1. **Apollo GraphOS Account**
     - Create an account at [apollographql.com](https://www.apollographql.com)
-    - Create a graph for Gebeta
+    - Create a graph for lole
     - Generate an API key with `Publisher` role
 
 2. **Environment Variables**
@@ -32,9 +32,9 @@ This document describes how to deploy and operate the Apollo Router for Gebeta's
     ```bash
     # Required
     APOLLO_KEY=your-apollo-key
-    APOLLO_GRAPH_REF=gebeta-production@current
+    APOLLO_GRAPH_REF=lole-production@current
     NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-    NEXT_PUBLIC_APP_URL=https://api.gebeta.app
+    NEXT_PUBLIC_APP_URL=https://api.lole.app
 
     # Optional
     OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
@@ -87,20 +87,20 @@ Each subgraph runs as a Next.js API route:
 1. **Build the Router Image**
 
     ```bash
-    docker build -t gebeta-router -f router/Dockerfile router/
+    docker build -t lole-router -f router/Dockerfile router/
     ```
 
 2. **Run the Container**
     ```bash
     docker run -d \
-      --name gebeta-router \
+      --name lole-router \
       -p 4000:4000 \
       -p 8088:8088 \
       -p 9090:9090 \
       -e APOLLO_KEY=${APOLLO_KEY} \
       -e APOLLO_GRAPH_REF=${APOLLO_GRAPH_REF} \
       -e NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL} \
-      gebeta-router
+      lole-router
     ```
 
 ### Option 2: Kubernetes Deployment
@@ -121,17 +121,17 @@ The GitHub workflow `.github/workflows/publish-graphql-subgraphs.yml` automatica
 
 ```bash
 # Publish a subgraph schema
-rover subgraph publish gebeta-production@current \
+rover subgraph publish lole-production@current \
   --name orders \
   --schema graphql/subgraphs/orders.graphql \
-  --routing-url https://api.gebeta.app/api/subgraphs/orders
+  --routing-url https://api.lole.app/api/subgraphs/orders
 ```
 
 ### Schema Checks
 
 ```bash
 # Check for breaking changes before publishing
-rover subgraph check gebeta-production@current \
+rover subgraph check lole-production@current \
   --name orders \
   --schema graphql/subgraphs/orders.graphql
 ```
@@ -203,8 +203,8 @@ Allowed origins are explicitly configured:
 ```yaml
 cors:
     origins:
-        - 'https://gebeta.app'
-        - 'https://www.gebeta.app'
+        - 'https://lole.app'
+        - 'https://www.lole.app'
 ```
 
 ## Troubleshooting
@@ -215,7 +215,7 @@ cors:
 
     ```bash
     # Check schema validity
-    rover subgraph check gebeta-production@current --name orders --schema orders.graphql
+    rover subgraph check lole-production@current --name orders --schema orders.graphql
     ```
 
 2. **Authentication Failures**
@@ -233,7 +233,7 @@ cors:
 View router logs:
 
 ```bash
-docker logs -f gebeta-router
+docker logs -f lole-router
 ```
 
 Structured JSON logs are output for easy parsing by log aggregation systems.
@@ -244,7 +244,7 @@ To rollback a schema change:
 
 ```bash
 # Revert to previous schema
-rover subgraph publish gebeta-production@current \
+rover subgraph publish lole-production@current \
   --name orders \
   --schema previous-orders.graphql
 ```

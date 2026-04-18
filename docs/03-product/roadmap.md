@@ -1,8 +1,8 @@
-# ገበጣ Gebeta — Product Roadmap
+# ገበጣ lole — Product Roadmap
 
 **Version 1.0 · March 2026 · Confidential**
 
-> The Sprint execution plan lives in the Master Blueprint (Section 18). This document answers the higher-order question: **what does Gebeta become, and by when?** It is the document you read when you need to remember why you are building what you are building.
+> The Sprint execution plan lives in the Master Blueprint (Section 18). This document answers the higher-order question: **what does lole become, and by when?** It is the document you read when you need to remember why you are building what you are building.
 
 ---
 
@@ -21,7 +21,7 @@ HORIZON 2 — SCALE (Month 13 → 30)
 HORIZON 3 — DOMINATE (Month 30 → 60)
   Expand to East Africa. Become the data layer for the industry.
   Financial services for restaurants: working capital, insurance, B2B marketplace.
-  Platform play — third parties build on Gebeta.
+  Platform play — third parties build on lole.
 ```
 
 ---
@@ -78,7 +78,7 @@ All Phase 1 work is invisible to restaurant owners. It is the engineering beneat
 
 ### Phase 2 — Product Completeness (Month 3–4) · Sprints 5–6
 
-**Theme: Close every gap between what Gebeta has and what a restaurant actually needs daily.**
+**Theme: Close every gap between what lole has and what a restaurant actually needs daily.**
 
 | Feature                       | Why it cannot wait                                                                                                                  | Sprint  |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------- |
@@ -126,7 +126,7 @@ All Phase 1 work is invisible to restaurant owners. It is the engineering beneat
 
 | Feature                         | Description                                                              | Business case                                                                                  |
 | ------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| **Gebeta Now Alpha**            | iOS/Android manager app — live revenue, quick actions, staff view        | Owners check their phone constantly. This is the product they demo to other owners.            |
+| **lole Now Alpha**              | iOS/Android manager app — live revenue, quick actions, staff view        | Owners check their phone constantly. This is the product they demo to other owners.            |
 | **Referral programme**          | Restaurant A refers Restaurant B → both get 2 months Pro free            | Ethiopian market is relationship-driven. CAC drops to near zero via word of mouth.             |
 | **Multi-location Beta**         | Owners with 2–3 locations get unified dashboard + consolidated reporting | Unlocks hotel groups and small chains for Enterprise plan. Average revenue 3× single-location. |
 | **CBE Birr integration**        | 4th payment method (Commercial Bank of Ethiopia, 25M+ account holders)   | Covers remaining payment gap from high-value corporate diners                                  |
@@ -141,7 +141,7 @@ All Phase 1 work is invisible to restaurant owners. It is the engineering beneat
 - **MRR: 200,000 ETB/month** (~$3,600 USD at ~50% Pro penetration)
 - **Monthly churn: <5%**
 - **NPS: >45**
-- Gebeta Now Alpha live with 50 restaurant owners
+- lole Now Alpha live with 50 restaurant owners
 - ERCA active for all VAT-registered restaurants on platform
 
 ---
@@ -153,9 +153,9 @@ All Phase 1 work is invisible to restaurant owners. It is the engineering beneat
 ### The Platform Expansion Arc
 
 ```
-Today (Month 0):     Restaurant pays Gebeta for POS subscription (ETB 1,200/mo)
-Month 13 (Gebeta Pay): Restaurant processes payments through Gebeta (1.5% fee)
-Month 18 (Capital):  Restaurant borrows working capital against Gebeta revenue data
+Today (Month 0):     Restaurant pays lole for POS subscription (ETB 1,200/mo)
+Month 13 (lole Pay): Restaurant processes payments through lole (1.5% fee)
+Month 18 (Capital):  Restaurant borrows working capital against lole revenue data
 Month 20 (Analytics Pro): Restaurant pays for competitive intelligence
 Month 24 (East Africa): Restaurant in Nairobi onboards — same platform, KES + M-Pesa
 ```
@@ -164,14 +164,14 @@ At each stage, **switching cost increases and revenue per restaurant compounds**
 
 ---
 
-### Initiative 1 — Gebeta Pay (Month 13–18)
+### Initiative 1 — lole Pay (Month 13–18)
 
-Move from integrating third-party payment providers to operating Gebeta's own payment product in partnership with a licensed Ethiopian Payment System Operator (PSO).
+Move from integrating third-party payment providers to operating lole's own payment product in partnership with a licensed Ethiopian Payment System Operator (PSO).
 
 **Why this matters:**
 
-- Chapa charges 2.49% + fees. Gebeta can offer 1.5% and still capture margin.
-- Payment data stays inside Gebeta → richer analytics → better lending risk model
+- Chapa charges 2.49% + fees. lole can offer 1.5% and still capture margin.
+- Payment data stays inside lole → richer analytics → better lending risk model
 - Instant settlement to restaurant account (vs. T+2 with Chapa)
 - This is precisely how Square became a $40B company from a $10 dongle
 
@@ -179,43 +179,43 @@ Move from integrating third-party payment providers to operating Gebeta's own pa
 
 - Partnership with a licensed Ethiopian PSO (likely CBE or a licensed fintech)
 - NBE approval for payment aggregation (or partnership structure that avoids this requirement)
-- `gebeta_pay` as new `payment.provider` enum value — all existing infrastructure reuses
+- `lole_pay` as new `payment.provider` enum value — all existing infrastructure reuses
 
-**Revenue model:** 1.5% of GMV processed through Gebeta Pay. At 200 restaurants × 150,000 ETB/month GMV = 450,000 ETB/month in payment volume → 6,750 ETB/month additional revenue from payment fees alone.
+**Revenue model:** 1.5% of GMV processed through lole Pay. At 200 restaurants × 150,000 ETB/month GMV = 450,000 ETB/month in payment volume → 6,750 ETB/month additional revenue from payment fees alone.
 
 ---
 
 ### Initiative 2 — Delivery Network Hub (Month 15–20)
 
-Not a competing delivery company. A neutral aggregation layer that benefits restaurants, delivery partners, and Gebeta simultaneously.
+Not a competing delivery company. A neutral aggregation layer that benefits restaurants, delivery partners, and lole simultaneously.
 
 **The problem today:** A restaurant with BEU, Deliver Addis, Zmall, and Esoora has 4 tablets, 4 logins, 4 sets of order notifications, and 4 menu update workflows.
 
-**Gebeta's solution:** One Channels hub screen where all delivery orders arrive in Gebeta's unified queue alongside dine-in. One menu update propagates to all connected partners. One reporting dashboard shows dine-in vs. delivery revenue side by side.
+**lole's solution:** One Channels hub screen where all delivery orders arrive in lole's unified queue alongside dine-in. One menu update propagates to all connected partners. One reporting dashboard shows dine-in vs. delivery revenue side by side.
 
-**Revenue model:** ETB 8–15 per delivery order processed through Gebeta. At 200 restaurants × 15 delivery orders/day = 3,000 orders/day → 24,000–45,000 ETB/day in delivery processing revenue.
+**Revenue model:** ETB 8–15 per delivery order processed through lole. At 200 restaurants × 15 delivery orders/day = 3,000 orders/day → 24,000–45,000 ETB/day in delivery processing revenue.
 
-**Delivery partner value prop:** Faster restaurant onboarding (Gebeta's 200 restaurants join the delivery partner's network automatically). Reduced integration cost (one Gebeta webhook, not per-restaurant technical work).
+**Delivery partner value prop:** Faster restaurant onboarding (lole's 200 restaurants join the delivery partner's network automatically). Reduced integration cost (one lole webhook, not per-restaurant technical work).
 
 ---
 
-### Initiative 3 — Gebeta Capital (Month 18–24)
+### Initiative 3 — lole Capital (Month 18–24)
 
-Restaurant working capital loans underwritten by Gebeta transaction data.
+Restaurant working capital loans underwritten by lole transaction data.
 
-**The insight:** Traditional banks cannot lend to most Ethiopian restaurants because they have no verifiable financial history. Gebeta has 12–18 months of daily revenue data, split by payment method, with trend analysis. This is a better risk signal than any bank statement.
+**The insight:** Traditional banks cannot lend to most Ethiopian restaurants because they have no verifiable financial history. lole has 12–18 months of daily revenue data, split by payment method, with trend analysis. This is a better risk signal than any bank statement.
 
 **Product:** Revenue-based advance. Restaurant receives lump sum. Repayment is automatic — a fixed percentage of each day's POS revenue until the advance plus a flat fee is repaid.
 
-**Example:** A restaurant averaging 45,000 ETB/week for 6 months receives a 200,000 ETB advance. Gebeta automatically withholds 15% of daily POS revenue until 220,000 ETB (advance + 10% flat fee) is repaid. ~6 week repayment at average revenue.
+**Example:** A restaurant averaging 45,000 ETB/week for 6 months receives a 200,000 ETB advance. lole automatically withholds 15% of daily POS revenue until 220,000 ETB (advance + 10% flat fee) is repaid. ~6 week repayment at average revenue.
 
-**Regulatory path:** Partnership with a licensed Ethiopian microfinance institution (MFI). Gebeta provides the risk model and origination. MFI provides the licensed lending entity and capital. Revenue split: 60/40 Gebeta/MFI.
+**Regulatory path:** Partnership with a licensed Ethiopian microfinance institution (MFI). lole provides the risk model and origination. MFI provides the licensed lending entity and capital. Revenue split: 60/40 lole/MFI.
 
-**Why this creates lock-in:** A restaurant with an outstanding Gebeta Capital advance cannot switch POS providers — repayment runs through Gebeta's revenue stream. This is the same mechanism that makes Toast's payment processing sticky.
+**Why this creates lock-in:** A restaurant with an outstanding lole Capital advance cannot switch POS providers — repayment runs through lole's revenue stream. This is the same mechanism that makes Toast's payment processing sticky.
 
 ---
 
-### Initiative 4 — Gebeta Analytics Pro (Month 20–26)
+### Initiative 4 — lole Analytics Pro (Month 20–26)
 
 Upgrade from operational analytics (what happened?) to strategic intelligence (what should I do?).
 
@@ -227,7 +227,7 @@ Upgrade from operational analytics (what happened?) to strategic intelligence (w
 | **Seasonal insights**       | Meskel, Timkat, Ramadan, Ethiopian Christmas impact quantified for your restaurant specifically | Business plan feature |
 | **Competitor intelligence** | Anonymised aggregate pricing data — "Macchiatos on Bole Road: ETB 95–130. You're at ETB 80."    | Enterprise feature    |
 
-These features are only possible because Gebeta has aggregate data across hundreds of restaurants. A single-restaurant analytics tool cannot do this. Network effects create a moat.
+These features are only possible because lole has aggregate data across hundreds of restaurants. A single-restaurant analytics tool cannot do this. Network effects create a moat.
 
 ---
 
@@ -253,13 +253,13 @@ The platform is already multi-currency by design (`currency_code` on payments, `
 
 This horizon is directional. Specifics depend on Horizon 2 results.
 
-| Initiative                    | Description                                                                                                                                                                       |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Gebeta Platform API**       | Public API for accountants, HR systems, food suppliers, loyalty aggregators to build on Gebeta data. Platform revenue via API calls.                                              |
-| **Gebeta B2B Marketplace**    | Connect restaurants with verified food suppliers. Gebeta takes a 2–3% transaction fee on every supplier order.                                                                    |
-| **Ghost Kitchen Management**  | As dark kitchens grow in Addis and Nairobi, a kitchen-optimised version for multi-brand ghost kitchen operators.                                                                  |
-| **Gebeta Insurance**          | Revenue protection insurance underwritten by transaction history. Claim on fire damage? Gebeta's 18 months of revenue data is the proof.                                          |
-| **Series B / Strategic Exit** | At 2,000+ restaurants across 3+ countries, Gebeta becomes an acquisition target for Lightspeed, Toast International, or a major East African fintech (Flutterwave, Chipper Cash). |
+| Initiative                    | Description                                                                                                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **lole Platform API**         | Public API for accountants, HR systems, food suppliers, loyalty aggregators to build on lole data. Platform revenue via API calls.                                              |
+| **lole B2B Marketplace**      | Connect restaurants with verified food suppliers. lole takes a 2–3% transaction fee on every supplier order.                                                                    |
+| **Ghost Kitchen Management**  | As dark kitchens grow in Addis and Nairobi, a kitchen-optimised version for multi-brand ghost kitchen operators.                                                                |
+| **lole Insurance**            | Revenue protection insurance underwritten by transaction history. Claim on fire damage? lole's 18 months of revenue data is the proof.                                          |
+| **Series B / Strategic Exit** | At 2,000+ restaurants across 3+ countries, lole becomes an acquisition target for Lightspeed, Toast International, or a major East African fintech (Flutterwave, Chipper Cash). |
 
 ---
 
@@ -289,10 +289,10 @@ This horizon is directional. Specifics depend on Horizon 2 results.
 Now → Month 2    Foundation      Webhooks · Amharic · Santim · Monitoring · Offline (PowerSync)
 Month 3–4        Completeness    Discounts · Modifiers · Loyalty · GraphQL · CBE Birr
 Month 4–5        Infrastructure  Cloudflare · TimescaleDB · ERCA · Subscriptions · CI/CD
-Month 6–12       Growth Engine   Gebeta Now · Multi-location · Referral · Kitchen Analytics
-Month 13–18      Gebeta Pay      Own payment product · 1.5% processing fee · Instant settlement
+Month 6–12       Growth Engine   lole Now · Multi-location · Referral · Kitchen Analytics
+Month 13–18      lole Pay      Own payment product · 1.5% processing fee · Instant settlement
 Month 15–20      Delivery Hub    Unified delivery aggregation · Per-order revenue model
-Month 18–24      Gebeta Capital  Revenue-based working capital · MFI partnership
+Month 18–24      lole Capital  Revenue-based working capital · MFI partnership
 Month 20–26      Analytics Pro   Benchmarking · Forecasting · Menu optimisation
 Month 24–30      East Africa     Kenya → Tanzania → Uganda · M-Pesa · Swahili i18n
 Month 30–60      Platform        Open API · B2B marketplace · Insurance · Series B
@@ -300,4 +300,4 @@ Month 30–60      Platform        Open API · B2B marketplace · Insurance · S
 
 ---
 
-_Gebeta Product Roadmap v1.0 · March 2026 · Confidential_
+_lole Product Roadmap v1.0 · March 2026 · Confidential_

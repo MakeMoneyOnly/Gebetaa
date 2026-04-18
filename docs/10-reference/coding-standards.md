@@ -1,4 +1,4 @@
-# Gebeta - Coding Standards
+# lole - Coding Standards
 
 **Version:** 1.0.0  
 **Last Updated:** February 17, 2026

@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Staff Training Manual
+# ገበጣ lole — Staff Training Manual
 
 **የሰራተኞች የስልጠና መምሪያ**
 **Version 1.0 · March 2026 · Bilingual: Amharic + English**
@@ -7,7 +7,7 @@
 
 ---
 
-## For the Trainer (Gebeta Staff)
+## For the Trainer (lole Staff)
 
 **Session structure (2 hours total):**
 
@@ -37,10 +37,10 @@ Do not lecture. Let them touch the tablet within the first 10 minutes. Waitstaff
 
 ---
 
-### What is Gebeta? / ገበጣ ምንድን ነው?
+### What is lole? / ገበጣ ምንድን ነው?
 
 **English:**
-Gebeta is a restaurant management system built in Ethiopia, for Ethiopia. Everything on this tablet — the menu, the orders, the payments — is in Amharic. Your job as a waiter just got simpler: take the order on the tablet, send it to the kitchen, and bring the bill when the guest is ready. No paper. No shouting orders across the restaurant. No mistakes.
+lole is a restaurant management system built in Ethiopia, for Ethiopia. Everything on this tablet — the menu, the orders, the payments — is in Amharic. Your job as a waiter just got simpler: take the order on the tablet, send it to the kitchen, and bring the bill when the guest is ready. No paper. No shouting orders across the restaurant. No mistakes.
 
 **አማርኛ:**
 ገበጣ ለኢትዮጵያ ምግብ ቤቶች የተሰራ የምግብ ቤት አስተዳደር ስርዓት ነው። በዚህ ታብሌት ላይ ያለው ሁሉ — ምናሌ፣ ትዕዛዞች፣ ክፍያዎች — በአማርኛ ነው። እንደ አስተናጋጅ ሥራዎ ቀለል ያለ ሆኗል፦ ትዕዛዙን በታብሌቱ ያስገቡ፣ ወደ ኩሽናው ይላኩ፣ እና ደንበኛው ሲጠይቅ ሂሳቡን ይስጡ። ወረቀት የለም። ጩኸት የለም። ስህተት አይኖርም።
@@ -74,7 +74,7 @@ Gebeta is a restaurant management system built in Ethiopia, for Ethiopia. Everyt
 **English:**
 Every waiter has their own 4-digit PIN. Your PIN identifies you on every order. Never share your PIN with another staff member.
 
-1. Open the Gebeta POS app from the tablet home screen
+1. Open the lole POS app from the tablet home screen
 2. The PIN screen appears automatically
 3. Tap your 4 digits
 4. Your name appears at the top of the screen — you are signed in
@@ -82,7 +82,7 @@ Every waiter has their own 4-digit PIN. Your PIN identifies you on every order. 
 **አማርኛ:**
 እያንዳንዱ አስተናጋጅ የራሱ 4-አሃዝ ፒን አለው። ፒንዎ እያንዳንዱ ትዕዛዝ ማን እንዳስገባ ያሳያል። ፒንዎን ለሌላ ሰው አይንገሩ።
 
-1. ከታብሌቱ መነሻ ገጽ Gebeta POS መተግበሪያ ይክፈቱ
+1. ከታብሌቱ መነሻ ገጽ lole POS መተግበሪያ ይክፈቱ
 2. የፒን ማያ ገጽ ራሱ ይታያል
 3. 4 ቁጥሮቻቸውን ይንኩ
 4. ስምዎ በማያ ገጽ አናት ላይ ይታያል — ተግብተዋል
@@ -402,17 +402,17 @@ The waiter does not need to manually enter a guest's phone order — it comes th
 
 1. Press the Home button to exit the app
 2. Wait 5 seconds
-3. Open Gebeta POS again from the home screen
+3. Open lole POS again from the home screen
 4. If still not working: press and hold the Power button → Restart
-5. After restart: open Gebeta POS, sign in with your PIN — all your unsent orders are saved
+5. After restart: open lole POS, sign in with your PIN — all your unsent orders are saved
 
 **አማርኛ:**
 
 1. የቤት (Home) ቁልፍ ይጫኑ
 2. 5 ሰከንድ ጠብቁ
-3. ከመነሻ ገጽ Gebeta POS ን እንደገና ይክፈቱ
+3. ከመነሻ ገጽ lole POS ን እንደገና ይክፈቱ
 4. ከሆነም ካልሰራ: የኃይል ቁልፍ ይያዙ → ዳግም አስጀምር (Restart)
-5. ከዳግም ጀምር በኋላ: Gebeta POS ን ይክፈቱ፣ ፒንዎን ያስገቡ — ያልተላኩ ትዕዛዞቻቸው ሁሉ ተቀምጠዋል
+5. ከዳግም ጀምር በኋላ: lole POS ን ይክፈቱ፣ ፒንዎን ያስገቡ — ያልተላኩ ትዕዛዞቻቸው ሁሉ ተቀምጠዋል
 
 ---
 
@@ -446,7 +446,7 @@ You **cannot** process Telebirr or Chapa payments without internet. Tell guests 
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║         ገበጣ GEBETA — ፈጣን ማጣቀሻ / QUICK REFERENCE        ║
+║         ገበጣ lole — ፈጣን ማጣቀሻ / QUICK REFERENCE        ║
 ╠══════════════════════════════════════════════════════════╣
 ║                                                          ║
 ║  1. ወደ ሥርዓቱ ይግቡ    LOGIN            → PIN ያስገቡ         ║
@@ -469,7 +469,7 @@ You **cannot** process Telebirr or Chapa payments without internet. Tell guests 
 ║  ኢንተርኔት ጠፋ     → ጥሬ ገንዘብ ብቻ ተቀበሉ                      ║
 ║  ፕሪንተሩ ዝም አለ  → Termux ይክፈቱ → node server.js ያሂዱ     ║
 ╠══════════════════════════════════════════════════════════╣
-║  ድጋፍ / SUPPORT:   Telegram → @GebetaSupport              ║
+║  ድጋፍ / SUPPORT:   Telegram → @loleSupport              ║
 ║  ሥራ ሰዓት ድጋፍ:    ከ6am–11pm EAT                           ║
 ╚══════════════════════════════════════════════════════════╝
 ```
@@ -491,4 +491,4 @@ Track these during Day 3 soft launch and address in Day 7 call.
 
 ---
 
-_Gebeta Staff Training Manual v1.0 · March 2026 · Bilingual Amharic / English_
+_lole Staff Training Manual v1.0 · March 2026 · Bilingual Amharic / English_

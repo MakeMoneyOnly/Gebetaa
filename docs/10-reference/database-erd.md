@@ -4,23 +4,23 @@
 
 ## Overview
 
-The Gebeta database contains **67 tables** (excluding views and functions) organized across 8 domains. The central entity is `restaurants`, which is referenced by nearly all tenant-scoped tables via `restaurant_id` foreign keys. Multi-tenant isolation is enforced through RLS policies on all tenant-scoped tables.
+The lole database contains **67 tables** (excluding views and functions) organized across 8 domains. The central entity is `restaurants`, which is referenced by nearly all tenant-scoped tables via `restaurant_id` foreign keys. Multi-tenant isolation is enforced through RLS policies on all tenant-scoped tables.
 
 ---
 
 ## Domain Index
 
-| Domain | Tables | Description |
-|--------|--------|-------------|
-| Core | 9 | Tenants, restaurants, users, staff, shifts, stations |
-| Orders | 13 | Orders, items, splits, payments, refunds, tips, reconciliation |
-| Menu | 10 | Categories, items, modifiers, discounts, happy hour, centralized configs |
-| KDS | 2 | Kitchen display items and events |
-| Guest | 11 | Guests, visits, campaigns, loyalty, reviews, gift cards |
-| Tables | 2 | Physical tables and sessions |
-| Notifications | 4 | Logs, metrics, push/device tokens |
-| Delivery | 6 | Partners, aggregators, external orders, service requests, support |
-| System | 10 | Audit logs, health, sync, reports, alerts, billing, compliance |
+| Domain        | Tables | Description                                                              |
+| ------------- | ------ | ------------------------------------------------------------------------ |
+| Core          | 9      | Tenants, restaurants, users, staff, shifts, stations                     |
+| Orders        | 13     | Orders, items, splits, payments, refunds, tips, reconciliation           |
+| Menu          | 10     | Categories, items, modifiers, discounts, happy hour, centralized configs |
+| KDS           | 2      | Kitchen display items and events                                         |
+| Guest         | 11     | Guests, visits, campaigns, loyalty, reviews, gift cards                  |
+| Tables        | 2      | Physical tables and sessions                                             |
+| Notifications | 4      | Logs, metrics, push/device tokens                                        |
+| Delivery      | 6      | Partners, aggregators, external orders, service requests, support        |
+| System        | 10     | Audit logs, health, sync, reports, alerts, billing, compliance           |
 
 ---
 
@@ -1032,50 +1032,50 @@ The `restaurants` table is the tenant-scoping entity. Almost every domain table 
 
 ### Cross-Domain Relationships
 
-| From | To | Relationship | Purpose |
-|------|----|-------------|---------|
-| orders | tables | order.table_id | Link order to physical table |
-| orders | guests | order.guest_id | Link order to guest |
-| orders | discounts | order.discount_id | Apply discount to order |
-| orders | happy_hour_schedules | order.happy_hour_schedule_id | Apply happy hour pricing |
-| order_items | menu_items | order_item.item_id | Reference menu item at order time |
-| kds_order_items | orders | kds_order_item.order_id | Display order on kitchen screen |
-| kds_order_items | order_items | kds_order_item.order_item_id | Track individual item preparation |
-| guest_visits | orders | guest_visit.order_id | Link visit to order |
-| guest_visits | tables | guest_visit.table_id | Track which table guest used |
-| table_sessions | restaurant_staff | table_session.assigned_staff_id | Staff assigned to table |
-| payments | tip_allocations | payment.tip_allocation_id | Tip from split check |
-| payments | tip_pools | payment.tip_pool_id | Tip to pool |
-| external_orders | delivery_partners | external_order.delivery_partner_id | Delivery fulfillment |
-| campaign_deliveries | orders | campaign_delivery.conversion_order_id | Track campaign conversion |
-| loyalty_transactions | orders | loyalty_transaction.order_id | Points from order |
-| gift_card_transactions | orders | gift_card_transaction.order_id | Gift card used in order |
+| From                   | To                   | Relationship                          | Purpose                           |
+| ---------------------- | -------------------- | ------------------------------------- | --------------------------------- |
+| orders                 | tables               | order.table_id                        | Link order to physical table      |
+| orders                 | guests               | order.guest_id                        | Link order to guest               |
+| orders                 | discounts            | order.discount_id                     | Apply discount to order           |
+| orders                 | happy_hour_schedules | order.happy_hour_schedule_id          | Apply happy hour pricing          |
+| order_items            | menu_items           | order_item.item_id                    | Reference menu item at order time |
+| kds_order_items        | orders               | kds_order_item.order_id               | Display order on kitchen screen   |
+| kds_order_items        | order_items          | kds_order_item.order_item_id          | Track individual item preparation |
+| guest_visits           | orders               | guest_visit.order_id                  | Link visit to order               |
+| guest_visits           | tables               | guest_visit.table_id                  | Track which table guest used      |
+| table_sessions         | restaurant_staff     | table_session.assigned_staff_id       | Staff assigned to table           |
+| payments               | tip_allocations      | payment.tip_allocation_id             | Tip from split check              |
+| payments               | tip_pools            | payment.tip_pool_id                   | Tip to pool                       |
+| external_orders        | delivery_partners    | external_order.delivery_partner_id    | Delivery fulfillment              |
+| campaign_deliveries    | orders               | campaign_delivery.conversion_order_id | Track campaign conversion         |
+| loyalty_transactions   | orders               | loyalty_transaction.order_id          | Points from order                 |
+| gift_card_transactions | orders               | gift_card_transaction.order_id        | Gift card used in order           |
 
 ---
 
 ## Views
 
-| View | Base Tables | Purpose |
-|------|-------------|---------|
+| View                          | Base Tables                     | Purpose                                |
+| ----------------------------- | ------------------------------- | -------------------------------------- |
 | `restaurant_staff_with_users` | restaurant_staff, user_profiles | Join staff with auth user profile data |
 
 ---
 
 ## Database Functions
 
-| Function | Args | Returns | Purpose |
-|----------|------|---------|---------|
-| `birr_to_santim` | birr_value: number | number | Convert Birr to Santim (cents) |
-| `santim_to_birr` | santim_value: number | number | Convert Santim to Birr |
-| `current_user_id` | none | string | Get current authenticated user ID |
-| `get_my_staff_role` | none | string | Get current user's staff role |
-| `is_agency_admin` | none | boolean | Check if current user is agency admin |
-| `user_has_restaurant_access` | restaurant_id, user_id | boolean | Verify user access to restaurant |
-| `increment_likes` | item_id | void | Increment menu item likes counter |
-| `increment_pending_changes` | config_id | void | Increment menu change queue counter |
-| `mark_stale_devices_offline` | none | void | Mark inactive devices as offline |
-| `check_auth_users_fk_cascade` | none | void | Verify auth users FK cascade integrity |
-| `complete_report_execution` | execution_id, status, result_url | void | Finalize report execution |
+| Function                      | Args                             | Returns | Purpose                                |
+| ----------------------------- | -------------------------------- | ------- | -------------------------------------- |
+| `birr_to_santim`              | birr_value: number               | number  | Convert Birr to Santim (cents)         |
+| `santim_to_birr`              | santim_value: number             | number  | Convert Santim to Birr                 |
+| `current_user_id`             | none                             | string  | Get current authenticated user ID      |
+| `get_my_staff_role`           | none                             | string  | Get current user's staff role          |
+| `is_agency_admin`             | none                             | boolean | Check if current user is agency admin  |
+| `user_has_restaurant_access`  | restaurant_id, user_id           | boolean | Verify user access to restaurant       |
+| `increment_likes`             | item_id                          | void    | Increment menu item likes counter      |
+| `increment_pending_changes`   | config_id                        | void    | Increment menu change queue counter    |
+| `mark_stale_devices_offline`  | none                             | void    | Mark inactive devices as offline       |
+| `check_auth_users_fk_cascade` | none                             | void    | Verify auth users FK cascade integrity |
+| `complete_report_execution`   | execution_id, status, result_url | void    | Finalize report execution              |
 
 ---
 

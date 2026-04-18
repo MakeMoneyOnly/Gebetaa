@@ -1,8 +1,8 @@
-# ገበጣ Gebeta — Disaster Recovery & Business Continuity Plan
+# ገበጣ lole — Disaster Recovery & Business Continuity Plan
 
 **Version 1.0 · March 2026 · Confidential — Engineering & Operations**
 
-> This document answers one question: when something catastrophic happens to Gebeta's infrastructure, what exactly do we do, in what order, and how do we know when we are recovered? It is written to be executed at 2am by someone who is stressed and has not slept. Every step is explicit. Nothing is left to memory.
+> This document answers one question: when something catastrophic happens to lole's infrastructure, what exactly do we do, in what order, and how do we know when we are recovered? It is written to be executed at 2am by someone who is stressed and has not slept. Every step is explicit. Nothing is left to memory.
 
 ---
 
@@ -115,7 +115,7 @@ Step 6 — COMMUNICATE RESOLUTION
 ### Scenario B — Vercel Outage
 
 **Probability:** Very low (Vercel Pro ~99.9%)
-**Detection:** Better Uptime alert in <60s · gebeta.app returns 5xx or times out
+**Detection:** Better Uptime alert in <60s · lole.app returns 5xx or times out
 
 **Restaurant impact:**
 
@@ -136,16 +136,16 @@ Step 1 — VERIFY (2 min)
 Step 2 — IF VERCEL CONFIRMED DOWN
   → Restaurants with installed PWA: no action needed — they continue normally
   → Restaurants with uninstalled PWA: guide to paper backup for duration
-  → Communicate: "Gebeta website temporarily unavailable. Installed tablets continue working."
+  → Communicate: "lole website temporarily unavailable. Installed tablets continue working."
 
 Step 3 — IF OUTAGE > 30 MINUTES: activate Cloudflare Pages cold standby
   (Requires pre-setup — see Prerequisites below)
   3a. Build: npx vercel build (locally, or trigger CI)
-  3b. Deploy: npx wrangler pages deploy .vercel/output/static --project-name gebeta-standby
+  3b. Deploy: npx wrangler pages deploy .vercel/output/static --project-name lole-standby
   3c. Update Cloudflare DNS:
-      gebeta.app CNAME → gebeta-standby.pages.dev
+      lole.app CNAME → lole-standby.pages.dev
       (TTL: 60 seconds — update takes ~1 minute to propagate)
-  3d. Test: confirm gebeta.app resolves to Pages deployment
+  3d. Test: confirm lole.app resolves to Pages deployment
   3e. Dashboard and guest ordering restored. POS PWA from cache still works.
 
 Step 4 — WHEN VERCEL RESTORES
@@ -154,7 +154,7 @@ Step 4 — WHEN VERCEL RESTORES
   → Write post-mortem
 
 PREREQUISITE (do this now, before first restaurant):
-  1. Create Cloudflare Pages project: "gebeta-standby"
+  1. Create Cloudflare Pages project: "lole-standby"
   2. Deploy current build to it (it sits idle, not in DNS)
   3. Update this runbook with the project URL
   4. Repeat after every major deploy to keep it current
@@ -183,8 +183,8 @@ Step 1 — VERIFY + ATTEMPT RESTART (3 min)
 Step 2 — IF RESTART FAILS: fallback to direct Next.js subgraph
   In Vercel dashboard → Environment Variables:
   Change: NEXT_PUBLIC_GRAPHQL_URL
-  From:   https://api.gebeta.app/graphql      (Apollo Router)
-  To:     https://gebeta.app/api/graphql      (Next.js direct)
+  From:   https://api.lole.app/graphql      (Apollo Router)
+  To:     https://lole.app/api/graphql      (Next.js direct)
   Trigger redeploy: ~60 seconds
 
   What this loses temporarily:
@@ -348,11 +348,11 @@ Step 5 — HARDEN
 
 ## Offline Operations Continuity
 
-For when Gebeta is fully inaccessible — power outage, extended provider failure, no internet.
+For when lole is fully inaccessible — power outage, extended provider failure, no internet.
 
-### What Always Works Without Gebeta
+### What Always Works Without lole
 
-| Function              | Without Gebeta                                                                   |
+| Function              | Without lole                                                                     |
 | --------------------- | -------------------------------------------------------------------------------- |
 | Take orders           | Paper order pads with carbon duplicate (one for kitchen, one for waiter)         |
 | Kitchen communication | Paper slips or verbal                                                            |
@@ -568,4 +568,4 @@ echo "=== Verification Complete ==="
 
 ---
 
-_Gebeta Disaster Recovery & Business Continuity Plan v1.0 · March 2026 · Confidential_
+_lole Disaster Recovery & Business Continuity Plan v1.0 · March 2026 · Confidential_

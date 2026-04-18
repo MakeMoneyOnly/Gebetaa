@@ -5,7 +5,7 @@
 
 ## Overview
 
-Gebeta uses a two-tier feature flag system for controlled rollouts and emergency kill switches.
+lole uses a two-tier feature flag system for controlled rollouts and emergency kill switches.
 
 ## Tier 1: Environment Variable Flags (Implemented)
 
@@ -65,9 +65,9 @@ These flags are documented in `docs/03-product/feature-flags.md` but have **no i
 | `erca_submission`       | Auto-submit ERCA e-invoice            | Sprint 8       |
 | `subscription_gating`   | Enforce plan limits                   | Sprint 8       |
 | `delivery_channels`     | Enable BEU/Deliver Addis order intake | Phase 2        |
-| `gebeta_now_app`        | Enable manager app API access         | Phase 4        |
+| `lole_now_app`          | Enable manager app API access         | Phase 4        |
 | `multi_location`        | Cross-location dashboard              | Phase 4        |
-| `gebeta_pay`            | Route payments through Gebeta Pay     | Horizon 2      |
+| `lole_pay`              | Route payments through lole Pay       | Horizon 2      |
 
 ### Implementation Requirements
 

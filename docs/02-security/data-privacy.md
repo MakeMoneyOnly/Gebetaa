@@ -1,22 +1,22 @@
-# ገበጣ Gebeta — Data Privacy & Protection Policy
+# ገበጣ lole — Data Privacy & Protection Policy
 
 **Version 1.0 · March 2026**
 
-> This policy covers what data Gebeta collects, why, how it is stored, who can access it, how long it is kept, and the rights of both restaurant operators and their guests. It is written to be readable by a restaurant owner, not just a lawyer.
+> This policy covers what data lole collects, why, how it is stored, who can access it, how long it is kept, and the rights of both restaurant operators and their guests. It is written to be readable by a restaurant owner, not just a lawyer.
 
 ---
 
 ## Legal Framework
 
-Gebeta operates under the following legal instruments relevant to Ethiopia:
+lole operates under the following legal instruments relevant to Ethiopia:
 
-| Instrument                                             | Relevance                                                                                                                                                                        |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Computer Crime Proclamation No. 958/2016**           | Prohibits unauthorized access to computer systems and data. Gebeta's RLS architecture and webhook HMAC verification directly address these obligations.                          |
-| **Electronic Transactions Proclamation No. 1072/2018** | Governs electronic payments and digital records. Gebeta's payment audit trail and idempotency records satisfy e-transaction record-keeping requirements.                         |
-| **ERCA Proclamation No. 983/2016**                     | Requires VAT-registered businesses to maintain transaction records. Gebeta's `reconciliation_entries` and ERCA e-invoice submission satisfy this.                                |
-| **NBE Directives on Digital Payments**                 | National Bank of Ethiopia requirements for merchant payment processing via Telebirr, Chapa, CBE Birr. Gebeta processes payments through licensed payment service providers only. |
-| **International standard (reference)**                 | GDPR principles are used as best-practice reference for data minimization and retention, even though GDPR does not directly apply in Ethiopia.                                   |
+| Instrument                                             | Relevance                                                                                                                                                                      |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Computer Crime Proclamation No. 958/2016**           | Prohibits unauthorized access to computer systems and data. lole's RLS architecture and webhook HMAC verification directly address these obligations.                          |
+| **Electronic Transactions Proclamation No. 1072/2018** | Governs electronic payments and digital records. lole's payment audit trail and idempotency records satisfy e-transaction record-keeping requirements.                         |
+| **ERCA Proclamation No. 983/2016**                     | Requires VAT-registered businesses to maintain transaction records. lole's `reconciliation_entries` and ERCA e-invoice submission satisfy this.                                |
+| **NBE Directives on Digital Payments**                 | National Bank of Ethiopia requirements for merchant payment processing via Telebirr, Chapa, CBE Birr. lole processes payments through licensed payment service providers only. |
+| **International standard (reference)**                 | GDPR principles are used as best-practice reference for data minimization and retention, even though GDPR does not directly apply in Ethiopia.                                 |
 
 ---
 
@@ -79,11 +79,11 @@ We collect different data depending on whether the guest is **anonymous** or **a
 
 ## What We Do NOT Collect (Ever)
 
-- **Raw card numbers (PAN)** — never transmitted through Gebeta infrastructure
+- **Raw card numbers (PAN)** — never transmitted through lole infrastructure
 - **Telebirr or CBE account passwords** — payments initiated via tokenized flows
 - **Biometrics** — no fingerprint, face, or voice data
 - **Location data** — no GPS tracking of guests or staff
-- **Social media data** — no Facebook, Google, or TikTok SDK on any Gebeta surface
+- **Social media data** — no Facebook, Google, or TikTok SDK on any lole surface
 - **Advertising identifiers** — no ad tracking, no remarketing pixels
 - **Children's data** — no features target users under 18; no COPPA-equivalent compliance required
 
@@ -130,22 +130,22 @@ We collect different data depending on whether the guest is **anonymous** or **a
 | Axiom application logs                                       | 30 days (raw), 90 days (aggregated) | Security audit trail                       |
 | Cloudflare access logs                                       | 7 days                              | Security monitoring                        |
 | Authentication audit logs                                    | 1 year                              | Security compliance                        |
-| Telegram message logs                                        | Not stored by Gebeta                | Telegram stores in their infrastructure    |
+| Telegram message logs                                        | Not stored by lole                  | Telegram stores in their infrastructure    |
 
 ---
 
 ## Data Access — Who Can See What
 
-### Inside Gebeta (Staff Access)
+### Inside lole (Staff Access)
 
-| Role                 | What They Can See                                                                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Owner                | All data for their restaurant(s). Cannot see other restaurants.                                                 |
-| Admin                | Same as Owner for their restaurant                                                                              |
-| Manager              | Orders, staff (own restaurant), analytics, inventory. Not payment API keys.                                     |
-| Waiter               | Active orders for their tables. Menu.                                                                           |
-| Kitchen / Bar        | KDS order items for their station only                                                                          |
-| Gebeta Platform Team | Anonymized aggregate metrics only. Never individual restaurant data without support ticket and written consent. |
+| Role               | What They Can See                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Owner              | All data for their restaurant(s). Cannot see other restaurants.                                                 |
+| Admin              | Same as Owner for their restaurant                                                                              |
+| Manager            | Orders, staff (own restaurant), analytics, inventory. Not payment API keys.                                     |
+| Waiter             | Active orders for their tables. Menu.                                                                           |
+| Kitchen / Bar      | KDS order items for their station only                                                                          |
+| lole Platform Team | Anonymized aggregate metrics only. Never individual restaurant data without support ticket and written consent. |
 
 ### Third-Party Access
 
@@ -155,13 +155,13 @@ We collect different data depending on whether the guest is **anonymous** or **a
 | **Telebirr (EthioTelecom)**                               | Payment initiation data. Provider processes payment, returns transaction ID.                           | Contract (Telebirr merchant agreement)    |
 | **ERCA**                                                  | E-invoice data (TIN, items, VAT amounts) for VAT-registered restaurants only                           | Legal obligation (ERCA Proclamation)      |
 | **Delivery partners (BEU, Deliver Addis, Zmall, Esoora)** | Menu items, order status. No guest personal data.                                                      | Contract (delivery integration agreement) |
-| **Supabase**                                              | All database content (as cloud database provider). Supabase processes on Gebeta's behalf.              | Data Processing Agreement                 |
+| **Supabase**                                              | All database content (as cloud database provider). Supabase processes on lole's behalf.                | Data Processing Agreement                 |
 | **Vercel**                                                | Application code, server-side env vars, access logs                                                    | Data Processing Agreement                 |
 | **Cloudflare**                                            | IP addresses, request metadata, edge-cached menu data                                                  | Data Processing Agreement                 |
 | **Sentry**                                                | Error logs, tagged with restaurant_id. No payment data in error context.                               | Data Processing Agreement                 |
 | **Telegram**                                              | EOD report content (revenue, top items, order count). No guest PII.                                    | Telegram Bot Terms                        |
 
-**We never sell data.** Gebeta's business model is subscription revenue from restaurants. Guest data is never sold, rented, or shared with advertisers.
+**We never sell data.** lole's business model is subscription revenue from restaurants. Guest data is never sold, rented, or shared with advertisers.
 
 ---
 
@@ -171,7 +171,7 @@ Guests who have created an authenticated account have the following rights:
 
 ### Right to Access
 
-Guests can request a copy of all personal data Gebeta holds about them. Email: privacy@gebeta.app. Response within 14 days.
+Guests can request a copy of all personal data lole holds about them. Email: privacy@lole.app. Response within 14 days.
 
 ### Right to Deletion
 
@@ -186,7 +186,7 @@ This does **not** delete:
 - `orders` and `order_items` records (retained 7 years for ERCA financial obligation) — these records are anonymized (guest_id set to null) but the order data itself is retained
 - Payment records (`payments` table) — retained 7 years per ERCA
 
-To request deletion: email privacy@gebeta.app or use the account deletion option in the guest profile screen (Phase 2 feature).
+To request deletion: email privacy@lole.app or use the account deletion option in the guest profile screen (Phase 2 feature).
 
 ### Right to Correction
 
@@ -229,7 +229,7 @@ If a data breach occurs that affects personal data:
 3. **Content of notification:**
     - What data was affected
     - When the breach occurred (estimated)
-    - What action Gebeta has taken
+    - What action lole has taken
     - What action the operator should take (e.g., reset staff passwords)
 4. **Regulatory notification** to relevant Ethiopian authorities if legally required
 
@@ -237,9 +237,9 @@ If a data breach occurs that affects personal data:
 
 ## Contact
 
-**Privacy questions:** privacy@gebeta.app  
-**Data deletion requests:** privacy@gebeta.app (subject: "Data Deletion Request")  
-**Data export requests:** privacy@gebeta.app (subject: "Data Export Request")  
+**Privacy questions:** privacy@lole.app  
+**Data deletion requests:** privacy@lole.app (subject: "Data Deletion Request")  
+**Data export requests:** privacy@lole.app (subject: "Data Export Request")  
 **Response SLA:** 14 business days for all privacy requests
 
 ---
@@ -252,4 +252,4 @@ If a data breach occurs that affects personal data:
 
 ---
 
-_Gebeta Data Privacy & Protection Policy v1.0 · March 2026_
+_lole Data Privacy & Protection Policy v1.0 · March 2026_

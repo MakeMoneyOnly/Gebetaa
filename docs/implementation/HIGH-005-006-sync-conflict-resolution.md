@@ -2,7 +2,7 @@
 
 ## Summary
 
-This implementation completes the sync worker functionality and integrates conflict resolution for the Gebeta Restaurant OS offline-first architecture.
+This implementation completes the sync worker functionality and integrates conflict resolution for the lole Restaurant OS offline-first architecture.
 
 ## Changes Made
 

@@ -1,4 +1,4 @@
-# Gebeta Platform Fee Model
+# lole Platform Fee Model
 
 **Audited and Revised for Addis Ababa operations**
 
@@ -21,7 +21,7 @@ If we implemented it as-is, we would create the wrong product contract in Mercha
 
 The draft treated `platform_fee_percentage` like a single truth for the whole business. That is too simplistic.
 
-Gebeta will have different commercial behaviors across:
+lole will have different commercial behaviors across:
 
 - Chapa-hosted guest checkout
 - Staff-collected cash
@@ -37,13 +37,13 @@ That is not true operationally.
 
 For v1, we only have strong product evidence for:
 
-- Chapa-hosted payments that can use a Gebeta-managed merchant subaccount
+- Chapa-hosted payments that can use a lole-managed merchant subaccount
 
 We do not have the same certainty for:
 
 - Telebirr direct flows
 - wallet-based settlement destinations
-- manual provider-to-Gebeta-to-merchant settlement loops
+- manual provider-to-lole-to-merchant settlement loops
 
 So the model must not promise that every digital payment follows the same settlement path.
 
@@ -70,7 +70,7 @@ Only the actual fee belongs in final financial reporting.
 
 ### 5. It overfit Toast's monetization without enough Ethiopia-specific guardrails
 
-Toast is useful inspiration, but Gebeta operates in a different environment:
+Toast is useful inspiration, but lole operates in a different environment:
 
 - smaller average ticket sizes
 - lower pricing tolerance
@@ -82,7 +82,7 @@ So we should copy Toast's structure, not Toast's fee shape.
 
 ## Revised North-Star Model
 
-Gebeta should monetize with four separate layers.
+lole should monetize with four separate layers.
 
 ### 1. Software plan fee
 
@@ -99,7 +99,7 @@ This pays for POS, KDS, table service, reporting, staff tools, and reliability.
 
 ### 2. Hosted checkout fee
 
-A Gebeta fee applied only when Gebeta initiates and manages the digital checkout flow.
+A lole fee applied only when lole initiates and manages the digital checkout flow.
 
 For v1 this means:
 
@@ -136,7 +136,7 @@ Keep the launch model simple and transparent:
 - `Monthly plan fee`: fixed per restaurant location
 - `Hosted checkout fee`: only on Chapa-hosted guest payments
 - `Cash`: no processor fee, no hosted checkout fee
-- `Manual staff settlement`: no hosted checkout fee unless Gebeta launches the digital flow
+- `Manual staff settlement`: no hosted checkout fee unless lole launches the digital flow
 
 ### V1 field mapping
 
@@ -160,7 +160,7 @@ Rules:
 
 - Show supported banks only
 - Do not show wallet rails unless Chapa explicitly documents wallet-based subaccounts for this flow
-- Explain that Gebeta creates and manages the Chapa settlement subaccount
+- Explain that lole creates and manages the Chapa settlement subaccount
 - Explain that guest payment methods are configured separately
 
 ### Guest Menu QR
@@ -288,7 +288,7 @@ Merchant reporting should distinguish:
 
 - gross sales
 - provider fees
-- Gebeta fees
+- lole fees
 - net payout
 - payout status
 
@@ -331,7 +331,7 @@ Use wording like:
 
 - "Payout bank"
 - "Account holder name"
-- "Gebeta creates and manages this restaurant's Chapa settlement subaccount."
+- "lole creates and manages this restaurant's Chapa settlement subaccount."
 - "Guest payment methods stay separate from this payout setup."
 
 ### Guest Menu and Online Ordering
@@ -358,12 +358,12 @@ Not:
 
 ## Final Recommendation
 
-Gebeta should take inspiration from Toast in structure, not by blindly copying a blended transaction fee strategy.
+lole should take inspiration from Toast in structure, not by blindly copying a blended transaction fee strategy.
 
 The correct platform model is:
 
 - SaaS fee for operating system value
-- hosted checkout fee where Gebeta actually runs the payment flow
+- hosted checkout fee where lole actually runs the payment flow
 - provider-fee awareness for reconciliation
 - separate merchant payout configuration
 - separate guest checkout choice

@@ -6,7 +6,7 @@
 
 ## Summary
 
-This document summarizes the database performance optimizations implemented for the Gebeta Restaurant OS, addressing three high-priority issues identified in the audit.
+This document summarizes the database performance optimizations implemented for the lole Restaurant OS, addressing three high-priority issues identified in the audit.
 
 ---
 

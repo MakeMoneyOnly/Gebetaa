@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — System Architecture
+# ገበጣ lole — System Architecture
 
 **Version 1.0 · March 2026**
 
@@ -6,7 +6,7 @@
 
 ## Architecture Philosophy
 
-Gebeta is designed as a **Modular Monolith with Federation Boundaries**. This is not a compromise — it is a deliberate choice that gives a solo AI-assisted builder 80% of the operational benefits of microservices with 10% of the operational cost.
+lole is designed as a **Modular Monolith with Federation Boundaries**. This is not a compromise — it is a deliberate choice that gives a solo AI-assisted builder 80% of the operational benefits of microservices with 10% of the operational cost.
 
 The key insight: a GraphQL Federation boundary means any domain can be extracted to an independent service with **zero client-side changes**. The POS, dashboard, and guest ordering surfaces never know or care whether `orders` is served from the Next.js monolith or a NestJS microservice — Apollo Router abstracts that entirely.
 
@@ -175,7 +175,7 @@ src/domains/{name}/
 
 ```
 1. Guest scans QR code on table
-2. Browser opens https://gebetamenu.com/{slug}?table=A3&sig=...&exp=...
+2. Browser opens https://lolemenu.com/{slug}?table=A3&sig=...&exp=...
 3. GET /api/guest/context → HMAC validated server-side → returns restaurantId + tableId
 4. Splash screen: Login / Signup / Skip to Menu
 5. Skip → POST /api/guest/session → creates guest_menu_sessions record
@@ -253,7 +253,7 @@ menu.service       ──XADD──►  events:menu.updated      ──►  Redi
                                                         ──►  PowerSync (push to tablets)
 
 inventory trigger  ──XADD──►  events:inventory.low     ──►  Telegram → owner
-                                                        ──►  Gebeta Now push notification
+                                                        ──►  lole Now push notification
 
 loyalty.service    ──XADD──►  events:loyalty.points_earned ──►  Telegram → guest
                                                              ──►  Guest PWA notification
@@ -463,8 +463,8 @@ export class OrdersModule {}
 ## Infrastructure Architecture
 
 ```
-DNS: gebeta.app → Cloudflare (proxied)
-DNS: gebetamenu.com → Cloudflare (proxied)
+DNS: lole.app → Cloudflare (proxied)
+DNS: lolemenu.com → Cloudflare (proxied)
 
 Cloudflare → Vercel (via Cloudflare proxy)
   ↓
@@ -534,7 +534,7 @@ Layer 6: Payment Security
 
 ```
 Data signed: "{slug}:{tableNumber}:{expiresAt}"
-Signature:   HMAC-SHA256(data, GEBETA_QR_SECRET)
+Signature:   HMAC-SHA256(data, lole_QR_SECRET)
 URL param:   ?sig={64-hex-char-signature}&exp={timestamp}
 Verification: crypto.timingSafeEqual(computedSig, receivedSig)
 Expiry:      24 hours from generation
@@ -581,4 +581,4 @@ At 500 restaurants, menu caching via Cloudflare Worker eliminates ~60% of DB rea
 
 ---
 
-_Gebeta System Architecture v1.0 · March 2026_
+_lole System Architecture v1.0 · March 2026_

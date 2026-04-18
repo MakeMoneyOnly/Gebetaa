@@ -1,11 +1,11 @@
 # Enhanced Rollback Procedures
 
 Last updated: 2026-04-10
-Scope: All Gebeta production systems (application, database, feature flags)
+Scope: All lole production systems (application, database, feature flags)
 
 ## Overview
 
-This document provides comprehensive rollback procedures for Gebeta's production environment, covering application deployments, database migrations, and feature flags. It extends the base rollback procedures in [rollback-procedures.md](./../../implementation/rollback-procedures.md) with database and feature-flag rollback strategies, a decision tree, verification checklists, and communication templates.
+This document provides comprehensive rollback procedures for lole's production environment, covering application deployments, database migrations, and feature flags. It extends the base rollback procedures in [rollback-procedures.md](./../../implementation/rollback-procedures.md) with database and feature-flag rollback strategies, a decision tree, verification checklists, and communication templates.
 
 **Rollback mechanisms in priority order:**
 

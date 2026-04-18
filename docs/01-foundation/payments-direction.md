@@ -1,6 +1,6 @@
 # Payment Direction
 
-Yes, a Terminal is different from the current waiter POS, but for Gebeta it does not need Toast-style proprietary hardware in v1. The right Ethiopia-tailored model is:
+Yes, a Terminal is different from the current waiter POS, but for lole it does not need Toast-style proprietary hardware in v1. The right Ethiopia-tailored model is:
 
 - **Guest QR / Guest Menu**: guest-led mobile payment on their own phone.
 - **Online ordering**: prepaid digital checkout before order acceptance.

@@ -1,7 +1,7 @@
-# ገበጣ Gebeta — Restaurant Onboarding Guide
+# ገበጣ lole — Restaurant Onboarding Guide
 
 **Version 1.0 · March 2026**
-**For Gebeta Staff & Founders Only — Not for Distribution**
+**For lole Staff & Founders Only — Not for Distribution**
 
 > This guide covers everything required to get a new restaurant from first conversation to first live order. Follow every step in sequence. Do not skip hardware verification. A bad setup on Day 1 creates support tickets for months.
 
@@ -92,7 +92,7 @@ The restaurant purchases hardware — you advise, you do not supply.
 On your laptop (not the tablet):
 
 ```
-1. Go to gebeta.app/register
+1. Go to lole.app/register
 2. Create owner account with owner's email
 3. Complete restaurant profile:
    - Name in English and Amharic
@@ -181,7 +181,7 @@ For each item within a category:
 Write all PINs on a card and give it to the owner.
 Tell the owner: keep this card in your office, not at the POS station.
 
-KDS-only staff (kitchen, bar) do NOT need Gebeta accounts.
+KDS-only staff (kitchen, bar) do NOT need lole accounts.
 KDS runs on a shared tablet with no individual login.
 ```
 
@@ -196,19 +196,19 @@ On the Android tablet:
 
 2. Open Chrome (NOT Samsung Internet or other browsers)
 
-3. Navigate to: gebeta.app/pos/waiter
+3. Navigate to: lole.app/pos/waiter
 
 4. Log in with owner's account (one-time — this links tablet to restaurant)
 
 5. Install as PWA:
    - Chrome shows "Add to Home Screen" banner at bottom of screen
    - If not visible: tap Chrome menu (⋮) → "Add to Home Screen"
-   - Name: "Gebeta POS"
+   - Name: "lole POS"
    - Tap "Add"
 
 6. Verify:
    - Close Chrome completely
-   - Open Gebeta POS from home screen
+   - Open lole POS from home screen
    - Confirm: opens fullscreen (no Chrome address bar)
    - Enter any waiter's PIN — menu should load in Amharic
 
@@ -253,8 +253,8 @@ PART C — Install print server
 
    pkg update -y
    pkg install nodejs-lts -y
-   mkdir -p ~/gebeta-print
-   cd ~/gebeta-print
+   mkdir -p ~/lole-print
+   cd ~/lole-print
    npm init -y
    npm install express node-thermal-printer
 
@@ -270,7 +270,7 @@ PART C — Install print server
 
 5. Test run:
    node server.js
-   → Should print: "Gebeta Print Server ready on localhost:3001"
+   → Should print: "lole Print Server ready on localhost:3001"
 
 6. Verify from browser:
    Open Chrome on same tablet → go to: http://localhost:3001/health
@@ -282,7 +282,7 @@ PART C — Install print server
 
    Paste:
    #!/data/data/com.termux/files/usr/bin/sh
-   cd ~/gebeta-print && node server.js >> ~/print.log 2>&1 &
+   cd ~/lole-print && node server.js >> ~/print.log 2>&1 &
 
    Ctrl+X → Y → Enter
 
@@ -293,7 +293,7 @@ PART C — Install print server
    Follow the permission prompt
 
 PART D — Test a real receipt
-   In the Gebeta POS, take a test order and tap Print Receipt
+   In the lole POS, take a test order and tap Print Receipt
    → Printer should produce a bilingual (Amharic + English) receipt
 ```
 
@@ -316,15 +316,15 @@ For each KDS station:
 
 1. Open Chrome on the KDS tablet
 2. Go to the station URL:
-   Kitchen:   gebeta.app/kds/kds
-   Bar:       gebeta.app/kds/bar
-   Coffee:    gebeta.app/kds/coffee
-   Dessert:   gebeta.app/kds/dessert
-   Expeditor: gebeta.app/kds/expeditor
+   Kitchen:   lole.app/kds/kds
+   Bar:       lole.app/kds/bar
+   Coffee:    lole.app/kds/coffee
+   Dessert:   lole.app/kds/dessert
+   Expeditor: lole.app/kds/expeditor
 
 3. Log in with owner's account
 
-4. Install as PWA: Chrome (⋮) → Add to Home Screen → "Gebeta KDS [Station]"
+4. Install as PWA: Chrome (⋮) → Add to Home Screen → "lole KDS [Station]"
 
 5. Open from home screen to confirm fullscreen
 
@@ -424,7 +424,7 @@ Be physically present for the first 1–2 hours of real service. You are a silen
 | -------------------------------------- | ------------------------------------------- | ------------------------------------------------------------ |
 | KDS not showing new orders             | KDS tablet screen is asleep                 | Set screen timeout to Never — repeat this step               |
 | Order appears on KDS but wrong station | Item category assigned to wrong KDS station | Fix in /merchant/menu → edit category → reassign KDS station |
-| Print button does nothing              | Termux print server stopped                 | Open Termux → run: `cd ~/gebeta-print && node server.js`     |
+| Print button does nothing              | Termux print server stopped                 | Open Termux → run: `cd ~/lole-print && node server.js`       |
 | Staff forgot PIN                       | PINs not memorised yet                      | Show owner: /merchant/staff → view PIN for that staff member |
 | Menu item missing                      | Forgotten during setup                      | Add on the spot via /merchant/menu → + Add Item              |
 | "Connection error" on POS              | WiFi dropped                                | Check WiFi router — reconnect tablet                         |
@@ -500,7 +500,7 @@ These referrals are your primary growth engine in Phase 1.
 ## Common Setup FAQs
 
 **Old tablet (Android 7 or 8) — will it work?**
-Test: open Chrome → gebeta.app. If it loads and shows PWA install prompt, it works. Chrome 90+ runs on Android 7+.
+Test: open Chrome → lole.app. If it loads and shows PWA install prompt, it works. Chrome 90+ runs on Android 7+.
 
 **Owner wants to use iPad instead of Android:**
 Termux is not available on iOS. Printing requires Bluetooth printer + AirPrint or Safari print. Functional but less reliable. Recommend Android strongly. Do not block the sale — work with what they have.
@@ -516,4 +516,4 @@ Older Xprinter firmware does not support UTF-8 Ethiopic. English-only receipt is
 
 ---
 
-_Gebeta Restaurant Onboarding Guide v1.0 · March 2026 · For Gebeta Staff Only_
+_lole Restaurant Onboarding Guide v1.0 · March 2026 · For lole Staff Only_

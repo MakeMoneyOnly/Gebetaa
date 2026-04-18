@@ -1,8 +1,8 @@
-# ገበጣ Gebeta — Feature Flags & Release Strategy
+# ገበጣ lole — Feature Flags & Release Strategy
 
 **Version 1.0 · March 2026**
 
-> This document defines how Gebeta ships features safely to a live restaurant platform. At 50 restaurants, a broken deploy affects real revenue. At 200 restaurants, it is a business-threatening event. Feature flags are how you maintain velocity without risking reliability.
+> This document defines how lole ships features safely to a live restaurant platform. At 50 restaurants, a broken deploy affects real revenue. At 200 restaurants, it is a business-threatening event. Feature flags are how you maintain velocity without risking reliability.
 
 ---
 
@@ -16,7 +16,7 @@ A restaurant running a Friday dinner service at 7PM does not care that you are d
 
 ## Feature Flag Architecture
 
-Gebeta uses a **two-tier flag system**: database-backed flags for restaurant-level control, and environment-variable flags for platform-wide emergency overrides.
+lole uses a **two-tier flag system**: database-backed flags for restaurant-level control, and environment-variable flags for platform-wide emergency overrides.
 
 ### Tier 1 — Restaurant-Level Flags (Database)
 
@@ -166,9 +166,9 @@ These are all flags in the system, their current state, and their release plan.
 | `eod_telegram_report`   | Send daily report to owner via Telegram at 10PM      | 🔴 Off        | Global on — Sprint 7              |
 | `timescaledb_analytics` | Route analytics queries to TimescaleDB hypertable    | 🔴 Off        | Global on — Sprint 7              |
 | `delivery_channels`     | Enable BEU / Deliver Addis order intake              | 🔴 Off        | Per-restaurant — Phase 2          |
-| `gebeta_now_app`        | Enable manager app API access                        | 🔴 Off        | Per-restaurant — Phase 4          |
+| `lole_now_app`          | Enable manager app API access                        | 🔴 Off        | Per-restaurant — Phase 4          |
 | `multi_location`        | Consolidated cross-location dashboard                | 🔴 Off        | Enterprise only — Phase 4         |
-| `gebeta_pay`            | Route payments through Gebeta Pay (not Chapa)        | 🔴 Off        | Beta restaurants only — Horizon 2 |
+| `lole_pay`              | Route payments through lole Pay (not Chapa)          | 🔴 Off        | Beta restaurants only — Horizon 2 |
 
 ---
 
@@ -378,4 +378,4 @@ Dead flags accumulate into technical debt. A flag that has been globally enabled
 
 ---
 
-_Gebeta Feature Flags & Release Strategy v1.0 · March 2026_
+_lole Feature Flags & Release Strategy v1.0 · March 2026_

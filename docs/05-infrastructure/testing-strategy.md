@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Testing Strategy
+# ገበጣ lole — Testing Strategy
 
 **Version 1.0 · March 2026**
 
@@ -661,7 +661,7 @@ test('owner can view revenue analytics for last 30 days', async ({ page }) => {
 
 ```bash
 # Against staging environment (set PLAYWRIGHT_BASE_URL)
-PLAYWRIGHT_BASE_URL=https://staging.gebeta.app npx playwright test
+PLAYWRIGHT_BASE_URL=https://staging.lole.app npx playwright test
 
 # Headed mode for debugging
 npx playwright test --headed --slowMo=500
@@ -676,7 +676,7 @@ npx playwright test src/__tests__/e2e/critical-flows.spec.ts
 
 ```yaml
 # .github/workflows/ci.yml
-name: Gebeta CI
+name: lole CI
 
 on:
     push:
@@ -744,7 +744,7 @@ jobs:
             - name: E2E critical flows
               run: npx playwright test
               env:
-                  PLAYWRIGHT_BASE_URL: https://staging.gebeta.app
+                  PLAYWRIGHT_BASE_URL: https://staging.lole.app
 
     deploy:
         runs-on: ubuntu-latest
@@ -789,4 +789,4 @@ jobs:
 
 ---
 
-_Gebeta Testing Strategy v1.0 · March 2026_
+_lole Testing Strategy v1.0 · March 2026_

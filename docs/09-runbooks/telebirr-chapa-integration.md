@@ -2,13 +2,13 @@
 
 **Version 1.0 · March 2026 · For the Builder**
 
-> This runbook covers troubleshooting and resolution procedures for Telebirr and Chapa payment integration issues in Gebeta.
+> This runbook covers troubleshooting and resolution procedures for Telebirr and Chapa payment integration issues in lole.
 
 ---
 
 ## Overview
 
-Gebeta integrates with two primary payment providers for the Ethiopian market:
+lole integrates with two primary payment providers for the Ethiopian market:
 
 | Provider     | Type                  | Use Case                                        |
 | ------------ | --------------------- | ----------------------------------------------- |
@@ -23,7 +23,7 @@ This runbook addresses common integration issues and their resolution.
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Gebeta    │────▶│   Payment   │────▶│  Telebirr/  │
+│   lole    │────▶│   Payment   │────▶│  Telebirr/  │
 │   App       │     │   Service   │     │  Chapa API  │
 └─────────────┘     └─────────────┘     └─────────────┘
        │                   │                   │
@@ -63,7 +63,7 @@ echo "APP_ID: ${TELEBIRR_FABRIC_APP_ID:0:8}..."
 echo "MERCHANT_CODE: $TELEBIRR_MERCHANT_CODE"
 
 # Check recent payment attempts
-curl https://gebeta.app/api/admin/payments/recent-failures?provider=telebirr
+curl https://lole.app/api/admin/payments/recent-failures?provider=telebirr
 ```
 
 **Resolution:**
@@ -134,7 +134,7 @@ ORDER BY created_at DESC;
 2. **Trigger manual verification:**
 
     ```bash
-    curl -X POST https://gebeta.app/api/payments/verify \
+    curl -X POST https://lole.app/api/payments/verify \
       -H "Content-Type: application/json" \
       -d '{"payment_id": "<payment_id>", "provider": "telebirr"}'
     ```
@@ -208,8 +208,8 @@ curl -X POST https://api.chapa.co/v1/transaction/initialize \
     "first_name": "Test",
     "last_name": "User",
     "tx_ref": "test-'$(date +%s)'",
-    "callback_url": "https://gebeta.app/api/webhooks/chapa",
-    "return_url": "https://gebeta.app/payment/return"
+    "callback_url": "https://lole.app/api/webhooks/chapa",
+    "return_url": "https://lole.app/payment/return"
   }'
 
 # Check Chapa status
@@ -272,7 +272,7 @@ AND created_at > NOW() - INTERVAL '2 hours';
 
 2. **Trigger manual verification:**
     ```bash
-    curl -X POST https://gebeta.app/api/payments/verify \
+    curl -X POST https://lole.app/api/payments/verify \
       -H "Content-Type: application/json" \
       -d '{"tx_ref": "<tx_ref>", "provider": "chapa"}'
     ```
@@ -372,11 +372,11 @@ OR p.currency != 'ETB';
 
 ```bash
 # Check all payment providers
-curl https://gebeta.app/api/health/payments
+curl https://lole.app/api/health
 
 # Check specific provider
-curl https://gebeta.app/api/health/payments/telebirr
-curl https://gebeta.app/api/health/payments/chapa
+curl https://lole.app/api/health/telebirr
+curl https://lole.app/api/health/chapa
 ```
 
 ### Key Metrics to Monitor
@@ -413,7 +413,7 @@ alerts:
 
 ```bash
 # 1. Test Telebirr QR generation
-curl -X POST https://gebeta.app/api/payments/initiate \
+curl -X POST https://lole.app/api/payments/initiate \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "telebirr",
@@ -423,7 +423,7 @@ curl -X POST https://gebeta.app/api/payments/initiate \
   }'
 
 # 2. Test Chapa initialization
-curl -X POST https://gebeta.app/api/payments/initiate \
+curl -X POST https://lole.app/api/payments/initiate \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "chapa",
@@ -434,7 +434,7 @@ curl -X POST https://gebeta.app/api/payments/initiate \
   }'
 
 # 3. Test webhook handling
-curl -X POST https://gebeta.app/api/webhooks/telebirr \
+curl -X POST https://lole.app/api/webhooks/telebirr \
   -H "Content-Type: application/json" \
   -H "X-Telebirr-Signature: test-signature" \
   -d '{"test": true}'

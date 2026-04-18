@@ -2,13 +2,13 @@
 
 **Version 1.0 · March 2026 · For the Builder**
 
-> This runbook covers the detection, response, and recovery procedures for payment gateway outages affecting Telebirr, Chapa, and other payment providers in Gebeta.
+> This runbook covers the detection, response, and recovery procedures for payment gateway outages affecting Telebirr, Chapa, and other payment providers in lole.
 
 ---
 
 ## Overview
 
-Gebeta integrates with multiple payment providers for the Ethiopian market:
+lole integrates with multiple payment providers for the Ethiopian market:
 
 - **Telebirr** - QR-based mobile money (primary)
 - **Chapa** - Card and bank transfers (secondary)
@@ -22,21 +22,21 @@ This runbook ensures business continuity when payment providers experience outag
 
 ### Real-time Status Checks
 
-| Provider      | Status Page                 | API Health Endpoint          |
-| ------------- | --------------------------- | ---------------------------- |
-| Telebirr      | No public page              | Internal health check        |
-| Chapa         | https://chapa.co/status     | `/api/health/payments/chapa` |
-| Supabase (DB) | https://status.supabase.com | `/api/health`                |
+| Provider      | Status Page                 | API Health Endpoint   |
+| ------------- | --------------------------- | --------------------- |
+| Telebirr      | No public page              | Internal health check |
+| Chapa         | https://chapa.co/status     | `/api/health/chapa`   |
+| Supabase (DB) | https://status.supabase.com | `/api/health`         |
 
 ### Internal Health Monitoring
 
 ```bash
 # Check all payment provider health
-curl https://gebeta.app/api/health/payments
+curl https://lole.app/api/health
 
 # Check specific provider
-curl https://gebeta.app/api/health/payments/telebirr
-curl https://gebeta.app/api/health/payments/chapa
+curl https://lole.app/api/health/telebirr
+curl https://lole.app/api/health/chapa
 ```
 
 ---
@@ -200,7 +200,7 @@ When a payment provider comes back online:
 
     ```bash
     # Test payment initiation with small amount
-    curl -X POST https://gebeta.app/api/payments/test-initiate \
+    curl -X POST https://lole.app/api/payments/test-initiate \
       -H "Content-Type: application/json" \
       -d '{"provider": "telebirr", "amount": 1}'
     ```
@@ -209,7 +209,7 @@ When a payment provider comes back online:
 
     ```bash
     # Trigger retry job for pending payments
-    curl -X POST https://gebeta.app/api/admin/retry-pending-payments
+    curl -X POST https://lole.app/api/admin/retry-pending-payments
     ```
 
 3. **Communicate recovery:**
@@ -268,13 +268,13 @@ When webhooks fail, payments may be completed but not marked:
 
     ```bash
     # Verify specific payment with provider
-    curl https://gebeta.app/api/payments/verify/{payment_id}
+    curl https://lole.app/api/payments/verify/{payment_id}
     ```
 
 3. **Batch verification:**
     ```bash
     # Verify all pending payments older than 10 minutes
-    curl -X POST https://gebeta.app/api/payments/batch-verify \
+    curl -X POST https://lole.app/api/payments/batch-verify \
       -H "Content-Type: application/json" \
       -d '{"older_than_minutes": 10}'
     ```

@@ -4,9 +4,10 @@ Last updated: 2026-04-04
 
 ## Overview
 
-This document describes how to run load tests for the Gebeta Restaurant OS platform. Load tests validate that critical API endpoints meet their SLO targets under peak load conditions.
+This document describes how to run load tests for the lole Restaurant OS platform. Load tests validate that critical API endpoints meet their SLO targets under peak load conditions.
 
 The test suite covers:
+
 - **Core API endpoints** - Command center, orders, order status updates
 - **Peak hour simulations** - Lunch and dinner rush scenarios
 - **KDS high-volume** - Kitchen display system under load
@@ -27,36 +28,36 @@ The following endpoints are tested with their respective performance thresholds:
 
 ### Peak Hour Ordering
 
-| Endpoint          | Method | P95 Latency | Error Rate |
-| ----------------- | ------ | ----------- | ---------- |
-| `/api/orders`     | POST   | ≤ 500ms     | < 1%       |
+| Endpoint      | Method | P95 Latency | Error Rate |
+| ------------- | ------ | ----------- | ---------- |
+| `/api/orders` | POST   | ≤ 500ms     | < 1%       |
 
 ### KDS Performance
 
-| Endpoint                | Method | P95 Latency | Error Rate |
-| ----------------------- | ------ | ----------- | ---------- |
-| `/api/kds/queue`        | GET    | ≤ 300ms     | < 1%       |
-| `/api/kds/items/:id/status` | PATCH | ≤ 200ms   | < 1%       |
+| Endpoint                    | Method | P95 Latency | Error Rate |
+| --------------------------- | ------ | ----------- | ---------- |
+| `/api/kds/queue`            | GET    | ≤ 300ms     | < 1%       |
+| `/api/kds/items/:id/status` | PATCH  | ≤ 200ms     | < 1%       |
 
 ### Payment Gateway
 
-| Endpoint          | Method | P95 Latency | Error Rate | Success Rate |
-| ----------------- | ------ | ----------- | ---------- | ------------ |
-| `/api/payments`   | POST   | ≤ 2000ms    | < 2%       | > 95%        |
-| `/api/payments/webhook` | POST | ≤ 500ms   | < 1%       | N/A          |
+| Endpoint                | Method | P95 Latency | Error Rate | Success Rate |
+| ----------------------- | ------ | ----------- | ---------- | ------------ |
+| `/api/payments`         | POST   | ≤ 2000ms    | < 2%       | > 95%        |
+| `/api/payments/webhook` | POST   | ≤ 500ms     | < 1%       | N/A          |
 
 ### Table Sessions
 
-| Endpoint                    | Method | P95 Latency | Error Rate |
-| --------------------------- | ------ | ----------- | ---------- |
-| `/api/sessions`             | POST   | ≤ 400ms     | < 1%       |
-| `/api/sessions/:id/heartbeat` | POST | ≤ 200ms    | < 1%       |
+| Endpoint                      | Method | P95 Latency | Error Rate |
+| ----------------------------- | ------ | ----------- | ---------- |
+| `/api/sessions`               | POST   | ≤ 400ms     | < 1%       |
+| `/api/sessions/:id/heartbeat` | POST   | ≤ 200ms     | < 1%       |
 
 ### Realtime Propagation
 
-| Metric                      | Target |
-| --------------------------- | ------ |
-| Order state propagation     | P95 ≤ 2000ms |
+| Metric                          | Target       |
+| ------------------------------- | ------------ |
+| Order state propagation         | P95 ≤ 2000ms |
 | Table/session state propagation | P95 ≤ 2000ms |
 
 ## Prerequisites
@@ -119,7 +120,7 @@ k6 run k6/peak-flow-scenarios.js \
 k6 run k6/peak-flow-scenarios.js \
   --vus 20 \
   --duration 2m \
-  --env K6_BASE_URL=https://staging.gebeta.app \
+  --env K6_BASE_URL=https://staging.lole.app \
   --env K6_USE_BYPASS_AUTH=true
 ```
 
@@ -131,20 +132,20 @@ k6 run k6/peak-flow-scenarios.js \
 k6 run k6/peak-flow-scenarios.js \
   --vus 10 \
   --duration 1m \
-  --env K6_BASE_URL=https://gebeta.app \
+  --env K6_BASE_URL=https://lole.app \
   --env K6_AUTH_TOKEN=<your-service-token>
 ```
 
 ## Environment Variables
 
-| Variable             | Description                      | Default                 |
-| -------------------- | -------------------------------- | ----------------------- |
-| `K6_BASE_URL`        | Base URL for the API             | `http://localhost:3000` |
-| `K6_AUTH_TOKEN`      | Bearer token for authentication  | (none)                  |
-| `K6_USE_BYPASS_AUTH` | Use `x-e2e-bypass-auth` header   | `false`                 |
-| `K6_ORDER_ID`        | Order ID for status update tests | `test-order-id`         |
-| `K6_RESTAURANT_ID`   | Restaurant ID for multi-tenant tests | `test-restaurant-id` |
-| `K6_TABLE_ID`        | Table ID for session tests       | `test-table-id`         |
+| Variable             | Description                          | Default                 |
+| -------------------- | ------------------------------------ | ----------------------- |
+| `K6_BASE_URL`        | Base URL for the API                 | `http://localhost:3000` |
+| `K6_AUTH_TOKEN`      | Bearer token for authentication      | (none)                  |
+| `K6_USE_BYPASS_AUTH` | Use `x-e2e-bypass-auth` header       | `false`                 |
+| `K6_ORDER_ID`        | Order ID for status update tests     | `test-order-id`         |
+| `K6_RESTAURANT_ID`   | Restaurant ID for multi-tenant tests | `test-restaurant-id`    |
+| `K6_TABLE_ID`        | Table ID for session tests           | `test-table-id`         |
 
 ## Running Specific Test Scenarios
 
@@ -209,7 +210,7 @@ The load test workflow is defined in [`.github/workflows/load-tests.yml`](../../
 
 To manually trigger a load test:
 
-1. Go to the [GitHub Actions workflow](https://github.com/gebeta/gebeta/actions/workflows/load-tests.yml)
+1. Go to the [GitHub Actions workflow](https://github.com/lole/lole/actions/workflows/load-tests.yml)
 2. Click "Run workflow"
 3. Select the environment (staging/production)
 4. Click "Run workflow"

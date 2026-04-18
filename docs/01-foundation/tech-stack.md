@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Tech Stack
+# ገበጣ lole — Tech Stack
 
 **Version 1.0 · March 2026 · Definitive Reference**
 
@@ -150,7 +150,7 @@ All monetary values are stored as `INTEGER` in **Santim** (100 santim = 1 ETB). 
 
 | Technology                     | Role                                           | Why                                                                                                                                                      |
 | ------------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **React Native (Expo SDK 52)** | Gebeta Now manager app — iOS + Android         | One codebase, OTA updates, Expo EAS build for APK distribution. Ethiopian Play Store access is inconsistent — EAS direct APK distribution bypasses this. |
+| **React Native (Expo SDK 52)** | lole Now manager app — iOS + Android           | One codebase, OTA updates, Expo EAS build for APK distribution. Ethiopian Play Store access is inconsistent — EAS direct APK distribution bypasses this. |
 | **Expo Router**                | Navigation                                     | File-based routing, consistent with Next.js mental model.                                                                                                |
 | **Apollo Client**              | GraphQL queries from Expo app                  | Consumes existing Federation endpoint — zero new backend work.                                                                                           |
 | **NativeWind**                 | Tailwind for React Native                      | Design system consistency between web and mobile.                                                                                                        |
@@ -162,13 +162,13 @@ All monetary values are stored as `INTEGER` in **Santim** (100 santim = 1 ETB). 
 
 ### Print Server
 
-| Technology               | Role                                              | Device                                |
-| ------------------------ | ------------------------------------------------- | ------------------------------------- |
-| **Termux (Android)**     | Node.js environment on POS tablet                 | Samsung Galaxy Tab A8 / Tecno T40 Pro |
-| **Node.js LTS**          | Print server runtime (`~/gebeta-print/server.js`) | Same Android tablet as POS            |
-| **Express**              | HTTP server (`localhost:3001`)                    | —                                     |
-| **node-thermal-printer** | ESC/POS commands to thermal printer               | USB OTG `/dev/usb/lp0`                |
-| **Termux:Boot**          | Auto-start print server on device boot            | F-Droid (not Play Store)              |
+| Technology               | Role                                            | Device                                |
+| ------------------------ | ----------------------------------------------- | ------------------------------------- |
+| **Termux (Android)**     | Node.js environment on POS tablet               | Samsung Galaxy Tab A8 / Tecno T40 Pro |
+| **Node.js LTS**          | Print server runtime (`~/lole-print/server.js`) | Same Android tablet as POS            |
+| **Express**              | HTTP server (`localhost:3001`)                  | —                                     |
+| **node-thermal-printer** | ESC/POS commands to thermal printer             | USB OTG `/dev/usb/lp0`                |
+| **Termux:Boot**          | Auto-start print server on device boot          | F-Droid (not Play Store)              |
 
 ---
 
@@ -202,4 +202,4 @@ These decisions are final and are not revisited unless a major external constrai
 
 ---
 
-_Gebeta Tech Stack v1.0 · March 2026_
+_lole Tech Stack v1.0 · March 2026_

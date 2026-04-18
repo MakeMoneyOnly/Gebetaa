@@ -1,6 +1,6 @@
 # Frontend Design Skills Audit Report
 
-**Project:** Gebeta Restaurant OS
+**Project:** lole Restaurant OS
 **Date:** March 21, 2026
 **Last Updated:** March 25, 2026
 **Auditor:** Cline AI
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-This audit evaluates the Gebeta Restaurant OS frontend codebase against five design skills. The project demonstrates **strong foundational work** with a comprehensive design token system, Tailwind v4 adoption, and accessibility considerations. All identified issues have been resolved.
+This audit evaluates the lole Restaurant OS frontend codebase against five design skills. The project demonstrates **strong foundational work** with a comprehensive design token system, Tailwind v4 adoption, and accessibility considerations. All identified issues have been resolved.
 
 ### Overall Scores ✅
 
@@ -492,7 +492,7 @@ zIndex: {
 
 ## 9. Conclusion
 
-The Gebeta Restaurant OS frontend demonstrates **excellent engineering practices** with a well-structured component library, Tailwind v4 adoption, and accessibility considerations. All high-priority issues have been resolved:
+The lole Restaurant OS frontend demonstrates **excellent engineering practices** with a well-structured component library, Tailwind v4 adoption, and accessibility considerations. All high-priority issues have been resolved:
 
 ### Remediation Summary ✅
 

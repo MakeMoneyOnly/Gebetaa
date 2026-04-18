@@ -1,6 +1,6 @@
 # Health Check API
 
-Gebeta exposes three health check endpoints for monitoring, Kubernetes probes, and external uptime monitoring.
+lole exposes three health check endpoints for monitoring, Kubernetes probes, and external uptime monitoring.
 
 ## Endpoints Overview
 
@@ -296,7 +296,7 @@ apiVersion: v1
 kind: Pod
 spec:
     containers:
-        - name: gebeta
+        - name: lole
           ports:
               - containerPort: 3000
 
@@ -404,11 +404,11 @@ This separation avoids the common failure mode where a slow database check cause
 
 Some runbooks and internal documentation reference the following endpoints that **do not exist** in the codebase:
 
-- `/api/health/payments`
-- `/api/health/realtime`
-- `/api/health/kds`
+- `/api/health`
+- `/api/health`
+- `/api/health`
 
-Payment provider health is reported as part of the `checks.payments` array within the comprehensive `GET /api/health` response. There is no standalone `/api/health/payments` endpoint.
+Payment provider health is reported as part of the `checks.payments` array within the comprehensive `GET /api/health` response. There is no standalone `/api/health` endpoint.
 
 Realtime and KDS health are not currently checked by any health endpoint. If granular checks for these subsystems are needed, they should be added to the comprehensive health check's `checks` object rather than as separate routes.
 

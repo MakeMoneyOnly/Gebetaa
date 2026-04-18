@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Competitive Analysis
+# ገበጣ lole — Competitive Analysis
 
 **Version 1.0 · March 2026 · Confidential**
 
@@ -8,19 +8,19 @@
 
 ## Competitive Landscape Overview
 
-Gebeta competes in two distinct arenas:
+lole competes in two distinct arenas:
 
 **Arena 1 — Global POS platforms** (Toast, Lightspeed, Square) that could theoretically enter Ethiopia but have not and are structurally unlikely to.
 
 **Arena 2 — Local and regional alternatives** used by Addis Ababa restaurants today: imported hardware bundles, WhatsApp-based operations, simple cash registers, and a handful of local software attempts.
 
-The honest competitive summary: **Gebeta has no direct competitor in Ethiopia today.** The market is not contested — it is unserved. The competition is pen and paper.
+The honest competitive summary: **lole has no direct competitor in Ethiopia today.** The market is not contested — it is unserved. The competition is pen and paper.
 
 ---
 
 ## The Real Competition: Paper & WhatsApp
 
-Before comparing against Toast, acknowledge what Gebeta actually displaces:
+Before comparing against Toast, acknowledge what lole actually displaces:
 
 | Current Method                                        | Estimated Restaurants     | Pain Points                                                |
 | ----------------------------------------------------- | ------------------------- | ---------------------------------------------------------- |
@@ -29,7 +29,7 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 | Imported Chinese POS hardware (offline, English-only) | ~10%                      | Expensive, no cloud, no Ethiopian payments, English UI     |
 | Other software (various)                              | ~5%                       | See local competitors below                                |
 
-**The default competitor in every sales conversation is inertia.** A restaurant owner who has run their business on paper for 10 years needs a reason to change, not a reason to choose Gebeta over Toast.
+**The default competitor in every sales conversation is inertia.** A restaurant owner who has run their business on paper for 10 years needs a reason to change, not a reason to choose lole over Toast.
 
 ---
 
@@ -50,9 +50,9 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 | Local presence      | Zero offices, zero salespeople, zero support infrastructure in Ethiopia or East Africa                                                   |
 | ERCA                | No knowledge of Ethiopian VAT compliance requirements                                                                                    |
 
-**Where Toast is better than Gebeta right now:**
+**Where Toast is better than lole right now:**
 
-| Area                  | Toast                                                  | Gebeta                                   | Gap closure           |
+| Area                  | Toast                                                  | lole                                     | Gap closure           |
 | --------------------- | ------------------------------------------------------ | ---------------------------------------- | --------------------- |
 | Offline reliability   | Native Android app with local SQLite — proven at scale | PowerSync CRDT (Sprint 4) — not yet live | Sprint 4              |
 | Discount engine       | Comprehensive, live                                    | Not yet built                            | Sprint 5              |
@@ -60,9 +60,9 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 | Delivery integrations | DoorDash, Uber Eats live                               | Schema only — no live integrations       | Phase 2               |
 | Hardware options      | Full ecosystem (handhelds, KDS, kiosk)                 | PWA-only                                 | By design — not a gap |
 
-**Where Gebeta is better than Toast right now:**
+**Where lole is better than Toast right now:**
 
-| Area                       | Toast                       | Gebeta                                                       |
+| Area                       | Toast                       | lole                                                         |
 | -------------------------- | --------------------------- | ------------------------------------------------------------ |
 | Guest QR ordering security | Basic QR, no HMAC signing   | HMAC-SHA256, timing-safe, 24h expiry — more secure           |
 | Loyalty enrollment UX      | Prompt only at checkout     | Splash-first enrollment at table arrival — higher conversion |
@@ -72,7 +72,7 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 | ERCA compliance            | Not applicable              | Full e-invoice submission (Sprint 8)                         |
 | Market fit                 | Zero                        | Built from the ground up for Addis Ababa                     |
 
-**Toast's acquisition risk:** Toast has historically expanded via acquisition (they acquired xtraCHEF, StratEx). If Gebeta reaches 1,000+ restaurants and $2M+ ARR, Toast becomes an acquisition candidate, not a competitor. This is a favourable outcome for investors.
+**Toast's acquisition risk:** Toast has historically expanded via acquisition (they acquired xtraCHEF, StratEx). If lole reaches 1,000+ restaurants and $2M+ ARR, Toast becomes an acquisition candidate, not a competitor. This is a favourable outcome for investors.
 
 ---
 
@@ -90,11 +90,11 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 
 **What they are:** ~$1.5B market cap. Primarily targets upscale restaurants and hotels globally.
 
-**Ethiopia relevance:** Lightspeed's K Series (formerly Kounta) is used by some international hotel chains in Addis Ababa that need a system their global headquarters already knows. This is Gebeta's first direct enterprise competition.
+**Ethiopia relevance:** Lightspeed's K Series (formerly Kounta) is used by some international hotel chains in Addis Ababa that need a system their global headquarters already knows. This is lole's first direct enterprise competition.
 
 **How to beat Lightspeed in hotel pitches:**
 
-| Factor             | Lightspeed                      | Gebeta                                   |
+| Factor             | Lightspeed                      | lole                                     |
 | ------------------ | ------------------------------- | ---------------------------------------- |
 | Amharic UI         | No                              | Yes — staff can use their language       |
 | Telebirr / Chapa   | No                              | Yes — most hotel guests use mobile money |
@@ -120,7 +120,7 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 
 **Weaknesses (based on market research and user conversations):**
 
-| Area                        | iKos                                                    | Gebeta                                                      |
+| Area                        | iKos                                                    | lole                                                        |
 | --------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
 | Technology stack            | Older web stack, reports of slow/unreliable performance | Next.js 16, React 19, Supabase Realtime — modern, fast      |
 | Offline capability          | Limited / unreliable                                    | PowerSync CRDT — 24h verified offline window                |
@@ -143,9 +143,9 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 
 **Ethiopia relevance:** Some medium/large restaurant groups in Addis with IT departments have evaluated or deployed Odoo POS.
 
-**Why Gebeta wins against Odoo for restaurants:**
+**Why lole wins against Odoo for restaurants:**
 
-| Factor                       | Odoo POS                             | Gebeta                                |
+| Factor                       | Odoo POS                             | lole                                  |
 | ---------------------------- | ------------------------------------ | ------------------------------------- |
 | Setup complexity             | Requires IT department or consultant | Up and running in hours               |
 | Ongoing maintenance          | Server management, updates, hosting  | Fully managed — zero IT required      |
@@ -155,13 +155,13 @@ Before comparing against Toast, acknowledge what Gebeta actually displaces:
 | Mobile money payments        | Requires custom development          | Native Telebirr + Chapa               |
 | Cost                         | "Free" but high implementation cost  | Predictable monthly ETB subscription  |
 
-**The Odoo competitive play:** Total cost of ownership. Odoo "free" requires an IT consultant at ETB 5,000–15,000/day for setup, plus ongoing server costs, plus updates, plus custom development for Telebirr. Gebeta is ETB 1,200/month with everything included.
+**The Odoo competitive play:** Total cost of ownership. Odoo "free" requires an IT consultant at ETB 5,000–15,000/day for setup, plus ongoing server costs, plus updates, plus custom development for Telebirr. lole is ETB 1,200/month with everything included.
 
 ---
 
 ### WhatsApp + Paper (The Real #1 Competitor)
 
-This deserves its own section because it is what Gebeta displaces in 80% of sales conversations.
+This deserves its own section because it is what lole displaces in 80% of sales conversations.
 
 **Why restaurant owners use WhatsApp + paper today:**
 
@@ -171,9 +171,9 @@ This deserves its own section because it is what Gebeta displaces in 80% of sale
 - No training required
 - Works during power cuts (phone has battery)
 
-**Gebeta's conversion argument — quantified:**
+**lole's conversion argument — quantified:**
 
-| Pain point                          | WhatsApp + Paper               | Gebeta                                       | Monthly impact (avg restaurant)                      |
+| Pain point                          | WhatsApp + Paper               | lole                                         | Monthly impact (avg restaurant)                      |
 | ----------------------------------- | ------------------------------ | -------------------------------------------- | ---------------------------------------------------- |
 | Order errors (wrong items to table) | 8–15% error rate (estimate)    | <2% (KDS + modifiers)                        | Save ~50 wasted dishes/month                         |
 | Analytics                           | None                           | Real-time revenue, top items, hourly heatmap | Owner makes data-driven menu decisions               |
@@ -182,7 +182,7 @@ This deserves its own section because it is what Gebeta displaces in 80% of sale
 | ERCA                                | Manual, error-prone            | Automatic                                    | Avoid penalties; save accountant fees                |
 | Revenue visibility                  | Next day (if they do accounts) | Real-time, on phone                          | Owner makes same-day operational decisions           |
 
-**The pitch:** "You are paying 0 ETB for a system that costs you 8,000 ETB/month in errors, wasted time, and missed loyalty revenue. Gebeta costs 1,200 ETB/month and pays for itself in the first week."
+**The pitch:** "You are paying 0 ETB for a system that costs you 8,000 ETB/month in errors, wasted time, and missed loyalty revenue. lole costs 1,200 ETB/month and pays for itself in the first week."
 
 ---
 
@@ -191,7 +191,7 @@ This deserves its own section because it is what Gebeta displaces in 80% of sale
 ```
                         HIGH ETHIOPIA FIT
                               │
-                              │         GEBETA ★
+                              │         lole ★
                               │         (local payments, Amharic,
                               │          ERCA, offline, affordable)
                               │
@@ -236,4 +236,4 @@ Track every sales conversation outcome. Update monthly.
 
 ---
 
-_Gebeta Competitive Analysis v1.0 · March 2026 · Confidential_
+_lole Competitive Analysis v1.0 · March 2026 · Confidential_

@@ -1,4 +1,4 @@
-# Gebeta Restaurant OS — Enterprise-Grade Production Readiness Tasks
+# lole Restaurant OS — Enterprise-Grade Production Readiness Tasks
 
 > **Generated**: 2026-04-16  
 > **Status**: Active — pre-production remediation required  
@@ -513,7 +513,7 @@ These must be resolved before any production traffic. Each represents a direct d
 ### 4.4 ☐ DOC-004: Fix root-level documentation inaccuracies
 
 - [ ] `README.md`: Verify/update tech stack versions (Next.js 16?), fix broken links, align brand with Lole decision
-- [ ] `terraform/README.md`: Replace placeholder clone URL (`your-org/gebeta.git`), fix Next.js version, resolve MIT vs Proprietary license conflict
+- [ ] `terraform/README.md`: Replace placeholder clone URL (`your-org/lole.git`), fix Next.js version, resolve MIT vs Proprietary license conflict
 - [ ] `LOLE_DESIGN_SYSTEM_FOUNDATION.md`: Replace absolute Windows file paths with relative paths
 - [ ] `DASHBOARD.md`: Add implementation status annotations to each recommendation
 
@@ -672,7 +672,7 @@ These are important but do not block production launch.
 - [ ] BUNDLE-001: Add bundle analyzer to CI pipeline
 - [ ] JSDOC-001: Add JSDoc to all service layer functions
 - [ ] DB-DOC-001: Auto-generate database-erd.md from live schema
-- [ ] BRAND-001: Complete Lole rebrand or revert to Gebeta across all docs
+- [ ] BRAND-001: Complete Lole rebrand or revert to lole across all docs
 - [ ] CODEOWNERS-001: Replace `docs/10-reference/owners.md` with CODEOWNERS file
 - [ ] CI-I18N-001: Add i18n completeness check to CI pipeline
 - [ ] CI-LINK-001: Add markdown link checker to CI pipeline

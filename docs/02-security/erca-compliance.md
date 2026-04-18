@@ -1,8 +1,8 @@
-# ገበጣ Gebeta — ERCA Compliance Guide
+# ገበጣ lole — ERCA Compliance Guide
 
 **Version 1.0 · March 2026**
 
-> This guide covers two audiences: the **engineering team** (how to implement ERCA integration) and **restaurant operators** (what ERCA means for them and how Gebeta handles it on their behalf).
+> This guide covers two audiences: the **engineering team** (how to implement ERCA integration) and **restaurant operators** (what ERCA means for them and how lole handles it on their behalf).
 
 ---
 
@@ -15,13 +15,13 @@ The **Ethiopian Revenue and Customs Authority (ERCA)** — ኢትዮጵያ ገ�
 3. Maintain records for a minimum of **7 years**
 4. Apply the standard VAT rate of **15%** on taxable goods and services
 
-**Most POS systems in Addis Ababa do not handle ERCA.** Restaurant owners with VAT registration currently prepare invoices manually — often at month-end, often inaccurate. This is Gebeta's strongest enterprise sales argument.
+**Most POS systems in Addis Ababa do not handle ERCA.** Restaurant owners with VAT registration currently prepare invoices manually — often at month-end, often inaccurate. This is lole's strongest enterprise sales argument.
 
 ---
 
 ## Who Needs This
 
-| Restaurant Type                       | VAT Registration Required?            | Gebeta ERCA Feature Needed?                 |
+| Restaurant Type                       | VAT Registration Required?            | lole ERCA Feature Needed?                   |
 | ------------------------------------- | ------------------------------------- | ------------------------------------------- |
 | Small café, <500K ETB/year turnover   | No                                    | No — ERCA feature auto-skipped              |
 | Restaurant, 500K–5M ETB/year turnover | Registration optional but recommended | Optional                                    |
@@ -29,20 +29,20 @@ The **Ethiopian Revenue and Customs Authority (ERCA)** — ኢትዮጵያ ገ�
 | Hotel restaurant, any size            | Mandatory if hotel is VAT-registered  | Yes                                         |
 | Chain restaurant (multiple locations) | Mandatory                             | Yes — each location has its own TIN         |
 
-Gebeta detects whether ERCA integration is needed by checking `restaurants.vat_number IS NOT NULL`. If the field is null, no ERCA calls are made for that restaurant.
+lole detects whether ERCA integration is needed by checking `restaurants.vat_number IS NOT NULL`. If the field is null, no ERCA calls are made for that restaurant.
 
 ---
 
 ## Part 1: For Restaurant Operators
 
-### What Gebeta Does on Your Behalf
+### What lole Does on Your Behalf
 
-Once you provide your TIN number and VAT registration number in your Gebeta settings, Gebeta will:
+Once you provide your TIN number and VAT registration number in your lole settings, lole will:
 
 1. **Automatically calculate 15% VAT** on every completed order
 2. **Generate an ERCA-compliant e-invoice** with your TIN, itemized VAT breakdown, and the correct invoice number format
 3. **Submit the invoice to ERCA** automatically when each order is completed — no manual action required
-4. **Retry failed submissions** — if ERCA's API is temporarily unavailable, Gebeta retries automatically up to 5 times over 2 hours
+4. **Retry failed submissions** — if ERCA's API is temporarily unavailable, lole retries automatically up to 5 times over 2 hours
 5. **Store all submissions** for 7 years (the legally required period) in your finance records
 6. **Include a daily VAT summary** in your end-of-day Telegram report
 
@@ -59,7 +59,7 @@ Go to `/merchant/settings` → Tax & Compliance:
 
 ### What Your Receipt Shows
 
-Every Gebeta receipt is already ERCA-compliant. It includes:
+Every lole receipt is already ERCA-compliant. It includes:
 
 ```
 ══════════════════════════════
@@ -90,7 +90,7 @@ Thank you for your visit!
 
 ### VAT Calculation on Guest-Facing Prices
 
-**Important:** Ethiopian VAT law requires that VAT is included in the price displayed to customers (tax-inclusive pricing), not added on top. Gebeta handles this correctly:
+**Important:** Ethiopian VAT law requires that VAT is included in the price displayed to customers (tax-inclusive pricing), not added on top. lole handles this correctly:
 
 ```
 If menu item price = 100 ETB (tax-inclusive):
@@ -100,7 +100,7 @@ If menu item price = 100 ETB (tax-inclusive):
 If you want to earn 100 ETB net after VAT:
   Display price  = 100 × (115/100) = 115 ETB
 
-Gebeta's receipt shows both the net amount and the VAT portion.
+lole's receipt shows both the net amount and the VAT portion.
 The total displayed to guests already includes VAT.
 ```
 
@@ -161,7 +161,7 @@ interface ERCAInvoicePayload {
 **VAT extraction from tax-inclusive prices (correct formula):**
 
 ```typescript
-// Prices in Gebeta are tax-INCLUSIVE (as displayed to guest)
+// Prices in lole are tax-INCLUSIVE (as displayed to guest)
 // ERCA needs the net price (before VAT) and VAT amount separately
 
 function extractVAT(taxInclusivePriceSantim: number) {
@@ -229,7 +229,7 @@ export class ERCAService {
                 headers: {
                     Authorization: `Bearer ${this.apiKey}`,
                     'Content-Type': 'application/json',
-                    'X-Idempotency-Key': `gebeta-${orderId}`, // ERCA-side dedup
+                    'X-Idempotency-Key': `lole-${orderId}`, // ERCA-side dedup
                 },
                 body: JSON.stringify(payload),
             });
@@ -444,20 +444,20 @@ curl -X POST http://localhost:3000/api/jobs/erca-invoice \
 A: Only VAT-registered restaurants. If your restaurant is not VAT-registered, this feature is automatically disabled and you will never see ERCA-related settings.
 
 **Q: What if ERCA's system is down when a customer pays?**
-A: Gebeta queues the invoice and retries automatically. The customer's payment still goes through and their order is processed normally. The ERCA submission happens in the background.
+A: lole queues the invoice and retries automatically. The customer's payment still goes through and their order is processed normally. The ERCA submission happens in the background.
 
 **Q: What if a submission fails permanently?**
-A: You will receive a Telegram alert. You can retry manually from the finance dashboard. You are also legally permitted to submit invoices retroactively when ERCA's system was experiencing downtime — Gebeta stores all order data needed for resubmission.
+A: You will receive a Telegram alert. You can retry manually from the finance dashboard. You are also legally permitted to submit invoices retroactively when ERCA's system was experiencing downtime — lole stores all order data needed for resubmission.
 
 **Q: Can I see proof that invoices were submitted?**
 A: Yes. The `/merchant/finance` screen shows every ERCA submission with the invoice number and ERCA's own reference ID for successful submissions. You can export this as a PDF for your accountant.
 
-**Q: How does Gebeta calculate the VAT amount on my receipts?**
-A: Ethiopian VAT is tax-inclusive — the price you display to customers already includes VAT. Gebeta extracts the VAT portion using the formula: VAT = price × 15 ÷ 115. So if an item costs ETB 115, the VAT portion is ETB 15.00 and the net price is ETB 100.00.
+**Q: How does lole calculate the VAT amount on my receipts?**
+A: Ethiopian VAT is tax-inclusive — the price you display to customers already includes VAT. lole extracts the VAT portion using the formula: VAT = price × 15 ÷ 115. So if an item costs ETB 115, the VAT portion is ETB 15.00 and the net price is ETB 100.00.
 
 **Q: What if I have B2B customers who need a VAT invoice with their TIN?**
 A: For regular dine-in guests, this is rare. For corporate accounts (hotel guests, business lunches), the guest can provide their TIN at checkout. The ERCA invoice will include the buyer's TIN. This is configured in the guest profile under "Business Tax Number."
 
 ---
 
-_Gebeta ERCA Compliance Guide v1.0 · March 2026_
+_lole ERCA Compliance Guide v1.0 · March 2026_

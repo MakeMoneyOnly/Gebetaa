@@ -2,7 +2,7 @@
 
 **Version 1.0 · March 2026 · For the Builder**
 
-> This runbook covers the diagnosis and resolution of Kitchen Display System (KDS) and printer failures in Gebeta restaurants.
+> This runbook covers the diagnosis and resolution of Kitchen Display System (KDS) and printer failures in lole restaurants.
 
 ---
 
@@ -52,7 +52,7 @@ The KDS is critical for kitchen operations. When KDS or printers fail, orders ca
 
     ```bash
     # On KDS tablet
-    ping gebeta.app
+    ping lole.app
     ping supabase.co
     ```
 
@@ -63,7 +63,7 @@ The KDS is critical for kitchen operations. When KDS or printers fail, orders ca
 
 3. **Check Supabase Realtime status:**
     ```bash
-    curl https://gebeta.app/api/health/realtime
+    curl https://lole.app/api/health/realtime
     ```
 
 **Resolution:**
@@ -164,7 +164,7 @@ The KDS is critical for kitchen operations. When KDS or printers fail, orders ca
     pkill -f print-server
 
     # Restart
-    cd ~/gebeta-print
+    cd ~/lole-print
     ./start-print-server.sh
     ```
 
@@ -190,7 +190,7 @@ The KDS is critical for kitchen operations. When KDS or printers fail, orders ca
 2. **Check print settings:**
     ```bash
     # Verify paper size setting
-    cat ~/gebeta-print/config.json
+    cat ~/lole-print/config.json
     ```
 
 **Resolution:**
@@ -252,7 +252,7 @@ The KDS continues to work offline with cached data:
 
 ```bash
 # Automated health check script
-curl -f https://gebeta.app/api/health/kds || \
+curl -f https://lole.app/api/health/kds || \
   curl -X POST $ALERT_WEBHOOK_URL \
     -d '{"text": "KDS health check failed"}'
 ```
@@ -281,10 +281,10 @@ useEffect(() => {
 ```bash
 # Full system check
 echo "=== Network ==="
-ping -c 3 gebeta.app
+ping -c 3 lole.app
 
 echo "=== Supabase ==="
-curl -s https://gebeta.app/api/health | jq
+curl -s https://lole.app/api/health | jq
 
 echo "=== Printer ==="
 curl -s http://localhost:3000/printer/status
@@ -300,11 +300,11 @@ pgrep -a print-server
 
 # 1. Restart browser
 am force-stop com.android.chrome
-am start -a android.intent.action.VIEW -d https://gebeta.app/kds
+am start -a android.intent.action.VIEW -d https://lole.app/kds
 
 # 2. Restart Termux print server
 pkill -f print-server
-cd ~/gebeta-print && ./start-print-server.sh &
+cd ~/lole-print && ./start-print-server.sh &
 
 # 3. Verify services
 sleep 5

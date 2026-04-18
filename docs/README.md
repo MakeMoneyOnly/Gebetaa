@@ -1,8 +1,8 @@
-# Gebeta Restaurant OS - Documentation Index
+# lole Restaurant OS - Documentation Index
 
 ## Enterprise Documentation Structure
 
-This document describes the standardized documentation organization for the Gebeta Restaurant OS project.
+This document describes the standardized documentation organization for the lole Restaurant OS project.
 
 ---
 

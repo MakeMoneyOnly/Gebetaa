@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines the chaos engineering practices for Gebeta - "Toast for Addis Ababa." Chaos engineering is the discipline of experimenting on a system to build confidence in its ability to withstand turbulent conditions in production. Given Gebeta's position as a critical restaurant operating system for Ethiopia, we must proactively identify weaknesses before they impact restaurant operations.
+This document defines the chaos engineering practices for lole - "Toast for Addis Ababa." Chaos engineering is the discipline of experimenting on a system to build confidence in its ability to withstand turbulent conditions in production. Given lole's position as a critical restaurant operating system for Ethiopia, we must proactively identify weaknesses before they impact restaurant operations.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ This document defines the chaos engineering practices for Gebeta - "Toast for Ad
 
 ### Core Philosophy
 
-Chaos engineering for Gebeta follows these foundational principles:
+Chaos engineering for lole follows these foundational principles:
 
 1. **Assume Failure Will Happen** - Infrastructure in Ethiopia faces unique challenges (power instability, network fluctuations). Design for failure from the start.
 
@@ -714,7 +714,7 @@ rollback:
     # Test connectivity
     psql $STAGING_DB_URL -c "SELECT 1"
     # Check for queued syncs
-    curl https://api.staging.gebeta.io/api/sync/status
+    curl https://api.staging.lole.io/api/sync/status
     ```
 
 ---
@@ -785,7 +785,7 @@ rollback:
 
     ```bash
     # Verify auth service
-    curl https://staging.gebeta.io/api/auth/health
+    curl https://staging.lole.io/api/auth/health
     ```
 
 2. **Start Experiment**
@@ -831,7 +831,7 @@ rollback:
 
     ```bash
     # Baseline latency check
-    curl -w "%{time_total}" https://staging.gebeta.io/api/health
+    curl -w "%{time_total}" https://staging.lole.io/api/health
     ```
 
 2. **Start Experiment**

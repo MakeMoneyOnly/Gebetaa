@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document tracks the WCAG 2.1 AA compliance status for Gebeta, a restaurant operating system designed for use in Addis Ababa, Ethiopia.
+This document tracks the WCAG 2.1 AA compliance status for lole, a restaurant operating system designed for use in Addis Ababa, Ethiopia.
 
 ## Audit Scope
 

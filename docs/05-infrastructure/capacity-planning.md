@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Capacity Planning Guide
+# ገበጣ lole — Capacity Planning Guide
 
 **Version 1.0 · March 2026**
 
@@ -378,4 +378,4 @@ Upgrade decisions
 
 ---
 
-_Gebeta Capacity Planning Guide v1.0 · March 2026_
+_lole Capacity Planning Guide v1.0 · March 2026_

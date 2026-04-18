@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-External penetration testing requires specialized third-party resources with independent security expertise and cannot be completed internally. This document outlines the scope, requirements, and planning considerations for engaging an external security firm to conduct comprehensive penetration testing of the Gebeta restaurant operating system.
+External penetration testing requires specialized third-party resources with independent security expertise and cannot be completed internally. This document outlines the scope, requirements, and planning considerations for engaging an external security firm to conduct comprehensive penetration testing of the lole restaurant operating system.
 
 ### Why External Testing is Required
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the enterprise-grade hybrid rendering pattern implemented in Gebeta Restaurant OS. This pattern combines Server Components for initial data fetching with Client Components for interactivity, delivering optimal performance and user experience.
+This document describes the enterprise-grade hybrid rendering pattern implemented in lole Restaurant OS. This pattern combines Server Components for initial data fetching with Client Components for interactivity, delivering optimal performance and user experience.
 
 ## Architecture Pattern
 

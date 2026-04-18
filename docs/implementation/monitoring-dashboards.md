@@ -2,14 +2,14 @@
 
 ## Overview
 
-Gebeta uses Grafana for monitoring and alerting, with metrics exposed via Prometheus at `/api/metrics/prometheus`.
+lole uses Grafana for monitoring and alerting, with metrics exposed via Prometheus at `/api/metrics/prometheus`.
 
 ## Dashboard Configuration
 
 ### Prerequisites
 
 - Grafana 10+ with Prometheus data source
-- Access to Gebeta's `/api/metrics/prometheus` endpoint
+- Access to lole's `/api/metrics/prometheus` endpoint
 - Prometheus scraping configured
 
 ### Importing Dashboards
@@ -21,7 +21,7 @@ Gebeta uses Grafana for monitoring and alerting, with metrics exposed via Promet
 
 ## Available Dashboards
 
-### 1. System Overview (`gebeta-overview.json`)
+### 1. System Overview (`lole-overview.json`)
 
 High-level system health dashboard showing:
 
@@ -33,7 +33,7 @@ High-level system health dashboard showing:
 - Active sync connections
 - Database connection pool utilization
 
-### 2. Orders Dashboard (`gebeta-orders.json`)
+### 2. Orders Dashboard (`lole-orders.json`)
 
 Order processing metrics:
 
@@ -44,7 +44,7 @@ Order processing metrics:
 - Split order frequency
 - Discount application rate
 
-### 3. Payments Dashboard (`gebeta-payments.json`)
+### 3. Payments Dashboard (`lole-payments.json`)
 
 Payment processing metrics:
 
@@ -55,7 +55,7 @@ Payment processing metrics:
 - Revenue by payment method
 - Payment session expiry rate
 
-### 4. KDS Dashboard (`gebeta-kds.json`)
+### 4. KDS Dashboard (`lole-kds.json`)
 
 Kitchen Display System metrics:
 
@@ -90,30 +90,30 @@ Kitchen Display System metrics:
 
 ### Application Metrics
 
-- `gebeta_http_requests_total` - Total HTTP requests
-- `gebeta_http_request_duration_seconds` - Request duration histogram
-- `gebeta_orders_created_total` - Orders created
-- `gebeta_orders_completed_total` - Orders completed
-- `gebeta_payments_processed_total` - Payments processed
-- `gebeta_kds_items_queued_total` - KDS items queued
-- `gebeta_sync_operations_total` - Sync operations processed
+- `lole_http_requests_total` - Total HTTP requests
+- `lole_http_request_duration_seconds` - Request duration histogram
+- `lole_orders_created_total` - Orders created
+- `lole_orders_completed_total` - Orders completed
+- `lole_payments_processed_total` - Payments processed
+- `lole_kds_items_queued_total` - KDS items queued
+- `lole_sync_operations_total` - Sync operations processed
 
 ### Infrastructure Metrics
 
-- `gebeta_db_connections_active` - Active DB connections
-- `gebeta_db_connections_idle` - Idle DB connections
-- `gebeta_realtime_connections` - Active Realtime connections
-- `gebeta_sync_queue_size` - Pending sync operations
+- `lole_db_connections_active` - Active DB connections
+- `lole_db_connections_idle` - Idle DB connections
+- `lole_realtime_connections` - Active Realtime connections
+- `lole_sync_queue_size` - Pending sync operations
 
 ## Setup Instructions
 
 ### 1. Configure Prometheus
 
-Add Gebeta as a scrape target in `prometheus.yml`:
+Add lole as a scrape target in `prometheus.yml`:
 
 ```yaml
 scrape_configs:
-    - job_name: 'gebeta'
+    - job_name: 'lole'
       metrics_path: '/api/metrics/prometheus'
       static_configs:
           - targets: ['localhost:3000']

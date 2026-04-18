@@ -2,13 +2,13 @@
 
 **Version 1.0 · March 2026 · For the Builder**
 
-> This runbook covers the safe execution of database migrations for Gebeta's Supabase PostgreSQL database, including rollback procedures and emergency response.
+> This runbook covers the safe execution of database migrations for lole's Supabase PostgreSQL database, including rollback procedures and emergency response.
 
 ---
 
 ## Overview
 
-Database migrations in Gebeta are managed through Supabase CLI and stored in `supabase/migrations/`. All migrations must follow the idempotency and safety guidelines defined in `AGENTS.md`.
+Database migrations in lole are managed through Supabase CLI and stored in `supabase/migrations/`. All migrations must follow the idempotency and safety guidelines defined in `AGENTS.md`.
 
 ---
 

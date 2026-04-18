@@ -1,7 +1,7 @@
-# Gebeta Restaurant OS - API Documentation
+# lole Restaurant OS - API Documentation
 
 **Version:** 1.0.0
-**Base URL:** `https://api.gebeta.app`
+**Base URL:** `https://api.lole.app`
 **Last Updated:** 2026-03-23
 
 ---
@@ -22,7 +22,7 @@
 
 ## Authentication
 
-All API endpoints require authentication unless otherwise noted. Gebeta uses Supabase Auth with JWT tokens.
+All API endpoints require authentication unless otherwise noted. lole uses Supabase Auth with JWT tokens.
 
 ### Headers
 
@@ -223,7 +223,7 @@ Initiates a payment with the specified provider.
     "provider": "chapa",
     "amount_santim": 57500,
     "currency": "ETB",
-    "return_url": "https://gebeta.app/order/success",
+    "return_url": "https://lole.app/order/success",
     "idempotency_key": "unique-payment-key"
 }
 ```

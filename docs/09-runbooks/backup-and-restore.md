@@ -2,7 +2,7 @@
 
 ## Overview
 
-Gebeta uses Supabase (PostgreSQL) for all persistent data. This runbook covers backup procedures, restore processes, and disaster recovery.
+lole uses Supabase (PostgreSQL) for all persistent data. This runbook covers backup procedures, restore processes, and disaster recovery.
 
 ## Automated Backups
 

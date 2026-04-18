@@ -1,4 +1,4 @@
-# ገበጣ Gebeta — Product Requirements Document (PRD)
+# ገበጣ lole — Product Requirements Document (PRD)
 
 **Version 1.0 · March 2026 · Confidential**
 
@@ -6,9 +6,9 @@
 
 ## Overview
 
-Gebeta is a full-stack restaurant operating system built for Addis Ababa, Ethiopia — and ultimately all of Ethiopia. It replaces paper-based operations, imported POS hardware, and disconnected tools with a single modern platform that speaks Amharic, integrates with Ethiopian payment providers, and works offline during the frequent power and network outages that characterize daily operations in Addis.
+lole is a full-stack restaurant operating system built for Addis Ababa, Ethiopia — and ultimately all of Ethiopia. It replaces paper-based operations, imported POS hardware, and disconnected tools with a single modern platform that speaks Amharic, integrates with Ethiopian payment providers, and works offline during the frequent power and network outages that characterize daily operations in Addis.
 
-The closest comparable product globally is Toast (US) — a $13B public company. Gebeta is what Toast would have built if they had designed it for Ethiopia from day one: Amharic-first, Telebirr-native, offline-resilient, and priced for the Ethiopian market.
+The closest comparable product globally is Toast (US) — a $13B public company. lole is what Toast would have built if they had designed it for Ethiopia from day one: Amharic-first, Telebirr-native, offline-resilient, and priced for the Ethiopian market.
 
 ---
 
@@ -16,7 +16,7 @@ The closest comparable product globally is Toast (US) — a $13B public company.
 
 ### What Ethiopian Restaurants Face Today
 
-| Problem                | Current Reality                                                                                                                    | Gebeta Solution                                                                   |
+| Problem                | Current Reality                                                                                                                    | lole Solution                                                                     |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | No Amharic POS         | Every POS in Addis is English-only. Waitstaff read item names they cannot pronounce. Errors happen.                                | Amharic-first UI — every surface defaults to አማርኛ                                 |
 | Expensive hardware     | Imported POS terminals cost ETB 15,000–50,000+. Most restaurants use pen and paper.                                                | PWA on any Android tablet (ETB 4,000–8,000) from Addis Mercato                    |
@@ -24,7 +24,7 @@ The closest comparable product globally is Toast (US) — a $13B public company.
 | No digital payments    | Restaurants accept Telebirr but cannot integrate it with their ordering system. Orders are disconnected from payment confirmation. | Native Telebirr + Chapa integration in POS and guest ordering                     |
 | Zero data insights     | Owners have no idea which items sell, what peak hours look like, or what their actual revenue is.                                  | Real-time analytics with Amharic item names, EOD Telegram reports                 |
 | ERCA compliance        | VAT-registered restaurants manually prepare invoices. No POS generates e-invoices.                                                 | Automated ERCA e-invoice submission on every completed order                      |
-| Delivery fragmentation | BEU, Deliver Addis, Zmall, Esoora all operate separately. Restaurants manage 4 tablets.                                            | Single Channels hub — all delivery orders come through one Gebeta screen          |
+| Delivery fragmentation | BEU, Deliver Addis, Zmall, Esoora all operate separately. Restaurants manage 4 tablets.                                            | Single Channels hub — all delivery orders come through one lole screen            |
 
 ---
 
@@ -79,7 +79,7 @@ The closest comparable product globally is Toast (US) — a $13B public company.
 **Delivery Riders / Partners**
 
 - BEU, Deliver Addis, Zmall, Esoora
-- Integrated via Channels — their orders flow into Gebeta's order queue
+- Integrated via Channels — their orders flow into lole's order queue
 - Core need: "My restaurant partner gets orders from me instantly"
 
 ---
@@ -125,7 +125,7 @@ Real-time order status from confirmed → preparing → ready → served.
 
 Full restaurant management: 14 routes covering every operational domain.
 
-### 6. Gebeta Now — Mobile Manager App (Phase 2)
+### 6. lole Now — Mobile Manager App (Phase 2)
 
 **Who:** Restaurant owners, managers
 **Device:** iOS and Android smartphone
@@ -504,4 +504,4 @@ The owner's companion app — live metrics, quick actions, staff management, rep
 
 ---
 
-_Gebeta PRD v1.0 · March 2026 · Confidential_
+_lole PRD v1.0 · March 2026 · Confidential_

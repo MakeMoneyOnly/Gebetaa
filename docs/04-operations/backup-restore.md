@@ -2,20 +2,20 @@
 
 Last updated: 2026-04-04
 
-This document outlines the backup and restore procedures for the Gebeta Restaurant OS database, including RPO/RTO targets, verification procedures, and disaster recovery runbooks.
+This document outlines the backup and restore procedures for the lole Restaurant OS database, including RPO/RTO targets, verification procedures, and disaster recovery runbooks.
 
 ## Overview
 
-Gebeta Restaurant OS uses Supabase (PostgreSQL) as its primary database. Supabase provides automatic backup capabilities, and we also maintain manual backup procedures for additional safety and compliance.
+lole Restaurant OS uses Supabase (PostgreSQL) as its primary database. Supabase provides automatic backup capabilities, and we also maintain manual backup procedures for additional safety and compliance.
 
 ### Database Architecture
 
-| Component | Description |
-| --------- | ----------- |
-| Primary Database | Supabase PostgreSQL (managed) |
-| Backup Storage | Supabase-managed + S3 (manual backups) |
-| Retention | 30 days (Pro plan) |
-| PITR | Enabled (Pro plan) |
+| Component        | Description                            |
+| ---------------- | -------------------------------------- |
+| Primary Database | Supabase PostgreSQL (managed)          |
+| Backup Storage   | Supabase-managed + S3 (manual backups) |
+| Retention        | 30 days (Pro plan)                     |
+| PITR             | Enabled (Pro plan)                     |
 
 ---
 
@@ -23,19 +23,19 @@ Gebeta Restaurant OS uses Supabase (PostgreSQL) as its primary database. Supabas
 
 ### Recovery Point Objective (RPO)
 
-| Scenario | Target | Maximum Acceptable |
-| -------- | ------ | ------------------ |
-| With PITR | 1 hour | 2 hours |
-| Daily backups only | 24 hours | 48 hours |
-| Manual backup | Time of last backup | 24 hours |
+| Scenario           | Target              | Maximum Acceptable |
+| ------------------ | ------------------- | ------------------ |
+| With PITR          | 1 hour              | 2 hours            |
+| Daily backups only | 24 hours            | 48 hours           |
+| Manual backup      | Time of last backup | 24 hours           |
 
 ### Recovery Time Objective (RTO)
 
-| Scenario | Target | Maximum Acceptable |
-| -------- | ------ | ------------------ |
-| Single table restore | 15 minutes | 30 minutes |
-| Full database restore | 1 hour | 4 hours |
-| Cross-region failover | 2 hours | 8 hours |
+| Scenario              | Target     | Maximum Acceptable |
+| --------------------- | ---------- | ------------------ |
+| Single table restore  | 15 minutes | 30 minutes         |
+| Full database restore | 1 hour     | 4 hours            |
+| Cross-region failover | 2 hours    | 8 hours            |
 
 ---
 
@@ -53,11 +53,11 @@ Supabase provides automatic daily backups for all projects:
 
 ### Backup Schedule
 
-| Backup Type | Frequency | Retention | Location |
-| ----------- | --------- | --------- | -------- |
-| Full snapshot | Daily (2:00 AM UTC) | 30 days | Supabase-managed |
-| WAL archives | Continuous | 7 days | Supabase-managed |
-| Manual dumps | On-demand | 90 days | S3 bucket |
+| Backup Type   | Frequency           | Retention | Location         |
+| ------------- | ------------------- | --------- | ---------------- |
+| Full snapshot | Daily (2:00 AM UTC) | 30 days   | Supabase-managed |
+| WAL archives  | Continuous          | 7 days    | Supabase-managed |
+| Manual dumps  | On-demand           | 90 days   | S3 bucket        |
 
 ### Accessing Backups
 
@@ -70,14 +70,14 @@ Supabase provides automatic daily backups for all projects:
 
 The following data is included in backups:
 
-| Data Type | Included | Notes |
-| --------- | -------- | ----- |
-| Application tables | ✅ | All tables in `public` schema |
-| Auth users | ✅ | `auth.users` and related tables |
-| Storage objects | ✅ | File storage buckets |
-| Edge functions | ❌ | Must be redeployed from code |
-| Realtime subscriptions | ❌ | Transient, not backed up |
-| Environment variables | ❌ | Must be restored from secrets manager |
+| Data Type              | Included | Notes                                 |
+| ---------------------- | -------- | ------------------------------------- |
+| Application tables     | ✅       | All tables in `public` schema         |
+| Auth users             | ✅       | `auth.users` and related tables       |
+| Storage objects        | ✅       | File storage buckets                  |
+| Edge functions         | ❌       | Must be redeployed from code          |
+| Realtime subscriptions | ❌       | Transient, not backed up              |
+| Environment variables  | ❌       | Must be restored from secrets manager |
 
 ---
 
@@ -142,9 +142,9 @@ set -euo pipefail
 ENVIRONMENT="${1:-production}"
 BACKUP_DIR="./backups/${ENVIRONMENT}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="${BACKUP_DIR}/gebeta_${ENVIRONMENT}_${TIMESTAMP}.dump"
-METADATA_FILE="${BACKUP_DIR}/gebeta_${ENVIRONMENT}_${TIMESTAMP}.meta.json"
-S3_BUCKET="s3://gebeta-backups/${ENVIRONMENT}"
+BACKUP_FILE="${BACKUP_DIR}/lole_${ENVIRONMENT}_${TIMESTAMP}.dump"
+METADATA_FILE="${BACKUP_DIR}/lole_${ENVIRONMENT}_${TIMESTAMP}.meta.json"
+S3_BUCKET="s3://lole-backups/${ENVIRONMENT}"
 
 # Ensure backup directory exists
 mkdir -p "$BACKUP_DIR"
@@ -227,7 +227,7 @@ Add to crontab for automated daily backups:
 crontab -e
 
 # Add daily backup at 3:00 AM UTC (after Supabase's backup)
-0 3 * * * /path/to/gebeta/scripts/database/backup-production.sh production >> /var/log/gebeta-backup.log 2>&1
+0 3 * * * /path/to/lole/scripts/database/backup-production.sh production >> /var/log/lole-backup.log 2>&1
 ```
 
 ---
@@ -280,7 +280,7 @@ pg_restore --dbname=$DATABASE_URL --schema-only backup_20260404.dump
 pg_restore --dbname=$DATABASE_URL --verbose backup_20260404.dump
 
 # Restore to a different database
-pg_restore --dbname=gebeta_restored backup_20260404.dump
+pg_restore --dbname=lole_restored backup_20260404.dump
 ```
 
 ### Using Supabase Dashboard
@@ -313,7 +313,7 @@ To copy a backup from one environment to another:
 # Copy production backup to staging
 
 # 1. Download production backup
-aws s3 cp s3://gebeta-backups/production/latest.dump ./production_backup.dump
+aws s3 cp s3://lole-backups/production/latest.dump ./production_backup.dump
 
 # 2. Restore to staging
 export DATABASE_URL=$STAGING_DATABASE_URL
@@ -332,12 +332,12 @@ rm ./production_backup.dump
 
 ### Incident Severity Levels
 
-| Level | Description | Response Time | Example |
-| ----- | ----------- | ------------- | ------- |
-| Sev1 | Complete data loss | Immediate | Database deleted |
-| Sev2 | Partial data loss | < 30 minutes | Table dropped |
-| Sev3 | Data corruption | < 1 hour | Incorrect update |
-| Sev4 | Backup failure | < 4 hours | Backup job failed |
+| Level | Description        | Response Time | Example           |
+| ----- | ------------------ | ------------- | ----------------- |
+| Sev1  | Complete data loss | Immediate     | Database deleted  |
+| Sev2  | Partial data loss  | < 30 minutes  | Table dropped     |
+| Sev3  | Data corruption    | < 1 hour      | Incorrect update  |
+| Sev4  | Backup failure     | < 4 hours     | Backup job failed |
 
 ### Sev1: Complete Data Loss
 
@@ -346,67 +346,72 @@ rm ./production_backup.dump
 **Steps**:
 
 1. **Declare incident** (0-5 minutes)
-   ```bash
-   # Notify stakeholders
-   ./scripts/incident/notify.sh --severity=1 --message="Database unavailable, initiating recovery"
 
-   # Create incident ticket
-   ./scripts/incident/create-ticket.sh --title="Database Recovery" --severity=1
-   ```
+    ```bash
+    # Notify stakeholders
+    ./scripts/incident/notify.sh --severity=1 --message="Database unavailable, initiating recovery"
+
+    # Create incident ticket
+    ./scripts/incident/create-ticket.sh --title="Database Recovery" --severity=1
+    ```
 
 2. **Assess situation** (5-10 minutes)
-   ```bash
-   # Check database connectivity
-   psql $DATABASE_URL -c "SELECT 1;"
 
-   # Check Supabase status page
-   curl -s https://status.supabase.com/api/v2/status.json | jq '.status'
+    ```bash
+    # Check database connectivity
+    psql $DATABASE_URL -c "SELECT 1;"
 
-   # Review recent changes
-   git log --oneline -10
-   ```
+    # Check Supabase status page
+    curl -s https://status.supabase.com/api/v2/status.json | jq '.status'
+
+    # Review recent changes
+    git log --oneline -10
+    ```
 
 3. **Initiate restore** (10-30 minutes)
-   ```bash
-   # Stop application services
-   vercel --prod --env DATABASE_URL=""  # Disable DB connection
 
-   # Restore from most recent backup
-   pg_restore --clean --dbname=$DATABASE_URL s3://gebeta-backups/production/latest.dump
+    ```bash
+    # Stop application services
+    vercel --prod --env DATABASE_URL=""  # Disable DB connection
 
-   # Or use PITR for more recent data
-   supabase db restore --timestamp "$(date -d '1 hour ago' '+%Y-%m-%d %H:%M:%S')"
-   ```
+    # Restore from most recent backup
+    pg_restore --clean --dbname=$DATABASE_URL s3://lole-backups/production/latest.dump
+
+    # Or use PITR for more recent data
+    supabase db restore --timestamp "$(date -d '1 hour ago' '+%Y-%m-%d %H:%M:%S')"
+    ```
 
 4. **Verify restoration** (30-45 minutes)
-   ```bash
-   # Check table counts
-   psql $DATABASE_URL -c "
-     SELECT
-       (SELECT COUNT(*) FROM restaurants) as restaurants,
-       (SELECT COUNT(*) FROM orders) as orders,
-       (SELECT COUNT(*) FROM menu_items) as menu_items,
-       (SELECT COUNT(*) FROM auth.users) as users;
-   "
 
-   # Check recent orders
-   psql $DATABASE_URL -c "SELECT * FROM orders ORDER BY created_at DESC LIMIT 10;"
+    ```bash
+    # Check table counts
+    psql $DATABASE_URL -c "
+      SELECT
+        (SELECT COUNT(*) FROM restaurants) as restaurants,
+        (SELECT COUNT(*) FROM orders) as orders,
+        (SELECT COUNT(*) FROM menu_items) as menu_items,
+        (SELECT COUNT(*) FROM auth.users) as users;
+    "
 
-   # Verify auth system
-   psql $DATABASE_URL -c "SELECT id, email FROM auth.users LIMIT 5;"
-   ```
+    # Check recent orders
+    psql $DATABASE_URL -c "SELECT * FROM orders ORDER BY created_at DESC LIMIT 10;"
+
+    # Verify auth system
+    psql $DATABASE_URL -c "SELECT id, email FROM auth.users LIMIT 5;"
+    ```
 
 5. **Resume operations** (45-60 minutes)
-   ```bash
-   # Re-enable application
-   vercel --prod --env DATABASE_URL="$DATABASE_URL"
 
-   # Run smoke tests
-   ./scripts/test/smoke-test.sh
+    ```bash
+    # Re-enable application
+    vercel --prod --env DATABASE_URL="$DATABASE_URL"
 
-   # Monitor for issues
-   ./scripts/monitoring/watch-metrics.sh --duration=30m
-   ```
+    # Run smoke tests
+    ./scripts/test/smoke-test.sh
+
+    # Monitor for issues
+    ./scripts/monitoring/watch-metrics.sh --duration=30m
+    ```
 
 ### Sev2: Partial Data Loss
 
@@ -534,7 +539,7 @@ jobs:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               run: |
-                  aws s3 cp s3://gebeta-backups/production/latest.dump ./backup.dump
+                  aws s3 cp s3://lole-backups/production/latest.dump ./backup.dump
 
             - name: Verify backup integrity
               run: |
@@ -560,12 +565,12 @@ jobs:
 
 ## Backup Retention Policy
 
-| Backup Type | Retention | Storage Location |
-| ----------- | --------- | ---------------- |
-| Daily snapshots | 30 days | Supabase-managed |
-| Weekly archives | 90 days | S3 (gebeta-backups) |
-| Monthly archives | 1 year | S3 (gebeta-backups-archive) |
-| Pre-migration backups | 90 days | S3 (gebeta-backups) |
+| Backup Type           | Retention | Storage Location          |
+| --------------------- | --------- | ------------------------- |
+| Daily snapshots       | 30 days   | Supabase-managed          |
+| Weekly archives       | 90 days   | S3 (lole-backups)         |
+| Monthly archives      | 1 year    | S3 (lole-backups-archive) |
+| Pre-migration backups | 90 days   | S3 (lole-backups)         |
 
 ---
 
@@ -601,20 +606,20 @@ jobs:
 
 ## Contacts
 
-| Role | Contact | Escalation |
-| ---- | ------- | ---------- |
-| Supabase Support | support@supabase.com | Priority support for Pro plans |
-| On-call Engineer | PagerDuty | Sev1/Sev2 incidents |
-| Database Team Lead | db-team@gebeta.app | Complex restore operations |
-| DevOps Lead | devops@gebeta.app | Infrastructure issues |
+| Role               | Contact              | Escalation                     |
+| ------------------ | -------------------- | ------------------------------ |
+| Supabase Support   | support@supabase.com | Priority support for Pro plans |
+| On-call Engineer   | PagerDuty            | Sev1/Sev2 incidents            |
+| Database Team Lead | db-team@lole.app     | Complex restore operations     |
+| DevOps Lead        | devops@lole.app      | Infrastructure issues          |
 
 ---
 
 ## Revision History
 
-| Date       | Author           | Changes               |
-| ---------- | ---------------- | --------------------- |
-| 2026-02-18 | Engineering Team | Initial documentation |
+| Date       | Author           | Changes                                                               |
+| ---------- | ---------------- | --------------------------------------------------------------------- |
+| 2026-02-18 | Engineering Team | Initial documentation                                                 |
 | 2026-04-04 | Engineering Team | Added RPO/RTO targets, detailed procedures, disaster recovery runbook |
 
 ---

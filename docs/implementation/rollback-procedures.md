@@ -1,10 +1,10 @@
 # Rollback Procedures
 
-This document describes the rollback procedures for Gebeta's Vercel deployments.
+This document describes the rollback procedures for lole's Vercel deployments.
 
 ## Overview
 
-Gebeta supports multiple rollback mechanisms:
+lole supports multiple rollback mechanisms:
 
 1. **GitHub Actions Workflow** - Automated rollback via GitHub UI or API
 2. **Local Script** - Command-line rollback using Vercel CLI
@@ -250,7 +250,7 @@ vercel whoami
 Verify the deployment ID is correct:
 
 ```bash
-vercel list gebeta
+vercel list lole
 ```
 
 ### Rollback Stuck

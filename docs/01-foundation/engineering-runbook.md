@@ -1,8 +1,8 @@
-# ገበታ Gebeta — Engineering Runbook
+# ገበታ lole — Engineering Runbook
 
 **Version 1.0 · March 2026 · For the Builder**
 
-> This is the operational playbook. It covers everything you need to know to deploy, debug, and operate Gebeta in production — without a DevOps team.
+> This is the operational playbook. It covers everything you need to know to deploy, debug, and operate lole in production — without a DevOps team.
 
 ---
 
@@ -10,7 +10,7 @@
 
 | Environment | URL                                 | Branch        | Purpose          |
 | ----------- | ----------------------------------- | ------------- | ---------------- |
-| Production  | `gebeta.app` + `gebetamenu.com`     | `main`        | Live restaurants |
+| Production  | `lole.app` + `lolemenu.com`         | `main`        | Live restaurants |
 | Preview     | Vercel preview URL (auto-generated) | Any PR branch | Feature testing  |
 | Local       | `localhost:3000`                    | Any           | Development      |
 
@@ -52,7 +52,7 @@ ERCA_API_URL=https://api.erca.gov.et       # Production
 ERCA_API_KEY=...
 
 # QR Security
-GEBETA_QR_HMAC_SECRET=...                 # Must be 32+ random bytes, never reuse
+lole_QR_HMAC_SECRET=...                 # Must be 32+ random bytes, never reuse
 
 # Monitoring
 NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
@@ -63,8 +63,8 @@ TELEGRAM_ALERT_CHAT_ID=...                 # Your personal Telegram for alerts
 POWERSYNC_URL=https://...powersync.journeyapps.com
 
 # App
-NEXT_PUBLIC_APP_URL=https://gebeta.app
-NEXT_PUBLIC_GRAPHQL_URL=https://api.gebeta.app/graphql
+NEXT_PUBLIC_APP_URL=https://lole.app
+NEXT_PUBLIC_GRAPHQL_URL=https://api.lole.app/graphql
 NEXT_PUBLIC_VERSION=1.0.0
 ```
 
@@ -172,7 +172,7 @@ railway up --service apollo-router
 1. Check /api/webhooks/chapa or /api/webhooks/telebirr in Axiom logs
 2. Check if webhook is arriving (Axiom: POST /api/webhooks/* in last 1h)
 3. If not arriving: check Chapa/Telebirr dashboard webhook config
-   - Production webhook URL must be: https://gebeta.app/api/webhooks/chapa
+   - Production webhook URL must be: https://lole.app/api/webhooks/chapa
    - Not a localhost or preview URL
 4. If arriving but rejecting: HMAC verification failing
    - Check CHAPA_WEBHOOK_SECRET env var in Vercel production
@@ -232,8 +232,8 @@ railway up --service apollo-router
 
 ```bash
 # Clone and install
-git clone https://github.com/yourorg/gebeta
-cd gebeta
+git clone https://github.com/yourorg/lole
+cd lole
 npm install
 
 # Set up Supabase locally
@@ -282,10 +282,10 @@ npm run migration:new -- {migration_name}
 npm run migration:push
 
 # View production logs (Axiom)
-# Go to: app.axiom.co → gebeta dataset
+# Go to: app.axiom.co → lole dataset
 
 # View production errors (Sentry)
-# Go to: sentry.io → gebeta project
+# Go to: sentry.io → lole project
 
 # View job queue (QStash)
 # Go to: console.upstash.com → QStash
@@ -305,7 +305,7 @@ Rotate these secrets if you suspect compromise:
 
 | Secret                      | Where Set                       | Rotation Impact                                                               |
 | --------------------------- | ------------------------------- | ----------------------------------------------------------------------------- |
-| `GEBETA_QR_HMAC_SECRET`     | Vercel env + code               | All existing QR codes expire immediately. Regenerate QR codes for all tables. |
+| `lole_QR_HMAC_SECRET`       | Vercel env + code               | All existing QR codes expire immediately. Regenerate QR codes for all tables. |
 | `CHAPA_WEBHOOK_SECRET`      | Vercel env + Chapa dashboard    | Must match both locations. Old webhooks fail for ~60 seconds during rotation. |
 | `TELEBIRR_WEBHOOK_SECRET`   | Vercel env + Telebirr dashboard | Same as Chapa.                                                                |
 | `SUPABASE_SERVICE_ROLE_KEY` | Vercel env only                 | Rotate in Supabase dashboard. Update Vercel env. Redeploy.                    |
@@ -366,7 +366,7 @@ As the sole engineer, every alert comes to you. Here is how to triage:
 **Response template (Telegram to affected restaurant):**
 
 ```
-[Gebeta Support]
+[lole Support]
 ስናካ (Restaurant Name),
 ቴክኒካዊ ችግር ተፈጥሯል እናስተካክለዋለን።
 We are aware of a technical issue and are working to resolve it.
@@ -375,4 +375,4 @@ ETA: 30 minutes
 
 ---
 
-_Gebeta Engineering Runbook v1.0 · March 2026_
+_lole Engineering Runbook v1.0 · March 2026_

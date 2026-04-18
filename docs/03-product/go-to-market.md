@@ -1,8 +1,8 @@
-# ገበጣ Gebeta — Go-To-Market Strategy
+# ገበጣ lole — Go-To-Market Strategy
 
 **Version 1.0 · March 2026 · Confidential**
 
-> This document covers how Gebeta gets from 0 to 200 restaurants. It assumes the founder is the sales team. No sales hires until Month 9 at the earliest. Every strategy in this document is executable by one person with a phone, Telegram, and a working product.
+> This document covers how lole gets from 0 to 200 restaurants. It assumes the founder is the sales team. No sales hires until Month 9 at the earliest. Every strategy in this document is executable by one person with a phone, Telegram, and a working product.
 
 ---
 
@@ -108,7 +108,7 @@ Your first 5 restaurants will come from your personal network. Your next 45 will
 
 ### Phase 1 — Referral Engine (Month 1–3) · Target: 5 → 25 restaurants
 
-**The activation moment:** When a pilot restaurant owner tells another owner "you should use Gebeta" without you asking. This is the only metric that matters in Phase 1.
+**The activation moment:** When a pilot restaurant owner tells another owner "you should use lole" without you asking. This is the only metric that matters in Phase 1.
 
 **The referral programme (Horizon 1):**
 
@@ -134,7 +134,7 @@ Do not spread across all of Addis randomly. Cluster by neighbourhood:
 2. Every passing restaurant owner sees the tablets, the QR menus, the Amharic KDS
 3. When you pitch the next restaurant on that street: "Your three neighbours already use this"
 
-Physical visibility is marketing. A guest scanning a Gebeta QR code at a table is an impression.
+Physical visibility is marketing. A guest scanning a lole QR code at a table is an impression.
 
 ---
 
@@ -144,13 +144,13 @@ Once 25 restaurants are live, there is enough social proof to invest in inbound 
 
 **Channel 1 — Telegram Channel**
 
-Create "Gebeta Restaurant Tips" (ምግብ ቤት ጠቃሚ ምክሮች) — a Telegram channel with daily/weekly content for Ethiopian restaurant owners:
+Create "lole Restaurant Tips" (ምግብ ቤት ጠቃሚ ምክሮች) — a Telegram channel with daily/weekly content for Ethiopian restaurant owners:
 
 - "አዲሱ የፀደይ ምናሌ ሀሳቦች" (New spring menu ideas)
 - Revenue optimisation tips ("Your busiest hour is probably 12–1PM. Do you have enough staff?")
 - ERCA compliance updates
 - ETB/USD exchange rate impact on food costs
-- Gebeta customer stories (with owner's permission and Amharic quote)
+- lole customer stories (with owner's permission and Amharic quote)
 
 Target: 2,000 subscribers within 6 months. Cost: 0 ETB. Every subscriber is a potential customer.
 
@@ -184,7 +184,7 @@ At 75 restaurants, the referral engine is running but a structured sales process
 - Ethiopian, Addis-based, speaks Amharic fluently
 - Restaurant or hospitality background preferred — they understand the job of a waiter and a chef
 - OTE structure: ETB 8,000 base + ETB 500 per activated restaurant + ETB 200/month recurring for active restaurants in their book
-- Equipped with: a demo tablet (fully set up Gebeta), printed one-pager in Amharic, Telegram access to founder for escalations
+- Equipped with: a demo tablet (fully set up lole), printed one-pager in Amharic, Telegram access to founder for escalations
 
 **Sales process (standardised):**
 
@@ -208,7 +208,7 @@ Day 60:  Referral ask. "Which other restaurant owner should I call?"
 
 **The demo tablet:**
 
-Every sales conversation happens on a real Gebeta tablet — pre-loaded with a demo restaurant menu (in Amharic), with a thermal printer connected. The prospect takes their own order. This is more powerful than any slide deck.
+Every sales conversation happens on a real lole tablet — pre-loaded with a demo restaurant menu (in Amharic), with a thermal printer connected. The prospect takes their own order. This is more powerful than any slide deck.
 
 ---
 
@@ -264,7 +264,7 @@ Churn signals to watch in the dashboard (admin view, Phase 2):
 - Restaurant processed <20% of their historical order volume this week → outreach
 - Restaurant has submitted a support ticket that has been open >24h → escalate to founder
 
-**The hard truth about Ethiopian restaurant churn:** Restaurants close. The industry has high mortality (estimated 30–40% of new restaurants close within 2 years in Addis). Gebeta's churn will always have a floor driven by restaurant closures, not by product dissatisfaction. Track "closed restaurant churn" separately from "voluntary product churn."
+**The hard truth about Ethiopian restaurant churn:** Restaurants close. The industry has high mortality (estimated 30–40% of new restaurants close within 2 years in Addis). lole's churn will always have a floor driven by restaurant closures, not by product dissatisfaction. Track "closed restaurant churn" separately from "voluntary product churn."
 
 ---
 
@@ -304,15 +304,15 @@ Churn signals to watch in the dashboard (admin view, Phase 2):
 
 Every sales conversation, every demo, every Telegram post, every TikTok video should tell the same story:
 
-> **Gebeta is the first POS built for Ethiopia by Ethiopians.**
+> **lole is the first POS built for Ethiopia by Ethiopians.**
 >
 > It speaks Amharic. It works on any tablet from Merkato. It accepts Telebirr. It works during power cuts. It handles ERCA. And it costs less per month than a bag of teff.
 >
 > Every other option was built for America or Europe and adapted for Ethiopia.
-> Gebeta was built for Addis Ababa first.
+> lole was built for Addis Ababa first.
 
 That is the story. Everything else is a feature list.
 
 ---
 
-_Gebeta Go-To-Market Strategy v1.0 · March 2026 · Confidential_
+_lole Go-To-Market Strategy v1.0 · March 2026 · Confidential_

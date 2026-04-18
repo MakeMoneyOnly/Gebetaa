@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines Gebeta Restaurant OS's enterprise-grade approach to managing npm dependencies, with a focus on security, reliability, and maintainability.
+This document outlines lole Restaurant OS's enterprise-grade approach to managing npm dependencies, with a focus on security, reliability, and maintainability.
 
 ## Table of Contents
 

@@ -2,7 +2,7 @@
 
 **Version 1.0 · April 2026**
 
-> This runbook covers operational procedures for the ERCA (Ethiopian Revenue and Customs Authority) integration in Gebeta.
+> This runbook covers operational procedures for the ERCA (Ethiopian Revenue and Customs Authority) integration in lole.
 
 ---
 
@@ -17,12 +17,12 @@ The ERCA integration provides automated VAT compliance for Ethiopian restaurants
 
 ### Key Components
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| ERCA Service | `src/lib/fiscal/erca-service.ts` | Core integration logic |
-| MoR Client | `src/lib/fiscal/mor-client.ts` | Fiscal printer integration |
-| ERCA Submissions Table | `supabase/migrations/..._erca_submissions.sql` | Audit trail storage |
-| Job Handler | `src/app/api/jobs/erca/submit/route.ts` | QStash job processor |
+| Component              | Location                                       | Purpose                    |
+| ---------------------- | ---------------------------------------------- | -------------------------- |
+| ERCA Service           | `src/lib/fiscal/erca-service.ts`               | Core integration logic     |
+| MoR Client             | `src/lib/fiscal/mor-client.ts`                 | Fiscal printer integration |
+| ERCA Submissions Table | `supabase/migrations/..._erca_submissions.sql` | Audit trail storage        |
+| Job Handler            | `src/app/api/jobs/erca/submit/route.ts`        | QStash job processor       |
 
 ---
 
@@ -46,10 +46,10 @@ For a restaurant to use ERCA integration:
 
 1. Navigate to `/merchant/settings` → Tax & Compliance
 2. Enter:
-   - **TIN Number**: Taxpayer Identification Number (e.g., `0014-XXXX-XXXXX`)
-   - **VAT Registration Number**: VAT certificate number (e.g., `VAT-XXXX-XXXX`)
-   - **Legal Business Name**: Registered name in English
-   - **Legal Business Name (Amharic)**: Registered name in Amharic
+    - **TIN Number**: Taxpayer Identification Number (e.g., `0014-XXXX-XXXXX`)
+    - **VAT Registration Number**: VAT certificate number (e.g., `VAT-XXXX-XXXX`)
+    - **Legal Business Name**: Registered name in English
+    - **Legal Business Name (Amharic)**: Registered name in Amharic
 
 3. When `vat_number` is set, ERCA integration is automatically enabled
 
@@ -59,7 +59,7 @@ For a restaurant to use ERCA integration:
 
 ### Tax-Inclusive Pricing
 
-Ethiopian law requires VAT to be included in displayed prices. Gebeta extracts VAT from the total:
+Ethiopian law requires VAT to be included in displayed prices. lole extracts VAT from the total:
 
 ```typescript
 // Price displayed to customer: 115 ETB (tax-inclusive)
@@ -118,11 +118,11 @@ Check restaurant.vat_number IS NOT NULL
 
 ### Key Metrics
 
-| Metric | Threshold | Action |
-|--------|-----------|--------|
-| Submission failure rate | > 5% | Alert ops team |
-| Pending submissions age | > 1 hour | Check ERCA API status |
-| Daily submission count | 0 for VAT-registered restaurant | Alert - possible issue |
+| Metric                  | Threshold                       | Action                 |
+| ----------------------- | ------------------------------- | ---------------------- |
+| Submission failure rate | > 5%                            | Alert ops team         |
+| Pending submissions age | > 1 hour                        | Check ERCA API status  |
+| Daily submission count  | 0 for VAT-registered restaurant | Alert - possible issue |
 
 ### Health Check Endpoint
 
@@ -154,19 +154,21 @@ Navigate to `/merchant/finance` → ERCA Compliance tab to view:
 **Symptoms**: High failure rate, network errors in logs
 
 **Resolution**:
+
 1. Check ERCA API status page
 2. Verify network connectivity from Vercel/AWS
 3. Submissions will auto-retry via QStash (5 retries over 2 hours)
 4. If persistent, enable stub mode temporarily:
-   ```bash
-   vercel env add ERCA_SANDBOX_MODE true
-   ```
+    ```bash
+    vercel env add ERCA_SANDBOX_MODE true
+    ```
 
 #### 2. Invalid TIN Number
 
 **Symptoms**: "Invalid TIN" error from ERCA
 
 **Resolution**:
+
 1. Verify TIN format: `XXXX-XXXX-XXXXX`
 2. Check TIN is registered with ERCA
 3. Update restaurant settings with correct TIN
@@ -176,19 +178,21 @@ Navigate to `/merchant/finance` → ERCA Compliance tab to view:
 **Symptoms**: "Invoice already exists" error
 
 **Resolution**:
+
 1. Check `erca_submissions` table for existing entry
 2. If submission exists with status 'success', no action needed
 3. If status 'failed', use retry endpoint:
-   ```bash
-   POST /api/jobs/erca/retry
-   { "submissionId": "<uuid>" }
-   ```
+    ```bash
+    POST /api/jobs/erca/retry
+    { "submissionId": "<uuid>" }
+    ```
 
 #### 4. Missing VAT Number
 
 **Symptoms**: Invoices not being submitted
 
 **Resolution**:
+
 1. Check restaurant.vat_number is set
 2. If null, restaurant is not VAT-registered - expected behavior
 3. If should be registered, update restaurant settings
@@ -215,12 +219,13 @@ WHERE id = 'uuid-of-failed-submission';
 If automatic submission fails completely:
 
 1. Generate invoice manually:
-   ```typescript
-   import { getERCAService } from '@/lib/fiscal/erca-service';
 
-   const ercaService = getERCAService();
-   await ercaService.submitInvoice('order-uuid');
-   ```
+    ```typescript
+    import { getERCAService } from '@/lib/fiscal/erca-service';
+
+    const ercaService = getERCAService();
+    await ercaService.submitInvoice('order-uuid');
+    ```
 
 2. Or submit directly to ERCA portal as fallback
 
@@ -231,21 +236,22 @@ If automatic submission fails completely:
 ### Morning Checklist
 
 1. Check overnight submission status:
-   ```sql
-   SELECT status, COUNT(*)
-   FROM erca_submissions
-   WHERE submitted_at >= CURRENT_DATE - INTERVAL '1 day'
-   GROUP BY status;
-   ```
+
+    ```sql
+    SELECT status, COUNT(*)
+    FROM erca_submissions
+    WHERE submitted_at >= CURRENT_DATE - INTERVAL '1 day'
+    GROUP BY status;
+    ```
 
 2. Review failed submissions:
-   ```sql
-   SELECT id, order_id, invoice_number, error_message, created_at
-   FROM erca_submissions
-   WHERE status = 'failed'
-   ORDER BY created_at DESC
-   LIMIT 10;
-   ```
+    ```sql
+    SELECT id, order_id, invoice_number, error_message, created_at
+    FROM erca_submissions
+    WHERE status = 'failed'
+    ORDER BY created_at DESC
+    LIMIT 10;
+    ```
 
 ### End-of-Day Report
 
@@ -272,9 +278,9 @@ import { getERCAService } from '@/lib/fiscal/erca-service';
 
 const ercaService = getERCAService();
 const report = await ercaService.generateMonthlyVATReport(
-  'restaurant-uuid',
-  2026,
-  4 // April
+    'restaurant-uuid',
+    2026,
+    4 // April
 );
 
 console.log(report);
@@ -315,6 +321,7 @@ ERCA submissions are retained for 7 years per Ethiopian law:
 ### Audit Trail
 
 All submissions are logged with:
+
 - Timestamp
 - Invoice number
 - VAT amount
@@ -330,35 +337,37 @@ All submissions are logged with:
 1. **Immediate**: Monitor submission queue depth
 2. **Short-term**: QStash will retry automatically
 3. **Extended outage** (>4 hours):
-   - Enable stub mode for new submissions
-   - Manual batch submission when API restored
+    - Enable stub mode for new submissions
+    - Manual batch submission when API restored
 
 ### Data Corruption
 
 1. Stop new submissions:
-   ```sql
-   -- Prevent new submissions temporarily
-   ALTER TABLE erca_submissions DISABLE TRIGGER ALL;
-   ```
+
+    ```sql
+    -- Prevent new submissions temporarily
+    ALTER TABLE erca_submissions DISABLE TRIGGER ALL;
+    ```
 
 2. Restore from backup
 3. Re-enable and verify:
-   ```sql
-   ALTER TABLE erca_submissions ENABLE TRIGGER ALL;
-   ```
+    ```sql
+    ALTER TABLE erca_submissions ENABLE TRIGGER ALL;
+    ```
 
 ### Compliance Audit
 
 If ERCA requests audit data:
 
 1. Export submissions for requested period:
-   ```sql
-   SELECT *
-   FROM erca_submissions
-   WHERE restaurant_id = 'requested-restaurant'
-   AND submitted_at BETWEEN 'start-date' AND 'end-date'
-   ORDER BY submitted_at;
-   ```
+
+    ```sql
+    SELECT *
+    FROM erca_submissions
+    WHERE restaurant_id = 'requested-restaurant'
+    AND submitted_at BETWEEN 'start-date' AND 'end-date'
+    ORDER BY submitted_at;
+    ```
 
 2. Generate PDF report via `/merchant/finance` → Export
 
@@ -367,13 +376,13 @@ If ERCA requests audit data:
 ## Contact & Support
 
 - **ERCA Helpdesk**: +251-11-XXX-XXXX
-- **Gebeta Support**: support@gebeta.et
+- **lole Support**: support@lole.et
 - **Internal Escalation**: #ops channel on Slack
 
 ---
 
 ## Changelog
 
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-04-05 | 1.0 | Initial runbook (MED-024) |
+| Date       | Version | Changes                   |
+| ---------- | ------- | ------------------------- |
+| 2026-04-05 | 1.0     | Initial runbook (MED-024) |

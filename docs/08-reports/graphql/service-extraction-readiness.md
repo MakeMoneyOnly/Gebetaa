@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document validates that Gebeta's GraphQL Federation architecture allows subgraphs to be extracted into separate services without requiring client rewrites. This addresses the CRIT-07 requirement: "Service extraction possible without client rewrites."
+This document validates that lole's GraphQL Federation architecture allows subgraphs to be extracted into separate services without requiring client rewrites. This addresses the CRIT-07 requirement: "Service extraction possible without client rewrites."
 
 ## Architecture Validation
 
@@ -60,7 +60,7 @@ Update `router/router.yaml` or `graphql/supergraph.yaml`:
 ```yaml
 subgraphs:
     orders:
-        routing_url: https://orders-service.gebeta.app/graphql
+        routing_url: https://orders-service.lole.app/graphql
         schema:
             file: ./subgraphs/orders.graphql
 ```

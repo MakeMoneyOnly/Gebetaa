@@ -1,9 +1,9 @@
-# ገበጣ Gebeta — Developer & Partner API Guide
+# ገበጣ lole — Developer & Partner API Guide
 
 **Version 1.0 · March 2026**
 **Confidential — Shared with Technology Partners Under NDA**
 
-> This guide is for technology partners building on top of Gebeta's data and workflows — accountants, HR platforms, ERP systems, food suppliers, loyalty aggregators, and analytics tools. If you are a delivery platform, see the Delivery Partner Integration Guide instead. This guide covers read-access to restaurant data, not real-time order injection.
+> This guide is for technology partners building on top of lole's data and workflows — accountants, HR platforms, ERP systems, food suppliers, loyalty aggregators, and analytics tools. If you are a delivery platform, see the Delivery Partner Integration Guide instead. This guide covers read-access to restaurant data, not real-time order injection.
 
 ---
 
@@ -18,7 +18,7 @@
 | **Analytics / BI tool**                                | Read aggregated transaction data                | /analytics                      |
 | **ERP integration**                                    | Full sync of all the above on a schedule        | All endpoints                   |
 
-This API is a **data-out API**. It gives partners read access (and limited write access where relevant) to a restaurant's Gebeta data, with the restaurant's explicit permission. It is not the same as the delivery partner API, which injects orders in real time.
+This API is a **data-out API**. It gives partners read access (and limited write access where relevant) to a restaurant's lole data, with the restaurant's explicit permission. It is not the same as the delivery partner API, which injects orders in real time.
 
 ---
 
@@ -29,11 +29,11 @@ Partner Application
         │
         │  HTTPS + API Key (per restaurant consent)
         ▼
-  api.gebeta.app/partner/v1
+  api.lole.app/partner/v1
         │
         │  Apollo Router validates API key → restaurant_id scope
         ▼
-  Gebeta PostgreSQL (Supabase)
+  lole PostgreSQL (Supabase)
         │
   RLS enforces: partner sees only data for the restaurant they were granted access to
 ```
@@ -49,13 +49,13 @@ Every API key is scoped to:
 
 ### API Key Structure
 
-API keys are issued by Gebeta and granted by the restaurant. They look like:
+API keys are issued by lole and granted by the restaurant. They look like:
 
 ```
 gbp_live_ca3f8e7b4d91a2c05fe6d8b13729048e5d6c4f2a1b9e7d5c3a1f8e6b4d2c0a
 └──┘ └──┘ └───────────────────────────────────────────────────────────────┘
  1    2                              3
- 1: prefix "gbp" = Gebeta Partner
+ 1: prefix "gbp" = lole Partner
  2: environment "live" or "test"
  3: 64-character hex key
 ```
@@ -114,7 +114,7 @@ Cursors are opaque base64 strings. Do not parse or construct them. To paginate t
 
 ## API Reference
 
-**Base URL:** `https://api.gebeta.app/partner/v1`
+**Base URL:** `https://api.lole.app/partner/v1`
 
 ---
 
@@ -375,7 +375,7 @@ GET /partner/v1/vat-summary?from=2026-03-01&to=2026-03-31
 }
 ```
 
-**VAT formula note:** Ethiopia uses tax-inclusive pricing. VAT is extracted from the gross price using the formula `VAT = price × 15 ÷ 115`, not `price × 0.15`. Your accounting software must implement this correctly to match Gebeta's calculations and the ERCA submission records.
+**VAT formula note:** Ethiopia uses tax-inclusive pricing. VAT is extracted from the gross price using the formula `VAT = price × 15 ÷ 115`, not `price × 0.15`. Your accounting software must implement this correctly to match lole's calculations and the ERCA submission records.
 
 ---
 
@@ -652,7 +652,7 @@ Update stock levels. Used by supplier integrations to record deliveries.
 }
 ```
 
-`quantity_change` is always a delta (positive = restock, negative = waste/adjustment). Gebeta records this as a stock movement with `type: adjustment` or `type: restock` depending on sign and reason.
+`quantity_change` is always a delta (positive = restock, negative = waste/adjustment). lole records this as a stock movement with `type: adjustment` or `type: restock` depending on sign and reason.
 
 ---
 
@@ -714,14 +714,14 @@ Register a webhook endpoint in the partner portal to receive real-time push even
 
 ### Webhook Security
 
-Webhooks are signed using the same HMAC-SHA256 scheme as the delivery partner integration. Verify the `X-Gebeta-Signature` header using your API key secret before processing any event.
+Webhooks are signed using the same HMAC-SHA256 scheme as the delivery partner integration. Verify the `X-lole-Signature` header using your API key secret before processing any event.
 
 ### Webhook Reliability
 
-- Gebeta retries failed webhook deliveries with exponential backoff: 30s, 2m, 10m, 30m, 2h
+- lole retries failed webhook deliveries with exponential backoff: 30s, 2m, 10m, 30m, 2h
 - If all retries fail, the event is moved to your partner portal dead-letter queue (visible in the dashboard)
 - Your endpoint must return HTTP `200` within 10 seconds
-- Your endpoint must be idempotent — Gebeta may deliver the same event more than once. Use the `event_id` field to deduplicate.
+- Your endpoint must be idempotent — lole may deliver the same event more than once. Use the `event_id` field to deduplicate.
 
 ---
 
@@ -742,19 +742,19 @@ All errors follow this format:
 
 Include `request_id` in any support ticket.
 
-| HTTP Status | Code                   | Common cause                                               |
-| ----------- | ---------------------- | ---------------------------------------------------------- |
-| 400         | `INVALID_DATE_RANGE`   | Range exceeds 366 days or `from` > `to`                    |
-| 400         | `INVALID_GRANULARITY`  | Unknown `granularity` value                                |
-| 400         | `INVALID_CURSOR`       | Cursor is malformed or expired                             |
-| 401         | `INVALID_API_KEY`      | Key is wrong format or does not exist                      |
-| 401         | `KEY_REVOKED`          | Restaurant revoked this key                                |
-| 403         | `SCOPE_DENIED`         | Key does not have required scope                           |
-| 404         | `RESTAURANT_NOT_FOUND` | The restaurant associated with this key is deleted         |
-| 422         | `PRICE_OUT_OF_RANGE`   | Price update exceeds allowed range (±200% of current)      |
-| 429         | `RATE_LIMITED`         | See rate limits below                                      |
-| 500         | `INTERNAL_ERROR`       | Gebeta internal error. Include `request_id` in bug report. |
-| 503         | `MAINTENANCE`          | Scheduled maintenance. Retry after `Retry-After` header.   |
+| HTTP Status | Code                   | Common cause                                             |
+| ----------- | ---------------------- | -------------------------------------------------------- |
+| 400         | `INVALID_DATE_RANGE`   | Range exceeds 366 days or `from` > `to`                  |
+| 400         | `INVALID_GRANULARITY`  | Unknown `granularity` value                              |
+| 400         | `INVALID_CURSOR`       | Cursor is malformed or expired                           |
+| 401         | `INVALID_API_KEY`      | Key is wrong format or does not exist                    |
+| 401         | `KEY_REVOKED`          | Restaurant revoked this key                              |
+| 403         | `SCOPE_DENIED`         | Key does not have required scope                         |
+| 404         | `RESTAURANT_NOT_FOUND` | The restaurant associated with this key is deleted       |
+| 422         | `PRICE_OUT_OF_RANGE`   | Price update exceeds allowed range (±200% of current)    |
+| 429         | `RATE_LIMITED`         | See rate limits below                                    |
+| 500         | `INTERNAL_ERROR`       | lole internal error. Include `request_id` in bug report. |
+| 503         | `MAINTENANCE`          | Scheduled maintenance. Retry after `Retry-After` header. |
 
 ---
 
@@ -792,7 +792,7 @@ The API is versioned at the URL path (`/partner/v1`). We commit to:
 - **Additive changes** (new fields, new endpoints, new event types) are non-breaking and may ship without notice
 - **Breaking changes** (removed fields, changed data types, renamed endpoints) require a new major version
 
-Subscribe to API change notifications at: integrations@gebeta.app
+Subscribe to API change notifications at: integrations@lole.app
 
 **API Changelog:**
 
@@ -818,21 +818,21 @@ Until SDKs are available, use the reference implementations in this guide. The s
 
 ## Support & Onboarding
 
-| Topic                                   | Contact                                                     |
-| --------------------------------------- | ----------------------------------------------------------- |
-| API access request and credential setup | integrations@gebeta.app                                     |
-| Technical questions during integration  | integrations@gebeta.app                                     |
-| Production issues                       | Telegram: @GebetaIntegrations (6am–11pm EAT)                |
-| Security disclosures                    | security@gebeta.app                                         |
-| Feature requests                        | integrations@gebeta.app with subject: "API Feature Request" |
+| Topic                                   | Contact                                                   |
+| --------------------------------------- | --------------------------------------------------------- |
+| API access request and credential setup | integrations@lole.app                                     |
+| Technical questions during integration  | integrations@lole.app                                     |
+| Production issues                       | Telegram: @loleIntegrations (6am–11pm EAT)                |
+| Security disclosures                    | security@lole.app                                         |
+| Feature requests                        | integrations@lole.app with subject: "API Feature Request" |
 
 **To request production API access:**
 
-1. Email integrations@gebeta.app with your company name, use case, and which scopes you require
+1. Email integrations@lole.app with your company name, use case, and which scopes you require
 2. We verify that the intended restaurants consent to the integration
 3. Credentials are issued within 2 business days
-4. You receive: `GEBETA_API_KEY` (partner-level), plus per-restaurant keys after restaurant opt-in
+4. You receive: `lole_API_KEY` (partner-level), plus per-restaurant keys after restaurant opt-in
 
 ---
 
-_Gebeta Developer & Partner API Guide v1.0 · March 2026 · Confidential — Shared Under NDA_
+_lole Developer & Partner API Guide v1.0 · March 2026 · Confidential — Shared Under NDA_

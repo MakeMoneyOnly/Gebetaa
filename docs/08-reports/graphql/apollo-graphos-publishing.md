@@ -2,11 +2,11 @@
 
 ## Overview
 
-This document describes how to publish the Gebeta subgraph schemas to Apollo GraphOS.
+This document describes how to publish the lole subgraph schemas to Apollo GraphOS.
 
 ## Prerequisites
 
-1. **Apollo GraphOS Account**: Already created (`gebeta-production-tj1sjiw@current`)
+1. **Apollo GraphOS Account**: Already created (`lole-production-tj1sjiw@current`)
 2. **Apollo API Key**: Get from https://studio.apollographql.com/settings/api-keys
 3. **Rover CLI**: Installed and configured
 
@@ -39,7 +39,7 @@ Run from the project root:
 ```bash
 # Set environment variables
 $env:APOLLO_KEY = "your-key-here"
-$env:GRAPH_REF = "gebeta-production-tj1sjiw@current"
+$env:GRAPH_REF = "lole-production-tj1sjiw@current"
 
 # Or use the script
 .\scripts\publish-subgraphs.ps1
@@ -59,11 +59,11 @@ The repository already includes a GitHub Actions workflow for schema publishing.
 
 ## Option 3: Manual Upload via Apollo Studio
 
-1. Go to https://studio.apollographql.com/graph/gebeta-production-tj1sjiw
+1. Go to https://studio.apollographql.com/graph/lole-production-tj1sjiw
 2. Navigate to your graph's "Subgraphs" tab
 3. Click "Add Subgraph" for each subgraph:
     - Name: orders, menu, payments, guests, staff
-    - Routing URL: https://gebeta.app/api/graphql
+    - Routing URL: https://lole.app/api/graphql
     - Schema: Upload the corresponding `.graphql` file from `src/domains/`
 
 ## Subgraph Schemas
@@ -91,7 +91,7 @@ After successful publishing:
 1. Deploy Apollo Router to Railway (see `router/`)
 2. Configure environment variables in Railway:
     - `APOLLO_KEY`: Your Apollo API key
-    - `APOLLO_GRAPH_REF`: `gebeta-production-tj1sjiw@current`
+    - `APOLLO_GRAPH_REF`: `lole-production-tj1sjiw@current`
 3. Update DNS to point to the router
 
 ## Troubleshooting

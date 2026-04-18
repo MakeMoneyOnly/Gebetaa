@@ -1,35 +1,35 @@
-# ገበጣ Gebeta — Delivery Partner Integration Guide
+# ገበጣ lole — Delivery Partner Integration Guide
 
 **Version 1.0 · March 2026**
 **Confidential — Shared with Delivery Partners Under NDA**
 
-> This document is the single source of truth for any delivery platform integrating with Gebeta. It defines the exact API surface, webhook contracts, authentication model, error handling expectations, and operational requirements for a production-grade integration. If something is not in this document, ask before building.
+> This document is the single source of truth for any delivery platform integrating with lole. It defines the exact API surface, webhook contracts, authentication model, error handling expectations, and operational requirements for a production-grade integration. If something is not in this document, ask before building.
 
 ---
 
 ## Integration Overview
 
-Gebeta is the POS and kitchen operating system inside the restaurant. You are the delivery platform outside it. The integration connects these two worlds so that orders placed on your platform arrive in the restaurant's unified Gebeta order queue — alongside dine-in orders — without requiring a separate tablet, a separate login, or a separate menu management workflow.
+lole is the POS and kitchen operating system inside the restaurant. You are the delivery platform outside it. The integration connects these two worlds so that orders placed on your platform arrive in the restaurant's unified lole order queue — alongside dine-in orders — without requiring a separate tablet, a separate login, or a separate menu management workflow.
 
 ### What the Integration Enables
 
-| Capability            | Description                                                                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **Menu sync**         | Your platform fetches the restaurant's live menu from Gebeta. One menu update in Gebeta propagates to your app automatically.          |
-| **Order injection**   | Delivery orders placed on your platform are pushed into Gebeta's order queue. They appear on the kitchen KDS alongside dine-in orders. |
-| **Status callbacks**  | Gebeta pushes real-time order status updates (confirmed, preparing, ready for pickup) to your webhook endpoint.                        |
-| **Item availability** | Your platform can mark items as 86'd (unavailable) via Gebeta, or receive push notifications when Gebeta marks an item unavailable.    |
-| **Operating hours**   | Your platform reads restaurant operating hours from Gebeta to gate ordering when the restaurant is closed.                             |
+| Capability            | Description                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Menu sync**         | Your platform fetches the restaurant's live menu from lole. One menu update in lole propagates to your app automatically.            |
+| **Order injection**   | Delivery orders placed on your platform are pushed into lole's order queue. They appear on the kitchen KDS alongside dine-in orders. |
+| **Status callbacks**  | lole pushes real-time order status updates (confirmed, preparing, ready for pickup) to your webhook endpoint.                        |
+| **Item availability** | Your platform can mark items as 86'd (unavailable) via lole, or receive push notifications when lole marks an item unavailable.      |
+| **Operating hours**   | Your platform reads restaurant operating hours from lole to gate ordering when the restaurant is closed.                             |
 
 ### What Is Out of Scope
 
-| Capability                 | Status                                                                                                                  |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Payment processing         | Gebeta does not process delivery payments — you do. Gebeta receives the order as already-paid.                          |
-| Delivery logistics         | Gebeta has no knowledge of driver assignment, GPS tracking, or delivery routing.                                        |
-| Customer identity          | Gebeta receives only what is needed to fulfill the order (items, special notes, your order reference). No customer PII. |
-| Pricing override           | Gebeta's menu prices are the restaurant's prices. You may apply your own delivery surcharge on your side.               |
-| Reservations or scheduling | Not supported. Gebeta processes orders in real time only.                                                               |
+| Capability                 | Status                                                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Payment processing         | lole does not process delivery payments — you do. lole receives the order as already-paid.                            |
+| Delivery logistics         | lole has no knowledge of driver assignment, GPS tracking, or delivery routing.                                        |
+| Customer identity          | lole receives only what is needed to fulfill the order (items, special notes, your order reference). No customer PII. |
+| Pricing override           | lole's menu prices are the restaurant's prices. You may apply your own delivery surcharge on your side.               |
+| Reservations or scheduling | Not supported. lole processes orders in real time only.                                                               |
 
 ---
 
@@ -44,7 +44,7 @@ The following partners have been issued credentials or are in the integration qu
 | Zmall         | Pending credential issuance | Webhook push | —               |
 | Esoora        | Pending credential issuance | Webhook push | —               |
 
-To request integration credentials for a new platform, contact: integrations@gebeta.app
+To request integration credentials for a new platform, contact: integrations@lole.app
 
 ---
 
@@ -55,22 +55,22 @@ To request integration credentials for a new platform, contact: integrations@geb
 Every delivery partner receives two credentials:
 
 ```
-GEBETA_PARTNER_ID      A stable UUID identifying your platform across all restaurants
-GEBETA_PARTNER_SECRET  A 64-character hex secret used to sign your requests and verify Gebeta's webhooks
+lole_PARTNER_ID      A stable UUID identifying your platform across all restaurants
+lole_PARTNER_SECRET  A 64-character hex secret used to sign your requests and verify lole's webhooks
 ```
 
-These credentials are **platform-level**, not restaurant-level. One set of credentials covers all restaurants you are integrated with on Gebeta.
+These credentials are **platform-level**, not restaurant-level. One set of credentials covers all restaurants you are integrated with on lole.
 
-Keep `GEBETA_PARTNER_SECRET` in your secret manager. Never expose it in client-side code, logs, or API responses.
+Keep `lole_PARTNER_SECRET` in your secret manager. Never expose it in client-side code, logs, or API responses.
 
 ### Request Signing
 
-Every API request to Gebeta must include these headers:
+Every API request to lole must include these headers:
 
 ```http
-X-Gebeta-Partner-ID: {GEBETA_PARTNER_ID}
-X-Gebeta-Timestamp: {unix_timestamp_seconds}    # Must be within ±300 seconds of current time
-X-Gebeta-Signature: {HMAC-SHA256}
+X-lole-Partner-ID: {lole_PARTNER_ID}
+X-lole-Timestamp: {unix_timestamp_seconds}    # Must be within ±300 seconds of current time
+X-lole-Signature: {HMAC-SHA256}
 Content-Type: application/json
 ```
 
@@ -78,8 +78,8 @@ Content-Type: application/json
 
 ```
 signature = HMAC-SHA256(
-  key    = GEBETA_PARTNER_SECRET,
-  message = "{GEBETA_PARTNER_ID}\n{timestamp}\n{request_body_sha256}"
+  key    = lole_PARTNER_SECRET,
+  message = "{lole_PARTNER_ID}\n{timestamp}\n{request_body_sha256}"
 )
 
 Where:
@@ -103,9 +103,9 @@ function signRequest(
     const signature = crypto.createHmac('sha256', partnerSecret).update(message).digest('hex');
 
     return {
-        'X-Gebeta-Partner-ID': partnerId,
-        'X-Gebeta-Timestamp': timestamp,
-        'X-Gebeta-Signature': signature,
+        'X-lole-Partner-ID': partnerId,
+        'X-lole-Timestamp': timestamp,
+        'X-lole-Signature': signature,
         'Content-Type': 'application/json',
     };
 }
@@ -113,7 +113,7 @@ function signRequest(
 // Usage:
 const body = JSON.stringify({ restaurant_slug: 'cafe-lucia' });
 const headers = signRequest(PARTNER_ID, PARTNER_SECRET, body);
-const response = await fetch('https://api.gebeta.app/delivery/v1/menu', {
+const response = await fetch('https://api.lole.app/delivery/v1/menu', {
     method: 'POST',
     headers,
     body,
@@ -133,48 +133,48 @@ def sign_request(partner_id: str, partner_secret: str, body: str | None = None) 
         partner_secret.encode(), message.encode(), hashlib.sha256
     ).hexdigest()
     return {
-        'X-Gebeta-Partner-ID': partner_id,
-        'X-Gebeta-Timestamp': timestamp,
-        'X-Gebeta-Signature': signature,
+        'X-lole-Partner-ID': partner_id,
+        'X-lole-Timestamp': timestamp,
+        'X-lole-Signature': signature,
         'Content-Type': 'application/json',
     }
 ```
 
 ### Webhook Signature Verification
 
-When Gebeta sends webhooks to your endpoint, we sign them the same way. You must verify our signature before processing any webhook.
+When lole sends webhooks to your endpoint, we sign them the same way. You must verify our signature before processing any webhook.
 
 ```typescript
-// Verify Gebeta's webhook signature on your server
-function verifyGebetaWebhook(
+// Verify lole's webhook signature on your server
+function verifyloleWebhook(
     rawBody: string, // Read as raw bytes BEFORE calling JSON.parse
     headers: {
-        'x-gebeta-partner-id': string;
-        'x-gebeta-timestamp': string;
-        'x-gebeta-signature': string;
+        'x-lole-partner-id': string;
+        'x-lole-timestamp': string;
+        'x-lole-signature': string;
     },
     partnerSecret: string
 ): boolean {
     // Replay attack prevention: reject timestamps older than 5 minutes
-    const timestamp = parseInt(headers['x-gebeta-timestamp'], 10);
+    const timestamp = parseInt(headers['x-lole-timestamp'], 10);
     if (Math.abs(Date.now() / 1000 - timestamp) > 300) return false;
 
     const bodyHash = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
-    const message = `${headers['x-gebeta-partner-id']}\n${timestamp}\n${bodyHash}`;
+    const message = `${headers['x-lole-partner-id']}\n${timestamp}\n${bodyHash}`;
     const expected = crypto.createHmac('sha256', partnerSecret).update(message).digest('hex');
 
     // Timing-safe comparison — never use === on HMAC values
     return crypto.timingSafeEqual(
-        Buffer.from(headers['x-gebeta-signature'], 'hex'),
+        Buffer.from(headers['x-lole-signature'], 'hex'),
         Buffer.from(expected, 'hex')
     );
 }
 
 // CRITICAL: Read raw body BEFORE json.parse()
 // Express.js example:
-app.post('/gebeta/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/lole/webhook', express.raw({ type: 'application/json' }), (req, res) => {
     const rawBody = req.body.toString('utf8');
-    const valid = verifyGebetaWebhook(rawBody, req.headers, PARTNER_SECRET);
+    const valid = verifyloleWebhook(rawBody, req.headers, PARTNER_SECRET);
     if (!valid) return res.status(401).json({ error: 'Invalid signature' });
 
     const event = JSON.parse(rawBody);
@@ -185,24 +185,24 @@ app.post('/gebeta/webhook', express.raw({ type: 'application/json' }), (req, res
 
 ---
 
-## Restaurant Onboarding via Gebeta
+## Restaurant Onboarding via lole
 
-Before your platform can send orders to a restaurant, the restaurant must explicitly grant your platform permission. This is a mutual opt-in — neither Gebeta nor you can activate a restaurant on your platform without the restaurant's knowledge.
+Before your platform can send orders to a restaurant, the restaurant must explicitly grant your platform permission. This is a mutual opt-in — neither lole nor you can activate a restaurant on your platform without the restaurant's knowledge.
 
 ### Activation Flow
 
 ```
-1. Restaurant owner logs in to Gebeta dashboard → Channels → Delivery Partners
+1. Restaurant owner logs in to lole dashboard → Channels → Delivery Partners
 2. They tap "Connect [Your Platform Name]"
-3. Gebeta sends you a connection webhook:
+3. lole sends you a connection webhook:
 
-   POST https://your-platform.com/gebeta/connect
+   POST https://your-platform.com/lole/connect
    {
      "event": "restaurant.connected",
      "restaurant_slug": "cafe-lucia",
      "restaurant_name_en": "Café Lucia",
      "restaurant_name_am": "ካፌ ሉቺያ",
-     "gebeta_restaurant_id": "uuid-here",
+     "lole_restaurant_id": "uuid-here",
      "connected_at": "2026-03-07T18:30:00Z"
    }
 
@@ -215,13 +215,13 @@ Before your platform can send orders to a restaurant, the restaurant must explic
 ```
 When a restaurant disconnects (from either side):
 
-POST https://your-platform.com/gebeta/connect
+POST https://your-platform.com/lole/connect
 {
   "event": "restaurant.disconnected",
   "restaurant_slug": "cafe-lucia",
-  "gebeta_restaurant_id": "uuid-here",
+  "lole_restaurant_id": "uuid-here",
   "disconnected_at": "2026-03-07T19:00:00Z",
-  "disconnected_by": "restaurant"  // or "partner" or "gebeta_admin"
+  "disconnected_by": "restaurant"  // or "partner" or "lole_admin"
 }
 
 On receiving this:
@@ -234,7 +234,7 @@ On receiving this:
 
 ## API Reference
 
-**Base URL:** `https://api.gebeta.app/delivery/v1`
+**Base URL:** `https://api.lole.app/delivery/v1`
 
 All requests must be signed (see Authentication above). All responses are `application/json`. All monetary values are in **Ethiopian Santim (integer)**. Divide by 100 to display in ETB.
 
@@ -248,9 +248,9 @@ Fetch the current live menu for a connected restaurant.
 
 ```http
 GET /delivery/v1/menu?restaurant_slug=cafe-lucia
-X-Gebeta-Partner-ID: {partner_id}
-X-Gebeta-Timestamp: {timestamp}
-X-Gebeta-Signature: {signature}
+X-lole-Partner-ID: {partner_id}
+X-lole-Timestamp: {timestamp}
+X-lole-Signature: {signature}
 ```
 
 **Response `200 OK`:**
@@ -289,7 +289,7 @@ X-Gebeta-Signature: {signature}
                     "price_santim": 8500,
                     "is_available": true,
                     "available_for_delivery": true,
-                    "photo_url": "https://r2.gebeta.app/menu/cafe-lucia/ful-001.jpg",
+                    "photo_url": "https://r2.lole.app/menu/cafe-lucia/ful-001.jpg",
                     "preparation_time_minutes": 12,
                     "modifier_groups": [
                         {
@@ -330,7 +330,7 @@ X-Gebeta-Signature: {signature}
 | 404    | `RESTAURANT_NOT_FOUND`     | Unknown restaurant slug                          |
 | 429    | `RATE_LIMITED`             | Exceeded 60 menu fetches per restaurant per hour |
 
-**Caching guidance:** Cache the menu response for 5 minutes. Do not poll more frequently than once per minute. Gebeta sends a `restaurant.menu_updated` webhook whenever the menu changes — use that to invalidate your cache rather than polling.
+**Caching guidance:** Cache the menu response for 5 minutes. Do not poll more frequently than once per minute. lole sends a `restaurant.menu_updated` webhook whenever the menu changes — use that to invalidate your cache rather than polling.
 
 ---
 
@@ -375,17 +375,17 @@ Submit a delivery order to a connected restaurant.
 
 **Field rules:**
 
-- `partner_order_id`: your unique order identifier. Gebeta uses this as an idempotency key — submitting the same `partner_order_id` twice returns the original order response without creating a duplicate.
-- `unit_price_santim`: must match the price in the current Gebeta menu. If it does not match, Gebeta rejects the order with `PRICE_MISMATCH`.
+- `partner_order_id`: your unique order identifier. lole uses this as an idempotency key — submitting the same `partner_order_id` twice returns the original order response without creating a duplicate.
+- `unit_price_santim`: must match the price in the current lole menu. If it does not match, lole rejects the order with `PRICE_MISMATCH`.
 - `estimated_pickup_at`: ISO 8601 UTC. Used to sequence the order in the kitchen queue.
-- `subtotal_santim + delivery_fee_santim` must equal `total_santim`. Gebeta validates this.
-- Payment is assumed to be already collected by your platform. Gebeta does not initiate any payment for delivery orders.
+- `subtotal_santim + delivery_fee_santim` must equal `total_santim`. lole validates this.
+- Payment is assumed to be already collected by your platform. lole does not initiate any payment for delivery orders.
 
 **Response `201 Created`:**
 
 ```json
 {
-    "gebeta_order_id": "uuid-of-new-order",
+    "lole_order_id": "uuid-of-new-order",
     "partner_order_id": "BEU-20260307-004821",
     "status": "pending_confirmation",
     "restaurant_name_en": "Café Lucia",
@@ -398,7 +398,7 @@ Submit a delivery order to a connected restaurant.
 
 | Status | Code                       | Meaning                                     | Action                                  |
 | ------ | -------------------------- | ------------------------------------------- | --------------------------------------- |
-| 200    | `ORDER_ALREADY_EXISTS`     | `partner_order_id` already submitted        | Use the returned `gebeta_order_id`      |
+| 200    | `ORDER_ALREADY_EXISTS`     | `partner_order_id` already submitted        | Use the returned `lole_order_id`        |
 | 400    | `PRICE_MISMATCH`           | `unit_price_santim` does not match menu     | Re-fetch menu and retry                 |
 | 400    | `ITEM_UNAVAILABLE`         | One or more items are currently unavailable | Remove items and retry, or cancel order |
 | 400    | `TOTAL_MISMATCH`           | Subtotal + fee ≠ total                      | Fix arithmetic and retry                |
@@ -409,7 +409,7 @@ Submit a delivery order to a connected restaurant.
 
 ---
 
-### GET /orders/{gebeta_order_id}
+### GET /orders/{lole_order_id}
 
 Poll current status of an order.
 
@@ -421,7 +421,7 @@ GET /delivery/v1/orders/uuid-here
 
 ```json
 {
-  "gebeta_order_id": "uuid-here",
+  "lole_order_id": "uuid-here",
   "partner_order_id": "BEU-20260307-004821",
   "status": "preparing",
   "status_updated_at": "2026-03-07T18:54:00Z",
@@ -445,7 +445,7 @@ GET /delivery/v1/orders/uuid-here
 
 ---
 
-### PATCH /orders/{gebeta_order_id}
+### PATCH /orders/{lole_order_id}
 
 Update order status from your side (e.g., driver picked up the order).
 
@@ -487,11 +487,11 @@ Mark one or more items as unavailable for delivery (86'd) without touching the d
 
 ---
 
-## Webhooks Gebeta Sends to You
+## Webhooks lole Sends to You
 
-Register your webhook endpoint in the partner portal. Gebeta sends events to this single endpoint for all restaurants you are connected to.
+Register your webhook endpoint in the partner portal. lole sends events to this single endpoint for all restaurants you are connected to.
 
-All webhooks are signed (see Authentication section). All webhooks expect HTTP `200` within 10 seconds. Gebeta retries with exponential backoff on failure: 30s, 2min, 10min, 30min, 2h.
+All webhooks are signed (see Authentication section). All webhooks expect HTTP `200` within 10 seconds. lole retries with exponential backoff on failure: 30s, 2min, 10min, 30min, 2h.
 
 ### Event: `order.confirmed`
 
@@ -500,7 +500,7 @@ Kitchen has accepted the order. Prepare driver dispatch.
 ```json
 {
     "event": "order.confirmed",
-    "gebeta_order_id": "uuid-here",
+    "lole_order_id": "uuid-here",
     "partner_order_id": "BEU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "estimated_ready_at": "2026-03-07T19:12:00Z",
@@ -515,7 +515,7 @@ Kitchen has started preparation. ETA is now reliable.
 ```json
 {
     "event": "order.preparing",
-    "gebeta_order_id": "uuid-here",
+    "lole_order_id": "uuid-here",
     "partner_order_id": "BEU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "estimated_ready_at": "2026-03-07T19:11:00Z",
@@ -530,7 +530,7 @@ All items are ready for pickup. Driver should be at the restaurant now.
 ```json
 {
     "event": "order.ready",
-    "gebeta_order_id": "uuid-here",
+    "lole_order_id": "uuid-here",
     "partner_order_id": "BEU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "ready_at": "2026-03-07T19:10:00Z"
@@ -544,7 +544,7 @@ Order was cancelled by the restaurant (kitchen cannot fulfill it).
 ```json
 {
     "event": "order.cancelled",
-    "gebeta_order_id": "uuid-here",
+    "lole_order_id": "uuid-here",
     "partner_order_id": "BEU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "cancelled_by": "restaurant",
@@ -613,24 +613,24 @@ Cancellation window: up to 90 seconds after order submission (status = pending_c
 After 90 seconds: cancellation requires restaurant approval
 
 To cancel:
-  PATCH /delivery/v1/orders/{gebeta_order_id}
+  PATCH /delivery/v1/orders/{lole_order_id}
   { "status": "cancelled", "reason": "customer_request" | "driver_unavailable" | "other" }
 
 If the order is already "preparing" or "ready":
   → Returns 409 CONFLICT
   → Contact the restaurant directly via Telegram
-  → Gebeta does not enforce cancellation after kitchen has started — the restaurant decides
+  → lole does not enforce cancellation after kitchen has started — the restaurant decides
 ```
 
 ### Restaurant-initiated cancellation
 
-When a restaurant cancels via Gebeta (e.g., item sold out after order accepted), you receive `order.cancelled` webhook. Refund the customer immediately. Gebeta is not responsible for customer refunds — that is your platform's responsibility.
+When a restaurant cancels via lole (e.g., item sold out after order accepted), you receive `order.cancelled` webhook. Refund the customer immediately. lole is not responsible for customer refunds — that is your platform's responsibility.
 
 ---
 
 ## Rate Limits
 
-All limits are per `GEBETA_PARTNER_ID` across all restaurants.
+All limits are per `lole_PARTNER_ID` across all restaurants.
 
 | Endpoint                 | Limit        | Window                  | Burst    |
 | ------------------------ | ------------ | ----------------------- | -------- |
@@ -657,8 +657,8 @@ On `429 Too Many Requests`: wait until `X-RateLimit-Reset` timestamp before retr
 Use the sandbox to build and test your integration without affecting real restaurants.
 
 ```
-Sandbox base URL:     https://sandbox.api.gebeta.app/delivery/v1
-Sandbox restaurant:   restaurant_slug = "gebeta-demo-restaurant"
+Sandbox base URL:     https://sandbox.api.lole.app/delivery/v1
+Sandbox restaurant:   restaurant_slug = "lole-demo-restaurant"
 Sandbox credentials:  Issued separately from production credentials
 
 Sandbox behaviours:
@@ -673,15 +673,15 @@ Sandbox behaviours:
 
 ```bash
 # Simulate order.ready webhook for a test order
-curl -X POST https://sandbox.api.gebeta.app/delivery/v1/sandbox/simulate/order.ready \
-  -H "X-Gebeta-Partner-ID: $SANDBOX_PARTNER_ID" \
-  -H "X-Gebeta-Timestamp: $(date +%s)" \
-  -H "X-Gebeta-Signature: $COMPUTED_SIG" \
+curl -X POST https://sandbox.api.lole.app/delivery/v1/sandbox/simulate/order.ready \
+  -H "X-lole-Partner-ID: $SANDBOX_PARTNER_ID" \
+  -H "X-lole-Timestamp: $(date +%s)" \
+  -H "X-lole-Signature: $COMPUTED_SIG" \
   -H "Content-Type: application/json" \
-  -d '{ "gebeta_order_id": "sandbox-order-uuid-001" }'
+  -d '{ "lole_order_id": "sandbox-order-uuid-001" }'
 ```
 
-Gebeta will send the `order.ready` event to your registered webhook endpoint immediately.
+lole will send the `order.ready` event to your registered webhook endpoint immediately.
 
 ---
 
@@ -694,7 +694,7 @@ Authentication
 [ ] Signature generation tested with all three reference implementations (TS, Python, + your language)
 [ ] Webhook signature verification implemented using raw body (not parsed JSON)
 [ ] Timestamp replay attack check implemented (reject if > 300 seconds old)
-[ ] GEBETA_PARTNER_SECRET stored in secret manager (not in code or .env in repo)
+[ ] lole_PARTNER_SECRET stored in secret manager (not in code or .env in repo)
 
 Menu
 [ ] GET /menu tested in sandbox with demo restaurant
@@ -722,9 +722,9 @@ Cancellation
 [ ] 409 CONFLICT handled when cancelling after "preparing" status
 
 Reliability
-[ ] Webhook endpoint returns 200 within 10 seconds (Gebeta retries on failure)
+[ ] Webhook endpoint returns 200 within 10 seconds (lole retries on failure)
 [ ] Idempotent webhook processing (same event received twice → processed once)
-[ ] Retry logic for transient 5xx errors from Gebeta API (exponential backoff)
+[ ] Retry logic for transient 5xx errors from lole API (exponential backoff)
 [ ] Alert configured if webhook endpoint error rate > 1%
 
 Sandbox sign-off
@@ -737,15 +737,15 @@ Sandbox sign-off
 
 ## Support
 
-| Topic                                      | Contact                                                |
-| ------------------------------------------ | ------------------------------------------------------ |
-| Integration questions, credential requests | integrations@gebeta.app                                |
-| Production incidents                       | Telegram: @GebetaIntegrations (monitored 6am–11pm EAT) |
-| Security vulnerabilities                   | security@gebeta.app — do not disclose publicly         |
-| SLA disputes                               | support@gebeta.app with incident timeline              |
+| Topic                                      | Contact                                              |
+| ------------------------------------------ | ---------------------------------------------------- |
+| Integration questions, credential requests | integrations@lole.app                                |
+| Production incidents                       | Telegram: @loleIntegrations (monitored 6am–11pm EAT) |
+| Security vulnerabilities                   | security@lole.app — do not disclose publicly         |
+| SLA disputes                               | support@lole.app with incident timeline              |
 
-**Partner SLA:** Gebeta guarantees 99.5% uptime on the delivery API, measured monthly. Planned maintenance windows are communicated 48 hours in advance via email to the registered partner contact.
+**Partner SLA:** lole guarantees 99.5% uptime on the delivery API, measured monthly. Planned maintenance windows are communicated 48 hours in advance via email to the registered partner contact.
 
 ---
 
-_Gebeta Delivery Partner Integration Guide v1.0 · March 2026 · Confidential — Shared Under NDA_
+_lole Delivery Partner Integration Guide v1.0 · March 2026 · Confidential — Shared Under NDA_
