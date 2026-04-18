@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Gebeta Device Shell</string>
-    <string name="title_activity_main">Gebeta Device Shell</string>
-    <string name="package_name">com.gebeta.device</string>
-    <string name="custom_url_scheme">com.gebeta.device</string>
+    <string name="app_name">lole Device Shell</string>
+    <string name="title_activity_main">lole Device Shell</string>
+    <string name="package_name">com.lole.device</string>
+    <string name="custom_url_scheme">com.lole.device</string>
 </resources>

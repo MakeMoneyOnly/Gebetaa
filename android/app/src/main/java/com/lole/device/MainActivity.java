@@ -1,4 +1,4 @@
-package com.gebeta.device;
+package com.lole.device;
 
 import com.getcapacitor.BridgeActivity;
 
