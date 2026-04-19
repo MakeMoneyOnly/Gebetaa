@@ -19,14 +19,12 @@ describe('prometheus monitoring', () => {
 
     it('should clear registry in non-production environment', () => {
         const originalEnv = process.env.NODE_ENV;
-        // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
         process.env.NODE_ENV = 'development';
         vi.resetModules();
 
         return import('../prometheus').then(async mod => {
             const result = await mod.getPrometheusMetrics();
             expect(result).toBeDefined();
-            // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
             process.env.NODE_ENV = originalEnv;
             vi.resetModules();
         });

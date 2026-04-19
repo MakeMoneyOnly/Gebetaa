@@ -68,9 +68,9 @@ export default function AccessibilityPage() {
                             Technical Specifications
                         </h2>
                         <p className="mb-4 text-gray-700">
-                            Accessibility of lole Restaurant OS relies on the following technologies
-                            to work with the particular combination of web browser and any assistive
-                            technologies or plugins installed on your computer:
+                            Accessibility of lole Restaurant OS relies on the following
+                            technologies to work with the particular combination of web browser and
+                            any assistive technologies or plugins installed on your computer:
                         </p>
                         <ul className="mb-4 list-inside list-disc space-y-1 text-gray-700">
                             <li>HTML5 (WAI-ARIA 1.1)</li>

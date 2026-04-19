@@ -12,12 +12,8 @@ export default function FOHPage() {
 
             <div className="flex h-[400px] items-center justify-center rounded-2xl border-2 border-dashed border-gray-100 bg-gray-50/50">
                 <div className="text-center">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                        FOH Module Under Construction
-                    </h3>
-                    <p className="mt-1 text-xs text-gray-500">
-                        This module is part of the lole Merchant Blueprint.
-                    </p>
+                    <h3 className="text-sm font-semibold text-gray-900">FOH Module Under Construction</h3>
+                    <p className="mt-1 text-xs text-gray-500">This module is part of the lole Merchant Blueprint.</p>
                 </div>
             </div>
         </div>

@@ -48,21 +48,13 @@ export default function WaiterPosPage() {
         expectedProfiles: ['waiter'],
     });
 
-    const [staffSession, setStaffSession] = useState<{
-        id: string;
-        name: string;
-        role: string;
-        user_id: string;
-    } | null>(null);
+    const [staffSession, setStaffSession] = useState<{ id: string; name: string; role: string; user_id: string } | null>(null);
     const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false);
     const headerDropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (
-                headerDropdownRef.current &&
-                !headerDropdownRef.current.contains(event.target as Node)
-            ) {
+            if (headerDropdownRef.current && !headerDropdownRef.current.contains(event.target as Node)) {
                 setIsHeaderDropdownOpen(false);
             }
         }
@@ -78,9 +70,7 @@ export default function WaiterPosPage() {
                 setStaffSession(JSON.parse(ctxStr));
             } catch (e) {
                 console.error('Invalid staff session structure, requiring PIN relogin.', e);
-                router.replace(
-                    `/waiter/pin?restaurantId=${managedDevice.session?.restaurant_id || ''}`
-                );
+                router.replace(`/waiter/pin?restaurantId=${managedDevice.session?.restaurant_id || ''}`);
             }
         } else if (managedDevice.session?.restaurant_id) {
             // Once device knows the restaurant but no staff session exists, lock the terminal.
@@ -248,7 +238,7 @@ export default function WaiterPosPage() {
             {/* Main Wrapper */}
             <main className="flex min-w-0 flex-1 flex-col bg-[#fbfbfb]">
                 {/* Top Bar */}
-                <header className="relative z-40 flex h-20 shrink-0 items-center justify-between border-b border-[#F1F1F1] bg-white px-8">
+                <header className="z-40 flex h-20 shrink-0 items-center justify-between border-b border-[#F1F1F1] bg-white px-8 relative">
                     {/* Left Header */}
                     <div className="flex items-center gap-6">
                         <div className="flex h-11 cursor-pointer items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 transition-colors hover:bg-gray-100">
@@ -300,61 +290,40 @@ export default function WaiterPosPage() {
                         </button>
 
                         <div className="relative" ref={headerDropdownRef}>
-                            <button
+                            <button 
                                 onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
-                                className="flex h-11 cursor-pointer items-center gap-3 rounded-xl bg-white px-3 text-left shadow-sm transition-all hover:shadow-md"
+                                className="flex h-11 cursor-pointer items-center gap-3 rounded-xl bg-white px-3 shadow-sm transition-all hover:shadow-md text-left"
                             >
                                 <User className="h-4 w-4 text-gray-500" />
                                 <span className="text-sm font-semibold text-[#000000]">
                                     {staffSession?.name || 'Waitstaff'}
                                 </span>
-                                <ChevronDown
-                                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isHeaderDropdownOpen ? 'rotate-180' : ''}`}
-                                />
+                                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isHeaderDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {isHeaderDropdownOpen && (
-                                <div className="animate-in fade-in zoom-in-95 absolute top-[calc(100%+8px)] right-0 z-100 w-56 rounded-xl border border-gray-100 bg-white p-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] duration-200">
-                                    <div className="mb-1 flex w-full items-center justify-between px-3 py-3">
-                                        <span className="text-sm font-bold text-gray-700">
-                                            Theme
-                                        </span>
-                                        <div className="flex items-center gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1">
-                                            <button className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-100 bg-white text-amber-500 shadow-sm">
+                                <div className="absolute right-0 top-[calc(100%+8px)] w-56 rounded-xl border border-gray-100 bg-white p-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] z-100 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="flex w-full items-center justify-between px-3 py-3 mb-1">
+                                        <span className="text-sm font-bold text-gray-700">Theme</span>
+                                        <div className="flex items-center gap-1 rounded-lg bg-gray-50 p-1 border border-gray-100">
+                                            <button className="flex h-7 w-7 items-center justify-center rounded-md bg-white shadow-sm border border-gray-100 text-amber-500">
                                                 <Sun className="h-4 w-4" />
                                             </button>
-                                            <button className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:text-gray-600">
+                                            <button className="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:text-gray-600 transition-colors">
                                                 <Moon className="h-4 w-4" />
                                             </button>
                                         </div>
                                     </div>
                                     <div className="border-b border-gray-50"></div>
-                                    <button
+                                    <button 
                                         onClick={() => {
                                             sessionStorage.removeItem('gebata_waiter_context');
                                             setIsHeaderDropdownOpen(false);
-                                            router.replace(
-                                                `/waiter/pin?restaurantId=${managedDevice.session?.restaurant_id || ''}`
-                                            );
+                                            router.replace(`/waiter/pin?restaurantId=${managedDevice.session?.restaurant_id || ''}`);
                                         }}
-                                        className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
+                                        className="flex w-full items-center gap-3 rounded-lg mt-1 px-3 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
                                     >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="lucide lucide-log-out"
-                                        >
-                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                            <polyline points="16 17 21 12 16 7" />
-                                            <line x1="21" x2="9" y1="12" y2="12" />
-                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                                         Logout
                                     </button>
                                 </div>
@@ -744,9 +713,7 @@ export default function WaiterPosPage() {
                                             <button
                                                 key={type}
                                                 onClick={() => {
-                                                    setOrderType(
-                                                        type as 'Dine-in' | 'Takeaway' | 'Delivery'
-                                                    );
+                                                    setOrderType(type as 'Dine-in' | 'Takeaway' | 'Delivery');
                                                     setShowOrderTypeDropdown(false);
                                                 }}
                                                 className="flex w-full px-4 py-3 text-left text-sm font-semibold hover:bg-gray-50"
@@ -766,9 +733,7 @@ export default function WaiterPosPage() {
                                     }}
                                     className="text-body-sm flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:border-gray-200"
                                 >
-                                    <span className="font-semibold text-gray-600">
-                                        Select Table
-                                    </span>
+                                    <span className="font-semibold text-gray-600">Select Table</span>
                                     <div className="flex items-center gap-2 font-bold text-[#000000]">
                                         {tables.find(t => t.id === selectedTableId)?.table_number ||
                                             'A-12B'}

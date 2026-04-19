@@ -13,9 +13,7 @@ export default function ShopPage() {
             <div className="flex h-[400px] items-center justify-center rounded-2xl border-2 border-dashed border-gray-100 bg-gray-50/50">
                 <div className="text-center">
                     <h3 className="text-sm font-semibold text-gray-900">Shop Under Construction</h3>
-                    <p className="mt-1 text-xs text-gray-500">
-                        Official lole POS hardware catalog coming soon.
-                    </p>
+                    <p className="mt-1 text-xs text-gray-500">Official lole POS hardware catalog coming soon.</p>
                 </div>
             </div>
         </div>

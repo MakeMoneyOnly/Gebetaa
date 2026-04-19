@@ -418,10 +418,7 @@ export default async function DashboardPage() {
                             </div>
                             <button className="flex h-11 items-center gap-1 rounded-xl bg-gray-50 px-4 text-sm font-bold text-gray-700 transition-colors outline-none hover:bg-gray-100">
                                 Today
-                                <ChevronDown
-                                    strokeWidth={2}
-                                    className="h-3.5 w-3.5 text-gray-400"
-                                />
+                                <ChevronDown strokeWidth={2} className="h-3.5 w-3.5 text-gray-400" />
                             </button>
                         </div>
 
@@ -467,11 +464,7 @@ export default async function DashboardPage() {
                         </div>
                     </div>
                     <button className="group flex w-full items-center justify-center gap-2 rounded-b-3xl border-t border-gray-50 bg-gray-50 py-4 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
-                        See details{' '}
-                        <ArrowRight
-                            strokeWidth={2}
-                            className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
-                        />
+                        See details <ArrowRight strokeWidth={2} className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12" />
                     </button>
                 </div>
 

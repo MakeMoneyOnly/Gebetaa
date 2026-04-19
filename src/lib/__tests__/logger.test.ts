@@ -65,7 +65,6 @@ describe('Logger', () => {
     describe('debug', () => {
         it('logs when NODE_ENV is development', () => {
             const originalEnv = process.env.NODE_ENV;
-            // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
             process.env.NODE_ENV = 'development';
             try {
                 logger.debug('debug msg', { key: 'val' });
@@ -74,20 +73,17 @@ describe('Logger', () => {
                 expect(call[0]).toContain('DEBUG');
                 expect(call[1]).toBe('debug msg');
             } finally {
-                // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
                 process.env.NODE_ENV = originalEnv;
             }
         });
 
         it('does not log when NODE_ENV is not development', () => {
             const originalEnv = process.env.NODE_ENV;
-            // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
             process.env.NODE_ENV = 'production';
             try {
                 logger.debug('debug msg', { key: 'val' });
                 expect(warnSpy).not.toHaveBeenCalled();
             } finally {
-                // @ts-expect-error - NODE_ENV is readonly in TypeScript but mutable at runtime
                 process.env.NODE_ENV = originalEnv;
             }
         });

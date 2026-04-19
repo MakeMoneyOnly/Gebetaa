@@ -7,10 +7,13 @@ const ChartSkeleton = () => (
     <div className="h-full w-full animate-pulse rounded-full bg-gray-50/50" />
 );
 
-const SalesPerformanceChartContent = dynamic(() => import('./SalesPerformanceChartContent'), {
-    loading: () => <ChartSkeleton />,
-    ssr: false,
-});
+const SalesPerformanceChartContent = dynamic(
+    () => import('./SalesPerformanceChartContent'),
+    {
+        loading: () => <ChartSkeleton />,
+        ssr: false,
+    }
+);
 
 interface SalesPerformanceChartProps {
     totalSales: number;

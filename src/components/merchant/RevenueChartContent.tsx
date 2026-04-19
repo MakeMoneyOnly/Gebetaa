@@ -51,11 +51,7 @@ const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                         fontFamily: 'var(--font-inter)',
                         letterSpacing: '-0.04em',
                     }}
-                    itemStyle={{
-                        color: '#17120B',
-                        fontFamily: 'var(--font-inter)',
-                        letterSpacing: '-0.04em',
-                    }}
+                    itemStyle={{ color: '#17120B', fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
                     cursor={{ stroke: '#8A887A', strokeWidth: 1, strokeDasharray: '3 3' }}
                     formatter={(value, name) => {
                         const numValue = typeof value === 'number' ? value : 0;
@@ -64,36 +60,19 @@ const RevenueChartContent = ({ data }: RevenueChartContentProps) => {
                             name === 'income' ? 'Current Period' : 'Previous Period',
                         ];
                     }}
-                    labelStyle={{
-                        color: '#8A887A',
-                        marginBottom: '8px',
-                        fontFamily: 'var(--font-inter)',
-                        letterSpacing: '-0.04em',
-                    }}
+                    labelStyle={{ color: '#8A887A', marginBottom: '8px', fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
                 />
                 <XAxis
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{
-                        fill: '#8A887A',
-                        fontSize: 12,
-                        fontWeight: 500,
-                        fontFamily: 'var(--font-inter)',
-                        letterSpacing: '-0.04em',
-                    }}
+                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
                     dy={10}
                 />
                 <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{
-                        fill: '#8A887A',
-                        fontSize: 12,
-                        fontWeight: 500,
-                        fontFamily: 'var(--font-inter)',
-                        letterSpacing: '-0.04em',
-                    }}
+                    tick={{ fill: '#8A887A', fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-inter)', letterSpacing: '-0.04em' }}
                     tickFormatter={value => `${(value / 1000).toFixed(0)}k`}
                     domain={[0, 'auto']}
                     width={40}
