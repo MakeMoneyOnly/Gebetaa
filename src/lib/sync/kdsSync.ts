@@ -10,6 +10,12 @@
 import { getPowerSync } from './powersync-config';
 import { queueSyncOperation, generateIdempotencyKey } from './idempotency';
 import {
+    buildCreateKdsItemCommand,
+    buildUpdateKdsActionCommand,
+    type KdsCommandContext,
+} from '@/lib/domain/kds/commands';
+import { appendLocalJournalEntryInDatabase } from '@/lib/journal/local-journal';
+import {
     resolveConflict,
     logConflictResolution,
     getConflictType,
@@ -20,7 +26,7 @@ import { logger } from '@/lib/logger';
 /**
  * KDS item status
  */
-export type KdsItemStatus = 'queued' | 'cooking' | 'ready' | 'recalled' | 'bumped';
+export type KdsItemStatus = 'queued' | 'in_progress' | 'on_hold' | 'ready' | 'recalled' | 'bumped';
 
 /**
  * KDS action types
@@ -51,6 +57,43 @@ export interface OfflineKdsItem {
     notes?: string;
 }
 
+function getKdsCommandContext(): KdsCommandContext {
+    return {
+        restaurantId: process.env.NEXT_PUBLIC_RESTAURANT_ID ?? 'default-restaurant',
+        locationId: process.env.NEXT_PUBLIC_LOCATION_ID ?? 'default-location',
+        deviceId: process.env.NEXT_PUBLIC_DEVICE_ID ?? 'kds-device',
+        actor: {
+            actorId: process.env.NEXT_PUBLIC_DEVICE_ID ?? 'kds-device',
+            actorType: 'device',
+        },
+    };
+}
+
+async function appendKdsCommandJournal(
+    db: NonNullable<ReturnType<typeof getPowerSync>>,
+    input: {
+        aggregateId: string;
+        operationType: string;
+        idempotencyKey: string;
+        payload: Record<string, unknown>;
+    }
+): Promise<void> {
+    const context = getKdsCommandContext();
+
+    await appendLocalJournalEntryInDatabase(db, {
+        restaurantId: context.restaurantId,
+        locationId: context.locationId,
+        deviceId: context.deviceId,
+        actorId: context.actor.actorId,
+        entryKind: 'command',
+        aggregateType: 'kds_item',
+        aggregateId: input.aggregateId,
+        operationType: input.operationType,
+        payload: input.payload,
+        idempotencyKey: input.idempotencyKey,
+    });
+}
+
 /**
  * Create a KDS item for an order item
  */
@@ -72,6 +115,21 @@ export async function createKdsItem(
 
     const now = new Date().toISOString();
     const kdsId = crypto.randomUUID();
+    const idempotencyKey = generateIdempotencyKey('kds-create');
+    const commandContext = getKdsCommandContext();
+    const createCommand = buildCreateKdsItemCommand(
+        commandContext,
+        {
+            kds_id: kdsId,
+            order_id: orderId,
+            order_item_id: orderItemId,
+            station,
+            priority,
+            status: 'queued',
+            display_data: displayData,
+        },
+        idempotencyKey
+    );
 
     try {
         await db.execute(
@@ -88,6 +146,33 @@ export async function createKdsItem(
                 orderItemId,
             ]);
         }
+
+        await appendKdsCommandJournal(db, {
+            aggregateId: kdsId,
+            operationType: 'kds.create',
+            idempotencyKey,
+            payload: createCommand as unknown as Record<string, unknown>,
+        });
+
+        await queueSyncOperation(
+            'create',
+            'kds_items',
+            kdsId,
+            {
+                order_id: orderId,
+                order_item_id: orderItemId,
+                station,
+                priority,
+                status: 'queued',
+                domain_command: createCommand,
+            },
+            {
+                restaurantId: commandContext.restaurantId,
+                locationId: commandContext.locationId,
+                deviceId: commandContext.deviceId,
+                actorId: commandContext.actor.actorId,
+            }
+        );
 
         const item = await getKdsItem(kdsId);
         return item;
@@ -164,6 +249,7 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
 
     const now = new Date().toISOString();
     const idempotencyKey = generateIdempotencyKey(`kds-${action}`);
+    const commandContext = getKdsCommandContext();
 
     try {
         let newStatus: KdsItemStatus;
@@ -172,12 +258,12 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
 
         switch (action) {
             case 'start':
-                newStatus = 'cooking';
+                newStatus = 'in_progress';
                 updateFields = ['status = ?', 'started_at = ?'];
                 updateValues = [newStatus, now];
                 break;
             case 'hold':
-                newStatus = 'queued';
+                newStatus = 'on_hold';
                 updateFields = ['status = ?'];
                 updateValues = [newStatus];
                 break;
@@ -187,7 +273,7 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
                 updateValues = [newStatus, now];
                 break;
             case 'recall':
-                newStatus = 'cooking';
+                newStatus = 'recalled';
                 updateFields = ['status = ?', 'recalled_at = ?'];
                 updateValues = [newStatus, now];
                 break;
@@ -213,6 +299,8 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
                 itemStatus = 'completed';
             } else if (action === 'ready') {
                 itemStatus = 'ready';
+            } else if (newStatus === 'on_hold' || newStatus === 'queued') {
+                itemStatus = 'pending';
             } else {
                 itemStatus = 'cooking';
             }
@@ -222,11 +310,40 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
             ]);
         }
 
-        // Queue for sync
-        await queueSyncOperation('update', 'kds_items', kdsId, {
-            action,
-            idempotency_key: idempotencyKey,
+        const actionCommand = buildUpdateKdsActionCommand(
+            commandContext,
+            {
+                kds_id: kdsId,
+                action,
+                status: newStatus,
+            },
+            idempotencyKey
+        );
+
+        await appendKdsCommandJournal(db, {
+            aggregateId: kdsId,
+            operationType: `kds.${action}`,
+            idempotencyKey,
+            payload: actionCommand as unknown as Record<string, unknown>,
         });
+
+        await queueSyncOperation(
+            'update',
+            'kds_items',
+            kdsId,
+            {
+                action,
+                idempotency_key: idempotencyKey,
+                status: newStatus,
+                domain_command: actionCommand,
+            },
+            {
+                restaurantId: commandContext.restaurantId,
+                locationId: commandContext.locationId,
+                deviceId: commandContext.deviceId,
+                actorId: commandContext.actor.actorId,
+            }
+        );
 
         return true;
     } catch (error) {
@@ -272,8 +389,11 @@ export async function getKdsStats(station?: string): Promise<{
 
     for (const row of results) {
         if (row.status === 'queued') stats.queued = row.count;
-        else if (row.status === 'cooking') stats.cooking = row.count;
-        else if (row.status === 'ready') stats.ready = row.count;
+        else if (row.status === 'in_progress' || row.status === 'recalled') {
+            stats.cooking += row.count;
+        } else if (row.status === 'on_hold') {
+            stats.queued += row.count;
+        } else if (row.status === 'ready') stats.ready = row.count;
         stats.total += row.count;
     }
 

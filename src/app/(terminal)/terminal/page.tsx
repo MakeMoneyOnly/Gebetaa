@@ -22,6 +22,7 @@ import {
     buildReceiptFromPaymentPayload,
     handleApprovedTransactionReceipt,
 } from '@/lib/printer/transaction-print';
+import { submitTerminalSettlement } from '@/lib/terminal/settlement-adapter';
 
 type TerminalTable = {
     id: string;
@@ -395,31 +396,72 @@ export default function TerminalPage() {
 
         try {
             setCapturingId(`table-${selectedTable.id}`);
-            const response = await fetch('/api/device/tables/close', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-device-token': deviceToken,
-                },
-                body: JSON.stringify({
-                    table_id: selectedTable.id,
-                    payment: {
-                        provider: paymentMethod === 'other' ? 'other' : paymentMethod,
-                        amount: parsedAmount,
-                        tx_ref: providerReference.trim() || undefined,
-                    },
-                    notes: `Settled from cashier terminal ${overview?.device.name ?? 'Terminal'}`,
-                }),
+            const localResult = await submitTerminalSettlement({
+                restaurantId: deviceInfo?.restaurant_id ?? '',
+                tableId: selectedTable.id,
+                paymentProvider: paymentMethod === 'other' ? 'other' : paymentMethod,
+                orders: tableOrders.map(order => ({
+                    id: order.id,
+                    status: order.status,
+                })),
             });
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to close table settlement');
+
+            if (!localResult.ok) {
+                throw new Error(localResult.error ?? 'Failed to close table settlement');
+            }
+
+            if (localResult.mode === 'api') {
+                const response = await fetch('/api/device/tables/close', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-device-token': deviceToken,
+                    },
+                    body: JSON.stringify({
+                        table_id: selectedTable.id,
+                        payment: {
+                            provider: paymentMethod === 'other' ? 'other' : paymentMethod,
+                            amount: parsedAmount,
+                            tx_ref: providerReference.trim() || undefined,
+                        },
+                        notes: `Settled from cashier terminal ${overview?.device.name ?? 'Terminal'}`,
+                    }),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload?.error ?? 'Failed to close table settlement');
+                }
+            } else {
+                setOverview(current =>
+                    current
+                        ? {
+                              ...current,
+                              tables: current.tables.map(table =>
+                                  table.id === selectedTable.id
+                                      ? {
+                                            ...table,
+                                            status: 'available',
+                                            outstanding_total: 0,
+                                            active_order_count: 0,
+                                        }
+                                      : table
+                              ),
+                              orders: current.orders.map(order =>
+                                  localResult.completedOrderIds?.includes(order.id)
+                                      ? { ...order, status: 'completed' }
+                                      : order
+                              ),
+                          }
+                        : current
+                );
             }
             toast.success(`Closed table ${selectedTable.table_number}`);
             setProviderReference('');
             setSelectedOrderId(null);
             setSplitPayload(null);
-            await loadOverview();
+            if (localResult.mode === 'api') {
+                await loadOverview();
+            }
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Failed to close table');
         } finally {

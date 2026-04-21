@@ -7,6 +7,8 @@ import { useRole } from '@/hooks/useRole';
 import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { submitOrderCourseFireUpdate } from '@/lib/orders/command-adapter';
+import { submitFinalKdsHandoff } from '@/lib/kds/handoff-adapter';
 
 type ConsolidatedOrder = UnifiedKDSOrder & {
     readiness: {
@@ -264,21 +266,17 @@ export function ExpeditorBoard() {
         async (orderId: string) => {
             setHandoffOrderId(orderId);
             try {
-                const response = await fetch(`/api/kds/orders/${orderId}/handoff`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'bump' }),
-                });
-
-                if (!response.ok) {
-                    const payload = await response.json().catch(() => ({}));
-                    setError(payload?.error ?? 'Failed to mark order served');
+                const result = await submitFinalKdsHandoff({ orderId });
+                if (!result.ok) {
+                    setError(result.error ?? 'Failed to mark order served');
                     return;
                 }
 
                 setOrders(current => current.filter(order => order.id !== orderId));
                 setError(null);
-                await fetchQueue();
+                if (result.mode === 'api') {
+                    await fetchQueue();
+                }
             } finally {
                 setHandoffOrderId(null);
             }
@@ -294,21 +292,27 @@ export function ExpeditorBoard() {
 
             setAdvancingCourseOrderId(order.id);
             try {
-                const response = await fetch(`/api/orders/${order.id}/course-fire`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        fire_mode: 'manual',
-                        current_course: next,
-                    }),
+                const result = await submitOrderCourseFireUpdate({
+                    orderId: order.id,
+                    fireMode: 'manual',
+                    currentCourse: next,
                 });
-                const payload = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    setError(payload?.error ?? 'Failed to advance course');
+                if (!result.ok) {
+                    setError(result.error ?? 'Failed to advance course');
                     return;
                 }
                 setError(null);
-                await fetchQueue();
+                if (result.mode === 'local') {
+                    setOrders(current =>
+                        current.map(currentOrder =>
+                            currentOrder.id === order.id
+                                ? { ...currentOrder, currentCourse: next }
+                                : currentOrder
+                        )
+                    );
+                } else {
+                    await fetchQueue();
+                }
             } finally {
                 setAdvancingCourseOrderId(null);
             }

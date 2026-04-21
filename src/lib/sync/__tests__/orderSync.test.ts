@@ -12,6 +12,8 @@ const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
 const mockWrite = vi.fn(async (fn: () => Promise<unknown>) => fn());
+const mockQueueSyncOperation = vi.fn().mockResolvedValue(undefined);
+const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../powersync-config', () => ({
     getPowerSync: vi.fn(() => ({
@@ -24,8 +26,12 @@ vi.mock('../powersync-config', () => ({
 
 // Mock idempotency module
 vi.mock('../idempotency', () => ({
-    queueSyncOperation: vi.fn().mockResolvedValue(undefined),
+    queueSyncOperation: mockQueueSyncOperation,
     generateIdempotencyKey: vi.fn((prefix: string) => `${prefix}-test-idempotency-key`),
+}));
+
+vi.mock('@/lib/journal/local-journal', () => ({
+    appendLocalJournalEntryInDatabase: mockAppendLocalJournalEntryInDatabase,
 }));
 
 // Mock conflict-resolution module
@@ -55,6 +61,8 @@ describe('Order Sync Manager', () => {
         mockGetFirstAsync.mockResolvedValue(null);
         mockGetAllAsync.mockResolvedValue([]);
         mockWrite.mockImplementation(async (fn: () => Promise<unknown>) => fn());
+        mockQueueSyncOperation.mockResolvedValue(undefined);
+        mockAppendLocalJournalEntryInDatabase.mockResolvedValue(undefined);
     });
 
     afterEach(() => {
@@ -65,8 +73,12 @@ describe('Order Sync Manager', () => {
         it('should create an order with items successfully', async () => {
             const randomUUIDSpy = vi
                 .spyOn(crypto, 'randomUUID')
-                .mockReturnValueOnce('order-id-123' as `${string}-${string}-${string}-${string}-${string}`)
-                .mockReturnValueOnce('item-id-123' as `${string}-${string}-${string}-${string}-${string}`);
+                .mockReturnValueOnce(
+                    'order-id-123' as `${string}-${string}-${string}-${string}-${string}`
+                )
+                .mockReturnValueOnce(
+                    'item-id-123' as `${string}-${string}-${string}-${string}-${string}`
+                );
 
             mockGetFirstAsync.mockResolvedValueOnce({
                 id: 'order-id-123',
@@ -95,6 +107,8 @@ describe('Order Sync Manager', () => {
             expect(result.success).toBe(true);
             expect(result.order).toBeDefined();
             expect(mockExecute).toHaveBeenCalled();
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
 
             randomUUIDSpy.mockRestore();
         });
@@ -102,8 +116,12 @@ describe('Order Sync Manager', () => {
         it('should create an order with all optional fields', async () => {
             const randomUUIDSpy = vi
                 .spyOn(crypto, 'randomUUID')
-                .mockReturnValueOnce('order-id-456' as `${string}-${string}-${string}-${string}-${string}`)
-                .mockReturnValueOnce('item-id-456' as `${string}-${string}-${string}-${string}-${string}`);
+                .mockReturnValueOnce(
+                    'order-id-456' as `${string}-${string}-${string}-${string}-${string}`
+                )
+                .mockReturnValueOnce(
+                    'item-id-456' as `${string}-${string}-${string}-${string}-${string}`
+                );
 
             mockGetFirstAsync.mockResolvedValueOnce({
                 id: 'order-id-456',
@@ -151,7 +169,9 @@ describe('Order Sync Manager', () => {
 
         it('should return error when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { createOfflineOrder } = await import('../orderSync');
             const result = await createOfflineOrder({
@@ -213,7 +233,9 @@ describe('Order Sync Manager', () => {
 
         it('should return null when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getOfflineOrder } = await import('../orderSync');
             const result = await getOfflineOrder('order-1');
@@ -241,7 +263,9 @@ describe('Order Sync Manager', () => {
 
         it('should return empty array when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getPendingOfflineOrders } = await import('../orderSync');
             const result = await getPendingOfflineOrders();
@@ -252,22 +276,43 @@ describe('Order Sync Manager', () => {
 
     describe('updateOfflineOrderStatus', () => {
         it('should update order status successfully', async () => {
+            mockGetFirstAsync.mockResolvedValueOnce({
+                id: 'order-1',
+                restaurant_id: 'restaurant-1',
+                status: 'pending',
+                order_type: 'dine_in',
+                subtotal_santim: 1000,
+                discount_santim: 0,
+                vat_santim: 150,
+                total_santim: 1150,
+                idempotency_key: 'key-1',
+                created_at: '2024-01-01T10:00:00Z',
+                updated_at: '2024-01-01T10:00:00Z',
+                last_modified: '2024-01-01T10:00:00Z',
+                version: 1,
+            });
+            mockGetAllAsync.mockResolvedValueOnce([]);
+
             const { updateOfflineOrderStatus } = await import('../orderSync');
-            const result = await updateOfflineOrderStatus('order-1', 'syncing');
+            const result = await updateOfflineOrderStatus('order-1', 'ready');
 
             expect(result).toBe(true);
             expect(mockExecute).toHaveBeenCalledWith(
                 expect.stringContaining('UPDATE orders SET status'),
-                expect.arrayContaining(['syncing', expect.any(String), expect.any(String), 'order-1'])
+                expect.arrayContaining(['ready', expect.any(String), expect.any(String), 'order-1'])
             );
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
         });
 
         it('should return false when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { updateOfflineOrderStatus } = await import('../orderSync');
-            const result = await updateOfflineOrderStatus('order-1', 'syncing');
+            const result = await updateOfflineOrderStatus('order-1', 'ready');
 
             expect(result).toBe(false);
         });
@@ -276,14 +321,62 @@ describe('Order Sync Manager', () => {
             mockExecute.mockRejectedValueOnce(new Error('Database error'));
 
             const { updateOfflineOrderStatus } = await import('../orderSync');
-            const result = await updateOfflineOrderStatus('order-1', 'syncing');
+            const result = await updateOfflineOrderStatus('order-1', 'ready');
 
             expect(result).toBe(false);
         });
     });
 
+    describe('updateOfflineOrderCourseFire', () => {
+        it('should update local course fire fields successfully', async () => {
+            mockGetFirstAsync.mockResolvedValueOnce({
+                id: 'order-1',
+                restaurant_id: 'restaurant-1',
+                status: 'pending',
+                order_type: 'dine_in',
+                subtotal_santim: 1000,
+                discount_santim: 0,
+                vat_santim: 150,
+                total_santim: 1150,
+                idempotency_key: 'key-1',
+                created_at: '2024-01-01T10:00:00Z',
+                updated_at: '2024-01-01T10:00:00Z',
+                last_modified: '2024-01-01T10:00:00Z',
+                version: 1,
+            });
+            mockGetAllAsync.mockResolvedValueOnce([]);
+
+            const { updateOfflineOrderCourseFire } = await import('../orderSync');
+            const result = await updateOfflineOrderCourseFire('order-1', {
+                fire_mode: 'manual',
+                current_course: 'main',
+            });
+
+            expect(result).toBe(true);
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+        });
+    });
+
     describe('deleteOfflineOrder', () => {
         it('should soft delete an order by setting status to cancelled', async () => {
+            mockGetFirstAsync.mockResolvedValueOnce({
+                id: 'order-1',
+                restaurant_id: 'restaurant-1',
+                status: 'pending',
+                order_type: 'dine_in',
+                subtotal_santim: 1000,
+                discount_santim: 0,
+                vat_santim: 150,
+                total_santim: 1150,
+                idempotency_key: 'key-1',
+                created_at: '2024-01-01T10:00:00Z',
+                updated_at: '2024-01-01T10:00:00Z',
+                last_modified: '2024-01-01T10:00:00Z',
+                version: 1,
+            });
+            mockGetAllAsync.mockResolvedValueOnce([]);
+
             const { deleteOfflineOrder } = await import('../orderSync');
             const result = await deleteOfflineOrder('order-1');
 
@@ -292,11 +385,15 @@ describe('Order Sync Manager', () => {
                 expect.stringContaining("status = 'cancelled'"),
                 expect.arrayContaining([expect.any(String), expect.any(String), 'order-1'])
             );
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
         });
 
         it('should return false when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { deleteOfflineOrder } = await import('../orderSync');
             const result = await deleteOfflineOrder('order-1');
@@ -331,7 +428,9 @@ describe('Order Sync Manager', () => {
 
         it('should return empty array when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getOfflineOrdersByRestaurant } = await import('../orderSync');
             const result = await getOfflineOrdersByRestaurant('restaurant-1');
@@ -372,7 +471,9 @@ describe('Order Sync Manager', () => {
 
         it('should return zeros when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getOfflineOrdersCountByStatus } = await import('../orderSync');
             const result = await getOfflineOrdersCountByStatus();
@@ -397,7 +498,9 @@ describe('Order Sync Manager', () => {
 
         it('should do nothing when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { clearOfflineOrders } = await import('../orderSync');
             await clearOfflineOrders();
@@ -446,7 +549,9 @@ describe('Order Sync Manager', () => {
 
         it('should return error when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { resolveOrderConflict } = await import('../orderSync');
             const result = await resolveOrderConflict(

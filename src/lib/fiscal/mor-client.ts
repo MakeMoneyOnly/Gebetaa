@@ -1,3 +1,9 @@
+import {
+    getLocalFiscalSigningConfig,
+    signFiscalPayload,
+    type LocalFiscalSignatureEnvelope,
+} from '@/lib/fiscal/local-signing';
+
 export interface FiscalLineItem {
     item_code?: string | null;
     name: string;
@@ -20,12 +26,13 @@ export interface FiscalSubmissionRequest {
 
 export interface FiscalSubmissionResult {
     ok: boolean;
-    mode: 'live' | 'stub';
+    mode: 'live' | 'local' | 'stub';
     transaction_number: string;
     qr_payload?: string | null;
     digital_signature?: string | null;
     warning?: string | null;
     raw?: Record<string, unknown> | null;
+    signatureEnvelope?: LocalFiscalSignatureEnvelope | null;
 }
 
 export class FiscalSubmissionError extends Error {
@@ -50,6 +57,27 @@ export async function submitFiscalTransaction(
     const apiKey = process.env.MOR_FISCAL_API_KEY;
 
     if (!endpoint || !apiKey) {
+        const localSigningConfig = getLocalFiscalSigningConfig();
+        if (localSigningConfig) {
+            const signatureEnvelope = await signFiscalPayload(request, localSigningConfig);
+
+            return {
+                ok: true,
+                mode: 'local',
+                transaction_number: request.transaction_number,
+                qr_payload: `local:${request.restaurant_tin}:${request.transaction_number}:${signatureEnvelope.digest}`,
+                digital_signature: signatureEnvelope.signature,
+                warning:
+                    'Live fiscal endpoint unavailable. Receipt locally signed and queued for upstream replay.',
+                raw: {
+                    signing_key_id: signatureEnvelope.keyId,
+                    signing_algorithm: signatureEnvelope.algorithm,
+                    signed_at: signatureEnvelope.signedAt,
+                },
+                signatureEnvelope,
+            };
+        }
+
         return {
             ok: true,
             mode: 'stub',
@@ -58,6 +86,7 @@ export async function submitFiscalTransaction(
             digital_signature: `stub-signature-${request.transaction_number}`,
             warning:
                 'MoR live API is not configured. Receipt remains in pending fiscalization mode.',
+            signatureEnvelope: null,
         };
     }
 
@@ -104,5 +133,6 @@ export async function submitFiscalTransaction(
                 ? String(payload.digital_signature)
                 : null,
         raw: payload,
+        signatureEnvelope: null,
     };
 }

@@ -15,7 +15,14 @@ import React, {
     useCallback,
     type ReactNode,
 } from 'react';
-import { initPowerSync, type PowerSyncDatabase } from './powersync-config';
+import {
+    getPowerSyncBootstrapStatus,
+    initPowerSync,
+    type PowerSyncBootstrapStatus,
+    type PowerSyncDatabase,
+} from './powersync-config';
+import { resolveStoreOperatingMode } from '@/lib/gateway/runtime-mode';
+import type { StoreOperatingMode } from '@/lib/gateway/config';
 import { logger } from '@/lib/logger';
 
 // Use unknown since @powersync/core types may not be available yet
@@ -38,6 +45,10 @@ interface PowerSyncContextValue {
     pendingCount: number;
     /** Error if any */
     error: Error | null;
+    /** Bootstrap status */
+    bootstrapStatus: PowerSyncBootstrapStatus;
+    /** Derived operating mode */
+    operatingMode: StoreOperatingMode;
     /** Trigger a manual sync */
     sync: () => Promise<void>;
     /** Get the PowerSync database */
@@ -60,6 +71,9 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
     const [pendingCount, setPendingCount] = useState(0);
     const [error, setError] = useState<Error | null>(null);
     const [db, setDb] = useState<PowerSyncDb>(null);
+    const [bootstrapStatus, setBootstrapStatus] = useState<PowerSyncBootstrapStatus>(
+        getPowerSyncBootstrapStatus()
+    );
 
     // Initialize PowerSync on mount
     useEffect(() => {
@@ -67,17 +81,21 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
             try {
                 const database = await initPowerSync();
                 setDb(database);
+                setBootstrapStatus(getPowerSyncBootstrapStatus());
 
                 if (database) {
                     // Start the sync worker
                     startGlobalSync();
                     setIsInitialized(true);
+                } else {
+                    setIsInitialized(false);
                 }
             } catch (err) {
                 logger.error('[PowerSync] Failed to initialize', {
                     error: err instanceof Error ? err.message : String(err),
                 });
                 setError(err instanceof Error ? err : new Error(String(err)));
+                setBootstrapStatus(getPowerSyncBootstrapStatus());
             }
         }
 
@@ -94,10 +112,12 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
             setIsOnline(true);
             // Trigger sync when coming back online
             triggerSync();
+            setBootstrapStatus(getPowerSyncBootstrapStatus());
         };
 
         const handleOffline = () => {
             setIsOnline(false);
+            setBootstrapStatus(getPowerSyncBootstrapStatus());
         };
 
         window.addEventListener('online', handleOnline);
@@ -122,6 +142,7 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
                 const status = await worker.getStatus();
                 setLastSyncAt(status.lastSyncAt);
                 setPendingCount(status.pendingOperations);
+                setBootstrapStatus(getPowerSyncBootstrapStatus());
             } catch (_err) {
                 // Silently ignore errors in status update
             }
@@ -148,6 +169,14 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
         }
     }, [isOnline, isInitialized]);
 
+    const operatingMode = resolveStoreOperatingMode({
+        isOnline,
+        isInitialized,
+        bootstrapState: bootstrapStatus.state,
+        pendingCount,
+        isSyncing,
+    });
+
     const value: PowerSyncContextValue = {
         isInitialized,
         isSyncing,
@@ -155,6 +184,8 @@ export function PowerSyncProvider({ children }: { children: ReactNode }) {
         lastSyncAt,
         pendingCount,
         error,
+        bootstrapStatus,
+        operatingMode,
         sync,
         db,
     };
@@ -179,20 +210,23 @@ export function usePowerSync() {
  * Hook to check if we're in offline mode
  */
 export function useOfflineMode() {
-    const { isOnline, isInitialized } = usePowerSync();
-    return !isOnline || !isInitialized;
+    const { operatingMode } = usePowerSync();
+    return operatingMode === 'offline-local' || operatingMode === 'degraded';
 }
 
 /**
  * Hook to get sync status
  */
 export function useSyncStatus() {
-    const { isSyncing, isOnline, lastSyncAt, pendingCount, sync } = usePowerSync();
+    const { isSyncing, isOnline, lastSyncAt, pendingCount, sync, operatingMode, bootstrapStatus } =
+        usePowerSync();
     return {
         isSyncing,
         isOnline,
         lastSyncAt: lastSyncAt ? new Date(lastSyncAt) : null,
         pendingCount,
+        operatingMode,
+        bootstrapStatus,
         sync,
     };
 }

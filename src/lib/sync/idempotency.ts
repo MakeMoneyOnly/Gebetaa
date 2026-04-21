@@ -6,6 +6,11 @@
  */
 
 import { getPowerSync } from './powersync-config';
+import {
+    dispatchGatewayDomainCommand,
+    isDispatchableDomainCommand,
+} from '@/lib/gateway/dispatcher';
+import { appendLocalJournalEntry } from '@/lib/journal/local-journal';
 import { logger } from '@/lib/logger';
 
 /**
@@ -54,6 +59,13 @@ export async function markIdempotencyKeyCompleted(idempotencyKey: string): Promi
  */
 export type SyncOperation = 'create' | 'update' | 'delete';
 
+export interface SyncQueueJournalContext {
+    restaurantId: string;
+    locationId?: string | null;
+    deviceId: string;
+    actorId?: string | null;
+}
+
 /**
  * Queue an operation for sync
  */
@@ -61,7 +73,8 @@ export async function queueSyncOperation(
     operation: SyncOperation,
     tableName: string,
     recordId: string,
-    payload: Record<string, unknown>
+    payload: Record<string, unknown>,
+    journalContext?: SyncQueueJournalContext
 ): Promise<string> {
     const db = getPowerSync();
     if (!db) {
@@ -77,6 +90,40 @@ export async function queueSyncOperation(
          VALUES (?, ?, ?, ?, ?, 'pending', 0, ?)`,
         [operation, tableName, recordId, JSON.stringify(payload), idempotencyKey, now]
     );
+
+    if (journalContext) {
+        await appendLocalJournalEntry({
+            restaurantId: journalContext.restaurantId,
+            locationId: journalContext.locationId ?? null,
+            deviceId: journalContext.deviceId,
+            actorId: journalContext.actorId ?? null,
+            entryKind: 'sync',
+            aggregateType: tableName,
+            aggregateId: recordId,
+            operationType: `sync.${operation}`,
+            payload: {
+                operation,
+                table_name: tableName,
+                record_id: recordId,
+                sync_payload: payload,
+            },
+            idempotencyKey,
+        });
+    }
+
+    const commandCandidate = payload.domain_command;
+    if (isDispatchableDomainCommand(commandCandidate)) {
+        try {
+            await dispatchGatewayDomainCommand(commandCandidate);
+        } catch (error) {
+            logger.warn('[SyncQueue] Gateway dispatch failed, relying on replay queue', {
+                operation,
+                tableName,
+                recordId,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
 
     return idempotencyKey;
 }

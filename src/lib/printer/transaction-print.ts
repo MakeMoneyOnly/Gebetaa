@@ -39,6 +39,16 @@ export async function handleApprovedTransactionReceipt(args: {
                 warning = fiscalResult.warning;
                 args.receipt.fiscal_warning = fiscalResult.warning;
             }
+            if (fiscalResult.mode === 'local' && args.orderId) {
+                await queueFiscalJob({
+                    orderId: args.orderId,
+                    payload: { ...args.fiscalRequest },
+                    warningText: fiscalResult.warning ?? null,
+                    queueMode: 'local-signing',
+                    signatureEnvelope: fiscalResult.signatureEnvelope ?? null,
+                });
+                queuedFiscal = true;
+            }
         } catch (error) {
             const offlineFallbackAllowed =
                 !liveFiscalRequired ||

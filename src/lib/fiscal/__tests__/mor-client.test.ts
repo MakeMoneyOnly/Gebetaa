@@ -22,15 +22,22 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('MOR Fiscal Client', () => {
+    const originalLocalSecret = process.env.LOCAL_FISCAL_SIGNING_SECRET;
+    const originalLocalKeyId = process.env.LOCAL_FISCAL_SIGNING_KEY_ID;
+
     beforeEach(() => {
         vi.clearAllMocks();
         // Ensure fetch is mocked for each test
         global.fetch = mockFetch;
+        delete process.env.LOCAL_FISCAL_SIGNING_SECRET;
+        delete process.env.LOCAL_FISCAL_SIGNING_KEY_ID;
     });
 
     afterEach(() => {
         // Don't restore all mocks as it would restore global.fetch to undefined
         vi.clearAllMocks();
+        process.env.LOCAL_FISCAL_SIGNING_SECRET = originalLocalSecret;
+        process.env.LOCAL_FISCAL_SIGNING_KEY_ID = originalLocalKeyId;
     });
 
     describe('isMorLiveConfigured', () => {
@@ -132,6 +139,23 @@ describe('MOR Fiscal Client', () => {
 
                 process.env.MOR_FISCAL_API_URL = originalUrl;
                 process.env.MOR_FISCAL_API_KEY = originalKey;
+            });
+        });
+
+        describe('local signing mode', () => {
+            it('should return local mode when live API missing but local signing configured', async () => {
+                delete process.env.MOR_FISCAL_API_URL;
+                delete process.env.MOR_FISCAL_API_KEY;
+                process.env.LOCAL_FISCAL_SIGNING_SECRET = 'local-secret';
+                process.env.LOCAL_FISCAL_SIGNING_KEY_ID = 'edge-key-1';
+
+                const result = await submitFiscalTransaction(validRequest);
+
+                expect(result.ok).toBe(true);
+                expect(result.mode).toBe('local');
+                expect(result.digital_signature).toMatch(/^[a-f0-9]+$/);
+                expect(result.signatureEnvelope?.keyId).toBe('edge-key-1');
+                expect(result.warning).toContain('locally signed');
             });
         });
 

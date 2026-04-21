@@ -11,6 +11,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
+const mockQueueSyncOperation = vi.fn().mockResolvedValue(undefined);
+const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../powersync-config', () => ({
     getPowerSync: vi.fn(() => ({
@@ -23,8 +25,12 @@ vi.mock('../powersync-config', () => ({
 
 // Mock idempotency module
 vi.mock('../idempotency', () => ({
-    queueSyncOperation: vi.fn().mockResolvedValue(undefined),
+    queueSyncOperation: mockQueueSyncOperation,
     generateIdempotencyKey: vi.fn((prefix: string) => `${prefix}-test-idempotency-key`),
+}));
+
+vi.mock('@/lib/journal/local-journal', () => ({
+    appendLocalJournalEntryInDatabase: mockAppendLocalJournalEntryInDatabase,
 }));
 
 // Mock conflict-resolution module
@@ -54,6 +60,8 @@ describe('KDS Sync Manager', () => {
         mockExecute.mockResolvedValue({ rowsAffected: 1 });
         mockGetFirstAsync.mockResolvedValue(null);
         mockGetAllAsync.mockResolvedValue([]);
+        mockQueueSyncOperation.mockResolvedValue(undefined);
+        mockAppendLocalJournalEntryInDatabase.mockResolvedValue(undefined);
     });
 
     afterEach(() => {
@@ -62,7 +70,11 @@ describe('KDS Sync Manager', () => {
 
     describe('createKdsItem', () => {
         it('should create a KDS item with required fields', async () => {
-            const randomUUIDSpy = vi.spyOn(crypto, 'randomUUID').mockReturnValue('test-kds-id-123' as `${string}-${string}-${string}-${string}-${string}`);
+            const randomUUIDSpy = vi
+                .spyOn(crypto, 'randomUUID')
+                .mockReturnValue(
+                    'test-kds-id-123' as `${string}-${string}-${string}-${string}-${string}`
+                );
 
             mockGetFirstAsync.mockResolvedValueOnce({
                 id: 'test-kds-id-123',
@@ -79,12 +91,18 @@ describe('KDS Sync Manager', () => {
 
             expect(result).not.toBeNull();
             expect(mockExecute).toHaveBeenCalled();
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
 
             randomUUIDSpy.mockRestore();
         });
 
         it('should create a KDS item with display data', async () => {
-            const randomUUIDSpy = vi.spyOn(crypto, 'randomUUID').mockReturnValue('test-kds-id-456' as `${string}-${string}-${string}-${string}-${string}`);
+            const randomUUIDSpy = vi
+                .spyOn(crypto, 'randomUUID')
+                .mockReturnValue(
+                    'test-kds-id-456' as `${string}-${string}-${string}-${string}-${string}`
+                );
 
             mockGetFirstAsync.mockResolvedValueOnce({
                 id: 'test-kds-id-456',
@@ -106,13 +124,17 @@ describe('KDS Sync Manager', () => {
 
             expect(result).not.toBeNull();
             expect(mockExecute).toHaveBeenCalledTimes(2); // INSERT + UPDATE
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
 
             randomUUIDSpy.mockRestore();
         });
 
         it('should return null when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { createKdsItem } = await import('../kdsSync');
             const result = await createKdsItem('order-1', 'item-1', 'grill');
@@ -137,7 +159,7 @@ describe('KDS Sync Manager', () => {
                 order_id: 'order-1',
                 order_item_id: 'item-1',
                 station: 'grill',
-                status: 'cooking',
+                status: 'in_progress',
                 priority: 0,
                 menu_item_name: 'Burger',
                 quantity: 1,
@@ -165,7 +187,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return null when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getKdsItem } = await import('../kdsSync');
             const result = await getKdsItem('kds-1');
@@ -177,7 +201,7 @@ describe('KDS Sync Manager', () => {
     describe('getKdsItemsByStation', () => {
         it('should return KDS items for a station excluding bumped', async () => {
             const mockItems = [
-                { id: 'kds-1', station: 'grill', status: 'cooking' },
+                { id: 'kds-1', station: 'grill', status: 'in_progress' },
                 { id: 'kds-2', station: 'grill', status: 'queued' },
             ];
             mockGetAllAsync.mockResolvedValueOnce(mockItems);
@@ -194,7 +218,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return empty array when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getKdsItemsByStation } = await import('../kdsSync');
             const result = await getKdsItemsByStation('grill');
@@ -206,7 +232,7 @@ describe('KDS Sync Manager', () => {
     describe('getKdsItemsByOrder', () => {
         it('should return all KDS items for an order', async () => {
             const mockItems = [
-                { id: 'kds-1', order_id: 'order-1', status: 'cooking' },
+                { id: 'kds-1', order_id: 'order-1', status: 'in_progress' },
                 { id: 'kds-2', order_id: 'order-1', status: 'ready' },
             ];
             mockGetAllAsync.mockResolvedValueOnce(mockItems);
@@ -223,7 +249,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return empty array when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getKdsItemsByOrder } = await import('../kdsSync');
             const result = await getKdsItemsByOrder('order-1');
@@ -233,7 +261,7 @@ describe('KDS Sync Manager', () => {
     });
 
     describe('executeKdsAction', () => {
-        it('should execute start action and update status to cooking', async () => {
+        it('should execute start action and update status to in_progress', async () => {
             mockGetFirstAsync.mockResolvedValueOnce({
                 id: 'kds-1',
                 order_item_id: 'item-1',
@@ -245,13 +273,15 @@ describe('KDS Sync Manager', () => {
 
             expect(result).toBe(true);
             expect(mockExecute).toHaveBeenCalled();
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
         });
 
         it('should execute ready action and update status', async () => {
             mockGetFirstAsync.mockResolvedValueOnce({
                 id: 'kds-1',
                 order_item_id: 'item-1',
-                status: 'cooking',
+                status: 'in_progress',
             });
 
             const { executeKdsAction } = await import('../kdsSync');
@@ -273,11 +303,11 @@ describe('KDS Sync Manager', () => {
             expect(result).toBe(true);
         });
 
-        it('should execute hold action and return to queued', async () => {
+        it('should execute hold action and move item to on_hold', async () => {
             mockGetFirstAsync.mockResolvedValueOnce({
                 id: 'kds-1',
                 order_item_id: 'item-1',
-                status: 'cooking',
+                status: 'in_progress',
             });
 
             const { executeKdsAction } = await import('../kdsSync');
@@ -308,7 +338,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return false when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { executeKdsAction } = await import('../kdsSync');
             const result = await executeKdsAction('kds-1', 'start');
@@ -330,7 +362,7 @@ describe('KDS Sync Manager', () => {
         it('should return KDS queue statistics', async () => {
             mockGetAllAsync.mockResolvedValueOnce([
                 { status: 'queued', count: 5 },
-                { status: 'cooking', count: 3 },
+                { status: 'in_progress', count: 3 },
                 { status: 'ready', count: 2 },
             ]);
 
@@ -348,7 +380,7 @@ describe('KDS Sync Manager', () => {
         it('should filter by station when provided', async () => {
             mockGetAllAsync.mockResolvedValueOnce([
                 { status: 'queued', count: 2 },
-                { status: 'cooking', count: 1 },
+                { status: 'in_progress', count: 1 },
             ]);
 
             const { getKdsStats } = await import('../kdsSync');
@@ -363,7 +395,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return zeros when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getKdsStats } = await import('../kdsSync');
             const result = await getKdsStats();
@@ -393,7 +427,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return 0 when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { clearBumpedKdsItems } = await import('../kdsSync');
             const result = await clearBumpedKdsItems();
@@ -438,7 +474,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return error when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { resolveKdsConflict } = await import('../kdsSync');
             const result = await resolveKdsConflict(
@@ -498,9 +536,7 @@ describe('KDS Sync Manager', () => {
 
     describe('getConflictedKdsItems', () => {
         it('should return KDS items with conflicts', async () => {
-            const mockItems = [
-                { id: 'kds-1', order_id: 'order-1', status: 'cooking' },
-            ];
+            const mockItems = [{ id: 'kds-1', order_id: 'order-1', status: 'cooking' }];
             mockGetAllAsync.mockResolvedValueOnce(mockItems);
 
             const { getConflictedKdsItems } = await import('../kdsSync');
@@ -523,7 +559,9 @@ describe('KDS Sync Manager', () => {
 
         it('should return empty array when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getConflictedKdsItems } = await import('../kdsSync');
             const result = await getConflictedKdsItems();
@@ -571,8 +609,9 @@ describe('KDS Sync Manager', () => {
 
         it('should track failed resolutions', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync)
-                .mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { batchResolveKdsConflicts } = await import('../kdsSync');
             const result = await batchResolveKdsConflicts([

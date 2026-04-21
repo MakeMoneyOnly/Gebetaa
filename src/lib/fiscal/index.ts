@@ -35,12 +35,25 @@ export {
     type FiscalSubmissionResult,
 } from './mor-client';
 
+export {
+    canonicalizeFiscalPayload,
+    digestFiscalPayload,
+    getLocalFiscalSigningConfig,
+    signFiscalPayload,
+    verifyFiscalPayloadSignature,
+    type LocalFiscalSigningConfig,
+    type LocalFiscalSigningPayload,
+    type LocalFiscalSignatureEnvelope,
+} from './local-signing';
+
 // Offline Queue for fiscal submissions
 export {
     queueFiscalJob,
     getPendingFiscalJobs,
     markFiscalJobSubmitted,
     markFiscalJobFailed,
+    replayPendingFiscalJobs,
     type FiscalQueueJob,
+    type FiscalQueueMode,
     type FiscalJobStatus,
 } from './offline-queue';

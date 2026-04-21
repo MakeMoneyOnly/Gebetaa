@@ -6,7 +6,10 @@
  */
 
 import { getPowerSync } from './powersync-config';
+import { buildEnqueuePrinterJobCommand } from '@/lib/domain/printer/commands';
+import { appendLocalJournalEntryInDatabase } from '@/lib/journal/local-journal';
 import { logger } from '@/lib/logger';
+import { generateIdempotencyKey } from './idempotency';
 
 /**
  * Printer job status
@@ -48,6 +51,18 @@ export interface KdsPrintPayload {
     reason: string;
 }
 
+function getPrinterCommandContext(restaurantId: string) {
+    return {
+        restaurantId,
+        locationId: process.env.NEXT_PUBLIC_LOCATION_ID ?? 'default-location',
+        deviceId: process.env.NEXT_PUBLIC_DEVICE_ID ?? 'printer-device',
+        actor: {
+            actorId: process.env.NEXT_PUBLIC_DEVICE_ID ?? 'printer-device',
+            actorType: 'device' as const,
+        },
+    };
+}
+
 /**
  * Create a print job (offline-first)
  */
@@ -61,6 +76,18 @@ export async function createPrintJob(
 
     const jobId = crypto.randomUUID();
     const now = new Date().toISOString();
+    const idempotencyKey = generateIdempotencyKey('printer-enqueue');
+    const context = getPrinterCommandContext(payload.restaurantId);
+    const command = buildEnqueuePrinterJobCommand(
+        context,
+        {
+            job_id: jobId,
+            order_id: orderId,
+            station,
+            payload,
+        },
+        idempotencyKey
+    );
 
     try {
         await db.execute(
@@ -69,6 +96,19 @@ export async function createPrintJob(
             ) VALUES (?, ?, ?, ?, 'pending', 0, ?)`,
             [jobId, orderId, station, JSON.stringify(payload), now]
         );
+
+        await appendLocalJournalEntryInDatabase(db, {
+            restaurantId: payload.restaurantId,
+            locationId: context.locationId,
+            deviceId: context.deviceId,
+            actorId: context.actor.actorId,
+            entryKind: 'command',
+            aggregateType: 'printer_job',
+            aggregateId: jobId,
+            operationType: 'printer.enqueue',
+            payload: command as unknown as Record<string, unknown>,
+            idempotencyKey,
+        });
 
         const job = await getPrintJob(jobId);
         return job;

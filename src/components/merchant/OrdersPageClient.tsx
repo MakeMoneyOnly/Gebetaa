@@ -9,6 +9,7 @@ import { formatCurrencyCompact } from '@/lib/utils/monetary';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import { useKDSRealtime } from '@/hooks/useKDSRealtime';
 import type { OrderSummary, ServiceRequestSummary } from '@/lib/services/dashboardDataService';
+import { submitOrderStatusUpdate } from '@/lib/orders/command-adapter';
 
 interface OrdersPageClientProps {
     initialData: {
@@ -133,14 +134,19 @@ export function OrdersPageClient({ initialData }: OrdersPageClientProps) {
             setOrders(prev => prev.map(o => (o.id === orderId ? { ...o, status: newStatus } : o)));
 
             try {
-                const response = await fetch(`/api/orders/${orderId}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus }),
+                const result = await submitOrderStatusUpdate({
+                    orderId,
+                    status: newStatus as
+                        | 'pending'
+                        | 'acknowledged'
+                        | 'preparing'
+                        | 'ready'
+                        | 'served'
+                        | 'completed'
+                        | 'cancelled',
                 });
 
-                if (!response.ok) {
-                    const result = await response.json();
+                if (!result.ok) {
                     throw new Error(result.error ?? 'Failed to update order status');
                 }
 

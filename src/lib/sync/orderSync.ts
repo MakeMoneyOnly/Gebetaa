@@ -10,6 +10,14 @@
 import { getPowerSync } from './powersync-config';
 import { generateIdempotencyKey, queueSyncOperation } from './idempotency';
 import {
+    buildCreateOfflineOrderCommand,
+    buildDeleteOfflineOrderCommand,
+    buildUpdateOfflineOrderStatusCommand,
+    type OfflineOrderDraft,
+    type OfflineOrderCommandContext,
+} from '@/lib/domain/orders/commands';
+import { appendLocalJournalEntryInDatabase } from '@/lib/journal/local-journal';
+import {
     resolveConflict,
     logConflictResolution,
     getConflictType,
@@ -20,7 +28,18 @@ import { logger } from '@/lib/logger';
 /**
  * Order status for offline tracking
  */
-export type OfflineOrderStatus = 'pending' | 'syncing' | 'conflict' | 'resolved' | 'completed';
+export type OfflineOrderStatus =
+    | 'payment_pending'
+    | 'pending'
+    | 'acknowledged'
+    | 'preparing'
+    | 'ready'
+    | 'served'
+    | 'completed'
+    | 'cancelled'
+    | 'syncing'
+    | 'conflict'
+    | 'resolved';
 
 /**
  * Order item for offline storage
@@ -68,35 +87,53 @@ export interface OfflineOrder {
     last_modified: string;
     version: number;
     items?: OfflineOrderItem[];
+    fire_mode?: string | null;
+    current_course?: string | null;
+}
+
+function getOfflineOrderCommandContext(restaurantId: string): OfflineOrderCommandContext {
+    return {
+        restaurantId,
+        locationId: process.env.NEXT_PUBLIC_LOCATION_ID ?? 'default-location',
+        deviceId: process.env.NEXT_PUBLIC_DEVICE_ID ?? 'offline-device',
+        actor: {
+            actorId: process.env.NEXT_PUBLIC_DEVICE_ID ?? 'offline-device',
+            actorType: 'device',
+        },
+    };
+}
+
+async function appendOrderCommandJournal(
+    db: NonNullable<ReturnType<typeof getPowerSync>>,
+    input: {
+        restaurantId: string;
+        aggregateId: string;
+        operationType: 'order.create' | 'order.update' | 'order.delete';
+        idempotencyKey: string;
+        payload: Record<string, unknown>;
+    }
+): Promise<void> {
+    const context = getOfflineOrderCommandContext(input.restaurantId);
+
+    await appendLocalJournalEntryInDatabase(db, {
+        restaurantId: context.restaurantId,
+        locationId: context.locationId,
+        deviceId: context.deviceId,
+        actorId: context.actor.actorId,
+        entryKind: 'command',
+        aggregateType: 'order',
+        aggregateId: input.aggregateId,
+        operationType: input.operationType,
+        payload: input.payload,
+        idempotencyKey: input.idempotencyKey,
+    });
 }
 
 /**
  * Create a new order locally (offline-first)
  */
 export async function createOfflineOrder(
-    orderData: {
-        restaurant_id: string;
-        table_number?: number;
-        guest_name?: string;
-        guest_phone?: string;
-        order_type?: string;
-        subtotal_santim: number;
-        discount_santim?: number;
-        vat_santim: number;
-        total_santim: number;
-        notes?: string;
-        items: Array<{
-            menu_item_id: string;
-            menu_item_name: string;
-            menu_item_name_am?: string;
-            quantity: number;
-            unit_price_santim: number;
-            total_price_santim: number;
-            modifiers_json?: string;
-            notes?: string;
-            station?: string;
-        }>;
-    },
+    orderData: OfflineOrderDraft,
     guestFingerprint?: string
 ): Promise<{ success: boolean; order?: OfflineOrder; error?: string }> {
     const db = getPowerSync();
@@ -107,11 +144,21 @@ export async function createOfflineOrder(
     const idempotencyKey = generateIdempotencyKey('order');
     const now = new Date().toISOString();
     const orderId = crypto.randomUUID();
+    const orderNumber = Date.now() % 100000;
+    const commandContext = getOfflineOrderCommandContext(orderData.restaurant_id);
+    const createCommand = buildCreateOfflineOrderCommand(
+        commandContext,
+        {
+            ...orderData,
+            order_id: orderId,
+            order_number: orderNumber,
+            guest_fingerprint: guestFingerprint,
+        },
+        idempotencyKey
+    );
 
     try {
-        // Start transaction
         await db.write(async () => {
-            // Insert order
             await db.execute(
                 `INSERT INTO orders (
                     id, restaurant_id, order_number, table_number, guest_name, guest_phone,
@@ -121,7 +168,7 @@ export async function createOfflineOrder(
                 [
                     orderId,
                     orderData.restaurant_id,
-                    Date.now() % 100000, // Generate local order number
+                    orderNumber,
                     orderData.table_number ?? null,
                     orderData.guest_name ?? null,
                     orderData.guest_phone ?? null,
@@ -141,7 +188,6 @@ export async function createOfflineOrder(
                 ]
             );
 
-            // Insert order items
             for (const item of orderData.items) {
                 const itemId = crypto.randomUUID();
                 await db.execute(
@@ -167,16 +213,34 @@ export async function createOfflineOrder(
                     ]
                 );
             }
+
+            await appendOrderCommandJournal(db, {
+                restaurantId: orderData.restaurant_id,
+                aggregateId: orderId,
+                operationType: 'order.create',
+                idempotencyKey,
+                payload: createCommand as unknown as Record<string, unknown>,
+            });
         });
 
-        // Queue for sync
-        await queueSyncOperation('create', 'orders', orderId, {
-            ...orderData,
-            id: orderId,
-            idempotency_key: idempotencyKey,
-        });
+        await queueSyncOperation(
+            'create',
+            'orders',
+            orderId,
+            {
+                ...orderData,
+                id: orderId,
+                idempotency_key: idempotencyKey,
+                domain_command: createCommand,
+            },
+            {
+                restaurantId: orderData.restaurant_id,
+                locationId: commandContext.locationId,
+                deviceId: commandContext.deviceId,
+                actorId: commandContext.actor.actorId,
+            }
+        );
 
-        // Get the created order
         const order = await getOfflineOrder(orderId);
 
         return { success: true, order: order! };
@@ -237,17 +301,134 @@ export async function updateOfflineOrderStatus(
     const now = new Date().toISOString();
 
     try {
+        const existingOrder = await getOfflineOrder(orderId);
+        if (!existingOrder) {
+            return false;
+        }
+
+        const commandContext = getOfflineOrderCommandContext(existingOrder.restaurant_id);
+        const idempotencyKey = generateIdempotencyKey('order-update');
+        const updateCommand = buildUpdateOfflineOrderStatusCommand(
+            commandContext,
+            {
+                order_id: orderId,
+                status,
+            },
+            idempotencyKey
+        );
+
         await db.execute(
             `UPDATE orders SET status = ?, updated_at = ?, last_modified = ?, version = version + 1 WHERE id = ?`,
             [status, now, now, orderId]
         );
 
-        // Queue for sync
-        await queueSyncOperation('update', 'orders', orderId, { status });
+        await appendOrderCommandJournal(db, {
+            restaurantId: existingOrder.restaurant_id,
+            aggregateId: orderId,
+            operationType: 'order.update',
+            idempotencyKey,
+            payload: updateCommand as unknown as Record<string, unknown>,
+        });
+
+        await queueSyncOperation(
+            'update',
+            'orders',
+            orderId,
+            { status, domain_command: updateCommand },
+            {
+                restaurantId: existingOrder.restaurant_id,
+                locationId: commandContext.locationId,
+                deviceId: commandContext.deviceId,
+                actorId: commandContext.actor.actorId,
+            }
+        );
 
         return true;
     } catch (error) {
         logger.error('[OrderSync] Failed to update order status', {
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return false;
+    }
+}
+
+export async function updateOfflineOrderCourseFire(
+    orderId: string,
+    input: {
+        fire_mode?: 'auto' | 'manual';
+        current_course?: 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
+    }
+): Promise<boolean> {
+    const db = getPowerSync();
+    if (!db) return false;
+
+    const now = new Date().toISOString();
+
+    try {
+        const existingOrder = await getOfflineOrder(orderId);
+        if (!existingOrder) {
+            return false;
+        }
+
+        const commandContext = getOfflineOrderCommandContext(existingOrder.restaurant_id);
+        const idempotencyKey = generateIdempotencyKey('order-course-fire');
+        const updateCommand = buildUpdateOfflineOrderStatusCommand(
+            commandContext,
+            {
+                order_id: orderId,
+                status: existingOrder.status,
+            },
+            idempotencyKey
+        );
+        const commandPayload = {
+            ...updateCommand,
+            payload: {
+                ...updateCommand.payload,
+                fire_mode: input.fire_mode,
+                current_course: input.current_course,
+            },
+        };
+
+        await db.execute(
+            `UPDATE orders
+             SET fire_mode = COALESCE(?, fire_mode),
+                 current_course = COALESCE(?, current_course),
+                 updated_at = ?,
+                 last_modified = ?,
+                 version = version + 1
+             WHERE id = ?`,
+            [input.fire_mode ?? null, input.current_course ?? null, now, now, orderId]
+        );
+
+        await appendOrderCommandJournal(db, {
+            restaurantId: existingOrder.restaurant_id,
+            aggregateId: orderId,
+            operationType: 'order.update',
+            idempotencyKey,
+            payload: commandPayload as unknown as Record<string, unknown>,
+        });
+
+        await queueSyncOperation(
+            'update',
+            'orders',
+            orderId,
+            {
+                status: existingOrder.status,
+                fire_mode: input.fire_mode,
+                current_course: input.current_course,
+                domain_command: commandPayload,
+            },
+            {
+                restaurantId: existingOrder.restaurant_id,
+                locationId: commandContext.locationId,
+                deviceId: commandContext.deviceId,
+                actorId: commandContext.actor.actorId,
+            }
+        );
+
+        return true;
+    } catch (error) {
+        logger.error('[OrderSync] Failed to update order course fire', {
             error: error instanceof Error ? error.message : String(error),
         });
         return false;
@@ -264,13 +445,50 @@ export async function deleteOfflineOrder(orderId: string): Promise<boolean> {
     const now = new Date().toISOString();
 
     try {
+        const existingOrder = await getOfflineOrder(orderId);
+        if (!existingOrder) {
+            return false;
+        }
+
+        const commandContext = getOfflineOrderCommandContext(existingOrder.restaurant_id);
+        const idempotencyKey = generateIdempotencyKey('order-delete');
+        const deleteCommand = buildDeleteOfflineOrderCommand(
+            commandContext,
+            {
+                order_id: orderId,
+                status: 'cancelled',
+            },
+            idempotencyKey
+        );
+
         await db.execute(
             `UPDATE orders SET status = 'cancelled', updated_at = ?, last_modified = ?, version = version + 1 WHERE id = ?`,
             [now, now, orderId]
         );
 
-        // Queue for sync
-        await queueSyncOperation('delete', 'orders', orderId, { status: 'cancelled' });
+        await appendOrderCommandJournal(db, {
+            restaurantId: existingOrder.restaurant_id,
+            aggregateId: orderId,
+            operationType: 'order.delete',
+            idempotencyKey,
+            payload: deleteCommand as unknown as Record<string, unknown>,
+        });
+
+        await queueSyncOperation(
+            'delete',
+            'orders',
+            orderId,
+            {
+                status: 'cancelled',
+                domain_command: deleteCommand,
+            },
+            {
+                restaurantId: existingOrder.restaurant_id,
+                locationId: commandContext.locationId,
+                deviceId: commandContext.deviceId,
+                actorId: commandContext.actor.actorId,
+            }
+        );
 
         return true;
     } catch (error) {

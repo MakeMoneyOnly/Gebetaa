@@ -19,12 +19,11 @@ import { useKDSRealtime } from '@/hooks/useKDSRealtime';
 import {
     getOfflineKdsQueueCount,
     getPendingKdsActions,
-    addKdsActionToQueue,
     clearSyncedKdsActions,
 } from '@/lib/kds/syncAdapter';
+import { submitKdsItemAction, usesLegacyKdsActionReplay } from '@/lib/kds/command-adapter';
+import { submitOrderCourseFireUpdate } from '@/lib/orders/command-adapter';
 import {
-    getOfflineKdsQueue,
-    enqueueKdsAction,
     removeQueuedKdsAction,
     incrementKdsActionAttempts,
     markKdsQueueSynced,
@@ -514,6 +513,11 @@ export function StationBoard({
 
     const syncOfflineActions = useCallback(async () => {
         if (!isOnline || syncingOfflineActions) return;
+        if (!usesLegacyKdsActionReplay()) {
+            setQueuedActionCount(await getOfflineKdsQueueCount());
+            return;
+        }
+
         const queueSnapshot = await getPendingKdsActions();
         if (queueSnapshot.length === 0) {
             setQueuedActionCount(0);
@@ -596,71 +600,47 @@ export function StationBoard({
                     return;
                 }
 
-                if (!isOnline) {
-                    const _queued = await addKdsActionToQueue({
-                        orderId,
-                        itemId,
-                        kdsItemId,
-                        action,
-                    });
-                    applyOptimisticItemStatus(orderId, itemId, action);
-                    const count = await getOfflineKdsQueueCount();
-                    setQueuedActionCount(count);
-                    setError(`Offline: queued ${action} for sync.`);
-                    if (printPolicy.mode === 'always') {
-                        await handlePrintTicket(orderId, 'offline_action_always_print');
-                    }
-                    return;
-                }
-
-                const response = await fetch(`/api/kds/items/${kdsItemId}/action`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-idempotency-key': crypto.randomUUID(),
-                    },
-                    body: JSON.stringify({ action }),
+                const result = await submitKdsItemAction({
+                    orderId,
+                    itemId,
+                    kdsItemId,
+                    action,
+                    isOnline,
                 });
 
-                if (!response.ok) {
-                    const payload = await response.json().catch(() => ({}));
-                    setError(payload?.error ?? 'Failed to update item');
-                    if (response.status >= 500) {
-                        enqueueKdsAction({
-                            orderId,
-                            itemId,
-                            kdsItemId,
-                            action,
-                            reason: 'queued_after_server_error',
-                        });
-                        applyOptimisticItemStatus(orderId, itemId, action);
-                        setQueuedActionCount(getOfflineKdsQueue().pendingActions.length);
-                        if (printPolicy.mode === 'fallback' || printPolicy.mode === 'always') {
-                            await handlePrintTicket(orderId, 'kds_action_server_error_fallback');
-                        }
-                    }
+                if (!result.ok) {
+                    setError(result.error ?? 'Failed to update item');
                     return;
                 }
 
-                await fetchQueue(true);
-                if (printPolicy.mode === 'always') {
-                    await handlePrintTicket(orderId, 'kds_action_print_mode_always');
+                applyOptimisticItemStatus(orderId, itemId, action);
+                const count = await getOfflineKdsQueueCount();
+                setQueuedActionCount(count);
+
+                if (result.mode === 'queued_legacy') {
+                    setError(`Offline: queued ${action} for sync.`);
+                } else {
+                    setError(null);
                 }
-            } catch {
-                if (kdsItemId) {
-                    enqueueKdsAction({
+
+                if (result.mode === 'api') {
+                    await fetchQueue(true);
+                }
+
+                if (printPolicy.mode === 'always') {
+                    await handlePrintTicket(
                         orderId,
-                        itemId,
-                        kdsItemId,
-                        action,
-                        reason: 'queued_after_network_error',
-                    });
-                    applyOptimisticItemStatus(orderId, itemId, action);
-                    setQueuedActionCount(getOfflineKdsQueue().pendingActions.length);
-                    setError('Network issue: action queued for retry.');
-                    if (printPolicy.mode === 'fallback' || printPolicy.mode === 'always') {
-                        await handlePrintTicket(orderId, 'kds_action_network_error_fallback');
-                    }
+                        result.mode === 'queued_legacy'
+                            ? 'offline_action_always_print'
+                            : 'kds_action_print_mode_always'
+                    );
+                }
+
+                if (
+                    result.mode === 'queued_legacy' &&
+                    (printPolicy.mode === 'fallback' || printPolicy.mode === 'always')
+                ) {
+                    await handlePrintTicket(orderId, 'kds_action_queued_legacy_fallback');
                 }
             } finally {
                 setActionKey(null);
@@ -677,21 +657,27 @@ export function StationBoard({
 
             setAdvancingCourseOrderId(order.id);
             try {
-                const response = await fetch(`/api/orders/${order.id}/course-fire`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        fire_mode: 'manual',
-                        current_course: next,
-                    }),
+                const result = await submitOrderCourseFireUpdate({
+                    orderId: order.id,
+                    fireMode: 'manual',
+                    currentCourse: next,
                 });
-                const payload = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    setError(payload?.error ?? 'Failed to advance course');
+                if (!result.ok) {
+                    setError(result.error ?? 'Failed to advance course');
                     return;
                 }
                 setError(null);
-                await fetchQueue(true);
+                if (result.mode === 'local') {
+                    setOrders(current =>
+                        current.map(currentOrder =>
+                            currentOrder.id === order.id
+                                ? { ...currentOrder, currentCourse: next }
+                                : currentOrder
+                        )
+                    );
+                } else {
+                    await fetchQueue(true);
+                }
             } finally {
                 setAdvancingCourseOrderId(null);
             }

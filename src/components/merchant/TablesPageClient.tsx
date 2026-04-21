@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
 import type { TableSummary } from '@/lib/services/dashboardDataService';
+import { submitTableStatusUpdate } from '@/lib/tables/session-adapter';
 
 interface TablesPageClientProps {
     initialData: {
@@ -73,14 +74,14 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
             setTables(prev => prev.map(t => (t.id === tableId ? { ...t, status: newStatus } : t)));
 
             try {
-                const response = await fetch(`/api/tables/${tableId}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus }),
+                const result = await submitTableStatusUpdate({
+                    restaurantId: restaurantId ?? '',
+                    tableId,
+                    status: newStatus as 'available' | 'occupied' | 'reserved' | 'cleaning',
                 });
 
-                if (!response.ok) {
-                    throw new Error('Failed to update table status');
+                if (!result.ok) {
+                    throw new Error(result.error ?? 'Failed to update table status');
                 }
 
                 toast.success('Table status updated');
@@ -101,7 +102,7 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
                 toast.error('Failed to update table status');
             }
         },
-        [initialData?.tables]
+        [initialData?.tables, restaurantId]
     );
 
     // Calculate stats

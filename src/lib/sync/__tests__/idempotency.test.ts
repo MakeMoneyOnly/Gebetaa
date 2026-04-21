@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
+const mockAppendLocalJournalEntry = vi.fn().mockResolvedValue(null);
 
 vi.mock('../powersync-config', () => ({
     getPowerSync: vi.fn(() => ({
@@ -19,12 +20,17 @@ vi.mock('../powersync-config', () => ({
     })),
 }));
 
+vi.mock('@/lib/journal/local-journal', () => ({
+    appendLocalJournalEntry: mockAppendLocalJournalEntry,
+}));
+
 describe('Idempotency Key Manager', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockExecute.mockResolvedValue({ rowsAffected: 1 });
         mockGetFirstAsync.mockResolvedValue(null);
         mockGetAllAsync.mockResolvedValue([]);
+        mockAppendLocalJournalEntry.mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -81,7 +87,9 @@ describe('Idempotency Key Manager', () => {
 
         it('should return false when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { isIdempotencyKeyUsed } = await import('../idempotency');
             const result = await isIdempotencyKeyUsed('test-key');
@@ -103,7 +111,9 @@ describe('Idempotency Key Manager', () => {
 
         it('should do nothing when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { markIdempotencyKeyCompleted } = await import('../idempotency');
             await markIdempotencyKeyCompleted('test-key');
@@ -136,12 +146,40 @@ describe('Idempotency Key Manager', () => {
 
         it('should return empty string when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { queueSyncOperation } = await import('../idempotency');
             const result = await queueSyncOperation('update', 'orders', 'order-123', {});
 
             expect(result).toBe('');
+        });
+
+        it('should append sync journal when context supplied', async () => {
+            const { queueSyncOperation } = await import('../idempotency');
+            await queueSyncOperation(
+                'create',
+                'orders',
+                'order-123',
+                { total: 1000 },
+                {
+                    restaurantId: 'rest-1',
+                    locationId: 'loc-1',
+                    deviceId: 'dev-1',
+                    actorId: 'device-1',
+                }
+            );
+
+            expect(mockAppendLocalJournalEntry).toHaveBeenCalledOnce();
+            expect(mockAppendLocalJournalEntry).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    entryKind: 'sync',
+                    aggregateType: 'orders',
+                    aggregateId: 'order-123',
+                    operationType: 'sync.create',
+                })
+            );
         });
     });
 
@@ -183,7 +221,9 @@ describe('Idempotency Key Manager', () => {
 
         it('should return empty array when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getPendingSyncOperations } = await import('../idempotency');
             const result = await getPendingSyncOperations();
@@ -205,7 +245,9 @@ describe('Idempotency Key Manager', () => {
 
         it('should do nothing when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { markSyncOperationFailed } = await import('../idempotency');
             await markSyncOperationFailed(1, 'error');
@@ -227,7 +269,9 @@ describe('Idempotency Key Manager', () => {
 
         it('should do nothing when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { markSyncOperationCompleted } = await import('../idempotency');
             await markSyncOperationCompleted(1);
@@ -257,7 +301,9 @@ describe('Idempotency Key Manager', () => {
 
         it('should return zeros when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { getSyncQueueStatus } = await import('../idempotency');
             const result = await getSyncQueueStatus();
@@ -310,7 +356,9 @@ describe('Idempotency Key Manager', () => {
 
         it('should return 0 when PowerSync is not available', async () => {
             const { getPowerSync } = await import('../powersync-config');
-            vi.mocked(getPowerSync).mockReturnValueOnce(null as unknown as ReturnType<typeof getPowerSync>);
+            vi.mocked(getPowerSync).mockReturnValueOnce(
+                null as unknown as ReturnType<typeof getPowerSync>
+            );
 
             const { clearCompletedSyncOperations } = await import('../idempotency');
             const result = await clearCompletedSyncOperations();

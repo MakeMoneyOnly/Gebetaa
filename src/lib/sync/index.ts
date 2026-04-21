@@ -8,10 +8,13 @@
 // Configuration
 export {
     getPowerSyncConfig,
+    getPowerSyncBootstrapStatus,
     initPowerSync,
     getPowerSync,
     closePowerSync,
     powerSyncSchema,
+    type PowerSyncBootstrapStatus,
+    type PowerSyncBootstrapState,
     type PowerSyncConfig,
 } from './powersync-config';
 
@@ -35,6 +38,7 @@ export {
     getOfflineOrder,
     getPendingOfflineOrders,
     updateOfflineOrderStatus,
+    updateOfflineOrderCourseFire,
     deleteOfflineOrder,
     getOfflineOrdersByRestaurant,
     getOfflineOrdersCountByStatus,
@@ -84,6 +88,17 @@ export {
     type PrinterJobStatus,
     type KdsPrintPayload,
 } from './printerFallback';
+
+// Table Session Sync
+export {
+    openOfflineTableSession,
+    getOfflineTableSession,
+    getOpenOfflineTableSessionByTableId,
+    transferOfflineTableSession,
+    closeOfflineTableSession,
+    type OfflineTableSession,
+    type OfflineTableSessionStatus,
+} from './tableSessionSync';
 
 // Sync Worker
 export {
