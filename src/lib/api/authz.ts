@@ -6,6 +6,7 @@ import { logSecurityEvent } from '@/lib/security/securityEvents';
 import { verifyDeviceTokenFromRequest } from '@/lib/auth/device-token-cookies';
 import { logger } from '@/lib/logger';
 import type { HardwareDeviceType, DeviceProfile } from '@/lib/devices/config';
+import { isGatewayIdentityRevoked } from '@/lib/auth/offline-authz';
 import {
     hydrateEnterpriseDeviceRecord,
     isEnterpriseDeviceSchemaError,
@@ -282,6 +283,14 @@ export async function getDeviceContext(request: Request): Promise<GetDeviceConte
         };
     }
 
+    const hydrated = hydrateEnterpriseDeviceRecord(device);
+    if (hydrated.pairing_state === 'revoked' || isGatewayIdentityRevoked(hydrated.metadata)) {
+        return {
+            ok: false as const,
+            response: apiError('Device identity revoked', 401, 'DEVICE_IDENTITY_REVOKED'),
+        };
+    }
+
     // Log token source for auditing (helps track migration to cookie-based auth)
     if (tokenSource === 'header') {
         logger.info(
@@ -291,7 +300,7 @@ export async function getDeviceContext(request: Request): Promise<GetDeviceConte
 
     return {
         ok: true as const,
-        device: hydrateEnterpriseDeviceRecord(device) as HydratedDeviceRecord,
+        device: hydrated as HydratedDeviceRecord,
         restaurantId: device.restaurant_id as string,
         admin,
     };

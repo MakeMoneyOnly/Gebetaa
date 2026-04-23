@@ -52,13 +52,8 @@ describe('table session adapter', () => {
         expect(result).toEqual({ ok: true, mode: 'local_session' });
     });
 
-    it('falls back to API for reserved status', async () => {
-        vi.mocked(fetch).mockResolvedValue(
-            new Response(JSON.stringify({ ok: true }), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            })
-        );
+    it('fails closed for non-local table states', async () => {
+        mockGetPowerSync.mockReturnValue({ execute: vi.fn() });
 
         const { submitTableStatusUpdate } = await import('../session-adapter');
         const result = await submitTableStatusUpdate({
@@ -67,6 +62,10 @@ describe('table session adapter', () => {
             status: 'reserved',
         });
 
-        expect(result).toEqual({ ok: true, mode: 'api' });
+        expect(result).toEqual({
+            ok: false,
+            error: 'Table status reserved requires gateway-owned table authority.',
+        });
+        expect(fetch).not.toHaveBeenCalled();
     });
 });

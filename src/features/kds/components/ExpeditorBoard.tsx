@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { submitOrderCourseFireUpdate } from '@/lib/orders/command-adapter';
 import { submitFinalKdsHandoff } from '@/lib/kds/handoff-adapter';
+import { readKdsQueue, readKdsSettings } from '@/lib/kds/read-adapter';
 
 type ConsolidatedOrder = UnifiedKDSOrder & {
     readiness: {
@@ -202,15 +203,16 @@ export function ExpeditorBoard() {
 
         setIsLoading(true);
         try {
-            const response = await fetch(
-                '/api/kds/queue?station=expeditor&limit=120&sla_minutes=30'
-            );
-            const payload = await response.json();
-            if (!response.ok) {
-                setError(payload?.error ?? 'Failed to fetch expeditor queue');
+            const result = await readKdsQueue({
+                station: 'expeditor',
+                limit: 120,
+                slaMinutes: 30,
+            });
+            if (!result.ok || !result.data) {
+                setError(result.error ?? 'Failed to fetch expeditor queue');
                 return;
             }
-            setOrders((payload?.data?.orders ?? []) as UnifiedKDSOrder[]);
+            setOrders((result.data.orders ?? []) as UnifiedKDSOrder[]);
             setError(null);
         } catch {
             setError('Failed to fetch expeditor queue');
@@ -222,20 +224,19 @@ export function ExpeditorBoard() {
     const fetchKdsSettings = useCallback(async () => {
         if (!restaurantId) return;
         try {
-            const response = await fetch('/api/settings/kds');
-            const payload = await response.json();
-            if (!response.ok) {
+            const result = await readKdsSettings();
+            if (!result.ok || !result.data) {
                 return;
             }
 
-            const value = Number(payload?.data?.ready_auto_archive_minutes ?? 15);
+            const value = Number(result.data.ready_auto_archive_minutes ?? 15);
             const normalized = Number.isFinite(value)
                 ? Math.max(0, Math.min(180, Math.floor(value)))
                 : 15;
             setArchiveMinutes(normalized);
             setArchiveInput(String(normalized));
-            setAlertPolicy(normalizeAlertPolicy(payload?.data?.alert_policy));
-            setPrintPolicy(normalizePrintPolicy(payload?.data?.print_policy));
+            setAlertPolicy(normalizeAlertPolicy(result.data.alert_policy));
+            setPrintPolicy(normalizePrintPolicy(result.data.print_policy));
         } catch {
             // Keep current local value if settings fetch fails.
         }
@@ -274,9 +275,6 @@ export function ExpeditorBoard() {
 
                 setOrders(current => current.filter(order => order.id !== orderId));
                 setError(null);
-                if (result.mode === 'api') {
-                    await fetchQueue();
-                }
             } finally {
                 setHandoffOrderId(null);
             }
@@ -302,17 +300,13 @@ export function ExpeditorBoard() {
                     return;
                 }
                 setError(null);
-                if (result.mode === 'local') {
-                    setOrders(current =>
-                        current.map(currentOrder =>
-                            currentOrder.id === order.id
-                                ? { ...currentOrder, currentCourse: next }
-                                : currentOrder
-                        )
-                    );
-                } else {
-                    await fetchQueue();
-                }
+                setOrders(current =>
+                    current.map(currentOrder =>
+                        currentOrder.id === order.id
+                            ? { ...currentOrder, currentCourse: next }
+                            : currentOrder
+                    )
+                );
             } finally {
                 setAdvancingCourseOrderId(null);
             }

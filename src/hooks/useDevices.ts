@@ -115,6 +115,37 @@ export function useDevices(initialData?: HardwareDevice[]) {
         }
     };
 
+    const updateDeviceIdentity = async (
+        deviceId: string,
+        action: 'rotate_identity' | 'revoke_identity'
+    ): Promise<HardwareDevice | null> => {
+        try {
+            const response = await fetch(`/api/devices/${deviceId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action }),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result?.error ?? 'Failed to update device identity.');
+            }
+
+            const nextDevice = result.data.device as HardwareDevice;
+            setDevices(prev =>
+                prev.map(device => (device.id === deviceId ? { ...device, ...nextDevice } : device))
+            );
+            toast.success(
+                action === 'rotate_identity'
+                    ? 'Device identity rotated.'
+                    : 'Device identity revoked.'
+            );
+            return nextDevice;
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to update device identity.');
+            return null;
+        }
+    };
+
     return {
         devices,
         loading,
@@ -122,5 +153,9 @@ export function useDevices(initialData?: HardwareDevice[]) {
         fetchDevices,
         handleProvisionDevice,
         handleDeleteDevice,
+        handleRotateDeviceIdentity: (deviceId: string) =>
+            updateDeviceIdentity(deviceId, 'rotate_identity'),
+        handleRevokeDeviceIdentity: (deviceId: string) =>
+            updateDeviceIdentity(deviceId, 'revoke_identity'),
     };
 }

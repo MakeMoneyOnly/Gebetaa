@@ -1,13 +1,21 @@
 import { createHmac, timingSafeEqual } from 'crypto';
+import type { DeviceProfile, HardwareDeviceType } from '@/lib/devices/config';
+import type { GatewayCapability, OfflineStaffOutagePolicy } from '@/lib/auth/offline-authz';
 
 export interface GatewaySessionClaims {
     deviceId: string;
     restaurantId: string;
     locationId: string;
     gatewayId: string;
+    deviceType: HardwareDeviceType;
+    deviceProfile: DeviceProfile | null;
+    identityVersion: number;
+    authorizations: GatewayCapability[];
     topicPrefix: string;
     issuedAt: string;
     expiresAt: string;
+    offlineAccessExpiresAt: string;
+    staffOutagePolicy: OfflineStaffOutagePolicy;
 }
 
 export interface GatewaySessionBundle {
@@ -18,12 +26,20 @@ export interface GatewaySessionBundle {
 }
 
 function getGatewaySessionSecret(): string {
-    return (
+    const configuredSecret =
         process.env.GATEWAY_SESSION_SECRET ||
         process.env.DEVICE_TOKEN_SIGNATURE_SECRET ||
-        process.env.AUTH_SECRET ||
-        'development-secret-change-in-production'
-    );
+        process.env.AUTH_SECRET;
+
+    if (configuredSecret) {
+        return configuredSecret;
+    }
+
+    if (process.env.NODE_ENV === 'test') {
+        return 'test-gateway-session-secret';
+    }
+
+    throw new Error('GATEWAY_SESSION_SECRET is required for gateway session issuance');
 }
 
 function toBase64Url(value: string): string {
@@ -39,7 +55,13 @@ export function issueGatewaySessionToken(input: {
     restaurantId: string;
     locationId: string;
     gatewayId: string;
+    deviceType?: HardwareDeviceType;
+    deviceProfile?: DeviceProfile | null;
+    identityVersion?: number;
+    authorizations?: GatewayCapability[];
     expiresInMinutes?: number;
+    offlineAccessExpiresAt?: string;
+    staffOutagePolicy?: OfflineStaffOutagePolicy;
 }): GatewaySessionBundle {
     const issuedAt = new Date();
     const expiresAt = new Date(issuedAt.getTime() + (input.expiresInMinutes ?? 60) * 60 * 1000);
@@ -48,9 +70,20 @@ export function issueGatewaySessionToken(input: {
         restaurantId: input.restaurantId,
         locationId: input.locationId,
         gatewayId: input.gatewayId,
+        deviceType: input.deviceType ?? 'pos',
+        deviceProfile: input.deviceProfile ?? null,
+        identityVersion: input.identityVersion ?? 1,
+        authorizations: input.authorizations ?? ['gateway.bootstrap'],
         topicPrefix: `lole/v1/restaurants/${input.restaurantId}/locations/${input.locationId}`,
         issuedAt: issuedAt.toISOString(),
         expiresAt: expiresAt.toISOString(),
+        offlineAccessExpiresAt: input.offlineAccessExpiresAt ?? expiresAt.toISOString(),
+        staffOutagePolicy: input.staffOutagePolicy ?? {
+            mode: 'blocked',
+            ttlMinutes: 0,
+            requiresRecentPin: false,
+            allowedRoles: [],
+        },
     };
 
     const encodedClaims = toBase64Url(JSON.stringify(claims));
@@ -71,7 +104,12 @@ export function verifyGatewaySessionToken(token: string): GatewaySessionClaims |
         return null;
     }
 
-    const expectedSignature = signPayload(encodedClaims);
+    let expectedSignature: string;
+    try {
+        expectedSignature = signPayload(encodedClaims);
+    } catch {
+        return null;
+    }
     const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
     const providedBuffer = Buffer.from(providedSignature, 'utf8');
 

@@ -48,20 +48,17 @@ describe('order command adapter', () => {
         expect(fetch).not.toHaveBeenCalled();
     });
 
-    it('falls back to API for order status when local runtime missing', async () => {
-        vi.mocked(fetch).mockResolvedValue(
-            new Response(JSON.stringify({ ok: true }), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-            })
-        );
-
+    it('fails closed for order status when local runtime missing', async () => {
         const { submitOrderStatusUpdate } = await import('../command-adapter');
         const result = await submitOrderStatusUpdate({
             orderId: 'order-1',
             status: 'acknowledged',
         });
 
-        expect(result).toEqual({ ok: true, mode: 'api' });
+        expect(result).toEqual({
+            ok: false,
+            error: 'Local order command runtime unavailable. Pair to store gateway and retry.',
+        });
+        expect(fetch).not.toHaveBeenCalled();
     });
 });

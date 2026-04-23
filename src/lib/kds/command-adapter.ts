@@ -1,9 +1,8 @@
 import { executeKdsAction, getPowerSync } from '@/lib/sync';
-import { addKdsActionToQueue } from '@/lib/kds/syncAdapter';
 
 type KdsItemAction = 'start' | 'hold' | 'ready';
 
-export type SubmitKdsItemActionMode = 'local' | 'api' | 'queued_legacy';
+export type SubmitKdsItemActionMode = 'local';
 
 export interface SubmitKdsItemActionInput {
     orderId: string;
@@ -24,29 +23,8 @@ function hasLocalKdsRuntime(): boolean {
     return getPowerSync() !== null;
 }
 
-async function queueLegacyKdsAction(
-    input: Required<
-        Pick<SubmitKdsItemActionInput, 'orderId' | 'itemId' | 'kdsItemId' | 'action'>
-    > & {
-        reason?: string;
-    }
-): Promise<SubmitKdsItemActionResult> {
-    await addKdsActionToQueue({
-        orderId: input.orderId,
-        itemId: input.itemId,
-        kdsItemId: input.kdsItemId,
-        action: input.action,
-        reason: input.reason,
-    });
-
-    return {
-        ok: true,
-        mode: 'queued_legacy',
-    };
-}
-
 export function usesLegacyKdsActionReplay(): boolean {
-    return !hasLocalKdsRuntime();
+    return false;
 }
 
 export async function submitKdsItemAction(
@@ -59,74 +37,23 @@ export async function submitKdsItemAction(
         };
     }
 
-    if (hasLocalKdsRuntime()) {
-        const success = await executeKdsAction(input.kdsItemId, input.action);
-        if (success) {
-            return {
-                ok: true,
-                mode: 'local',
-            };
-        }
-
-        if (!input.isOnline) {
-            return {
-                ok: false,
-                error: 'Local KDS command failed while offline.',
-            };
-        }
-    }
-
-    if (!input.isOnline) {
-        return queueLegacyKdsAction({
-            orderId: input.orderId,
-            itemId: input.itemId,
-            kdsItemId: input.kdsItemId,
-            action: input.action,
-        });
-    }
-
-    try {
-        const response = await fetch(`/api/kds/items/${input.kdsItemId}/action`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-idempotency-key': crypto.randomUUID(),
-            },
-            body: JSON.stringify({
-                action: input.action,
-                reason: input.reason,
-            }),
-        });
-
-        if (response.ok) {
-            return {
-                ok: true,
-                mode: 'api',
-            };
-        }
-
-        const payload = (await response.json().catch(() => ({}))) as { error?: string };
-        if (response.status >= 500) {
-            return queueLegacyKdsAction({
-                orderId: input.orderId,
-                itemId: input.itemId,
-                kdsItemId: input.kdsItemId,
-                action: input.action,
-                reason: input.reason ?? 'queued_after_server_error',
-            });
-        }
-
+    if (!hasLocalKdsRuntime()) {
         return {
             ok: false,
-            error: payload.error ?? 'Failed to update item',
+            error: 'Local KDS command runtime unavailable. Pair to store gateway and retry.',
         };
-    } catch {
-        return queueLegacyKdsAction({
-            orderId: input.orderId,
-            itemId: input.itemId,
-            kdsItemId: input.kdsItemId,
-            action: input.action,
-            reason: input.reason ?? 'queued_after_network_error',
-        });
     }
+
+    const success = await executeKdsAction(input.kdsItemId, input.action);
+    if (success) {
+        return {
+            ok: true,
+            mode: 'local',
+        };
+    }
+
+    return {
+        ok: false,
+        error: 'Failed to apply KDS action locally.',
+    };
 }

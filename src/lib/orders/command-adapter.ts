@@ -5,7 +5,7 @@ import {
     type OfflineOrderStatus,
 } from '@/lib/sync';
 
-export type SubmitOrderCommandMode = 'local' | 'api';
+export type SubmitOrderCommandMode = 'local';
 type OrderCourse = 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
 
 export interface SubmitOrderStatusInput {
@@ -29,41 +29,35 @@ function hasLocalRuntime(): boolean {
     return getPowerSync() !== null;
 }
 
+const LOCAL_RUNTIME_UNAVAILABLE_ERROR =
+    'Local order command runtime unavailable. Pair to store gateway and retry.';
+
 export async function submitOrderStatusUpdate(
     input: SubmitOrderStatusInput
 ): Promise<SubmitOrderCommandResult> {
-    if (hasLocalRuntime()) {
+    if (!hasLocalRuntime()) {
+        return { ok: false, error: LOCAL_RUNTIME_UNAVAILABLE_ERROR };
+    }
+
+    try {
         const updated = await updateOfflineOrderStatus(input.orderId, input.status);
         if (updated) {
             return { ok: true, mode: 'local' };
         }
-    }
-
-    try {
-        const response = await fetch(`/api/orders/${input.orderId}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: input.status }),
-        });
-
-        if (!response.ok) {
-            const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            return {
-                ok: false,
-                error: payload.error ?? 'Failed to update order status',
-            };
-        }
-
-        return { ok: true, mode: 'api' };
+        return { ok: false, error: 'Failed to update order status locally.' };
     } catch {
-        return { ok: false, error: 'Failed to update order status' };
+        return { ok: false, error: 'Failed to update order status locally.' };
     }
 }
 
 export async function submitOrderCourseFireUpdate(
     input: SubmitOrderCourseFireInput
 ): Promise<SubmitOrderCommandResult> {
-    if (hasLocalRuntime()) {
+    if (!hasLocalRuntime()) {
+        return { ok: false, error: LOCAL_RUNTIME_UNAVAILABLE_ERROR };
+    }
+
+    try {
         const updated = await updateOfflineOrderCourseFire(input.orderId, {
             fire_mode: input.fireMode,
             current_course: input.currentCourse,
@@ -71,28 +65,8 @@ export async function submitOrderCourseFireUpdate(
         if (updated) {
             return { ok: true, mode: 'local' };
         }
-    }
-
-    try {
-        const response = await fetch(`/api/orders/${input.orderId}/course-fire`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                fire_mode: input.fireMode,
-                current_course: input.currentCourse,
-            }),
-        });
-
-        if (!response.ok) {
-            const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            return {
-                ok: false,
-                error: payload.error ?? 'Failed to advance course',
-            };
-        }
-
-        return { ok: true, mode: 'api' };
+        return { ok: false, error: 'Failed to advance course locally.' };
     } catch {
-        return { ok: false, error: 'Failed to advance course' };
+        return { ok: false, error: 'Failed to advance course locally.' };
     }
 }

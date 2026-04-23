@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
+    evaluateOfflineStaffAccess,
+    isGatewayIdentityRevoked,
+    resolveOfflineStaffOutagePolicy,
+} from '@/lib/auth/offline-authz';
+import {
     DeviceProfileSchema,
     getDeviceProfileLabel,
     getDeviceTypeLabel,
@@ -66,6 +71,32 @@ export function useManagedDeviceSession({
         !session || expectedProfiles.length === 0 || expectedProfiles.includes(resolvedProfile);
     const requiresPairing = requirePaired && !loading && !deviceToken;
     const hasProfileMismatch = Boolean(session) && !hasExpectedProfile;
+    const isIdentityRevoked =
+        Boolean(session) &&
+        (isGatewayIdentityRevoked(session.metadata ?? null) ||
+            session?.gateway_bootstrap_status === 'failed');
+    const outagePolicy = useMemo(
+        () =>
+            resolveOfflineStaffOutagePolicy(session?.metadata ?? null, {
+                deviceType:
+                    session?.device_type === 'terminal' ||
+                    session?.device_type === 'kds' ||
+                    session?.device_type === 'kiosk'
+                        ? session.device_type
+                        : 'pos',
+                deviceProfile: resolvedProfile,
+            }),
+        [resolvedProfile, session?.device_type, session?.metadata]
+    );
+    const outageAccess = useMemo(
+        () =>
+            evaluateOfflineStaffAccess({
+                policy: outagePolicy,
+                isOnline: session?.gateway?.operatingMode === 'online',
+                role: resolvedProfile,
+            }),
+        [outagePolicy, resolvedProfile, session?.gateway?.operatingMode]
+    );
 
     useDeviceHeartbeat({
         deviceToken,
@@ -82,6 +113,10 @@ export function useManagedDeviceSession({
         hasExpectedProfile,
         requiresPairing,
         hasProfileMismatch,
+        isIdentityRevoked,
+        outagePolicy,
+        outageAccess,
+        hasOutageAccess: outageAccess.allowed && !isIdentityRevoked,
         profileLabel: getDeviceProfileLabel(resolvedProfile),
         typeLabel: getDeviceTypeLabel(session?.device_type),
     };

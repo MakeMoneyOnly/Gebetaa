@@ -19,7 +19,7 @@ describe('kds handoff adapter', () => {
         vi.stubGlobal('fetch', vi.fn());
     });
 
-    it('uses local handoff when all items ready', async () => {
+    it('marks order served locally when all kds items ready', async () => {
         mockGetPowerSync.mockReturnValue({ execute: vi.fn() });
         mockGetKdsItemsByOrder.mockResolvedValue([{ status: 'ready' }]);
         mockUpdateOfflineOrderStatus.mockResolvedValue(true);
@@ -28,18 +28,16 @@ describe('kds handoff adapter', () => {
         const result = await submitFinalKdsHandoff({ orderId: 'order-1' });
 
         expect(result).toEqual({ ok: true, mode: 'local' });
+        expect(fetch).not.toHaveBeenCalled();
     });
 
-    it('blocks local handoff when item not ready', async () => {
-        mockGetPowerSync.mockReturnValue({ execute: vi.fn() });
-        mockGetKdsItemsByOrder.mockResolvedValue([{ status: 'queued' }]);
-
+    it('fails closed when local runtime missing', async () => {
         const { submitFinalKdsHandoff } = await import('../handoff-adapter');
         const result = await submitFinalKdsHandoff({ orderId: 'order-1' });
 
         expect(result).toEqual({
             ok: false,
-            error: 'Ticket is not fully ready for final handoff',
+            error: 'Local KDS handoff runtime unavailable. Pair to store gateway and retry.',
         });
     });
 });

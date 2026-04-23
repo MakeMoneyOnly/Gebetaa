@@ -8,7 +8,7 @@ import {
 
 type SettlementProvider = 'cash' | 'chapa' | 'other';
 
-export type SubmitTerminalSettlementMode = 'local' | 'api';
+export type SubmitTerminalSettlementMode = 'local';
 
 export interface LocalSettlementOrder {
     id: string;
@@ -42,41 +42,55 @@ function canLocallySettle(provider: SettlementProvider): boolean {
 export async function submitTerminalSettlement(
     input: SubmitTerminalSettlementInput
 ): Promise<SubmitTerminalSettlementResult> {
-    if (hasLocalRuntime() && canLocallySettle(input.paymentProvider)) {
-        const openSession = await getOpenOfflineTableSessionByTableId(input.tableId);
-        if (openSession) {
-            const completedOrderIds: string[] = [];
+    if (!hasLocalRuntime()) {
+        return {
+            ok: false,
+            error: 'Local terminal settlement runtime unavailable. Pair to store gateway and retry.',
+        };
+    }
 
-            for (const order of input.orders) {
-                if (!FINALIZABLE_ORDER_STATUSES.has(order.status)) continue;
+    if (!canLocallySettle(input.paymentProvider)) {
+        return {
+            ok: false,
+            error: `Local settlement for ${input.paymentProvider} is not available yet.`,
+        };
+    }
 
-                const updated = await updateOfflineOrderStatus(
-                    order.id,
-                    'completed' as OfflineOrderStatus
-                );
-                if (updated) {
-                    completedOrderIds.push(order.id);
-                }
-            }
+    const openSession = await getOpenOfflineTableSessionByTableId(input.tableId);
+    if (!openSession) {
+        return {
+            ok: false,
+            error: 'No open local table session found for terminal settlement.',
+        };
+    }
 
-            const closed = await closeOfflineTableSession({
-                sessionId: openSession.id,
-                restaurantId: input.restaurantId,
-                tableId: input.tableId,
-            });
+    const completedOrderIds: string[] = [];
 
-            if (closed) {
-                return {
-                    ok: true,
-                    mode: 'local',
-                    completedOrderIds,
-                };
-            }
+    for (const order of input.orders) {
+        if (!FINALIZABLE_ORDER_STATUSES.has(order.status)) continue;
+
+        const updated = await updateOfflineOrderStatus(order.id, 'completed' as OfflineOrderStatus);
+        if (updated) {
+            completedOrderIds.push(order.id);
         }
+    }
+
+    const closed = await closeOfflineTableSession({
+        sessionId: openSession.id,
+        restaurantId: input.restaurantId,
+        tableId: input.tableId,
+    });
+
+    if (!closed) {
+        return {
+            ok: false,
+            error: 'Failed to close local table session from terminal.',
+        };
     }
 
     return {
         ok: true,
-        mode: 'api',
+        mode: 'local',
+        completedOrderIds,
     };
 }

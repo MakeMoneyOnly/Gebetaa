@@ -44,7 +44,7 @@ describe('terminal settlement adapter', () => {
         });
     });
 
-    it('falls back to api mode for chapa', async () => {
+    it('fails closed for unsupported provider', async () => {
         mockGetPowerSync.mockReturnValue({ execute: vi.fn() });
 
         const { submitTerminalSettlement } = await import('../settlement-adapter');
@@ -56,8 +56,23 @@ describe('terminal settlement adapter', () => {
         });
 
         expect(result).toEqual({
-            ok: true,
-            mode: 'api',
+            ok: false,
+            error: 'Local settlement for chapa is not available yet.',
+        });
+    });
+
+    it('fails closed when local runtime missing', async () => {
+        const { submitTerminalSettlement } = await import('../settlement-adapter');
+        const result = await submitTerminalSettlement({
+            restaurantId: 'rest-1',
+            tableId: 'table-1',
+            paymentProvider: 'cash',
+            orders: [],
+        });
+
+        expect(result).toEqual({
+            ok: false,
+            error: 'Local terminal settlement runtime unavailable. Pair to store gateway and retry.',
         });
     });
 });

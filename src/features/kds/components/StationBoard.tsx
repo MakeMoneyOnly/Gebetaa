@@ -16,6 +16,7 @@ import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useKDSRealtime } from '@/hooks/useKDSRealtime';
+import { readKdsQueue, readKdsSettings } from '@/lib/kds/read-adapter';
 import {
     getOfflineKdsQueueCount,
     getPendingKdsActions,
@@ -367,17 +368,18 @@ export function StationBoard({
             }
 
             try {
-                const response = await fetch(
-                    `/api/kds/queue?station=${station}&limit=100&sla_minutes=30`
-                );
-                const payload = await response.json();
+                const result = await readKdsQueue({
+                    station,
+                    limit: 100,
+                    slaMinutes: 30,
+                });
 
-                if (!response.ok) {
-                    setError(payload?.error ?? 'Failed to fetch KDS queue');
+                if (!result.ok || !result.data) {
+                    setError(result.error ?? 'Failed to fetch KDS queue');
                     return;
                 }
 
-                const nextOrders = (payload?.data?.orders ?? []) as UnifiedKDSOrder[];
+                const nextOrders = (result.data.orders ?? []) as UnifiedKDSOrder[];
                 // Read alertPolicy from ref — avoids adding it to deps which
                 // would cause fetchQueue to recreate on every settings refresh.
                 const policy = alertPolicyRef.current;
@@ -407,15 +409,12 @@ export function StationBoard({
     const fetchKdsSettings = useCallback(async () => {
         if (!restaurantId) return;
         try {
-            const response = await fetch('/api/settings/kds', {
-                cache: 'no-store',
-            });
-            if (!response.ok) {
+            const result = await readKdsSettings();
+            if (!result.ok || !result.data) {
                 return;
             }
-            const payload = await response.json().catch(() => ({}));
-            const normalized = normalizeAlertPolicy(payload?.data?.alert_policy);
-            const normalizedPrint = normalizePrintPolicy(payload?.data?.print_policy);
+            const normalized = normalizeAlertPolicy(result.data.alert_policy);
+            const normalizedPrint = normalizePrintPolicy(result.data.print_policy);
             // Keep ref in sync so fetchQueue always sees the latest policy.
             alertPolicyRef.current = normalized;
             setAlertPolicy(normalized);
@@ -514,7 +513,7 @@ export function StationBoard({
     const syncOfflineActions = useCallback(async () => {
         if (!isOnline || syncingOfflineActions) return;
         if (!usesLegacyKdsActionReplay()) {
-            setQueuedActionCount(await getOfflineKdsQueueCount());
+            setQueuedActionCount(0);
             return;
         }
 
@@ -616,31 +615,10 @@ export function StationBoard({
                 applyOptimisticItemStatus(orderId, itemId, action);
                 const count = await getOfflineKdsQueueCount();
                 setQueuedActionCount(count);
-
-                if (result.mode === 'queued_legacy') {
-                    setError(`Offline: queued ${action} for sync.`);
-                } else {
-                    setError(null);
-                }
-
-                if (result.mode === 'api') {
-                    await fetchQueue(true);
-                }
+                setError(null);
 
                 if (printPolicy.mode === 'always') {
-                    await handlePrintTicket(
-                        orderId,
-                        result.mode === 'queued_legacy'
-                            ? 'offline_action_always_print'
-                            : 'kds_action_print_mode_always'
-                    );
-                }
-
-                if (
-                    result.mode === 'queued_legacy' &&
-                    (printPolicy.mode === 'fallback' || printPolicy.mode === 'always')
-                ) {
-                    await handlePrintTicket(orderId, 'kds_action_queued_legacy_fallback');
+                    await handlePrintTicket(orderId, 'kds_action_print_mode_always');
                 }
             } finally {
                 setActionKey(null);
@@ -667,17 +645,13 @@ export function StationBoard({
                     return;
                 }
                 setError(null);
-                if (result.mode === 'local') {
-                    setOrders(current =>
-                        current.map(currentOrder =>
-                            currentOrder.id === order.id
-                                ? { ...currentOrder, currentCourse: next }
-                                : currentOrder
-                        )
-                    );
-                } else {
-                    await fetchQueue(true);
-                }
+                setOrders(current =>
+                    current.map(currentOrder =>
+                        currentOrder.id === order.id
+                            ? { ...currentOrder, currentCourse: next }
+                            : currentOrder
+                    )
+                );
             } finally {
                 setAdvancingCourseOrderId(null);
             }
