@@ -21,6 +21,10 @@ import {
 } from '@/lib/devices/pairing';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { setDeviceTokenCookies, type DeviceMetadata } from '@/lib/auth/device-token-cookies';
+import {
+    buildGatewayIdentityMetadata,
+    buildOfflineStaffOutagePolicyMetadata,
+} from '@/lib/auth/offline-authz';
 
 export async function POST(request: Request) {
     const parsed = await parseJsonBody(request, PairDeviceSchema);
@@ -139,6 +143,12 @@ export async function POST(request: Request) {
         },
         resolvedProfile
     );
+    const gatewayAwareMetadata = buildOfflineStaffOutagePolicyMetadata({
+        metadata: buildGatewayIdentityMetadata(normalizedMetadata, now),
+        deviceType: resolvedDeviceType,
+        deviceProfile: resolvedProfile,
+        nowIso: now,
+    });
 
     let updateError: { message: string } | null = null;
 
@@ -156,14 +166,14 @@ export async function POST(request: Request) {
             printer_device_id: parsed.data.printer?.device_id ?? null,
             printer_device_name: parsed.data.printer?.device_name ?? null,
             printer_mac_address: parsed.data.printer?.mac_address ?? null,
-            metadata: normalizedMetadata,
+            metadata: gatewayAwareMetadata,
         })
         .eq('id', String(device.id));
 
     updateError = enterpriseUpdate.error;
 
     if (updateError && isEnterpriseDeviceSchemaError(updateError.message)) {
-        const legacyMetadata = mergeEnterpriseShellMetadata(normalizedMetadata, {
+        const legacyMetadata = mergeEnterpriseShellMetadata(gatewayAwareMetadata, {
             device_profile: resolvedProfile,
             location_id: (device.location_id as string | null | undefined) ?? null,
             pairing_state: 'paired',
@@ -220,7 +230,7 @@ export async function POST(request: Request) {
             device_profile: hydratedDevice.device_profile,
             name: hydratedDevice.name,
             assigned_zones: hydratedDevice.assigned_zones,
-            metadata: normalizedMetadata,
+            metadata: gatewayAwareMetadata,
             boot_path,
             restaurant_slug: restaurant?.slug ?? null,
         },

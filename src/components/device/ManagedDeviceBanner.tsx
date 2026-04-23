@@ -1,8 +1,9 @@
 'use client';
 
-import { Cpu, Route, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Cpu, Route, ShieldCheck, WifiOff } from 'lucide-react';
 import { getDeviceShellSummary } from '@/lib/devices/shell';
 import type { StoredDeviceSession } from '@/lib/mobile/device-storage';
+import { evaluateOfflineStaffAccess, resolveOfflineStaffOutagePolicy } from '@/lib/auth/offline-authz';
 
 export function ManagedDeviceBanner(args: {
     session: StoredDeviceSession | null;
@@ -14,6 +15,20 @@ export function ManagedDeviceBanner(args: {
     }
 
     const summary = getDeviceShellSummary(args.session);
+    const outagePolicy = resolveOfflineStaffOutagePolicy(args.session.metadata ?? null, {
+        deviceType:
+            args.session.device_type === 'terminal' ||
+            args.session.device_type === 'kds' ||
+            args.session.device_type === 'kiosk'
+                ? args.session.device_type
+                : 'pos',
+        deviceProfile: args.session.device_profile ?? null,
+    });
+    const outageAccess = evaluateOfflineStaffAccess({
+        policy: outagePolicy,
+        isOnline: args.session.gateway?.operatingMode === 'online',
+    });
+    const operatingMode = args.session.gateway?.operatingMode ?? 'offline-local';
 
     return (
         <div
@@ -31,6 +46,16 @@ export function ManagedDeviceBanner(args: {
                     <p className="mt-1 text-sm font-medium text-[var(--color-brand-neutral)]">
                         {summary.profileLabel} mode is active for {args.routeLabel}.
                     </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em]">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-canvas)] px-3 py-1 text-[var(--color-brand-ink-strong)]">
+                            <WifiOff className="h-3.5 w-3.5 text-[var(--color-brand-ember)]" />
+                            {operatingMode}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-canvas)] px-3 py-1 text-[var(--color-brand-ink-strong)]">
+                            <AlertTriangle className="h-3.5 w-3.5 text-[var(--color-brand-ember)]" />
+                            {outageAccess.allowed ? 'Outage access ready' : outageAccess.reason ?? 'Outage restricted'}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="grid min-w-[240px] gap-2 text-sm text-[var(--color-brand-neutral)] sm:grid-cols-2">

@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { getDeviceProfileLabel, getDeviceTypeLabel } from '@/lib/devices/config';
 import { DEVICE_PAIRING_CODE_LENGTH, normalizePairingCode } from '@/lib/devices/pairing';
+import { bootstrapGatewayForPairedDevice } from '@/lib/gateway/device-bootstrap';
 import { getNativeDeviceInfo } from '@/lib/mobile/capacitor';
 import { storeDeviceSession, storePrinterSelection } from '@/lib/mobile/device-storage';
 
@@ -124,6 +125,18 @@ export default function DeviceSetupPage() {
             setDeviceInfo(pairedDevice);
             setStatus('success');
 
+            const gatewaySession =
+                pairedDevice.restaurant_id && pairedDevice.location_id
+                    ? await bootstrapGatewayForPairedDevice({
+                          deviceToken: pairedDevice.device_token,
+                          restaurantId: pairedDevice.restaurant_id,
+                          locationId: pairedDevice.location_id,
+                          preferredBrokerUrl: process.env.NEXT_PUBLIC_LAN_MQTT_URL ?? null,
+                          fallbackBootstrapUrl:
+                              process.env.NEXT_PUBLIC_GATEWAY_BOOTSTRAP_URL ?? null,
+                      })
+                    : null;
+
             await storeDeviceSession({
                 device_token: pairedDevice.device_token,
                 device_type: pairedDevice.device_type,
@@ -133,6 +146,8 @@ export default function DeviceSetupPage() {
                 location_id: pairedDevice.location_id ?? null,
                 boot_path: pairedDevice.boot_path ?? null,
                 metadata: pairedDevice.metadata ?? null,
+                gateway: gatewaySession,
+                gateway_bootstrap_status: gatewaySession ? 'ready' : 'unavailable',
             });
 
             if (pairedDevice.metadata?.printer?.connection_type) {
@@ -142,6 +157,10 @@ export default function DeviceSetupPage() {
                     device_name: pairedDevice.metadata.printer.device_name ?? null,
                     mac_address: pairedDevice.metadata.printer.mac_address ?? null,
                 });
+            }
+
+            if (!gatewaySession) {
+                toast.error('Device paired, but local gateway bootstrap is still unavailable.');
             }
 
             window.setTimeout(() => {

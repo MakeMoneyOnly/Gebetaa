@@ -14,6 +14,7 @@ export type DomainCommandType =
     | 'kds.start'
     | 'kds.ready'
     | 'kds.bump'
+    | 'kds.update'
     | 'table.open'
     | 'table.transfer'
     | 'table.close'

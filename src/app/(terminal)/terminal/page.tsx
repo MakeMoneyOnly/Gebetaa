@@ -22,6 +22,12 @@ import {
     buildReceiptFromPaymentPayload,
     handleApprovedTransactionReceipt,
 } from '@/lib/printer/transaction-print';
+import {
+    captureTerminalPayment,
+    createTerminalEvenSplit,
+    readTerminalOrderSplit,
+    readTerminalOverview,
+} from '@/lib/terminal/read-adapter';
 import { submitTerminalSettlement } from '@/lib/terminal/settlement-adapter';
 
 type TerminalTable = {
@@ -93,14 +99,6 @@ const METHOD_ICONS: Record<SupportedPaymentMethod, React.ReactNode> = {
     other: <Receipt className="h-4 w-4" />,
 };
 
-function getProviderForMethod(method: SupportedPaymentMethod): string {
-    if (method === 'chapa') {
-        return method;
-    }
-
-    return 'internal';
-}
-
 export default function TerminalPage() {
     const managedDevice = useManagedDeviceSession({
         route: '/terminal',
@@ -128,17 +126,21 @@ export default function TerminalPage() {
 
         try {
             setLoading(true);
-            const response = await fetch('/api/device/terminal/overview', {
-                headers: {
-                    'x-device-token': deviceToken,
+            const result = await readTerminalOverview({
+                device: {
+                    id: deviceInfo?.device_token ?? 'paired-terminal',
+                    name: deviceInfo?.name ?? 'Terminal',
+                    device_type: deviceInfo?.device_type ?? 'terminal',
+                    assigned_zones: [],
+                    metadata: (deviceInfo?.metadata as TerminalOverview['device']['metadata']) ?? null,
                 },
+                deviceToken,
             });
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to load terminal workspace');
+            if (!result.ok || !result.data) {
+                throw new Error(result.error ?? 'Failed to load terminal workspace');
             }
-            setOverview(payload.data as TerminalOverview);
-            const firstTable = (payload.data as TerminalOverview).tables[0];
+            setOverview(result.data as TerminalOverview);
+            const firstTable = (result.data as TerminalOverview).tables[0];
             setSelectedTableNumber(current => current ?? firstTable?.table_number ?? null);
         } catch (error) {
             toast.error(
@@ -163,16 +165,11 @@ export default function TerminalPage() {
             if (!deviceToken) return;
 
             try {
-                const response = await fetch(`/api/orders/${orderId}/split`, {
-                    headers: {
-                        'x-device-token': deviceToken,
-                    },
-                });
-                const payload = await response.json();
-                if (!response.ok) {
-                    throw new Error(payload?.error ?? 'Failed to load split settlement');
+                const result = await readTerminalOrderSplit(orderId, deviceToken);
+                if (!result.ok || !result.data) {
+                    throw new Error(result.error ?? 'Failed to load split settlement');
                 }
-                const splitData = payload.data as SplitPayload;
+                const splitData = result.data as SplitPayload;
                 setSplitPayload(splitData);
                 if ((splitData.splits?.length ?? 0) >= 2) {
                     setSplitGuestCount(Math.max(2, Math.min(12, splitData.splits.length)));
@@ -264,23 +261,13 @@ export default function TerminalPage() {
 
         try {
             setCapturingId('split-setup');
-            const response = await fetch(`/api/orders/${selectedOrderId}/split`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-device-token': deviceToken,
-                    'x-idempotency-key': crypto.randomUUID(),
-                },
-                body: JSON.stringify({
-                    method: 'even',
-                    splits: Array.from({ length: splitGuestCount }, (_, index) => ({
-                        guest_name: `Guest ${index + 1}`,
-                    })),
-                }),
+            const result = await createTerminalEvenSplit({
+                orderId: selectedOrderId,
+                guestCount: splitGuestCount,
+                deviceToken,
             });
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to create even split');
+            if (!result.ok) {
+                throw new Error(result.error ?? 'Failed to create even split');
             }
             toast.success(`Split ${selectedOrder.order_number ?? 'order'} into ${splitGuestCount}`);
             await loadSplitPayload(selectedOrderId);
@@ -301,31 +288,19 @@ export default function TerminalPage() {
 
         try {
             setCapturingId(args.splitId ?? args.orderId ?? 'payment');
-            const response = await fetch('/api/finance/payments', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-device-token': deviceToken,
-                    'x-idempotency-key': crypto.randomUUID(),
-                },
-                body: JSON.stringify({
-                    order_id: args.orderId,
-                    split_id: args.splitId,
-                    method: paymentMethod,
-                    provider: getProviderForMethod(paymentMethod),
-                    provider_reference: providerReference.trim() || undefined,
-                    amount: Number(args.amount.toFixed(2)),
-                    metadata: {
-                        source: 'terminal_device',
-                        terminal_name: overview?.device.name ?? null,
-                        station_name: overview?.device.metadata?.station_name ?? null,
-                        settlement_label: args.label,
-                    },
-                }),
+            const result = await captureTerminalPayment({
+                orderId: args.orderId,
+                splitId: args.splitId,
+                amount: Number(args.amount.toFixed(2)),
+                method: paymentMethod,
+                label: args.label,
+                providerReference: providerReference.trim() || undefined,
+                restaurantId: deviceInfo?.restaurant_id ?? 'local-restaurant',
+                terminalName: overview?.device.name ?? null,
+                deviceToken,
             });
-            const payload = await response.json();
-            if (!response.ok) {
-                throw new Error(payload?.error ?? 'Failed to record payment');
+            if (!result.ok || !result.data) {
+                throw new Error(result.error ?? 'Failed to record payment');
             }
 
             const shouldAutoPrint = overview?.device.metadata?.receipt_mode === 'auto';
@@ -334,7 +309,7 @@ export default function TerminalPage() {
                     restaurantName: deviceInfo?.name ?? overview?.device.name ?? 'lole',
                     restaurantTin: null,
                     transactionNumber:
-                        payload?.data?.transaction_number ??
+                        result.data.transaction_number ??
                         providerReference.trim() ??
                         crypto.randomUUID().slice(0, 8).toUpperCase(),
                     orderNumber: selectedOrder?.order_number ?? args.label,
@@ -356,7 +331,7 @@ export default function TerminalPage() {
                     orderId: args.orderId ?? selectedOrder?.id ?? null,
                     transactionNumber: receipt.transaction_number,
                     receipt,
-                    fiscalRequest: payload?.data?.fiscal_request ?? null,
+                    fiscalRequest: result.data.fiscal_request ?? null,
                     isOnline: typeof navigator === 'undefined' ? true : Boolean(navigator.onLine),
                 });
 
@@ -399,7 +374,12 @@ export default function TerminalPage() {
             const localResult = await submitTerminalSettlement({
                 restaurantId: deviceInfo?.restaurant_id ?? '',
                 tableId: selectedTable.id,
-                paymentProvider: paymentMethod === 'other' ? 'other' : paymentMethod,
+                paymentProvider:
+                    paymentMethod === 'cash'
+                        ? 'cash'
+                        : paymentMethod === 'other'
+                          ? 'other'
+                          : 'other',
                 orders: tableOrders.map(order => ({
                     id: order.id,
                     status: order.status,
@@ -410,58 +390,32 @@ export default function TerminalPage() {
                 throw new Error(localResult.error ?? 'Failed to close table settlement');
             }
 
-            if (localResult.mode === 'api') {
-                const response = await fetch('/api/device/tables/close', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-device-token': deviceToken,
-                    },
-                    body: JSON.stringify({
-                        table_id: selectedTable.id,
-                        payment: {
-                            provider: paymentMethod === 'other' ? 'other' : paymentMethod,
-                            amount: parsedAmount,
-                            tx_ref: providerReference.trim() || undefined,
-                        },
-                        notes: `Settled from cashier terminal ${overview?.device.name ?? 'Terminal'}`,
-                    }),
-                });
-                const payload = await response.json();
-                if (!response.ok) {
-                    throw new Error(payload?.error ?? 'Failed to close table settlement');
-                }
-            } else {
-                setOverview(current =>
-                    current
-                        ? {
-                              ...current,
-                              tables: current.tables.map(table =>
-                                  table.id === selectedTable.id
-                                      ? {
-                                            ...table,
-                                            status: 'available',
-                                            outstanding_total: 0,
-                                            active_order_count: 0,
-                                        }
-                                      : table
-                              ),
-                              orders: current.orders.map(order =>
-                                  localResult.completedOrderIds?.includes(order.id)
-                                      ? { ...order, status: 'completed' }
-                                      : order
-                              ),
-                          }
-                        : current
-                );
-            }
+            setOverview(current =>
+                current
+                    ? {
+                          ...current,
+                          tables: current.tables.map(table =>
+                              table.id === selectedTable.id
+                                  ? {
+                                        ...table,
+                                        status: 'available',
+                                        outstanding_total: 0,
+                                        active_order_count: 0,
+                                    }
+                                  : table
+                          ),
+                          orders: current.orders.map(order =>
+                              localResult.completedOrderIds?.includes(order.id)
+                                  ? { ...order, status: 'completed' }
+                                  : order
+                          ),
+                      }
+                    : current
+            );
             toast.success(`Closed table ${selectedTable.table_number}`);
             setProviderReference('');
             setSelectedOrderId(null);
             setSplitPayload(null);
-            if (localResult.mode === 'api') {
-                await loadOverview();
-            }
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Failed to close table');
         } finally {
@@ -502,6 +456,23 @@ export default function TerminalPage() {
         );
     }
 
+    if (managedDevice.isIdentityRevoked) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-6">
+                <div className="max-w-md rounded-2xl border border-red-400/20 bg-red-500/10 p-8 text-center">
+                    <AlertCircle className="mx-auto h-10 w-10 text-red-300" />
+                    <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                        Device identity revoked
+                    </h1>
+                    <p className="mt-2 text-[15px] text-gray-600">
+                        Re-pair this cashier terminal from merchant device management before it can
+                        continue trading.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     if (managedDevice.hasProfileMismatch) {
         return (
             <div className="flex min-h-screen items-center justify-center p-6">
@@ -513,6 +484,23 @@ export default function TerminalPage() {
                     <p className="mt-2 text-[15px] text-gray-600">
                         This tablet is paired as {getDeviceTypeLabel(deviceInfo?.device_type)}.
                         Re-provision it as a cashier terminal to access `/terminal`.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!managedDevice.hasOutageAccess) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-6">
+                <div className="max-w-md rounded-2xl border border-amber-400/20 bg-amber-500/10 p-8 text-center">
+                    <AlertCircle className="mx-auto h-10 w-10 text-amber-400" />
+                    <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                        Outage access expired
+                    </h1>
+                    <p className="mt-2 text-[15px] text-gray-600">
+                        {managedDevice.outageAccess.reason ??
+                            'This cashier terminal needs fresh online authorization before more settlement work.'}
                     </p>
                 </div>
             </div>

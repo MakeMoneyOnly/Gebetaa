@@ -13,6 +13,7 @@ describe('Logger', () => {
     afterEach(() => {
         warnSpy.mockRestore();
         errorSpy.mockRestore();
+        vi.unstubAllEnvs();
     });
 
     describe('singleton', () => {

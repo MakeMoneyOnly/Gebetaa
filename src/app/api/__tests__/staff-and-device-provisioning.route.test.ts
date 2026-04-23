@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET as getStaff } from '@/app/api/staff/route';
 import { POST as postDeviceProvision } from '@/app/api/devices/provision/route';
+import { PATCH as patchDeviceIdentity } from '@/app/api/devices/[deviceId]/route';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { writeAuditLog } from '@/lib/api/audit';
 
 vi.mock('@/lib/api/authz', () => ({
     getAuthenticatedUser: vi.fn(),
@@ -13,9 +15,14 @@ vi.mock('@/lib/supabase/service-role', () => ({
     createServiceRoleClient: vi.fn(),
 }));
 
+vi.mock('@/lib/api/audit', () => ({
+    writeAuditLog: vi.fn(),
+}));
+
 const getAuthenticatedUserMock = vi.mocked(getAuthenticatedUser);
 const getAuthorizedRestaurantContextMock = vi.mocked(getAuthorizedRestaurantContext);
 const createServiceRoleClientMock = vi.mocked(createServiceRoleClient);
+const writeAuditLogMock = vi.mocked(writeAuditLog);
 
 function setAuthContextOk() {
     getAuthenticatedUserMock.mockResolvedValue({
@@ -33,6 +40,7 @@ function setAuthContextOk() {
 describe('staff and device provisioning routes', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        writeAuditLogMock.mockResolvedValue(undefined);
     });
 
     it('GET /api/staff merges base staff rows with enriched user fields', async () => {
@@ -177,5 +185,179 @@ describe('staff and device provisioning routes', () => {
         expect(response.status).toBe(201);
         expect(body.data.device.pairing_code).toMatch(/^[A-Z0-9]{6}$/);
         expect(body.data.device.device_profile).toBe('cashier');
+    });
+
+    it('PATCH /api/devices/[deviceId] rotates identity by clearing live token and incrementing version', async () => {
+        setAuthContextOk();
+
+        const singleMock = vi
+            .fn()
+            .mockResolvedValueOnce({
+                data: {
+                    id: 'device-1',
+                    name: 'Front Cashier',
+                    device_type: 'terminal',
+                    restaurant_id: 'resto-1',
+                    metadata: {
+                        gateway_identity: {
+                            version: 2,
+                            issued_at: '2026-04-21T10:00:00.000Z',
+                            rotated_at: '2026-04-21T10:00:00.000Z',
+                            revoked_at: null,
+                        },
+                    },
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    id: 'device-1',
+                    pairing_state: 'ready',
+                    device_token: null,
+                    metadata: {
+                        gateway_identity: {
+                            version: 3,
+                            revoked_at: null,
+                        },
+                    },
+                },
+                error: null,
+            });
+
+        const eqRestaurantMock = vi.fn(() => ({ single: singleMock }));
+        const eqIdMock = vi.fn(() => ({ eq: eqRestaurantMock }));
+        const selectMock = vi.fn(() => ({ eq: eqIdMock }));
+        const updateSelectMock = vi.fn(() => ({ single: singleMock }));
+        const updateEqRestaurantMock = vi.fn(() => ({ select: updateSelectMock }));
+        const updateEqIdMock = vi.fn(() => ({ eq: updateEqRestaurantMock }));
+        const updateMock = vi.fn(() => ({ eq: updateEqIdMock }));
+
+        const fromMock = vi.fn(() => ({
+            select: selectMock,
+            update: updateMock,
+        }));
+
+        getAuthorizedRestaurantContextMock.mockResolvedValue({
+            ok: true,
+            restaurantId: 'resto-1',
+            supabase: {
+                from: fromMock,
+            },
+        } as never);
+
+        const response = await patchDeviceIdentity(
+            new Request('http://localhost/api/devices/device-1', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'rotate_identity' }),
+            }),
+            { params: Promise.resolve({ deviceId: 'device-1' }) }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(updateMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                pairing_state: 'ready',
+                device_token: null,
+                metadata: expect.objectContaining({
+                    gateway_identity: expect.objectContaining({
+                        version: 3,
+                        revoked_at: null,
+                    }),
+                }),
+            })
+        );
+        expect(body.data.device.metadata.gateway_identity.version).toBe(3);
+        expect(writeAuditLogMock).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ action: 'device_identity_rotated' })
+        );
+    });
+
+    it('PATCH /api/devices/[deviceId] revokes identity and marks device revoked', async () => {
+        setAuthContextOk();
+
+        const singleMock = vi
+            .fn()
+            .mockResolvedValueOnce({
+                data: {
+                    id: 'device-2',
+                    name: 'Kitchen Screen',
+                    device_type: 'kds',
+                    restaurant_id: 'resto-1',
+                    metadata: {
+                        gateway_identity: {
+                            version: 5,
+                            revoked_at: null,
+                        },
+                    },
+                },
+                error: null,
+            })
+            .mockResolvedValueOnce({
+                data: {
+                    id: 'device-2',
+                    pairing_state: 'revoked',
+                    device_token: null,
+                    metadata: {
+                        gateway_identity: {
+                            version: 5,
+                            revoked_at: '2026-04-22T00:00:00.000Z',
+                        },
+                    },
+                },
+                error: null,
+            });
+
+        const eqRestaurantMock = vi.fn(() => ({ single: singleMock }));
+        const eqIdMock = vi.fn(() => ({ eq: eqRestaurantMock }));
+        const selectMock = vi.fn(() => ({ eq: eqIdMock }));
+        const updateSelectMock = vi.fn(() => ({ single: singleMock }));
+        const updateEqRestaurantMock = vi.fn(() => ({ select: updateSelectMock }));
+        const updateEqIdMock = vi.fn(() => ({ eq: updateEqRestaurantMock }));
+        const updateMock = vi.fn(() => ({ eq: updateEqIdMock }));
+
+        const fromMock = vi.fn(() => ({
+            select: selectMock,
+            update: updateMock,
+        }));
+
+        getAuthorizedRestaurantContextMock.mockResolvedValue({
+            ok: true,
+            restaurantId: 'resto-1',
+            supabase: {
+                from: fromMock,
+            },
+        } as never);
+
+        const response = await patchDeviceIdentity(
+            new Request('http://localhost/api/devices/device-2', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'revoke_identity' }),
+            }),
+            { params: Promise.resolve({ deviceId: 'device-2' }) }
+        );
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(updateMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                pairing_state: 'revoked',
+                device_token: null,
+                metadata: expect.objectContaining({
+                    gateway_identity: expect.objectContaining({
+                        version: 5,
+                    }),
+                }),
+            })
+        );
+        expect(body.data.device.pairing_state).toBe('revoked');
+        expect(body.data.device.metadata.gateway_identity.revoked_at).toBeTruthy();
+        expect(writeAuditLogMock).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({ action: 'device_identity_revoked' })
+        );
     });
 });

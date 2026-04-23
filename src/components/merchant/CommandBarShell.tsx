@@ -80,7 +80,7 @@ export function CommandBarShell() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="fixed right-5 bottom-5 z-40 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-lg hover:bg-gray-50"
+                className="fixed left-[300px] bottom-5 z-40 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-lg hover:bg-gray-50"
             >
                 <Command className="h-4 w-4" />
                 Command Bar

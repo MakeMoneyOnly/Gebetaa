@@ -10,12 +10,12 @@ import {
     MoreHorizontal,
     Users,
     Plus,
-    Trello,
     Search,
     ArrowUpRight,
     BarChart3,
 } from 'lucide-react';
 import RevenueChart from '@/components/merchant/RevenueChart';
+import VisitHeatmap from '@/components/merchant/VisitHeatmap';
 import SalesPerformanceChart from '@/components/merchant/SalesPerformanceChart';
 import { createClient } from '@/lib/supabase/server';
 
@@ -34,25 +34,6 @@ export default async function DashboardPage() {
     else timeGreeting = 'Good evening';
 
     const greeting = `${timeGreeting}, ${name}!`;
-
-    const topItems = [
-        {
-            name: 'lole Platters',
-            sales: 127,
-            rev: 'Br. 1,890',
-            stock: '120',
-            status: 'In Stock',
-            statusColor: 'bg-indigo-50 text-indigo-600',
-        },
-        {
-            name: 'Doro Wot',
-            sales: 540,
-            rev: 'Br. 2,889',
-            stock: '100',
-            status: 'Out of stock',
-            statusColor: 'bg-red-50 text-red-500',
-        },
-    ];
 
     return (
         <div className="flex min-h-full w-full flex-col bg-white py-4 tracking-[-0.04em] lg:py-6">
@@ -230,14 +211,14 @@ export default async function DashboardPage() {
                         </div>
 
                         <div className="flex border-t border-gray-50">
-                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
                                 See details{' '}
                                 <ArrowRight
                                     strokeWidth={2}
                                     className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                 />
                             </button>
-                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
                                 See details{' '}
                                 <ArrowRight
                                     strokeWidth={2}
@@ -331,14 +312,14 @@ export default async function DashboardPage() {
                         </div>
 
                         <div className="flex border-t border-gray-50">
-                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
                                 See details{' '}
                                 <ArrowRight
                                     strokeWidth={2}
                                     className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                 />
                             </button>
-                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                            <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
                                 See details{' '}
                                 <ArrowRight
                                     strokeWidth={2}
@@ -427,7 +408,7 @@ export default async function DashboardPage() {
                                 <SalesPerformanceChart totalSales={75} averageSales={40} />
                             </div>
 
-                            <div className="absolute inset-0 flex flex-col items-center justify-end pb-12">
+                            <div className="absolute inset-0 flex flex-col items-center justify-end pb-5">
                                 <div className="flex items-center gap-2">
                                     <span className="text-display-2 font-bold text-gray-900">
                                         17.9%
@@ -463,191 +444,34 @@ export default async function DashboardPage() {
                             </div>
                         </div>
                     </div>
-                    <button className="group flex w-full items-center justify-center gap-2 rounded-b-3xl border-t border-gray-50 bg-gray-50 py-4 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                    <button className="group flex w-full items-center justify-center gap-2 rounded-b-3xl border-t border-gray-50 bg-gray-100 py-4 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
                         See details <ArrowRight strokeWidth={2} className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12" />
                     </button>
                 </div>
 
                 {/* Row 3: Bottom Metrics */}
-                <div className="col-span-1 flex h-full flex-col rounded-3xl border border-gray-100 bg-white p-8 lg:col-span-4">
-                    <div className="mb-8 flex items-start justify-between">
-                        <div className="flex items-center gap-5">
-                            <div className="border-brand-accent/10 bg-brand-accent/5 rounded-2xl border p-3.5 text-gray-900 shadow-sm">
-                                <Users strokeWidth={2} className="h-6 w-6" />
+                <div className="col-span-1 flex flex-col rounded-3xl border border-gray-100 bg-white p-8 lg:col-span-12">
+                    <div className="mb-4 flex items-start justify-between">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-medium text-gray-400">Total visits</h3>
+                                <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-sm font-medium text-gray-400">
-                                        Total visits
-                                    </h3>
-                                    <Info strokeWidth={1.5} className="h-3.5 w-3.5 text-gray-300" />
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[32px] font-bold text-black">
-                                        288,822
-                                    </span>
-                                    <span className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
-                                        <ArrowUp strokeWidth={2} className="h-2.5 w-2.5" /> 4%
-                                    </span>
-                                </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-4xl font-bold tracking-tight text-gray-900">288,822</span>
+                                <span className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+                                    <ArrowUp strokeWidth={2} className="h-2.5 w-2.5" /> 4%
+                                </span>
                             </div>
                         </div>
-                        <button className="rounded-xl border border-gray-200 p-2 text-gray-400 shadow-sm transition-colors outline-none hover:bg-gray-50">
-                            <MoreHorizontal strokeWidth={2} className="h-5 w-5" />
+                        <button className="flex h-11 items-center gap-1 rounded-xl bg-gray-50 px-4 text-sm font-bold text-gray-700 transition-colors outline-none hover:bg-gray-100">
+                            Today
+                            <ChevronDown strokeWidth={2} className="h-3.5 w-3.5 text-gray-400" />
                         </button>
                     </div>
 
-                    <div className="mt-6 flex grow gap-6">
-                        <div className="flex flex-col justify-around gap-5 py-2 text-[10px] font-bold text-gray-400 uppercase">
-                            <span>MON</span>
-                            <span>TUE</span>
-                            <span>WED</span>
-                        </div>
-                        <div className="flex flex-1 flex-col gap-3">
-                            <div className="relative flex items-center gap-2">
-                                <div className="bg-brand-accent/10 h-8 w-full rounded-lg"></div>
-                                <div className="bg-brand-accent shadow-brand-accent/20 group relative flex h-8 w-full cursor-pointer items-center justify-center rounded-lg shadow-sm transition-transform hover:scale-105 active:scale-95">
-                                    <div className="pointer-events-none absolute -top-10 z-20 flex translate-y-2 items-center gap-2 rounded-full border border-white/10 bg-gray-900 px-3 py-1.5 text-[10px] font-bold whitespace-nowrap text-white opacity-0 shadow-xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
-                                        <Users
-                                            strokeWidth={2.5}
-                                            className="text-brand-accent h-3 w-3"
-                                        />{' '}
-                                        3,880 (8AM)
-                                    </div>
-                                </div>
-                                <div className="bg-brand-accent/10 h-8 w-full rounded-lg"></div>
-                                <div className="h-8 w-full rounded-lg bg-gray-50"></div>
-                                <Plus
-                                    strokeWidth={2.5}
-                                    className="mx-2 h-4 w-4 rotate-45 text-gray-300"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2 opacity-80">
-                                <div className="bg-brand-accent/5 h-8 w-full rounded-lg"></div>
-                                <div className="bg-brand-accent/10 h-8 w-full rounded-lg"></div>
-                                <div className="bg-brand-accent/40 h-8 w-full rounded-lg"></div>
-                                <div className="bg-brand-accent/60 h-8 w-full rounded-lg"></div>
-                                <div className="mx-2 h-px w-4 bg-gray-200"></div>
-                            </div>
-                            <div className="flex items-center gap-2 opacity-60">
-                                <div className="h-8 w-full rounded-lg bg-gray-50"></div>
-                                <div className="bg-brand-accent/5 h-8 w-full rounded-lg"></div>
-                                <div className="bg-brand-accent/80 h-8 w-full rounded-lg"></div>
-                                <div className="bg-brand-accent/40 h-8 w-full rounded-lg"></div>
-                                <div className="mx-2 h-px w-4 bg-transparent"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-span-1 flex flex-col rounded-3xl border border-gray-100 bg-white p-8 lg:col-span-8">
-                    <div className="mb-10 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-medium text-gray-400">Top Products</h3>
-                            <Info strokeWidth={1.5} className="h-4.5 w-4.5 text-gray-300" />
-                        </div>
-                        <a
-                            href="#"
-                            className="group flex items-center gap-2 text-xs font-bold text-gray-400/80 opacity-80 transition-colors hover:text-gray-900 hover:opacity-100"
-                        >
-                            See details{' '}
-                            <ArrowRight
-                                strokeWidth={2.5}
-                                className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                            />
-                        </a>
-                    </div>
-
-                    <div className="flex h-full flex-col gap-10 xl:flex-row">
-                        <div className="flex w-full flex-col justify-between rounded-3xl border border-gray-100 bg-gray-50/30 p-6 transition-shadow hover:shadow-md xl:w-72">
-                            <div className="flex flex-col gap-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-100 bg-white text-gray-900 shadow-sm">
-                                        <Trello strokeWidth={1.5} className="h-6 w-6" />
-                                    </div>
-                                    <span className="text-base font-bold text-gray-900">
-                                        Blid Shorts
-                                    </span>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <div className="flex items-baseline gap-1.5">
-                                        <span className="text-[32px] font-normal text-gray-400">
-                                            Br.
-                                        </span>
-                                        <span className="text-[32px] font-bold text-black">
-                                            4,730.33
-                                        </span>
-                                    </div>
-                                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200 shadow-inner">
-                                        <div
-                                            className="bg-brand-accent h-full rounded-full shadow-[0_0_8px_rgba(var(--brand-accent),0.5)] transition-all duration-1000"
-                                            style={{ width: '70%' }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="text-micro mt-6 font-bold text-gray-400 uppercase">
-                                <span className="mr-1.5 font-extrabold text-green-500 uppercase">
-                                    12%
-                                </span>{' '}
-                                Targets achieved
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-gray-100">
-                                        <th className="w-1/3 pb-5 text-[10px] font-bold text-gray-400">
-                                            Product
-                                        </th>
-                                        <th className="pb-5 text-[10px] font-bold text-gray-400">
-                                            Sales
-                                        </th>
-                                        <th className="pb-5 text-[10px] font-bold text-gray-400">
-                                            Revenue
-                                        </th>
-                                        <th className="pb-5 text-[10px] font-bold text-gray-400">
-                                            Stock
-                                        </th>
-                                        <th className="pb-5 text-right text-[10px] font-bold text-gray-400">
-                                            Status
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm">
-                                    {topItems.map((item, i) => (
-                                        <tr
-                                            key={i}
-                                            className="group border-b border-gray-50 transition-colors last:border-0 hover:bg-gray-50/50"
-                                        >
-                                            <td className="text-body py-6 font-bold text-gray-900">
-                                                {item.name}
-                                            </td>
-                                            <td className="py-6 font-medium text-gray-600">
-                                                {item.sales}{' '}
-                                                <span className="text-micro ml-0.5 font-bold text-gray-400 uppercase">
-                                                    pcs
-                                                </span>
-                                            </td>
-                                            <td className="py-6 font-bold text-gray-900">
-                                                {item.rev}
-                                            </td>
-                                            <td className="py-6 font-bold text-gray-500">
-                                                {item.stock}
-                                            </td>
-                                            <td className="py-6 text-right">
-                                                <span
-                                                    className={`text-micro inline-flex items-center rounded-xl px-3 py-1.5 font-bold uppercase ${item.statusColor}`}
-                                                >
-                                                    {item.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div className="mt-6">
+                        <VisitHeatmap columns={20} />
                     </div>
                 </div>
             </div>

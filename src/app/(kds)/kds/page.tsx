@@ -67,6 +67,25 @@ function KdsPageContent() {
         );
     }
 
+    if (managedDevice.isIdentityRevoked || !managedDevice.hasOutageAccess) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-6">
+                <div className="max-w-md rounded-2xl border border-amber-400/20 bg-amber-500/10 p-8 text-center">
+                    <AlertCircle className="mx-auto h-10 w-10 text-amber-400" />
+                    <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                        KDS access paused
+                    </h1>
+                    <p className="mt-2 text-[15px] text-gray-600">
+                        {managedDevice.isIdentityRevoked
+                            ? 'This kitchen screen identity was revoked. Re-pair it from device management.'
+                            : (managedDevice.outageAccess.reason ??
+                              'This kitchen screen needs fresh online authorization.')}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <StationBoard
             station={station}

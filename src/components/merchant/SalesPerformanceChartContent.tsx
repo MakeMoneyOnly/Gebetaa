@@ -36,7 +36,7 @@ const SalesPerformanceChartContent = ({ data }: SalesPerformanceChartContentProp
                 <Pie
                     data={totalSalesData}
                     cx="50%"
-                    cy="65%"
+                    cy="55%"
                     startAngle={180}
                     endAngle={0}
                     innerRadius="75%"
@@ -56,7 +56,7 @@ const SalesPerformanceChartContent = ({ data }: SalesPerformanceChartContentProp
                 <Pie
                     data={averageSalesData}
                     cx="50%"
-                    cy="65%"
+                    cy="55%"
                     startAngle={180}
                     endAngle={0}
                     innerRadius="50%"

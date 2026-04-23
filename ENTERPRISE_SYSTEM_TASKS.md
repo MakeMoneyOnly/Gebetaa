@@ -55,6 +55,18 @@ It is organized to help us:
 | Phase 3 | Compliance & Security: local fiscal continuity, audit ledger, encryption, offline auth hardening | `[ ]`  | store remains compliant and forensically trustworthy offline |
 | Phase 4 | Scaling: fleet bootstrap, Esper alignment, zero-touch provisioning, self-healing rollout         | `[ ]`  | 50+ device store rollout becomes repeatable and low-touch    |
 
+## Audit Refresh
+
+Status refresh: `2026-04-21`
+
+Validated as complete:
+
+- `ENT-001`, `ENT-002`, `ENT-003`, `ENT-004`, `ENT-005`, `ENT-006`, `ENT-007`, `ENT-008`, `ENT-009`, `ENT-010`, `ENT-011`, `ENT-012`, `ENT-013`, `ENT-046`, `ENT-047`
+
+Downgraded after implementation audit:
+
+- none currently in this slice
+
 ## Immediate Priority Queue
 
 These are the first tasks to start because other work depends on them.
@@ -258,10 +270,10 @@ These are the first tasks to start because other work depends on them.
 
 ### 3.4 Identity, Session, and Offline Authorization
 
-- [ ] `ENT-046` Harden device identity issuance and rotation for LAN operation.
+- [x] `ENT-046` Harden device identity issuance and rotation for LAN operation.
       Definition of done: each device has revocable identity material suitable for offline trust decisions.
 
-- [ ] `ENT-047` Define offline authz rules for staff and devices when cloud auth is unavailable.
+- [x] `ENT-047` Define offline authz rules for staff and devices when cloud auth is unavailable.
       Definition of done: the system knows who may continue operating and for how long during outage.
 
 - [ ] `ENT-048` Remove insecure fallback secrets and weak development fallbacks from production paths.

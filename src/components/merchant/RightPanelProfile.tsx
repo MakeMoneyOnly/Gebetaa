@@ -21,7 +21,7 @@ export function ProfileSection({
     onMoreClick,
 }: ProfileSectionProps) {
     return (
-        <div className="group relative mb-10 rounded-[2.5rem] bg-[#F8F9FA] p-8 text-center transition-shadow hover:shadow-sm">
+        <div className="group relative mb-0 rounded-[2.5rem] bg-[#F8F9FA] p-8 text-center transition-shadow hover:shadow-sm">
             {/* Avatar */}
             <div className="relative mb-4 inline-block">
                 <div className="mx-auto h-24 w-24 rounded-full bg-white p-1 shadow-sm ring-4 ring-white">

@@ -1,10 +1,6 @@
 import React from 'react';
 import { RoleGuard } from '@/components/auth/RoleGuard';
-import { Sidebar } from '@/components/merchant/Sidebar';
-import { RightPanel } from '@/components/merchant/RightPanel';
-import { CommandBarShell } from '@/components/merchant/CommandBarShell';
-import { MobileBottomNav } from '@/components/merchant/MobileBottomNav';
-import { MerchantHeader } from '@/components/merchant/MerchantHeader';
+import { DashboardLayoutClient } from '@/components/merchant/DashboardLayoutClient';
 
 // Force dynamic rendering to prevent build-time errors
 export const dynamic = 'force-dynamic';
@@ -25,30 +21,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="font-inter flex h-screen overflow-hidden bg-white" data-lenis-prevent>
             <SkipLink />
 
-            {/* 1. Sidebar (Fixed Left) */}
-            <Sidebar />
-
-            {/* 2. Main Space (Center area containing its own Header and Scrollable Content) */}
-            <div className="flex flex-1 flex-col overflow-hidden md:ml-[280px] xl:mr-[380px]">
-                {/* Global Header (ONLY fits in the center) */}
-                <MerchantHeader />
-
-                <main
-                    id="main-content"
-                    className="flex-1 overflow-y-auto bg-white transition-all duration-300"
-                    tabIndex={-1}
-                >
-                    <div className="w-full px-4 sm:px-6 lg:px-6 pt-2 pb-24 sm:pb-8">
-                        <RoleGuard allowedRoles={['owner', 'admin', 'manager']}>{children}</RoleGuard>
-                    </div>
-                </main>
-            </div>
-
-            {/* 3. Right Panel (Full height) */}
-            <RightPanel />
-            
-            <MobileBottomNav />
-            <CommandBarShell />
+            <DashboardLayoutClient>
+                <RoleGuard allowedRoles={['owner', 'admin', 'manager']}>{children}</RoleGuard>
+            </DashboardLayoutClient>
         </div>
     );
 }

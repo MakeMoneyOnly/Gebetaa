@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import { ServiceWorkerCleanup } from '@/components/providers/ServiceWorkerCleanup';
 import { OfflineIndicator } from '@/components/providers/OfflineIndicator';
 import { SkipLink } from '@/components/ui/SkipLink';
+import { PowerSyncProvider } from '@/lib/sync/usePowerSync';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
@@ -37,34 +38,36 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
                     <ServiceWorkerCleanup />
                     <SkipLink href="#main-content">Skip to main content</SkipLink>
-                    <OfflineIndicator position="top" showSyncStatus={true} />
-                    <LenisRoot>
-                        <QueryProvider>
-                            <div className="fixed top-6 right-6 z-50 hidden md:flex">
-                                {/* Theme Switcher Logic */}
-                            </div>
-                            <div className="pointer-events-none fixed inset-0 z-9999 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
-                            <main id="main-content" tabIndex={-1}>
-                                {children}
-                            </main>
-                            <Toaster
-                                position="top-center"
-                                toastOptions={{
-                                    style: {
-                                        background: '#333',
-                                        color: '#fff',
-                                        borderRadius: '9999px',
-                                    },
-                                    success: {
-                                        iconTheme: {
-                                            primary: '#22c55e',
-                                            secondary: '#fff',
+                    <PowerSyncProvider>
+                        <OfflineIndicator position="top" showSyncStatus={true} />
+                        <LenisRoot>
+                            <QueryProvider>
+                                <div className="fixed top-6 right-6 z-50 hidden md:flex">
+                                    {/* Theme Switcher Logic */}
+                                </div>
+                                <div className="pointer-events-none fixed inset-0 z-9999 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                                <main id="main-content" tabIndex={-1}>
+                                    {children}
+                                </main>
+                                <Toaster
+                                    position="top-center"
+                                    toastOptions={{
+                                        style: {
+                                            background: '#333',
+                                            color: '#fff',
+                                            borderRadius: '9999px',
                                         },
-                                    },
-                                }}
-                            />
-                        </QueryProvider>
-                    </LenisRoot>
+                                        success: {
+                                            iconTheme: {
+                                                primary: '#22c55e',
+                                                secondary: '#fff',
+                                            },
+                                        },
+                                    }}
+                                />
+                            </QueryProvider>
+                        </LenisRoot>
+                    </PowerSyncProvider>
                 </ThemeProvider>
             </body>
         </html>
