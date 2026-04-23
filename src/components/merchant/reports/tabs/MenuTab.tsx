@@ -1,12 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-    Utensils,
-    PieChart,
-    ArrowUp,
-    ArrowDown,
-} from 'lucide-react';
+import { Utensils, PieChart, ArrowUp, ArrowDown, Info } from 'lucide-react';
 import { ModernSelect } from '../../ModernSelect';
 
 export function MenuTab() {
@@ -19,7 +14,10 @@ export function MenuTab() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <PieChart className="h-5 w-5" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Category Mix</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900">Category Mix</h3>
+                            <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
+                        </div>
                     </div>
 
                     <div className="relative mb-8 flex aspect-square w-full items-center justify-center">
@@ -60,7 +58,12 @@ export function MenuTab() {
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                                 <Utensils className="h-5 w-5" />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900">Item Performance</h3>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-gray-900">
+                                    Item Performance
+                                </h3>
+                                <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
+                            </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-semibold text-gray-400">Sort by:</span>
@@ -76,7 +79,7 @@ export function MenuTab() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto rounded-2xl border border-gray-100">
+                    <div className="overflow-x-auto rounded-2xl">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 text-xs font-bold text-gray-400">
                                 <tr>
@@ -88,13 +91,43 @@ export function MenuTab() {
                             </thead>
                             <tbody className="divide-y divide-gray-50 text-sm font-semibold text-gray-900">
                                 {[
-                                    { name: 'lole Special Platter', units: 145, price: '850', rev: '123,250', trend: 'up' },
-                                    { name: 'Doro Wot', units: 210, price: '450', rev: '94,500', trend: 'up' },
-                                    { name: 'St. George Beer', units: 450, price: '85', rev: '38,250', trend: 'up' },
-                                    { name: 'Shiro Tegabino', units: 110, price: '180', rev: '19,800', trend: 'down' },
-                                    { name: 'Avocado Juice', units: 45, price: '120', rev: '5,400', trend: 'down' },
+                                    {
+                                        name: 'lole Special Platter',
+                                        units: 145,
+                                        price: '850',
+                                        rev: '123,250',
+                                        trend: 'up',
+                                    },
+                                    {
+                                        name: 'Doro Wot',
+                                        units: 210,
+                                        price: '450',
+                                        rev: '94,500',
+                                        trend: 'up',
+                                    },
+                                    {
+                                        name: 'St. George Beer',
+                                        units: 450,
+                                        price: '85',
+                                        rev: '38,250',
+                                        trend: 'up',
+                                    },
+                                    {
+                                        name: 'Shiro Tegabino',
+                                        units: 110,
+                                        price: '180',
+                                        rev: '19,800',
+                                        trend: 'down',
+                                    },
+                                    {
+                                        name: 'Avocado Juice',
+                                        units: 45,
+                                        price: '120',
+                                        rev: '5,400',
+                                        trend: 'down',
+                                    },
                                 ].map((item, i) => (
-                                    <tr key={i} className="hover:bg-gray-50/30">
+                                    <tr key={i}>
                                         <td className="px-4 py-4">{item.name}</td>
                                         <td className="px-4 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
@@ -107,7 +140,9 @@ export function MenuTab() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4 text-right">{item.price}</td>
-                                        <td className="px-4 py-4 text-right font-bold text-black">{item.rev}</td>
+                                        <td className="px-4 py-4 text-right font-bold text-black">
+                                            {item.rev}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -1,12 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-    FileCheck,
-    Calculator,
-    Download,
-    Scale,
-} from 'lucide-react';
+import { FileCheck, Calculator, Download, Scale, Info } from 'lucide-react';
 
 export function TaxTab() {
     return (
@@ -19,11 +14,14 @@ export function TaxTab() {
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                                 <FileCheck className="h-5 w-5" />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900">VAT Collected</h3>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-gray-900">VAT Collected</h3>
+                                <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
+                            </div>
                         </div>
-                        <button className="flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-black active:scale-95">
-                            <Download className="h-4 w-4" />
-                            MoR Export
+                        <button className="flex h-11 items-center gap-2 rounded-xl bg-[#DDF853] px-6 text-sm font-bold text-black transition-all active:scale-[0.98]">
+                            <Download className="h-4 w-4" strokeWidth={2.5} />
+                            Sigtas VAT Export
                         </button>
                     </div>
 
@@ -37,7 +35,9 @@ export function TaxTab() {
                             <span className="text-lg font-bold text-black">7,206.45 ETB</span>
                         </div>
                         <div className="flex items-center justify-between rounded-xl bg-gray-50/50 p-4">
-                            <span className="text-sm font-bold text-gray-400">VAT-Exempt Sales</span>
+                            <span className="text-sm font-bold text-gray-400">
+                                VAT-Exempt Sales
+                            </span>
                             <span className="text-base font-bold text-gray-900">0.00 ETB</span>
                         </div>
                     </div>
@@ -50,30 +50,45 @@ export function TaxTab() {
                             <Calculator className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900">MAT Check Report 🇪🇹</h3>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-gray-900">
+                                    MAT Check Report
+                                </h3>
+                                <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
+                            </div>
                             <p className="text-[10px] font-bold text-gray-400">YTD Projection</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between rounded-xl border border-gray-100 p-4">
-                            <span className="text-sm font-semibold text-gray-500">Annual Turnover (ETB)</span>
+                        <div className="flex items-center justify-between rounded-xl bg-gray-50/50 p-4">
+                            <span className="text-sm font-semibold text-gray-500">
+                                Annual Turnover (ETB)
+                            </span>
                             <span className="text-sm font-bold text-gray-900">1,250,000</span>
                         </div>
-                        <div className="flex items-center justify-between rounded-xl border border-gray-100 p-4">
-                            <span className="text-sm font-semibold text-gray-500">2.5% MAT Threshold</span>
+                        <div className="flex items-center justify-between rounded-xl bg-gray-50/50 p-4">
+                            <span className="text-sm font-semibold text-gray-500">
+                                2.5% MAT Threshold
+                            </span>
                             <span className="text-sm font-bold text-gray-900">31,250</span>
                         </div>
-                        <div className="flex items-center justify-between rounded-xl border border-gray-100 p-4">
-                            <span className="text-sm font-semibold text-gray-500">Income Tax Liability</span>
+                        <div className="flex items-center justify-between rounded-xl bg-gray-50/50 p-4">
+                            <span className="text-sm font-semibold text-gray-400">
+                                Income Tax Liability
+                            </span>
                             <span className="text-sm font-bold text-gray-900">45,000</span>
                         </div>
-                        
+
                         <div className="flex items-center justify-between rounded-xl bg-green-50 p-4">
                             <span className="text-sm font-bold text-gray-900">MAT Applicable</span>
-                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">No</span>
+                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                                No
+                            </span>
                         </div>
-                        <p className="text-xs text-gray-400 text-center mt-2">Income Tax Liability is greater than MAT threshold.</p>
+                        <p className="mt-2 text-center text-xs text-gray-400">
+                            Income Tax Liability is greater than MAT threshold.
+                        </p>
                     </div>
                 </div>
 
@@ -83,10 +98,13 @@ export function TaxTab() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <Scale className="h-5 w-5" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Service Charges</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900">Service Charges</h3>
+                            <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
+                        </div>
                     </div>
-                    
-                    <div className="overflow-x-auto rounded-2xl border border-gray-100">
+
+                    <div className="overflow-x-auto rounded-2xl">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 text-xs font-bold text-gray-400">
                                 <tr>
@@ -96,12 +114,12 @@ export function TaxTab() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50 text-sm font-semibold text-gray-900">
-                                <tr className="hover:bg-gray-50/30">
+                                <tr>
                                     <td className="px-4 py-4">Standard 10% Service Charge</td>
                                     <td className="px-4 py-4">312</td>
                                     <td className="px-4 py-4 text-right">4,500.00</td>
                                 </tr>
-                                <tr className="hover:bg-gray-50/30">
+                                <tr>
                                     <td className="px-4 py-4">Large Group (15%)</td>
                                     <td className="px-4 py-4">12</td>
                                     <td className="px-4 py-4 text-right">500.00</td>
