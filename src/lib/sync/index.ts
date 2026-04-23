@@ -17,6 +17,7 @@ export {
     type PowerSyncBootstrapState,
     type PowerSyncConfig,
 } from './powersync-config';
+export { Connector as PowerSyncConnector, POWERSYNC_INSTANCE_URL } from './PowerSyncConnector';
 
 // Idempotency
 export {

@@ -299,7 +299,7 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
                 itemStatus = 'completed';
             } else if (action === 'ready') {
                 itemStatus = 'ready';
-            } else if (newStatus === 'on_hold' || newStatus === 'queued') {
+            } else if (newStatus === 'on_hold') {
                 itemStatus = 'pending';
             } else {
                 itemStatus = 'cooking';

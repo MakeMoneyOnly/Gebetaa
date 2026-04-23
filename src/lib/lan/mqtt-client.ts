@@ -1,5 +1,4 @@
-import {
-    connect,
+import mqtt, {
     type IClientOptions,
     type IClientPublishOptions,
     type ISubscriptionGrant,
@@ -36,7 +35,7 @@ export function createLanMqttClient(config: MqttTransportConfig): MqttClient {
         clean: config.clean ?? false,
     };
 
-    const client = connect(config.brokerUrl, options);
+    const client = mqtt.connect(config.brokerUrl, options);
 
     client.on('connect', () => {
         logger.info('[LAN/MQTT] Connected', {

@@ -1,4 +1,5 @@
 import type { DeviceProfile, PrinterConnectionType } from '@/lib/devices/config';
+import type { DeviceGatewayBootstrapSession } from '@/lib/gateway/device-bootstrap';
 import { isCapacitorNativeRuntime } from '@/lib/mobile/capacitor';
 
 export interface StoredDeviceSession {
@@ -10,6 +11,8 @@ export interface StoredDeviceSession {
     location_id?: string | null;
     boot_path?: string | null;
     metadata?: Record<string, unknown> | null;
+    gateway?: DeviceGatewayBootstrapSession | null;
+    gateway_bootstrap_status?: 'ready' | 'unavailable' | 'failed';
 }
 
 export interface StoredPrinterSelection {

@@ -5,7 +5,15 @@
  * Adds explicit bootstrap status, local journal tables, and client-safe config handling.
  */
 
+import {
+    PowerSyncDatabase as WebPowerSyncDatabase,
+    Schema,
+    Table,
+    column,
+    type Transaction,
+} from '@powersync/web';
 import { logger } from '@/lib/logger';
+import { Connector, POWERSYNC_INSTANCE_URL } from './PowerSyncConnector';
 
 export interface PowerSyncDatabase {
     execute(sql: string, params?: unknown[]): Promise<{ rowsAffected: number }>;
@@ -13,16 +21,6 @@ export interface PowerSyncDatabase {
     getAllAsync<T>(sql: string, params?: unknown[]): Promise<T[]>;
     write(fn: () => Promise<void>): Promise<void>;
     close(): Promise<void>;
-}
-
-interface PowerSyncWebModule {
-    PowerSyncDatabase?: {
-        connect?: (options: { schema: string; adapter: unknown }) => Promise<PowerSyncDatabase>;
-    };
-}
-
-interface PowerSyncReactModule {
-    PowerSyncOpenSQLiteAdapter?: new (options: { dbFilename: string }) => unknown;
 }
 
 export const powerSyncSchema = `
@@ -101,6 +99,55 @@ export const powerSyncSchema = `
         closed_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS order_check_splits (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        order_id TEXT NOT NULL,
+        split_index INTEGER NOT NULL,
+        split_label TEXT,
+        requested_amount REAL,
+        computed_amount REAL NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        metadata_json TEXT,
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS order_check_split_items (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        order_id TEXT NOT NULL,
+        split_id TEXT NOT NULL,
+        order_item_id TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        line_amount REAL NOT NULL DEFAULT 0,
+        idempotency_key TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (split_id) REFERENCES order_check_splits(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS payments (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        order_id TEXT,
+        split_id TEXT,
+        amount REAL NOT NULL,
+        tip_amount REAL NOT NULL DEFAULT 0,
+        method TEXT NOT NULL,
+        provider TEXT,
+        provider_reference TEXT,
+        transaction_number TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'captured',
+        metadata_json TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (split_id) REFERENCES order_check_splits(id)
     );
 
     CREATE TABLE IF NOT EXISTS sync_queue (
@@ -207,6 +254,9 @@ export const powerSyncSchema = `
     CREATE INDEX IF NOT EXISTS idx_kds_items_station ON kds_items(station);
     CREATE INDEX IF NOT EXISTS idx_table_sessions_restaurant ON table_sessions(restaurant_id);
     CREATE INDEX IF NOT EXISTS idx_table_sessions_table ON table_sessions(table_id, status);
+    CREATE INDEX IF NOT EXISTS idx_order_check_splits_order ON order_check_splits(order_id, split_index);
+    CREATE INDEX IF NOT EXISTS idx_order_check_split_items_order ON order_check_split_items(order_id, split_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(order_id, split_id, status);
     CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(status);
     CREATE INDEX IF NOT EXISTS idx_printer_jobs_status ON printer_jobs(status);
     CREATE INDEX IF NOT EXISTS idx_fiscal_jobs_status ON fiscal_jobs(status);
@@ -223,6 +273,257 @@ export interface PowerSyncConfig {
     restaurantId?: string;
     debug?: boolean;
 }
+
+type QueryContext = Pick<Transaction, 'execute' | 'getAll' | 'getOptional'> | WebPowerSyncDatabase;
+
+function textColumns(names: string[]) {
+    return Object.fromEntries(names.map(name => [name, column.text])) as Record<
+        string,
+        typeof column.text
+    >;
+}
+
+function integerColumns(names: string[]) {
+    return Object.fromEntries(names.map(name => [name, column.integer])) as Record<
+        string,
+        typeof column.integer
+    >;
+}
+
+function realColumns(names: string[]) {
+    return Object.fromEntries(names.map(name => [name, column.real])) as Record<
+        string,
+        typeof column.real
+    >;
+}
+
+const powerSyncAppSchema = new Schema({
+    orders: new Table({
+        ...textColumns([
+            'restaurant_id',
+            'guest_name',
+            'guest_phone',
+            'status',
+            'order_type',
+            'notes',
+            'fire_mode',
+            'current_course',
+            'idempotency_key',
+            'guest_fingerprint',
+            'created_at',
+            'updated_at',
+            'synced_at',
+            'last_modified',
+        ]),
+        ...integerColumns([
+            'order_number',
+            'table_number',
+            'subtotal_santim',
+            'discount_santim',
+            'vat_santim',
+            'total_santim',
+            'version',
+        ]),
+    }),
+    order_items: new Table({
+        ...textColumns([
+            'order_id',
+            'menu_item_id',
+            'menu_item_name',
+            'menu_item_name_am',
+            'modifiers_json',
+            'notes',
+            'status',
+            'station',
+            'fired_at',
+            'created_at',
+            'synced_at',
+        ]),
+        ...integerColumns(['quantity', 'unit_price_santim', 'total_price_santim']),
+    }),
+    kds_items: new Table({
+        ...textColumns([
+            'order_id',
+            'order_item_id',
+            'station',
+            'status',
+            'started_at',
+            'ready_at',
+            'recalled_at',
+            'bumped_at',
+            'created_at',
+            'synced_at',
+            'last_modified',
+        ]),
+        ...integerColumns(['priority', 'version']),
+    }),
+    table_sessions: new Table({
+        ...textColumns([
+            'restaurant_id',
+            'table_id',
+            'status',
+            'assigned_staff_id',
+            'notes',
+            'metadata_json',
+            'opened_at',
+            'closed_at',
+            'created_at',
+            'updated_at',
+        ]),
+        ...integerColumns(['guest_count']),
+    }),
+    order_check_splits: new Table({
+        ...textColumns([
+            'restaurant_id',
+            'order_id',
+            'split_label',
+            'status',
+            'metadata_json',
+            'created_by',
+            'created_at',
+            'updated_at',
+        ]),
+        ...integerColumns(['split_index']),
+        ...realColumns(['requested_amount', 'computed_amount']),
+    }),
+    order_check_split_items: new Table({
+        ...textColumns([
+            'restaurant_id',
+            'order_id',
+            'split_id',
+            'order_item_id',
+            'idempotency_key',
+            'created_at',
+        ]),
+        ...integerColumns(['quantity']),
+        ...realColumns(['line_amount']),
+    }),
+    payments: new Table({
+        ...textColumns([
+            'restaurant_id',
+            'order_id',
+            'split_id',
+            'method',
+            'provider',
+            'provider_reference',
+            'transaction_number',
+            'status',
+            'metadata_json',
+            'created_at',
+            'updated_at',
+        ]),
+        ...realColumns(['amount', 'tip_amount']),
+    }),
+    restaurant_settings: new Table({
+        ...textColumns(['restaurant_id', 'settings_json', 'synced_at']),
+    }),
+    sync_queue: new Table(
+        {
+            ...textColumns([
+                'operation',
+                'table_name',
+                'record_id',
+                'payload',
+                'idempotency_key',
+                'status',
+                'last_error',
+                'created_at',
+                'processed_at',
+            ]),
+            ...integerColumns(['attempts']),
+        },
+        { localOnly: true }
+    ),
+    printer_jobs: new Table(
+        {
+            ...textColumns([
+                'order_id',
+                'station',
+                'payload_json',
+                'status',
+                'last_error',
+                'created_at',
+                'printed_at',
+            ]),
+            ...integerColumns(['attempts']),
+        },
+        { localOnly: true }
+    ),
+    fiscal_jobs: new Table(
+        {
+            ...textColumns([
+                'order_id',
+                'payload_json',
+                'queue_mode',
+                'signature_json',
+                'signature_algorithm',
+                'signed_at',
+                'status',
+                'last_error',
+                'warning_text',
+                'created_at',
+                'submitted_at',
+                'synced_at',
+            ]),
+            ...integerColumns(['attempts']),
+        },
+        { localOnly: true }
+    ),
+    local_journal: new Table(
+        {
+            ...textColumns([
+                'restaurant_id',
+                'location_id',
+                'device_id',
+                'actor_id',
+                'entry_kind',
+                'aggregate_type',
+                'aggregate_id',
+                'operation_type',
+                'payload_json',
+                'payload_hash',
+                'idempotency_key',
+                'status',
+                'error_text',
+                'created_at',
+                'updated_at',
+                'replayed_at',
+            ]),
+        },
+        { localOnly: true }
+    ),
+    audit_logs: new Table(
+        {
+            ...textColumns([
+                'restaurant_id',
+                'action',
+                'entity_type',
+                'entity_id',
+                'user_id',
+                'old_value',
+                'new_value',
+                'metadata',
+                'created_at',
+            ]),
+        },
+        { localOnly: true }
+    ),
+    sync_conflict_logs: new Table(
+        {
+            ...textColumns([
+                'entity_type',
+                'entity_id',
+                'conflict_type',
+                'client_timestamp',
+                'server_timestamp',
+                'resolution_strategy',
+                'resolution_details',
+                'created_at',
+            ]),
+        },
+        { localOnly: true }
+    ),
+});
 
 export type PowerSyncBootstrapState =
     | 'idle'
@@ -254,21 +555,22 @@ let bootstrapStatus: PowerSyncBootstrapStatus = createBootstrapStatus(
 );
 
 export function getPowerSyncConfig(): PowerSyncConfig {
-    const endpoint = process.env.NEXT_PUBLIC_POWERSYNC_ENDPOINT ?? '';
+    const endpoint = process.env.NEXT_PUBLIC_POWERSYNC_ENDPOINT ?? POWERSYNC_INSTANCE_URL;
     const accessToken =
+        process.env.NEXT_PUBLIC_POWERSYNC_DEV_TOKEN ??
         process.env.NEXT_PUBLIC_POWERSYNC_ACCESS_TOKEN ??
         process.env.NEXT_PUBLIC_POWERSYNC_API_KEY ??
         '';
 
-    if (!endpoint || !accessToken) {
+    if (!endpoint) {
         bootstrapStatus = createBootstrapStatus(
             'not_configured',
-            'Missing NEXT_PUBLIC_POWERSYNC_ENDPOINT or NEXT_PUBLIC_POWERSYNC_ACCESS_TOKEN.'
+            'Missing PowerSync endpoint configuration.'
         );
 
         return {
             endpoint: '',
-            accessToken: '',
+            accessToken,
             restaurantId: process.env.NEXT_PUBLIC_RESTAURANT_ID,
             debug: process.env.NODE_ENV === 'development',
         };
@@ -286,28 +588,65 @@ export function getPowerSyncBootstrapStatus(): PowerSyncBootstrapStatus {
     return bootstrapStatus;
 }
 
+class WrappedPowerSyncDatabase implements PowerSyncDatabase {
+    private activeTransaction: Transaction | null = null;
+
+    constructor(private readonly database: WebPowerSyncDatabase) {}
+
+    private get queryContext(): QueryContext {
+        return this.activeTransaction ?? this.database;
+    }
+
+    async execute(sql: string, params: unknown[] = []): Promise<{ rowsAffected: number }> {
+        const result = await this.queryContext.execute(sql, params);
+        return { rowsAffected: result.rowsAffected };
+    }
+
+    async getFirstAsync<T>(sql: string, params: unknown[] = []): Promise<T | null> {
+        return this.queryContext.getOptional<T>(sql, params);
+    }
+
+    async getAllAsync<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+        return this.queryContext.getAll<T>(sql, params);
+    }
+
+    async write(fn: () => Promise<void>): Promise<void> {
+        if (this.activeTransaction) {
+            await fn();
+            return;
+        }
+
+        await this.database.writeTransaction(async tx => {
+            const previousTransaction = this.activeTransaction;
+            this.activeTransaction = tx;
+
+            try {
+                await fn();
+            } finally {
+                this.activeTransaction = previousTransaction;
+            }
+
+            return undefined;
+        });
+    }
+
+    async close(): Promise<void> {
+        await this.database.close();
+    }
+}
+
+let rawPowerSyncDb: WebPowerSyncDatabase | null = null;
 let powerSyncDb: PowerSyncDatabase | null = null;
 
-async function loadPowerSyncModules(): Promise<{
-    webModule: PowerSyncWebModule | null;
-    reactModule: PowerSyncReactModule | null;
-}> {
-    let webModule: PowerSyncWebModule | null = null;
-    let reactModule: PowerSyncReactModule | null = null;
+async function ensureLocalSchema(database: WebPowerSyncDatabase): Promise<void> {
+    const statements = powerSyncSchema
+        .split(';')
+        .map(statement => statement.trim())
+        .filter(statement => statement.length > 0);
 
-    try {
-        webModule = (await import('@powersync/web')) as PowerSyncWebModule;
-    } catch {
-        webModule = null;
+    for (const statement of statements) {
+        await database.execute(`${statement};`);
     }
-
-    try {
-        reactModule = (await import('@powersync/react')) as PowerSyncReactModule;
-    } catch {
-        reactModule = null;
-    }
-
-    return { webModule, reactModule };
 }
 
 export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
@@ -317,31 +656,40 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
     }
 
     const config = getPowerSyncConfig();
-    if (!config.endpoint || !config.accessToken) {
-        logger.warn('[PowerSync] Not configured - deterministic offline-local mode');
+    if (typeof window === 'undefined') {
+        bootstrapStatus = createBootstrapStatus(
+            'missing_runtime_adapter',
+            'PowerSync only initializes in browser runtime.'
+        );
         return null;
     }
 
     try {
-        const { webModule, reactModule } = await loadPowerSyncModules();
-        const connectFn = webModule?.PowerSyncDatabase?.connect;
-        const AdapterCtor = reactModule?.PowerSyncOpenSQLiteAdapter;
+        rawPowerSyncDb = new WebPowerSyncDatabase({
+            schema: powerSyncAppSchema,
+            database: {
+                dbFilename: 'lole_offline.db',
+            },
+        });
 
-        if (!connectFn || !AdapterCtor) {
+        await rawPowerSyncDb.init();
+        await ensureLocalSchema(rawPowerSyncDb);
+
+        powerSyncDb = new WrappedPowerSyncDatabase(rawPowerSyncDb);
+
+        const connector = new Connector();
+        const credentials = await connector.fetchCredentials();
+
+        if (!config.endpoint || !credentials) {
             bootstrapStatus = createBootstrapStatus(
-                'missing_runtime_adapter',
-                'PowerSync runtime adapter missing. App remains in offline-local bootstrap mode.'
+                'not_configured',
+                'PowerSync local database ready. Remote sync waiting for auth token or dev token.'
             );
-            logger.warn('[PowerSync] Runtime adapter missing - offline-local bootstrap mode');
-            return null;
+            logger.warn('[PowerSync] Remote sync not configured yet - local database only');
+            return powerSyncDb;
         }
 
-        powerSyncDb = await connectFn({
-            schema: powerSyncSchema,
-            adapter: new AdapterCtor({
-                dbFilename: 'lole_offline.db',
-            }),
-        });
+        await rawPowerSyncDb.connect(connector);
 
         bootstrapStatus = createBootstrapStatus('ready', 'PowerSync initialized successfully.');
 
@@ -356,7 +704,7 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
         logger.warn('[PowerSync] Initialization failed - offline-local mode continues', {
             error: message,
         });
-        return null;
+        return powerSyncDb;
     }
 }
 
@@ -368,6 +716,7 @@ export async function closePowerSync(): Promise<void> {
     if (powerSyncDb) {
         await powerSyncDb.close();
         powerSyncDb = null;
+        rawPowerSyncDb = null;
         bootstrapStatus = createBootstrapStatus('idle', 'PowerSync connection closed.');
     }
 }
