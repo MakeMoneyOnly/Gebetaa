@@ -3,6 +3,18 @@
 import { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import {
+    createLanMqttClient,
+    closeLanMqttClient,
+    registerLanMessageHandler,
+    subscribeTopic,
+} from '@/lib/lan/mqtt-client';
+import { getStoredDeviceSession } from '@/lib/mobile/device-storage';
+import {
+    getGatewayTopicsForScopes,
+    isGatewayLanEventMessage,
+    LocalGatewaySequenceTracker,
+} from '@/lib/gateway/local-events';
 
 /**
  * HIGH-015: Reconnection configuration
@@ -157,6 +169,7 @@ interface UseKDSRealtimeOptions {
     onNewOrder?: (order: KDSOrder) => void;
     onOrderUpdate?: (order: KDSOrder) => void;
     onOrderDelete?: (orderId: string) => void;
+    onLocalSignal?: (event: { type: string; aggregate: string; aggregateId: string }) => void;
     enabled?: boolean;
 }
 
@@ -171,12 +184,14 @@ export function useKDSRealtime({
     onNewOrder,
     onOrderUpdate,
     onOrderDelete,
+    onLocalSignal,
     enabled = true,
 }: UseKDSRealtimeOptions) {
     const channelRef = useRef<RealtimeChannel | null>(null);
     const supabase = useMemo(() => createClient(), []);
     const mountedRef = useRef(false);
     const [isConnected, setIsConnected] = useState(false);
+    const lanTrackerRef = useRef<LocalGatewaySequenceTracker | null>(null);
 
     // HIGH-015: Reconnection state
     const retryCountRef = useRef(0);
@@ -191,11 +206,77 @@ export function useKDSRealtime({
     // Initialize deduplicator on mount
     useEffect(() => {
         deduplicatorRef.current = new MessageDeduplicator();
+        lanTrackerRef.current = new LocalGatewaySequenceTracker();
         return () => {
             deduplicatorRef.current?.destroy();
             deduplicatorRef.current = null;
+            lanTrackerRef.current = null;
         };
     }, []);
+
+    const handleLocalGatewayMessage = useCallback(
+        (topic: string, rawPayload: string) => {
+            const parsed = JSON.parse(rawPayload) as Record<string, unknown>;
+            const event = isGatewayLanEventMessage(parsed)
+                ? parsed
+                : {
+                      messageId: String(parsed.id ?? parsed.idempotencyKey ?? ''),
+                      sequence: typeof parsed.sequence === 'number' ? parsed.sequence : undefined,
+                      aggregate: String(parsed.aggregate ?? ''),
+                      aggregateId: String(parsed.aggregateId ?? ''),
+                      type: String(parsed.type ?? ''),
+                      payload:
+                          parsed.payload && typeof parsed.payload === 'object'
+                              ? (parsed.payload as Record<string, unknown>)
+                              : {},
+                  };
+
+            if (
+                !lanTrackerRef.current?.shouldProcess({
+                    messageId: event.messageId,
+                    aggregate: event.aggregate,
+                    aggregateId: event.aggregateId,
+                    sequence: event.sequence,
+                })
+            ) {
+                return;
+            }
+
+            onLocalSignal?.({
+                type: event.type,
+                aggregate: event.aggregate,
+                aggregateId: event.aggregateId,
+            });
+
+            if (topic.includes('/orders/commands')) {
+                if (event.type === 'order.create') {
+                    onNewOrder?.({
+                        id: String(event.payload.order_id ?? event.aggregateId),
+                        order_type:
+                            String(event.payload.order_type ?? 'dine_in') === 'pickup'
+                                ? 'pickup'
+                                : String(event.payload.order_type ?? 'dine_in') === 'delivery'
+                                  ? 'delivery'
+                                  : 'dine-in',
+                        source: 'gateway-local',
+                        status: String(event.payload.status ?? 'pending') as OrderStatus,
+                        created_at: new Date().toISOString(),
+                    });
+                } else if (event.type === 'order.update' || event.type === 'order.fire_course') {
+                    onOrderUpdate?.({
+                        id: String(event.payload.order_id ?? event.aggregateId),
+                        order_type: 'dine-in',
+                        source: 'gateway-local',
+                        status: String(event.payload.status ?? 'pending') as OrderStatus,
+                        created_at: new Date().toISOString(),
+                    });
+                } else if (event.type === 'order.delete') {
+                    onOrderDelete?.(String(event.payload.order_id ?? event.aggregateId));
+                }
+            }
+        },
+        [onLocalSignal, onNewOrder, onOrderDelete, onOrderUpdate]
+    );
 
     const handleOrdersChange = useCallback(
         (payload: RealtimePayload) => {
@@ -413,12 +494,51 @@ export function useKDSRealtime({
         mountedRef.current = true;
         retryCountRef.current = 0;
         setReconnectionStatus('idle');
+        let mqttClient: ReturnType<typeof createLanMqttClient> | null = null;
+        let cancelled = false;
 
-        // Initial channel setup
-        setupChannel();
+        const bootstrapLocalGateway = async () => {
+            const session = await getStoredDeviceSession();
+            if (
+                cancelled ||
+                !session?.gateway ||
+                session.gateway_bootstrap_status !== 'ready' ||
+                !session.gateway.brokerUrl
+            ) {
+                setupChannel();
+                return;
+            }
+
+            mqttClient = createLanMqttClient({
+                brokerUrl: session.gateway.brokerUrl,
+                clientId: `${session.device_token}-kds-local`,
+                clean: false,
+            });
+
+            const topics = getGatewayTopicsForScopes({
+                restaurantId: session.restaurant_id ?? restaurantId,
+                locationId: session.location_id ?? 'default-location',
+                scopes: ['orders', 'kds'],
+            });
+
+            for (const topic of topics) {
+                await subscribeTopic(mqttClient, topic, 1);
+            }
+
+            registerLanMessageHandler(mqttClient, (topic, rawPayload) => {
+                if (!mountedRef.current) return;
+                void handleLocalGatewayMessage(topic, String(rawPayload));
+            });
+
+            setIsConnected(true);
+            setReconnectionStatus('idle');
+        };
+
+        void bootstrapLocalGateway();
 
         // HIGH-015: Cleanup function
         return () => {
+            cancelled = true;
             mountedRef.current = false;
 
             // Clear any pending reconnect timeout
@@ -431,10 +551,13 @@ export function useKDSRealtime({
                 channelRef.current.unsubscribe();
                 channelRef.current = null;
             }
+            if (mqttClient) {
+                void closeLanMqttClient(mqttClient).catch(() => undefined);
+            }
             setIsConnected(false);
             setReconnectionStatus('idle');
         };
-    }, [enabled, restaurantId, setupChannel]);
+    }, [enabled, restaurantId, setupChannel, handleLocalGatewayMessage]);
 
     return {
         isConnected,

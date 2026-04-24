@@ -101,6 +101,22 @@ function parseModifiers(raw: string | null | undefined): string[] {
     }
 }
 
+function isKdsFireMode(value: string | null | undefined): value is 'auto' | 'manual' {
+    return value === 'auto' || value === 'manual';
+}
+
+function isKdsCourseName(
+    value: string | null | undefined
+): value is 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side' {
+    return (
+        value === 'appetizer' ||
+        value === 'main' ||
+        value === 'dessert' ||
+        value === 'beverage' ||
+        value === 'side'
+    );
+}
+
 async function readLocalKdsSettings(): Promise<KdsSettingsPayload> {
     const db = getPowerSync();
     const row = await db?.getFirstAsync<{ settings_json: string }>(
@@ -276,18 +292,8 @@ export async function readKdsQueue(filters: QueueFilters): Promise<
                 acknowledgedAt: order.acknowledged_at ?? undefined,
                 elapsedMinutes,
                 slaStatus: resolveSlaStatus(elapsedMinutes, filters.slaMinutes),
-                fireMode:
-                    order.fire_mode === 'manual' || order.fire_mode === 'auto'
-                        ? order.fire_mode
-                        : 'auto',
-                currentCourse:
-                    order.current_course === 'appetizer' ||
-                    order.current_course === 'main' ||
-                    order.current_course === 'dessert' ||
-                    order.current_course === 'beverage' ||
-                    order.current_course === 'side'
-                        ? order.current_course
-                        : null,
+                fireMode: isKdsFireMode(order.fire_mode) ? order.fire_mode : 'auto',
+                currentCourse: isKdsCourseName(order.current_course) ? order.current_course : null,
             };
         })
         .filter(order => stationMatches(order.station, filters.station))

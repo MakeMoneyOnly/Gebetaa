@@ -24,11 +24,6 @@ import {
 } from '@/lib/kds/syncAdapter';
 import { submitKdsItemAction, usesLegacyKdsActionReplay } from '@/lib/kds/command-adapter';
 import { submitOrderCourseFireUpdate } from '@/lib/orders/command-adapter';
-import {
-    removeQueuedKdsAction,
-    incrementKdsActionAttempts,
-    markKdsQueueSynced,
-} from '@/lib/kds/offlineQueue';
 
 type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee';
 type ViewMode = 'grid' | 'list';
@@ -517,50 +512,14 @@ export function StationBoard({
             return;
         }
 
-        const queueSnapshot = await getPendingKdsActions();
-        if (queueSnapshot.length === 0) {
+        const pendingActions = await getPendingKdsActions();
+        if (pendingActions.length === 0) {
             setQueuedActionCount(0);
             return;
         }
 
         setSyncingOfflineActions(true);
         try {
-            for (const pending of queueSnapshot) {
-                try {
-                    const response = await fetch(`/api/kds/items/${pending.kdsItemId}/action`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-idempotency-key': pending.idempotencyKey,
-                        },
-                        body: JSON.stringify({
-                            action: pending.action,
-                            reason: pending.reason,
-                        }),
-                    });
-
-                    if (response.ok) {
-                        removeQueuedKdsAction(pending.id);
-                    } else {
-                        const payload = await response.json().catch(() => ({}));
-                        if (response.status >= 400 && response.status < 500) {
-                            // Non-retryable transition/auth errors are dropped.
-                            removeQueuedKdsAction(pending.id);
-                            setError(
-                                payload?.error ??
-                                    'Dropped one queued action due to invalid transition'
-                            );
-                        } else {
-                            incrementKdsActionAttempts(pending.id);
-                            break;
-                        }
-                    }
-                } catch {
-                    incrementKdsActionAttempts(pending.id);
-                    break;
-                }
-            }
-            markKdsQueueSynced();
             await clearSyncedKdsActions();
             setQueuedActionCount(await getOfflineKdsQueueCount());
             await fetchQueue(true);
