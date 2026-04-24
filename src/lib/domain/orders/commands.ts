@@ -55,10 +55,17 @@ export interface DeleteOfflineOrderCommandPayload {
     status: 'cancelled';
 }
 
+export interface FireOrderCourseCommandPayload {
+    order_id: string;
+    fire_mode: 'auto' | 'manual';
+    current_course: 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
+    status: OfflineOrderStatus;
+}
+
 function buildOrderEnvelope<TPayload>(
     context: OfflineOrderCommandContext,
     aggregateId: string,
-    type: 'order.create' | 'order.update' | 'order.delete',
+    type: 'order.create' | 'order.update' | 'order.delete' | 'order.fire_course',
     payload: TPayload,
     idempotencyKey: string
 ): DomainCommandEnvelope<TPayload> {
@@ -75,6 +82,20 @@ function buildOrderEnvelope<TPayload>(
     };
 
     return createDomainEnvelope(input) as DomainCommandEnvelope<TPayload>;
+}
+
+export function buildFireOfflineOrderCourseCommand(
+    context: OfflineOrderCommandContext,
+    payload: FireOrderCourseCommandPayload,
+    idempotencyKey: string
+): DomainCommandEnvelope<FireOrderCourseCommandPayload> {
+    return buildOrderEnvelope(
+        context,
+        payload.order_id,
+        'order.fire_course',
+        payload,
+        idempotencyKey
+    );
 }
 
 export function buildCreateOfflineOrderCommand(

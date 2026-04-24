@@ -29,6 +29,14 @@ export interface TransferTableSessionCommandPayload {
     notes?: string | null;
 }
 
+export interface UpdateTableSessionCommandPayload {
+    session_id: string;
+    table_id: string;
+    guest_count?: number | null;
+    assigned_staff_id?: string | null;
+    notes?: string | null;
+}
+
 export interface CloseTableSessionCommandPayload {
     session_id: string;
     table_id: string;
@@ -38,7 +46,7 @@ export interface CloseTableSessionCommandPayload {
 function buildTableEnvelope<TPayload>(
     context: TableCommandContext,
     aggregateId: string,
-    type: 'table.open' | 'table.transfer' | 'table.close',
+    type: 'table.open' | 'table.update' | 'table.transfer' | 'table.close',
     payload: TPayload,
     idempotencyKey: string
 ): DomainCommandEnvelope<TPayload> {
@@ -55,6 +63,14 @@ function buildTableEnvelope<TPayload>(
     };
 
     return createDomainEnvelope(input) as DomainCommandEnvelope<TPayload>;
+}
+
+export function buildUpdateTableSessionCommand(
+    context: TableCommandContext,
+    payload: UpdateTableSessionCommandPayload,
+    idempotencyKey: string
+): DomainCommandEnvelope<UpdateTableSessionCommandPayload> {
+    return buildTableEnvelope(context, payload.session_id, 'table.update', payload, idempotencyKey);
 }
 
 export function buildOpenTableSessionCommand(

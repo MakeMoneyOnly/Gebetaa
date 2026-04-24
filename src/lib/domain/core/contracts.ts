@@ -4,7 +4,8 @@ export type DomainAggregate =
     | 'table_session'
     | 'device'
     | 'printer_job'
-    | 'fiscal_receipt';
+    | 'fiscal_receipt'
+    | 'audit_entry';
 
 export type DomainCommandType =
     | 'order.create'
@@ -16,6 +17,7 @@ export type DomainCommandType =
     | 'kds.bump'
     | 'kds.update'
     | 'table.open'
+    | 'table.update'
     | 'table.transfer'
     | 'table.close'
     | 'printer.enqueue'
@@ -29,14 +31,18 @@ export type DomainEventType =
     | 'kds.started'
     | 'kds.ready'
     | 'kds.bumped'
+    | 'kds.state_changed'
     | 'table.opened'
+    | 'table.updated'
     | 'table.transferred'
     | 'table.closed'
     | 'printer.queued'
+    | 'printer.printing'
     | 'printer.failed'
     | 'fiscal.signed'
     | 'fiscal.queued'
-    | 'fiscal.replayed';
+    | 'fiscal.replayed'
+    | 'audit.logged';
 
 export interface DomainActorRef {
     actorId: string;
