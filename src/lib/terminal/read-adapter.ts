@@ -1,4 +1,9 @@
 import { getPaymentOptionsForSurface, type SupportedPaymentMethod } from '@/lib/devices/config';
+import {
+    getTableSettlementBalance,
+    listLocalPayments,
+    recordLocalCapturedPayment,
+} from '@/lib/payments/local-ledger';
 import { getPowerSync } from '@/lib/sync';
 
 export interface TerminalOverviewDevice {
@@ -46,7 +51,26 @@ export interface TerminalSplitSnapshot {
         split_id?: string | null;
         amount: number;
         status: string;
+        method: string;
+        truth_state: string;
+        truth_label: string;
+        truth_tone: string;
+        provider_reference?: string | null;
+        transaction_number: string;
     }>;
+}
+
+export interface TerminalRecentPayment {
+    id: string;
+    order_number: string | null;
+    table_number: string | null;
+    label: string;
+    amount: number;
+    method: string;
+    truth_state: string;
+    truth_label: string;
+    truth_tone: string;
+    created_at: string;
 }
 
 interface AdapterResult<T> {
@@ -58,10 +82,6 @@ interface AdapterResult<T> {
 
 function normalizeMoney(value: number): number {
     return Number(Number(value ?? 0).toFixed(2));
-}
-
-function buildLocalTransactionNumber(): string {
-    return `LOCAL-PAY-${Date.now().toString(36).toUpperCase()}`;
 }
 
 async function readLocalSplitSnapshot(orderId: string): Promise<TerminalSplitSnapshot | null> {
@@ -86,18 +106,7 @@ async function readLocalSplitSnapshot(orderId: string): Promise<TerminalSplitSna
              ORDER BY split_index ASC`,
             [orderId]
         ),
-        db.getAllAsync<{
-            id: string;
-            split_id: string | null;
-            amount: number;
-            status: string;
-        }>(
-            `SELECT id, split_id, amount, status
-             FROM payments
-             WHERE order_id = ?
-             ORDER BY created_at ASC`,
-            [orderId]
-        ),
+        listLocalPayments(db, { orderId, limit: 200 }),
     ]);
 
     if (!order) return null;
@@ -120,9 +129,15 @@ async function readLocalSplitSnapshot(orderId: string): Promise<TerminalSplitSna
         })),
         split_payments: splitPayments.map(payment => ({
             id: payment.id,
-            split_id: payment.split_id ?? null,
+            split_id: payment.splitId ?? null,
             amount: normalizeMoney(payment.amount),
-            status: payment.status,
+            status: payment.paymentStatus,
+            method: payment.method,
+            truth_state: payment.truthState,
+            truth_label: payment.truthLabel,
+            truth_tone: payment.truthTone,
+            provider_reference: payment.providerReference ?? null,
+            transaction_number: payment.transactionNumber,
         })),
     };
 }
@@ -136,6 +151,7 @@ export async function readTerminalOverview(input: {
         payment_options: ReturnType<typeof getPaymentOptionsForSurface>;
         tables: TerminalOverviewTable[];
         orders: TerminalOverviewOrder[];
+        recent_payments: TerminalRecentPayment[];
     }>
 > {
     const db = getPowerSync();
@@ -153,6 +169,7 @@ export async function readTerminalOverview(input: {
                 payment_options: ReturnType<typeof getPaymentOptionsForSurface>;
                 tables: TerminalOverviewTable[];
                 orders: TerminalOverviewOrder[];
+                recent_payments: TerminalRecentPayment[];
             };
             error?: string;
         };
@@ -170,7 +187,7 @@ export async function readTerminalOverview(input: {
         };
     }
 
-    const [orders, openSessions] = await Promise.all([
+    const [orders, openSessions, recentPayments] = await Promise.all([
         db.getAllAsync<TerminalOverviewOrder>(
             `SELECT
                 id,
@@ -189,6 +206,7 @@ export async function readTerminalOverview(input: {
              WHERE status = 'open'
              ORDER BY updated_at DESC`
         ),
+        listLocalPayments(db, { limit: 12 }),
     ]);
 
     const tablesByNumber = new Map<string, TerminalOverviewTable>();
@@ -222,6 +240,14 @@ export async function readTerminalOverview(input: {
         });
     }
 
+    const balanceMap = new Map<string, number>();
+    await Promise.all(
+        [...tablesByNumber.values()].map(async table => {
+            const balance = await getTableSettlementBalance(db, table.id);
+            balanceMap.set(table.id, balance.remainingAmount);
+        })
+    );
+
     const allowedMethods = input.device.metadata?.allowed_payment_methods ?? ['cash', 'other'];
     return {
         ok: true,
@@ -231,10 +257,25 @@ export async function readTerminalOverview(input: {
             payment_options: getPaymentOptionsForSurface('terminal').filter(option =>
                 allowedMethods.includes(option.method)
             ),
-            tables: [...tablesByNumber.values()],
+            tables: [...tablesByNumber.values()].map(table => ({
+                ...table,
+                outstanding_total: balanceMap.get(table.id) ?? table.outstanding_total,
+            })),
             orders: orders.map(order => ({
                 ...order,
                 total_price: normalizeMoney(Number(order.total_price ?? 0)),
+            })),
+            recent_payments: recentPayments.map(payment => ({
+                id: payment.id,
+                order_number: payment.orderNumber,
+                table_number: payment.tableNumber,
+                label: payment.label,
+                amount: payment.amount,
+                method: payment.method,
+                truth_state: payment.truthState,
+                truth_label: payment.truthLabel,
+                truth_tone: payment.truthTone,
+                created_at: payment.createdAt,
             })),
         },
     };
@@ -322,8 +363,13 @@ export async function createTerminalEvenSplit(input: {
         };
     }
 
-    const order = await db.getFirstAsync<{ id: string; total_price: number; status: string }>(
-        `SELECT id, total_santim / 100.0 as total_price, status FROM orders WHERE id = ?`,
+    const order = await db.getFirstAsync<{
+        id: string;
+        restaurant_id: string;
+        total_price: number;
+        status: string;
+    }>(
+        `SELECT id, restaurant_id, total_santim / 100.0 as total_price, status FROM orders WHERE id = ?`,
         [input.orderId]
     );
     if (!order) {
@@ -352,7 +398,7 @@ export async function createTerminalEvenSplit(input: {
                  ) VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?, ?, ?)`,
                 [
                     splitId,
-                    'local-restaurant',
+                    order.restaurant_id,
                     input.orderId,
                     index,
                     `Guest ${index + 1}`,
@@ -387,6 +433,8 @@ export async function captureTerminalPayment(input: {
     AdapterResult<{
         transaction_number: string;
         fiscal_request: null;
+        truth_state: string;
+        truth_label: string;
     }>
 > {
     const db = getPowerSync();
@@ -396,42 +444,28 @@ export async function captureTerminalPayment(input: {
             error: 'Local payment capture runtime unavailable. Pair to store gateway and retry.',
         };
     }
-
-    const nowIso = new Date().toISOString();
-    const paymentId = crypto.randomUUID();
-    const transactionNumber = buildLocalTransactionNumber();
-
-    await db.execute(
-        `INSERT INTO payments (
-            id, restaurant_id, order_id, split_id, amount, tip_amount, method, provider,
-            provider_reference, transaction_number, status, metadata_json, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, 'captured', ?, ?, ?)`,
-        [
-            paymentId,
-            input.restaurantId,
-            input.orderId ?? null,
-            input.splitId ?? null,
-            normalizeMoney(input.amount),
-            input.method,
-            input.method,
-            input.providerReference ?? null,
-            transactionNumber,
-            JSON.stringify({
-                source: 'local_terminal_capture',
-                label: input.label,
-                terminal_name: input.terminalName ?? null,
-            }),
-            nowIso,
-            nowIso,
-        ]
-    );
+    const ledger = await recordLocalCapturedPayment(db, {
+        restaurantId: input.restaurantId,
+        orderId: input.orderId ?? null,
+        splitId: input.splitId ?? null,
+        amount: normalizeMoney(input.amount),
+        method: input.method,
+        provider: input.method,
+        providerReference: input.providerReference ?? undefined,
+        label: input.label,
+        terminalName: input.terminalName ?? null,
+        verificationMode:
+            input.method === 'chapa' || input.method === 'card' ? 'deferred' : 'immediate',
+    });
 
     return {
         ok: true,
         mode: 'local',
         data: {
-            transaction_number: transactionNumber,
+            transaction_number: ledger.transactionNumber,
             fiscal_request: null,
+            truth_state: ledger.truthState,
+            truth_label: ledger.truthLabel,
         },
     };
 }

@@ -67,6 +67,12 @@ type SettlementPayment = {
     split_id?: string | null;
     amount: number;
     status: string;
+    method: string;
+    truth_state: string;
+    truth_label: string;
+    truth_tone: string;
+    provider_reference?: string | null;
+    transaction_number: string;
 };
 
 type SplitPayload = {
@@ -90,6 +96,18 @@ type TerminalOverview = {
     payment_options: TerminalPaymentOption[];
     tables: TerminalTable[];
     orders: TerminalOrder[];
+    recent_payments: Array<{
+        id: string;
+        order_number: string | null;
+        table_number: string | null;
+        label: string;
+        amount: number;
+        method: string;
+        truth_state: string;
+        truth_label: string;
+        truth_tone: string;
+        created_at: string;
+    }>;
 };
 
 const METHOD_ICONS: Record<SupportedPaymentMethod, React.ReactNode> = {
@@ -97,6 +115,14 @@ const METHOD_ICONS: Record<SupportedPaymentMethod, React.ReactNode> = {
     chapa: <CreditCard className="h-4 w-4" />,
     card: <CreditCard className="h-4 w-4" />,
     other: <Receipt className="h-4 w-4" />,
+};
+
+const PAYMENT_TRUTH_BADGE_STYLES: Record<string, string> = {
+    local_capture: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+    pending_verification: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200',
+    verified: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+    failed: 'bg-red-50 text-red-700 ring-1 ring-red-200',
+    review_required: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200',
 };
 
 export default function TerminalPage() {
@@ -132,7 +158,8 @@ export default function TerminalPage() {
                     name: deviceInfo?.name ?? 'Terminal',
                     device_type: deviceInfo?.device_type ?? 'terminal',
                     assigned_zones: [],
-                    metadata: (deviceInfo?.metadata as TerminalOverview['device']['metadata']) ?? null,
+                    metadata:
+                        (deviceInfo?.metadata as TerminalOverview['device']['metadata']) ?? null,
                 },
                 deviceToken,
             });
@@ -227,7 +254,12 @@ export default function TerminalPage() {
     const splitPaidById = useMemo(() => {
         const totals = new Map<string, number>();
         for (const payment of splitPayload?.split_payments ?? []) {
-            if (!payment.split_id || payment.status !== 'captured') continue;
+            if (!payment.split_id) continue;
+            if (
+                !['local_capture', 'pending_verification', 'verified'].includes(payment.truth_state)
+            ) {
+                continue;
+            }
             totals.set(
                 payment.split_id,
                 Number(
@@ -242,6 +274,17 @@ export default function TerminalPage() {
         if (!selectedTable) return 0;
         return Number(selectedTable.outstanding_total ?? 0);
     }, [selectedTable]);
+
+    const splitPaymentsById = useMemo(() => {
+        const grouped = new Map<string, SettlementPayment[]>();
+        for (const payment of splitPayload?.split_payments ?? []) {
+            if (!payment.split_id) continue;
+            const existing = grouped.get(payment.split_id) ?? [];
+            existing.push(payment);
+            grouped.set(payment.split_id, existing);
+        }
+        return grouped;
+    }, [splitPayload?.split_payments]);
 
     useEffect(() => {
         setOrderAmountInput(fullOrderRemaining > 0 ? String(fullOrderRemaining.toFixed(2)) : '');
@@ -347,7 +390,7 @@ export default function TerminalPage() {
                 }
             }
 
-            toast.success(`Payment recorded for ${args.label}`);
+            toast.success(`${result.data.truth_label ?? 'Payment recorded'} for ${args.label}`);
             setProviderReference('');
             await Promise.all([
                 loadOverview(),
@@ -377,13 +420,16 @@ export default function TerminalPage() {
                 paymentProvider:
                     paymentMethod === 'cash'
                         ? 'cash'
-                        : paymentMethod === 'other'
-                          ? 'other'
+                        : paymentMethod === 'chapa'
+                          ? 'chapa'
                           : 'other',
                 orders: tableOrders.map(order => ({
                     id: order.id,
                     status: order.status,
                 })),
+                amount: parsedAmount,
+                providerReference: providerReference.trim() || undefined,
+                terminalName: overview?.device.name ?? null,
             });
 
             if (!localResult.ok) {
@@ -412,10 +458,13 @@ export default function TerminalPage() {
                       }
                     : current
             );
-            toast.success(`Closed table ${selectedTable.table_number}`);
+            toast.success(
+                `${localResult.truthLabel ?? 'Settlement recorded'} and closed table ${selectedTable.table_number}`
+            );
             setProviderReference('');
             setSelectedOrderId(null);
             setSplitPayload(null);
+            await loadOverview();
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Failed to close table');
         } finally {
@@ -818,6 +867,25 @@ export default function TerminalPage() {
                                             <p className="mt-2 text-[15px] font-medium text-gray-500">
                                                 Capture a full payment or divide this check.
                                             </p>
+                                            {selectedTable && (
+                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                    {(overview?.recent_payments ?? [])
+                                                        .filter(
+                                                            payment =>
+                                                                payment.table_number ===
+                                                                selectedTable.table_number
+                                                        )
+                                                        .slice(0, 3)
+                                                        .map(payment => (
+                                                            <span
+                                                                key={payment.id}
+                                                                className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold ${PAYMENT_TRUTH_BADGE_STYLES[payment.truth_state] ?? PAYMENT_TRUTH_BADGE_STYLES.local_capture}`}
+                                                            >
+                                                                {payment.truth_label}
+                                                            </span>
+                                                        ))}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex min-w-[200px] flex-col items-end justify-center rounded-[2rem] border border-gray-100 bg-slate-50 p-6 text-right shadow-inner">
                                             <p className="text-[12px] font-bold tracking-widest text-gray-400 uppercase">
@@ -916,6 +984,37 @@ export default function TerminalPage() {
                                                                                     ETB
                                                                                 </p>
                                                                             </div>
+                                                                            {(
+                                                                                splitPaymentsById.get(
+                                                                                    split.id
+                                                                                ) ?? []
+                                                                            )
+                                                                                .slice(0, 2)
+                                                                                .map(payment => (
+                                                                                    <div
+                                                                                        key={
+                                                                                            payment.id
+                                                                                        }
+                                                                                        className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold"
+                                                                                    >
+                                                                                        <span
+                                                                                            className={`inline-flex items-center rounded-full px-2.5 py-1 ${PAYMENT_TRUTH_BADGE_STYLES[payment.truth_state] ?? PAYMENT_TRUTH_BADGE_STYLES.local_capture}`}
+                                                                                        >
+                                                                                            {
+                                                                                                payment.truth_label
+                                                                                            }
+                                                                                        </span>
+                                                                                        <span className="text-gray-500">
+                                                                                            {
+                                                                                                payment.method
+                                                                                            }{' '}
+                                                                                            {payment.amount.toFixed(
+                                                                                                2
+                                                                                            )}{' '}
+                                                                                            ETB
+                                                                                        </span>
+                                                                                    </div>
+                                                                                ))}
                                                                         </div>
                                                                         <button
                                                                             onClick={() =>

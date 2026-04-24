@@ -5,6 +5,7 @@ import {
     updateOfflineOrderStatus,
     type OfflineOrderStatus,
 } from '@/lib/sync';
+import { getTableSettlementBalance, recordLocalCapturedPayment } from '@/lib/payments/local-ledger';
 
 type SettlementProvider = 'cash' | 'chapa' | 'other';
 
@@ -20,12 +21,16 @@ export interface SubmitTerminalSettlementInput {
     tableId: string;
     paymentProvider: SettlementProvider;
     orders: LocalSettlementOrder[];
+    amount: number;
+    providerReference?: string;
+    terminalName?: string | null;
 }
 
 export interface SubmitTerminalSettlementResult {
     ok: boolean;
     mode?: SubmitTerminalSettlementMode;
     completedOrderIds?: string[];
+    truthLabel?: string;
     error?: string;
 }
 
@@ -33,10 +38,6 @@ const FINALIZABLE_ORDER_STATUSES = new Set(['ready', 'served']);
 
 function hasLocalRuntime(): boolean {
     return getPowerSync() !== null;
-}
-
-function canLocallySettle(provider: SettlementProvider): boolean {
-    return provider === 'cash' || provider === 'other';
 }
 
 export async function submitTerminalSettlement(
@@ -49,13 +50,6 @@ export async function submitTerminalSettlement(
         };
     }
 
-    if (!canLocallySettle(input.paymentProvider)) {
-        return {
-            ok: false,
-            error: `Local settlement for ${input.paymentProvider} is not available yet.`,
-        };
-    }
-
     const openSession = await getOpenOfflineTableSessionByTableId(input.tableId);
     if (!openSession) {
         return {
@@ -64,10 +58,45 @@ export async function submitTerminalSettlement(
         };
     }
 
+    const db = getPowerSync();
+    if (!db) {
+        return {
+            ok: false,
+            error: 'Local terminal settlement runtime unavailable. Pair to store gateway and retry.',
+        };
+    }
+
+    const balance = await getTableSettlementBalance(db, input.tableId);
+    if (Math.abs(Number(input.amount.toFixed(2)) - balance.remainingAmount) > 0.009) {
+        return {
+            ok: false,
+            error: `Settlement amount must match outstanding balance (${balance.remainingAmount.toFixed(2)} ETB).`,
+        };
+    }
+
+    const verificationMode = input.paymentProvider === 'chapa' ? 'deferred' : 'immediate';
+    let truthLabel = verificationMode === 'deferred' ? 'Pending Verification' : 'Local Capture';
     const completedOrderIds: string[] = [];
 
+    for (const order of balance.orders) {
+        if (order.remainingAmount <= 0) continue;
+
+        const ledger = await recordLocalCapturedPayment(db, {
+            restaurantId: input.restaurantId,
+            orderId: order.orderId,
+            amount: order.remainingAmount,
+            method: input.paymentProvider,
+            provider: input.paymentProvider,
+            providerReference: input.providerReference,
+            label: order.orderNumber ?? `Table ${input.tableId}`,
+            terminalName: input.terminalName ?? null,
+            verificationMode,
+        });
+        truthLabel = ledger.truthLabel;
+    }
+
     for (const order of input.orders) {
-        if (!FINALIZABLE_ORDER_STATUSES.has(order.status)) continue;
+        if (!FINALIZABLE_ORDER_STATUSES.has(order.status) && order.status !== 'completed') continue;
 
         const updated = await updateOfflineOrderStatus(order.id, 'completed' as OfflineOrderStatus);
         if (updated) {
@@ -92,5 +121,6 @@ export async function submitTerminalSettlement(
         ok: true,
         mode: 'local',
         completedOrderIds,
+        truthLabel,
     };
 }
