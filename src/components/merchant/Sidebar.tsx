@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import {
     LayoutGrid,
@@ -25,6 +26,63 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { motion, AnimatePresence } from 'framer-motion';
+
+function SidebarTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+    const [isVisible, setIsVisible] = React.useState(false);
+    const [coords, setCoords] = React.useState({ top: 0, left: 0 });
+    const triggerRef = React.useRef<HTMLDivElement>(null);
+    const { isCollapsed } = useSidebar();
+
+    // Early return if not collapsed
+    if (!isCollapsed) return <>{children}</>;
+
+    const handleMouseEnter = () => {
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            // Position the tooltip at the center-right of the trigger
+            setCoords({
+                top: rect.top + rect.height / 2,
+                left: rect.right + 12,
+            });
+        }
+        setIsVisible(true);
+    };
+
+    return (
+        <div
+            ref={triggerRef}
+            className="relative flex items-center"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={() => setIsVisible(false)}
+        >
+            {children}
+            {isVisible &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                    <AnimatePresence>
+                        <motion.div
+                            initial={{ opacity: 0, x: -10, y: '-50%' }}
+                            animate={{ opacity: 1, x: 0, y: '-50%' }}
+                            exit={{ opacity: 0, x: -10, y: '-50%' }}
+                            transition={{ duration: 0.15, ease: 'easeOut' }}
+                            style={{
+                                top: coords.top,
+                                left: coords.left,
+                                position: 'fixed',
+                            }}
+                            className="pointer-events-none z-[9999] rounded-md bg-black px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-white shadow-2xl"
+                        >
+                            {label}
+                            {/* Triangle arrow */}
+                            <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-y-[4px] border-r-[4px] border-y-transparent border-r-black" />
+                        </motion.div>
+                    </AnimatePresence>,
+                    document.body
+                )}
+        </div>
+    );
+}
 
 const SECTIONS = [
     {
@@ -78,33 +136,27 @@ export function Sidebar() {
         <aside
             className={cn(
                 // Fixed, full-height, scrollable, hidden on mobile
-                'no-scrollbar fixed top-0 left-0 z-50 hidden h-screen flex-col justify-between',
-                'overflow-y-auto overflow-x-hidden',
+                'no-scrollbar relative z-50 hidden h-full flex-col justify-between',
+                'overflow-x-hidden overflow-y-auto',
                 'border-r border-[#F1F1F1] bg-white',
-                'shadow-[4px_0_24px_-12px_rgba(0,0,0,0.05)]',
                 // GPU-composited width transition — translateZ(0) promotes to own layer
                 // cubic-bezier(0.4,0,0.2,1) = fast start, smooth deceleration (Material standard)
                 'transition-[width] duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-                'will-change-[width] [transform:translateZ(0)]',
+                '[transform:translateZ(0)] will-change-[width]',
                 'md:flex',
                 isCollapsed ? 'w-[72px] px-2 pb-4' : 'w-[280px] px-4 pb-6'
             )}
         >
             {/* ── Top section ── */}
             <div className="space-y-6">
-
                 {/* Logo */}
-                <div className="flex h-[88px] w-full items-center overflow-hidden">
-                    {/*
-                        We render both logo states and crossfade between them.
-                        Using absolute positioning keeps the logo area height stable.
-                    */}
+                <div className="flex h-[88px] w-full items-center">
                     <div className="relative flex w-full items-center">
                         {/* Full wordmark — visible when expanded */}
                         <div
                             className={cn(
                                 'flex items-center pl-3 transition-[opacity] duration-300 ease-in-out',
-                                isCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                                isCollapsed ? 'pointer-events-none opacity-0' : 'opacity-100'
                             )}
                         >
                             <Image
@@ -113,62 +165,48 @@ export function Sidebar() {
                                 width={110}
                                 height={40}
                                 className="h-20 w-auto object-contain"
-                                style={{ width: 'auto' }}
                                 priority
                             />
                         </div>
 
-                        {/* Icon mark — visible when collapsed, absolutely overlaid */}
+                        {/* Monogram — visible when collapsed */}
                         <div
                             className={cn(
                                 'absolute left-1/2 -translate-x-1/2',
-                                'flex items-center justify-center',
+                                'flex h-10 w-10 items-center justify-center rounded-xl bg-black text-xl font-bold text-white',
                                 'transition-[opacity] duration-300 ease-in-out',
-                                isCollapsed ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                                isCollapsed ? 'opacity-100' : 'pointer-events-none opacity-0'
                             )}
                         >
-                            <Image
-                                src="/logo-black.svg"
-                                alt="Lole"
-                                width={28}
-                                height={28}
-                                className="h-7 w-auto object-contain"
-                                style={{ width: 'auto' }}
-                                priority
-                            />
+                            L
                         </div>
                     </div>
                 </div>
 
                 {/* Navigation */}
-                <nav className="space-y-6 px-1">
-                    {SECTIONS.map(section => (
-                        <div key={section.title} className="space-y-1.5">
-                            {/*
-                                CRITICAL: opacity-only transition on section titles.
-                                Never animate height/max-height here — doing so shifts
-                                every icon's Y-coordinate during the animation.
-                                whitespace-nowrap + overflow-hidden are equally critical:
-                                without them, "PEOPLE & FINANCE" wraps to 2 lines at
-                                intermediate sidebar widths, making the h3 taller and
-                                pushing every icon below it down during the transition.
-                            */}
-                            <h3
-                                className={cn(
-                                    // Explicit 10px — pins to pre-Tailwind-v4-migration size
-                                    // (text-micro was 10px in the old tailwind.config.ts; now 11px in v4 @theme)
-                                    // leading-none removes extra line-height padding for a tight, compact look
-                                    'text-[10px] leading-none px-4 font-bold tracking-[-0.04em] text-gray-400 uppercase',
-                                    // Prevent wrapping at any sidebar width during transition
-                                    'whitespace-nowrap overflow-hidden',
-                                    // Fade only — height stays constant in both states
-                                    // 150ms so labels fully disappear before sidebar finishes collapsing
-                                    'transition-[opacity] duration-[150ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-                                    isCollapsed ? 'opacity-0 select-none pointer-events-none' : 'opacity-100'
-                                )}
-                            >
-                                {section.title}
-                            </h3>
+                <nav className={cn('px-1', isCollapsed ? 'space-y-4' : 'space-y-6')}>
+                    {SECTIONS.map((section, idx) => (
+                        <div
+                            key={section.title}
+                            className={cn(isCollapsed ? 'space-y-2' : 'space-y-1.5')}
+                        >
+                            {/* Header or Divider */}
+                            {isCollapsed ? (
+                                idx > 0 && <div className="mx-2 h-px bg-gray-100" />
+                            ) : (
+                                <h3
+                                    className={cn(
+                                        'px-4 text-[10px] leading-none font-bold tracking-[-0.04em] text-gray-400 uppercase',
+                                        'overflow-hidden whitespace-nowrap',
+                                        'transition-[opacity] duration-[150ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
+                                        isCollapsed
+                                            ? 'pointer-events-none opacity-0 select-none'
+                                            : 'opacity-100'
+                                    )}
+                                >
+                                    {section.title}
+                                </h3>
+                            )}
 
                             <div className="space-y-1">
                                 {section.items.map(item => {
@@ -178,22 +216,20 @@ export function Sidebar() {
                                             : pathname.startsWith(item.href);
                                     const Icon = item.icon;
 
-                                    return (
+                                    const linkContent = (
                                         <Link
                                             key={item.label}
                                             href={item.href}
-                                            title={isCollapsed ? item.label : undefined}
                                             className={cn(
-                                                // Fixed padding — icon is ALWAYS anchored at px-4 from left
-                                                // This is what keeps icon X/Y stable during transition
-                                                'group flex items-center px-4 py-2.5 rounded-xl',
-                                                'transition-colors duration-200 ease-in-out',
+                                                'group flex items-center rounded-xl transition-all duration-200 ease-in-out',
+                                                isCollapsed
+                                                    ? 'justify-center p-2.5'
+                                                    : 'px-4 py-2.5',
                                                 isActive
                                                     ? 'bg-gray-100 text-black'
                                                     : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                                             )}
                                         >
-                                            {/* Icon — never moves */}
                                             <Icon
                                                 className={cn(
                                                     'h-[22px] w-[22px] shrink-0 transition-colors duration-200',
@@ -204,29 +240,27 @@ export function Sidebar() {
                                                 strokeWidth={isActive ? 2 : 1.5}
                                             />
 
-                                            {/*
-                                                Label — width+opacity collapse.
-                                                margin-left is on the span so gap disappears with text.
-                                                overflow-hidden clips during collapse cleanly.
-                                            */}
-                                            <span
-                                                className={cn(
-                                                    'block overflow-hidden whitespace-nowrap',
-                                                    // 180ms — slightly faster than sidebar width so text is gone first
-                                                    'transition-[max-width,opacity,margin-left] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-                                                    'text-sm tracking-[-0.04em]',
-                                                    isActive
-                                                        ? 'font-semibold text-black'
-                                                        : 'font-medium text-gray-500 group-hover:text-black',
-                                                    isCollapsed
-                                                        ? 'max-w-0 opacity-0 ml-0'
-                                                        : 'max-w-[180px] opacity-100 ml-3'
-                                                )}
-                                                aria-hidden={isCollapsed}
-                                            >
-                                                {item.label}
-                                            </span>
+                                            {!isCollapsed && (
+                                                <span
+                                                    className={cn(
+                                                        'ml-3 block overflow-hidden text-sm tracking-[-0.04em] whitespace-nowrap',
+                                                        isActive
+                                                            ? 'font-semibold text-black'
+                                                            : 'font-medium text-gray-500 group-hover:text-black'
+                                                    )}
+                                                >
+                                                    {item.label}
+                                                </span>
+                                            )}
                                         </Link>
+                                    );
+
+                                    return isCollapsed ? (
+                                        <SidebarTooltip key={item.label} label={item.label}>
+                                            {linkContent}
+                                        </SidebarTooltip>
+                                    ) : (
+                                        linkContent
                                     );
                                 })}
                             </div>
@@ -236,53 +270,57 @@ export function Sidebar() {
             </div>
 
             {/* ── Bottom section ── */}
-            <div className="mt-auto space-y-1 border-t border-[#F1F1F1] pt-6">
-                {BOTTOM_LINKS.map(link => (
-                    <Link
-                        key={link.href}
-                        href={link.href}
-                        title={isCollapsed ? link.label : undefined}
-                        className={cn(
-                            'group flex items-center px-4 py-2.5 rounded-xl',
-                            'transition-colors duration-200 hover:bg-gray-50',
-                            pathname === link.href ? 'bg-gray-100 text-black' : 'text-gray-500'
-                        )}
-                    >
-                        <link.icon
+            <div className={cn('mt-auto space-y-1 border-t border-[#F1F1F1] pt-6')}>
+                {BOTTOM_LINKS.map(link => {
+                    const linkContent = (
+                        <Link
+                            key={link.href}
+                            href={link.href}
                             className={cn(
-                                'h-[22px] w-[22px] shrink-0 transition-colors duration-200',
-                                pathname === link.href
-                                    ? 'text-black'
-                                    : 'text-gray-400 group-hover:text-black'
+                                'group flex items-center rounded-xl transition-all duration-200 hover:bg-gray-50',
+                                isCollapsed ? 'justify-center p-2.5' : 'px-4 py-2.5',
+                                pathname === link.href ? 'bg-gray-100 text-black' : 'text-gray-500'
                             )}
-                            strokeWidth={pathname === link.href ? 2 : 1.5}
-                        />
-                        <span
-                            className={cn(
-                                'block overflow-hidden whitespace-nowrap',
-                                'transition-[max-width,opacity,margin-left] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-                                'text-sm font-medium tracking-[-0.04em]',
-                                pathname === link.href
-                                    ? 'font-semibold text-black'
-                                    : 'text-gray-500 group-hover:text-black',
-                                isCollapsed
-                                    ? 'max-w-0 opacity-0 ml-0'
-                                    : 'max-w-[180px] opacity-100 ml-3'
-                            )}
-                            aria-hidden={isCollapsed}
                         >
-                            {link.label}
-                        </span>
-                    </Link>
-                ))}
+                            <link.icon
+                                className={cn(
+                                    'h-[22px] w-[22px] shrink-0 transition-colors duration-200',
+                                    pathname === link.href
+                                        ? 'text-black'
+                                        : 'text-gray-400 group-hover:text-black'
+                                )}
+                                strokeWidth={pathname === link.href ? 2 : 1.5}
+                            />
+                            {!isCollapsed && (
+                                <span
+                                    className={cn(
+                                        'ml-3 block overflow-hidden text-sm font-medium tracking-[-0.04em] whitespace-nowrap',
+                                        pathname === link.href
+                                            ? 'font-semibold text-black'
+                                            : 'text-gray-500 group-hover:text-black'
+                                    )}
+                                >
+                                    {link.label}
+                                </span>
+                            )}
+                        </Link>
+                    );
+
+                    return isCollapsed ? (
+                        <SidebarTooltip key={link.href} label={link.label}>
+                            {linkContent}
+                        </SidebarTooltip>
+                    ) : (
+                        linkContent
+                    );
+                })}
 
                 {/* Logout */}
                 <button
                     className={cn(
-                        'group flex w-full items-center px-4 py-2.5 rounded-xl text-left',
-                        'transition-colors duration-200 hover:bg-red-50'
+                        'group flex w-full items-center rounded-xl text-left transition-colors duration-200 hover:bg-red-50',
+                        isCollapsed ? 'justify-center p-2.5' : 'px-4 py-2.5'
                     )}
-                    title={isCollapsed ? 'Logout' : undefined}
                     onClick={() => {
                         window.location.href = '/auth/login';
                     }}
@@ -291,28 +329,17 @@ export function Sidebar() {
                         className="h-[22px] w-[22px] shrink-0 text-gray-400 transition-colors duration-200 group-hover:text-red-400"
                         strokeWidth={1.5}
                     />
-                    <span
-                        className={cn(
-                            'block overflow-hidden whitespace-nowrap',
-                            'transition-[max-width,opacity,margin-left] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-                            'text-sm font-medium tracking-[-0.04em] text-gray-500 group-hover:text-red-500',
-                            isCollapsed
-                                ? 'max-w-0 opacity-0 ml-0'
-                                : 'max-w-[180px] opacity-100 ml-3'
-                        )}
-                        aria-hidden={isCollapsed}
-                    >
-                        Logout
-                    </span>
-                    {/* Logout arrow — fades with label */}
-                    <LogOut
-                        className={cn(
-                            'h-[22px] w-[22px] shrink-0 text-red-500',
-                            'transition-[opacity,max-width,margin-left] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-                            isCollapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[22px] opacity-100 ml-auto'
-                        )}
-                        strokeWidth={1.5}
-                    />
+                    {!isCollapsed && (
+                        <>
+                            <span className="ml-3 block overflow-hidden text-sm font-medium tracking-[-0.04em] whitespace-nowrap text-gray-500 group-hover:text-red-500">
+                                Logout
+                            </span>
+                            <LogOut
+                                className="ml-auto h-[22px] w-[22px] shrink-0 text-red-500"
+                                strokeWidth={1.5}
+                            />
+                        </>
+                    )}
                 </button>
             </div>
         </aside>

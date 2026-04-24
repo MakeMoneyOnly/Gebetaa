@@ -18,7 +18,7 @@ function SkipLink() {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="font-inter flex h-screen overflow-hidden bg-white" data-lenis-prevent>
+        <div className="font-inter flex h-full overflow-hidden bg-white" data-lenis-prevent>
             <SkipLink />
 
             <DashboardLayoutClient>

@@ -24,12 +24,11 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             {/* 2. Main Space */}
             <div
                 className={cn(
-                    // Base flex column, fills remaining width, right panel offset
-                    'flex flex-1 flex-col overflow-hidden xl:mr-[380px]',
+                    // Base flex column, fills remaining width
+                    'flex flex-1 flex-col overflow-hidden',
                     // Left margin responds to sidebar width — smooth CSS transition
                     // Exact same curve/duration as sidebar for perfect sync
-                    'transition-[margin-left] duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-                    isCollapsed ? 'md:ml-[72px]' : 'md:ml-[280px]'
+                    'transition-all duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]'
                 )}
             >
                 <MerchantHeader />
@@ -39,9 +38,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                     className="flex-1 overflow-y-auto bg-white transition-all duration-300"
                     tabIndex={-1}
                 >
-                    <div className="w-full px-4 sm:px-6 lg:px-6 pt-2 pb-24 sm:pb-8">
-                        {children}
-                    </div>
+                    <div className="w-full px-4 pt-2 pb-24 sm:px-6 sm:pb-8 lg:px-6">{children}</div>
                 </main>
             </div>
 

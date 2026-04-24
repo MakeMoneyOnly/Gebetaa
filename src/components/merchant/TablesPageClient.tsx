@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePageLoadGuard } from '@/hooks/usePageLoadGuard';
+import { useTableSessionRealtime } from '@/hooks/useTableSessionRealtime';
 import type { TableSummary } from '@/lib/services/dashboardDataService';
 import { submitTableStatusUpdate } from '@/lib/tables/session-adapter';
 
@@ -46,6 +47,28 @@ export function TablesPageClient({ initialData }: TablesPageClientProps) {
             markLoaded();
         }
     }, [initialData, markLoaded]);
+
+    useTableSessionRealtime({
+        restaurantId: restaurantId ?? '',
+        enabled: !!restaurantId,
+        onEvent: event => {
+            setTables(prev =>
+                prev.map(table =>
+                    table.id !== event.tableId
+                        ? table
+                        : {
+                              ...table,
+                              status:
+                                  event.type === 'table.close'
+                                      ? 'available'
+                                      : event.type === 'table.transfer'
+                                        ? 'occupied'
+                                        : 'occupied',
+                          }
+                )
+            );
+        },
+    });
 
     // Refresh data from server
     const refreshData = useCallback(async () => {
