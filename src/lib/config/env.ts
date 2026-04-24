@@ -27,6 +27,10 @@ const envSchema = z.object({
 
     // Database
     DATABASE_URL: z.string().url().optional(),
+    DATABASE_DIRECT_URL: z.string().url().optional(),
+    SUPABASE_POOLER_URL: z.string().url().optional(),
+    SUPABASE_DB_URL: z.string().url().optional(),
+    POWERSYNC_DATABASE_URL: z.string().url().optional(),
 
     // Security
     JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters').optional(),
@@ -81,6 +85,10 @@ const serverEnvSchema = z.object({
     // These should never be exposed to client
     SUPABASE_SECRET_KEY: z.string().optional(),
     DATABASE_URL: z.string().optional(),
+    DATABASE_DIRECT_URL: z.string().optional(),
+    SUPABASE_POOLER_URL: z.string().optional(),
+    SUPABASE_DB_URL: z.string().optional(),
+    POWERSYNC_DATABASE_URL: z.string().optional(),
     JWT_SECRET: z.string().optional(),
     HMAC_SECRET: z.string().optional(),
     CHAPA_SECRET_KEY: z.string().optional(),

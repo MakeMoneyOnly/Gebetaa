@@ -65,6 +65,43 @@ const eslintConfig = defineConfig([
             'no-console': 'off',
         },
     },
+    {
+        files: [
+            'src/app/**/*.{ts,tsx}',
+            'src/components/**/*.{ts,tsx}',
+            'src/features/**/*.{ts,tsx}',
+            'src/hooks/**/*.{ts,tsx}',
+            'src/domains/**/*.{ts,tsx}',
+            'src/lib/**/*.{ts,tsx}',
+        ],
+        ignores: ['src/lib/db/**/*.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: [
+                        {
+                            name: '@/lib/db/admin',
+                            message:
+                                'Direct database lane is infra-only. Request/runtime code must use app-safe pooler lane.',
+                        },
+                        {
+                            name: '@/lib/db/admin.ts',
+                            message:
+                                'Direct database lane is infra-only. Request/runtime code must use app-safe pooler lane.',
+                        },
+                    ],
+                    patterns: [
+                        {
+                            group: ['**/lib/db/admin', '**/lib/db/admin.ts'],
+                            message:
+                                'Direct database lane is infra-only. Request/runtime code must not import admin lane.',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
 ]);
 
 export default eslintConfig;

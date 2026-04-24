@@ -55,8 +55,7 @@ export function OfflineIndicator({
     return (
         <div
             className={cn(
-                'fixed right-0 left-0 z-[9999] flex items-center justify-center gap-3 px-4 py-2 transition-all duration-300',
-                position === 'top' ? 'top-0' : 'bottom-0',
+                'relative flex items-center justify-center gap-3 px-4 py-2 transition-all duration-300',
                 mode.tone,
                 className
             )}

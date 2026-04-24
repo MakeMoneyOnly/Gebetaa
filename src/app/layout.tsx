@@ -33,40 +33,42 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en" suppressHydrationWarning className="overflow-x-clip">
             <body
-                className={`${inter.variable} ${manrope.variable} font-inter text-brand-ink bg-brand-canvas overflow-x-clip overscroll-none antialiased`}
+                className={`${inter.variable} ${manrope.variable} font-inter text-brand-ink bg-brand-canvas flex h-screen flex-col overflow-hidden antialiased`}
             >
                 <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
                     <ServiceWorkerCleanup />
                     <SkipLink href="#main-content">Skip to main content</SkipLink>
                     <PowerSyncProvider>
                         <OfflineIndicator position="top" showSyncStatus={true} />
-                        <LenisRoot>
-                            <QueryProvider>
-                                <div className="fixed top-6 right-6 z-50 hidden md:flex">
-                                    {/* Theme Switcher Logic */}
-                                </div>
-                                <div className="pointer-events-none fixed inset-0 z-9999 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
-                                <main id="main-content" tabIndex={-1}>
-                                    {children}
-                                </main>
-                                <Toaster
-                                    position="top-center"
-                                    toastOptions={{
-                                        style: {
-                                            background: '#333',
-                                            color: '#fff',
-                                            borderRadius: '9999px',
-                                        },
-                                        success: {
-                                            iconTheme: {
-                                                primary: '#22c55e',
-                                                secondary: '#fff',
+                        <div className="relative flex-1 overflow-hidden">
+                            <LenisRoot>
+                                <QueryProvider>
+                                    <div className="fixed top-6 right-6 z-50 hidden md:flex">
+                                        {/* Theme Switcher Logic */}
+                                    </div>
+                                    <div className="pointer-events-none fixed inset-0 z-9999 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                                    <main id="main-content" className="h-full" tabIndex={-1}>
+                                        {children}
+                                    </main>
+                                    <Toaster
+                                        position="top-center"
+                                        toastOptions={{
+                                            style: {
+                                                background: '#333',
+                                                color: '#fff',
+                                                borderRadius: '9999px',
                                             },
-                                        },
-                                    }}
-                                />
-                            </QueryProvider>
-                        </LenisRoot>
+                                            success: {
+                                                iconTheme: {
+                                                    primary: '#22c55e',
+                                                    secondary: '#fff',
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </QueryProvider>
+                            </LenisRoot>
+                        </div>
                     </PowerSyncProvider>
                 </ThemeProvider>
             </body>
