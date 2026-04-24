@@ -286,7 +286,7 @@ export function MenuGridEditor({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <button
                     onClick={() => onAddItem(category)}
-                    className="group flex h-[280px] w-full flex-col items-center justify-center gap-4 rounded-[2rem] bg-gray-50 shadow-sm transition-all hover:bg-gray-100"
+                    className="group flex h-[340px] w-full flex-col items-center justify-center gap-4 rounded-4xl border-b border-gray-100 bg-gray-50 shadow-sm transition-all hover:bg-white hover:shadow-md"
                 >
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-110">
                         <Plus className="h-5 w-5 text-gray-400 group-hover:text-black" />
@@ -301,7 +301,7 @@ export function MenuGridEditor({
                     return (
                         <div
                             key={item.id}
-                            className="group relative flex min-h-72 flex-col gap-4 overflow-hidden rounded-[2rem] bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-lg"
+                            className="group relative flex h-[340px] flex-col gap-4 overflow-hidden rounded-4xl border-b border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md"
                         >
                             {isSelectionMode && (
                                 <label className="absolute top-3 right-3 z-10 cursor-pointer rounded-lg bg-white/90 px-2 py-1 text-xs font-semibold text-gray-700 shadow-sm">
@@ -332,10 +332,10 @@ export function MenuGridEditor({
                                 <div className="absolute top-3 left-3">
                                     <span
                                         className={cn(
-                                            'rounded-lg px-2 py-1 text-[10px] font-bold tracking-wide uppercase backdrop-blur-md',
+                                            'rounded-full px-2 py-1 text-[10px] font-bold',
                                             (item.is_available ?? true)
-                                                ? 'bg-white/90 text-green-700'
-                                                : 'bg-black/80 text-white'
+                                                ? 'bg-green-50 text-green-600'
+                                                : 'bg-gray-100 text-gray-600'
                                         )}
                                     >
                                         {(item.is_available ?? true) ? 'In Stock' : 'Sold Out'}
@@ -358,12 +358,12 @@ export function MenuGridEditor({
                                             {item.description || 'No description provided.'}
                                         </p>
                                     </div>
-                                    <div className="mt-auto flex items-center gap-2">
+                                    <div className="mt-auto flex items-center justify-between gap-2 px-1">
                                         <button
                                             type="button"
                                             onClick={() => startInlineEdit(item)}
                                             disabled={readOnly || isSelectionMode}
-                                            className="inline-flex h-9 items-center gap-1 rounded-xl bg-white px-3 text-xs font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
+                                            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-white border border-gray-100 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 hover:text-black disabled:opacity-50"
                                         >
                                             <Edit2 className="h-3.5 w-3.5" />
                                             Inline Edit
@@ -372,7 +372,7 @@ export function MenuGridEditor({
                                             type="button"
                                             onClick={() => onOpenAdvancedEdit(category, item)}
                                             disabled={isSelectionMode}
-                                            className="h-9 rounded-xl bg-white px-3 text-xs font-semibold text-gray-700 shadow-sm transition-shadow hover:shadow-md disabled:opacity-50"
+                                            className="h-9 flex-1 rounded-2xl bg-white border border-gray-100 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 hover:text-black disabled:opacity-50"
                                         >
                                             Advanced
                                         </button>
@@ -522,7 +522,7 @@ export function MenuGridEditor({
                         </div>
 
                         <div className="rounded-xl bg-gray-50 p-3 shadow-inner">
-                            <div className="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                            <div className="mb-2 text-xs font-semibold text-gray-500">
                                 Preview
                             </div>
                             <div className="max-h-44 space-y-1 overflow-y-auto">
