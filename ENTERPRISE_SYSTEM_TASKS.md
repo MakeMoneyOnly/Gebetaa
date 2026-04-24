@@ -57,15 +57,21 @@ It is organized to help us:
 
 ## Audit Refresh
 
-Status refresh: `2026-04-21`
+Status refresh: `2026-04-24`
 
 Validated as complete:
 
-- `ENT-001`, `ENT-002`, `ENT-003`, `ENT-004`, `ENT-005`, `ENT-006`, `ENT-007`, `ENT-008`, `ENT-009`, `ENT-010`, `ENT-011`, `ENT-012`, `ENT-013`, `ENT-046`, `ENT-047`
+- `ENT-001`, `ENT-002`, `ENT-003`, `ENT-004`, `ENT-005`, `ENT-006`, `ENT-007`, `ENT-008`, `ENT-009`, `ENT-010`, `ENT-011`, `ENT-012`, `ENT-013`, `ENT-046`, `ENT-047`, `ENT-068`
 
 Downgraded after implementation audit:
 
 - none currently in this slice
+
+Active blockers discovered after integration attempt:
+
+- [!] `ENT-018` PowerSync cloud bridge is not end-to-end operational in the current dev environment yet.
+  Current state: client bootstrap/config path is implemented and observable, but Supabase manual logical replication for PowerSync is not live yet. The `powersync` publication and direct replication path still need to be established outside the app before end-to-end sync can be validated.
+  Source of truth: `docs/01-foundation/powersync-supabase-dev-status.md`
 
 ## Immediate Priority Queue
 
@@ -116,33 +122,40 @@ These are the first tasks to start because other work depends on them.
 - [x] `ENT-013` Replace direct client `fetch('/api/...')` orchestration in core flows with domain commands routed locally first.
       Definition of done: the main in-store flows can execute against a local adapter rather than a cloud adapter.
 
-- [ ] `ENT-014` Standardize domain event contracts for orders, course fire, KDS state, print intents, fiscal intents, and audit intents.
+- [x] `ENT-014` Standardize domain event contracts for orders, course fire, KDS state, print intents, fiscal intents, and audit intents.
       Definition of done: contracts are versioned and shared by client, gateway, and cloud sync code.
+      Source of truth: `src/lib/domain/core/events.ts`
 
 ### 1.4 Local Persistence and Sync Foundation
 
 - [x] `ENT-005` Audit and repair the current PowerSync bootstrap/config path.
       Definition of done: the app can initialize local persistence reliably with correct client-safe credentials and observable error states.
 
-- [ ] `ENT-015` Define the canonical local database schema for store operations.
+- [x] `ENT-015` Define the canonical local database schema for store operations.
       Definition of done: local schema includes orders, items, KDS state, printer jobs, fiscal jobs, audit log, sync journal, and conflict records.
+      Source of truth: `src/lib/sync/powersync-config.ts`, `docs/01-foundation/canonical-local-schema.md`
 
-- [ ] `ENT-016` Introduce a journal-first write path for in-store mutations.
+- [x] `ENT-016` Introduce a journal-first write path for in-store mutations.
       Definition of done: user success is not shown until the local journal append succeeds.
+      Source of truth: `src/lib/sync/orderSync.ts`, `src/lib/sync/tableSessionSync.ts`, `src/lib/sync/kdsSync.ts`, `src/lib/sync/printerFallback.ts`, `src/lib/fiscal/offline-queue.ts`
 
-- [ ] `ENT-017` Replace deprecated localStorage/Dexie fallback paths with one supported local data stack.
+- [x] `ENT-017` Replace deprecated localStorage/Dexie fallback paths with one supported local data stack.
       Definition of done: deprecated offline queues are removed or fully isolated behind compatibility adapters scheduled for removal.
+      Source of truth: `src/lib/kds/syncAdapter.ts`, `src/features/kds/components/StationBoard.tsx`
 
-- [ ] `ENT-018` Add reconnect and replay orchestration from local journal to cloud sync bridge.
-      Definition of done: replay is idempotent, observable, and can survive process restart.
+- [!] `ENT-018` Add reconnect and replay orchestration from local journal to cloud sync bridge.
+  Definition of done: replay is idempotent, observable, and can survive process restart.
+  Current blocker: direct logical replication and `powersync` publication are not live in current dev environment, so final end-to-end validation is deferred.
 
 ### 1.5 Foundation Validation
 
-- [ ] `ENT-019` Build a WAN-disconnected integration test harness for a single-store setup.
+- [x] `ENT-019` Build a WAN-disconnected integration test harness for a single-store setup.
       Definition of done: we can simulate fiber cut and verify local order create/update flows still work.
+      Source of truth: `src/lib/sync/__tests__/helpers/storeRuntimeHarness.ts`, `src/lib/sync/__tests__/store-runtime-harness.test.ts`
 
-- [ ] `ENT-020` Add chaos cases for gateway restart, client restart, and delayed reconnect.
+- [x] `ENT-020` Add chaos cases for gateway restart, client restart, and delayed reconnect.
       Definition of done: the harness verifies no data loss across these failures.
+      Source of truth: `src/lib/sync/__tests__/store-runtime-harness.test.ts`, `docs/01-foundation/wan-chaos-harness.md`
 
 ## Phase 2: Operational Resiliency
 
@@ -170,26 +183,33 @@ These are the first tasks to start because other work depends on them.
 
 ### 2.3 Payments and Settlement Resiliency
 
-- [ ] `ENT-068` Define the canonical local payment ledger schema with cloud parity.
+- [x] `ENT-068` Define the canonical local payment ledger schema with cloud parity.
       Definition of done: local `payment_sessions`, `payments`, `payment_events`, reconciliation records, and settlement metadata exist with parity to the cloud ledger where required.
+      Source of truth: `src/lib/sync/powersync-config.ts`, `src/lib/payments/local-ledger.ts`, `docs/01-foundation/canonical-local-schema.md`
 
-- [ ] `ENT-069` Introduce journal-first payment command and event flows.
+- [x] `ENT-069` Introduce journal-first payment command and event flows.
       Definition of done: payment session open, capture record, verification outcome, refund, and reconciliation actions append durable local journal records before user success is shown.
+      Source of truth: `src/lib/payments/local-ledger.ts`, `src/lib/payments/local-ledger.test.ts`
 
-- [ ] `ENT-070` Implement full offline settlement for cash and manual payment methods.
+- [x] `ENT-070` Implement full offline settlement for cash and manual payment methods.
       Definition of done: cash and approved manual settlement methods can complete table settlement offline with durable local ledger writes, receipts, audit records, and later replay.
+      Source of truth: `src/lib/terminal/settlement-adapter.ts`, `src/lib/terminal/__tests__/settlement-adapter.test.ts`
 
-- [ ] `ENT-071` Implement deferred-verification payment mode for Chapa and other online processors.
+- [x] `ENT-071` Implement deferred-verification payment mode for Chapa and other online processors.
       Definition of done: the system can record offline payment intent and local operational settlement state without falsely marking processor-backed money as verified before upstream confirmation.
+      Source of truth: `src/lib/payments/local-ledger.ts`, `src/lib/terminal/read-adapter.ts`, `src/lib/terminal/__tests__/read-adapter.test.ts`
 
-- [ ] `ENT-072` Build a payment reconciliation worker for reconnect and upstream replay.
+- [x] `ENT-072` Build a payment reconciliation worker for reconnect and upstream replay.
       Definition of done: local payment ledger entries replay idempotently, reconcile against upstream provider/cloud state, and surface matched, rejected, duplicate, and manual-review outcomes.
+      Source of truth: `src/lib/payments/local-ledger.ts`, `src/lib/payments/local-ledger.test.ts`
 
-- [ ] `ENT-073` Add full payment ledger parity for split, partial, and table-close settlement flows.
+- [x] `ENT-073` Add full payment ledger parity for split, partial, and table-close settlement flows.
       Definition of done: split checks, partial captures, remaining balances, and table-close settlement all operate from the same local ledger model and converge correctly after reconnect.
+      Source of truth: `src/lib/payments/local-ledger.ts`, `src/lib/terminal/read-adapter.ts`, `src/lib/terminal/settlement-adapter.ts`
 
-- [ ] `ENT-074` Add operator-visible payment state labels for local capture, pending verification, verified, failed, and review-required outcomes.
+- [x] `ENT-074` Add operator-visible payment state labels for local capture, pending verification, verified, failed, and review-required outcomes.
       Definition of done: terminals, cashier views, and audit/support tooling make payment truth explicit during and after outages.
+      Source of truth: `src/app/(terminal)/terminal/page.tsx`, `src/lib/terminal/read-adapter.ts`, `src/lib/payments/local-ledger.ts`
 
 ### 2.4 Print and Peripheral Reliability
 

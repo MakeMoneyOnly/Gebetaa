@@ -69,6 +69,8 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 HMAC_SECRET_KEY=your_hmac_secret
+DATABASE_URL=postgresql://...pooler...              # app-safe default lane
+DATABASE_DIRECT_URL=postgresql://...direct...      # infra-only lane
 
 # Optional (payments)
 CHAPA_SECRET_KEY=your_chapa_secret
@@ -77,6 +79,13 @@ CHAPA_PUBLIC_KEY=your_chapa_public_key
 # Optional (production)
 REDIS_URL=your_redis_url
 ```
+
+### Database Lanes
+
+- `DATABASE_URL` is the app-safe pooler lane. Use it for request or compute traffic.
+- `DATABASE_DIRECT_URL` is the infra-only direct lane. Use it for migrations, CI, admin scripts, and PowerSync replication.
+- Supabase JS clients in this repo keep using `NEXT_PUBLIC_SUPABASE_URL` + publishable/service keys, so most app code does not touch raw Postgres URLs.
+- PowerSync client bootstrap is wired, but end-to-end Supabase replication is still blocked in current dev environment until direct logical replication and `powersync` publication are live. See [docs/01-foundation/powersync-supabase-dev-status.md](docs/01-foundation/powersync-supabase-dev-status.md).
 
 ---
 
