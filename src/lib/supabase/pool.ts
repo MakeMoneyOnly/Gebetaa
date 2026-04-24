@@ -10,13 +10,14 @@
  * - session: Connections persist for the full client session (use only if you need session features)
  *
  * Environment Variables:
- * - NEXT_PUBLIC_SUPABASE_POOLER_ENABLED: Enable/disable pooling
+ * - DATABASE_URL: App-safe pooler URL
+ * - DATABASE_DIRECT_URL: Infra-only direct URL
  * - SUPABASE_POOL_MODE: transaction or session
  * - SUPABASE_POOL_SIZE: Connections per instance
  * - SUPABASE_POOL_MAX_CLIENTS: Max clients in pool
  * - SUPABASE_POOL_CONNECTION_TIMEOUT: Connection timeout in seconds
  * - SUPABASE_POOL_IDLE_TIMEOUT: Idle timeout in seconds
- * - SUPABASE_POOLER_URL: Direct pooler connection string
+ * - SUPABASE_POOLER_URL: Optional alias of DATABASE_URL
  */
 
 export interface PoolConfig {
@@ -33,7 +34,7 @@ export interface PoolConfig {
  * Get connection pool configuration from environment
  */
 export function getPoolConfig(): PoolConfig {
-    const enabled = process.env.NEXT_PUBLIC_SUPABASE_POOLER_ENABLED === 'true';
+    const enabled = Boolean(process.env.DATABASE_URL || process.env.SUPABASE_POOLER_URL);
     const mode = (process.env.SUPABASE_POOL_MODE as 'transaction' | 'session') || 'transaction';
     const poolSize = parseInt(process.env.SUPABASE_POOL_SIZE || '10', 10);
     const maxClients = parseInt(process.env.SUPABASE_POOL_MAX_CLIENTS || '20', 10);
@@ -53,10 +54,10 @@ export function getPoolConfig(): PoolConfig {
 }
 
 /**
- * Check if connection pooling is enabled
+ * Check if connection pooling lane is configured
  */
 export function isPoolEnabled(): boolean {
-    return process.env.NEXT_PUBLIC_SUPABASE_POOLER_ENABLED === 'true';
+    return Boolean(process.env.DATABASE_URL || process.env.SUPABASE_POOLER_URL);
 }
 
 /**
@@ -65,11 +66,15 @@ export function isPoolEnabled(): boolean {
  */
 export function getPoolerUrl(): string | undefined {
     const config = getPoolConfig();
+    if (process.env.DATABASE_URL) {
+        return process.env.DATABASE_URL;
+    }
+
     if (config.poolerUrl) {
         return config.poolerUrl;
     }
 
-    // If pooler URL not set but pooling is enabled, construct from project URL
+    // If explicit pooler URL is not set, construct from project URL as a fallback.
     const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (projectUrl && config.enabled) {
         // Extract project ref from URL: https://xxx.supabase.co -> xxx
@@ -88,7 +93,7 @@ export function getPoolerUrl(): string | undefined {
  * Default pool configuration for reference
  */
 export const DEFAULT_POOL_CONFIG: PoolConfig = {
-    enabled: false,
+    enabled: true,
     mode: 'transaction',
     poolSize: 10,
     maxClients: 20,

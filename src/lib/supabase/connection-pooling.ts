@@ -39,9 +39,7 @@ export interface ConnectionPoolConfig {
      */
     poolMode: 'transaction' | 'session';
 
-    /**
-     * Whether to use Supabase's built-in connection pooling (PgBouncer)
-     */
+    /** Whether app traffic is using the dedicated pooler lane. */
     useSupabasePooler: boolean;
 }
 
@@ -84,40 +82,43 @@ export function getConnectionPoolConfig(): ConnectionPoolConfig {
 }
 
 /**
- * Get the Supabase connection URL with pooling enabled
- *
- * Supabase provides connection pooling through PgBouncer on port 6543
- * For transaction mode: use port 6543
- * For session mode: use port 6543 with prepare statements disabled
- *
- * @param mode - The pooling mode to use
- * @returns The connection URL with pooling enabled
+ * Get the app-safe pooler URL.
+ * App traffic should never switch to direct connections at runtime.
  */
 export function getPooledConnectionUrl(_mode: 'transaction' | 'session' = 'transaction'): string {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-    if (!supabaseUrl) {
-        throw new Error('NEXT_PUBLIC_SUPABASE_URL is not configured');
+    const poolerUrl = process.env.DATABASE_URL ?? process.env.SUPABASE_POOLER_URL;
+    if (!poolerUrl) {
+        throw new Error('DATABASE_URL is not configured with the Supabase pooler URL');
     }
 
-    // Parse the Supabase URL to get the project reference
-    const url = new URL(supabaseUrl);
-    const projectRef = url.hostname.split('.')[0];
-
-    // Use the pooler URL (port 6543 for transaction mode)
-    // Format: postgres://[user]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
-    const poolerHost = `aws-0-${process.env.SUPABASE_REGION || 'eu-central-1'}.pooler.supabase.com`;
-
-    // For direct connection (bypass pooler), use the standard URL
-    const usePooler = process.env.SUPABASE_USE_POOLER !== 'false';
-
-    if (usePooler) {
-        // Return pooler URL
-        return `postgres://postgres.${projectRef}:${process.env.SUPABASE_DB_PASSWORD}@${poolerHost}:6543/postgres`;
+    if (poolerUrl.includes('@db.') || poolerUrl.includes('.supabase.co:5432')) {
+        throw new Error(
+            'DATABASE_URL must point to the Supabase pooler, not the direct database host'
+        );
     }
 
-    // Return direct connection URL
-    return supabaseUrl;
+    return poolerUrl;
+}
+
+/**
+ * Get the infra-only direct Postgres URL.
+ * Reserved for migrations, CI, admin scripts, and PowerSync replication.
+ */
+export function getDirectConnectionUrl(): string {
+    const directUrl = process.env.DATABASE_DIRECT_URL ?? process.env.SUPABASE_DB_URL;
+    if (!directUrl) {
+        throw new Error(
+            'DATABASE_DIRECT_URL is not configured with the direct Supabase Postgres URL'
+        );
+    }
+
+    if (directUrl.includes('.pooler.supabase.com:6543') || directUrl.includes('@pooler.')) {
+        throw new Error(
+            'DATABASE_DIRECT_URL must point to the direct database host, not the Supabase pooler'
+        );
+    }
+
+    return directUrl;
 }
 
 /**
@@ -183,14 +184,14 @@ export function getSupabasePoolerConfig(): SupabasePoolerConfig {
  *
  * Required environment variables:
  *
- * - NEXT_PUBLIC_SUPABASE_URL: Your Supabase project URL
- * - SUPABASE_SECRET_KEY: Service role key for admin operations
- * - SUPABASE_DB_PASSWORD: Database password for direct connections
+ * - DATABASE_URL: Supabase pooler URL for app-safe SQL traffic
+ * - DATABASE_DIRECT_URL: Direct Postgres URL for infra-only capabilities
  *
  * Optional environment variables:
  *
- * - SUPABASE_USE_POOLER: Set to 'false' to disable pooler (default: true)
- * - SUPABASE_REGION: AWS region for pooler endpoint (default: 'eu-central-1')
+ * - SUPABASE_POOLER_URL: Alias of DATABASE_URL
+ * - SUPABASE_DB_URL: Alias of DATABASE_DIRECT_URL
+ * - SUPABASE_REGION: AWS region for legacy pooler endpoint construction
  *
  * Supabase Connection Pooling Setup:
  *
@@ -200,8 +201,8 @@ export function getSupabasePoolerConfig(): SupabasePoolerConfig {
  *    - Choose "Transaction" mode for serverless
  *
  * 2. Configure environment variables:
- *    SUPABASE_USE_POOLER=true
- *    SUPABASE_REGION=eu-central-1
+ *    DATABASE_URL=postgresql://...pooler...:6543/postgres
+ *    DATABASE_DIRECT_URL=postgresql://...db...:5432/postgres
  *
  * 3. For production, ensure these settings in Supabase:
  *    - Pool Size: 15-20 (adjust based on your plan)
@@ -210,7 +211,8 @@ export function getSupabasePoolerConfig(): SupabasePoolerConfig {
  * Best Practices:
  *
  * - Use transaction mode for serverless functions (Vercel, Netlify)
- * - Use session mode for long-running servers
+ * - Use session mode for long-running app workers when needed
+ * - Reserve direct connection for migrations, CI, admin scripts, and PowerSync replication
  * - Monitor connection count with pg_stat_activity
  * - Set appropriate timeouts to prevent connection leaks
  * - Use prepared statements only in session mode
@@ -219,6 +221,7 @@ export function getSupabasePoolerConfig(): SupabasePoolerConfig {
 const connectionPoolingExports = {
     getConnectionPoolConfig,
     getPooledConnectionUrl,
+    getDirectConnectionUrl,
     checkPoolHealth,
     getSupabasePoolerConfig,
     SERVERLESS_POOL_CONFIG,
