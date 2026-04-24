@@ -18,20 +18,20 @@ export function LaborTab() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             {/* Labor Summary */}
-            <div>
-                <div className="mb-6 flex items-center justify-between">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <Clock className="h-5 w-5" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-bold text-gray-900">Labor Summary</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Labor Summary</h3>
                             <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {[
                         [
                             {
@@ -69,13 +69,13 @@ export function LaborTab() {
                     ].map((pair, i) => (
                         <div
                             key={i}
-                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-white"
+                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-gray-50/30"
                         >
                             <div className="flex flex-1">
                                 {pair.map((metric, j) => (
                                     <div
                                         key={j}
-                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-50' : ''}`}
+                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-100' : ''}`}
                                     >
                                         <div>
                                             <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
@@ -139,15 +139,15 @@ export function LaborTab() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex border-t border-gray-50">
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                            <div className="flex border-t border-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
                                         className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                     />
                                 </button>
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
@@ -161,7 +161,7 @@ export function LaborTab() {
             </div>
 
             {/* Time Entries Table */}
-            <div className="rounded-4xl bg-white p-8">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -194,9 +194,9 @@ export function LaborTab() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-gray-100">
+                <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-gray-50/30">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-xs font-bold text-gray-400">
+                        <thead className="bg-gray-50/50 text-xs font-bold text-gray-400">
                             <tr>
                                 <th className="px-4 py-3">Employee</th>
                                 <th className="px-4 py-3">Job</th>
@@ -206,7 +206,7 @@ export function LaborTab() {
                                 <th className="px-4 py-3">Wage (ETB)</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50 text-sm font-semibold text-gray-900">
+                        <tbody className="divide-y divide-gray-100 text-sm font-semibold text-gray-900">
                             {[
                                 {
                                     emp: 'Almaz T.',
@@ -225,7 +225,7 @@ export function LaborTab() {
                                     wage: '600.00',
                                 },
                             ].map((row, i) => (
-                                <tr key={i} className="hover:bg-gray-50/30">
+                                <tr key={i} className="hover:bg-gray-100/30">
                                     <td className="px-4 py-3">{row.emp}</td>
                                     <td className="px-4 py-3">{row.job}</td>
                                     <td className="px-4 py-3">{row.in}</td>
@@ -241,7 +241,7 @@ export function LaborTab() {
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Overtime Alerts */}
-                <div className="rounded-4xl border border-red-100 bg-white p-8">
+                <div className="rounded-4xl bg-white p-8 shadow-sm">
                     <div className="mb-6 flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-500">
                             <AlertTriangle className="h-5 w-5" />
@@ -270,7 +270,7 @@ export function LaborTab() {
                 </div>
 
                 {/* Tip Summary */}
-                <div className="flex min-h-[280px] flex-col rounded-3xl bg-white">
+                <div className="flex min-h-[280px] flex-col rounded-4xl bg-white shadow-sm">
                     <div className="flex-1 p-8">
                         <div className="mb-6 flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -292,13 +292,13 @@ export function LaborTab() {
                         </div>
 
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between py-2">
+                            <div className="flex items-center justify-between rounded-xl bg-gray-50/30 p-3">
                                 <span className="text-sm font-semibold text-gray-900">
                                     Almaz T.
                                 </span>
                                 <span className="text-sm font-bold text-gray-500">1,200 ETB</span>
                             </div>
-                            <div className="flex items-center justify-between py-2">
+                            <div className="flex items-center justify-between rounded-xl bg-gray-50/30 p-3">
                                 <span className="text-sm font-semibold text-gray-900">
                                     Tip Pool (BOH)
                                 </span>
@@ -307,7 +307,7 @@ export function LaborTab() {
                         </div>
                     </div>
                     <div className="flex border-t border-gray-50">
-                        <button className="group flex flex-1 items-center justify-center gap-2 rounded-b-3xl bg-gray-100/50 py-4 text-xs font-bold text-gray-900 transition-all">
+                        <button className="group flex flex-1 items-center justify-center gap-2 rounded-b-3xl bg-gray-50/30 py-4 text-xs font-bold text-gray-900 transition-all">
                             See details{' '}
                             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                         </button>

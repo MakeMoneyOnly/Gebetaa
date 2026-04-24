@@ -8,13 +8,13 @@ export function CashManagementTab() {
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Cash Drawer Summary */}
-                <div className="rounded-4xl border border-gray-100 bg-white p-8">
-                    <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-4xl bg-white p-8 shadow-sm">
+                    <div className="mb-8 flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <Wallet className="h-5 w-5" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-bold text-gray-900">Cash Drawer Summary</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Cash Drawer Summary</h3>
                             <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
                         </div>
                     </div>
@@ -47,7 +47,7 @@ export function CashManagementTab() {
                 </div>
 
                 {/* Payout Report */}
-                <div className="flex flex-col rounded-4xl border border-gray-100 bg-white p-8">
+                <div className="flex flex-col rounded-4xl bg-white p-8 shadow-sm">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -85,14 +85,15 @@ export function CashManagementTab() {
             </div>
 
             {/* Z-Report (End-of-Day) */}
-            <div>
-                <div className="mb-6 flex items-center justify-between">
+            {/* Z-Report Section */}
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <FileText className="h-5 w-5" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-bold text-gray-900">
+                            <h3 className="text-xl font-bold text-gray-900">
                                 Z-Report (End-of-Day)
                             </h3>
                             <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
@@ -105,7 +106,7 @@ export function CashManagementTab() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <div className="rounded-3xl border border-gray-100 bg-white p-6 transition-all">
+                    <div className="rounded-3xl border border-gray-100 bg-gray-50/30 p-6 transition-all">
                         <h4 className="mb-4 text-sm font-bold text-gray-400">
                             Net Sales By Method
                         </h4>
@@ -124,7 +125,7 @@ export function CashManagementTab() {
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-3xl border border-gray-100 bg-white p-6 transition-all">
+                    <div className="rounded-3xl border border-gray-100 bg-gray-50/30 p-6 transition-all">
                         <h4 className="mb-4 text-sm font-bold text-gray-400">Tax Breakdown</h4>
                         <div className="space-y-3 text-sm leading-tight font-semibold text-gray-900">
                             <div className="flex justify-between py-1 transition-colors">
@@ -141,7 +142,7 @@ export function CashManagementTab() {
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-3xl border border-gray-100 bg-white p-6 transition-all">
+                    <div className="rounded-3xl border border-gray-100 bg-gray-50/30 p-6 transition-all">
                         <h4 className="mb-4 text-sm font-bold text-gray-400">Exceptions</h4>
                         <div className="space-y-3 text-sm leading-tight font-semibold text-gray-900">
                             <div className="flex justify-between py-1 transition-colors">

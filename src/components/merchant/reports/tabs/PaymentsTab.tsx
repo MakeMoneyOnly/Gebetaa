@@ -18,14 +18,14 @@ export function PaymentsTab() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             {/* Payment Method Breakdown */}
-            <div>
-                <div className="mb-6 flex items-center justify-between">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <PieChart className="h-5 w-5" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-bold text-gray-900">Payment Breakdown</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Payment Breakdown</h3>
                             <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
                         </div>
                     </div>
@@ -40,7 +40,7 @@ export function PaymentsTab() {
                     </div>
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {[
                         [
                             {
@@ -81,13 +81,13 @@ export function PaymentsTab() {
                     ].map((pair, i) => (
                         <div
                             key={i}
-                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-white"
+                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-gray-50/30"
                         >
                             <div className="flex flex-1">
                                 {pair.map((metric, j) => (
                                     <div
                                         key={j}
-                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-50' : ''}`}
+                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-100' : ''}`}
                                     >
                                         <div>
                                             <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
@@ -144,15 +144,15 @@ export function PaymentsTab() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex border-t border-gray-50">
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
+                            <div className="flex border-t border-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
                                         className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                     />
                                 </button>
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
@@ -166,7 +166,7 @@ export function PaymentsTab() {
             </div>
 
             {/* Transaction Detail */}
-            <div className="rounded-4xl bg-white p-8">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">

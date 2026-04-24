@@ -92,14 +92,14 @@ export function SalesTab() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             {/* Summary Report */}
-            <div>
-                <div className="mb-6 flex items-center justify-between">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <TrendingUp className="h-5 w-5" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-bold text-gray-900">Summary Report</h3>
+                            <h3 className="text-xl font-bold text-gray-900">Summary Report</h3>
                             <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors hover:text-gray-900" />
                         </div>
                     </div>
@@ -182,13 +182,13 @@ export function SalesTab() {
                     ].map((pair, i) => (
                         <div
                             key={i}
-                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-white"
+                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-gray-50/30"
                         >
                             <div className="flex flex-1">
                                 {pair.map((metric, j) => (
                                     <div
                                         key={j}
-                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-50' : ''}`}
+                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-100' : ''}`}
                                     >
                                         <div>
                                             <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
@@ -268,15 +268,15 @@ export function SalesTab() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex border-t border-gray-50">
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
+                            <div className="flex border-t border-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
                                         className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                     />
                                 </button>
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
@@ -290,7 +290,7 @@ export function SalesTab() {
             </div>
 
             {/* Itemized Sales */}
-            <div className="rounded-4xl border border-gray-100 bg-white p-8">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -468,7 +468,7 @@ export function SalesTab() {
             {/* Other Sections Row */}
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Hourly Sales */}
-                <div className="group rounded-4xl bg-white p-8">
+                <div className="group rounded-4xl bg-white p-8 shadow-sm">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -560,7 +560,7 @@ export function SalesTab() {
                 </div>
 
                 {/* Product Mix */}
-                <div className="rounded-4xl bg-white p-8">
+                <div className="rounded-4xl bg-white p-8 shadow-sm">
                     <div className="mb-6 flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <PieChart className="h-5 w-5" />
@@ -603,8 +603,8 @@ export function SalesTab() {
                     </div>
                 </div>
 
-                {/* Discounts Report */}
-                <div className="rounded-4xl bg-white p-8">
+                {/* Discounts */}
+                <div className="flex flex-col rounded-4xl bg-white p-8 shadow-sm">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -619,16 +619,16 @@ export function SalesTab() {
                             <ModernSelect options={[{ value: 'all', label: 'All Types' }]} />
                         </div>
                     </div>
-                    <div className="overflow-hidden rounded-2xl border border-gray-100">
+                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/30">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                            <thead className="bg-gray-50/50 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                                 <tr>
                                     <th className="px-5 py-3">Discount Type</th>
                                     <th className="px-5 py-3">Usage</th>
                                     <th className="px-5 py-3 text-right">Amount</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50 text-sm font-semibold text-gray-900">
+                            <tbody className="divide-y divide-gray-100 text-sm font-semibold text-gray-900">
                                 <tr className="hover:bg-gray-50/50">
                                     <td className="px-5 py-4">Staff Meal (100%)</td>
                                     <td className="px-5 py-4 text-gray-500">12 Applied</td>
@@ -644,8 +644,8 @@ export function SalesTab() {
                     </div>
                 </div>
 
-                {/* Voids Report */}
-                <div className="rounded-4xl bg-white p-8">
+                {/* Voids */}
+                <div className="flex flex-col rounded-4xl bg-white p-8 shadow-sm">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -685,17 +685,17 @@ export function SalesTab() {
             </div>
 
             {/* Order Source Report */}
-            <div>
-                <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="mb-8 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                         <Store className="h-5 w-5" />
                     </div>
                     <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-gray-900">Order Source Report</h3>
+                        <h3 className="text-xl font-bold text-gray-900">Order Source Report</h3>
                         <Info className="h-4 w-4 cursor-pointer text-gray-400 transition-colors" />
                     </div>
                 </div>
-                <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {[
                         [
                             {
@@ -732,13 +732,13 @@ export function SalesTab() {
                     ].map((pair, i) => (
                         <div
                             key={i}
-                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-white"
+                            className="flex min-h-[200px] flex-col rounded-3xl border border-gray-100 bg-gray-50/30"
                         >
                             <div className="flex flex-1">
                                 {pair.map((metric, j) => (
                                     <div
                                         key={j}
-                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-50' : ''}`}
+                                        className={`flex flex-1 flex-col p-6 ${j === 0 ? 'border-r border-gray-100' : ''}`}
                                     >
                                         <div>
                                             <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
@@ -794,15 +794,15 @@ export function SalesTab() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="flex border-t border-gray-50">
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-50 bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
+                            <div className="flex border-t border-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
                                         className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                     />
                                 </button>
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-200">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
