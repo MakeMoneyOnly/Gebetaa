@@ -24,6 +24,8 @@ export interface PublishJsonOptions {
     retain?: boolean;
 }
 
+export type LanMessageHandler = (topic: string, payload: Uint8Array) => void;
+
 export function createLanMqttClient(config: MqttTransportConfig): MqttClient {
     const options: IClientOptions = {
         clientId: config.clientId,
@@ -58,7 +60,7 @@ export function createLanMqttClient(config: MqttTransportConfig): MqttClient {
 export async function publishJson(
     client: MqttClient,
     topic: string,
-    payload: Record<string, unknown>,
+    payload: unknown,
     options?: PublishJsonOptions
 ): Promise<void> {
     const publishOptions: IClientPublishOptions = {
@@ -76,6 +78,14 @@ export async function publishJson(
             resolve();
         });
     });
+}
+
+export function registerLanMessageHandler(client: MqttClient, handler: LanMessageHandler): void {
+    (
+        client as unknown as {
+            on(event: 'message', callback: LanMessageHandler): void;
+        }
+    ).on('message', handler);
 }
 
 export async function subscribeTopic(

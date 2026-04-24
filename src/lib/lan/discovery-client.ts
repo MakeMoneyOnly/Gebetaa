@@ -1,6 +1,7 @@
 import type { MqttClient } from 'mqtt';
 import { parseGatewayDiscoveryRecord, type GatewayDiscoveryRecord } from '@/lib/lan/discovery';
 import { buildGatewayDiscoveryTopic } from '@/lib/lan/mqtt-topics';
+import { registerLanMessageHandler } from '@/lib/lan/mqtt-client';
 
 export function selectPreferredGatewayDiscoveryRecord(
     records: GatewayDiscoveryRecord[]
@@ -33,7 +34,7 @@ export async function observeGatewayDiscoveryTopic(
         });
     });
 
-    client.on('message', (messageTopic, rawPayload) => {
+    registerLanMessageHandler(client, (messageTopic, rawPayload) => {
         if (messageTopic !== topic) {
             return;
         }
