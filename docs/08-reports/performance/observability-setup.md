@@ -305,9 +305,10 @@ Configure these alerts before signing your first restaurant:
 ### Database Connection Pool Exhausted
 
 1. Verify pgBouncer is enabled in Supabase
-2. Verify all `DATABASE_URL` use pooler URL
-3. If critical: Supabase Pro allows up to 60 direct connections
-4. Long term: upgrade to Supabase Team
+2. Verify app/runtime SQL traffic uses `DATABASE_URL` pooler lane
+3. Verify direct lane stays restricted to `DATABASE_DIRECT_URL` infra consumers
+4. If critical: Supabase Pro allows up to 60 direct connections
+5. Long term: upgrade to Supabase Team
 
 ---
 

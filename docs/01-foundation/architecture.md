@@ -2065,15 +2065,15 @@ _Standalone — no upstream dependencies. Do in parallel with Sprint 1._
 
 ### Sprint 7 — Infrastructure Hardening (Week 14–15)
 
-| #   | Task                           | Opus 4.6 Prompt Seed                                                                                                                                                                                       |
-| --- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 7.1 | Cloudflare DNS + WAF           | Cloudflare dashboard — proxy all lole.app and lolemenu.com traffic. Enable WAF managed rules.                                                                                                              |
-| 7.2 | Cloudflare Worker — menu cache | "Deploy Cloudflare Worker from blueprint Section 12 to cache `GetMenuItems` GraphQL operations for 5 minutes at edge."                                                                                     |
-| 7.3 | Supabase pgBouncer             | Enable connection pooler in Supabase dashboard. Update all `DATABASE_URL` env vars to use pooler URL. Update Prisma/Supabase client config.                                                                |
-| 7.4 | TimescaleDB setup              | Execute SQL from blueprint Section 11 in Supabase SQL editor. Enable `timescaledb` extension first in Dashboard → Extensions.                                                                              |
-| 7.5 | EOD report CRON                | "Implement `POST /api/jobs/eod-report` handler. Generate per-restaurant EOD report. Send Telegram message to `restaurant.owner_telegram_id`. Submit ERCA daily summary if `restaurant.vat_number` exists." |
-| 7.6 | Telegram alert system          | "Implement `sendAlert(level, message, context)` function from blueprint Section 13. Configure Better Uptime to poll `/api/health` every 60 seconds with Telegram notification."                            |
-| 7.7 | GitHub Actions CI/CD           | "Create `.github/workflows/deploy.yml`: type-check, lint, unit tests, Supabase migration push, Vercel deploy, Railway Apollo Router deploy. Fail fast on any step."                                        |
+| #   | Task                           | Opus 4.6 Prompt Seed                                                                                                                                                                                                 |
+| --- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 7.1 | Cloudflare DNS + WAF           | Cloudflare dashboard — proxy all lole.app and lolemenu.com traffic. Enable WAF managed rules.                                                                                                                        |
+| 7.2 | Cloudflare Worker — menu cache | "Deploy Cloudflare Worker from blueprint Section 12 to cache `GetMenuItems` GraphQL operations for 5 minutes at edge."                                                                                               |
+| 7.3 | Supabase DB lanes              | Enable connection pooler in Supabase dashboard. Set `DATABASE_URL` to pooler and `DATABASE_DIRECT_URL` to direct Postgres. Keep direct lane infra-only for PowerSync replication, migrations, CI, and admin tooling. |
+| 7.4 | TimescaleDB setup              | Execute SQL from blueprint Section 11 in Supabase SQL editor. Enable `timescaledb` extension first in Dashboard → Extensions.                                                                                        |
+| 7.5 | EOD report CRON                | "Implement `POST /api/jobs/eod-report` handler. Generate per-restaurant EOD report. Send Telegram message to `restaurant.owner_telegram_id`. Submit ERCA daily summary if `restaurant.vat_number` exists."           |
+| 7.6 | Telegram alert system          | "Implement `sendAlert(level, message, context)` function from blueprint Section 13. Configure Better Uptime to poll `/api/health` every 60 seconds with Telegram notification."                                      |
+| 7.7 | GitHub Actions CI/CD           | "Create `.github/workflows/deploy.yml`: type-check, lint, unit tests, Supabase migration push, Vercel deploy, Railway Apollo Router deploy. Fail fast on any step."                                                  |
 
 ---
 

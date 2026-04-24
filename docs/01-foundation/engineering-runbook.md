@@ -25,8 +25,10 @@
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...          # Server-side only — never expose to client
-DATABASE_URL=<pooler-url>              # Use pooler URL for all connections
-DATABASE_POOLER_URL=<pooler-url>        # From Supabase dashboard → Connection Pooler
+DATABASE_URL=<pooler-url>                 # Default app-safe SQL lane
+DATABASE_DIRECT_URL=<direct-url>          # Infra-only: PowerSync replication, migrations, CI, admin scripts
+SUPABASE_POOLER_URL=<pooler-url>          # Optional alias
+SUPABASE_DB_URL=<direct-url>              # Optional alias
 
 # Upstash
 UPSTASH_REDIS_REST_URL=https://...upstash.io
@@ -62,6 +64,9 @@ TELEGRAM_ALERT_CHAT_ID=...                 # Your personal Telegram for alerts
 # PowerSync
 POWERSYNC_URL=https://...powersync.journeyapps.com
 
+# PowerSync replication lane
+POWERSYNC_DATABASE_URL=${DATABASE_DIRECT_URL}
+
 # App
 NEXT_PUBLIC_APP_URL=https://lole.app
 NEXT_PUBLIC_GRAPHQL_URL=https://api.lole.app/graphql
@@ -71,6 +76,18 @@ NEXT_PUBLIC_VERSION=1.0.0
 ---
 
 ## Deployment Process
+
+## PowerSync Reality Check
+
+Before claiming end-to-end PowerSync is live, verify `docs/01-foundation/powersync-supabase-dev-status.md`.
+
+Current rule:
+
+- client bootstrap/config can be implemented independently
+- PowerSync cloud replication is not considered done until direct logical replication is live and the `powersync` publication exists
+- transaction pooler is never valid for PowerSync replication
+
+If dev environment cannot satisfy those infra prerequisites yet, keep local-first work moving and leave `ENT-018` blocked.
 
 ### Standard Deploy (main branch)
 
@@ -188,12 +205,13 @@ railway up --service apollo-router
 
 ```
 1. Verify pgBouncer is enabled in Supabase dashboard
-2. Verify all DATABASE_URL env vars use pooler URL (not direct connection)
+2. Verify request and app SQL traffic uses DATABASE_URL (pooler)
    Pooler URL: <your-pooler-url>
+3. Verify infra-only tools use DATABASE_DIRECT_URL
    Direct URL: <your-direct-url>
-   ← Use pooler everywhere except Supabase migrations
-3. If immediately needed: Supabase Pro allows up to 60 direct connections
-   Add DIRECT_DATABASE_URL for migrations, use pooler for everything else
+   PowerSync replication must stay on direct
+4. If immediately needed: Supabase Pro allows up to 60 direct connections
+   Keep direct reserved for migrations, CI, admin scripts, and PowerSync replication only
 4. Long term: upgrade to Supabase Team for more connections
 ```
 

@@ -481,7 +481,7 @@ Apollo Router → Next.js subgraph endpoints
 Supabase (managed):
   Primary PostgreSQL (writes)
   └── Read Replica (analytics queries) → Phase 2
-  └── pgBouncer connection pooler (always enabled)
+  └── Supavisor / pgBouncer for app-safe SQL traffic
 
 Upstash (serverless):
   Redis (cache + event bus + rate limiting)
@@ -489,8 +489,13 @@ Upstash (serverless):
 
 PowerSync (managed):
   CRDT sync coordinator
-  ← Postgres WAL from Supabase
+  ← Direct Postgres logical replication from Supabase
   → WebSocket connections to POS/KDS tablets
+
+Current dev note:
+  Client bootstrap path is implemented.
+  End-to-end cloud replication stays blocked until direct logical replication and
+  `powersync` publication are established. See `docs/01-foundation/powersync-supabase-dev-status.md`.
 ```
 
 ---
@@ -557,8 +562,8 @@ Database read scaling: Phase 2
   Route all SELECT from /merchant/analytics to replica
 
 Connection pool management: Now
-  Supabase pgBouncer enabled
-  All connection strings use pooler URL
+  DATABASE_URL = pooler lane for app/runtime SQL traffic
+  DATABASE_DIRECT_URL = direct lane for migrations, CI, admin scripts, PowerSync replication
   Target: max 20 connections per Vercel instance
 
 Cache hierarchy:

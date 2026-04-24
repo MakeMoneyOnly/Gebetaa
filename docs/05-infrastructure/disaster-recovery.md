@@ -14,27 +14,27 @@
 | **RPO** — Recovery Point Objective | Maximum data loss acceptable                   | **Zero** — no completed orders or payments lost |
 | **MTTR** — Mean Time to Recover    | Average measured recovery time                 | < 20 minutes target                             |
 
-**Why zero RPO:** Completed orders and captured payments are a restaurant's revenue record. Losing them means reconciliation failures, ERCA submission gaps, and permanent trust damage. Supabase's continuous WAL replication and PowerSync's CRDT local storage together guarantee zero data loss for all completed transactions.
+**Why zero RPO:** Completed orders and captured payments are a restaurant's revenue record. Losing them means reconciliation failures, ERCA submission gaps, and permanent trust damage. Our target state is Supabase WAL durability plus local-first store persistence. Important current dev caveat: PowerSync client bootstrap is wired, but end-to-end Supabase replication is still blocked until direct logical replication and the `powersync` publication are live. See `docs/01-foundation/powersync-supabase-dev-status.md`.
 
 ---
 
 ## Dependency Map
 
-| Service           | Provider        | What fails if down                       | Restaurants operate without it?              | Fallback         |
-| ----------------- | --------------- | ---------------------------------------- | -------------------------------------------- | ---------------- |
-| PostgreSQL        | Supabase        | All data reads/writes, new orders        | **Yes — 24h offline (PowerSync)**            | Local CRDT       |
-| Supabase Realtime | Supabase        | KDS live updates, guest tracker          | Yes — manual poll on reconnect               | Polling          |
-| Supabase Auth     | Supabase        | Staff login, JWT validation              | New logins fail. Existing sessions last ~1h. | Cached JWT       |
-| Redis + event bus | Upstash         | Menu cache, event fan-out, rate limiting | Yes — requests hit DB directly (slower)      | Direct DB        |
-| QStash job queue  | Upstash         | ERCA, loyalty awards, EOD reports        | Yes — jobs queue, no data loss               | Backlog replay   |
-| Apollo Router     | Railway         | GraphQL API                              | Yes — fallback to Next.js direct subgraph    | Direct subgraph  |
-| Vercel (app host) | Vercel          | Dashboard, PWA serving, API routes       | **Installed PWA continues offline**          | PWA cache        |
-| Cloudflare        | Cloudflare      | DNS, WAF, edge cache                     | Installed PWA still works                    | Direct Vercel IP |
-| PowerSync         | PowerSync Cloud | Offline CRDT sync                        | POS/KDS run from local IndexedDB             | Local state      |
-| Telebirr          | EthioTelecom    | Telebirr payment initiation              | Yes — cash + Chapa work                      | Cash             |
-| Chapa             | Chapa Ethiopia  | Card payment initiation                  | Yes — cash + Telebirr work                   | Cash             |
-| ERCA API          | ERCA            | VAT e-invoice submission                 | Yes — QStash queues and retries              | Backlog          |
-| Cloudflare R2     | Cloudflare      | Menu photos, receipt PDFs                | Yes — menus show without images              | Text fallback    |
+| Service           | Provider        | What fails if down                       | Restaurants operate without it?                                                            | Fallback          |
+| ----------------- | --------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------- |
+| PostgreSQL        | Supabase        | All data reads/writes, new orders        | **Target: Yes — 24h offline (local-first + PowerSync replay once unblocked)**              | Local-first state |
+| Supabase Realtime | Supabase        | KDS live updates, guest tracker          | Yes — manual poll on reconnect                                                             | Polling           |
+| Supabase Auth     | Supabase        | Staff login, JWT validation              | New logins fail. Existing sessions last ~1h.                                               | Cached JWT        |
+| Redis + event bus | Upstash         | Menu cache, event fan-out, rate limiting | Yes — requests hit DB directly (slower)                                                    | Direct DB         |
+| QStash job queue  | Upstash         | ERCA, loyalty awards, EOD reports        | Yes — jobs queue, no data loss                                                             | Backlog replay    |
+| Apollo Router     | Railway         | GraphQL API                              | Yes — fallback to Next.js direct subgraph                                                  | Direct subgraph   |
+| Vercel (app host) | Vercel          | Dashboard, PWA serving, API routes       | **Installed PWA continues offline**                                                        | PWA cache         |
+| Cloudflare        | Cloudflare      | DNS, WAF, edge cache                     | Installed PWA still works                                                                  | Direct Vercel IP  |
+| PowerSync         | PowerSync Cloud | Offline CRDT sync                        | Local device state continues; cloud convergence remains blocked in current dev environment | Local state       |
+| Telebirr          | EthioTelecom    | Telebirr payment initiation              | Yes — cash + Chapa work                                                                    | Cash              |
+| Chapa             | Chapa Ethiopia  | Card payment initiation                  | Yes — cash + Telebirr work                                                                 | Cash              |
+| ERCA API          | ERCA            | VAT e-invoice submission                 | Yes — QStash queues and retries                                                            | Backlog           |
+| Cloudflare R2     | Cloudflare      | Menu photos, receipt PDFs                | Yes — menus show without images                                                            | Text fallback     |
 
 **The only single points of total failure:**
 
@@ -54,7 +54,7 @@
 
 **Immediate restaurant impact:**
 
-- Installed PWA → orders queue in PowerSync, KDS shows cached state ✅
+- Installed PWA → local device state continues, but do not assume full PowerSync cloud replay has been validated yet ⚠️
 - Guest QR ordering → cannot place new orders (needs DB) ❌
 - Dashboard → cached data only, KPIs stop updating ⚠️
 - Telebirr/Chapa → cannot initiate (needs DB write) ❌ — **switch to cash**
@@ -533,13 +533,13 @@ echo "Date: $(date)"
 echo ""
 
 # Check table count
-TABLE_COUNT=$(psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
+TABLE_COUNT=$(psql $DATABASE_DIRECT_URL -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
 echo "Tables found: $TABLE_COUNT (expected: 47)"
 
 # Check critical tables have data
 echo ""
 echo "Row counts:"
-psql $DATABASE_URL -c "
+psql $DATABASE_DIRECT_URL -c "
 SELECT
   (SELECT COUNT(*) FROM orders) as orders,
   (SELECT COUNT(*) FROM payments) as payments,
@@ -550,7 +550,7 @@ SELECT
 # Check for orphaned records
 echo ""
 echo "Checking for orphaned records..."
-ORPHANED_ITEMS=$(psql $DATABASE_URL -t -c "
+ORPHANED_ITEMS=$(psql $DATABASE_DIRECT_URL -t -c "
 SELECT COUNT(*) FROM order_items oi
 LEFT JOIN orders o ON o.id = oi.order_id
 WHERE o.id IS NULL
@@ -560,7 +560,7 @@ echo "Orphaned order_items: $ORPHANED_ITEMS (expected: 0)"
 # Check RLS policies
 echo ""
 echo "RLS policies count:"
-psql $DATABASE_URL -t -c "SELECT COUNT(*) FROM pg_policies WHERE schemaname = 'public'"
+psql $DATABASE_DIRECT_URL -t -c "SELECT COUNT(*) FROM pg_policies WHERE schemaname = 'public'"
 
 echo ""
 echo "=== Verification Complete ==="

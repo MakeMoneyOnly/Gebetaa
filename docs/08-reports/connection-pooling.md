@@ -2,7 +2,10 @@
 
 ## Overview
 
-This document describes the connection pooling implementation for Supabase using Supavisor. Connection pooling improves database performance by reusing database connections instead of creating new ones for each request.
+This document describes the app database lane for Supabase using Supavisor. In lole, pooler and direct are separate lanes:
+
+- `DATABASE_URL` = pooler, default for app/runtime SQL traffic
+- `DATABASE_DIRECT_URL` = direct, infra-only for migrations, CI, admin scripts, and PowerSync replication
 
 ## Why Connection Pooling?
 
@@ -15,8 +18,8 @@ This document describes the connection pooling implementation for Supabase using
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Next.js Server │────▶│  Supavisor     │────▶│  PostgreSQL    │
-│  (Vercel)       │     │  (Pooler)      │     │  (Supabase)    │
+│  App SQL Lane   │────▶│  Supavisor     │────▶│  PostgreSQL    │
+│  (serverless)   │     │  (Pooler)      │     │  (Supabase)    │
 │                 │     │  :6543         │     │  :5432          │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
@@ -27,15 +30,16 @@ This document describes the connection pooling implementation for Supabase using
 
 Add the following to your `.env.local`:
 
-| Variable                              | Description                           | Default          | Required |
-| ------------------------------------- | ------------------------------------- | ---------------- | -------- |
-| `NEXT_PUBLIC_SUPABASE_POOLER_ENABLED` | Enable/disable connection pooling     | `false`          | No       |
-| `SUPABASE_POOL_MODE`                  | Pool mode: `transaction` or `session` | `transaction`    | No       |
-| `SUPABASE_POOL_SIZE`                  | Connections per pool instance (1-50)  | `10`             | No       |
-| `SUPABASE_POOL_MAX_CLIENTS`           | Max clients in pool (1-100)           | `20`             | No       |
-| `SUPABASE_POOL_CONNECTION_TIMEOUT`    | Connection timeout in seconds (1-300) | `30`             | No       |
-| `SUPABASE_POOL_IDLE_TIMEOUT`          | Idle timeout in seconds (60-3600)     | `1800`           | No       |
-| `SUPABASE_POOLER_URL`                 | Direct pooler connection string       | Auto-constructed | No       |
+| Variable                           | Description                           | Default          | Required |
+| ---------------------------------- | ------------------------------------- | ---------------- | -------- |
+| `DATABASE_URL`                     | App-safe pooler connection string     | None             | Yes      |
+| `DATABASE_DIRECT_URL`              | Infra-only direct connection string   | None             | Yes      |
+| `SUPABASE_POOL_MODE`               | Pool mode: `transaction` or `session` | `transaction`    | No       |
+| `SUPABASE_POOL_SIZE`               | Connections per pool instance (1-50)  | `10`             | No       |
+| `SUPABASE_POOL_MAX_CLIENTS`        | Max clients in pool (1-100)           | `20`             | No       |
+| `SUPABASE_POOL_CONNECTION_TIMEOUT` | Connection timeout in seconds (1-300) | `30`             | No       |
+| `SUPABASE_POOL_IDLE_TIMEOUT`       | Idle timeout in seconds (60-3600)     | `1800`           | No       |
+| `SUPABASE_POOLER_URL`              | Direct pooler connection string       | Auto-constructed | No       |
 
 ### Pool Mode Options
 
@@ -161,11 +165,13 @@ The pool configuration module (`src/lib/supabase/pool.ts`) provides:
 
 ## Best Practices
 
-1. **Start with transaction mode**: Only use session mode if specifically needed
-2. **Conservative pool sizing**: Start small, monitor, then adjust
-3. **Monitor in production**: Use health checks and metrics
-4. **Set appropriate timeouts**: Balance connection reuse with freshness
-5. **Enable via feature flag**: Use `NEXT_PUBLIC_SUPABASE_POOLER_ENABLED` for easy toggle
+1. **Pooler is default**: Use `DATABASE_URL` for any request-driven SQL traffic
+2. **Direct is privileged**: Use `DATABASE_DIRECT_URL` only for infra-only capabilities
+3. **Start with transaction mode**: Only use session mode if specifically needed
+4. **Conservative pool sizing**: Start small, monitor, then adjust
+5. **Monitor in production**: Use health checks and metrics
+6. **Set appropriate timeouts**: Balance connection reuse with freshness
+7. **Never runtime-switch lanes**: Separation belongs in env and module boundaries, not feature flags
 
 ## Related Documentation
 

@@ -80,9 +80,9 @@ Railway CPU:                < 30% avg (alert at 70%)
 ```
 1. Enable Supabase pgBouncer connection pooler (if not already done — do it now)
    Effect: multiplexes hundreds of app connections into 60 DB connections
-   Setting: all DATABASE_URL env vars must use the pooler URL:
+   Setting: DATABASE_URL must use the pooler URL:
    postgresql://postgres.[project-ref]:[password]@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
-   NOT the direct URL:
+   DATABASE_DIRECT_URL stays reserved for infra-only direct access:
    postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres
 
 2. Enable Supabase Read Replica ($60–80/month add-on)

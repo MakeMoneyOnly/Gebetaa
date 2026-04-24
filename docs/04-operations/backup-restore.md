@@ -87,22 +87,22 @@ The following data is included in backups:
 
 ```bash
 # Full database backup with roles and privileges
-pg_dump $DATABASE_URL --no-owner --no-privileges > backup_$(date +%Y%m%d_%H%M%S).sql
+pg_dump $DATABASE_DIRECT_URL --no-owner --no-privileges > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Compressed backup (recommended)
-pg_dump $DATABASE_URL --format=custom --file=backup_$(date +%Y%m%d).dump
+pg_dump $DATABASE_DIRECT_URL --format=custom --file=backup_$(date +%Y%m%d).dump
 
 # Schema-only backup (for migration testing)
-pg_dump $DATABASE_URL --schema-only > schema_backup.sql
+pg_dump $DATABASE_DIRECT_URL --schema-only > schema_backup.sql
 
 # Data-only backup (for data refresh)
-pg_dump $DATABASE_URL --data-only --inserts > data_backup.sql
+pg_dump $DATABASE_DIRECT_URL --data-only --inserts > data_backup.sql
 
 # Specific tables backup
-pg_dump $DATABASE_URL --table=orders --table=order_items > orders_backup.sql
+pg_dump $DATABASE_DIRECT_URL --table=orders --table=order_items > orders_backup.sql
 
 # Backup with row limits (for large tables)
-pg_dump $DATABASE_URL --table=audit_logs --exclude-table-data=audit_logs > schema_with_limited_data.sql
+pg_dump $DATABASE_DIRECT_URL --table=audit_logs --exclude-table-data=audit_logs > schema_with_limited_data.sql
 ```
 
 ### Using Supabase CLI
@@ -154,9 +154,9 @@ if [ -f ".env.${ENVIRONMENT}" ]; then
     source ".env.${ENVIRONMENT}"
 fi
 
-# Validate DATABASE_URL is set
-if [ -z "${DATABASE_URL:-}" ]; then
-    echo "ERROR: DATABASE_URL is not set"
+# Validate DATABASE_DIRECT_URL is set
+if [ -z "${DATABASE_DIRECT_URL:-}" ]; then
+    echo "ERROR: DATABASE_DIRECT_URL is not set"
     exit 1
 fi
 
@@ -165,7 +165,7 @@ echo "Timestamp: ${TIMESTAMP}"
 
 # Create backup
 echo "Creating database backup..."
-pg_dump "$DATABASE_URL" --format=custom --file="$BACKUP_FILE"
+pg_dump "$DATABASE_DIRECT_URL" --format=custom --file="$BACKUP_FILE"
 
 # Verify backup was created
 if [ ! -f "$BACKUP_FILE" ]; then
@@ -184,7 +184,7 @@ cat > "$METADATA_FILE" <<EOF
     "timestamp": "${TIMESTAMP}",
     "file": "$(basename "$BACKUP_FILE")",
     "size_bytes": $(stat -f%z "$BACKUP_FILE" 2>/dev/null || stat -c%s "$BACKUP_FILE"),
-    "database_url_host": "$(echo "$DATABASE_URL" | sed -E 's|.*@([^/:]+).*|\1|')",
+    "database_url_host": "$(echo "$DATABASE_DIRECT_URL" | sed -E 's|.*@([^/:]+).*|\1|')",
     "created_by": "$(whoami)",
     "created_at": "$(date -Iseconds)"
 }
@@ -249,35 +249,35 @@ Before restoring, verify:
 
 ```bash
 # Restore from SQL backup file
-psql $DATABASE_URL < backup_20260404.sql
+psql $DATABASE_DIRECT_URL < backup_20260404.sql
 
 # Restore compressed SQL backup
-gunzip -c backup_20260404.sql.gz | psql $DATABASE_URL
+gunzip -c backup_20260404.sql.gz | psql $DATABASE_DIRECT_URL
 
 # Restore with verbose output
-psql $DATABASE_URL -f backup_20260404.sql --echo-all
+psql $DATABASE_DIRECT_URL -f backup_20260404.sql --echo-all
 
 # Restore specific tables only
-psql $DATABASE_URL -f orders_backup.sql
+psql $DATABASE_DIRECT_URL -f orders_backup.sql
 ```
 
 ### Using pg_restore (Custom format)
 
 ```bash
 # Restore from custom format backup
-pg_restore --dbname=$DATABASE_URL backup_20260404.dump
+pg_restore --dbname=$DATABASE_DIRECT_URL backup_20260404.dump
 
 # Restore with clean (drop existing objects)
-pg_restore --clean --dbname=$DATABASE_URL backup_20260404.dump
+pg_restore --clean --dbname=$DATABASE_DIRECT_URL backup_20260404.dump
 
 # Restore specific tables
-pg_restore --dbname=$DATABASE_URL --table=orders --table=order_items backup_20260404.dump
+pg_restore --dbname=$DATABASE_DIRECT_URL --table=orders --table=order_items backup_20260404.dump
 
 # Restore schema only (no data)
-pg_restore --dbname=$DATABASE_URL --schema-only backup_20260404.dump
+pg_restore --dbname=$DATABASE_DIRECT_URL --schema-only backup_20260404.dump
 
 # Restore with verbose output
-pg_restore --dbname=$DATABASE_URL --verbose backup_20260404.dump
+pg_restore --dbname=$DATABASE_DIRECT_URL --verbose backup_20260404.dump
 
 # Restore to a different database
 pg_restore --dbname=lole_restored backup_20260404.dump
@@ -316,11 +316,11 @@ To copy a backup from one environment to another:
 aws s3 cp s3://lole-backups/production/latest.dump ./production_backup.dump
 
 # 2. Restore to staging
-export DATABASE_URL=$STAGING_DATABASE_URL
-pg_restore --clean --dbname=$DATABASE_URL ./production_backup.dump
+export DATABASE_DIRECT_URL=$STAGING_DATABASE_DIRECT_URL
+pg_restore --clean --dbname=$DATABASE_DIRECT_URL ./production_backup.dump
 
 # 3. Verify restoration
-psql $DATABASE_URL -c "SELECT COUNT(*) FROM restaurants;"
+psql $DATABASE_DIRECT_URL -c "SELECT COUNT(*) FROM restaurants;"
 
 # 4. Clean up
 rm ./production_backup.dump
@@ -359,7 +359,7 @@ rm ./production_backup.dump
 
     ```bash
     # Check database connectivity
-    psql $DATABASE_URL -c "SELECT 1;"
+    psql $DATABASE_DIRECT_URL -c "SELECT 1;"
 
     # Check Supabase status page
     curl -s https://status.supabase.com/api/v2/status.json | jq '.status'
@@ -372,10 +372,10 @@ rm ./production_backup.dump
 
     ```bash
     # Stop application services
-    vercel --prod --env DATABASE_URL=""  # Disable DB connection
+    vercel --prod --env DATABASE_URL=""  # Disable app SQL lane if needed
 
     # Restore from most recent backup
-    pg_restore --clean --dbname=$DATABASE_URL s3://lole-backups/production/latest.dump
+    pg_restore --clean --dbname=$DATABASE_DIRECT_URL s3://lole-backups/production/latest.dump
 
     # Or use PITR for more recent data
     supabase db restore --timestamp "$(date -d '1 hour ago' '+%Y-%m-%d %H:%M:%S')"
@@ -385,7 +385,7 @@ rm ./production_backup.dump
 
     ```bash
     # Check table counts
-    psql $DATABASE_URL -c "
+    psql $DATABASE_DIRECT_URL -c "
       SELECT
         (SELECT COUNT(*) FROM restaurants) as restaurants,
         (SELECT COUNT(*) FROM orders) as orders,
@@ -394,10 +394,10 @@ rm ./production_backup.dump
     "
 
     # Check recent orders
-    psql $DATABASE_URL -c "SELECT * FROM orders ORDER BY created_at DESC LIMIT 10;"
+    psql $DATABASE_DIRECT_URL -c "SELECT * FROM orders ORDER BY created_at DESC LIMIT 10;"
 
     # Verify auth system
-    psql $DATABASE_URL -c "SELECT id, email FROM auth.users LIMIT 5;"
+    psql $DATABASE_DIRECT_URL -c "SELECT id, email FROM auth.users LIMIT 5;"
     ```
 
 5. **Resume operations** (45-60 minutes)
@@ -426,10 +426,10 @@ rm ./production_backup.dump
 
 ```bash
 # Restore specific table
-pg_restore --dbname=$DATABASE_URL --table=orders backup_latest.dump
+pg_restore --dbname=$DATABASE_DIRECT_URL --table=orders backup_latest.dump
 
 # Verify row count matches expected
-psql $DATABASE_URL -c "SELECT COUNT(*) FROM orders;"
+psql $DATABASE_DIRECT_URL -c "SELECT COUNT(*) FROM orders;"
 ```
 
 ### Sev3: Data Corruption
@@ -445,7 +445,7 @@ psql $DATABASE_URL -c "SELECT COUNT(*) FROM orders;"
 
 ```bash
 # Find corruption timestamp
-psql $DATABASE_URL -c "SELECT MIN(created_at) FROM audit_logs WHERE action = 'suspicious_update';"
+psql $DATABASE_DIRECT_URL -c "SELECT MIN(created_at) FROM audit_logs WHERE action = 'suspicious_update';"
 
 # Restore to point before corruption
 supabase db restore --timestamp "2026-04-04 09:00:00"
