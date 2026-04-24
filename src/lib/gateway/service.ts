@@ -3,6 +3,7 @@ import {
     closeLanMqttClient,
     createLanMqttClient,
     publishJson,
+    registerLanMessageHandler,
     subscribeTopic,
     type MqttTransportConfig,
 } from '@/lib/lan/mqtt-client';
@@ -12,6 +13,7 @@ import {
     buildRestaurantTopic,
     type MqttScope,
 } from '@/lib/lan/mqtt-topics';
+import { toGatewayLanEvent } from '@/lib/gateway/local-events';
 import { buildGatewayDiscoveryRecord } from '@/lib/lan/discovery';
 import {
     buildGatewayHealthSnapshot,
@@ -55,6 +57,7 @@ export class StoreGatewayService {
     private client: MqttClient | null = null;
     private readonly handlers = new Map<string, GatewayHandler>();
     private currentMode: StoreOperatingMode;
+    private readonly sequenceByAggregate = new Map<string, number>();
 
     constructor(config?: StoreGatewayConfig | null) {
         const resolvedConfig = config ?? getStoreGatewayConfig();
@@ -109,12 +112,18 @@ export class StoreGatewayService {
             await subscribeTopic(this.client, topic, 1);
         }
 
-        this.client.on('message', (_topic, raw) => {
+        registerLanMessageHandler(this.client, (_topic, raw) => {
             try {
-                const parsed = JSON.parse(String(raw)) as GatewayCommandMessage;
-                const handler = this.handlers.get(parsed.type);
+                const parsed = JSON.parse(String(raw)) as
+                    | GatewayCommandMessage
+                    | { type: string; payload: Record<string, unknown> };
+                const commandLike =
+                    'schema' in (parsed as Record<string, unknown>)
+                        ? (parsed as { type: string; payload: Record<string, unknown> })
+                        : (parsed as GatewayCommandMessage);
+                const handler = this.handlers.get(commandLike.type);
                 if (handler) {
-                    void handler(parsed);
+                    void handler(commandLike as GatewayCommandMessage);
                 }
             } catch (error) {
                 logger.error('[Gateway] Failed to process command message', error);
@@ -138,6 +147,10 @@ export class StoreGatewayService {
             throw new Error('Gateway MQTT client unavailable');
         }
 
+        const aggregateKey = `${message.aggregate}:${message.aggregateId}`;
+        const nextSequence = (this.sequenceByAggregate.get(aggregateKey) ?? 0) + 1;
+        this.sequenceByAggregate.set(aggregateKey, nextSequence);
+
         const topic = buildRestaurantTopic({
             restaurantId: message.restaurantId,
             locationId: message.locationId,
@@ -148,7 +161,7 @@ export class StoreGatewayService {
                     : 'commands',
         });
 
-        await publishJson(this.client, topic, message, { qos: 1 });
+        await publishJson(this.client, topic, toGatewayLanEvent(message, nextSequence), { qos: 1 });
     }
 
     async publishMode(mode: StoreOperatingMode): Promise<void> {

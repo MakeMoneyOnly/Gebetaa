@@ -2,12 +2,14 @@ import { logger } from '@/lib/logger';
 import { getStoreGatewayService } from '@/lib/gateway/service';
 
 export interface DispatchableDomainCommand {
+    id?: string;
     type: string;
     aggregate: string;
     aggregateId: string;
     payload: Record<string, unknown>;
     restaurantId: string;
     locationId: string;
+    idempotencyKey?: string;
 }
 
 export function isDispatchableDomainCommand(value: unknown): value is DispatchableDomainCommand {
@@ -17,6 +19,7 @@ export function isDispatchableDomainCommand(value: unknown): value is Dispatchab
 
     const candidate = value as Record<string, unknown>;
     return (
+        (candidate.id === undefined || typeof candidate.id === 'string') &&
         typeof candidate.type === 'string' &&
         typeof candidate.aggregate === 'string' &&
         typeof candidate.aggregateId === 'string' &&
