@@ -161,24 +161,24 @@ These are the first tasks to start because other work depends on them.
 
 ### 2.1 Local Realtime for KDS and FOH
 
-- [ ] `ENT-021` Replace cloud-only KDS realtime with gateway-owned local event propagation.
+- [x] `ENT-021` Replace cloud-only KDS realtime with gateway-owned local event propagation.
       Definition of done: KDS screens update from LAN events without Supabase Realtime.
 
-- [ ] `ENT-022` Add local subscriptions for table/session and order status events.
+- [x] `ENT-022` Add local subscriptions for table/session and order status events.
       Definition of done: FOH and handheld devices stay convergent over LAN.
 
-- [ ] `ENT-023` Add local event sequencing and deduplication guarantees.
+- [x] `ENT-023` Add local event sequencing and deduplication guarantees.
       Definition of done: duplicate delivery and out-of-order delivery are handled predictably.
 
 ### 2.2 Table and Order Authority
 
-- [ ] `ENT-024` Move table/session authority to the gateway for offline operation.
+- [x] `ENT-024` Move table/session authority to the gateway for offline operation.
       Definition of done: table opens, transfers, closes, and seat edits can be completed offline.
 
-- [ ] `ENT-025` Move course firing and kitchen pacing rules into the headless domain core.
+- [x] `ENT-025` Move course firing and kitchen pacing rules into the headless domain core.
       Definition of done: course state changes do not depend on cloud APIs to remain correct.
 
-- [ ] `ENT-026` Define offline-safe order numbering and receipt numbering rules.
+- [x] `ENT-026` Define offline-safe order numbering and receipt numbering rules.
       Definition of done: identifiers remain unique, reconcilable, and fiscally acceptable after reconnect.
 
 ### 2.3 Payments and Settlement Resiliency
