@@ -1,5 +1,5 @@
 import { getPowerSync } from '@/lib/sync/powersync-config';
-import { appendLocalJournalEntry } from '@/lib/journal/local-journal';
+import { appendLocalJournalEntryInDatabase } from '@/lib/journal/local-journal';
 import type { LocalFiscalSignatureEnvelope } from '@/lib/fiscal/local-signing';
 import {
     submitFiscalTransaction,
@@ -50,43 +50,45 @@ export async function queueFiscalJob(args: {
     const signedAt = args.signatureEnvelope?.signedAt ?? null;
     const signatureJson = args.signatureEnvelope ? JSON.stringify(args.signatureEnvelope) : null;
 
-    await db.execute(
-        `INSERT INTO fiscal_jobs (
-            id, order_id, payload_json, queue_mode, signature_json, signature_algorithm,
-            signed_at, status, attempts, warning_text, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?)`,
-        [
-            id,
-            args.orderId,
-            JSON.stringify(args.payload),
-            queueMode,
-            signatureJson,
-            signatureAlgorithm,
-            signedAt,
-            args.warningText ?? null,
-            now,
-        ]
-    );
+    await db.write(async () => {
+        await appendLocalJournalEntryInDatabase(db, {
+            restaurantId: args.restaurantId ?? 'unknown-restaurant',
+            locationId: args.locationId ?? null,
+            deviceId: args.deviceId ?? 'unknown-device',
+            actorId: args.actorId ?? null,
+            entryKind: 'fiscal',
+            aggregateType: 'fiscal_receipt',
+            aggregateId: args.orderId,
+            operationType: 'fiscal.queue',
+            payload: {
+                job_id: id,
+                order_id: args.orderId,
+                queue_mode: queueMode,
+                signed_at: signedAt,
+                warning_text: args.warningText ?? null,
+                request: args.payload,
+                signature: args.signatureEnvelope ?? null,
+            },
+            idempotencyKey: `fiscal-job-${id}`,
+        });
 
-    await appendLocalJournalEntry({
-        restaurantId: args.restaurantId ?? 'unknown-restaurant',
-        locationId: args.locationId ?? null,
-        deviceId: args.deviceId ?? 'unknown-device',
-        actorId: args.actorId ?? null,
-        entryKind: 'fiscal',
-        aggregateType: 'fiscal_receipt',
-        aggregateId: args.orderId,
-        operationType: 'fiscal.queue',
-        payload: {
-            job_id: id,
-            order_id: args.orderId,
-            queue_mode: queueMode,
-            signed_at: signedAt,
-            warning_text: args.warningText ?? null,
-            request: args.payload,
-            signature: args.signatureEnvelope ?? null,
-        },
-        idempotencyKey: `fiscal-job-${id}`,
+        await db.execute(
+            `INSERT INTO fiscal_jobs (
+                id, order_id, payload_json, queue_mode, signature_json, signature_algorithm,
+                signed_at, status, attempts, warning_text, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?)`,
+            [
+                id,
+                args.orderId,
+                JSON.stringify(args.payload),
+                queueMode,
+                signatureJson,
+                signatureAlgorithm,
+                signedAt,
+                args.warningText ?? null,
+                now,
+            ]
+        );
     });
 
     return {
@@ -172,22 +174,25 @@ export async function replayPendingFiscalJobs(options?: {
             }
 
             await markFiscalJobSubmitted(job.id);
-            await appendLocalJournalEntry({
-                restaurantId: String(payload.restaurant_tin),
-                locationId: null,
-                deviceId: 'fiscal-replay-worker',
-                actorId: 'fiscal-replay-worker',
-                entryKind: 'fiscal',
-                aggregateType: 'fiscal_receipt',
-                aggregateId: job.order_id,
-                operationType: 'fiscal.replayed',
-                payload: {
-                    job_id: job.id,
-                    transaction_number: result.transaction_number,
-                    mode: result.mode,
-                },
-                idempotencyKey: `fiscal-replayed-${job.id}`,
-            });
+            const db = getPowerSync();
+            if (db) {
+                await appendLocalJournalEntryInDatabase(db, {
+                    restaurantId: String(payload.restaurant_tin),
+                    locationId: null,
+                    deviceId: 'fiscal-replay-worker',
+                    actorId: 'fiscal-replay-worker',
+                    entryKind: 'fiscal',
+                    aggregateType: 'fiscal_receipt',
+                    aggregateId: job.order_id,
+                    operationType: 'fiscal.replayed',
+                    payload: {
+                        job_id: job.id,
+                        transaction_number: result.transaction_number,
+                        mode: result.mode,
+                    },
+                    idempotencyKey: `fiscal-replayed-${job.id}`,
+                });
+            }
             submitted++;
         } catch (error) {
             await markFiscalJobFailed(

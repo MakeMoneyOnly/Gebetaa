@@ -2,13 +2,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
-const mockAppendLocalJournalEntry = vi.fn().mockResolvedValue(null);
+const mockWrite = vi.fn(async (fn: () => Promise<unknown>) => fn());
+const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(null);
 const mockSubmitFiscalTransaction = vi.fn();
 
 const mockGetPowerSync = vi.fn(() => ({
     execute: mockExecute,
     getFirstAsync: vi.fn().mockResolvedValue(null),
     getAllAsync: mockGetAllAsync,
+    write: mockWrite,
 }));
 
 vi.mock('@/lib/sync/powersync-config', () => ({
@@ -16,7 +18,7 @@ vi.mock('@/lib/sync/powersync-config', () => ({
 }));
 
 vi.mock('@/lib/journal/local-journal', () => ({
-    appendLocalJournalEntry: mockAppendLocalJournalEntry,
+    appendLocalJournalEntryInDatabase: mockAppendLocalJournalEntryInDatabase,
 }));
 
 vi.mock('@/lib/fiscal/mor-client', () => ({
@@ -32,7 +34,9 @@ describe('Offline Fiscal Queue', () => {
             execute: mockExecute,
             getFirstAsync: vi.fn().mockResolvedValue(null),
             getAllAsync: mockGetAllAsync,
+            write: mockWrite,
         });
+        mockWrite.mockImplementation(async (fn: () => Promise<unknown>) => fn());
         mockSubmitFiscalTransaction.mockReset();
     });
 
@@ -68,6 +72,9 @@ describe('Offline Fiscal Queue', () => {
                     expect.any(String),
                 ]
             );
+            expect(mockAppendLocalJournalEntryInDatabase.mock.invocationCallOrder[0]).toBeLessThan(
+                mockExecute.mock.invocationCallOrder[0]
+            );
         });
 
         it('should include warning text when provided', async () => {
@@ -99,7 +106,7 @@ describe('Offline Fiscal Queue', () => {
             expect(result?.queue_mode).toBe('local-signing');
             expect(result?.signature_algorithm).toBe('HMAC-SHA256');
             expect(result?.signed_at).toBe('2026-04-21T00:00:00.000Z');
-            expect(mockAppendLocalJournalEntry).toHaveBeenCalledOnce();
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
         });
 
         it('should return null when PowerSync is not available', async () => {
