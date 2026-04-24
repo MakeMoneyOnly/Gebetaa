@@ -11,7 +11,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
-const mockQueueSyncOperation = vi.fn().mockResolvedValue(undefined);
+const mockQueueSyncOperationInDatabase = vi.fn().mockResolvedValue(undefined);
 const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../powersync-config', () => ({
@@ -25,7 +25,7 @@ vi.mock('../powersync-config', () => ({
 
 // Mock idempotency module
 vi.mock('../idempotency', () => ({
-    queueSyncOperation: mockQueueSyncOperation,
+    queueSyncOperationInDatabase: mockQueueSyncOperationInDatabase,
     generateIdempotencyKey: vi.fn((prefix: string) => `${prefix}-test-idempotency-key`),
 }));
 
@@ -60,7 +60,7 @@ describe('KDS Sync Manager', () => {
         mockExecute.mockResolvedValue({ rowsAffected: 1 });
         mockGetFirstAsync.mockResolvedValue(null);
         mockGetAllAsync.mockResolvedValue([]);
-        mockQueueSyncOperation.mockResolvedValue(undefined);
+        mockQueueSyncOperationInDatabase.mockResolvedValue(undefined);
         mockAppendLocalJournalEntryInDatabase.mockResolvedValue(undefined);
     });
 
@@ -92,7 +92,10 @@ describe('KDS Sync Manager', () => {
             expect(result).not.toBeNull();
             expect(mockExecute).toHaveBeenCalled();
             expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
+            expect(mockAppendLocalJournalEntryInDatabase.mock.invocationCallOrder[0]).toBeLessThan(
+                mockExecute.mock.invocationCallOrder[0]
+            );
 
             randomUUIDSpy.mockRestore();
         });
@@ -125,7 +128,7 @@ describe('KDS Sync Manager', () => {
             expect(result).not.toBeNull();
             expect(mockExecute).toHaveBeenCalledTimes(2); // INSERT + UPDATE
             expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
 
             randomUUIDSpy.mockRestore();
         });
@@ -274,7 +277,7 @@ describe('KDS Sync Manager', () => {
             expect(result).toBe(true);
             expect(mockExecute).toHaveBeenCalled();
             expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
         });
 
         it('should execute ready action and update status', async () => {

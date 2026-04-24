@@ -23,6 +23,28 @@ export interface PowerSyncDatabase {
     close(): Promise<void>;
 }
 
+export const canonicalLocalTableNames = [
+    'orders',
+    'order_items',
+    'kds_items',
+    'table_sessions',
+    'order_check_splits',
+    'order_check_split_items',
+    'payment_sessions',
+    'payments',
+    'payment_events',
+    'reconciliation_entries',
+    'domain_events',
+    'sync_queue',
+    'printer_jobs',
+    'fiscal_jobs',
+    'local_journal',
+    'audit_logs',
+    'sync_conflict_logs',
+    'sync_replay_checkpoints',
+    'local_sequence_counters',
+] as const;
+
 export const powerSyncSchema = `
     CREATE TABLE IF NOT EXISTS orders (
         id TEXT PRIMARY KEY,
@@ -131,23 +153,120 @@ export const powerSyncSchema = `
         FOREIGN KEY (split_id) REFERENCES order_check_splits(id)
     );
 
+    CREATE TABLE IF NOT EXISTS payment_sessions (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        order_id TEXT,
+        surface TEXT NOT NULL,
+        channel TEXT NOT NULL,
+        intent_type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'created',
+        selected_method TEXT,
+        selected_provider TEXT,
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'ETB',
+        checkout_url TEXT,
+        provider_transaction_id TEXT,
+        provider_reference TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        authorized_at TEXT,
+        captured_at TEXT,
+        expires_at TEXT,
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id)
+    );
+
     CREATE TABLE IF NOT EXISTS payments (
         id TEXT PRIMARY KEY,
         restaurant_id TEXT NOT NULL,
         order_id TEXT,
+        payment_session_id TEXT,
         split_id TEXT,
         amount REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'ETB',
+        created_by TEXT,
+        idempotency_key TEXT,
         tip_amount REAL NOT NULL DEFAULT 0,
+        authorized_at TEXT,
+        captured_at TEXT,
         method TEXT NOT NULL,
-        provider TEXT,
+        provider TEXT NOT NULL DEFAULT 'other',
         provider_reference TEXT,
+        tip_allocation_id TEXT,
+        tip_pool_id TEXT,
         transaction_number TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'captured',
         metadata_json TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (payment_session_id) REFERENCES payment_sessions(id),
         FOREIGN KEY (split_id) REFERENCES order_check_splits(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS payment_events (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        payment_session_id TEXT,
+        payment_id TEXT,
+        order_id TEXT,
+        split_id TEXT,
+        event_type TEXT NOT NULL,
+        status TEXT NOT NULL,
+        provider TEXT,
+        provider_reference TEXT,
+        idempotency_key TEXT,
+        payload_json TEXT NOT NULL DEFAULT '{}',
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        occurred_at TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (payment_session_id) REFERENCES payment_sessions(id),
+        FOREIGN KEY (payment_id) REFERENCES payments(id),
+        FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (split_id) REFERENCES order_check_splits(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS reconciliation_entries (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        payment_id TEXT,
+        payment_session_id TEXT,
+        ledger_type TEXT NOT NULL,
+        ledger_id TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        source_id TEXT,
+        expected_amount REAL NOT NULL,
+        settled_amount REAL NOT NULL,
+        delta_amount REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'matched',
+        notes TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (payment_id) REFERENCES payments(id),
+        FOREIGN KEY (payment_session_id) REFERENCES payment_sessions(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS domain_events (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        location_id TEXT,
+        device_id TEXT NOT NULL,
+        actor_id TEXT,
+        aggregate_type TEXT NOT NULL,
+        aggregate_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        schema_name TEXT NOT NULL DEFAULT 'lole.domain-event',
+        schema_version INTEGER NOT NULL DEFAULT 1,
+        payload_json TEXT NOT NULL,
+        idempotency_key TEXT UNIQUE NOT NULL,
+        causation_id TEXT,
+        correlation_id TEXT,
+        created_at TEXT NOT NULL,
+        synced_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS sync_queue (
@@ -236,14 +355,36 @@ export const powerSyncSchema = `
 
     CREATE TABLE IF NOT EXISTS sync_conflict_logs (
         id TEXT PRIMARY KEY,
+        restaurant_id TEXT,
+        location_id TEXT,
+        device_id TEXT,
         entity_type TEXT NOT NULL,
         entity_id TEXT NOT NULL,
         conflict_type TEXT NOT NULL,
+        operation_type TEXT,
+        payload_json TEXT,
         client_timestamp TEXT NOT NULL,
         server_timestamp TEXT NOT NULL,
         resolution_strategy TEXT NOT NULL,
         resolution_details TEXT NOT NULL,
         created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS sync_replay_checkpoints (
+        scope TEXT PRIMARY KEY,
+        cursor_value TEXT,
+        journal_entry_id TEXT,
+        status TEXT NOT NULL DEFAULT 'idle',
+        error_text TEXT,
+        updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS local_sequence_counters (
+        scope_key TEXT NOT NULL,
+        business_date TEXT NOT NULL,
+        last_value INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (scope_key, business_date)
     );
 
     CREATE INDEX IF NOT EXISTS idx_orders_restaurant ON orders(restaurant_id);
@@ -256,7 +397,17 @@ export const powerSyncSchema = `
     CREATE INDEX IF NOT EXISTS idx_table_sessions_table ON table_sessions(table_id, status);
     CREATE INDEX IF NOT EXISTS idx_order_check_splits_order ON order_check_splits(order_id, split_index);
     CREATE INDEX IF NOT EXISTS idx_order_check_split_items_order ON order_check_split_items(order_id, split_id);
+    CREATE INDEX IF NOT EXISTS idx_payment_sessions_order ON payment_sessions(order_id, status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_payment_sessions_provider ON payment_sessions(selected_provider, provider_transaction_id);
     CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(order_id, split_id, status);
+    CREATE INDEX IF NOT EXISTS idx_payments_session ON payments(payment_session_id, status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_payment_events_session ON payment_events(payment_session_id, occurred_at);
+    CREATE INDEX IF NOT EXISTS idx_payment_events_payment ON payment_events(payment_id, occurred_at);
+    CREATE INDEX IF NOT EXISTS idx_reconciliation_entries_payment ON reconciliation_entries(payment_id, status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_reconciliation_entries_session ON reconciliation_entries(payment_session_id, status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_domain_events_type ON domain_events(event_type, created_at);
+    CREATE INDEX IF NOT EXISTS idx_domain_events_aggregate ON domain_events(aggregate_type, aggregate_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_domain_events_idempotency ON domain_events(idempotency_key);
     CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(status);
     CREATE INDEX IF NOT EXISTS idx_printer_jobs_status ON printer_jobs(status);
     CREATE INDEX IF NOT EXISTS idx_fiscal_jobs_status ON fiscal_jobs(status);
@@ -265,6 +416,8 @@ export const powerSyncSchema = `
     CREATE INDEX IF NOT EXISTS idx_local_journal_idempotency ON local_journal(idempotency_key);
     CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_sync_conflict_entity ON sync_conflict_logs(entity_type, entity_id);
+    CREATE INDEX IF NOT EXISTS idx_sync_replay_checkpoints_status ON sync_replay_checkpoints(status, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_local_sequence_counters_updated ON local_sequence_counters(updated_at);
 `;
 
 export interface PowerSyncConfig {
@@ -398,14 +551,49 @@ const powerSyncAppSchema = new Schema({
         ...integerColumns(['quantity']),
         ...realColumns(['line_amount']),
     }),
+    payment_sessions: new Table(
+        {
+            ...textColumns([
+                'restaurant_id',
+                'order_id',
+                'surface',
+                'channel',
+                'intent_type',
+                'status',
+                'selected_method',
+                'selected_provider',
+                'currency',
+                'checkout_url',
+                'provider_transaction_id',
+                'provider_reference',
+                'metadata_json',
+                'authorized_at',
+                'captured_at',
+                'expires_at',
+                'created_by',
+                'created_at',
+                'updated_at',
+            ]),
+            ...realColumns(['amount']),
+        },
+        { localOnly: true }
+    ),
     payments: new Table({
         ...textColumns([
             'restaurant_id',
             'order_id',
+            'payment_session_id',
             'split_id',
+            'currency',
+            'created_by',
+            'idempotency_key',
             'method',
             'provider',
             'provider_reference',
+            'authorized_at',
+            'captured_at',
+            'tip_allocation_id',
+            'tip_pool_id',
             'transaction_number',
             'status',
             'metadata_json',
@@ -414,6 +602,70 @@ const powerSyncAppSchema = new Schema({
         ]),
         ...realColumns(['amount', 'tip_amount']),
     }),
+    payment_events: new Table(
+        {
+            ...textColumns([
+                'restaurant_id',
+                'payment_session_id',
+                'payment_id',
+                'order_id',
+                'split_id',
+                'event_type',
+                'status',
+                'provider',
+                'provider_reference',
+                'idempotency_key',
+                'payload_json',
+                'metadata_json',
+                'occurred_at',
+                'created_at',
+            ]),
+        },
+        { localOnly: true }
+    ),
+    reconciliation_entries: new Table(
+        {
+            ...textColumns([
+                'restaurant_id',
+                'payment_id',
+                'payment_session_id',
+                'ledger_type',
+                'ledger_id',
+                'source_type',
+                'source_id',
+                'status',
+                'notes',
+                'metadata_json',
+                'created_by',
+                'created_at',
+                'updated_at',
+            ]),
+            ...realColumns(['expected_amount', 'settled_amount', 'delta_amount']),
+        },
+        { localOnly: true }
+    ),
+    domain_events: new Table(
+        {
+            ...textColumns([
+                'restaurant_id',
+                'location_id',
+                'device_id',
+                'actor_id',
+                'aggregate_type',
+                'aggregate_id',
+                'event_type',
+                'schema_name',
+                'payload_json',
+                'idempotency_key',
+                'causation_id',
+                'correlation_id',
+                'created_at',
+                'synced_at',
+            ]),
+            ...integerColumns(['schema_version']),
+        },
+        { localOnly: true }
+    ),
     restaurant_settings: new Table({
         ...textColumns(['restaurant_id', 'settings_json', 'synced_at']),
     }),
@@ -511,15 +763,40 @@ const powerSyncAppSchema = new Schema({
     sync_conflict_logs: new Table(
         {
             ...textColumns([
+                'restaurant_id',
+                'location_id',
+                'device_id',
                 'entity_type',
                 'entity_id',
                 'conflict_type',
+                'operation_type',
+                'payload_json',
                 'client_timestamp',
                 'server_timestamp',
                 'resolution_strategy',
                 'resolution_details',
                 'created_at',
             ]),
+        },
+        { localOnly: true }
+    ),
+    sync_replay_checkpoints: new Table(
+        {
+            ...textColumns([
+                'scope',
+                'cursor_value',
+                'journal_entry_id',
+                'status',
+                'error_text',
+                'updated_at',
+            ]),
+        },
+        { localOnly: true }
+    ),
+    local_sequence_counters: new Table(
+        {
+            ...textColumns(['scope_key', 'business_date', 'updated_at']),
+            ...integerColumns(['last_value']),
         },
         { localOnly: true }
     ),

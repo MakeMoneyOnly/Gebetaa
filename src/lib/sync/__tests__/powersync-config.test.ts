@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+    canonicalLocalTableNames,
     getPowerSyncBootstrapStatus,
     getPowerSyncConfig,
     powerSyncSchema,
@@ -53,9 +54,35 @@ describe('powersync-config', () => {
         expect(getPowerSyncBootstrapStatus().state).toBe('not_configured');
     });
 
-    it('includes local_journal and conflict tables in schema', () => {
+    it('includes canonical local durability tables in schema', () => {
+        expect(canonicalLocalTableNames).toEqual(
+            expect.arrayContaining([
+                'orders',
+                'order_items',
+                'kds_items',
+                'payment_sessions',
+                'printer_jobs',
+                'fiscal_jobs',
+                'local_journal',
+                'audit_logs',
+                'sync_conflict_logs',
+                'domain_events',
+                'payment_events',
+                'reconciliation_entries',
+                'sync_replay_checkpoints',
+            ])
+        );
+
+        expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS payment_sessions');
+        expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS domain_events');
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS local_journal');
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS audit_logs');
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS sync_conflict_logs');
+        expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS payment_events');
+        expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS reconciliation_entries');
+        expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS sync_replay_checkpoints');
+        expect(powerSyncSchema).toContain('payment_session_id TEXT');
+        expect(powerSyncSchema).toContain('selected_provider TEXT');
+        expect(powerSyncSchema).toContain('ledger_type TEXT NOT NULL');
     });
 });

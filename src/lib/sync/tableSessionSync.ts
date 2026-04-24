@@ -2,11 +2,12 @@ import {
     buildCloseTableSessionCommand,
     buildOpenTableSessionCommand,
     buildTransferTableSessionCommand,
+    buildUpdateTableSessionCommand,
     type TableCommandContext,
 } from '@/lib/domain/tables/commands';
 import { appendLocalJournalEntryInDatabase } from '@/lib/journal/local-journal';
 import { logger } from '@/lib/logger';
-import { generateIdempotencyKey, queueSyncOperation } from '@/lib/sync/idempotency';
+import { generateIdempotencyKey, queueSyncOperationInDatabase } from '@/lib/sync/idempotency';
 import { getPowerSync } from '@/lib/sync/powersync-config';
 
 export type OfflineTableSessionStatus = 'open' | 'closed' | 'transferred';
@@ -92,53 +93,56 @@ export async function openOfflineTableSession(input: {
     );
 
     try {
-        await db.execute(
-            `INSERT INTO table_sessions (
-                id, restaurant_id, table_id, status, guest_count, assigned_staff_id,
-                notes, metadata_json, opened_at, created_at, updated_at
-            ) VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                sessionId,
+        await db.write(async () => {
+            await appendTableCommandJournal(
+                db,
                 input.restaurantId,
-                input.tableId,
-                input.guestCount ?? 1,
-                input.assignedStaffId ?? null,
-                input.notes ?? null,
-                JSON.stringify(input.metadata ?? {}),
-                now,
-                now,
-                now,
-            ]
-        );
+                sessionId,
+                'table.open',
+                idempotencyKey,
+                command as unknown as Record<string, unknown>
+            );
 
-        await appendTableCommandJournal(
-            db,
-            input.restaurantId,
-            sessionId,
-            'table.open',
-            idempotencyKey,
-            command as unknown as Record<string, unknown>
-        );
+            await db.execute(
+                `INSERT INTO table_sessions (
+                    id, restaurant_id, table_id, status, guest_count, assigned_staff_id,
+                    notes, metadata_json, opened_at, created_at, updated_at
+                ) VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    sessionId,
+                    input.restaurantId,
+                    input.tableId,
+                    input.guestCount ?? 1,
+                    input.assignedStaffId ?? null,
+                    input.notes ?? null,
+                    JSON.stringify(input.metadata ?? {}),
+                    now,
+                    now,
+                    now,
+                ]
+            );
 
-        await queueSyncOperation(
-            'create',
-            'table_sessions',
-            sessionId,
-            {
-                table_id: input.tableId,
-                guest_count: input.guestCount ?? 1,
-                assigned_staff_id: input.assignedStaffId ?? null,
-                notes: input.notes ?? null,
-                metadata: input.metadata ?? {},
-                domain_command: command,
-            },
-            {
-                restaurantId: input.restaurantId,
-                locationId: context.locationId,
-                deviceId: context.deviceId,
-                actorId: context.actor.actorId,
-            }
-        );
+            await queueSyncOperationInDatabase(
+                db,
+                'create',
+                'table_sessions',
+                sessionId,
+                {
+                    table_id: input.tableId,
+                    guest_count: input.guestCount ?? 1,
+                    assigned_staff_id: input.assignedStaffId ?? null,
+                    notes: input.notes ?? null,
+                    metadata: input.metadata ?? {},
+                    domain_command: command,
+                },
+                {
+                    restaurantId: input.restaurantId,
+                    locationId: context.locationId,
+                    deviceId: context.deviceId,
+                    actorId: context.actor.actorId,
+                }
+            );
+        });
 
         return await getOfflineTableSession(sessionId);
     } catch (error) {
@@ -202,50 +206,135 @@ export async function transferOfflineTableSession(input: {
     );
 
     try {
-        await db.execute(
-            `UPDATE table_sessions
-             SET table_id = ?, assigned_staff_id = ?, notes = ?, status = 'transferred', updated_at = ?
-             WHERE id = ?`,
-            [
-                input.tableId,
-                input.assignedStaffId ?? null,
-                input.notes ?? null,
-                now,
+        await db.write(async () => {
+            await appendTableCommandJournal(
+                db,
+                input.restaurantId,
                 input.sessionId,
-            ]
-        );
+                'table.transfer',
+                idempotencyKey,
+                command as unknown as Record<string, unknown>
+            );
 
-        await appendTableCommandJournal(
-            db,
-            input.restaurantId,
-            input.sessionId,
-            'table.transfer',
-            idempotencyKey,
-            command as unknown as Record<string, unknown>
-        );
+            await db.execute(
+                `UPDATE table_sessions
+                 SET table_id = ?, assigned_staff_id = ?, notes = ?, status = 'transferred', updated_at = ?
+                 WHERE id = ?`,
+                [
+                    input.tableId,
+                    input.assignedStaffId ?? null,
+                    input.notes ?? null,
+                    now,
+                    input.sessionId,
+                ]
+            );
 
-        await queueSyncOperation(
-            'update',
-            'table_sessions',
-            input.sessionId,
-            {
-                table_id: input.tableId,
-                assigned_staff_id: input.assignedStaffId ?? null,
-                notes: input.notes ?? null,
-                status: 'transferred',
-                domain_command: command,
-            },
-            {
-                restaurantId: input.restaurantId,
-                locationId: context.locationId,
-                deviceId: context.deviceId,
-                actorId: context.actor.actorId,
-            }
-        );
+            await queueSyncOperationInDatabase(
+                db,
+                'update',
+                'table_sessions',
+                input.sessionId,
+                {
+                    table_id: input.tableId,
+                    assigned_staff_id: input.assignedStaffId ?? null,
+                    notes: input.notes ?? null,
+                    status: 'transferred',
+                    domain_command: command,
+                },
+                {
+                    restaurantId: input.restaurantId,
+                    locationId: context.locationId,
+                    deviceId: context.deviceId,
+                    actorId: context.actor.actorId,
+                }
+            );
+        });
 
         return true;
     } catch (error) {
         logger.error('[TableSessionSync] Failed to transfer table session', error);
+        return false;
+    }
+}
+
+export async function updateOfflineTableSession(input: {
+    sessionId: string;
+    restaurantId: string;
+    tableId: string;
+    guestCount?: number | null;
+    assignedStaffId?: string | null;
+    notes?: string | null;
+}): Promise<boolean> {
+    const db = getPowerSync();
+    if (!db) {
+        return false;
+    }
+
+    const now = new Date().toISOString();
+    const idempotencyKey = generateIdempotencyKey('table-update');
+    const context = getTableCommandContext(input.restaurantId);
+    const command = buildUpdateTableSessionCommand(
+        context,
+        {
+            session_id: input.sessionId,
+            table_id: input.tableId,
+            guest_count: input.guestCount ?? null,
+            assigned_staff_id: input.assignedStaffId ?? null,
+            notes: input.notes ?? null,
+        },
+        idempotencyKey
+    );
+
+    try {
+        await db.write(async () => {
+            await appendTableCommandJournal(
+                db,
+                input.restaurantId,
+                input.sessionId,
+                'table.update',
+                idempotencyKey,
+                command as unknown as Record<string, unknown>
+            );
+
+            await db.execute(
+                `UPDATE table_sessions
+                 SET guest_count = COALESCE(?, guest_count),
+                     assigned_staff_id = COALESCE(?, assigned_staff_id),
+                     notes = COALESCE(?, notes),
+                     updated_at = ?
+                 WHERE id = ?`,
+                [
+                    input.guestCount ?? null,
+                    input.assignedStaffId ?? null,
+                    input.notes ?? null,
+                    now,
+                    input.sessionId,
+                ]
+            );
+
+            await queueSyncOperationInDatabase(
+                db,
+                'update',
+                'table_sessions',
+                input.sessionId,
+                {
+                    guest_count: input.guestCount ?? null,
+                    assigned_staff_id: input.assignedStaffId ?? null,
+                    notes: input.notes ?? null,
+                    domain_command: command,
+                },
+                {
+                    restaurantId: input.restaurantId,
+                    locationId: context.locationId,
+                    deviceId: context.deviceId,
+                    actorId: context.actor.actorId,
+                }
+            );
+        });
+
+        return true;
+    } catch (error) {
+        logger.error('[TableSessionSync] Failed to update table session', error);
         return false;
     }
 }
@@ -274,39 +363,42 @@ export async function closeOfflineTableSession(input: {
     );
 
     try {
-        await db.execute(
-            `UPDATE table_sessions
-             SET status = 'closed', closed_at = ?, updated_at = ?
-             WHERE id = ?`,
-            [now, now, input.sessionId]
-        );
+        await db.write(async () => {
+            await appendTableCommandJournal(
+                db,
+                input.restaurantId,
+                input.sessionId,
+                'table.close',
+                idempotencyKey,
+                command as unknown as Record<string, unknown>
+            );
 
-        await appendTableCommandJournal(
-            db,
-            input.restaurantId,
-            input.sessionId,
-            'table.close',
-            idempotencyKey,
-            command as unknown as Record<string, unknown>
-        );
+            await db.execute(
+                `UPDATE table_sessions
+                 SET status = 'closed', closed_at = ?, updated_at = ?
+                 WHERE id = ?`,
+                [now, now, input.sessionId]
+            );
 
-        await queueSyncOperation(
-            'update',
-            'table_sessions',
-            input.sessionId,
-            {
-                table_id: input.tableId,
-                status: 'closed',
-                closed_at: now,
-                domain_command: command,
-            },
-            {
-                restaurantId: input.restaurantId,
-                locationId: context.locationId,
-                deviceId: context.deviceId,
-                actorId: context.actor.actorId,
-            }
-        );
+            await queueSyncOperationInDatabase(
+                db,
+                'update',
+                'table_sessions',
+                input.sessionId,
+                {
+                    table_id: input.tableId,
+                    status: 'closed',
+                    closed_at: now,
+                    domain_command: command,
+                },
+                {
+                    restaurantId: input.restaurantId,
+                    locationId: context.locationId,
+                    deviceId: context.deviceId,
+                    actorId: context.actor.actorId,
+                }
+            );
+        });
 
         return true;
     } catch (error) {

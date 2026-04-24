@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
-const mockAppendLocalJournalEntry = vi.fn().mockResolvedValue(null);
+const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(null);
 
 vi.mock('../powersync-config', () => ({
     getPowerSync: vi.fn(() => ({
@@ -21,7 +21,7 @@ vi.mock('../powersync-config', () => ({
 }));
 
 vi.mock('@/lib/journal/local-journal', () => ({
-    appendLocalJournalEntry: mockAppendLocalJournalEntry,
+    appendLocalJournalEntryInDatabase: mockAppendLocalJournalEntryInDatabase,
 }));
 
 describe('Idempotency Key Manager', () => {
@@ -30,7 +30,7 @@ describe('Idempotency Key Manager', () => {
         mockExecute.mockResolvedValue({ rowsAffected: 1 });
         mockGetFirstAsync.mockResolvedValue(null);
         mockGetAllAsync.mockResolvedValue([]);
-        mockAppendLocalJournalEntry.mockResolvedValue(null);
+        mockAppendLocalJournalEntryInDatabase.mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -171,14 +171,18 @@ describe('Idempotency Key Manager', () => {
                 }
             );
 
-            expect(mockAppendLocalJournalEntry).toHaveBeenCalledOnce();
-            expect(mockAppendLocalJournalEntry).toHaveBeenCalledWith(
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+            expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledWith(
+                expect.anything(),
                 expect.objectContaining({
                     entryKind: 'sync',
                     aggregateType: 'orders',
                     aggregateId: 'order-123',
                     operationType: 'sync.create',
                 })
+            );
+            expect(mockAppendLocalJournalEntryInDatabase.mock.invocationCallOrder[0]).toBeLessThan(
+                mockExecute.mock.invocationCallOrder[0]
             );
         });
     });

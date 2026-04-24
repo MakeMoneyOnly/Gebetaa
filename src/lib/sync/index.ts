@@ -96,6 +96,7 @@ export {
     getOfflineTableSession,
     getOpenOfflineTableSessionByTableId,
     transferOfflineTableSession,
+    updateOfflineTableSession,
     closeOfflineTableSession,
     type OfflineTableSession,
     type OfflineTableSessionStatus,

@@ -6,11 +6,12 @@
  */
 
 import { getPowerSync } from './powersync-config';
+import type { PowerSyncDatabase } from './powersync-config';
 import {
     dispatchGatewayDomainCommand,
     isDispatchableDomainCommand,
 } from '@/lib/gateway/dispatcher';
-import { appendLocalJournalEntry } from '@/lib/journal/local-journal';
+import { appendLocalJournalEntryInDatabase } from '@/lib/journal/local-journal';
 import { logger } from '@/lib/logger';
 
 /**
@@ -66,6 +67,68 @@ export interface SyncQueueJournalContext {
     actorId?: string | null;
 }
 
+async function appendSyncQueueJournal(
+    db: PowerSyncDatabase,
+    operation: SyncOperation,
+    tableName: string,
+    recordId: string,
+    payload: Record<string, unknown>,
+    idempotencyKey: string,
+    journalContext?: SyncQueueJournalContext
+): Promise<void> {
+    if (!journalContext) {
+        return;
+    }
+
+    await appendLocalJournalEntryInDatabase(db, {
+        restaurantId: journalContext.restaurantId,
+        locationId: journalContext.locationId ?? null,
+        deviceId: journalContext.deviceId,
+        actorId: journalContext.actorId ?? null,
+        entryKind: 'sync',
+        aggregateType: tableName,
+        aggregateId: recordId,
+        operationType: `sync.${operation}`,
+        payload: {
+            operation,
+            table_name: tableName,
+            record_id: recordId,
+            sync_payload: payload,
+        },
+        idempotencyKey,
+    });
+}
+
+export async function queueSyncOperationInDatabase(
+    db: PowerSyncDatabase,
+    operation: SyncOperation,
+    tableName: string,
+    recordId: string,
+    payload: Record<string, unknown>,
+    journalContext?: SyncQueueJournalContext
+): Promise<string> {
+    const idempotencyKey = generateIdempotencyKey(`${operation}-${tableName}`);
+    const now = new Date().toISOString();
+
+    await appendSyncQueueJournal(
+        db,
+        operation,
+        tableName,
+        recordId,
+        payload,
+        idempotencyKey,
+        journalContext
+    );
+
+    await db.execute(
+        `INSERT INTO sync_queue (operation, table_name, record_id, payload, idempotency_key, status, attempts, created_at)
+         VALUES (?, ?, ?, ?, ?, 'pending', 0, ?)`,
+        [operation, tableName, recordId, JSON.stringify(payload), idempotencyKey, now]
+    );
+
+    return idempotencyKey;
+}
+
 /**
  * Queue an operation for sync
  */
@@ -82,34 +145,14 @@ export async function queueSyncOperation(
         return '';
     }
 
-    const idempotencyKey = generateIdempotencyKey(`${operation}-${tableName}`);
-    const now = new Date().toISOString();
-
-    await db.execute(
-        `INSERT INTO sync_queue (operation, table_name, record_id, payload, idempotency_key, status, attempts, created_at)
-         VALUES (?, ?, ?, ?, ?, 'pending', 0, ?)`,
-        [operation, tableName, recordId, JSON.stringify(payload), idempotencyKey, now]
+    const idempotencyKey = await queueSyncOperationInDatabase(
+        db,
+        operation,
+        tableName,
+        recordId,
+        payload,
+        journalContext
     );
-
-    if (journalContext) {
-        await appendLocalJournalEntry({
-            restaurantId: journalContext.restaurantId,
-            locationId: journalContext.locationId ?? null,
-            deviceId: journalContext.deviceId,
-            actorId: journalContext.actorId ?? null,
-            entryKind: 'sync',
-            aggregateType: tableName,
-            aggregateId: recordId,
-            operationType: `sync.${operation}`,
-            payload: {
-                operation,
-                table_name: tableName,
-                record_id: recordId,
-                sync_payload: payload,
-            },
-            idempotencyKey,
-        });
-    }
 
     const commandCandidate = payload.domain_command;
     if (isDispatchableDomainCommand(commandCandidate)) {

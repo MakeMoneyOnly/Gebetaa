@@ -2,18 +2,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
-const mockQueueSyncOperation = vi.fn().mockResolvedValue(undefined);
+const mockWrite = vi.fn(async (fn: () => Promise<unknown>) => fn());
+const mockQueueSyncOperationInDatabase = vi.fn().mockResolvedValue(undefined);
 const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../powersync-config', () => ({
     getPowerSync: vi.fn(() => ({
         execute: mockExecute,
         getFirstAsync: mockGetFirstAsync,
+        write: mockWrite,
     })),
 }));
 
 vi.mock('../idempotency', () => ({
-    queueSyncOperation: mockQueueSyncOperation,
+    queueSyncOperationInDatabase: mockQueueSyncOperationInDatabase,
     generateIdempotencyKey: vi.fn((prefix: string) => `${prefix}-idem`),
 }));
 
@@ -34,6 +36,7 @@ describe('tableSessionSync', () => {
         vi.clearAllMocks();
         mockExecute.mockResolvedValue({ rowsAffected: 1 });
         mockGetFirstAsync.mockResolvedValue(null);
+        mockWrite.mockImplementation(async (fn: () => Promise<unknown>) => fn());
     });
 
     afterEach(() => {
@@ -62,7 +65,10 @@ describe('tableSessionSync', () => {
 
         expect(result).not.toBeNull();
         expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-        expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+        expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
+        expect(mockAppendLocalJournalEntryInDatabase.mock.invocationCallOrder[0]).toBeLessThan(
+            mockExecute.mock.invocationCallOrder[0]
+        );
     });
 
     it('transfers table session with command journal and sync queue', async () => {
@@ -75,7 +81,7 @@ describe('tableSessionSync', () => {
 
         expect(result).toBe(true);
         expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-        expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+        expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
     });
 
     it('closes table session with command journal and sync queue', async () => {
@@ -88,6 +94,6 @@ describe('tableSessionSync', () => {
 
         expect(result).toBe(true);
         expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-        expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+        expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
     });
 });

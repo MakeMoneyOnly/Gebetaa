@@ -90,24 +90,26 @@ export async function createPrintJob(
     );
 
     try {
-        await db.execute(
-            `INSERT INTO printer_jobs (
-                id, order_id, station, payload_json, status, attempts, created_at
-            ) VALUES (?, ?, ?, ?, 'pending', 0, ?)`,
-            [jobId, orderId, station, JSON.stringify(payload), now]
-        );
+        await db.write(async () => {
+            await appendLocalJournalEntryInDatabase(db, {
+                restaurantId: payload.restaurantId,
+                locationId: context.locationId,
+                deviceId: context.deviceId,
+                actorId: context.actor.actorId,
+                entryKind: 'command',
+                aggregateType: 'printer_job',
+                aggregateId: jobId,
+                operationType: 'printer.enqueue',
+                payload: command as unknown as Record<string, unknown>,
+                idempotencyKey,
+            });
 
-        await appendLocalJournalEntryInDatabase(db, {
-            restaurantId: payload.restaurantId,
-            locationId: context.locationId,
-            deviceId: context.deviceId,
-            actorId: context.actor.actorId,
-            entryKind: 'command',
-            aggregateType: 'printer_job',
-            aggregateId: jobId,
-            operationType: 'printer.enqueue',
-            payload: command as unknown as Record<string, unknown>,
-            idempotencyKey,
+            await db.execute(
+                `INSERT INTO printer_jobs (
+                    id, order_id, station, payload_json, status, attempts, created_at
+                ) VALUES (?, ?, ?, ?, 'pending', 0, ?)`,
+                [jobId, orderId, station, JSON.stringify(payload), now]
+            );
         });
 
         const job = await getPrintJob(jobId);

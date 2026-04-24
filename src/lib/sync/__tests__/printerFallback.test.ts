@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
+const mockWrite = vi.fn(async (fn: () => Promise<unknown>) => fn());
 const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../powersync-config', () => ({
@@ -10,6 +11,7 @@ vi.mock('../powersync-config', () => ({
         execute: mockExecute,
         getFirstAsync: mockGetFirstAsync,
         getAllAsync: mockGetAllAsync,
+        write: mockWrite,
     })),
 }));
 
@@ -35,6 +37,7 @@ describe('printerFallback', () => {
         mockExecute.mockResolvedValue({ rowsAffected: 1 });
         mockGetFirstAsync.mockResolvedValue(null);
         mockGetAllAsync.mockResolvedValue([]);
+        mockWrite.mockImplementation(async (fn: () => Promise<unknown>) => fn());
     });
 
     afterEach(() => {
@@ -65,5 +68,8 @@ describe('printerFallback', () => {
 
         expect(result).not.toBeNull();
         expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
+        expect(mockAppendLocalJournalEntryInDatabase.mock.invocationCallOrder[0]).toBeLessThan(
+            mockExecute.mock.invocationCallOrder[0]
+        );
     });
 });

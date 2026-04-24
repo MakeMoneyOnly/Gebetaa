@@ -12,7 +12,7 @@ const mockExecute = vi.fn().mockResolvedValue({ rowsAffected: 1 });
 const mockGetFirstAsync = vi.fn().mockResolvedValue(null);
 const mockGetAllAsync = vi.fn().mockResolvedValue([]);
 const mockWrite = vi.fn(async (fn: () => Promise<unknown>) => fn());
-const mockQueueSyncOperation = vi.fn().mockResolvedValue(undefined);
+const mockQueueSyncOperationInDatabase = vi.fn().mockResolvedValue(undefined);
 const mockAppendLocalJournalEntryInDatabase = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../powersync-config', () => ({
@@ -26,7 +26,7 @@ vi.mock('../powersync-config', () => ({
 
 // Mock idempotency module
 vi.mock('../idempotency', () => ({
-    queueSyncOperation: mockQueueSyncOperation,
+    queueSyncOperationInDatabase: mockQueueSyncOperationInDatabase,
     generateIdempotencyKey: vi.fn((prefix: string) => `${prefix}-test-idempotency-key`),
 }));
 
@@ -61,7 +61,7 @@ describe('Order Sync Manager', () => {
         mockGetFirstAsync.mockResolvedValue(null);
         mockGetAllAsync.mockResolvedValue([]);
         mockWrite.mockImplementation(async (fn: () => Promise<unknown>) => fn());
-        mockQueueSyncOperation.mockResolvedValue(undefined);
+        mockQueueSyncOperationInDatabase.mockResolvedValue(undefined);
         mockAppendLocalJournalEntryInDatabase.mockResolvedValue(undefined);
     });
 
@@ -108,7 +108,15 @@ describe('Order Sync Manager', () => {
             expect(result.order).toBeDefined();
             expect(mockExecute).toHaveBeenCalled();
             expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
+            expect(mockExecute.mock.calls[0][0]).toContain('INSERT INTO local_sequence_counters');
+            const orderInsertIndex = mockExecute.mock.calls.findIndex(call =>
+                String(call[0]).includes('INSERT INTO orders')
+            );
+            expect(orderInsertIndex).toBeGreaterThanOrEqual(0);
+            expect(mockAppendLocalJournalEntryInDatabase.mock.invocationCallOrder[0]).toBeLessThan(
+                mockExecute.mock.invocationCallOrder[orderInsertIndex]
+            );
 
             randomUUIDSpy.mockRestore();
         });
@@ -302,7 +310,7 @@ describe('Order Sync Manager', () => {
                 expect.arrayContaining(['ready', expect.any(String), expect.any(String), 'order-1'])
             );
             expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
         });
 
         it('should return false when PowerSync is not available', async () => {
@@ -354,7 +362,7 @@ describe('Order Sync Manager', () => {
 
             expect(result).toBe(true);
             expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
         });
     });
 
@@ -386,7 +394,7 @@ describe('Order Sync Manager', () => {
                 expect.arrayContaining([expect.any(String), expect.any(String), 'order-1'])
             );
             expect(mockAppendLocalJournalEntryInDatabase).toHaveBeenCalledOnce();
-            expect(mockQueueSyncOperation).toHaveBeenCalledOnce();
+            expect(mockQueueSyncOperationInDatabase).toHaveBeenCalledOnce();
         });
 
         it('should return false when PowerSync is not available', async () => {
@@ -479,11 +487,17 @@ describe('Order Sync Manager', () => {
             const result = await getOfflineOrdersCountByStatus();
 
             expect(result).toEqual({
+                payment_pending: 0,
                 pending: 0,
+                acknowledged: 0,
+                preparing: 0,
+                ready: 0,
+                served: 0,
                 syncing: 0,
                 conflict: 0,
                 resolved: 0,
                 completed: 0,
+                cancelled: 0,
             });
         });
     });

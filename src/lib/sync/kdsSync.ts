@@ -8,7 +8,7 @@
  */
 
 import { getPowerSync } from './powersync-config';
-import { queueSyncOperation, generateIdempotencyKey } from './idempotency';
+import { queueSyncOperationInDatabase, generateIdempotencyKey } from './idempotency';
 import {
     buildCreateKdsItemCommand,
     buildUpdateKdsActionCommand,
@@ -132,47 +132,49 @@ export async function createKdsItem(
     );
 
     try {
-        await db.execute(
-            `INSERT INTO kds_items (
-                id, order_id, order_item_id, station, status, priority, created_at
-            ) VALUES (?, ?, ?, ?, 'queued', ?, ?)`,
-            [kdsId, orderId, orderItemId, station, priority, now]
-        );
+        await db.write(async () => {
+            await appendKdsCommandJournal(db, {
+                aggregateId: kdsId,
+                operationType: 'kds.create',
+                idempotencyKey,
+                payload: createCommand as unknown as Record<string, unknown>,
+            });
 
-        // Also store display data in order_items for reference
-        if (displayData) {
-            await db.execute(`UPDATE order_items SET station = ?, status = 'queued' WHERE id = ?`, [
-                station,
-                orderItemId,
-            ]);
-        }
+            await db.execute(
+                `INSERT INTO kds_items (
+                    id, order_id, order_item_id, station, status, priority, created_at
+                ) VALUES (?, ?, ?, ?, 'queued', ?, ?)`,
+                [kdsId, orderId, orderItemId, station, priority, now]
+            );
 
-        await appendKdsCommandJournal(db, {
-            aggregateId: kdsId,
-            operationType: 'kds.create',
-            idempotencyKey,
-            payload: createCommand as unknown as Record<string, unknown>,
-        });
-
-        await queueSyncOperation(
-            'create',
-            'kds_items',
-            kdsId,
-            {
-                order_id: orderId,
-                order_item_id: orderItemId,
-                station,
-                priority,
-                status: 'queued',
-                domain_command: createCommand,
-            },
-            {
-                restaurantId: commandContext.restaurantId,
-                locationId: commandContext.locationId,
-                deviceId: commandContext.deviceId,
-                actorId: commandContext.actor.actorId,
+            if (displayData) {
+                await db.execute(
+                    `UPDATE order_items SET station = ?, status = 'queued' WHERE id = ?`,
+                    [station, orderItemId]
+                );
             }
-        );
+
+            await queueSyncOperationInDatabase(
+                db,
+                'create',
+                'kds_items',
+                kdsId,
+                {
+                    order_id: orderId,
+                    order_item_id: orderItemId,
+                    station,
+                    priority,
+                    status: 'queued',
+                    domain_command: createCommand,
+                },
+                {
+                    restaurantId: commandContext.restaurantId,
+                    locationId: commandContext.locationId,
+                    deviceId: commandContext.deviceId,
+                    actorId: commandContext.actor.actorId,
+                }
+            );
+        });
 
         const item = await getKdsItem(kdsId);
         return item;
@@ -286,30 +288,6 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
                 return false;
         }
 
-        await db.execute(`UPDATE kds_items SET ${updateFields.join(', ')} WHERE id = ?`, [
-            ...updateValues,
-            kdsId,
-        ]);
-
-        // Also update the order_items status
-        const kdsItem = await getKdsItem(kdsId);
-        if (kdsItem) {
-            let itemStatus: string;
-            if (action === 'bump') {
-                itemStatus = 'completed';
-            } else if (action === 'ready') {
-                itemStatus = 'ready';
-            } else if (newStatus === 'on_hold') {
-                itemStatus = 'pending';
-            } else {
-                itemStatus = 'cooking';
-            }
-            await db.execute(`UPDATE order_items SET status = ? WHERE id = ?`, [
-                itemStatus,
-                kdsItem.order_item_id,
-            ]);
-        }
-
         const actionCommand = buildUpdateKdsActionCommand(
             commandContext,
             {
@@ -320,30 +298,56 @@ export async function executeKdsAction(kdsId: string, action: KdsAction): Promis
             idempotencyKey
         );
 
-        await appendKdsCommandJournal(db, {
-            aggregateId: kdsId,
-            operationType: `kds.${action}`,
-            idempotencyKey,
-            payload: actionCommand as unknown as Record<string, unknown>,
-        });
+        await db.write(async () => {
+            await appendKdsCommandJournal(db, {
+                aggregateId: kdsId,
+                operationType: `kds.${action}`,
+                idempotencyKey,
+                payload: actionCommand as unknown as Record<string, unknown>,
+            });
 
-        await queueSyncOperation(
-            'update',
-            'kds_items',
-            kdsId,
-            {
-                action,
-                idempotency_key: idempotencyKey,
-                status: newStatus,
-                domain_command: actionCommand,
-            },
-            {
-                restaurantId: commandContext.restaurantId,
-                locationId: commandContext.locationId,
-                deviceId: commandContext.deviceId,
-                actorId: commandContext.actor.actorId,
+            await db.execute(`UPDATE kds_items SET ${updateFields.join(', ')} WHERE id = ?`, [
+                ...updateValues,
+                kdsId,
+            ]);
+
+            const kdsItem = await getKdsItem(kdsId);
+            if (kdsItem) {
+                let itemStatus: string;
+                if (action === 'bump') {
+                    itemStatus = 'completed';
+                } else if (action === 'ready') {
+                    itemStatus = 'ready';
+                } else if (newStatus === 'on_hold') {
+                    itemStatus = 'pending';
+                } else {
+                    itemStatus = 'cooking';
+                }
+                await db.execute(`UPDATE order_items SET status = ? WHERE id = ?`, [
+                    itemStatus,
+                    kdsItem.order_item_id,
+                ]);
             }
-        );
+
+            await queueSyncOperationInDatabase(
+                db,
+                'update',
+                'kds_items',
+                kdsId,
+                {
+                    action,
+                    idempotency_key: idempotencyKey,
+                    status: newStatus,
+                    domain_command: actionCommand,
+                },
+                {
+                    restaurantId: commandContext.restaurantId,
+                    locationId: commandContext.locationId,
+                    deviceId: commandContext.deviceId,
+                    actorId: commandContext.actor.actorId,
+                }
+            );
+        });
 
         return true;
     } catch (error) {
