@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, HandPlatter, RefreshCw, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
-import { useRole } from '@/hooks/useRole';
+import { useRole } from '@/features/auth/hooks/useRole';
 import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { submitOrderCourseFireUpdate } from '@/lib/orders/command-adapter';
-import { submitFinalKdsHandoff } from '@/lib/kds/handoff-adapter';
-import { readKdsQueue, readKdsSettings } from '@/lib/kds/read-adapter';
+import { submitFinalKdsHandoff } from '@/features/kds/lib/handoff-adapter';
+import { readKdsQueue, readKdsSettings } from '@/features/kds/lib/read-adapter';
 
 type ConsolidatedOrder = UnifiedKDSOrder & {
     readiness: {

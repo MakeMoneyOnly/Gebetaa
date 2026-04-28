@@ -3,8 +3,8 @@
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
-import { ManagedDeviceBanner } from '@/components/device/ManagedDeviceBanner';
-import { useRole } from '@/hooks/useRole';
+import { ManagedDeviceBanner } from '@/components/device/shell/ManagedDeviceBanner';
+import { useRole } from '@/features/auth/hooks/useRole';
 import { useManagedDeviceSession } from '@/hooks/useManagedDeviceSession';
 import { StationBoard } from '@/features/kds/components/StationBoard';
 

@@ -11,18 +11,18 @@ import {
     List,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useRole } from '@/hooks/useRole';
+import { useRole } from '@/features/auth/hooks/useRole';
 import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useKDSRealtime } from '@/hooks/useKDSRealtime';
-import { readKdsQueue, readKdsSettings } from '@/lib/kds/read-adapter';
+import { useKDSRealtime } from '@/features/kds/hooks/useKDSRealtime';
+import { readKdsQueue, readKdsSettings } from '@/features/kds/lib/read-adapter';
 import {
     getOfflineKdsQueueCount,
     getPendingKdsActions,
     clearSyncedKdsActions,
-} from '@/lib/kds/syncAdapter';
-import { submitKdsItemAction, usesLegacyKdsActionReplay } from '@/lib/kds/command-adapter';
+} from '@/features/kds/lib/syncAdapter';
+import { submitKdsItemAction, usesLegacyKdsActionReplay } from '@/features/kds/lib/command-adapter';
 import { submitOrderCourseFireUpdate } from '@/lib/orders/command-adapter';
 
 type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee';

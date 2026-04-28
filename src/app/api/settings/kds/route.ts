@@ -4,7 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { writeAuditLog } from '@/lib/api/audit';
 import type { Json } from '@/types/database';
-import { DEFAULT_KDS_PRINT_POLICY, normalizeKdsPrintPolicy } from '@/lib/kds/printer';
+import { DEFAULT_KDS_PRINT_POLICY, normalizeKdsPrintPolicy } from '@/features/kds/lib/printer';
 
 const AlertPolicySchema = z.object({
     new_ticket_sound: z.boolean().optional(),

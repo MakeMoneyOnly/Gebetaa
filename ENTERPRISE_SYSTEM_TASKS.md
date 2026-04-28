@@ -94,6 +94,14 @@ These are the first tasks to start because other work depends on them.
 - [x] `ENT-007` Define gateway responsibilities versus client responsibilities versus cloud responsibilities.
       Definition of done: one boundary document exists and is referenced by all implementation work.
 
+- [x] Consolidate `src/components/merchant/shared/` and normalize imports.
+- [x] Fix `TS2307` module resolution errors in employee and takeout tabs.
+- [x] Update `src/types/database.ts` with missing `hardware_devices` columns.
+- [x] Resolve `as any` lint errors in `route.ts` and `DeliveryZoneBuilder.tsx`.
+- [x] Verify full project stability with `pnpm run type-check` and `pnpm run lint`.
+- [x] Audit `src/components/landing/shared` and `src/components/merchant/shared` for unused components.
+- [x] Relocate feature-scoped hooks and libraries to `src/features/[feature]` directories.
+
 - [x] `ENT-008` Create the gateway service skeleton in the repo.
       Definition of done: a runnable local process exists with health endpoints, config loading, and persistent local storage initialization.
 
@@ -198,6 +206,28 @@ These are the first tasks to start because other work depends on them.
 - [x] `ENT-071` Implement deferred-verification payment mode for Chapa and other online processors.
       Definition of done: the system can record offline payment intent and local operational settlement state without falsely marking processor-backed money as verified before upstream confirmation.
       Source of truth: `src/lib/payments/local-ledger.ts`, `src/lib/terminal/read-adapter.ts`, `src/lib/terminal/__tests__/read-adapter.test.ts`
+
+### 2.4 Operational Excellence (Phase 2 Expansion)
+
+- [ ] `ENT-075` Operationalize the Delivery Aggregator for Ethiopian Partners (BeU, Zmall, Deliver Addis, Telebirr Food).
+      Definition of done: Orders from all partners inject into the POS kitchen flow via the unified `AggregatorService` and local-first bus.
+      Source of truth: `src/lib/delivery/aggregator.ts`, `src/lib/delivery/aggregator.test.ts`
+
+- [ ] `ENT-076` Enable Decentralized Waiter Printing (Silent Printing from Tablets).
+      Definition of done: Waiters can print receipts/chits directly from their handheld tablets to networked printers without cashier intervention.
+      Source of truth: `src/lib/printer/silent-print.ts`, `src/lib/printer/escpos.ts`
+
+- [ ] `ENT-077` Harden Staff PIN Security and Tip Tracking.
+      Definition of done: PIN-based waiter login with session expiry and real-time tip allocation logic for payroll.
+      Source of truth: `src/domains/staff/service.ts`, `src/domains/staff/repository.ts`
+
+- [ ] `ENT-078` Implement Multi-Station KDS Routing (Bar, Grill, Cold, Expeditor).
+      Definition of done: Orders are automatically routed to specific kitchen stations based on category-to-station mapping rules.
+      Source of truth: `src/lib/kds/station-router.ts`, `src/domains/orders/service.ts`
+
+- [ ] `ENT-079` Synchronize Employee Payroll and Labor Cost Data.
+      Definition of done: Real-time calculation of labor cost vs. sales KPIs on the command center dashboard, syncing via PowerSync.
+      Source of truth: `src/lib/services/laborReportsService.ts`, `src/lib/services/dashboard-data.ts`
 
 - [x] `ENT-072` Build a payment reconciliation worker for reconnect and upstream replay.
       Definition of done: local payment ledger entries replay idempotently, reconcile against upstream provider/cloud state, and surface matched, rejected, duplicate, and manual-review outcomes.

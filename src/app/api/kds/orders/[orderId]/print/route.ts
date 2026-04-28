@@ -7,7 +7,7 @@ import {
     DEFAULT_KDS_PRINT_POLICY,
     dispatchKdsPrintJob,
     normalizeKdsPrintPolicy,
-} from '@/lib/kds/printer';
+} from '@/features/kds/lib/printer';
 
 const PrintTicketBodySchema = z.object({
     reason: z.string().trim().min(2).max(120).optional().default('manual_print'),
