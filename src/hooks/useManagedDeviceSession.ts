@@ -73,7 +73,7 @@ export function useManagedDeviceSession({
     const hasProfileMismatch = Boolean(session) && !hasExpectedProfile;
     const isIdentityRevoked =
         Boolean(session) &&
-        (isGatewayIdentityRevoked(session.metadata ?? null) ||
+        (isGatewayIdentityRevoked(session?.metadata ?? null) ||
             session?.gateway_bootstrap_status === 'failed');
     const outagePolicy = useMemo(
         () =>

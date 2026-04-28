@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { Utensils, PieChart, ArrowUp, ArrowDown, Info } from 'lucide-react';
-import { ModernSelect } from '../../ModernSelect';
+import { ModernSelect } from '../../shared/ModernSelect';
 
 export function MenuTab() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {/* Category Mix */}
-                <div className="rounded-4xl border border-gray-100 bg-white p-8 lg:col-span-1">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8 lg:col-span-1">
                     <div className="mb-6 flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <PieChart className="h-5 w-5" />
@@ -52,7 +52,7 @@ export function MenuTab() {
                 </div>
 
                 {/* Item Performance */}
-                <div className="rounded-4xl border border-gray-100 bg-white p-8 lg:col-span-2">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8 lg:col-span-2">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">

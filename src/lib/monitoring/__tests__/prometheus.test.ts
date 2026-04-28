@@ -18,14 +18,13 @@ describe('prometheus monitoring', () => {
     });
 
     it('should clear registry in non-production environment', () => {
-        const originalEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'development';
+        vi.stubEnv('NODE_ENV', 'development');
         vi.resetModules();
 
         return import('../prometheus').then(async mod => {
             const result = await mod.getPrometheusMetrics();
             expect(result).toBeDefined();
-            process.env.NODE_ENV = originalEnv;
+            vi.unstubAllEnvs();
             vi.resetModules();
         });
     });

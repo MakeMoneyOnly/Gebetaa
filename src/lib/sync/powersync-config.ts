@@ -287,10 +287,21 @@ export const powerSyncSchema = `
         id TEXT PRIMARY KEY,
         order_id TEXT NOT NULL,
         station TEXT NOT NULL,
+        route_key TEXT NOT NULL DEFAULT 'default',
+        fallback_route_key TEXT,
+        driver_kind TEXT NOT NULL DEFAULT 'network',
+        printer_device_id TEXT,
+        printer_name TEXT,
         payload_json TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
         attempts INTEGER NOT NULL DEFAULT 0,
+        max_attempts INTEGER NOT NULL DEFAULT 3,
         last_error TEXT,
+        status_reason TEXT,
+        next_attempt_at TEXT,
+        last_dispatch_at TEXT,
+        last_heartbeat_at TEXT,
+        rerouted_from_job_id TEXT,
         created_at TEXT NOT NULL,
         printed_at TEXT,
         FOREIGN KEY (order_id) REFERENCES orders(id)
@@ -410,6 +421,7 @@ export const powerSyncSchema = `
     CREATE INDEX IF NOT EXISTS idx_domain_events_idempotency ON domain_events(idempotency_key);
     CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(status);
     CREATE INDEX IF NOT EXISTS idx_printer_jobs_status ON printer_jobs(status);
+    CREATE INDEX IF NOT EXISTS idx_printer_jobs_route_status ON printer_jobs(route_key, status, created_at);
     CREATE INDEX IF NOT EXISTS idx_fiscal_jobs_status ON fiscal_jobs(status);
     CREATE INDEX IF NOT EXISTS idx_local_journal_status ON local_journal(status);
     CREATE INDEX IF NOT EXISTS idx_local_journal_kind ON local_journal(entry_kind, created_at);
@@ -691,13 +703,23 @@ const powerSyncAppSchema = new Schema({
             ...textColumns([
                 'order_id',
                 'station',
+                'route_key',
+                'fallback_route_key',
+                'driver_kind',
+                'printer_device_id',
+                'printer_name',
                 'payload_json',
                 'status',
                 'last_error',
+                'status_reason',
+                'next_attempt_at',
+                'last_dispatch_at',
+                'last_heartbeat_at',
+                'rerouted_from_job_id',
                 'created_at',
                 'printed_at',
             ]),
-            ...integerColumns(['attempts']),
+            ...integerColumns(['attempts', 'max_attempts']),
         },
         { localOnly: true }
     ),

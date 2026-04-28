@@ -12,11 +12,10 @@ import {
     Download,
     Filter,
     CalendarDays,
-    Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { ModernSelect } from '../ModernSelect';
+import { ModernSelect } from '../shared/ModernSelect';
 import { ContemporaryCalendar } from './ContemporaryCalendar';
 import {
     DropdownMenu,

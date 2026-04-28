@@ -1,17 +1,20 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Manrope } from 'next/font/google';
+import { Inter, Manrope, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import { LenisRoot } from '@/components/providers/LenisRoot';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { Toaster } from 'react-hot-toast';
 import { ServiceWorkerCleanup } from '@/components/providers/ServiceWorkerCleanup';
-import { OfflineIndicator } from '@/components/providers/OfflineIndicator';
 import { SkipLink } from '@/components/ui/SkipLink';
 import { PowerSyncProvider } from '@/lib/sync/usePowerSync';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap' });
+const jetbrainsMono = JetBrains_Mono({
+    subsets: ['latin'],
+    variable: '--font-jetbrains',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
     title: 'Lole - Restaurant Infrastructure',
@@ -31,44 +34,34 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en" suppressHydrationWarning className="overflow-x-clip">
+        <html lang="en" suppressHydrationWarning className="h-full">
             <body
-                className={`${inter.variable} ${manrope.variable} font-inter text-brand-ink bg-brand-canvas flex h-screen flex-col overflow-hidden antialiased`}
+                className={`${inter.variable} ${manrope.variable} ${jetbrainsMono.variable} font-inter text-brand-ink bg-brand-canvas antialiased`}
+                suppressHydrationWarning
             >
                 <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
                     <ServiceWorkerCleanup />
                     <SkipLink href="#main-content">Skip to main content</SkipLink>
                     <PowerSyncProvider>
-                        <OfflineIndicator position="top" showSyncStatus={true} />
-                        <div className="relative flex-1 overflow-hidden">
-                            <LenisRoot>
-                                <QueryProvider>
-                                    <div className="fixed top-6 right-6 z-50 hidden md:flex">
-                                        {/* Theme Switcher Logic */}
-                                    </div>
-                                    <div className="pointer-events-none fixed inset-0 z-9999 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
-                                    <main id="main-content" className="h-full" tabIndex={-1}>
-                                        {children}
-                                    </main>
-                                    <Toaster
-                                        position="top-center"
-                                        toastOptions={{
-                                            style: {
-                                                background: '#333',
-                                                color: '#fff',
-                                                borderRadius: '9999px',
-                                            },
-                                            success: {
-                                                iconTheme: {
-                                                    primary: '#22c55e',
-                                                    secondary: '#fff',
-                                                },
-                                            },
-                                        }}
-                                    />
-                                </QueryProvider>
-                            </LenisRoot>
-                        </div>
+                        <QueryProvider>
+                            {children}
+                            <Toaster
+                                position="top-center"
+                                toastOptions={{
+                                    style: {
+                                        background: '#333',
+                                        color: '#fff',
+                                        borderRadius: '9999px',
+                                    },
+                                    success: {
+                                        iconTheme: {
+                                            primary: '#22c55e',
+                                            secondary: '#fff',
+                                        },
+                                    },
+                                }}
+                            />
+                        </QueryProvider>
                     </PowerSyncProvider>
                 </ThemeProvider>
             </body>

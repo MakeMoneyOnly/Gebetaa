@@ -8,7 +8,7 @@ export function CashManagementTab() {
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Cash Drawer Summary */}
-                <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-8 flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <Wallet className="h-5 w-5" />
@@ -47,7 +47,7 @@ export function CashManagementTab() {
                 </div>
 
                 {/* Payout Report */}
-                <div className="flex flex-col rounded-4xl bg-white p-8 shadow-sm">
+                <div className="flex flex-col rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -86,7 +86,7 @@ export function CashManagementTab() {
 
             {/* Z-Report (End-of-Day) */}
             {/* Z-Report Section */}
-            <div className="rounded-4xl bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">

@@ -1,15 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Calendar, MapPin, Layout, ShoppingBag, ChevronDown } from 'lucide-react';
+import { Calendar, Layout, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ModernSelect } from '../ModernSelect';
+import { ModernSelect } from '../shared/ModernSelect';
 
 export function ReportsFilters() {
     return (
         <div className="mb-8 flex flex-wrap items-center gap-4 rounded-3xl border border-gray-100 bg-gray-50/30 p-4">
             {/* Date Range Picker Placeholder */}
-            <div className="flex h-12 min-w-[320px] items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 shadow-sm transition-all hover:border-gray-200">
+            <div className="flex h-12 min-w-[320px] items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 shadow-none transition-all hover:border-gray-200">
                 <Calendar className="h-5 w-5 text-gray-400" />
                 <div className="flex flex-1 items-center gap-2">
                     <span className="text-sm font-bold text-gray-900">Apr 21, 2026</span>
@@ -31,7 +31,7 @@ export function ReportsFilters() {
                             'h-12 rounded-2xl px-4 text-sm font-bold transition-all active:scale-95',
                             range === 'Today'
                                 ? 'bg-black text-white'
-                                : 'border border-gray-100 bg-white text-gray-600 shadow-sm hover:border-gray-200'
+                                : 'border border-gray-100 bg-white text-gray-600 shadow-none hover:border-gray-200'
                         )}
                     >
                         {range}
@@ -79,7 +79,7 @@ export function ReportsFilters() {
             </div>
 
             {/* Compare Toggle */}
-            <button className="flex h-12 items-center gap-2 rounded-2xl border border-gray-100 bg-white px-4 text-sm font-bold text-gray-600 shadow-sm transition-all hover:bg-gray-50 active:scale-95">
+            <button className="flex h-12 items-center gap-2 rounded-2xl border border-gray-100 bg-white px-4 text-sm font-bold text-gray-600 shadow-none transition-all hover:bg-gray-50 active:scale-95">
                 <Layout className="h-4 w-4" />
                 Compare
             </button>

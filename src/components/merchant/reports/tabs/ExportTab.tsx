@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Download, Mail, FileSpreadsheet, CalendarClock, Plus, Trash2, Info } from 'lucide-react';
-import { ModernSelect } from '../../ModernSelect';
+import { ModernSelect } from '../../shared/ModernSelect';
 
 export function ExportTab() {
     const [emails, setEmails] = useState(['']);
@@ -25,7 +25,7 @@ export function ExportTab() {
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Schedule Report */}
-                <div className="rounded-4xl border border-gray-100 bg-white p-8">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -123,7 +123,7 @@ export function ExportTab() {
                 </div>
 
                 {/* Bulk Exports */}
-                <div className="rounded-4xl border border-gray-100 bg-white p-8">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">

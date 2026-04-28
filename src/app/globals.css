@@ -160,10 +160,8 @@
     --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --font-jakarta: var(--font-manrope), sans-serif;
-    --font-playfair: var(--font-playfair), serif;
     --font-jetbrains: var(--font-jetbrains), monospace;
     --font-geist: var(--font-geist), sans-serif;
-    --font-instrument: var(--font-instrument), serif;
 }
 
 /* 

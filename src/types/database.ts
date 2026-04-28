@@ -1222,6 +1222,24 @@ export type Database = {
                     restaurant_id: string;
                     status: string;
                     updated_at: string | null;
+                    device_profile: string | null;
+                    location_id: string | null;
+                    pairing_state: string | null;
+                    pairing_code_expires_at: string | null;
+                    pairing_completed_at: string | null;
+                    hardware_fingerprint: string | null;
+                    printer_connection_type: string | null;
+                    printer_device_id: string | null;
+                    printer_device_name: string | null;
+                    printer_mac_address: string | null;
+                    printer_preferences: Json | null;
+                    management_provider: string | null;
+                    management_device_id: string | null;
+                    management_status: string | null;
+                    app_channel: string | null;
+                    app_version: string | null;
+                    last_boot_at: string | null;
+                    fiscal_mode: string | null;
                 };
                 Insert: {
                     assigned_zones?: string[] | null;
@@ -1237,6 +1255,24 @@ export type Database = {
                     restaurant_id: string;
                     status?: string;
                     updated_at?: string | null;
+                    device_profile?: string | null;
+                    location_id?: string | null;
+                    pairing_state?: string | null;
+                    pairing_code_expires_at?: string | null;
+                    pairing_completed_at?: string | null;
+                    hardware_fingerprint?: string | null;
+                    printer_connection_type?: string | null;
+                    printer_device_id?: string | null;
+                    printer_device_name?: string | null;
+                    printer_mac_address?: string | null;
+                    printer_preferences?: Json | null;
+                    management_provider?: string | null;
+                    management_device_id?: string | null;
+                    management_status?: string | null;
+                    app_channel?: string | null;
+                    app_version?: string | null;
+                    last_boot_at?: string | null;
+                    fiscal_mode?: string | null;
                 };
                 Update: {
                     assigned_zones?: string[] | null;
@@ -1252,6 +1288,24 @@ export type Database = {
                     restaurant_id?: string;
                     status?: string;
                     updated_at?: string | null;
+                    device_profile?: string | null;
+                    location_id?: string | null;
+                    pairing_state?: string | null;
+                    pairing_code_expires_at?: string | null;
+                    pairing_completed_at?: string | null;
+                    hardware_fingerprint?: string | null;
+                    printer_connection_type?: string | null;
+                    printer_device_id?: string | null;
+                    printer_device_name?: string | null;
+                    printer_mac_address?: string | null;
+                    printer_preferences?: Json | null;
+                    management_provider?: string | null;
+                    management_device_id?: string | null;
+                    management_status?: string | null;
+                    app_channel?: string | null;
+                    app_version?: string | null;
+                    last_boot_at?: string | null;
+                    fiscal_mode?: string | null;
                 };
                 Relationships: [
                     {

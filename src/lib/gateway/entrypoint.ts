@@ -99,14 +99,13 @@ export async function startStandaloneGatewayServer(
             if (request.headers['x-device-token']) {
                 const authRequest = new Request(url, {
                     method: request.method,
-                    headers: new Headers(
-                        Object.entries(request.headers).flatMap(([key, value]) =>
-                            typeof value === 'string'
-                                ? [[key, value]]
-                                : Array.isArray(value)
-                                  ? value.map(item => [key, item] as [string, string])
-                                  : []
-                        )
+                    headers: Object.entries(request.headers).reduce(
+                        (acc, [key, value]) => {
+                            if (typeof value === 'string') acc[key] = value;
+                            if (Array.isArray(value)) acc[key] = value.join(', ');
+                            return acc;
+                        },
+                        {} as Record<string, string>
                     ),
                     body: body.length > 0 ? body : undefined,
                 });

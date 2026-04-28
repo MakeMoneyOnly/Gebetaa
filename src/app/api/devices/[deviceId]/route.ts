@@ -1,6 +1,7 @@
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { writeAuditLog } from '@/lib/api/audit';
+import type { Json } from '@/types/database';
 import {
     revokeGatewayIdentityMetadata,
     rotateGatewayIdentityMetadata,
@@ -108,7 +109,7 @@ export async function PATCH(
         : revokeGatewayIdentityMetadata(currentMetadata, now);
     const updatePayload = rotating
         ? {
-              metadata: nextMetadata,
+              metadata: nextMetadata as Json,
               device_token: null,
               pairing_state: 'ready',
               pairing_code: generatePairingCode(),
@@ -117,7 +118,7 @@ export async function PATCH(
               pairing_completed_at: null,
           }
         : {
-              metadata: nextMetadata,
+              metadata: nextMetadata as Json,
               device_token: null,
               pairing_state: 'revoked',
               pairing_code: null,

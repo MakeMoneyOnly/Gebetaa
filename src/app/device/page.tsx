@@ -1,4 +1,4 @@
-import { ManagedDeviceShell } from '@/components/device/ManagedDeviceShell';
+import { ManagedDeviceShell } from '@/components/device/shell/ManagedDeviceShell';
 
 export const dynamic = 'force-dynamic';
 

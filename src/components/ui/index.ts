@@ -2,13 +2,10 @@
 export { Button } from './Button';
 export { Card } from './Card';
 export { Input } from './Input';
-export { CanvasRevealEffect } from './CanvasRevealEffect';
 export { FilterShape } from './FilterShape';
 export { FocusTrap } from './FocusTrap';
-export { MiniNavbar } from './MiniNavbar';
 export { Skeleton } from './Skeleton';
 export { SkipLink } from './SkipLink';
-export { ThemeSwitcher } from './ThemeSwitcher';
 export { Theme } from './theme';
 export { PriceBurst, ScallopBg } from './shapes';
 

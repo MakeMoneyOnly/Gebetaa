@@ -13,9 +13,9 @@ import {
     ArrowUpRight,
     BarChart3,
 } from 'lucide-react';
-import RevenueChart from '@/components/merchant/RevenueChart';
-import VisitHeatmap from '@/components/merchant/VisitHeatmap';
-import SalesPerformanceChart from '@/components/merchant/SalesPerformanceChart';
+import RevenueChart from '@/components/merchant/shared/RevenueChart';
+import VisitHeatmap from '@/components/merchant/shared/VisitHeatmap';
+import SalesPerformanceChart from '@/components/merchant/shared/SalesPerformanceChart';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function DashboardPage() {

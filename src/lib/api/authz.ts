@@ -284,7 +284,10 @@ export async function getDeviceContext(request: Request): Promise<GetDeviceConte
     }
 
     const hydrated = hydrateEnterpriseDeviceRecord(device);
-    if (hydrated.pairing_state === 'revoked' || isGatewayIdentityRevoked(hydrated.metadata)) {
+    if (
+        hydrated.pairing_state === 'revoked' ||
+        isGatewayIdentityRevoked(hydrated.metadata ?? null)
+    ) {
         return {
             ok: false as const,
             response: apiError('Device identity revoked', 401, 'DEVICE_IDENTITY_REVOKED'),

@@ -105,3 +105,5 @@ seed-data*.sql
 plans/
 
 # Added by ggshield
+
+.agents/

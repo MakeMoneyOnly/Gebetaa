@@ -9,16 +9,14 @@ import {
     ListFilter,
     Info,
     ArrowRight,
-    ArrowUp,
-    ArrowDown,
 } from 'lucide-react';
-import { ModernSelect } from '../../ModernSelect';
+import { ModernSelect } from '../../shared/ModernSelect';
 
 export function LaborTab() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             {/* Labor Summary */}
-            <div className="rounded-4xl bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -140,14 +138,14 @@ export function LaborTab() {
                                 ))}
                             </div>
                             <div className="flex border-t border-gray-100">
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
                                         className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                     />
                                 </button>
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-100/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
@@ -161,7 +159,7 @@ export function LaborTab() {
             </div>
 
             {/* Time Entries Table */}
-            <div className="rounded-4xl bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -241,7 +239,7 @@ export function LaborTab() {
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Overtime Alerts */}
-                <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-6 flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-500">
                             <AlertTriangle className="h-5 w-5" />
@@ -270,7 +268,7 @@ export function LaborTab() {
                 </div>
 
                 {/* Tip Summary */}
-                <div className="flex min-h-[280px] flex-col rounded-4xl bg-white shadow-sm">
+                <div className="flex min-h-[280px] flex-col rounded-3xl border border-gray-100 bg-white shadow-none">
                     <div className="flex-1 p-8">
                         <div className="mb-6 flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -278,7 +276,9 @@ export function LaborTab() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <h3 className="text-lg font-bold text-gray-900">Tip Summary</h3>
-                                <Info className="h-4 w-4 cursor-pointer text-gray-400" />
+                                <div className="flex h-4 w-4 cursor-pointer items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200">
+                                    <Info className="h-2.5 w-2.5 text-gray-400" />
+                                </div>
                             </div>
                         </div>
 
@@ -306,8 +306,8 @@ export function LaborTab() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex border-t border-gray-50">
-                        <button className="group flex flex-1 items-center justify-center gap-2 rounded-b-3xl bg-gray-50/30 py-4 text-xs font-bold text-gray-900 transition-all">
+                    <div className="flex border-t border-gray-100">
+                        <button className="group flex flex-1 items-center justify-center gap-2 rounded-b-3xl bg-gray-50 py-4 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                             See details{' '}
                             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                         </button>

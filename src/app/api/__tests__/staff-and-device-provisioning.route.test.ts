@@ -40,7 +40,7 @@ function setAuthContextOk() {
 describe('staff and device provisioning routes', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        writeAuditLogMock.mockResolvedValue(undefined);
+        writeAuditLogMock.mockResolvedValue({ error: null });
     });
 
     it('GET /api/staff merges base staff rows with enriched user fields', async () => {

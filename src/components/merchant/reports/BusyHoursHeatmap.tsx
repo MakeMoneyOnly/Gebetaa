@@ -12,10 +12,10 @@ const DATA = Array.from({ length: 7 }, () => Array.from({ length: 12 }, () => Ma
 
 export function BusyHoursHeatmap() {
     return (
-        <div className="rounded-4xl border border-gray-100 bg-white p-8 shadow-sm">
+        <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
             <div className="mb-8 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black shadow-none">
                         <Clock className="h-5 w-5" />
                     </div>
                     <div>
@@ -58,7 +58,7 @@ export function BusyHoursHeatmap() {
                                     <div
                                         key={hIdx}
                                         className={cn(
-                                            'group relative h-10 rounded-lg transition-all hover:scale-105 hover:shadow-md',
+                                            'group relative h-10 rounded-lg transition-all hover:scale-105 hover:shadow-none',
                                             val < 0.2
                                                 ? 'bg-gray-50/50'
                                                 : val < 0.4

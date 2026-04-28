@@ -1,23 +1,19 @@
 /**
- * Conflict Resolution for Offline Sync
+ * Domain-aware conflict resolution
  *
- * Implements last-write-wins with audit trail conflict resolution
- * for offline-first operations.
- *
- * HIGH-024: Conflict resolution strategies for offline sync
+ * ENT-031/032/033: intent rules, split-brain matrix support, explicit operator review
  */
 
 import { getPowerSync } from './powersync-config';
 import { logger } from '@/lib/logger';
 
-/**
- * Conflict resolution strategy types
- */
-export type ConflictStrategy = 'last_write_wins' | 'server_wins' | 'client_wins' | 'merge';
+export type ConflictStrategy =
+    | 'last_write_wins'
+    | 'server_wins'
+    | 'client_wins'
+    | 'merge'
+    | 'manual_review';
 
-/**
- * Conflict record for audit trail
- */
 export interface ConflictRecord {
     id: string;
     entity_type: string;
@@ -32,9 +28,6 @@ export interface ConflictRecord {
     resolved_at: string;
 }
 
-/**
- * Sync conflict log entry
- */
 export interface SyncConflictLog {
     id: string;
     entity_type: string;
@@ -47,156 +40,138 @@ export interface SyncConflictLog {
     created_at: string;
 }
 
-/**
- * Entity-specific conflict resolution configuration
- */
-const ENTITY_STRATEGIES: Record<string, ConflictStrategy> = {
-    orders: 'last_write_wins',
-    order_items: 'last_write_wins',
-    kds_items: 'server_wins',
-    menu_items: 'server_wins',
-    tables: 'last_write_wins',
-    guests: 'last_write_wins',
-    payments: 'server_wins',
+type DomainRule = {
+    defaultStrategy: ConflictStrategy;
+    serverWinsFields?: string[];
+    clientWinsFields?: string[];
+    mergeFields?: string[];
+    reviewWhen?: Array<
+        (clientData: Record<string, unknown>, serverData: Record<string, unknown>) => boolean
+    >;
 };
 
-/**
- * Fields to exclude from conflict detection (auto-merged)
- */
+const ENTITY_RULES: Record<string, DomainRule> = {
+    orders: {
+        defaultStrategy: 'merge',
+        serverWinsFields: ['subtotal_santim', 'discount_santim', 'vat_santim', 'total_santim'],
+        clientWinsFields: ['notes', 'guest_name', 'guest_phone'],
+        mergeFields: ['status', 'fire_mode', 'current_course', 'table_number'],
+        reviewWhen: [
+            (clientData, serverData) =>
+                String(clientData.status ?? '') === 'cancelled' &&
+                ['preparing', 'ready', 'served', 'completed'].includes(
+                    String(serverData.status ?? '')
+                ),
+            (clientData, serverData) =>
+                String(serverData.status ?? '') === 'cancelled' &&
+                ['preparing', 'ready', 'served', 'completed'].includes(
+                    String(clientData.status ?? '')
+                ),
+        ],
+    },
+    table_sessions: {
+        defaultStrategy: 'merge',
+        clientWinsFields: ['guest_count', 'assigned_staff_id', 'notes'],
+        mergeFields: ['table_id', 'status'],
+        reviewWhen: [
+            (clientData, serverData) =>
+                String(clientData.status ?? '') === 'closed' &&
+                String(serverData.status ?? '') === 'transferred',
+            (clientData, serverData) =>
+                String(clientData.status ?? '') === 'transferred' &&
+                String(serverData.status ?? '') === 'closed',
+        ],
+    },
+    payments: {
+        defaultStrategy: 'server_wins',
+        serverWinsFields: ['status', 'provider_reference', 'transaction_number'],
+        mergeFields: ['metadata_json'],
+        reviewWhen: [
+            (clientData, serverData) =>
+                Number(clientData.amount ?? 0) !==
+                Number(serverData.amount ?? clientData.amount ?? 0),
+        ],
+    },
+    reconciliation_entries: {
+        defaultStrategy: 'manual_review',
+        reviewWhen: [() => true],
+    },
+    order_voids: {
+        defaultStrategy: 'manual_review',
+        reviewWhen: [() => true],
+    },
+    kds_items: {
+        defaultStrategy: 'server_wins',
+        serverWinsFields: ['status', 'started_at', 'ready_at', 'bumped_at'],
+    },
+    tables: {
+        defaultStrategy: 'merge',
+        clientWinsFields: ['name', 'capacity'],
+        mergeFields: ['status'],
+    },
+    menu_items: {
+        defaultStrategy: 'server_wins',
+    },
+    guests: {
+        defaultStrategy: 'last_write_wins',
+    },
+};
+
 const EXCLUDED_FIELDS: Record<string, string[]> = {
     orders: ['synced_at', 'updated_at', 'last_modified'],
     order_items: ['synced_at', 'updated_at', 'last_modified'],
     kds_items: ['synced_at', 'updated_at', 'last_modified'],
+    table_sessions: ['synced_at', 'updated_at', 'last_modified'],
+    payments: ['synced_at', 'updated_at', 'last_modified'],
 };
 
-/**
- * Detect if there is a conflict between client and server data
- */
-export function detectConflict(
-    clientData: { version: number; last_modified: string },
-    serverData: { version: number; last_modified: string }
-): boolean {
-    // Conflict exists if versions differ
-    return clientData.version !== serverData.version;
+function getRule(entityType: string): DomainRule {
+    return ENTITY_RULES[entityType] ?? { defaultStrategy: 'last_write_wins' };
 }
 
-/**
- * Determine conflict type based on data state
- */
-export function getConflictType(
-    clientData: { deleted_at?: string | null; version: number },
-    serverData: { deleted_at?: string | null; version: number }
-): 'version_mismatch' | 'concurrent_edit' | 'delete_update' {
-    const clientDeleted = !!clientData.deleted_at;
-    const serverDeleted = !!serverData.deleted_at;
-
-    if (clientDeleted && !serverDeleted) {
-        return 'delete_update';
-    }
-    if (!clientDeleted && serverDeleted) {
-        return 'delete_update';
-    }
-    if (Math.abs(clientData.version - serverData.version) > 1) {
-        return 'version_mismatch';
-    }
-    return 'concurrent_edit';
+function timestamps(clientData: { last_modified: string }, serverData: { last_modified: string }) {
+    const clientTime = new Date(clientData.last_modified).getTime();
+    const serverTime = new Date(serverData.last_modified).getTime();
+    return { clientTime, serverTime };
 }
 
-/**
- * Resolve conflict using the appropriate strategy
- */
-export function resolveConflict(
-    entityType: string,
-    clientData: Record<string, unknown> & { version: number; last_modified: string },
-    serverData: Record<string, unknown> & { version: number; last_modified: string },
-    strategy?: ConflictStrategy
-): {
-    resolvedData: Record<string, unknown>;
-    strategy: ConflictStrategy;
-    auditDetails: Record<string, unknown>;
-} {
-    const resolvedStrategy = strategy ?? ENTITY_STRATEGIES[entityType] ?? 'last_write_wins';
-    const excludedFields = EXCLUDED_FIELDS[entityType] ?? [];
-
-    let resolvedData: Record<string, unknown>;
-    const auditDetails: Record<string, unknown> = {
-        strategy: resolvedStrategy,
-        clientVersion: clientData.version,
-        serverVersion: serverData.version,
-        clientTimestamp: clientData.last_modified,
-        serverTimestamp: serverData.last_modified,
-    };
-
-    switch (resolvedStrategy) {
-        case 'server_wins':
-            // Server data takes precedence
-            resolvedData = { ...serverData };
-            auditDetails.winner = 'server';
-            break;
-
-        case 'client_wins':
-            // Client data takes precedence
-            resolvedData = { ...clientData };
-            // Increment version to be higher than server
-            resolvedData.version = Math.max(clientData.version, serverData.version) + 1;
-            auditDetails.winner = 'client';
-            break;
-
-        case 'merge':
-            // Merge strategy: combine non-conflicting fields
-            resolvedData = mergeData(clientData, serverData, excludedFields);
-            resolvedData.version = Math.max(clientData.version, serverData.version) + 1;
-            auditDetails.winner = 'merged';
-            break;
-
-        case 'last_write_wins':
-        default:
-            // Compare timestamps, most recent wins
-            const clientTime = new Date(clientData.last_modified).getTime();
-            const serverTime = new Date(serverData.last_modified).getTime();
-
-            if (clientTime >= serverTime) {
-                resolvedData = { ...clientData };
-                resolvedData.version = Math.max(clientData.version, serverData.version) + 1;
-                auditDetails.winner = 'client';
-                auditDetails.timeDiff = clientTime - serverTime;
-            } else {
-                resolvedData = { ...serverData };
-                auditDetails.winner = 'server';
-                auditDetails.timeDiff = serverTime - clientTime;
-            }
-            break;
-    }
-
-    // Update last_modified to now
-    resolvedData.last_modified = new Date().toISOString();
-    resolvedData.updated_at = new Date().toISOString();
-
-    return { resolvedData, strategy: resolvedStrategy, auditDetails };
-}
-
-/**
- * Merge client and server data, preferring non-null values
- */
 function mergeData(
     clientData: Record<string, unknown>,
     serverData: Record<string, unknown>,
-    excludedFields: string[]
+    excludedFields: string[],
+    rule?: DomainRule
 ): Record<string, unknown> {
     const merged: Record<string, unknown> = {};
     const allKeys = new Set([...Object.keys(clientData), ...Object.keys(serverData)]);
+    const mergeFields = new Set(rule?.mergeFields ?? []);
+    const serverWinsFields = new Set(rule?.serverWinsFields ?? []);
+    const clientWinsFields = new Set(rule?.clientWinsFields ?? []);
 
     for (const key of allKeys) {
         if (excludedFields.includes(key)) {
-            // Use server value for excluded fields
             merged[key] = serverData[key];
+            continue;
+        }
+
+        if (serverWinsFields.has(key)) {
+            merged[key] = serverData[key] ?? clientData[key];
+            continue;
+        }
+
+        if (clientWinsFields.has(key)) {
+            merged[key] = clientData[key] ?? serverData[key];
             continue;
         }
 
         const clientValue = clientData[key];
         const serverValue = serverData[key];
 
-        // Prefer non-null, non-undefined values
+        if (mergeFields.has(key)) {
+            merged[key] =
+                clientValue === null || clientValue === undefined ? serverValue : clientValue;
+            continue;
+        }
+
         if (clientValue === null || clientValue === undefined) {
             merged[key] = serverValue;
         } else if (serverValue === null || serverValue === undefined) {
@@ -207,14 +182,13 @@ function mergeData(
             !Array.isArray(clientValue) &&
             !Array.isArray(serverValue)
         ) {
-            // Recursively merge objects
             merged[key] = mergeData(
                 clientValue as Record<string, unknown>,
                 serverValue as Record<string, unknown>,
-                []
+                [],
+                undefined
             );
         } else {
-            // For primitive values, prefer client (user's intent)
             merged[key] = clientValue;
         }
     }
@@ -222,9 +196,120 @@ function mergeData(
     return merged;
 }
 
-/**
- * Log conflict resolution to audit trail
- */
+export function detectConflict(
+    clientData: { version: number; last_modified: string },
+    serverData: { version: number; last_modified: string }
+): boolean {
+    return clientData.version !== serverData.version;
+}
+
+export function getConflictType(
+    clientData: { deleted_at?: string | null; version: number },
+    serverData: { deleted_at?: string | null; version: number }
+): 'version_mismatch' | 'concurrent_edit' | 'delete_update' {
+    const clientDeleted = !!clientData.deleted_at;
+    const serverDeleted = !!serverData.deleted_at;
+
+    if (clientDeleted !== serverDeleted) {
+        return 'delete_update';
+    }
+    if (Math.abs(clientData.version - serverData.version) > 1) {
+        return 'version_mismatch';
+    }
+    return 'concurrent_edit';
+}
+
+export function requiresOperatorReview(
+    entityType: string,
+    clientData: Record<string, unknown>,
+    serverData: Record<string, unknown>
+): boolean {
+    const rule = getRule(entityType);
+    if (rule.defaultStrategy === 'manual_review') {
+        return true;
+    }
+
+    return (rule.reviewWhen ?? []).some(check => check(clientData, serverData));
+}
+
+export function resolveConflict(
+    entityType: string,
+    clientData: Record<string, unknown> & { version: number; last_modified: string },
+    serverData: Record<string, unknown> & { version: number; last_modified: string },
+    strategy?: ConflictStrategy
+): {
+    resolvedData: Record<string, unknown>;
+    strategy: ConflictStrategy;
+    auditDetails: Record<string, unknown>;
+} {
+    const rule = getRule(entityType);
+    const resolvedStrategy =
+        strategy ??
+        (requiresOperatorReview(entityType, clientData, serverData)
+            ? 'manual_review'
+            : rule.defaultStrategy);
+    const excludedFields = EXCLUDED_FIELDS[entityType] ?? [];
+
+    const auditDetails: Record<string, unknown> = {
+        strategy: resolvedStrategy,
+        clientVersion: clientData.version,
+        serverVersion: serverData.version,
+        clientTimestamp: clientData.last_modified,
+        serverTimestamp: serverData.last_modified,
+    };
+
+    let resolvedData: Record<string, unknown>;
+
+    switch (resolvedStrategy) {
+        case 'server_wins':
+            resolvedData = { ...serverData };
+            auditDetails.winner = 'server';
+            break;
+        case 'client_wins':
+            resolvedData = {
+                ...clientData,
+                version: Math.max(clientData.version, serverData.version) + 1,
+            };
+            auditDetails.winner = 'client';
+            break;
+        case 'merge':
+            resolvedData = mergeData(clientData, serverData, excludedFields, rule);
+            resolvedData.version = Math.max(clientData.version, serverData.version) + 1;
+            auditDetails.winner = 'merged';
+            break;
+        case 'manual_review':
+            resolvedData = mergeData(clientData, serverData, excludedFields, rule);
+            resolvedData.status = resolvedData.status ?? 'conflict';
+            resolvedData.version = Math.max(clientData.version, serverData.version) + 1;
+            auditDetails.winner = 'operator_review';
+            auditDetails.requiresOperatorReview = true;
+            break;
+        case 'last_write_wins':
+        default: {
+            const { clientTime, serverTime } = timestamps(clientData, serverData);
+            if (clientTime >= serverTime) {
+                resolvedData = {
+                    ...clientData,
+                    version: Math.max(clientData.version, serverData.version) + 1,
+                };
+                auditDetails.winner = 'client';
+                auditDetails.timeDiff = clientTime - serverTime;
+            } else {
+                resolvedData = { ...serverData };
+                auditDetails.winner = 'server';
+                auditDetails.timeDiff = serverTime - clientTime;
+            }
+            break;
+        }
+    }
+
+    const nowIso = new Date().toISOString();
+    resolvedData.last_modified = nowIso;
+    resolvedData.updated_at = nowIso;
+
+    return { resolvedData, strategy: resolvedStrategy, auditDetails };
+}
+
 export async function logConflictResolution(params: {
     entityType: string;
     entityId: string;
@@ -234,6 +319,7 @@ export async function logConflictResolution(params: {
     resolvedData: Record<string, unknown>;
     strategy: ConflictStrategy;
     auditDetails: Record<string, unknown>;
+    operationType?: string;
 }): Promise<void> {
     const db = getPowerSync();
     if (!db) {
@@ -248,14 +334,20 @@ export async function logConflictResolution(params: {
         await db.execute(
             `INSERT INTO sync_conflict_logs (
                 id, entity_type, entity_id, conflict_type,
-                client_timestamp, server_timestamp, resolution_strategy,
-                resolution_details, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                operation_type, payload_json, client_timestamp, server_timestamp,
+                resolution_strategy, resolution_details, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 logId,
                 params.entityType,
                 params.entityId,
                 params.conflictType,
+                params.operationType ?? null,
+                JSON.stringify({
+                    clientData: params.clientData,
+                    serverData: params.serverData,
+                    resolvedData: params.resolvedData,
+                }),
                 (params.clientData.last_modified as string) ?? now,
                 (params.serverData.last_modified as string) ?? now,
                 params.strategy,
@@ -263,50 +355,37 @@ export async function logConflictResolution(params: {
                 now,
             ]
         );
-
-        logger.info('[ConflictResolution] Conflict resolved and logged', {
-            entityType: params.entityType,
-            entityId: params.entityId,
-            strategy: params.strategy,
-            winner: params.auditDetails.winner,
-        });
     } catch (error) {
         logger.error('[ConflictResolution] Failed to log conflict resolution', error);
     }
 }
 
-/**
- * Handle sync conflict for an entity
- * This is the main entry point for conflict resolution
- */
 export async function handleSyncConflict(params: {
     entityType: string;
     entityId: string;
     clientData: Record<string, unknown> & { version: number; last_modified: string };
     serverData: Record<string, unknown> & { version: number; last_modified: string };
     strategy?: ConflictStrategy;
+    operationType?: string;
 }): Promise<{
     resolved: boolean;
     resolvedData?: Record<string, unknown>;
     error?: string;
+    requiresOperatorReview?: boolean;
 }> {
-    const { entityType, entityId, clientData, serverData, strategy } = params;
+    const { entityType, entityId, clientData, serverData, strategy, operationType } = params;
 
     try {
-        // Detect conflict type
         const conflictType = getConflictType(
             clientData as { deleted_at?: string | null; version: number },
             serverData as { deleted_at?: string | null; version: number }
         );
-
-        // Resolve the conflict
         const {
             resolvedData,
             strategy: usedStrategy,
             auditDetails,
         } = resolveConflict(entityType, clientData, serverData, strategy);
 
-        // Log the resolution
         await logConflictResolution({
             entityType,
             entityId,
@@ -316,11 +395,13 @@ export async function handleSyncConflict(params: {
             resolvedData,
             strategy: usedStrategy,
             auditDetails,
+            operationType,
         });
 
         return {
             resolved: true,
             resolvedData,
+            requiresOperatorReview: usedStrategy === 'manual_review',
         };
     } catch (error) {
         logger.error('[ConflictResolution] Failed to handle sync conflict', {
@@ -328,7 +409,6 @@ export async function handleSyncConflict(params: {
             entityId,
             error: error instanceof Error ? error.message : 'Unknown error',
         });
-
         return {
             resolved: false,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -336,69 +416,73 @@ export async function handleSyncConflict(params: {
     }
 }
 
-/**
- * Get conflict history for an entity
- */
 export async function getConflictHistory(
     entityType: string,
     entityId: string,
-    limit: number = 10
+    limit = 10
 ): Promise<SyncConflictLog[]> {
     const db = getPowerSync();
     if (!db) return [];
 
     try {
-        const logs = await db.getAllAsync<SyncConflictLog>(
+        return await db.getAllAsync<SyncConflictLog>(
             `SELECT * FROM sync_conflict_logs
              WHERE entity_type = ? AND entity_id = ?
              ORDER BY created_at DESC
              LIMIT ?`,
             [entityType, entityId, limit]
         );
-
-        return logs;
     } catch (error) {
         logger.error('[ConflictResolution] Failed to get conflict history', error);
         return [];
     }
 }
 
-/**
- * Get unresolved conflicts count
- */
 export async function getUnresolvedConflictsCount(): Promise<number> {
     const db = getPowerSync();
     if (!db) return 0;
 
     try {
-        const result = await db.getFirstAsync<{ count: number }>(
-            `SELECT COUNT(*) as count FROM orders WHERE status = 'conflict'`
-        );
+        const [orders, tableSessions, payments] = await Promise.all([
+            db.getFirstAsync<{ count: number }>(
+                `SELECT COUNT(*) as count FROM orders WHERE status = 'conflict'`
+            ),
+            db.getFirstAsync<{ count: number }>(
+                `SELECT COUNT(*) as count FROM table_sessions WHERE status = 'conflict'`
+            ),
+            db.getFirstAsync<{ count: number }>(
+                `SELECT COUNT(*) as count FROM payments WHERE status = 'review_required'`
+            ),
+        ]);
 
-        return result?.count ?? 0;
+        return (
+            Number(orders?.count ?? 0) +
+            Number(tableSessions?.count ?? 0) +
+            Number(payments?.count ?? 0)
+        );
     } catch (error) {
         logger.error('[ConflictResolution] Failed to get unresolved conflicts count', error);
         return 0;
     }
 }
 
-/**
- * Batch resolve conflicts for multiple entities
- */
 export async function batchResolveConflicts(
     conflicts: Array<{
         entityType: string;
         entityId: string;
         clientData: Record<string, unknown> & { version: number; last_modified: string };
         serverData: Record<string, unknown> & { version: number; last_modified: string };
+        operationType?: string;
     }>
 ): Promise<{
     resolved: number;
     failed: number;
+    manualReview: number;
     errors: string[];
 }> {
     let resolved = 0;
     let failed = 0;
+    let manualReview = 0;
     const errors: string[] = [];
 
     for (const conflict of conflicts) {
@@ -406,28 +490,18 @@ export async function batchResolveConflicts(
 
         if (result.resolved) {
             resolved++;
+            if (result.requiresOperatorReview) {
+                manualReview++;
+            }
         } else {
             failed++;
             errors.push(`${conflict.entityType}:${conflict.entityId} - ${result.error}`);
         }
     }
 
-    logger.info('[ConflictResolution] Batch resolution complete', {
-        total: conflicts.length,
-        resolved,
-        failed,
-    });
-
-    return { resolved, failed, errors };
+    return { resolved, failed, manualReview, errors };
 }
 
-/**
- * Reconcile local data with server data after a successful sync.
- * Updates the local PowerSync record with the server's current version
- * to prevent future false conflicts.
- *
- * HIGH-006: Server reconciliation on sync completion
- */
 export async function reconcileWithServer(params: {
     entityType: string;
     entityId: string;
@@ -449,15 +523,14 @@ export async function reconcileWithServer(params: {
             kds_order_items: 'kds_items',
             menu_items: 'menu_items',
             tables: 'tables',
+            table_sessions: 'table_sessions',
             guests: 'guests',
             payments: 'payments',
+            reconciliation_entries: 'reconciliation_entries',
         };
 
         const tableName = tableMap[entityType];
         if (!tableName) {
-            logger.warn('[ConflictResolution] Unknown entity type for reconciliation', {
-                entityType,
-            });
             return { success: false, error: `Unknown entity type: ${entityType}` };
         }
 
@@ -475,19 +548,17 @@ export async function reconcileWithServer(params: {
             return { success: true };
         }
 
-        if (serverData.version !== undefined) {
-            const versionIdx = updateFields.findIndex(f => f.startsWith('version'));
-            if (versionIdx >= 0) {
-                updateValues[versionIdx] = serverData.version;
-            } else {
-                updateFields.push('version = ?');
-                updateValues.push(serverData.version);
-            }
+        const versionIdx = updateFields.findIndex(field => field.startsWith('version'));
+        if (serverData.version !== undefined && versionIdx >= 0) {
+            updateValues[versionIdx] = serverData.version;
+        } else if (serverData.version !== undefined) {
+            updateFields.push('version = ?');
+            updateValues.push(serverData.version);
         }
 
-        const lastModIdx = updateFields.findIndex(f => f.startsWith('last_modified'));
-        if (lastModIdx >= 0) {
-            updateValues[lastModIdx] = serverData.last_modified ?? now;
+        const lastModifiedIdx = updateFields.findIndex(field => field.startsWith('last_modified'));
+        if (lastModifiedIdx >= 0) {
+            updateValues[lastModifiedIdx] = serverData.last_modified ?? now;
         } else {
             updateFields.push('last_modified = ?');
             updateValues.push(serverData.last_modified ?? now);
@@ -495,19 +566,12 @@ export async function reconcileWithServer(params: {
 
         updateFields.push('updated_at = ?');
         updateValues.push(now);
-
         updateValues.push(entityId);
 
         await db.execute(
             `UPDATE ${tableName} SET ${updateFields.join(', ')} WHERE id = ?`,
             updateValues
         );
-
-        logger.info('[ConflictResolution] Reconciled with server', {
-            entityType,
-            entityId,
-            fieldsUpdated: updateFields.length,
-        });
 
         return { success: true };
     } catch (error) {

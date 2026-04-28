@@ -19,7 +19,7 @@ import {
     ArrowDown,
     ArrowRight,
 } from 'lucide-react';
-import { ModernSelect } from '../../ModernSelect';
+import { ModernSelect } from '../../shared/ModernSelect';
 import {
     AreaChart,
     Area,
@@ -92,7 +92,7 @@ export function SalesTab() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             {/* Summary Report */}
-            <div className="rounded-4xl bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -290,7 +290,7 @@ export function SalesTab() {
             </div>
 
             {/* Itemized Sales */}
-            <div className="rounded-4xl bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -468,7 +468,7 @@ export function SalesTab() {
             {/* Other Sections Row */}
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Hourly Sales */}
-                <div className="group rounded-4xl bg-white p-8 shadow-sm">
+                <div className="group rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -560,7 +560,7 @@ export function SalesTab() {
                 </div>
 
                 {/* Product Mix */}
-                <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-6 flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                             <PieChart className="h-5 w-5" />
@@ -604,7 +604,7 @@ export function SalesTab() {
                 </div>
 
                 {/* Discounts */}
-                <div className="flex flex-col rounded-4xl bg-white p-8 shadow-sm">
+                <div className="flex flex-col rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -645,7 +645,7 @@ export function SalesTab() {
                 </div>
 
                 {/* Voids */}
-                <div className="flex flex-col rounded-4xl bg-white p-8 shadow-sm">
+                <div className="flex flex-col rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -685,7 +685,7 @@ export function SalesTab() {
             </div>
 
             {/* Order Source Report */}
-            <div className="rounded-4xl bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                 <div className="mb-8 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
                         <Store className="h-5 w-5" />
@@ -795,14 +795,14 @@ export function SalesTab() {
                                 ))}
                             </div>
                             <div className="flex border-t border-gray-100">
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-bl-3xl border-r border-gray-100 bg-gray-50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}
                                         className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 group-hover:-rotate-12"
                                     />
                                 </button>
-                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-50/50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
+                                <button className="group flex flex-1 items-center justify-center gap-2 rounded-br-3xl bg-gray-50 py-3 text-xs font-bold text-gray-900 transition-all outline-none hover:bg-gray-100">
                                     See details{' '}
                                     <ArrowRight
                                         strokeWidth={2}

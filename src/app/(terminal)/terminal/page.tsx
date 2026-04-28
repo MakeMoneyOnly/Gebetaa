@@ -13,7 +13,7 @@ import {
     Store,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { ManagedDeviceBanner } from '@/components/device/ManagedDeviceBanner';
+import { ManagedDeviceBanner } from '@/components/device/shell/ManagedDeviceBanner';
 import { useManagedDeviceSession } from '@/hooks/useManagedDeviceSession';
 import type { SupportedPaymentMethod } from '@/lib/devices/config';
 import { getDeviceTypeLabel } from '@/lib/devices/config';

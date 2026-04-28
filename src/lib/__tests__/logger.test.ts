@@ -65,28 +65,18 @@ describe('Logger', () => {
 
     describe('debug', () => {
         it('logs when NODE_ENV is development', () => {
-            const originalEnv = process.env.NODE_ENV;
-            process.env.NODE_ENV = 'development';
-            try {
-                logger.debug('debug msg', { key: 'val' });
-                expect(warnSpy).toHaveBeenCalledTimes(1);
-                const call = warnSpy.mock.calls[0];
-                expect(call[0]).toContain('DEBUG');
-                expect(call[1]).toBe('debug msg');
-            } finally {
-                process.env.NODE_ENV = originalEnv;
-            }
+            vi.stubEnv('NODE_ENV', 'development');
+            logger.debug('debug msg', { key: 'val' });
+            expect(warnSpy).toHaveBeenCalledTimes(1);
+            const call = warnSpy.mock.calls[0];
+            expect(call[0]).toContain('DEBUG');
+            expect(call[1]).toBe('debug msg');
         });
 
         it('does not log when NODE_ENV is not development', () => {
-            const originalEnv = process.env.NODE_ENV;
-            process.env.NODE_ENV = 'production';
-            try {
-                logger.debug('debug msg', { key: 'val' });
-                expect(warnSpy).not.toHaveBeenCalled();
-            } finally {
-                process.env.NODE_ENV = originalEnv;
-            }
+            vi.stubEnv('NODE_ENV', 'production');
+            logger.debug('debug msg', { key: 'val' });
+            expect(warnSpy).not.toHaveBeenCalled();
         });
     });
 

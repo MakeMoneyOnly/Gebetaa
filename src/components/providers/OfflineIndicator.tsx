@@ -39,7 +39,7 @@ const MODE_STYLES = {
 } as const;
 
 export function OfflineIndicator({
-    position = 'top',
+    position: _position = 'top',
     showSyncStatus = true,
     className,
 }: OfflineIndicatorProps) {

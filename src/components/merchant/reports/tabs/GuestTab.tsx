@@ -1,15 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Heart, Users, Star, Award, TrendingUp, Info, ArrowRight } from 'lucide-react';
-import { ModernSelect } from '../../ModernSelect';
+import { Heart, Users, Star, Award, Info, ArrowRight } from 'lucide-react';
+import { ModernSelect } from '../../shared/ModernSelect';
 
 export function GuestTab() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 space-y-8 pb-12 duration-500">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Visit Frequency */}
-                <div className="rounded-4xl bg-white p-8 shadow-sm">
+                <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="mb-8 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">
@@ -133,7 +133,7 @@ export function GuestTab() {
                     </div>
                 </div>
 
-                <div className="mt-8 space-y-4 rounded-4xl bg-white p-8 shadow-sm">
+                <div className="mt-8 space-y-4 rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                     <div className="flex items-center justify-between">
                         <span className="text-sm font-bold text-gray-900">Return Rate</span>
                         <span className="text-lg font-bold text-black">40.7%</span>
@@ -146,7 +146,7 @@ export function GuestTab() {
             </div>
 
             {/* Loyalty Report */}
-            <div className="rounded-4xl bg-white p-8 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-none">
                 <div className="mb-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDF853] text-black">

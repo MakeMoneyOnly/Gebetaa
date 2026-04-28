@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import OfflineContent from '@/components/offline/OfflineContent';
+import OfflineContent from '@/components/shared/offline/OfflineContent';
 
 export const metadata: Metadata = {
     title: 'Offline - lole',

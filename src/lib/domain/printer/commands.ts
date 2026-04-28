@@ -4,7 +4,7 @@ import {
     type DomainActorRef,
     type DomainCommandEnvelope,
 } from '@/lib/domain/core/contracts';
-import type { KdsPrintPayload } from '@/lib/sync/printerFallback';
+import type { KdsPrintPayload } from '@/lib/printer/contracts';
 
 export interface PrinterCommandContext {
     restaurantId: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { RoleGuard } from '@/components/auth/RoleGuard';
+import { RoleGuard } from '@/components/auth/guards/RoleGuard';
 
 // Force dynamic rendering to prevent build-time errors
 export const dynamic = 'force-dynamic';

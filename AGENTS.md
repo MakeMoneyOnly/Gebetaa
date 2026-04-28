@@ -161,6 +161,16 @@ Use the minimal set of skills that covers the task. Prefer stack-specific skills
     - Use for rollout, rollback, and production deployment planning.
 - `SKILLS/workflow-automation/github-workflow-automation/SKILL.md`
     - Use for CI/CD automation, PR checks, and release workflow improvements.
+- `.agents/skills/gstack/SKILL.md`
+    - Use for headless browser automation, QA testing, design audits, and specialized builder workflows (/ship, /investigate, /qa, /review).
+- `.agents/skills/gstack-investigate/SKILL.md`
+    - Use for deep-diving into bugs, errors, and system failures.
+- `.agents/skills/gstack-qa/SKILL.md`
+    - Use for end-to-end QA testing and bug-fixing loops.
+- `.agents/skills/gstack-ship/SKILL.md`
+    - Use for quality-gated shipping, PR creation, and deployment verification.
+- `.agents/skills/gstack-review/SKILL.md`
+    - Use for comprehensive code and design reviews.
 
 ## Skill Usage Protocol
 

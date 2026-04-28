@@ -1,5 +1,5 @@
 import React from 'react';
-import { MenusPageClient } from '@/components/merchant/MenusPageClient';
+import { MenusPageClient } from '@/components/merchant/menus/MenusPageClient';
 import { getMenuPageData } from '@/lib/services/dashboardDataService';
 
 export default async function MenusPage() {
