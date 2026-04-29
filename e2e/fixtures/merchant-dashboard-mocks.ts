@@ -75,8 +75,7 @@ export async function mockMerchantDashboardAuth(page: Page) {
         window.localStorage.setItem(
             'sb-axuegixbqsvztdraenkz-auth-token',
             JSON.stringify({
-                access_token:
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGFmZi11c2VyLTEiLCJlbWFpbCI6ImUyZUBleGFtcGxlLmNvbSIsInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoyMDk5OTk5OTk5fQ.signature',
+                access_token: 'eyJ-e2e-dummy-token-value.payload.signature',
                 token_type: 'bearer',
                 expires_in: 3600,
                 expires_at: 2099999999,

@@ -52,7 +52,7 @@ Every API key is scoped to:
 API keys are issued by lole and granted by the restaurant. They look like:
 
 ```
-gbp_live_ca3f8e7b4d91a2c05fe6d8b13729048e5d6c4f2a1b9e7d5c3a1f8e6b4d2c0a
+gbp_live_<your-64-character-hex-key>
 └──┘ └──┘ └───────────────────────────────────────────────────────────────┘
  1    2                              3
  1: prefix "gbp" = lole Partner

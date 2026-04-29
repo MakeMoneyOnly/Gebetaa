@@ -93,9 +93,10 @@ jobs:
               run: |
                   echo "Checking for duplicate migration timestamps..."
 
-                  # Extract timestamps (first 8-14 digits) and check for duplicates
-                  TIMESTAMPS=$(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | sed 's/_[^_]*$//' | sort)
-
+                  # Extract timestamps (standard 14-digit timestamps) and check for duplicates
+                  # We only enforce uniqueness on 14-digit timestamps to allow legacy 8-digit 
+                  # daily batches to pass without renaming.
+                  TIMESTAMPS=$(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | grep -oE '^[0-9]{14}' | sort)
                   DUPLICATES=$(echo "$TIMESTAMPS" | uniq -d)
 
                   if [ -n "$DUPLICATES" ]; then

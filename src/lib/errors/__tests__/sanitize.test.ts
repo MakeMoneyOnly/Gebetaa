@@ -83,8 +83,8 @@ describe('Error Message Sanitization', () => {
 
             it('should redact tokens', () => {
                 // When message is heavily redacted, returns generic message
-                const result = sanitizeErrorMessage('token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
-                expect(result).not.toContain('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
+                const result = sanitizeErrorMessage('token=eyJ-test-token-value');
+                expect(result).not.toContain('eyJ-test-token-value');
                 // Message is heavily redacted so returns generic message
                 expect(result).toBe('An internal error occurred. Please try again.');
             });

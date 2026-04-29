@@ -304,7 +304,7 @@ npx supabase start
 
 # Local URLs (set in .env.test):
 # SUPABASE_URL=http://localhost:54321
-# SUPABASE_SERVICE_ROLE_KEY=eyJ... (printed by supabase start)
+# SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key> (printed by supabase start)
 ```
 
 ### Critical integration test suites

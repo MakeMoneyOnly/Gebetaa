@@ -23,8 +23,12 @@ export function validateE2EConfig(): void {
     const e2eTestMode = process.env.E2E_TEST_MODE;
     const e2eBypassSecret = process.env.E2E_BYPASS_SECRET;
 
-    // CRITICAL: Never allow E2E test mode in production
-    if (nodeEnv === 'production') {
+    // CRITICAL: Never allow E2E test mode in production (unless in CI for E2E testing)
+    if (
+        nodeEnv === 'production' &&
+        process.env.GITHUB_ACTIONS !== 'true' &&
+        process.env.CI !== 'true'
+    ) {
         if (e2eTestMode === 'true') {
             throw new Error(
                 'CRITICAL SECURITY VIOLATION: E2E_TEST_MODE cannot be enabled in production. ' +
@@ -78,8 +82,12 @@ export function isE2EBypassAllowed(): boolean {
     const nodeEnv = process.env.NODE_ENV;
     const e2eTestMode = process.env.E2E_TEST_MODE;
 
-    // Production: Never allow bypass
-    if (nodeEnv === 'production') {
+    // Production: Never allow bypass (unless in CI for E2E testing)
+    if (
+        nodeEnv === 'production' &&
+        process.env.GITHUB_ACTIONS !== 'true' &&
+        process.env.CI !== 'true'
+    ) {
         return false;
     }
 

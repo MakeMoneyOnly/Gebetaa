@@ -23,8 +23,8 @@
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...          # Server-side only — never expose to client
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>          # Server-side only — never expose to client
 DATABASE_URL=<pooler-url>                 # Default app-safe SQL lane
 DATABASE_DIRECT_URL=<direct-url>          # Infra-only: PowerSync replication, migrations, CI, admin scripts
 SUPABASE_POOLER_URL=<pooler-url>          # Optional alias
@@ -33,7 +33,7 @@ SUPABASE_DB_URL=<direct-url>              # Optional alias
 # Upstash
 UPSTASH_REDIS_REST_URL=https://...upstash.io
 UPSTASH_REDIS_REST_TOKEN=AX...
-QSTASH_TOKEN=eyJ...
+QSTASH_TOKEN=<your-qstash-token>
 QSTASH_CURRENT_SIGNING_KEY=sig_...         # Verify QStash webhooks
 
 # Payments
