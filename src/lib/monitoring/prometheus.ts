@@ -16,7 +16,9 @@
  * @see docs/implementation/observability-setup.md
  */
 
-import type { Registry, Histogram, Counter, Gauge } from 'prom-client';
+import type { Histogram, Counter, Gauge } from 'prom-client';
+
+type PromClient = typeof import('prom-client');
 
 /**
  * Edge-safe metrics interface
@@ -34,7 +36,7 @@ export interface Metrics {
 // Check if we are in the edge runtime
 const isEdge = process.env.NEXT_RUNTIME === 'edge';
 
-let client: any = null;
+let client: PromClient | null = null;
 let metrics: Metrics = {
     httpRequestDurationSeconds: null,
     httpRequestsTotal: null,
@@ -47,9 +49,9 @@ let metrics: Metrics = {
 
 if (!isEdge) {
     try {
-        // Only import prom-client in Node.js runtime
+        // Only import prom-client in Node.js runtime — not Edge safe
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        client = require('prom-client');
+        client = require('prom-client') as PromClient;
 
         // Clear registry on hot reload in development
         if (process.env.NODE_ENV !== 'production') {
@@ -114,7 +116,7 @@ export function recordHttpRequest(
     try {
         metrics.httpRequestDurationSeconds.labels(method, path, status).observe(durationSeconds);
         metrics.httpRequestsTotal.labels(method, path, status).inc();
-    } catch (err) {
+    } catch (_err) {
         // Silently ignore recording errors
     }
 }
@@ -126,7 +128,7 @@ export function recordOrderEvent(restaurantId: string, status: string): void {
     if (!metrics.loleOrdersTotal) return;
     try {
         metrics.loleOrdersTotal.labels(restaurantId, status).inc();
-    } catch (err) {}
+    } catch (_err) {}
 }
 
 /**
@@ -136,7 +138,7 @@ export function recordPaymentEvent(provider: string, status: string): void {
     if (!metrics.lolePaymentsTotal) return;
     try {
         metrics.lolePaymentsTotal.labels(provider, status).inc();
-    } catch (err) {}
+    } catch (_err) {}
 }
 
 /**
@@ -146,7 +148,7 @@ export function setActiveSessions(count: number): void {
     if (!metrics.lolectiveSessions) return;
     try {
         metrics.lolectiveSessions.set(count);
-    } catch (err) {}
+    } catch (_err) {}
 }
 
 /**
@@ -156,7 +158,7 @@ export function setActiveRestaurants(count: number): void {
     if (!metrics.lolectiveRestaurants) return;
     try {
         metrics.lolectiveRestaurants.set(count);
-    } catch (err) {}
+    } catch (_err) {}
 }
 
 /**
