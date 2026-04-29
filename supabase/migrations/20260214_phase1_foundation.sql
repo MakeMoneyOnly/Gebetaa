@@ -6,7 +6,7 @@
 DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'tables') THEN
-        CREATE TABLE tables (
+        CREATE TABLE public.tables (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
             table_number TEXT NOT NULL,
