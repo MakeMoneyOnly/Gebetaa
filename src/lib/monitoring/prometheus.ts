@@ -37,7 +37,8 @@ export interface Metrics {
 const isEdge = process.env.NEXT_RUNTIME === 'edge';
 
 let client: PromClient | null = null;
-let metrics: Metrics = {
+
+export let metrics: Metrics = {
     httpRequestDurationSeconds: null,
     httpRequestsTotal: null,
     loleOrdersTotal: null,

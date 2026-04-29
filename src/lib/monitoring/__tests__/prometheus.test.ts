@@ -12,6 +12,8 @@ import {
     getMetricsJson,
 } from '../prometheus';
 
+type MetricValue = { labels: Record<string, string>; value: number };
+
 describe('prometheus monitoring', () => {
     beforeEach(() => {
         client.register.resetMetrics();
@@ -43,12 +45,12 @@ describe('prometheus monitoring', () => {
         it('should observe histogram with duration converted to seconds and increment counter', async () => {
             recordHttpRequest('GET', '/api/orders', 200, 1500);
 
-            const histogramValues = await metrics.httpRequestDurationSeconds.get();
+            const histogramValues = await metrics.httpRequestDurationSeconds!.get();
             expect(histogramValues.values.length).toBeGreaterThan(0);
 
-            const counterValues = await metrics.httpRequestsTotal.get();
+            const counterValues = await metrics.httpRequestsTotal!.get();
             const matched = counterValues.values.find(
-                v =>
+                (v: MetricValue) =>
                     v.labels.method === 'GET' &&
                     v.labels.path === '/api/orders' &&
                     v.labels.status === '200'
@@ -60,9 +62,9 @@ describe('prometheus monitoring', () => {
         it('should convert statusCode to string for labels', async () => {
             recordHttpRequest('POST', '/api/payments', 404, 500);
 
-            const counterValues = await metrics.httpRequestsTotal.get();
+            const counterValues = await metrics.httpRequestsTotal!.get();
             const matched = counterValues.values.find(
-                v =>
+                (v: MetricValue) =>
                     v.labels.method === 'POST' &&
                     v.labels.path === '/api/payments' &&
                     v.labels.status === '404'
@@ -74,9 +76,9 @@ describe('prometheus monitoring', () => {
         it('should convert durationMs to seconds (divide by 1000)', async () => {
             recordHttpRequest('PUT', '/api/orders/1', 204, 2500);
 
-            const histogramValues = await metrics.httpRequestDurationSeconds.get();
+            const histogramValues = await metrics.httpRequestDurationSeconds!.get();
             const observed = histogramValues.values.find(
-                v =>
+                (v: MetricValue) =>
                     v.labels.method === 'PUT' &&
                     v.labels.path === '/api/orders/1' &&
                     v.labels.status === '204'
@@ -88,9 +90,9 @@ describe('prometheus monitoring', () => {
             recordHttpRequest('GET', '/api/test', 200, 100);
             recordHttpRequest('GET', '/api/test', 200, 200);
 
-            const counterValues = await metrics.httpRequestsTotal.get();
+            const counterValues = await metrics.httpRequestsTotal!.get();
             const matched = counterValues.values.find(
-                v =>
+                (v: MetricValue) =>
                     v.labels.method === 'GET' &&
                     v.labels.path === '/api/test' &&
                     v.labels.status === '200'
@@ -104,9 +106,10 @@ describe('prometheus monitoring', () => {
         it('should increment order counter with correct labels', async () => {
             recordOrderEvent('rest-123', 'completed');
 
-            const values = await metrics.loleOrdersTotal.get();
+            const values = await metrics.loleOrdersTotal!.get();
             const matched = values.values.find(
-                v => v.labels.restaurant_id === 'rest-123' && v.labels.status === 'completed'
+                (v: MetricValue) =>
+                    v.labels.restaurant_id === 'rest-123' && v.labels.status === 'completed'
             );
             expect(matched).toBeDefined();
             expect(matched!.value).toBe(1);
@@ -117,9 +120,10 @@ describe('prometheus monitoring', () => {
             recordOrderEvent('rest-456', 'cancelled');
             recordOrderEvent('rest-456', 'cancelled');
 
-            const values = await metrics.loleOrdersTotal.get();
+            const values = await metrics.loleOrdersTotal!.get();
             const matched = values.values.find(
-                v => v.labels.restaurant_id === 'rest-456' && v.labels.status === 'cancelled'
+                (v: MetricValue) =>
+                    v.labels.restaurant_id === 'rest-456' && v.labels.status === 'cancelled'
             );
             expect(matched).toBeDefined();
             expect(matched!.value).toBe(3);
@@ -130,9 +134,10 @@ describe('prometheus monitoring', () => {
         it('should increment payment counter with correct labels', async () => {
             recordPaymentEvent('telebirr', 'success');
 
-            const values = await metrics.lolePaymentsTotal.get();
+            const values = await metrics.lolePaymentsTotal!.get();
             const matched = values.values.find(
-                v => v.labels.provider === 'telebirr' && v.labels.status === 'success'
+                (v: MetricValue) =>
+                    v.labels.provider === 'telebirr' && v.labels.status === 'success'
             );
             expect(matched).toBeDefined();
             expect(matched!.value).toBe(1);
@@ -142,12 +147,12 @@ describe('prometheus monitoring', () => {
             recordPaymentEvent('amole', 'success');
             recordPaymentEvent('cbe', 'failed');
 
-            const values = await metrics.lolePaymentsTotal.get();
+            const values = await metrics.lolePaymentsTotal!.get();
             const amoleSuccess = values.values.find(
-                v => v.labels.provider === 'amole' && v.labels.status === 'success'
+                (v: MetricValue) => v.labels.provider === 'amole' && v.labels.status === 'success'
             );
             const cbeFailed = values.values.find(
-                v => v.labels.provider === 'cbe' && v.labels.status === 'failed'
+                (v: MetricValue) => v.labels.provider === 'cbe' && v.labels.status === 'failed'
             );
             expect(amoleSuccess).toBeDefined();
             expect(amoleSuccess!.value).toBe(1);
@@ -160,7 +165,7 @@ describe('prometheus monitoring', () => {
         it('should set the active sessions gauge to the given value', async () => {
             setActiveSessions(42);
 
-            const values = await metrics.lolectiveSessions.get();
+            const values = await metrics.lolectiveSessions!.get();
             expect(values.values[0]?.value).toBe(42);
         });
 
@@ -168,14 +173,14 @@ describe('prometheus monitoring', () => {
             setActiveSessions(10);
             setActiveSessions(5);
 
-            const values = await metrics.lolectiveSessions.get();
+            const values = await metrics.lolectiveSessions!.get();
             expect(values.values[0]?.value).toBe(5);
         });
 
         it('should accept zero', async () => {
             setActiveSessions(0);
 
-            const values = await metrics.lolectiveSessions.get();
+            const values = await metrics.lolectiveSessions!.get();
             expect(values.values[0]?.value).toBe(0);
         });
     });
@@ -184,7 +189,7 @@ describe('prometheus monitoring', () => {
         it('should set the active restaurants gauge to the given value', async () => {
             setActiveRestaurants(7);
 
-            const values = await metrics.lolectiveRestaurants.get();
+            const values = await metrics.lolectiveRestaurants!.get();
             expect(values.values[0]?.value).toBe(7);
         });
 
@@ -192,7 +197,7 @@ describe('prometheus monitoring', () => {
             setActiveRestaurants(20);
             setActiveRestaurants(15);
 
-            const values = await metrics.lolectiveRestaurants.get();
+            const values = await metrics.lolectiveRestaurants!.get();
             expect(values.values[0]?.value).toBe(15);
         });
     });
