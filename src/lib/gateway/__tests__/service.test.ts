@@ -24,7 +24,7 @@ describe('StoreGatewayService', () => {
         mqttBrokerUrl: 'mqtt://localhost:1883',
         defaultOperatingMode: 'cloud-first' as const,
         syncProtocolVersion: '1.0',
-    };
+    } as any;
 
     beforeEach(() => {
         vi.clearAllMocks();
