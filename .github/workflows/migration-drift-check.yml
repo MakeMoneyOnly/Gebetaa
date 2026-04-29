@@ -40,11 +40,32 @@ jobs:
                   fi
 
                   # Link to project
-                  supabase link --project-ref $SUPABASE_PROJECT_REF --password "$SUPABASE_DB_PASSWORD"
+                  echo "Linking to Supabase project: $SUPABASE_PROJECT_REF"
+                  LINK_OUTPUT=$(supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" 2>&1)
+                  LINK_EXIT_CODE=$?
+                  
+                  if [ $LINK_EXIT_CODE -ne 0 ]; then
+                    echo "$LINK_OUTPUT"
+                    if echo "$LINK_OUTPUT" | grep -q "password authentication failed"; then
+                      echo "::error::Supabase Database Password authentication failed (SQLSTATE 28P01)."
+                      echo "::error::Please verify that SUPABASE_DB_PASSWORD in GitHub Secrets matches your database password."
+                    else
+                      echo "::error::Failed to link to Supabase project (Exit Code: $LINK_EXIT_CODE)."
+                    fi
+                    exit 1
+                  fi
+                  echo "Finished supabase link."
 
                   # List migrations and check for drift
+                  echo "Fetching migration list from remote..."
                   MIGRATION_OUTPUT=$(supabase migration list 2>&1)
+                  LIST_EXIT_CODE=$?
                   echo "$MIGRATION_OUTPUT"
+                  
+                  if [ $LIST_EXIT_CODE -ne 0 ]; then
+                    echo "::error::Failed to list migrations from Supabase (Exit Code: $LIST_EXIT_CODE)."
+                    exit 1
+                  fi
 
                   # Check if there are local migrations not in remote
                   if echo "$MIGRATION_OUTPUT" | grep -q "LOCAL:"; then
