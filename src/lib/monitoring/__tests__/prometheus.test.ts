@@ -12,7 +12,7 @@ import {
     getMetricsJson,
 } from '../prometheus';
 
-type MetricValue = { labels: Record<string, string>; value: number };
+type MetricValue = { labels: Partial<Record<string, string | number>>; value: number };
 
 describe('prometheus monitoring', () => {
     beforeEach(() => {
