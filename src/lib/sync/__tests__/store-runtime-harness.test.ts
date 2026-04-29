@@ -55,6 +55,9 @@ describe('store runtime harness', () => {
             ],
         });
 
+        if (!created.success) {
+            console.error('createOfflineOrder failed:', created.error);
+        }
         expect(harness.isWanConnected()).toBe(false);
         expect(created.success).toBe(true);
         expect(created.order?.id).toBeDefined();

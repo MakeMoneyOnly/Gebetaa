@@ -5,6 +5,8 @@ import { ordersRepository, OrderRow, OrderItemRow } from './repository';
 import { Database } from '@/types/database';
 import { loleGraphQLError } from '@/lib/graphql/errors';
 import { publishEvent } from '@/lib/events/publisher';
+import { getMenuItemsByIds } from '../menu/repository';
+import { routeOrderItemToPrimaryStation } from '@/lib/kds/station-router';
 
 export interface CreateOrderInput {
     restaurantId: string;
@@ -193,9 +195,14 @@ export class OrdersService {
 
         // Calculate totals
         let totalPrice = 0;
+        const menuItems = await getMenuItemsByIds(input.items.map(item => item.menuItemId));
+        const menuItemMap = new Map(
+            menuItems.map(item => [String(item.id), item as Record<string, unknown>])
+        );
         const orderItems = input.items.map(item => {
-            // In production, fetch menu item price from database
-            const unitPrice = 0; // Would be fetched from menu_items
+            const menuItem = menuItemMap.get(item.menuItemId);
+            const unitPrice =
+                typeof menuItem?.price === 'number' ? menuItem.price : Number(menuItem?.price ?? 0);
             const itemTotal = calculateItemTotal(unitPrice, item.quantity, item.modifiers);
             totalPrice += itemTotal;
 
@@ -205,7 +212,17 @@ export class OrdersService {
                 price: itemTotal,
                 modifiers: item.modifiers,
                 notes: item.notes,
-                name: '',
+                name: typeof menuItem?.name === 'string' ? menuItem.name : '',
+                station: routeOrderItemToPrimaryStation({
+                    itemName: typeof menuItem?.name === 'string' ? menuItem.name : null,
+                    station: typeof menuItem?.station === 'string' ? menuItem.station : null,
+                    connectedStations: Array.isArray(menuItem?.connected_stations)
+                        ? menuItem.connected_stations.filter(
+                              (value): value is string => typeof value === 'string'
+                          )
+                        : null,
+                    course: typeof menuItem?.course === 'string' ? menuItem.course : null,
+                }),
                 course: 'main',
                 status: 'pending',
             };

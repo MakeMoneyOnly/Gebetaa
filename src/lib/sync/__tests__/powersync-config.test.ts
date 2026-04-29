@@ -60,7 +60,9 @@ describe('powersync-config', () => {
                 'orders',
                 'order_items',
                 'kds_items',
+                'time_entries',
                 'payment_sessions',
+                'tip_allocations',
                 'printer_jobs',
                 'fiscal_jobs',
                 'local_journal',
@@ -74,6 +76,8 @@ describe('powersync-config', () => {
         );
 
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS payment_sessions');
+        expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS time_entries');
+        expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS tip_allocations');
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS domain_events');
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS local_journal');
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS audit_logs');
@@ -82,6 +86,8 @@ describe('powersync-config', () => {
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS reconciliation_entries');
         expect(powerSyncSchema).toContain('CREATE TABLE IF NOT EXISTS sync_replay_checkpoints');
         expect(powerSyncSchema).toContain('payment_session_id TEXT');
+        expect(powerSyncSchema).toContain('clock_in_at TEXT NOT NULL');
+        expect(powerSyncSchema).toContain('total_tips_distributed REAL NOT NULL DEFAULT 0');
         expect(powerSyncSchema).toContain('selected_provider TEXT');
         expect(powerSyncSchema).toContain('ledger_type TEXT NOT NULL');
     });

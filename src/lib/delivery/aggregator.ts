@@ -7,12 +7,16 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import { publishEvent } from '@/lib/events/publisher';
+import { toGatewayLanEvent, type GatewayLanEventMessage } from '@/lib/gateway/local-events';
 
 // =========================================================
 // Type Definitions
 // =========================================================
 
 export type DeliveryPartnerName =
+    | 'beu'
+    | 'zmall'
     | 'telebirr_food'
     | 'deliver_addis'
     | 'betengna'
@@ -77,6 +81,108 @@ export interface InjectedOrderResult {
     order_number?: string;
     already_exists?: boolean;
     error?: string;
+}
+
+export function normalizeDeliveryPartnerName(partnerName: string): DeliveryPartnerName {
+    const normalized = partnerName.trim().toLowerCase().replace(/\s+/g, '_');
+
+    if (normalized === 'beu' || normalized === 'betengna') return 'beu';
+    if (normalized === 'zmall') return 'zmall';
+    if (normalized === 'telebirr_food' || normalized === 'telebirr') return 'telebirr_food';
+    if (normalized === 'deliver_addis') return 'deliver_addis';
+    if (normalized === 'custom') return 'custom';
+    return 'other';
+}
+
+export function buildAggregatorOrderLanEvent(
+    order: AggregatorOrder,
+    locationId: string = 'delivery-hub'
+): GatewayLanEventMessage<Record<string, unknown>> {
+    return toGatewayLanEvent(
+        {
+            restaurantId: order.restaurant_id,
+            locationId,
+            aggregate: 'aggregator_order',
+            aggregateId: order.id,
+            type: 'delivery.aggregator.order.received',
+            payload: {
+                aggregator_order_id: order.id,
+                delivery_partner_id: order.delivery_partner_id,
+                external_order_id: order.external_order_id,
+                total: order.total,
+                status: order.status,
+            },
+        },
+        1
+    );
+}
+
+interface AggregatorServiceDependencies {
+    receiveOrder?: typeof receiveExternalOrder;
+    publishLocalEvent?: (
+        event: GatewayLanEventMessage<Record<string, unknown>>
+    ) => Promise<void> | void;
+    publishCloudEvent?: (
+        type: 'delivery.aggregator.received',
+        payload: Record<string, unknown>
+    ) => Promise<void>;
+}
+
+export class AggregatorService {
+    private readonly receiveOrderImpl: typeof receiveExternalOrder;
+    private readonly publishLocalEventImpl: (
+        event: GatewayLanEventMessage<Record<string, unknown>>
+    ) => Promise<void> | void;
+    private readonly publishCloudEventImpl: (
+        type: 'delivery.aggregator.received',
+        payload: Record<string, unknown>
+    ) => Promise<void>;
+
+    constructor(dependencies: AggregatorServiceDependencies = {}) {
+        this.receiveOrderImpl = dependencies.receiveOrder ?? receiveExternalOrder;
+        this.publishLocalEventImpl = dependencies.publishLocalEvent ?? (async () => {});
+        this.publishCloudEventImpl =
+            dependencies.publishCloudEvent ??
+            (async (_type, payload) => {
+                await publishEvent('notification.queued', payload);
+            });
+    }
+
+    async receiveAndBroadcastOrder(
+        supabase: SupabaseClient<Database>,
+        restaurantId: string,
+        partnerId: string,
+        externalOrder: Parameters<typeof receiveExternalOrder>[3]
+    ): Promise<{
+        success: boolean;
+        order?: AggregatorOrder;
+        error?: string;
+        lanEvent?: GatewayLanEventMessage<Record<string, unknown>>;
+    }> {
+        const result = await this.receiveOrderImpl(
+            supabase,
+            restaurantId,
+            partnerId,
+            externalOrder
+        );
+        if (!result.success || !result.order) {
+            return result;
+        }
+
+        const lanEvent = buildAggregatorOrderLanEvent(result.order);
+        await this.publishLocalEventImpl(lanEvent);
+        await this.publishCloudEventImpl('delivery.aggregator.received', {
+            aggregator_order_id: result.order.id,
+            restaurant_id: result.order.restaurant_id,
+            partner_id: result.order.delivery_partner_id,
+            total: result.order.total,
+        });
+
+        return {
+            ...result,
+            lanEvent,
+        };
+    }
 }
 
 // =========================================================

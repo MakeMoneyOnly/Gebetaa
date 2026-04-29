@@ -5,6 +5,10 @@ import { trackApiMetric } from '@/lib/api/metrics';
 import { enforcePilotAccess } from '@/lib/api/pilotGate';
 import { getCacheHeaders, CACHE_PRESETS } from '@/lib/api/cache';
 import { monitoredQuery } from '@/lib/services/queryMonitor';
+import {
+    calculateLaborMetricsFromTimeEntries,
+    getHourlyRateConfig,
+} from '@/lib/services/laborReportsService';
 
 type AttentionItem = {
     id: string;
@@ -139,7 +143,16 @@ export async function GET(request: NextRequest) {
         const rangeParam = request.nextUrl.searchParams.get('range');
         const { range, sinceIso } = resolveSince(rangeParam);
 
-        const [ordersRes, requestsRes, tablesRes, alertsRes, prevOrdersRes] = await monitoredQuery(
+        const [
+            ordersRes,
+            requestsRes,
+            tablesRes,
+            alertsRes,
+            prevOrdersRes,
+            staffRes,
+            timeEntriesRes,
+            tipAllocationsRes,
+        ] = await monitoredQuery(
             'command-center:fetch-dashboard',
             () =>
                 Promise.all([
@@ -179,6 +192,21 @@ export async function GET(request: NextRequest) {
                         .eq('restaurant_id', restaurantId)
                         .gte('created_at', resolvePreviousRange(rangeParam).sinceIso)
                         .lt('created_at', resolvePreviousRange(rangeParam).untilIso),
+                    supabase
+                        .from('restaurant_staff')
+                        .select('id, role')
+                        .eq('restaurant_id', restaurantId)
+                        .eq('is_active', true),
+                    supabase
+                        .from('time_entries')
+                        .select('staff_id, clock_in_at, clock_out_at')
+                        .eq('restaurant_id', restaurantId)
+                        .gte('clock_in_at', sinceIso),
+                    supabase
+                        .from('tip_allocations')
+                        .select('total_tips_distributed')
+                        .eq('restaurant_id', restaurantId)
+                        .gte('period_date', sinceIso.slice(0, 10)),
                 ]),
             { restaurantId }
         );
@@ -205,6 +233,9 @@ export async function GET(request: NextRequest) {
         const tables = tablesRes.data ?? [];
         const alerts = alertsRes.data ?? [];
         const prevOrders = prevOrdersRes.data ?? [];
+        const staff = staffRes.data ?? [];
+        const timeEntries = timeEntriesRes.data ?? [];
+        const tipAllocations = tipAllocationsRes.data ?? [];
 
         const ordersInFlight = orders.filter(o => isInFlightStatus(o.status)).length;
         const completedOrders = orders.filter(
@@ -220,6 +251,21 @@ export async function GET(request: NextRequest) {
             prevOrders.reduce((sum, o) => sum + Number(o.total_price ?? 0), 0) / 100;
         const avgOrderValue = orders.length > 0 ? Math.round(grossSales / orders.length) : 0;
         const uniqueTablesToday = new Set(orders.map(o => o.table_number).filter(Boolean)).size;
+        const hourlyRateConfig = await getHourlyRateConfig(supabase, restaurantId);
+        const laborMetrics = calculateLaborMetricsFromTimeEntries({
+            salesTotal: grossSales,
+            timeEntries: timeEntries.map(entry => ({
+                staff_id: entry.staff_id,
+                clock_in_at: entry.clock_in_at,
+                clock_out_at: entry.clock_out_at,
+            })),
+            staffRoles: Object.fromEntries(
+                staff.map(member => [member.id, member.role ?? 'default'])
+            ),
+            hourlyRateConfig,
+            tipAllocations,
+            rangeEndAt: new Date().toISOString(),
+        });
 
         let avgTicketMinutes = 0;
         if (completedOrders.length > 0) {
@@ -339,6 +385,9 @@ export async function GET(request: NextRequest) {
                     total_orders_today: orders.length,
                     avg_order_value_etb: avgOrderValue,
                     unique_tables_today: uniqueTablesToday,
+                    labor_cost_percent: laborMetrics.laborCostPercent,
+                    labor_cost_etb: laborMetrics.laborCost,
+                    tips_distributed_today: laborMetrics.tipsDistributed,
                 },
                 attention_queue: attentionQueue,
                 chart_data: chartPoints,

@@ -10,6 +10,7 @@ const {
     mockFindActiveByRestaurant,
     mockFindByKDSStation,
     mockGetItems,
+    mockGetMenuItemsByIds,
     mockPublishEvent,
     mockRpc,
 } = vi.hoisted(() => ({
@@ -22,6 +23,7 @@ const {
     mockFindActiveByRestaurant: vi.fn(),
     mockFindByKDSStation: vi.fn(),
     mockGetItems: vi.fn(),
+    mockGetMenuItemsByIds: vi.fn(),
     mockPublishEvent: vi.fn(),
     mockRpc: vi.fn(),
 }));
@@ -49,6 +51,10 @@ vi.mock('../repository', () => ({
 
 vi.mock('@/lib/events/publisher', () => ({
     publishEvent: mockPublishEvent,
+}));
+
+vi.mock('../../menu/repository', () => ({
+    getMenuItemsByIds: mockGetMenuItemsByIds,
 }));
 
 vi.mock('@/lib/graphql/errors', () => ({
@@ -86,6 +92,7 @@ describe('OrdersService', () => {
         mockFindByRestaurant.mockResolvedValue([]);
         mockCreate.mockResolvedValue(mockOrder);
         mockCreateItems.mockResolvedValue([]);
+        mockGetMenuItemsByIds.mockResolvedValue([]);
         mockRpc.mockResolvedValue({
             data: [
                 { is_valid: true, missing_groups: [], error_message: null, error_message_am: null },
@@ -392,6 +399,37 @@ describe('OrdersService', () => {
                         price: 0,
                         status: 'pending',
                         course: 'main',
+                    }),
+                ])
+            );
+        });
+
+        it('routes items to mapped prep stations when menu metadata exists', async () => {
+            const service = await importService();
+            mockGetMenuItemsByIds.mockResolvedValue([
+                {
+                    id: 'item-1',
+                    name: 'Mixed Grill Platter',
+                    price: 120,
+                },
+            ]);
+
+            await service.createOrder({
+                restaurantId: 'rest-1',
+                type: 'dine_in',
+                items: [{ menuItemId: 'item-1', quantity: 1 }],
+                idempotencyKey: 'idem-station',
+                staffId: 'staff-1',
+            });
+
+            expect(mockCreateItems).toHaveBeenCalledWith(
+                'rest-1',
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        item_id: 'item-1',
+                        station: 'grill',
+                        name: 'Mixed Grill Platter',
+                        price: 120,
                     }),
                 ])
             );

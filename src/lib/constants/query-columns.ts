@@ -120,6 +120,9 @@ export const MENU_ITEM_LIST_COLUMNS = [
     'is_available',
     'preparation_time_minutes',
     'dietary_tags',
+    'station',
+    'connected_stations',
+    'course',
     'created_at',
 ] as const;
 
@@ -139,6 +142,9 @@ export const MENU_ITEM_DETAIL_COLUMNS = [
     'is_available',
     'preparation_time_minutes',
     'dietary_tags',
+    'station',
+    'connected_stations',
+    'course',
     'sort_order',
     'created_at',
     'updated_at',

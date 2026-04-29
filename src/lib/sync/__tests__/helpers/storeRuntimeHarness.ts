@@ -16,11 +16,19 @@ type SyncQueueRow = {
     processed_at: string | null;
 };
 
+type LocalSequenceCounter = {
+    scope_key: string;
+    business_date: string;
+    last_value: number;
+    updated_at: string;
+};
+
 type HarnessStore = {
     orders: OfflineOrder[];
     orderItems: OfflineOrderItem[];
     localJournal: LocalJournalEntry[];
     syncQueue: SyncQueueRow[];
+    localSequenceCounters: LocalSequenceCounter[];
     nextSyncQueueId: number;
 };
 
@@ -34,6 +42,7 @@ function cloneStore(store: HarnessStore): HarnessStore {
         orderItems: structuredClone(store.orderItems),
         localJournal: structuredClone(store.localJournal),
         syncQueue: structuredClone(store.syncQueue),
+        localSequenceCounters: structuredClone(store.localSequenceCounters),
         nextSyncQueueId: store.nextSyncQueueId,
     };
 }
@@ -43,6 +52,7 @@ function restoreStore(target: HarnessStore, snapshot: HarnessStore): void {
     target.orderItems = snapshot.orderItems;
     target.localJournal = snapshot.localJournal;
     target.syncQueue = snapshot.syncQueue;
+    target.localSequenceCounters = snapshot.localSequenceCounters;
     target.nextSyncQueueId = snapshot.nextSyncQueueId;
 }
 
@@ -52,6 +62,7 @@ export class StoreRuntimeHarness {
         orderItems: [],
         localJournal: [],
         syncQueue: [],
+        localSequenceCounters: [],
         nextSyncQueueId: 1,
     };
 
@@ -153,6 +164,31 @@ export class StoreRuntimeHarness {
                     return { rowsAffected: 1 };
                 }
 
+                if (normalized.startsWith('insert into local_sequence_counters')) {
+                    const scopeKey = String(params[0]);
+                    const businessDate = String(params[1]);
+                    const lastValue = Number(params[2]);
+                    const updatedAt = String(params[3]);
+
+                    const existing = store.localSequenceCounters.find(
+                        row => row.scope_key === scopeKey && row.business_date === businessDate
+                    );
+
+                    if (existing) {
+                        existing.last_value = lastValue;
+                        existing.updated_at = updatedAt;
+                    } else {
+                        store.localSequenceCounters.push({
+                            scope_key: scopeKey,
+                            business_date: businessDate,
+                            last_value: lastValue,
+                            updated_at: updatedAt,
+                        });
+                    }
+
+                    return { rowsAffected: 1 };
+                }
+
                 if (normalized.startsWith('update orders set status = ?')) {
                     const order = store.orders.find(row => row.id === String(params[3]));
                     if (!order) {
@@ -203,6 +239,15 @@ export class StoreRuntimeHarness {
                 if (normalized.startsWith('select * from orders where id = ?')) {
                     const order = store.orders.find(row => row.id === String(params[0])) ?? null;
                     return (order ? structuredClone(order) : null) as T | null;
+                }
+
+                if (normalized.startsWith('select last_value from local_sequence_counters')) {
+                    const scopeKey = String(params[0]);
+                    const businessDate = String(params[1]);
+                    const existing = store.localSequenceCounters.find(
+                        row => row.scope_key === scopeKey && row.business_date === businessDate
+                    );
+                    return (existing ? { last_value: existing.last_value } : null) as T | null;
                 }
 
                 if (

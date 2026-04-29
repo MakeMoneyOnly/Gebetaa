@@ -28,10 +28,12 @@ export const canonicalLocalTableNames = [
     'order_items',
     'kds_items',
     'table_sessions',
+    'time_entries',
     'order_check_splits',
     'order_check_split_items',
     'payment_sessions',
     'payments',
+    'tip_allocations',
     'payment_events',
     'reconciliation_entries',
     'domain_events',
@@ -123,6 +125,21 @@ export const powerSyncSchema = `
         updated_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS time_entries (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        staff_id TEXT NOT NULL,
+        shift_id TEXT,
+        clock_in_at TEXT NOT NULL,
+        clock_out_at TEXT,
+        status TEXT NOT NULL DEFAULT 'open',
+        source TEXT,
+        metadata_json TEXT NOT NULL DEFAULT '{}',
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS order_check_splits (
         id TEXT PRIMARY KEY,
         restaurant_id TEXT NOT NULL,
@@ -204,6 +221,24 @@ export const powerSyncSchema = `
         FOREIGN KEY (order_id) REFERENCES orders(id),
         FOREIGN KEY (payment_session_id) REFERENCES payment_sessions(id),
         FOREIGN KEY (split_id) REFERENCES order_check_splits(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS tip_allocations (
+        id TEXT PRIMARY KEY,
+        restaurant_id TEXT NOT NULL,
+        tip_pool_id TEXT NOT NULL,
+        shift_id TEXT,
+        period_date TEXT NOT NULL,
+        period_start TEXT NOT NULL,
+        period_end TEXT NOT NULL,
+        total_tips_collected REAL NOT NULL DEFAULT 0,
+        total_tips_pooled REAL NOT NULL DEFAULT 0,
+        total_tips_distributed REAL NOT NULL DEFAULT 0,
+        distribution_json TEXT NOT NULL DEFAULT '[]',
+        status TEXT NOT NULL DEFAULT 'calculated',
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS payment_events (

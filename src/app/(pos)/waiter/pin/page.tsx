@@ -73,16 +73,16 @@ function WaiterPinContent() {
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-[#fbfbfb] px-4 font-manrope antialiased">
+        <main className="font-manrope flex min-h-screen flex-col items-center justify-center bg-[#fbfbfb] px-4 antialiased">
             <div className="w-full max-w-[420px] rounded-2xl border border-gray-100 bg-white p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <div className="mb-8 flex flex-col items-center text-center">
-                    <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 border border-gray-100 shadow-sm">
+                    <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 shadow-sm">
                         <Tablet className="h-8 w-8 text-gray-700" />
                     </div>
                     <h1 className="text-[26px] font-bold tracking-tight text-gray-900">
                         Terminal Locked
                     </h1>
-                    <p className="mt-2.5 text-body font-medium text-gray-500">
+                    <p className="text-body mt-2.5 font-medium text-gray-500">
                         Enter your 4-digit PIN to access the POS
                     </p>
                 </div>
@@ -97,7 +97,9 @@ function WaiterPinContent() {
                                     : 'border-gray-100 bg-gray-50'
                             }`}
                         >
-                            {i < pin.length && <div className="h-3.5 w-3.5 rounded-full bg-gray-900" />}
+                            {i < pin.length && (
+                                <div className="h-3.5 w-3.5 rounded-full bg-gray-900" />
+                            )}
                         </div>
                     ))}
                 </div>
@@ -144,7 +146,7 @@ export default function WaiterPinPage() {
     return (
         <Suspense
             fallback={
-                <main className="flex min-h-screen items-center justify-center bg-[#fbfbfb] font-manrope font-bold text-gray-900">
+                <main className="font-manrope flex min-h-screen items-center justify-center bg-[#fbfbfb] font-bold text-gray-900">
                     <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gray-200 border-t-gray-900" />
                 </main>
             }

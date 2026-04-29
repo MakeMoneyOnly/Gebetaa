@@ -4,6 +4,7 @@ import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/
 import { parseJsonBody } from '@/lib/api/validation';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { writeAuditLog } from '@/lib/api/audit';
+import { hashStaffPin } from '@/domains/staff/pin';
 
 const AddPinStaffSchema = z.object({
     name: z.string().trim().min(2).max(120),
@@ -37,12 +38,14 @@ export async function POST(request: Request) {
             restaurant_id: context.restaurantId,
             name: parsed.data.name,
             role: parsed.data.role,
-            pin_code: parsed.data.pin_code,
+            pin_code: hashStaffPin(parsed.data.pin_code),
             assigned_zones: parsed.data.assigned_zones ?? [],
             is_active: true,
         })
         // HIGH-013: Explicit column selection
-        .select('id, restaurant_id, name, role, pin_code, assigned_zones, is_active, user_id, created_at')
+        .select(
+            'id, restaurant_id, name, role, pin_code, assigned_zones, is_active, user_id, created_at'
+        )
         .single();
 
     if (error) {
@@ -64,13 +67,15 @@ export async function POST(request: Request) {
         },
         new_value: {
             status: data.is_active,
-            pin_code: data.pin_code,
         },
     });
 
     return apiSuccess(
         {
-            staff: data,
+            staff: {
+                ...data,
+                pin_code: null,
+            },
         },
         201
     );

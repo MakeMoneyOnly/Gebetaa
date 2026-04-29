@@ -183,6 +183,65 @@ export interface LaborInsight {
     recommendation?: string;
 }
 
+export interface LaborMetricTimeEntry {
+    staff_id: string;
+    clock_in_at: string;
+    clock_out_at: string | null;
+}
+
+export interface LaborMetricSnapshot {
+    totalHours: number;
+    laborCost: number;
+    laborCostPercent: number;
+    tipsDistributed: number;
+}
+
+export function calculateLaborMetricsFromTimeEntries(input: {
+    salesTotal: number;
+    timeEntries: LaborMetricTimeEntry[];
+    staffRoles: Record<string, string>;
+    hourlyRateConfig: HourlyRateConfig;
+    tipAllocations?: Array<{ total_tips_distributed?: number | null }>;
+    rangeEndAt?: string;
+}): LaborMetricSnapshot {
+    const rangeEndAt = input.rangeEndAt ?? new Date().toISOString();
+    const totalHours = input.timeEntries.reduce((sum, entry) => {
+        const endAt = entry.clock_out_at ?? rangeEndAt;
+        const hours =
+            (new Date(endAt).getTime() - new Date(entry.clock_in_at).getTime()) / (1000 * 60 * 60);
+        return sum + Math.max(0, hours);
+    }, 0);
+
+    const laborCost = input.timeEntries.reduce((sum, entry) => {
+        const endAt = entry.clock_out_at ?? rangeEndAt;
+        const hours =
+            (new Date(endAt).getTime() - new Date(entry.clock_in_at).getTime()) / (1000 * 60 * 60);
+        const rate = getStaffHourlyRate(
+            entry.staff_id,
+            input.staffRoles[entry.staff_id] ?? 'default',
+            input.hourlyRateConfig
+        );
+        return sum + Math.max(0, hours) * rate;
+    }, 0);
+
+    const tipsDistributed = (input.tipAllocations ?? []).reduce(
+        (sum, allocation) => sum + Number(allocation.total_tips_distributed ?? 0),
+        0
+    );
+
+    const roundedLaborCost = Math.round(laborCost * 100) / 100;
+    const roundedTotalHours = Math.round(totalHours * 100) / 100;
+    const laborCostPercent =
+        input.salesTotal > 0 ? Math.round((roundedLaborCost / input.salesTotal) * 10000) / 100 : 0;
+
+    return {
+        totalHours: roundedTotalHours,
+        laborCost: roundedLaborCost,
+        laborCostPercent,
+        tipsDistributed: Math.round(tipsDistributed * 100) / 100,
+    };
+}
+
 // ============================================================================
 // Service Functions
 // ============================================================================
@@ -257,13 +316,22 @@ export async function getLaborCostPercentage(
     hourlyRateConfig?: HourlyRateConfig
 ): Promise<{ data: number | null; error: Error | null }> {
     try {
-        // Get staff with roles for rate calculation
-        const { data: staff, error: staffError } = await supabase
-            .from('restaurant_staff')
-            .select('id, role')
-            .eq('restaurant_id', restaurantId);
+        const [{ data: staff, error: staffError }, { data: timeEntries, error: timeEntriesError }] =
+            await Promise.all([
+                supabase
+                    .from('restaurant_staff')
+                    .select('id, role')
+                    .eq('restaurant_id', restaurantId),
+                supabase
+                    .from('time_entries')
+                    .select('staff_id, clock_in_at, clock_out_at')
+                    .eq('restaurant_id', restaurantId)
+                    .gte('clock_in_at', startDate)
+                    .lte('clock_in_at', endDate),
+            ]);
 
         if (staffError) throw staffError;
+        if (timeEntriesError) throw timeEntriesError;
 
         // Get total sales
         const { data: orders, error: ordersError } = await supabase
@@ -279,23 +347,22 @@ export async function getLaborCostPercentage(
         // Fetch hourly rate configuration if not provided
         const rateConfig = hourlyRateConfig ?? (await getHourlyRateConfig(supabase, restaurantId));
 
-        // Calculate estimated labor cost using configurable rates
-        const avgHoursPerDay = 8;
-        const daysInPeriod = Math.ceil(
-            (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        // Calculate total labor cost based on individual staff rates
-        const totalLaborCost = (staff || []).reduce((total, s) => {
-            const rate = getStaffHourlyRate(s.id, s.role || 'default', rateConfig);
-            return total + rate * avgHoursPerDay * daysInPeriod;
-        }, 0);
-
         const totalSales = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
+        const staffRoles = Object.fromEntries((staff ?? []).map(s => [s.id, s.role || 'default']));
+        const metrics = calculateLaborMetricsFromTimeEntries({
+            salesTotal: totalSales,
+            timeEntries:
+                (timeEntries ?? []).map(entry => ({
+                    staff_id: entry.staff_id,
+                    clock_in_at: entry.clock_in_at,
+                    clock_out_at: entry.clock_out_at,
+                })) ?? [],
+            staffRoles,
+            hourlyRateConfig: rateConfig,
+            rangeEndAt: endDate,
+        });
 
-        if (totalSales === 0) return { data: 0, error: null };
-
-        return { data: (totalLaborCost / totalSales) * 100, error: null };
+        return { data: metrics.laborCostPercent, error: null };
     } catch (error) {
         console.error('Error calculating labor cost percentage:', error);
         return { data: null, error: error as Error };

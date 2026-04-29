@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-    Users,
-    Briefcase,
-    Clock,
-    Banknote,
-} from 'lucide-react';
+import { Users, Briefcase, Clock, Banknote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TeamManagementTab } from './tabs/TeamManagementTab';
 import { JobsTab } from './tabs/JobsTab';
@@ -24,10 +19,22 @@ export function EmployeesPageClient() {
     const [activeTab, setActiveTab] = useState('team');
 
     const titles: Record<string, { title: string; desc: string }> = {
-        team: { title: 'Team Management', desc: 'Manage your staff directory, profiles, and basic access.' },
-        jobs: { title: 'Job Roles & Permissions', desc: 'Define standard roles, wages, and system access levels.' },
-        time: { title: 'Time & Attendance', desc: 'Manage timesheets, breaks, and Ethiopian labor law compliance.' },
-        tips: { title: 'Tips & Pooling', desc: 'Configure tip rules, suggested amounts, and staff distribution pools.' },
+        team: {
+            title: 'Team Management',
+            desc: 'Manage your staff directory, profiles, and basic access.',
+        },
+        jobs: {
+            title: 'Job Roles & Permissions',
+            desc: 'Define standard roles, wages, and system access levels.',
+        },
+        time: {
+            title: 'Time & Attendance',
+            desc: 'Manage timesheets, breaks, and Ethiopian labor law compliance.',
+        },
+        tips: {
+            title: 'Tips & Pooling',
+            desc: 'Configure tip rules, suggested amounts, and staff distribution pools.',
+        },
     };
 
     return (

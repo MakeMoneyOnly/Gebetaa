@@ -250,7 +250,9 @@ export async function updateDeliveryZone(
         .eq('id', zoneId)
         .eq('restaurant_id', restaurantId)
         // HIGH-013: Explicit column selection
-        .select('id, restaurant_id, name, description, boundary_type, center_latitude, center_longitude, radius_meters, polygon_coordinates, base_fee, per_km_fee, minimum_order, maximum_order, is_active, estimated_delivery_minutes_min, estimated_delivery_minutes_max, available_days, available_hours_start, available_hours_end, created_at, updated_at')
+        .select(
+            'id, restaurant_id, name, description, boundary_type, center_latitude, center_longitude, radius_meters, polygon_coordinates, base_fee, per_km_fee, minimum_order, maximum_order, is_active, estimated_delivery_minutes_min, estimated_delivery_minutes_max, available_days, available_hours_start, available_hours_end, created_at, updated_at'
+        )
         .single();
 
     if (error) {

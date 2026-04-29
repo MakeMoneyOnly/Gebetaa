@@ -4,6 +4,10 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import {
+    calculateLaborMetricsFromTimeEntries,
+    getHourlyRateConfig,
+} from '@/lib/services/laborReportsService';
 
 // ============================================================================
 // Types
@@ -19,6 +23,9 @@ export interface CommandCenterMetrics {
     total_orders_today: number;
     avg_order_value_etb: number;
     unique_tables_today: number;
+    labor_cost_percent: number;
+    labor_cost_etb: number;
+    tips_distributed_today: number;
 }
 
 export interface AttentionItem {
@@ -197,6 +204,9 @@ export async function getCommandCenterData(
             tablesResult,
             serviceRequestsResult,
             todayOrdersResult,
+            staffResult,
+            timeEntriesResult,
+            tipAllocationsResult,
         ] = await Promise.all([
             // All orders in range for metrics
             supabase
@@ -232,6 +242,21 @@ export async function getCommandCenterData(
                 .select('id, total_price, table_number')
                 .eq('restaurant_id', restaurantId)
                 .gte('created_at', new Date(now.setHours(0, 0, 0, 0)).toISOString()),
+            supabase
+                .from('restaurant_staff')
+                .select('id, role')
+                .eq('restaurant_id', restaurantId)
+                .eq('is_active', true),
+            supabase
+                .from('time_entries')
+                .select('staff_id, clock_in_at, clock_out_at')
+                .eq('restaurant_id', restaurantId)
+                .gte('clock_in_at', startDate.toISOString()),
+            supabase
+                .from('tip_allocations')
+                .select('total_tips_distributed')
+                .eq('restaurant_id', restaurantId)
+                .gte('period_date', startDate.toISOString().slice(0, 10)),
         ]);
 
         // Calculate metrics
@@ -240,11 +265,29 @@ export async function getCommandCenterData(
         const tables = tablesResult.data ?? [];
         const serviceRequests = serviceRequestsResult.data ?? [];
         const todayOrders = todayOrdersResult.data ?? [];
+        const staff = staffResult.data ?? [];
+        const timeEntries = timeEntriesResult.data ?? [];
+        const tipAllocations = tipAllocationsResult.data ?? [];
 
         const completedOrders = orders.filter(o => o.status === 'completed');
         const grossSales = completedOrders.reduce((sum, o) => sum + (o.total_price ?? 0), 0);
         const avgTicketTime = calculateAvgTicketTime(orders);
         const activeTables = tables.filter(t => t.status === 'occupied').length;
+        const hourlyRateConfig = await getHourlyRateConfig(supabase, restaurantId);
+        const laborMetrics = calculateLaborMetricsFromTimeEntries({
+            salesTotal: grossSales,
+            timeEntries: timeEntries.map(entry => ({
+                staff_id: entry.staff_id,
+                clock_in_at: entry.clock_in_at,
+                clock_out_at: entry.clock_out_at,
+            })),
+            staffRoles: Object.fromEntries(
+                staff.map(member => [member.id, member.role ?? 'default'])
+            ),
+            hourlyRateConfig,
+            tipAllocations,
+            rangeEndAt: new Date().toISOString(),
+        });
 
         // Calculate unique tables today
         const uniqueTablesToday = new Set(
@@ -305,6 +348,9 @@ export async function getCommandCenterData(
             total_orders_today: orders.length,
             avg_order_value_etb: orders.length > 0 ? Math.round(grossSales / orders.length) : 0,
             unique_tables_today: uniqueTablesToday,
+            labor_cost_percent: laborMetrics.laborCostPercent,
+            labor_cost_etb: laborMetrics.laborCost,
+            tips_distributed_today: laborMetrics.tipsDistributed,
         };
 
         return {

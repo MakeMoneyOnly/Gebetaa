@@ -1,4 +1,4 @@
-# ገበጣ lole — Enterprise Master Blueprint
+# lole — Enterprise Master Blueprint
 
 ## Toast-Grade Platform · Modern · Ethiopia-First
 

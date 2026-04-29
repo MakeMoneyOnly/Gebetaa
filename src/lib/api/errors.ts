@@ -162,7 +162,7 @@ export function notFound(resource: string, id?: string): NotFoundError {
 export function validationErrorFromZod(zodError: ZodError): ValidationError {
     return new ValidationError(
         'Validation failed',
-        zodError.issues.map((issue) => ({
+        zodError.issues.map(issue => ({
             path: issue.path.join('.'),
             message: issue.message,
             code: issue.code,

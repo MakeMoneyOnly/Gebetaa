@@ -282,7 +282,10 @@ export class ERCAService {
             });
             return {
                 success: true,
-                invoice_number: generateInvoiceNumber(orderData.restaurant_id, orderData.order_number),
+                invoice_number: generateInvoiceNumber(
+                    orderData.restaurant_id,
+                    orderData.order_number
+                ),
                 error: 'Restaurant not VAT registered',
             };
         }
@@ -330,7 +333,7 @@ export class ERCAService {
      * Build ERCA invoice payload from order data
      */
     private buildPayload(order: ERCAOrderData): ERCAInvoicePayload {
-        const items: ERCALineItem[] = order.order_items.map((item) => {
+        const items: ERCALineItem[] = order.order_items.map(item => {
             const unitPriceSantim = etbToSantim(item.unit_price);
             const { netPriceSantim, vatPortionSantim } = extractVAT(unitPriceSantim);
 
@@ -405,7 +408,9 @@ export class ERCAService {
                 grand_total_santim: payload.grand_total_santim,
                 erca_invoice_id: String(result.invoice_id ?? result.id ?? ''),
                 qr_payload: result.qr_payload ? String(result.qr_payload) : null,
-                digital_signature: result.digital_signature ? String(result.digital_signature) : null,
+                digital_signature: result.digital_signature
+                    ? String(result.digital_signature)
+                    : null,
                 status: 'success',
                 submitted_at: new Date().toISOString(),
             });
@@ -492,11 +497,14 @@ export class ERCAService {
         }
 
         const submissions = data ?? [];
-        const successful = submissions.filter((s) => s.status === 'success');
-        const pending = submissions.filter((s) => s.status === 'pending');
-        const failed = submissions.filter((s) => s.status === 'failed');
+        const successful = submissions.filter(s => s.status === 'success');
+        const pending = submissions.filter(s => s.status === 'pending');
+        const failed = submissions.filter(s => s.status === 'failed');
 
-        const totalRevenueSantim = successful.reduce((sum, s) => sum + (s.grand_total_santim ?? 0), 0);
+        const totalRevenueSantim = successful.reduce(
+            (sum, s) => sum + (s.grand_total_santim ?? 0),
+            0
+        );
         const totalVATSantim = successful.reduce((sum, s) => sum + (s.vat_amount_santim ?? 0), 0);
 
         return {
@@ -512,7 +520,10 @@ export class ERCAService {
     /**
      * Get failed submissions for retry
      */
-    async getFailedSubmissions(restaurantId: string, limit: number = 50): Promise<
+    async getFailedSubmissions(
+        restaurantId: string,
+        limit: number = 50
+    ): Promise<
         Array<{
             id: string;
             order_id: string;
@@ -606,10 +617,7 @@ export class ERCAService {
             (sum, s) => sum + (s.grand_total_santim ?? 0),
             0
         );
-        const totalVATSantim = submissions.reduce(
-            (sum, s) => sum + (s.vat_amount_santim ?? 0),
-            0
-        );
+        const totalVATSantim = submissions.reduce((sum, s) => sum + (s.vat_amount_santim ?? 0), 0);
 
         // Group by day
         const dailyMap = new Map<string, { revenue: number; vat: number; count: number }>();

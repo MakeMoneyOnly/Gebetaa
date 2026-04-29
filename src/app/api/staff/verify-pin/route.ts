@@ -3,6 +3,7 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { buildStaffSessionExpiry, hashStaffPin } from '@/domains/staff/pin';
 
 const VerifyPinSchema = z.object({
     restaurantId: z.string().uuid(),
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
         .from('restaurant_staff_with_users')
         .select('id, user_id, role, name, email, pin_code, staff_name')
         .eq('restaurant_id', context.restaurantId)
-        .eq('pin_code', parsed.data.pin)
+        .in('pin_code', [parsed.data.pin.trim(), hashStaffPin(parsed.data.pin)])
         .eq('is_active', true)
         .single();
 
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
                 role: staff.role,
                 name: staff.staff_name || staff.name || staff.email || 'Waitstaff',
                 user_id: staff.user_id,
+                session_expires_at: buildStaffSessionExpiry(),
             },
         },
         200

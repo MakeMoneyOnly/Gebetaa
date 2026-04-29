@@ -274,8 +274,8 @@ function StepSettlement({
                     Add your payout destination.
                 </h2>
                 <p className="mt-2 font-medium text-gray-500">
-                    lole will create and manage your Chapa settlement subaccount and route
-                    eligible Chapa-hosted payouts to the bank or wallet destination you choose here.
+                    lole will create and manage your Chapa settlement subaccount and route eligible
+                    Chapa-hosted payouts to the bank or wallet destination you choose here.
                 </p>
             </div>
 

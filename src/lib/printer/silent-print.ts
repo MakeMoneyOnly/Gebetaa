@@ -13,6 +13,16 @@ export interface SilentPrintResult {
     reason?: string;
 }
 
+export interface SilentPrintOptions {
+    networkBridgeUrl?: string;
+    queueFallback?: (input: {
+        receipt: EscPosReceiptPayload;
+        bytes: Uint8Array;
+        payloadBase64: string;
+        printer: StoredPrinterSelection | null;
+    }) => Promise<{ ok: boolean; reason?: string }>;
+}
+
 function toBase64(bytes: Uint8Array): string {
     if (typeof window === 'undefined') {
         return Buffer.from(bytes).toString('base64');
@@ -71,12 +81,56 @@ export async function discoverNativePrinters(): Promise<StoredPrinterSelection[]
 
 export async function silentPrintReceipt(
     receipt: EscPosReceiptPayload,
-    printerSelection?: StoredPrinterSelection | null
+    printerSelection?: StoredPrinterSelection | null,
+    options?: SilentPrintOptions
 ): Promise<SilentPrintResult> {
     const bytes = await encodeReceiptToEscPos(receipt);
     const selectedPrinter = printerSelection ?? (await getStoredPrinterSelection());
+    const payloadBase64 = toBase64(bytes);
+
+    if (
+        selectedPrinter?.connection_type === 'network' &&
+        options?.networkBridgeUrl &&
+        typeof fetch === 'function'
+    ) {
+        const response = await fetch(options.networkBridgeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                payload: payloadBase64,
+                encoding: 'base64',
+                connectionType: selectedPrinter.connection_type,
+                deviceId: selectedPrinter.device_id,
+                macAddress: selectedPrinter.mac_address,
+            }),
+        });
+
+        if (response.ok) {
+            return {
+                ok: true,
+                channel: 'native',
+                printer: selectedPrinter,
+            };
+        }
+    }
 
     if (!isCapacitorNativeRuntime()) {
+        if (options?.queueFallback) {
+            const queued = await options.queueFallback({
+                receipt,
+                bytes,
+                payloadBase64,
+                printer: selectedPrinter,
+            });
+            return {
+                ok: queued.ok,
+                channel: 'queue',
+                printer: selectedPrinter,
+                reason: queued.reason,
+            };
+        }
         return {
             ok: false,
             channel: 'browser-fallback',
@@ -97,7 +151,7 @@ export async function silentPrintReceipt(
 
     if (typeof plugin.printRaw === 'function') {
         await plugin.printRaw({
-            payload: toBase64(bytes),
+            payload: payloadBase64,
             encoding: 'base64',
             connectionType: selectedPrinter?.connection_type,
             deviceId: selectedPrinter?.device_id,
