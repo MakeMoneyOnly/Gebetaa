@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Smartphone, Lock, LogOut, Clock, History, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ModernSelect } from '../shared/ModernSelect';
+import { ModernSelect } from '../../shared/ModernSelect';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { logger } from '@/lib/logger';

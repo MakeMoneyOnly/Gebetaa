@@ -1,0 +1,27 @@
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Generated files
+src/types/supabase.ts
+*.generated.ts
+
+# Supabase migrations (SQL files - not formatted by Prettier)
+supabase/migrations/
+
+# GitHub Actions workflows (YAML - managed independently)
+.github/
+
+# Env files
+.env
+.env.*
+
+# Package manager lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

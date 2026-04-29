@@ -3,7 +3,7 @@
 import React from 'react';
 import { Building2, FileText, MapPin, BadgeCheck } from 'lucide-react';
 
-import { ModernSelect } from '../shared/ModernSelect';
+import { ModernSelect } from '../../shared/ModernSelect';
 
 export function BusinessInfoTab() {
     return (

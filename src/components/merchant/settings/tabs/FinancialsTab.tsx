@@ -3,7 +3,7 @@
 import React from 'react';
 import { Landmark, Calculator, Calendar, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ModernSelect } from '../shared/ModernSelect';
+import { ModernSelect } from '../../shared/ModernSelect';
 
 export function FinancialsTab() {
     return (

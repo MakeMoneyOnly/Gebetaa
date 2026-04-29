@@ -126,13 +126,16 @@ CREATE INDEX IF NOT EXISTS idx_menu_items_category_id ON public.menu_items(categ
 DROP INDEX IF EXISTS public.idx_orders_fingerprint_created;
 CREATE INDEX IF NOT EXISTS idx_orders_guest_fingerprint_created_at ON public.orders(guest_fingerprint, created_at DESC);
 
+-- NOTE: recipe_ingredients and stock_movements were dropped in a previous cleanup migration.
+-- Skipping indexes for these tables to avoid migration failures.
+
 -- idx_recipe_ingredients_item -> idx_recipe_ingredients_inventory_item_id (ambiguous "item")
-DROP INDEX IF EXISTS public.idx_recipe_ingredients_item;
-CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_inventory_item_id ON public.recipe_ingredients(inventory_item_id);
+-- DROP INDEX IF EXISTS public.idx_recipe_ingredients_item;
+-- CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_inventory_item_id ON public.recipe_ingredients(inventory_item_id);
 
 -- idx_stock_movements_item_created -> idx_stock_movements_inventory_item_id_created_at (ambiguous)
-DROP INDEX IF EXISTS public.idx_stock_movements_item_created;
-CREATE INDEX IF NOT EXISTS idx_stock_movements_inventory_item_id_created_at ON public.stock_movements(inventory_item_id, created_at DESC);
+-- DROP INDEX IF EXISTS public.idx_stock_movements_item_created;
+-- CREATE INDEX IF NOT EXISTS idx_stock_movements_inventory_item_id_created_at ON public.stock_movements(inventory_item_id, created_at DESC);
 
 -- ROLLBACK for LOW-002:
 -- To rollback, reverse each rename: drop new index, recreate with old name.
