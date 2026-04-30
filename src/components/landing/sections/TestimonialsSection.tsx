@@ -54,15 +54,17 @@ export function TestimonialsSection({ scrollRef, onScroll }: TestimonialsSection
                     <div className="mb-2.5 flex gap-2.5">
                         <button
                             onClick={() => onScroll('left')}
+                            aria-label="Previous testimonial"
                             className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-black/5 bg-black/5 text-black/30 transition-all hover:bg-black/10 hover:text-black active:scale-95"
                         >
-                            <ChevronLeft className="h-4.5 w-4.5" />
+                            <ChevronLeft className="h-5 w-5 text-gray-500 group-hover:text-black" />
                         </button>
                         <button
                             onClick={() => onScroll('right')}
+                            aria-label="Next testimonial"
                             className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-black/5 bg-black/5 text-black/30 transition-all hover:bg-black/10 hover:text-black active:scale-95"
                         >
-                            <ChevronRight className="h-4.5 w-4.5" />
+                            <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-black" />
                         </button>
                     </div>
                 </div>
@@ -95,9 +97,12 @@ export function TestimonialsSection({ scrollRef, onScroll }: TestimonialsSection
                                         {op.logo.slice(Math.floor(op.logo.length / 2))}
                                     </span>
                                 </div>
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-sm transition-all hover:bg-white hover:text-black md:h-12 md:w-12">
+                                <button
+                                    aria-label={`Play video testimonial from ${op.name}`}
+                                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 text-white backdrop-blur-sm transition-all hover:bg-white hover:text-black md:h-12 md:w-12"
+                                >
                                     <Play className="ml-[2px] h-4 w-4 fill-current md:h-5 md:w-5" />
-                                </div>
+                                </button>
                             </div>
 
                             {/* Card Footer Content */}

@@ -30,7 +30,10 @@ export function MerchantHeader() {
                                 />
                             </div>
                         ))}
-                        <button className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gray-50 text-gray-400 shadow-none transition-all hover:bg-gray-100 hover:text-black active:scale-95">
+                        <button
+                            aria-label="Add Staff"
+                            className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gray-50 text-gray-400 shadow-none transition-all hover:bg-gray-100 hover:text-black active:scale-95"
+                        >
                             <Plus className="h-4 w-4" strokeWidth={2.5} />
                         </button>
                     </div>
@@ -38,7 +41,10 @@ export function MerchantHeader() {
 
                 {/* Action Controls */}
                 <div className="flex items-center gap-4 border-l border-gray-100 pl-6">
-                    <button className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-500 shadow-none transition-all hover:bg-gray-50 hover:text-black hover:shadow-none active:scale-95">
+                    <button
+                        aria-label="View notifications"
+                        className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-white text-gray-500 shadow-none transition-all hover:bg-gray-50 hover:text-black hover:shadow-none active:scale-95"
+                    >
                         <Bell className="h-5 w-5" strokeWidth={1.5} />
                         <span className="bg-brand-accent absolute top-3 right-3 h-2 w-2 rounded-full border-2 border-white"></span>
                     </button>

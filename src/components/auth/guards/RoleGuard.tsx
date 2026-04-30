@@ -3,7 +3,7 @@
 import { useRole } from '@/features/auth/hooks/useRole';
 import { UserRole } from '@/types/models';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface RoleGuardProps {
@@ -14,11 +14,15 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard(props: RoleGuardProps) {
-    const bypassForE2E =
-        typeof window !== 'undefined' &&
-        window.localStorage.getItem('__e2e_bypass_auth') === 'true';
+    const [isE2EBypass, setIsE2EBypass] = useState(false);
 
-    if (bypassForE2E) {
+    useEffect(() => {
+        if (window.localStorage.getItem('__e2e_bypass_auth') === 'true') {
+            setIsE2EBypass(true);
+        }
+    }, []);
+
+    if (isE2EBypass) {
         return <>{props.children}</>;
     }
 

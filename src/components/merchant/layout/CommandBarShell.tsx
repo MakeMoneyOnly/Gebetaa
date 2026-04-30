@@ -84,7 +84,7 @@ export function CommandBarShell() {
             >
                 <Command className="h-4 w-4" />
                 Command Bar
-                <span className="text-micro rounded-xs bg-gray-100 px-1.5 py-0.5 text-gray-500">
+                <span className="text-micro rounded-xs bg-gray-100 px-1.5 py-0.5 text-gray-600">
                     Ctrl K
                 </span>
             </button>

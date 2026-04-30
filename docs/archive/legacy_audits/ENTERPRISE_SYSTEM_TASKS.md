@@ -209,25 +209,30 @@ These are the first tasks to start because other work depends on them.
 
 ### 2.4 Operational Excellence (Phase 2 Expansion)
 
-- [ ] `ENT-075` Operationalize the Delivery Aggregator for Ethiopian Partners (BeU, Zmall, Deliver Addis, Telebirr Food).
+- [x] `ENT-075` Operationalize the Delivery Aggregator for Ethiopian Partners (BeU, Zmall, Deliver Addis, Telebirr Food).
       Definition of done: Orders from all partners inject into the POS kitchen flow via the unified `AggregatorService` and local-first bus.
       Source of truth: `src/lib/delivery/aggregator.ts`, `src/lib/delivery/aggregator.test.ts`
+      Verification: `src/app/api/__tests__/delivery-aggregator.route.test.ts`, `src/app/api/__tests__/channels-api-routes.test.ts`
 
-- [ ] `ENT-076` Enable Decentralized Waiter Printing (Silent Printing from Tablets).
+- [x] `ENT-076` Enable Decentralized Waiter Printing (Silent Printing from Tablets).
       Definition of done: Waiters can print receipts/chits directly from their handheld tablets to networked printers without cashier intervention.
       Source of truth: `src/lib/printer/silent-print.ts`, `src/lib/printer/escpos.ts`
+      Verification: `src/lib/printer/transaction-print.test.ts`
 
-- [ ] `ENT-077` Harden Staff PIN Security and Tip Tracking.
+- [x] `ENT-077` Harden Staff PIN Security and Tip Tracking.
       Definition of done: PIN-based waiter login with session expiry and real-time tip allocation logic for payroll.
       Source of truth: `src/domains/staff/service.ts`, `src/domains/staff/repository.ts`
+      Verification: `src/app/api/__tests__/staff-verify-pin.route.test.ts`, `src/app/api/sync/__tests__/payroll-sync.route.test.ts`
 
-- [ ] `ENT-078` Implement Multi-Station KDS Routing (Bar, Grill, Cold, Expeditor).
+- [x] `ENT-078` Implement Multi-Station KDS Routing (Bar, Grill, Cold, Expeditor).
       Definition of done: Orders are automatically routed to specific kitchen stations based on category-to-station mapping rules.
       Source of truth: `src/lib/kds/station-router.ts`, `src/domains/orders/service.ts`
+      Verification: `src/features/kds/lib/__tests__/read-adapter.test.ts`, `src/app/api/__tests__/kds-telemetry.route.test.ts`
 
-- [ ] `ENT-079` Synchronize Employee Payroll and Labor Cost Data.
+- [x] `ENT-079` Synchronize Employee Payroll and Labor Cost Data.
       Definition of done: Real-time calculation of labor cost vs. sales KPIs on the command center dashboard, syncing via PowerSync.
       Source of truth: `src/lib/services/laborReportsService.ts`, `src/lib/services/dashboard-data.ts`
+      Verification: `src/app/api/sync/__tests__/payroll-sync.route.test.ts`, `src/lib/sync/__tests__/powersync-config.test.ts`, `src/lib/services/__tests__/laborReportsService.test.ts`
 
 - [x] `ENT-072` Build a payment reconciliation worker for reconnect and upstream replay.
       Definition of done: local payment ledger entries replay idempotently, reconcile against upstream provider/cloud state, and surface matched, rejected, duplicate, and manual-review outcomes.

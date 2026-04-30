@@ -196,7 +196,7 @@ export function Sidebar() {
                             ) : (
                                 <h3
                                     className={cn(
-                                        'px-4 text-[10px] leading-none font-bold tracking-[-0.04em] text-gray-400 uppercase',
+                                        'px-4 text-[10px] leading-none font-bold tracking-[-0.04em] text-gray-500 uppercase',
                                         'overflow-hidden whitespace-nowrap',
                                         'transition-[opacity] duration-[150ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
                                         isCollapsed

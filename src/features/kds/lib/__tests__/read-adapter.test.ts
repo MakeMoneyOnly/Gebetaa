@@ -98,4 +98,58 @@ describe('kds read adapter', () => {
         });
         expect(fetch).not.toHaveBeenCalled();
     });
+
+    it('keeps grill station tickets visible in local runtime reads', async () => {
+        const mockDb = {
+            getAllAsync: vi
+                .fn()
+                .mockResolvedValueOnce([
+                    {
+                        id: 'order-2',
+                        order_number: 'ORD-2',
+                        table_number: 'T2',
+                        created_at: '2026-04-22T10:00:00.000Z',
+                        acknowledged_at: null,
+                        status: 'preparing',
+                        fire_mode: 'auto',
+                        current_course: 'main',
+                    },
+                ])
+                .mockResolvedValueOnce([
+                    {
+                        id: 'item-2',
+                        order_id: 'order-2',
+                        name: 'Mixed Grill',
+                        quantity: 1,
+                        notes: null,
+                        station: 'grill',
+                        course: 'main',
+                        order_item_id: 'order-item-2',
+                        modifiers_json: '[]',
+                        kds_item_id: 'kds-2',
+                        kds_status: 'queued',
+                    },
+                ]),
+            getFirstAsync: vi.fn().mockResolvedValueOnce({
+                settings_json: JSON.stringify({
+                    kds: {
+                        ready_auto_archive_minutes: 20,
+                    },
+                }),
+            }),
+        };
+        mockGetPowerSync.mockReturnValue(mockDb);
+
+        const { readKdsQueue } = await import('../read-adapter');
+        const result = await readKdsQueue({
+            station: 'grill' as never,
+            limit: 20,
+            slaMinutes: 30,
+        });
+
+        expect(result.ok).toBe(true);
+        expect(result.data?.orders).toHaveLength(1);
+        expect(result.data?.orders[0]?.station).toBe('grill');
+        expect(result.data?.orders[0]?.items[0]?.station).toBe('grill');
+    });
 });

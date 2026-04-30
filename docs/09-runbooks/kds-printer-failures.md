@@ -22,11 +22,10 @@ The KDS is critical for kitchen operations. When KDS or printers fail, orders ca
 └─────────────┘     └─────────────┘     └──────┬──────┘
                                                │
                                                ▼
-                                        ┌─────────────┐
-                                        │   Thermal   │
-                                        │   Printer   │
-                                        │   (Termux)  │
-                                        └─────────────┘
+                                         ┌─────────────┐
+                                         │   Thermal   │
+                                         │ (Capacitor) │
+                                         └─────────────┘
 ```
 
 ---
@@ -130,19 +129,17 @@ The KDS is critical for kitchen operations. When KDS or printers fail, orders ca
 
 **Diagnosis:**
 
-1. **Check printer status:**
+1. **Check device shell status:**
+    - Open Chrome `chrome://inspect/#devices` on a laptop connected to the tablet.
+    - Check the `Console` for `@capacitor/printer` plugin errors.
 
-    ```bash
-    # On the device running Termux print server
-    curl http://localhost:3000/printer/status
+2. **Check Capacitor native logs:**
+    - Look for `ThermalPrinter` or `PrinterBridge` events in the device logs.
+
+    # Should return process ID
+
     ```
 
-2. **Check Termux service:**
-
-    ```bash
-    # In Termux
-    pgrep -f print-server
-    # Should return process ID
     ```
 
 3. **Check printer connection:**
@@ -157,16 +154,10 @@ The KDS is critical for kitchen operations. When KDS or printers fail, orders ca
 
 **Resolution:**
 
-1. **Restart Termux print server:**
-
-    ```bash
-    # Kill existing process
-    pkill -f print-server
-
-    # Restart
-    cd ~/lole-print
-    ./start-print-server.sh
-    ```
+1. **Restart the lole Device Shell app:**
+    - Swipe the app away to close it.
+    - Re-open the 'lole' app from the home screen.
+    - This re-initializes the Capacitor plugins.
 
 2. **Reconnect printer:**
     - Unplug and replug USB cable

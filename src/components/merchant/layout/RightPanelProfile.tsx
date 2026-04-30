@@ -51,7 +51,7 @@ export function ProfileSection({
                     <h2 className="mb-1 text-xl font-bold tracking-tight text-black">
                         {restaurantName}
                     </h2>
-                    <p className="mb-8 text-sm font-medium text-gray-400">{restaurantHandle}</p>
+                    <p className="mb-8 text-sm font-medium text-gray-500">{restaurantHandle}</p>
                 </>
             )}
 
@@ -59,6 +59,7 @@ export function ProfileSection({
             <div className="relative flex justify-center gap-4">
                 <button
                     onClick={onNotificationClick}
+                    aria-label="Notifications"
                     className="group/btn flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-white text-gray-700 shadow-none transition-all hover:-translate-y-1 hover:text-black hover:shadow-none active:scale-95"
                 >
                     <Bell className="group-hover/btn:swing h-5 w-5 transition-transform" />
@@ -66,6 +67,7 @@ export function ProfileSection({
 
                 <button
                     onClick={onMessageClick}
+                    aria-label="Messages"
                     className="group/btn flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-white text-gray-700 shadow-none transition-all hover:-translate-y-1 hover:text-black hover:shadow-none active:scale-95"
                 >
                     <MessageSquare className="h-5 w-5 transition-transform group-hover/btn:scale-110" />
@@ -73,6 +75,7 @@ export function ProfileSection({
 
                 <button
                     onClick={onMoreClick}
+                    aria-label="More options"
                     className="group/btn flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-white text-gray-700 shadow-none transition-all hover:-translate-y-1 hover:text-black hover:shadow-none active:scale-95"
                 >
                     <MoreHorizontal className="h-5 w-5 transition-transform group-hover/btn:rotate-90" />

@@ -22,7 +22,7 @@ const MODE_STYLES = {
         icon: AlertCircle,
         title: 'Degraded',
         detail: 'Local store active. Cloud/bootstrap degraded.',
-        tone: 'bg-amber-500/90 text-white',
+        tone: 'bg-amber-800/90 text-white',
     },
     'offline-local': {
         icon: WifiOff,
@@ -78,13 +78,13 @@ export function OfflineIndicator({
                 <button
                     onClick={handleRetry}
                     disabled={isSyncing}
-                    className="rounded bg-white/20 px-2 py-0.5 text-xs font-bold hover:bg-white/30 disabled:opacity-50"
+                    className="rounded bg-black/20 px-2 py-0.5 text-xs font-bold hover:bg-black/30 disabled:opacity-50"
                 >
                     {operatingMode === 'reconciling' ? 'Syncing' : 'Retry'}
                 </button>
             ) : null}
             {operatingMode === 'degraded' && bootstrapStatus.message ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 rounded-full bg-black/20 px-2 py-0.5 text-xs font-medium">
                     <CloudOff className="h-3 w-3" />
                     {bootstrapStatus.message}
                 </span>

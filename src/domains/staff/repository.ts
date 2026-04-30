@@ -7,7 +7,7 @@ import {
     STAFF_DETAIL_COLUMNS,
     columnsToString,
 } from '@/lib/constants/query-columns';
-import { hashStaffPin } from './pin';
+import { verifyStoredStaffPin } from './pin';
 
 // Lazy initialization of Supabase client - only creates when actually needed
 let supabase: SupabaseClient<Database> | null = null;
@@ -205,7 +205,6 @@ export class StaffRepository {
             .from('restaurant_staff')
             .select(columnsToString(STAFF_DETAIL_COLUMNS))
             .eq('id', staffId)
-            .in('pin_code', [pinCode.trim(), hashStaffPin(pinCode)])
             .eq('is_active', true)
             .maybeSingle();
 
@@ -214,7 +213,11 @@ export class StaffRepository {
             throw new Error(error.message);
         }
 
-        return data as StaffRow | null;
+        if (!data || !verifyStoredStaffPin(data.pin_code, pinCode)) {
+            return null;
+        }
+
+        return data as StaffRow;
     }
 
     /**

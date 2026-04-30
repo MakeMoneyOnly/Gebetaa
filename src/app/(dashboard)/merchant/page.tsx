@@ -46,11 +46,11 @@ export default async function DashboardPage() {
 
                     {/* Search Bar (Moved from Header) */}
                     <div className="group relative w-[520px]">
-                        <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-black" />
+                        <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-500 transition-colors group-focus-within:text-black" />
                         <input
                             type="text"
                             placeholder="What are you looking for?"
-                            className="h-11 w-full appearance-none rounded-xl border-none bg-gray-50 pr-4 pl-12 text-sm font-medium shadow-none transition-all placeholder:text-gray-400 focus:bg-gray-50 focus:ring-0 focus:outline-none"
+                            className="h-11 w-full appearance-none rounded-xl border-none bg-gray-50 pr-4 pl-12 text-sm font-medium shadow-none transition-all placeholder:text-gray-500 focus:bg-gray-50 focus:ring-0 focus:outline-none"
                         />
                     </div>
                 </div>
@@ -73,7 +73,7 @@ export default async function DashboardPage() {
                     <div>
                         <div className="-mt-2.5 mb-4 flex h-11 items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <h3 className="text-base font-medium text-gray-400">
+                                <h3 className="text-base font-medium text-gray-500">
                                     Quick actions
                                 </h3>
                                 <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
                             <div className="flex flex-1 flex-col border-r border-gray-50 p-6">
                                 <div>
                                     <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
-                                        <h3 className="text-base font-medium text-gray-400">
+                                        <h3 className="text-base font-medium text-gray-500">
                                             Net Sales
                                         </h3>
                                         <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
@@ -145,16 +145,16 @@ export default async function DashboardPage() {
                                     <div className="flex items-end justify-between">
                                         <div className="flex flex-col gap-2">
                                             <div className="-mt-2 flex items-baseline gap-1.5">
-                                                <span className="text-3xl font-normal text-gray-400">
+                                                <span className="text-3xl font-normal text-gray-500">
                                                     Br.
                                                 </span>
                                                 <span className="text-3xl font-bold text-black">
                                                     27,064
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
                                                 vs yesterday
-                                                <span className="flex items-center gap-0.5 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+                                                <span className="flex items-center gap-0.5 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
                                                     <ArrowUp
                                                         strokeWidth={2.5}
                                                         className="h-2.5 w-2.5"
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
                             <div className="flex flex-1 flex-col p-6">
                                 <div>
                                     <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
-                                        <h3 className="text-base font-medium text-gray-400">
+                                        <h3 className="text-base font-medium text-gray-500">
                                             Total Orders
                                         </h3>
                                         <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
@@ -190,9 +190,9 @@ export default async function DashboardPage() {
                                                     453
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
                                                 vs yesterday
-                                                <span className="flex items-center gap-0.5 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+                                                <span className="flex items-center gap-0.5 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
                                                     <ArrowUp
                                                         strokeWidth={2.5}
                                                         className="h-2.5 w-2.5"
@@ -234,7 +234,7 @@ export default async function DashboardPage() {
                             <div className="flex flex-1 flex-col border-r border-gray-50 p-6">
                                 <div>
                                     <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
-                                        <h3 className="text-base font-medium text-gray-400">
+                                        <h3 className="text-base font-medium text-gray-500">
                                             Avg. Guest Spend
                                         </h3>
                                         <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
@@ -243,16 +243,16 @@ export default async function DashboardPage() {
                                     <div className="flex items-end justify-between">
                                         <div className="flex flex-col gap-2">
                                             <div className="-mt-2 flex items-baseline gap-1.5">
-                                                <span className="text-3xl font-normal text-gray-400">
+                                                <span className="text-3xl font-normal text-gray-500">
                                                     Br.
                                                 </span>
                                                 <span className="text-3xl font-bold text-black">
                                                     3,240
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
                                                 vs yesterday
-                                                <span className="flex items-center gap-0.5 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+                                                <span className="flex items-center gap-0.5 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
                                                     <ArrowUp
                                                         strokeWidth={2.5}
                                                         className="h-2.5 w-2.5"
@@ -275,7 +275,7 @@ export default async function DashboardPage() {
                             <div className="flex flex-1 flex-col p-6">
                                 <div>
                                     <div className="-mt-2.5 mb-0 flex h-11 items-center gap-2">
-                                        <h3 className="text-base font-medium text-gray-400">
+                                        <h3 className="text-base font-medium text-gray-500">
                                             Labor Cost
                                         </h3>
                                         <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
@@ -284,16 +284,16 @@ export default async function DashboardPage() {
                                     <div className="flex items-end justify-between">
                                         <div className="flex flex-col gap-2">
                                             <div className="-mt-2 flex items-baseline gap-1.5">
-                                                <span className="text-3xl font-normal text-gray-400">
+                                                <span className="text-3xl font-normal text-gray-500">
                                                     Br.
                                                 </span>
                                                 <span className="text-3xl font-bold text-black">
                                                     12,402
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
                                                 vs yesterday
-                                                <span className="flex items-center gap-0.5 rounded-lg bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                                                <span className="flex items-center gap-0.5 rounded-lg bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
                                                     <ArrowDown
                                                         strokeWidth={2.5}
                                                         className="h-2.5 w-2.5"
@@ -333,7 +333,7 @@ export default async function DashboardPage() {
                 <div className="relative col-span-1 overflow-hidden rounded-3xl border border-gray-100 bg-white p-8 lg:col-span-8">
                     <div className="relative z-10 mb-8 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-medium text-gray-400">Analytics</h3>
+                            <h3 className="text-lg font-medium text-gray-500">Analytics</h3>
                             <Info strokeWidth={1.5} className="h-4.5 w-4.5 text-gray-300" />
                         </div>
                         <div className="flex items-center gap-3">
@@ -341,7 +341,7 @@ export default async function DashboardPage() {
                                 This year
                                 <ChevronDown
                                     strokeWidth={2}
-                                    className="h-3.5 w-3.5 text-gray-400"
+                                    className="h-3.5 w-3.5 text-gray-500"
                                 />
                             </button>
                         </div>
@@ -350,22 +350,22 @@ export default async function DashboardPage() {
                     <div className="relative z-10 mb-10 flex items-end justify-between px-2">
                         <div className="flex flex-col gap-1">
                             <div className="flex items-baseline gap-1.5">
-                                <span className="text-[32px] font-normal text-gray-400">Br.</span>
+                                <span className="text-[32px] font-normal text-gray-500">Br.</span>
                                 <span className="text-[32px] font-bold text-black">-4,543</span>
-                                <div className="ml-1.5 flex items-center gap-1 rounded-lg bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-500">
+                                <div className="ml-1.5 flex items-center gap-1 rounded-lg bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
                                     <ArrowDown strokeWidth={2.5} className="h-2.5 w-2.5" /> 0.4%
                                 </div>
                             </div>
-                            <span className="text-xs font-bold text-gray-400">Total sales</span>
+                            <span className="text-xs font-bold text-gray-500">Total sales</span>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                             <div className="flex items-baseline gap-3">
                                 <span className="text-2xl font-bold text-gray-900">0.73%</span>
-                                <div className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+                                <div className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
                                     <ArrowUp strokeWidth={2.5} className="h-2.5 w-2.5" /> 13%
                                 </div>
                             </div>
-                            <span className="text-right text-xs font-bold text-gray-400">
+                            <span className="text-right text-xs font-bold text-gray-500">
                                 Conv. rate
                             </span>
                         </div>
@@ -391,7 +391,7 @@ export default async function DashboardPage() {
                     <div className="flex h-full flex-col p-8">
                         <div className="mb-8 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <h3 className="text-lg font-medium text-gray-400">
+                                <h3 className="text-lg font-medium text-gray-500">
                                     Sales Performance
                                 </h3>
                                 <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
@@ -400,7 +400,7 @@ export default async function DashboardPage() {
                                 Today
                                 <ChevronDown
                                     strokeWidth={2}
-                                    className="h-3.5 w-3.5 text-gray-400"
+                                    className="h-3.5 w-3.5 text-gray-500"
                                 />
                             </button>
                         </div>
@@ -422,7 +422,7 @@ export default async function DashboardPage() {
                                         />
                                     </div>
                                 </div>
-                                <span className="mt-1 text-sm font-medium text-gray-400">
+                                <span className="mt-1 text-sm font-medium text-gray-500">
                                     Since yesterday
                                 </span>
                             </div>
@@ -430,19 +430,19 @@ export default async function DashboardPage() {
 
                         <div className="mt-8 space-y-4">
                             <div className="flex items-center justify-between text-xs font-bold">
-                                <div className="flex items-center gap-3 text-gray-400/80">
+                                <div className="flex items-center gap-3 text-gray-500/80">
                                     <div className="bg-brand-accent h-1.5 w-4 rounded-full"></div>
                                     Total sales{' '}
-                                    <span className="ml-1 font-medium text-gray-400">/ day</span>
+                                    <span className="ml-1 font-medium text-gray-500">/ day</span>
                                 </div>
-                                <span className="font-medium text-gray-400">For week</span>
+                                <span className="font-medium text-gray-500">For week</span>
                             </div>
                             <div className="flex items-center justify-between text-xs font-bold">
-                                <div className="flex items-center gap-3 text-gray-400/80">
+                                <div className="flex items-center gap-3 text-gray-500/80">
                                     <div className="bg-brand-accent/30 h-1.5 w-4 rounded-full"></div>
                                     Average sales
                                 </div>
-                                <span className="font-medium text-gray-400">For today</span>
+                                <span className="font-medium text-gray-500">For today</span>
                             </div>
                         </div>
                     </div>
@@ -460,21 +460,21 @@ export default async function DashboardPage() {
                     <div className="mb-4 flex items-start justify-between">
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center gap-2">
-                                <h3 className="text-lg font-medium text-gray-400">Total visits</h3>
+                                <h3 className="text-lg font-medium text-gray-500">Total visits</h3>
                                 <Info strokeWidth={1.5} className="h-4 w-4 text-gray-300" />
                             </div>
                             <div className="flex items-center gap-3">
                                 <span className="text-4xl font-bold tracking-tight text-gray-900">
                                     288,822
                                 </span>
-                                <span className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+                                <span className="flex items-center gap-1 rounded-lg bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
                                     <ArrowUp strokeWidth={2} className="h-2.5 w-2.5" /> 4%
                                 </span>
                             </div>
                         </div>
                         <button className="flex h-11 items-center gap-1 rounded-xl bg-gray-50 px-4 text-sm font-bold text-gray-700 transition-colors outline-none hover:bg-gray-100">
                             Today
-                            <ChevronDown strokeWidth={2} className="h-3.5 w-3.5 text-gray-400" />
+                            <ChevronDown strokeWidth={2} className="h-3.5 w-3.5 text-gray-500" />
                         </button>
                     </div>
 

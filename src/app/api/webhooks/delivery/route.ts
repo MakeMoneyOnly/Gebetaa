@@ -14,7 +14,7 @@ import type { Json } from '@/types/database';
  * and normalizes them into the external_orders table.
  *
  * Headers:
- * - X-Provider: The delivery provider (beu, zmall, deliver_addis, esoora, custom_local)
+ * - X-Provider: The delivery provider (beu, zmall, deliver_addis, telebirr_food, esoora, custom_local)
  * - X-API-Key: The integration API key for the restaurant
  * - X-Signature: HMAC signature of the payload (optional, for verification)
  */
@@ -56,6 +56,11 @@ const PROVIDER_CONFIGS = {
         name: 'Deliver Addis',
         color: '#2196F3', // Blue
         orderPrefix: 'DA',
+    },
+    telebirr_food: {
+        name: 'Telebirr Food',
+        color: '#EAB308', // Amber
+        orderPrefix: 'TBF',
     },
     esoora: {
         name: 'Esoora',
@@ -118,7 +123,7 @@ export async function POST(request: NextRequest) {
     // Validate provider
     if (!provider || !PROVIDER_CONFIGS[provider]) {
         return apiError(
-            'Invalid or missing X-Provider header. Supported: beu, zmall, deliver_addis, esoora, custom_local',
+            'Invalid or missing X-Provider header. Supported: beu, zmall, deliver_addis, telebirr_food, esoora, custom_local',
             400,
             'INVALID_PROVIDER'
         );

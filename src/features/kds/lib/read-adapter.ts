@@ -2,7 +2,15 @@ import type { UnifiedKDSOrder } from '@/app/api/kds/queue/route';
 import { normalizeKdsPrintPolicy, DEFAULT_KDS_PRINT_POLICY } from './printer';
 import { getPowerSync } from '@/lib/sync';
 
-type StationFilter = 'all' | 'kitchen' | 'bar' | 'dessert' | 'coffee' | 'expeditor';
+type StationFilter =
+    | 'all'
+    | 'kitchen'
+    | 'bar'
+    | 'dessert'
+    | 'coffee'
+    | 'grill'
+    | 'cold'
+    | 'expeditor';
 
 interface QueueFilters {
     station: StationFilter;

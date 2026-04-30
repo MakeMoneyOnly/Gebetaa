@@ -372,6 +372,7 @@ export default function TerminalPage() {
                 const printResult = await handleApprovedTransactionReceipt({
                     autoPrint: true,
                     orderId: args.orderId ?? selectedOrder?.id ?? null,
+                    restaurantId: deviceInfo?.restaurant_id ?? null,
                     transactionNumber: receipt.transaction_number,
                     receipt,
                     fiscalRequest: result.data.fiscal_request ?? null,

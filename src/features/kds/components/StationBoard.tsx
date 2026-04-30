@@ -25,7 +25,7 @@ import {
 import { submitKdsItemAction, usesLegacyKdsActionReplay } from '@/features/kds/lib/command-adapter';
 import { submitOrderCourseFireUpdate } from '@/lib/orders/command-adapter';
 
-type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee';
+type StationType = 'kitchen' | 'bar' | 'dessert' | 'coffee' | 'grill' | 'cold';
 type ViewMode = 'grid' | 'list';
 type KdsItemAction = 'start' | 'hold' | 'ready';
 type CourseType = 'appetizer' | 'main' | 'dessert' | 'beverage' | 'side';
@@ -795,6 +795,7 @@ export function StationBoard({
         return (
             <div className="bg-brand-canvas flex h-screen items-center justify-center">
                 <div className="text-brand-neutral text-center font-bold tracking-tight">
+                    <h1 className="sr-only">Loading {title} queue</h1>
                     Loading {title} queue...
                 </div>
             </div>

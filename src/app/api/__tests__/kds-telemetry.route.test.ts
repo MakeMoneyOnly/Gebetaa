@@ -152,4 +152,30 @@ describe('KDS telemetry API', () => {
             },
         });
     });
+
+    it('POST /api/kds/telemetry accepts grill station heartbeats for expanded routing', async () => {
+        setAuthAndContextOk(makeFakeDb({}));
+
+        const response = await postKdsTelemetry(
+            new Request('http://localhost/api/kds/telemetry', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    station: 'grill',
+                    realtime_connected: true,
+                    queue_size: 4,
+                    breached_tickets: 0,
+                }),
+            })
+        );
+        const payload = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(payload.data.received).toBe(true);
+        expect(writeAuditLogMock.mock.calls.at(-1)?.[1]).toMatchObject({
+            metadata: expect.objectContaining({
+                station: 'grill',
+            }),
+        });
+    });
 });

@@ -105,8 +105,6 @@ test.describe('Signed QR to guest order flow', () => {
             await continueAsGuestButton.click();
         }
         // Wait for menu items to load after context is established
-        await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => undefined);
-
         await expect(page.getByText('Scan Burger')).toBeVisible({ timeout: 15000 });
 
         await page.getByText('Scan Burger').first().click();

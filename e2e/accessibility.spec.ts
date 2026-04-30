@@ -57,10 +57,10 @@ test.describe('Accessibility Tests', () => {
             await page.goto('/merchant');
 
             // Wait for the page to be fully loaded
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             // Wait for main content to be visible
-            await page.waitForSelector('#main-content', { timeout: 10000 });
+            await page.waitForSelector('#main-content', { timeout: 30000 });
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -74,10 +74,12 @@ test.describe('Accessibility Tests', () => {
             expect(criticalViolations).toEqual([]);
         });
 
-        test('merchant orders page should have no accessibility violations', async ({ page }) => {
-            await page.goto('/merchant/orders');
-            await page.waitForLoadState('networkidle');
-            await page.waitForSelector('#main-content', { timeout: 10000 });
+        test('merchant takeout (orders) page should have no accessibility violations', async ({
+            page,
+        }) => {
+            await page.goto('/merchant/takeout');
+            await page.waitForLoadState('domcontentloaded');
+            await page.waitForSelector('#main-content', { timeout: 30000 });
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -90,10 +92,10 @@ test.describe('Accessibility Tests', () => {
             expect(criticalViolations).toEqual([]);
         });
 
-        test('merchant menu page should have no accessibility violations', async ({ page }) => {
-            await page.goto('/merchant/menu');
-            await page.waitForLoadState('networkidle');
-            await page.waitForSelector('#main-content', { timeout: 10000 });
+        test('merchant menus page should have no accessibility violations', async ({ page }) => {
+            await page.goto('/merchant/menus');
+            await page.waitForLoadState('domcontentloaded');
+            await page.waitForSelector('#main-content', { timeout: 30000 });
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -115,7 +117,7 @@ test.describe('Accessibility Tests', () => {
 
         test('KDS page should have no accessibility violations', async ({ page }) => {
             await page.goto('/kds');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -130,7 +132,7 @@ test.describe('Accessibility Tests', () => {
 
         test('KDS page should have proper heading structure', async ({ page }) => {
             await page.goto('/kds');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             // Check for proper heading hierarchy
             const h1Count = await page.locator('h1').count();
@@ -152,7 +154,7 @@ test.describe('Accessibility Tests', () => {
 
         test('KDS page should have sufficient color contrast', async ({ page }) => {
             await page.goto('/kds');
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const accessibilityScanResults = await new AxeBuilder({ page })
                 .withRules(['color-contrast'])

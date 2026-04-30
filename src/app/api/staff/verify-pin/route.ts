@@ -3,7 +3,8 @@ import { apiError, apiSuccess } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
 import { parseJsonBody } from '@/lib/api/validation';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import { buildStaffSessionExpiry, hashStaffPin } from '@/domains/staff/pin';
+import { buildStaffSessionExpiry, verifyStoredStaffPin } from '@/domains/staff/pin';
+import { logger } from '@/lib/logger';
 
 const VerifyPinSchema = z.object({
     restaurantId: z.string().uuid(),
@@ -38,16 +39,22 @@ export async function POST(request: Request) {
     // to ensure reliable login on shared terminals.
     const adminClient = createServiceRoleClient();
 
-    const { data: staff, error } = await adminClient
+    const { data: staffRows, error } = await adminClient
         .from('restaurant_staff_with_users')
         .select('id, user_id, role, name, email, pin_code, staff_name')
         .eq('restaurant_id', context.restaurantId)
-        .in('pin_code', [parsed.data.pin.trim(), hashStaffPin(parsed.data.pin)])
-        .eq('is_active', true)
-        .single();
+        .eq('is_active', true);
 
-    if (error || !staff) {
-        console.error('[Verify PIN] Failed:', error?.message);
+    if (error || !staffRows) {
+        logger.error('[Verify PIN] Failed to fetch staff rows', { error: error?.message });
+        return apiError('Invalid PIN', 400, 'INVALID_PIN');
+    }
+
+    const staff = staffRows.find((candidate: { pin_code: string | null }) =>
+        verifyStoredStaffPin(candidate.pin_code, parsed.data.pin)
+    );
+
+    if (!staff) {
         return apiError('Invalid PIN', 400, 'INVALID_PIN');
     }
 

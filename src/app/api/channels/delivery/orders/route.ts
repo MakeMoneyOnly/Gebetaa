@@ -5,7 +5,15 @@ import { parseQuery } from '@/lib/api/validation';
 
 const DeliveryOrdersQuerySchema = z.object({
     provider: z
-        .enum(['beu', 'deliver_addis', 'zmall', 'esoora', 'direct_web', 'custom_local'])
+        .enum([
+            'beu',
+            'deliver_addis',
+            'zmall',
+            'telebirr_food',
+            'esoora',
+            'direct_web',
+            'custom_local',
+        ])
         .optional(),
     status: z
         .enum([

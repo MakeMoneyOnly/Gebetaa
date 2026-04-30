@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiError } from '@/lib/api/response';
 import { getAuthenticatedUser, getAuthorizedRestaurantContext } from '@/lib/api/authz';
+import { writeAuditLog } from '@/lib/api/audit';
 
 import { GET as getChannelsSummary } from '@/app/api/channels/summary/route';
 import {
@@ -16,8 +17,13 @@ vi.mock('@/lib/api/authz', () => ({
     getAuthorizedRestaurantContext: vi.fn(),
 }));
 
+vi.mock('@/lib/api/audit', () => ({
+    writeAuditLog: vi.fn().mockResolvedValue({ error: null }),
+}));
+
 const getAuthenticatedUserMock = vi.mocked(getAuthenticatedUser);
 const getAuthorizedRestaurantContextMock = vi.mocked(getAuthorizedRestaurantContext);
+const writeAuditLogMock = vi.mocked(writeAuditLog);
 
 function setAuthUnauthorized() {
     getAuthenticatedUserMock.mockResolvedValue({
@@ -86,6 +92,43 @@ describe('Channels API routes', () => {
         );
 
         expect(response.status).toBe(400);
+    });
+
+    it('POST /api/channels/delivery/connect accepts telebirr_food rollout config', async () => {
+        const supabase = {
+            from: vi.fn(() => {
+                const chain: Record<string, ReturnType<typeof vi.fn>> = {};
+                chain.upsert = vi.fn(() => chain);
+                chain.select = vi.fn(() => chain);
+                chain.single = vi.fn().mockResolvedValue({
+                    data: {
+                        id: 'partner-telebirr',
+                        provider: 'telebirr_food',
+                        status: 'connected',
+                        display_name: 'Telebirr Food',
+                    },
+                    error: null,
+                });
+                return chain;
+            }),
+        };
+        setAuthAndContextOk(supabase);
+
+        const response = await postDeliveryConnect(
+            new Request('http://localhost/api/channels/delivery/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: 'telebirr_food' }),
+            })
+        );
+        const payload = await response.json();
+
+        expect(response.status).toBe(201);
+        expect(payload.data.partner).toMatchObject({
+            id: 'partner-telebirr',
+            provider: 'telebirr_food',
+        });
+        expect(writeAuditLogMock).toHaveBeenCalledOnce();
     });
 
     it('GET /api/channels/delivery/orders returns 400 for invalid query', async () => {

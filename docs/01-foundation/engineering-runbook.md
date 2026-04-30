@@ -308,9 +308,12 @@ npm run migration:push
 # View job queue (QStash)
 # Go to: console.upstash.com → QStash
 
-# SSH into POS tablet (for Termux debugging)
-# On tablet: Termux → pkg install openssh → sshd
-# On laptop: ssh -p 8022 {tablet_ip}
+# Debugging the Native Shell (Capacitor)
+# 1. Connect Android tablet via USB
+# 2. Enable Developer Options -> USB Debugging
+# 3. Open Chrome on laptop: chrome://inspect/#devices
+# 4. Find the 'com.lole.device' entry and click 'inspect'
+# 5. Access the full console and hardware logs directly
 ```
 
 ---

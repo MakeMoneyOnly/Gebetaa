@@ -7,7 +7,7 @@ import { isIdempotencyKeyValid, resolveIdempotencyKey } from '@/lib/api/idempote
 import type { Json } from '@/types/database';
 
 const DeliveryConnectSchema = z.object({
-    provider: z.enum(['beu', 'deliver_addis', 'zmall', 'esoora', 'custom_local']),
+    provider: z.enum(['beu', 'deliver_addis', 'zmall', 'telebirr_food', 'esoora', 'custom_local']),
     display_name: z.string().trim().min(2).max(80).optional(),
     credentials_ref: z.string().trim().min(3).max(200).optional(),
     settings_json: z.record(z.string(), z.unknown()).optional(),

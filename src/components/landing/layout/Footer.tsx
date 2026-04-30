@@ -28,24 +28,28 @@ export function Footer() {
                             <div className="flex w-[350px] max-w-full -translate-x-[25px] items-center justify-center gap-5">
                                 <Link
                                     href="#"
+                                    aria-label="Instagram"
                                     className="text-white transition-colors hover:text-white/80"
                                 >
                                     <Instagram className="h-5 w-5" />
                                 </Link>
                                 <Link
                                     href="#"
+                                    aria-label="Facebook"
                                     className="text-white transition-colors hover:text-white/80"
                                 >
                                     <Facebook className="h-5 w-5" />
                                 </Link>
                                 <Link
                                     href="#"
+                                    aria-label="LinkedIn"
                                     className="text-white transition-colors hover:text-white/80"
                                 >
                                     <Linkedin className="h-5 w-5" />
                                 </Link>
                                 <Link
                                     href="#"
+                                    aria-label="TikTok"
                                     className="text-white transition-colors hover:text-white/80"
                                 >
                                     <svg
@@ -62,6 +66,7 @@ export function Footer() {
                                 </Link>
                                 <Link
                                     href="#"
+                                    aria-label="YouTube"
                                     className="text-white transition-colors hover:text-white/80"
                                 >
                                     <Youtube className="h-6 w-6" />
@@ -70,7 +75,12 @@ export function Footer() {
                         </div>
 
                         {/* Language Selector */}
-                        <div className="mt-auto flex w-fit translate-y-[40px] cursor-pointer items-center gap-1.5 pt-20 text-white hover:text-white/80 lg:translate-y-[90px]">
+                        <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Select language"
+                            className="mt-auto flex w-fit translate-y-[40px] cursor-pointer items-center gap-1.5 pt-20 text-white hover:text-white/80 lg:translate-y-[90px]"
+                        >
                             <Globe className="h-3.5 w-3.5" />
                             <span className="text-sm font-normal">English</span>
                             <ChevronDown className="h-3.5 w-3.5" />

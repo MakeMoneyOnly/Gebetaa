@@ -34,6 +34,7 @@ Every tool was evaluated against four Ethiopia-specific criteria:
 | **next-pwa / Serwist** | Latest          | PWA + service worker                           | Generates service worker from Next.js config. NetworkFirst strategy for menu, NetworkOnly for payments.                                                 |
 | **Noto Sans Ethiopic** | —               | Amharic typeface                               | Google Fonts — renders Ethiopic script correctly across all Android devices. Loaded via `next/font` with `display: swap`.                               |
 | **Framer Motion**      | Latest          | Animations                                     | **Dashboard only** — disabled on POS and KDS. Tablet responsiveness requires zero animation overhead.                                                   |
+| **CapacitorJS**        | Latest          | Native Shell / Hardware Bridge                 | Wraps the Next.js bundle for Android. Enables silent printing, Bluetooth/USB access, and PWA+ performance on tablets.                                   |
 
 ---
 
@@ -98,8 +99,6 @@ All monetary values are stored as `INTEGER` in **Santim** (100 santim = 1 ETB). 
 | **Telebirr** | REST API — initiate USSD/app payment, webhook callback | ✅ Initiate + verify. Webhook: Sprint 1 | P0       |
 | **Chapa**    | REST API — initiate checkout, webhook callback         | ✅ Initiate + verify. Webhook: Sprint 1 | P0       |
 | **Cash**     | Record only — no API                                   | ✅ Live                                 | P0       |
-| **CBE Birr** | CBE Merchant REST API                                  | ❌ Phase 2                              | P1       |
-| **Amole**    | Dashen Bank REST API                                   | ❌ Phase 3                              | P2       |
 
 **Webhook security:** All payment webhooks verified with HMAC-SHA256 timing-safe comparison before any processing. All webhook handlers return 200 immediately and publish to event bus — zero synchronous business logic in webhook handlers.
 
@@ -160,15 +159,16 @@ All monetary values are stored as `INTEGER` in **Santim** (100 santim = 1 ETB). 
 
 ---
 
-### Print Server
+### Native Hardware & Printing (POS/KDS)
 
-| Technology               | Role                                            | Device                                |
-| ------------------------ | ----------------------------------------------- | ------------------------------------- |
-| **Termux (Android)**     | Node.js environment on POS tablet               | Samsung Galaxy Tab A8 / Tecno T40 Pro |
-| **Node.js LTS**          | Print server runtime (`~/lole-print/server.js`) | Same Android tablet as POS            |
-| **Express**              | HTTP server (`localhost:3001`)                  | —                                     |
-| **node-thermal-printer** | ESC/POS commands to thermal printer             | USB OTG `/dev/usb/lp0`                |
-| **Termux:Boot**          | Auto-start print server on device boot          | F-Droid (not Play Store)              |
+| Technology                 | Role                               | Implementation                                                                                           |
+| -------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Capacitor Native Shell** | Hardware bridge for POS tablets    | Android APK wrapper for the lole web bundle.                                                             |
+| **ThermalPrinter Plugin**  | ESC/POS driver for silent printing | Native Capacitor plugin handling Bluetooth, USB OTG, and Network (TCP) printing directly from the app.   |
+| **Capacitor SQLite**       | High-performance local caching     | Local persistence for large datasets (e.g. offline menu search) that exceed browser localStorage limits. |
+| **Capacitor Device**       | Hardware identification            | Reliable serial/IMEI tracking for ERCA compliance and device-scoped security.                            |
+
+**Legacy Transition:** The Termux/Node.js print server approach is deprecated and replaced by the native Capacitor hardware bridge for all new store deployments.
 
 ---
 

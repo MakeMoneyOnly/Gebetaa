@@ -4,6 +4,7 @@ import { handleApprovedTransactionReceipt } from '@/lib/printer/transaction-prin
 import { queueFiscalJob } from '@/lib/fiscal/offline-queue';
 import { silentPrintReceipt } from '@/lib/printer/silent-print';
 import { isMorLiveConfigured, submitFiscalTransaction } from '@/lib/fiscal/mor-client';
+import { createPrintJob } from '@/lib/sync/printerFallback';
 
 vi.mock('@/lib/fiscal/offline-queue', () => ({
     queueFiscalJob: vi.fn(),
@@ -11,6 +12,10 @@ vi.mock('@/lib/fiscal/offline-queue', () => ({
 
 vi.mock('@/lib/printer/silent-print', () => ({
     silentPrintReceipt: vi.fn(),
+}));
+
+vi.mock('@/lib/sync/printerFallback', () => ({
+    createPrintJob: vi.fn(),
 }));
 
 vi.mock('@/lib/fiscal/mor-client', async importOriginal => {
@@ -27,6 +32,17 @@ describe('handleApprovedTransactionReceipt', () => {
         vi.clearAllMocks();
         vi.mocked(isMorLiveConfigured).mockReturnValue(true);
         vi.mocked(silentPrintReceipt).mockResolvedValue({ ok: true, channel: 'native' });
+        vi.mocked(createPrintJob).mockResolvedValue({
+            id: 'job-1',
+            order_id: 'order-2',
+            station: 'receipt',
+            route_key: 'receipt-printer',
+            payload_json: '{}',
+            status: 'pending',
+            attempts: 0,
+            max_attempts: 3,
+            created_at: '2026-04-29T00:00:00.000Z',
+        } as never);
     });
 
     it('blocks receipt printing when live fiscalization fails while online', async () => {
@@ -106,5 +122,59 @@ describe('handleApprovedTransactionReceipt', () => {
         });
         expect(queueFiscalJob).toHaveBeenCalledOnce();
         expect(silentPrintReceipt).toHaveBeenCalledOnce();
+    });
+
+    it('spools receipt to local printer queue when silent print needs browser fallback', async () => {
+        vi.mocked(silentPrintReceipt).mockImplementation(
+            async (_receipt, _printerSelection, options) => {
+                const queued = await options?.queueFallback?.({
+                    receipt: {
+                        restaurant_name: 'lole',
+                        transaction_number: 'TX-3',
+                        printed_at: '2026-04-03T12:00:00.000Z',
+                        items: [],
+                        subtotal: 150,
+                        total: 150,
+                    },
+                    bytes: new Uint8Array([27, 64]),
+                    payloadBase64: 'G0A=',
+                    printer: null,
+                });
+
+                return {
+                    ok: queued?.ok ?? false,
+                    channel: 'queue' as const,
+                    reason: queued?.reason,
+                };
+            }
+        );
+
+        const result = await handleApprovedTransactionReceipt({
+            autoPrint: true,
+            orderId: 'order-3',
+            transactionNumber: 'TX-3',
+            receipt: {
+                restaurant_name: 'lole',
+                transaction_number: 'TX-3',
+                printed_at: '2026-04-03T12:00:00.000Z',
+                items: [],
+                subtotal: 150,
+                total: 150,
+            },
+        });
+
+        expect(result).toMatchObject({
+            printed: true,
+            blocked: false,
+        });
+        expect(createPrintJob).toHaveBeenCalledWith(
+            expect.objectContaining({
+                orderId: 'order-3',
+                station: 'receipt',
+            })
+        );
+        expect(vi.mocked(silentPrintReceipt).mock.calls[0]?.[2]).toMatchObject({
+            queueFallback: expect.any(Function),
+        });
     });
 });

@@ -49,22 +49,32 @@ export function FaqSection({ openFaq, setOpenFaq }: FaqSectionProps) {
                     {questions.map((question, idx) => (
                         <div
                             key={idx}
-                            onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                            className="group flex cursor-pointer flex-col overflow-hidden rounded-[20px] border border-transparent bg-white transition-all duration-300"
+                            className="group flex flex-col overflow-hidden rounded-[20px] border border-transparent bg-white transition-all duration-300"
                         >
-                            <div className="flex items-center justify-between px-8 py-6">
-                                <span className="text-[15px] leading-tight font-semibold text-black">
+                            <button
+                                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                                aria-expanded={openFaq === idx}
+                                aria-controls={`faq-answer-${idx}`}
+                                className="flex w-full items-center justify-between px-8 py-6 text-left transition-colors hover:bg-black/5"
+                            >
+                                <span
+                                    id={`faq-question-${idx}`}
+                                    className="text-[15px] leading-tight font-semibold text-black"
+                                >
                                     {question}
                                 </span>
                                 <ChevronDown
                                     className={`h-4 w-4 text-black/60 transition-transform duration-300 ${openFaq === idx ? 'rotate-180' : ''}`}
                                 />
-                            </div>
+                            </button>
                             <div
+                                id={`faq-answer-${idx}`}
+                                role="region"
+                                aria-labelledby={`faq-question-${idx}`}
                                 className={`px-8 transition-all duration-300 ease-in-out ${
                                     openFaq === idx
                                         ? 'max-h-40 pb-6 opacity-100'
-                                        : 'max-h-0 opacity-0'
+                                        : 'max-h-0 overflow-hidden opacity-0'
                                 }`}
                             >
                                 <p className="text-[14px] leading-relaxed text-gray-500">

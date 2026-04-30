@@ -38,3 +38,17 @@ Key routing rules:
 - Review what gstack has learned → invoke /gstack-learn
 - Tune question sensitivity → invoke /gstack-plan-tune
 - Code quality dashboard → invoke /gstack-health
+
+## Agent skills
+
+### Issue tracker
+
+GitHub (https://github.com/MakeMoneyOnly/lole.git). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary (needs-triage, ready-for-agent, etc.). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. Root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.

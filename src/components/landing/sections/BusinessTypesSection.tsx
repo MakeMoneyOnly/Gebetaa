@@ -62,13 +62,15 @@ export function BusinessTypesSection({ scrollRef, onScroll }: BusinessTypesSecti
                     <div className="mb-2.5 flex translate-y-[40px] gap-2.5">
                         <button
                             onClick={() => onScroll('left')}
-                            className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-white/5 bg-white/10 text-white/50 transition-all hover:text-white active:scale-95"
+                            aria-label="Previous business type"
+                            className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-white/5 bg-white/10 text-white/70 transition-all hover:text-white active:scale-95"
                         >
                             <ChevronLeft className="h-4.5 w-4.5" />
                         </button>
                         <button
                             onClick={() => onScroll('right')}
-                            className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-white/5 bg-white/10 text-white/50 transition-all hover:text-white active:scale-95"
+                            aria-label="Next business type"
+                            className="flex h-[34px] w-[34px] items-center justify-center rounded-full border border-white/5 bg-white/10 text-white/70 transition-all hover:text-white active:scale-95"
                         >
                             <ChevronRight className="h-4.5 w-4.5" />
                         </button>

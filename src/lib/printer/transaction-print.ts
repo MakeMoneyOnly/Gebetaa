@@ -7,6 +7,7 @@ import {
 } from '@/lib/fiscal/mor-client';
 import { silentPrintReceipt } from '@/lib/printer/silent-print';
 import type { EscPosReceiptPayload } from '@/lib/printer/escpos';
+import { createPrintJob } from '@/lib/sync/printerFallback';
 
 function toNumber(value: unknown): number {
     const numeric = Number(value ?? 0);
@@ -16,6 +17,7 @@ function toNumber(value: unknown): number {
 export async function handleApprovedTransactionReceipt(args: {
     autoPrint: boolean;
     orderId?: string | null;
+    restaurantId?: string | null;
     transactionNumber: string;
     receipt: EscPosReceiptPayload;
     fiscalRequest?: FiscalSubmissionRequest | null;
@@ -91,7 +93,43 @@ export async function handleApprovedTransactionReceipt(args: {
         };
     }
 
-    const result = await silentPrintReceipt(args.receipt);
+    const result = await silentPrintReceipt(args.receipt, undefined, {
+        queueFallback: async ({ printer }) => {
+            const job = await createPrintJob({
+                orderId: args.orderId ?? args.transactionNumber,
+                station: 'receipt',
+                route: {
+                    routeKey: 'receipt-printer',
+                    station: 'receipt',
+                    preferredDeviceId: printer?.device_id ?? null,
+                    preferredPrinterName: printer?.device_name ?? null,
+                },
+                payload: {
+                    restaurantId:
+                        args.restaurantId ??
+                        process.env.NEXT_PUBLIC_RESTAURANT_ID ??
+                        'default-restaurant',
+                    orderId: args.orderId ?? args.transactionNumber,
+                    orderNumber:
+                        args.receipt.order_label?.replace(/^Order\s+/i, '') ??
+                        args.transactionNumber,
+                    items: args.receipt.items.map(item => ({
+                        name: item.name,
+                        quantity: item.quantity,
+                        notes: item.notes ?? undefined,
+                    })),
+                    station: 'receipt',
+                    firedAt: new Date().toISOString(),
+                    reason: 'receipt_auto_print',
+                },
+            });
+
+            return {
+                ok: Boolean(job),
+                reason: job ? 'queued_locally' : 'printer_spool_unavailable',
+            };
+        },
+    });
     return {
         printed: result.ok,
         queuedFiscal,

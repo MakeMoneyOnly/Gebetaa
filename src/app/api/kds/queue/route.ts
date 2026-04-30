@@ -19,7 +19,15 @@ import {
 import { parseQuery } from '@/lib/api/validation';
 import type { TablesInsert } from '@/types/database';
 
-type StationFilter = 'all' | 'kitchen' | 'bar' | 'dessert' | 'coffee' | 'expeditor';
+type StationFilter =
+    | 'all'
+    | 'kitchen'
+    | 'bar'
+    | 'dessert'
+    | 'coffee'
+    | 'grill'
+    | 'cold'
+    | 'expeditor';
 type SlaFilter = 'on_track' | 'at_risk' | 'breached';
 
 const ACTIVE_KDS_STATUSES = ['pending', 'confirmed', 'acknowledged', 'preparing', 'ready'] as const;
@@ -28,7 +36,9 @@ const DEFAULT_READY_AUTO_ARCHIVE_MINUTES = 15;
 
 const QueueRequestSchema = z.object({
     status: z.enum(ACTIVE_KDS_STATUSES).optional(),
-    station: z.enum(['all', 'kitchen', 'bar', 'dessert', 'coffee', 'expeditor']).default('all'),
+    station: z
+        .enum(['all', 'kitchen', 'bar', 'dessert', 'coffee', 'grill', 'cold', 'expeditor'])
+        .default('all'),
     sla_status: z.enum(['on_track', 'at_risk', 'breached']).optional(),
     sla_minutes: z.coerce.number().int().min(5).max(180).default(30),
     cursor: z.string().min(8).max(400).optional(),
@@ -73,6 +83,7 @@ interface QueueItem {
         | 'direct_pickup'
         | 'beu'
         | 'zmall'
+        | 'telebirr_food'
         | 'deliver_addis'
         | 'esoora';
     sourceLabel: string;
@@ -118,6 +129,7 @@ const SOURCE_CONFIG = {
     direct_pickup: { label: 'Pickup', color: '#16A34A' },
     beu: { label: 'Beu', color: '#F97316' },
     zmall: { label: 'Zmall', color: '#22C55E' },
+    telebirr_food: { label: 'Telebirr Food', color: '#EAB308' },
     deliver_addis: { label: 'Deliver Addis', color: '#8B5CF6' },
     esoora: { label: 'Esoora', color: '#06B6D4' },
 };
@@ -735,7 +747,7 @@ export async function GET(request: Request) {
             directDelivery: page.filter(o => o.source === 'direct_delivery').length,
             directPickup: page.filter(o => o.source === 'direct_pickup').length,
             partners: page.filter(o =>
-                ['beu', 'zmall', 'deliver_addis', 'esoora'].includes(o.source)
+                ['beu', 'zmall', 'telebirr_food', 'deliver_addis', 'esoora'].includes(o.source)
             ).length,
         },
         cursor: {

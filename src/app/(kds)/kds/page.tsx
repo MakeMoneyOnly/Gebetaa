@@ -43,11 +43,10 @@ function KdsPageContent() {
     const config = STATION_CONFIG[station];
 
     if (managedDevice.loading) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500">
-                Loading KDS...
-            </div>
-        );
+        <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500">
+            <h1 className="sr-only">Loading Kitchen Display System</h1>
+            Loading KDS...
+        </div>;
     }
 
     if (managedDevice.hasProfileMismatch) {
@@ -104,6 +103,7 @@ export default function KdsPage() {
         <Suspense
             fallback={
                 <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500">
+                    <h1 className="sr-only">Loading Kitchen Display System</h1>
                     Loading KDS...
                 </div>
             }

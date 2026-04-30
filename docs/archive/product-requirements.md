@@ -1,4 +1,4 @@
-# ገበጣ lole — Product Requirements Document (PRD)
+# lole — Product Requirements Document (PRD)
 
 **Version 1.0 · March 2026 · Confidential**
 

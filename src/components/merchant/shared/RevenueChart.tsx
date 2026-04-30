@@ -56,7 +56,11 @@ const RevenueChart = ({ data = [] }: RevenueChartProps) => {
     return (
         <div ref={containerRef} className="h-[350px] w-full select-none">
             {chartSize.width > 0 && chartSize.height > 0 ? (
-                <RevenueChartContent data={data} />
+                <RevenueChartContent
+                    data={data}
+                    width={chartSize.width}
+                    height={chartSize.height}
+                />
             ) : (
                 <ChartSkeleton />
             )}

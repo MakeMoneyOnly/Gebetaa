@@ -92,13 +92,15 @@ interface SyncOperationResult {
 // Table-to-Supabase mapping for sync operations
 // ============================================================================
 
-const TABLE_MAPPING: Record<string, string> = {
-    orders: 'orders',
-    order_items: 'order_items',
-    kds_items: 'kds_order_items',
-    tables: 'tables',
-    guests: 'guests',
-    menu_items: 'menu_items',
+const TABLE_MAPPING: Record<string, { table: string; usesVersion: boolean }> = {
+    orders: { table: 'orders', usesVersion: true },
+    order_items: { table: 'order_items', usesVersion: true },
+    kds_items: { table: 'kds_order_items', usesVersion: true },
+    tables: { table: 'tables', usesVersion: true },
+    guests: { table: 'guests', usesVersion: true },
+    menu_items: { table: 'menu_items', usesVersion: true },
+    time_entries: { table: 'time_entries', usesVersion: false },
+    tip_allocations: { table: 'tip_allocations', usesVersion: false },
 };
 
 // Tables that require special conflict handling
@@ -109,6 +111,8 @@ const CONFLICT_STRATEGIES: Record<string, ConflictStrategy> = {
     tables: 'last_write_wins',
     guests: 'last_write_wins',
     menu_items: 'server_wins', // Menu changes should come from server
+    time_entries: 'last_write_wins',
+    tip_allocations: 'last_write_wins',
 };
 
 // ============================================================================
@@ -221,16 +225,16 @@ async function getServerRecord(
     recordId: string,
     restaurantId: string
 ): Promise<{ version: number; lastModified: string; data: Record<string, unknown> } | null> {
-    const supabaseTable = TABLE_MAPPING[tableName];
-    if (!supabaseTable) {
+    const tableConfig = TABLE_MAPPING[tableName];
+    if (!tableConfig) {
         return null;
     }
 
     const admin = createServiceRoleClient();
 
     const { data, error } = await admin
-        .from(supabaseTable)
-        .select('version, updated_at, *')
+        .from(tableConfig.table)
+        .select(tableConfig.usesVersion ? 'version, updated_at, *' : 'updated_at, *')
         .eq('id', recordId)
         .eq('restaurant_id', restaurantId)
         .maybeSingle();
@@ -240,8 +244,12 @@ async function getServerRecord(
     }
 
     return {
-        version: (data as Record<string, unknown>).version as number,
-        lastModified: (data as Record<string, unknown>).updated_at as string,
+        version: tableConfig.usesVersion
+            ? Number((data as Record<string, unknown>).version ?? 1)
+            : 1,
+        lastModified:
+            ((data as Record<string, unknown>).updated_at as string | undefined) ??
+            new Date().toISOString(),
         data: data as Record<string, unknown>,
     };
 }
@@ -253,8 +261,8 @@ async function processSyncOperation(
     op: z.infer<typeof SyncOperationPayloadSchema>,
     restaurantId: string
 ): Promise<SyncOperationResult> {
-    const supabaseTable = TABLE_MAPPING[op.tableName];
-    if (!supabaseTable) {
+    const tableConfig = TABLE_MAPPING[op.tableName];
+    if (!tableConfig) {
         return {
             id: op.id,
             success: false,
@@ -344,10 +352,12 @@ async function processSyncOperation(
 
                     // Update with resolved data
                     const { error: updateError } = await admin
-                        .from(supabaseTable)
+                        .from(tableConfig.table)
                         .update({
                             ...resolvedData,
-                            version: existingRecord.version + 1,
+                            ...(tableConfig.usesVersion
+                                ? { version: existingRecord.version + 1 }
+                                : {}),
                             updated_at: new Date().toISOString(),
                         })
                         .eq('id', op.recordId)
@@ -386,11 +396,11 @@ async function processSyncOperation(
             }
 
             // No conflict - insert new record
-            const { error: insertError } = await admin.from(supabaseTable).insert({
+            const { error: insertError } = await admin.from(tableConfig.table).insert({
                 ...op.data,
                 id: op.recordId,
                 restaurant_id: restaurantId,
-                version: 1,
+                ...(tableConfig.usesVersion ? { version: 1 } : {}),
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             });
@@ -436,11 +446,11 @@ async function processSyncOperation(
 
             if (!serverRecord) {
                 // Record doesn't exist - treat as create
-                const { error: insertError } = await admin.from(supabaseTable).insert({
+                const { error: insertError } = await admin.from(tableConfig.table).insert({
                     ...op.data,
                     id: op.recordId,
                     restaurant_id: restaurantId,
-                    version: 1,
+                    ...(tableConfig.usesVersion ? { version: 1 } : {}),
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                 });
@@ -494,10 +504,10 @@ async function processSyncOperation(
 
                 // Update with resolved data
                 const { error: updateError } = await admin
-                    .from(supabaseTable)
+                    .from(tableConfig.table)
                     .update({
                         ...resolvedData,
-                        version: serverRecord.version + 1,
+                        ...(tableConfig.usesVersion ? { version: serverRecord.version + 1 } : {}),
                         updated_at: new Date().toISOString(),
                     })
                     .eq('id', op.recordId)
@@ -536,10 +546,10 @@ async function processSyncOperation(
 
             // No conflict - simple update
             const { error: updateError } = await admin
-                .from(supabaseTable)
+                .from(tableConfig.table)
                 .update({
                     ...op.data,
-                    version: serverRecord.version + 1,
+                    ...(tableConfig.usesVersion ? { version: serverRecord.version + 1 } : {}),
                     updated_at: new Date().toISOString(),
                 })
                 .eq('id', op.recordId)
@@ -571,10 +581,10 @@ async function processSyncOperation(
 
             // Soft delete by setting deleted_at
             const { error: deleteError } = await admin
-                .from(supabaseTable)
+                .from(tableConfig.table)
                 .update({
                     deleted_at: new Date().toISOString(),
-                    version: serverRecord.version + 1,
+                    ...(tableConfig.usesVersion ? { version: serverRecord.version + 1 } : {}),
                     updated_at: new Date().toISOString(),
                 })
                 .eq('id', op.recordId)
@@ -755,6 +765,18 @@ export async function GET(request: NextRequest) {
         .eq('restaurant_id', restaurantId)
         .gte('updated_at', sinceFilter);
 
+    const { count: timeEntriesChanged } = await admin
+        .from('time_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('restaurant_id', restaurantId)
+        .gte('updated_at', sinceFilter);
+
+    const { count: tipAllocationsChanged } = await admin
+        .from('tip_allocations')
+        .select('*', { count: 'exact', head: true })
+        .eq('restaurant_id', restaurantId)
+        .gte('updated_at', sinceFilter);
+
     // Get recent sync operations for this restaurant
     const { data: recentSyncOps, error: syncOpsError } = await admin
         .from('sync_idempotency_keys')
@@ -782,6 +804,8 @@ export async function GET(request: NextRequest) {
             orders: ordersChanged || 0,
             orderItems: orderItemsChanged || 0,
             kdsItems: kdsItemsChanged || 0,
+            timeEntries: timeEntriesChanged || 0,
+            tipAllocations: tipAllocationsChanged || 0,
         },
         recentSyncOperations: recentSyncOps || [],
         serverTime: new Date().toISOString(),

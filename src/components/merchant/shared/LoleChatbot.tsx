@@ -236,7 +236,7 @@ export function LoleChatbot() {
                 <h3 className="mb-1 text-[17px] leading-snug font-semibold tracking-tight text-gray-900">
                     Beyond chat, get it done.
                 </h3>
-                <p className="text-[12px] leading-relaxed font-normal text-gray-400">
+                <p className="text-[12px] leading-relaxed font-normal text-gray-500">
                     Just tell lole what you need — it plans, executes, and delivers, keeping you in
                     the loop.
                 </p>
@@ -247,6 +247,7 @@ export function LoleChatbot() {
                 ref={scrollRef}
                 className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-0.5"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}
+                tabIndex={0}
             >
                 <AnimatePresence initial={false}>
                     {messages.map(msg => (
@@ -335,11 +336,12 @@ export function LoleChatbot() {
                     />
                 </div>
                 <div className="flex items-center justify-between px-3 pt-1 pb-2.5">
-                    <span className="text-[10px] font-semibold text-gray-400">
+                    <span className="text-[10px] font-semibold text-gray-500">
                         {isTyping ? 'lole is thinking…' : 'Enter to send · Shift+Enter for newline'}
                     </span>
                     <motion.button
                         type="button"
+                        aria-label="Send message"
                         onClick={() => sendMessage(value)}
                         disabled={isTyping || !value.trim()}
                         whileTap={{ scale: 0.93 }}

@@ -16,7 +16,9 @@ const KdsTelemetryQuerySchema = z.object({
 });
 
 const KdsHeartbeatSchema = z.object({
-    station: z.enum(['kitchen', 'bar', 'dessert', 'coffee', 'expeditor']).optional(),
+    station: z
+        .enum(['kitchen', 'bar', 'dessert', 'coffee', 'grill', 'cold', 'expeditor'])
+        .optional(),
     realtime_connected: z.boolean(),
     queue_size: z.number().int().min(0).max(500).optional(),
     breached_tickets: z.number().int().min(0).max(500).optional(),

@@ -306,10 +306,10 @@ test.describe('KDS queue to handoff flow', () => {
 
         await page.keyboard.press('1');
         await page.keyboard.press('s');
-        await expect(page.getByText('Item status: In Progress')).toBeVisible();
+        await expect(page.getByText('Status: In Progress')).toBeVisible();
 
         await page.keyboard.press('r');
-        await expect(page.getByText('Item status: Ready')).toBeVisible();
+        await expect(page.getByText('Status: Ready')).toBeVisible();
 
         await page.goto('/expeditor?restaurantId=rest-1');
         await expect(page.getByRole('heading', { name: 'Expeditor Handoff' })).toBeVisible();

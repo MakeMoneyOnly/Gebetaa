@@ -7,12 +7,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { receiveExternalOrder, getActivePartners } from '@/lib/delivery/aggregator';
+import {
+    AggregatorService,
+    getActivePartners,
+    normalizeDeliveryPartnerName,
+} from '@/lib/delivery/aggregator';
 import { createHmac } from 'crypto';
 import { redisRateLimiters } from '@/lib/security';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import { getStoreGatewayService } from '@/lib/gateway/service';
+import { logger } from '@/lib/logger';
 
 /**
  * HIGH-009: Zod schema for external order validation
@@ -87,6 +93,26 @@ const ExternalOrderSchema = z
 
 type ValidatedExternalOrder = z.infer<typeof ExternalOrderSchema>;
 
+function createDeliveryAggregatorService() {
+    return new AggregatorService({
+        publishLocalEvent: async event => {
+            const gateway = getStoreGatewayService();
+            if (!gateway) {
+                return;
+            }
+
+            await gateway.publishCommand({
+                type: event.type,
+                aggregate: event.aggregate,
+                aggregateId: event.aggregateId,
+                payload: event.payload as Record<string, unknown>,
+                restaurantId: event.restaurantId,
+                locationId: event.locationId,
+            });
+        },
+    });
+}
+
 export async function POST(request: NextRequest) {
     // HIGH-002: Apply rate limiting for webhook endpoint
     const rateLimitResponse = await redisRateLimiters.mutation(request as NextRequest);
@@ -111,6 +137,8 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+
+        const normalizedPlatform = normalizeDeliveryPartnerName(platform);
 
         // Get raw body for signature verification
         const rawBody = await request.text();
@@ -159,7 +187,7 @@ export async function POST(request: NextRequest) {
 
         // Get active partners for this restaurant
         const partners = await getActivePartners(supabase, restaurantId);
-        const partner = partners.find(p => p.partner_name === platform);
+        const partner = partners.find(p => p.partner_name === normalizedPlatform);
 
         if (!partner) {
             return NextResponse.json(
@@ -195,23 +223,29 @@ export async function POST(request: NextRequest) {
         }));
 
         // Receive the external order
-        const result = await receiveExternalOrder(supabase, restaurantId, partner.id, {
-            external_order_id: orderData.id || orderData.order_id!,
-            external_order_number: orderData.order_number,
-            raw_order_data: orderData,
-            customer_name: orderData.customer?.name || orderData.customer_name,
-            customer_phone: orderData.customer?.phone || orderData.customer_phone,
-            delivery_address: orderData.delivery_address || orderData.address,
-            delivery_latitude: orderData.location?.lat || orderData.delivery_latitude,
-            delivery_longitude: orderData.location?.lng || orderData.delivery_longitude,
-            delivery_notes: orderData.delivery_notes,
-            items,
-            subtotal: orderData.subtotal,
-            delivery_fee: orderData.delivery_fee,
-            platform_fee: orderData.platform_fee || orderData.service_fee || 0,
-            total: orderData.total || orderData.total_amount || 0,
-            placed_at: orderData.placed_at || orderData.created_at,
-        });
+        const aggregatorService = createDeliveryAggregatorService();
+        const result = await aggregatorService.receiveAndBroadcastOrder(
+            supabase,
+            restaurantId,
+            partner.id,
+            {
+                external_order_id: orderData.id || orderData.order_id!,
+                external_order_number: orderData.order_number,
+                raw_order_data: orderData,
+                customer_name: orderData.customer?.name || orderData.customer_name,
+                customer_phone: orderData.customer?.phone || orderData.customer_phone,
+                delivery_address: orderData.delivery_address || orderData.address,
+                delivery_latitude: orderData.location?.lat || orderData.delivery_latitude,
+                delivery_longitude: orderData.location?.lng || orderData.delivery_longitude,
+                delivery_notes: orderData.delivery_notes,
+                items,
+                subtotal: orderData.subtotal,
+                delivery_fee: orderData.delivery_fee,
+                platform_fee: orderData.platform_fee || orderData.service_fee || 0,
+                total: orderData.total || orderData.total_amount || 0,
+                placed_at: orderData.placed_at || orderData.created_at,
+            }
+        );
 
         if (!result.success) {
             return NextResponse.json(
@@ -227,7 +261,7 @@ export async function POST(request: NextRequest) {
             entity_id: result.order?.id,
             restaurant_id: restaurantId,
             metadata: {
-                platform,
+                platform: normalizedPlatform,
                 external_order_id: orderData.id || orderData.order_id,
                 partner_id: partner.id,
             },
@@ -237,11 +271,11 @@ export async function POST(request: NextRequest) {
             data: {
                 success: true,
                 aggregatorOrderId: result.order?.id,
-                platform,
+                platform: normalizedPlatform,
             },
         });
     } catch (error) {
-        console.error('[Delivery Aggregator API] Error:', error);
+        logger.error('[Delivery Aggregator API] Error', { error });
         return NextResponse.json(
             { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
             { status: 500 }
@@ -290,7 +324,7 @@ export async function GET(request: NextRequest) {
             },
         });
     } catch (error) {
-        console.error('[Delivery Aggregator API] Error:', error);
+        logger.error('[Delivery Aggregator API] Error', { error });
         return NextResponse.json(
             { error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } },
             { status: 500 }

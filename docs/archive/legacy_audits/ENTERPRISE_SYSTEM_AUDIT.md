@@ -39,6 +39,28 @@ The largest structural issues are:
 
 If the fiber cable is cut today, the system degrades unevenly and unpredictably. Some local UI workflows may still appear to function, but the architecture does not yet guarantee durable, synchronized, compliant restaurant operations for 48 hours.
 
+## 2026-04-29 Progress Addendum
+
+The original audit verdict above still stands at platform level, but the following Phase 2 operational slices now have concrete runtime coverage and focused verification:
+
+- `ENT-075` Delivery aggregator runtime wiring now routes inbound partner orders through `AggregatorService`, publishes the local-first gateway bus event, and accepts `telebirr_food` across delivery connect/listing surfaces.
+- `ENT-076` Tablet-triggered payment receipts now queue into the gateway-owned printer spooler when native silent printing is unavailable, with the paired device restaurant context forwarded from terminal runtime.
+- `ENT-077` Staff PIN verification now checks fetched active staff rows against stored hashed PINs, preserves session expiry issuance, and the payroll sync path now accepts `tip_allocations` for downstream labor reporting.
+- `ENT-078` Expanded KDS station runtime now recognizes `grill` and `cold` across queue filters, telemetry, board types, and dedicated KDS pages, closing the gap between routing rules and operator-visible station surfaces.
+- `ENT-079` PowerSync server sync now accepts `time_entries` and `tip_allocations`, matching the existing dashboard/labor KPI calculations so payroll-facing metrics can converge from local-first writes.
+
+Focused verification completed on 2026-04-29 with:
+
+- `src/app/api/__tests__/delivery-aggregator.route.test.ts`
+- `src/app/api/__tests__/channels-api-routes.test.ts`
+- `src/app/api/__tests__/staff-verify-pin.route.test.ts`
+- `src/app/api/sync/__tests__/payroll-sync.route.test.ts`
+- `src/features/kds/lib/__tests__/read-adapter.test.ts`
+- `src/app/api/__tests__/kds-telemetry.route.test.ts`
+- `src/lib/printer/transaction-print.test.ts`
+- `src/lib/delivery/aggregator.test.ts`
+- `src/lib/sync/__tests__/powersync-config.test.ts`
+
 ## 1. Outbound Network Dependency Map
 
 This section starts with the required map of outbound requests and their offline criticality for restaurant operations.
