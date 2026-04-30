@@ -7,6 +7,7 @@
 
 import {
     PowerSyncDatabase as WebPowerSyncDatabase,
+    WASQLiteOpenFactory,
     Schema,
     Table,
     column,
@@ -971,22 +972,29 @@ class WrappedPowerSyncDatabase implements PowerSyncDatabase {
 
 let rawPowerSyncDb: WebPowerSyncDatabase | null = null;
 let powerSyncDb: PowerSyncDatabase | null = null;
+let initPromise: Promise<PowerSyncDatabase | null> | null = null;
 
 async function ensureLocalSchema(database: WebPowerSyncDatabase): Promise<void> {
-    const statements = powerSyncSchema
-        .split(';')
-        .map(statement => statement.trim())
-        .filter(statement => statement.length > 0);
-
-    for (const statement of statements) {
-        await database.execute(`${statement};`);
-    }
+    // PowerSync's Schema() already creates internal views for all defined tables.
+    // We must NOT re-create those tables or attempt to index the views (SQLite error:
+    // "views may not be indexed"). We only need to run CREATE INDEX on tables that
+    // are truly local-only (localOnly: true in the Schema definition) since those are
+    // real SQLite tables, not views.
+    //
+    // However, the PowerSync SDK already handles all table/view creation via the Schema.
+    // The raw powerSyncSchema DDL was originally written for a manual SQLite setup and
+    // conflicts with PowerSync's internal management. We skip it entirely now.
+    logger.info('[PowerSync] Schema managed by PowerSync SDK — skipping manual DDL.');
 }
 
 export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
     if (powerSyncDb) {
         bootstrapStatus = createBootstrapStatus('ready', 'PowerSync already initialized.');
         return powerSyncDb;
+    }
+
+    if (initPromise) {
+        return initPromise;
     }
 
     const config = getPowerSyncConfig();
@@ -998,48 +1006,79 @@ export async function initPowerSync(): Promise<PowerSyncDatabase | null> {
         return null;
     }
 
-    try {
-        rawPowerSyncDb = new WebPowerSyncDatabase({
-            schema: powerSyncAppSchema,
-            database: {
+    initPromise = (async () => {
+        try {
+            const factory = new WASQLiteOpenFactory({
                 dbFilename: 'lole_offline.db',
-            },
-        });
+                worker: '/@powersync/worker/WASQLiteDB.umd.js',
+                flags: {
+                    useWebWorker: true,
+                    enableMultiTabs: false,
+                    disableSSRWarning: true,
+                },
+            });
 
-        await rawPowerSyncDb.init();
-        await ensureLocalSchema(rawPowerSyncDb);
+            rawPowerSyncDb = new WebPowerSyncDatabase({
+                schema: powerSyncAppSchema,
+                database: factory,
+                sync: {
+                    worker: '/@powersync/worker/SharedSyncImplementation.umd.js',
+                },
+            });
 
-        powerSyncDb = new WrappedPowerSyncDatabase(rawPowerSyncDb);
+            logger.info('[PowerSync] Initiating raw database...');
+            await rawPowerSyncDb.init();
 
-        const connector = new Connector();
-        const credentials = await connector.fetchCredentials();
+            logger.info('[PowerSync] Raw database initialized.');
+            await ensureLocalSchema(rawPowerSyncDb);
 
-        if (!config.endpoint || !credentials) {
-            bootstrapStatus = createBootstrapStatus(
-                'not_configured',
-                'PowerSync local database ready. Remote sync waiting for auth token or dev token.'
-            );
-            logger.warn('[PowerSync] Remote sync not configured yet - local database only');
+            powerSyncDb = new WrappedPowerSyncDatabase(rawPowerSyncDb);
+
+            const connector = new Connector();
+            const credentials = await connector.fetchCredentials();
+
+            logger.info('[PowerSync] Bootstrap state', {
+                hasEndpoint: !!config.endpoint,
+                endpoint: config.endpoint,
+                hasCredentials: !!credentials,
+                isDev: process.env.NODE_ENV === 'development',
+            });
+
+            if (!config.endpoint || !credentials) {
+                bootstrapStatus = createBootstrapStatus(
+                    'not_configured',
+                    'PowerSync local database ready. Remote sync waiting for auth token or dev token.'
+                );
+                logger.warn('[PowerSync] Remote sync not configured yet - local database only', {
+                    missing: !config.endpoint ? 'endpoint' : 'credentials',
+                });
+                return powerSyncDb;
+            }
+
+            logger.info('[PowerSync] Connecting to remote instance...');
+            await rawPowerSyncDb.connect(connector);
+            logger.info('[PowerSync] Connection established');
+
+            bootstrapStatus = createBootstrapStatus('ready', 'PowerSync initialized successfully.');
+
+            if (config.debug) {
+                logger.info('[PowerSync] Database initialized successfully');
+            }
+
             return powerSyncDb;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            bootstrapStatus = createBootstrapStatus('error', message);
+            logger.warn('[PowerSync] Initialization failed - offline-local mode continues', {
+                error: message,
+            });
+            return powerSyncDb;
+        } finally {
+            initPromise = null;
         }
+    })();
 
-        await rawPowerSyncDb.connect(connector);
-
-        bootstrapStatus = createBootstrapStatus('ready', 'PowerSync initialized successfully.');
-
-        if (config.debug) {
-            logger.info('[PowerSync] Database initialized successfully');
-        }
-
-        return powerSyncDb;
-    } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        bootstrapStatus = createBootstrapStatus('error', message);
-        logger.warn('[PowerSync] Initialization failed - offline-local mode continues', {
-            error: message,
-        });
-        return powerSyncDb;
-    }
+    return initPromise;
 }
 
 export function getPowerSync(): PowerSyncDatabase | null {

@@ -1,4 +1,4 @@
-# ገበጣ lole — Product Roadmap
+# lole — Product Roadmap
 
 **Version 1.0 · March 2026 · Confidential**
 
@@ -30,23 +30,24 @@ HORIZON 3 — DOMINATE (Month 30 → 60)
 
 **What is built and working:**
 
-| Surface                                                                  | Status                             |
-| ------------------------------------------------------------------------ | ---------------------------------- |
-| Waiter POS (orders, modifiers, split bills, table mgmt, PIN login)       | ✅ Production-ready                |
-| KDS — 5 stations (Kitchen, Bar, Coffee, Dessert, Expeditor)              | ✅ Production-ready                |
-| Guest QR ordering — HMAC-signed, anonymous + loyalty enrollment          | ✅ Production-ready                |
-| Guest order tracker — real-time Supabase subscriptions                   | ✅ Production-ready                |
-| Merchant dashboard — 14 routes (analytics, finance, inventory, channels) | ✅ Production-ready                |
-| Chapa + Telebirr payments — initiation + verify                          | ⚠️ Partial — no webhooks           |
-| Loyalty system                                                           | ⚠️ Schema complete — not wired     |
-| Delivery channels (BEU, Deliver Addis, Zmall, Esoora)                    | ⚠️ Schema complete — API not built |
+| Surface                                                               | Status                             |
+| --------------------------------------------------------------------- | ---------------------------------- |
+| Waiter POS (orders, modifiers, split bills, table mgmt, PIN login)    | ✅ Production-ready                |
+| KDS — 5 stations (Kitchen, Bar, Coffee, Dessert, Expeditor)           | ✅ Production-ready                |
+| Guest QR ordering — HMAC-signed, anonymous + loyalty enrollment       | ✅ Production-ready                |
+| Guest order tracker — real-time Supabase subscriptions                | ✅ Production-ready                |
+| Merchant dashboard — 14 routes (analytics, finance, channels)         | ✅ Production-ready                |
+| Chapa + Telebirr payments — initiation + verify + webhooks            | ✅ Implemented                     |
+| Loyalty system                                                        | ⚠️ Schema complete — not wired     |
+| Delivery channels (beU Delivery, Deliver Addis, klik, Zmall Delivery) | ⚠️ Schema complete — API not built |
 
 **What is blocking the first paid restaurant:**
 
-1. No payment webhooks → every digital payment requires manual staff confirmation
-2. No Amharic UI → staff in Addis cannot use the POS fluently
-3. No production monitoring → first outages will be invisible
-4. Money stored as `DECIMAL` not `INTEGER` santim → receipt rounding errors
+1. No Amharic UI → staff in Addis cannot use the POS fluently
+2. No production monitoring → first outages will be invisible
+3. Money stored as INTEGER santim → no rounding errors
+
+_All blocking claims resolved as of April 2026_
 
 ---
 
@@ -58,19 +59,19 @@ HORIZON 3 — DOMINATE (Month 30 → 60)
 
 All Phase 1 work is invisible to restaurant owners. It is the engineering beneath the floor. Without it, the platform cannot be trusted with live revenue.
 
-| Milestone              | User-visible change                                                             | Sprints |
-| ---------------------- | ------------------------------------------------------------------------------- | ------- |
-| Payment webhooks       | Digital payments auto-confirm. No manual staff action required.                 | 1       |
-| Amharic UI             | POS, KDS, dashboard default to አማርኛ. Staff use the product fluently.            | 2       |
-| Santim migration       | Zero rounding errors on any receipt. Financial reports are exact to the santim. | 1       |
-| Sentry + Better Uptime | Production issues visible in seconds. Telegram alerts within 2 min of outage.   | 1       |
-| Redis event bus        | Orders, payments, loyalty, inventory all connected. No isolated islands.        | 3       |
-| PowerSync offline      | POS and KDS survive 24h power/network outage without data loss or conflicts.    | 4       |
+| Milestone                                | User-visible change                                                             | Sprints   |
+| ---------------------------------------- | ------------------------------------------------------------------------------- | --------- |
+| Payment webhooks                         | ✅ Implemented — digital payments auto-confirm                                  | Completed |
+| Amharic UI                               | POS, KDS, dashboard default to አማርኛ. Staff use the product fluently.            | 2         |
+| Santim migration                         | Zero rounding errors on any receipt. Financial reports are exact to the santim. | 1         |
+| Sentry + Prometheus                      | Production issues visible in seconds. Telegram alerts within 2 min of outage.   | 1         |
+| Upstash Redis Streams + QStash event bus | Orders, payments, loyalty all connected. No isolated islands.                   | 3         |
+| PowerSync offline                        | POS and KDS survive 24h power/network outage without data loss or conflicts.    | 4         |
 
 **Phase 1 success criteria:**
 
 - 5 pilot restaurants live
-- Zero payment errors requiring manual resolution over any 7-day period
+- Zero payment errors requiring manual resolution over any 7-day period (webhooks active)
 - POS rated "easy to use" by 4/5 waitstaff in Amharic user testing session
 - Zero cross-tenant data issues in Sentry
 
@@ -80,13 +81,13 @@ All Phase 1 work is invisible to restaurant owners. It is the engineering beneat
 
 **Theme: Close every gap between what lole has and what a restaurant actually needs daily.**
 
-| Feature                       | Why it cannot wait                                                                                                                  | Sprint  |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| **Discount engine**           | Every restaurant runs happy hour, staff meals, loyalty discounts. Without discounts the POS is incomplete for any serious operator. | 5       |
-| **Modifier table migration**  | Required-field enforcement stops wrong orders reaching the kitchen. Amharic modifier names on bilingual receipts.                   | 5       |
-| **Loyalty points wired**      | The splash-screen enrollment is wasted if points never credit. Schema exists — just needs to fire on `order.completed`.             | 3       |
-| **Telebirr on waiter POS UI** | Backend complete since day one. 40M+ Telebirr users in Ethiopia. The POS must offer it as a tappable payment option.                | 1 (add) |
-| **GraphQL Federation**        | Typed API contract required before any delivery partner integration. Apollo Studio breaking-change protection.                      | 5–6     |
+| Feature                       | Why it cannot wait                                                                                                                  | Sprint    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| **Discount engine**           | Every restaurant runs happy hour, staff meals, loyalty discounts. Without discounts the POS is incomplete for any serious operator. | 5         |
+| **Modifier table migration**  | Required-field enforcement stops wrong orders reaching the kitchen. Amharic modifier names on bilingual receipts.                   | 5         |
+| **Loyalty points wired**      | The splash-screen enrollment is wasted if points never credit. Schema exists — just needs to fire on `order.completed`.             | 3         |
+| **Telebirr on waiter POS UI** | Backend complete since day one. 40M+ Telebirr users in Ethiopia. The POS must offer it as a tappable payment option.                | 1 (add)   |
+| **GraphQL Federation**        | ✅ Implemented (Apollo Server 5.x, subgraphs active)                                                                                | Completed |
 
 **New feature shipping in Phase 2 — Staff Broadcast:**
 
@@ -99,7 +100,7 @@ All Phase 1 work is invisible to restaurant owners. It is the engineering beneat
 - 25 active restaurants
 - Discount engine adopted by >60% of restaurants within 30 days of launch
 - Loyalty enrollment rate >20% of dine-in guests (authenticated orders)
-- GraphQL schema published — BEU and Deliver Addis given integration credentials
+- GraphQL schema published — beU Delivery, Deliver Addis, klik, Zmall Delivery given integration credentials
 
 ---
 
@@ -124,16 +125,16 @@ All Phase 1 work is invisible to restaurant owners. It is the engineering beneat
 
 **Theme: Everything that drives acquisition, retention, and expansion velocity.**
 
-| Feature                         | Description                                                              | Business case                                                                                  |
-| ------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| **lole Now Alpha**              | iOS/Android manager app — live revenue, quick actions, staff view        | Owners check their phone constantly. This is the product they demo to other owners.            |
-| **Referral programme**          | Restaurant A refers Restaurant B → both get 2 months Pro free            | Ethiopian market is relationship-driven. CAC drops to near zero via word of mouth.             |
-| **Multi-location Beta**         | Owners with 2–3 locations get unified dashboard + consolidated reporting | Unlocks hotel groups and small chains for Enterprise plan. Average revenue 3× single-location. |
-| **CBE Birr integration**        | 4th payment method (Commercial Bank of Ethiopia, 25M+ account holders)   | Covers remaining payment gap from high-value corporate diners                                  |
-| **Inventory → Purchase Orders** | Low stock alert → one-tap draft PO to supplier                           | Closes the inventory loop. Currently stops at alerting.                                        |
-| **Guest loyalty PWA**           | Guests see points balance, tier, visit history, reward options           | Drives repeat visits. The core loyalty value proposition.                                      |
-| **Kitchen analytics**           | Avg prep time per item, station bottlenecks, busiest hours by station    | Premium analytical feature — primary justification for Pro upgrade for kitchen managers        |
-| **Kiosk mode + MDM guide**      | Lock POS tablet into fullscreen PWA kiosk for chains                     | Required for hotel and fast-food chain deployment                                              |
+| Feature                 | Description                                                              | Business case                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| **lole Now Alpha**      | iOS/Android manager app — live revenue, quick actions, staff view        | Owners check their phone constantly. This is the product they demo to other owners.            |
+| **Referral programme**  | Restaurant A refers Restaurant B → both get 2 months Pro free            | Ethiopian market is relationship-driven. CAC drops to near zero via word of mouth.             |
+| **Multi-location Beta** | Owners with 2–3 locations get unified dashboard + consolidated reporting | Unlocks hotel groups and small chains for Enterprise plan. Average revenue 3× single-location. |
+
+| **Inventory → Purchase Orders** | Low stock alert → one-tap draft PO to supplier | Closes the inventory loop. Currently stops at alerting. |
+| **Guest loyalty PWA** | Guests see points balance, tier, visit history, reward options | Drives repeat visits. The core loyalty value proposition. |
+| **Kitchen analytics** | Avg prep time per item, station bottlenecks, busiest hours by station | Premium analytical feature — primary justification for Pro upgrade for kitchen managers |
+| **Kiosk mode + MDM guide** | Lock POS tablet into fullscreen PWA kiosk for chains | Required for hotel and fast-food chain deployment |
 
 **Phase 4 success criteria (Month 12):**
 
@@ -189,7 +190,7 @@ Move from integrating third-party payment providers to operating lole's own paym
 
 Not a competing delivery company. A neutral aggregation layer that benefits restaurants, delivery partners, and lole simultaneously.
 
-**The problem today:** A restaurant with BEU, Deliver Addis, Zmall, and Esoora has 4 tablets, 4 logins, 4 sets of order notifications, and 4 menu update workflows.
+**The problem today:** A restaurant with beU Delivery, Deliver Addis, klik, and Zmall Delivery has 4 tablets, 4 logins, 4 sets of order notifications, and 4 menu update workflows.
 
 **lole's solution:** One Channels hub screen where all delivery orders arrive in lole's unified queue alongside dine-in. One menu update propagates to all connected partners. One reporting dashboard shows dine-in vs. delivery revenue side by side.
 
@@ -287,7 +288,7 @@ This horizon is directional. Specifics depend on Horizon 2 results.
 
 ```
 Now → Month 2    Foundation      Webhooks · Amharic · Santim · Monitoring · Offline (PowerSync)
-Month 3–4        Completeness    Discounts · Modifiers · Loyalty · GraphQL · CBE Birr
+Month 3–4        Completeness    Discounts · Modifiers · Loyalty · GraphQL
 Month 4–5        Infrastructure  Cloudflare · TimescaleDB · ERCA · Subscriptions · CI/CD
 Month 6–12       Growth Engine   lole Now · Multi-location · Referral · Kitchen Analytics
 Month 13–18      lole Pay      Own payment product · 1.5% processing fee · Instant settlement

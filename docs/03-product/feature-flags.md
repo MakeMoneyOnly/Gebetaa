@@ -1,4 +1,4 @@
-# ገበጣ lole — Feature Flags & Release Strategy
+# lole — Feature Flags & Release Strategy
 
 **Version 1.0 · March 2026**
 
@@ -148,27 +148,27 @@ export function useFeatureFlag(flagKey: string): boolean {
 
 These are all flags in the system, their current state, and their release plan.
 
-| Flag Key                | Description                                          | Current State | Target State                      |
-| ----------------------- | ---------------------------------------------------- | ------------- | --------------------------------- |
-| `payment_webhooks`      | Auto-confirm Telebirr and Chapa payments via webhook | 🔴 Off        | ✅ Global on — Sprint 1           |
-| `amharic_pos`           | Amharic default locale on POS waiter app             | 🔴 Off        | ✅ Global on — Sprint 2           |
-| `amharic_kds`           | Amharic default locale on all KDS stations           | 🔴 Off        | ✅ Global on — Sprint 2           |
-| `amharic_dashboard`     | Amharic default on merchant dashboard                | 🔴 Off        | ✅ Global on — Sprint 2           |
-| `redis_event_bus`       | Publish/consume events via Upstash Redis Streams     | 🔴 Off        | ✅ Global on — Sprint 3           |
-| `loyalty_earning`       | Award points on order.completed event                | 🔴 Off        | ✅ Global on — Sprint 3           |
-| `inventory_deduction`   | Auto-deduct stock on order confirm via DB trigger    | 🔴 Off        | Canary 10% → Sprint 3             |
-| `powersync_offline`     | Replace Dexie.js polling with PowerSync CRDT sync    | 🔴 Off        | Canary 20% → Sprint 4             |
-| `discount_engine`       | Discount picker in waiter POS and guest checkout     | 🔴 Off        | Canary 25% → Sprint 5             |
-| `modifier_tables`       | Serve modifiers from new tables (not JSONB)          | 🔴 Off        | Canary 10% → Sprint 5             |
-| `graphql_federation`    | Route POS/dashboard queries through Apollo Router    | 🔴 Off        | Canary 5% → Sprint 6              |
-| `erca_submission`       | Auto-submit ERCA e-invoice on order.completed        | 🔴 Off        | VAT restaurants only → Sprint 8   |
-| `subscription_gating`   | Enforce plan limits (Pro, Business features)         | 🔴 Off        | Global on — Sprint 8              |
-| `eod_telegram_report`   | Send daily report to owner via Telegram at 10PM      | 🔴 Off        | Global on — Sprint 7              |
-| `timescaledb_analytics` | Route analytics queries to TimescaleDB hypertable    | 🔴 Off        | Global on — Sprint 7              |
-| `delivery_channels`     | Enable BEU / Deliver Addis order intake              | 🔴 Off        | Per-restaurant — Phase 2          |
-| `lole_now_app`          | Enable manager app API access                        | 🔴 Off        | Per-restaurant — Phase 4          |
-| `multi_location`        | Consolidated cross-location dashboard                | 🔴 Off        | Enterprise only — Phase 4         |
-| `lole_pay`              | Route payments through lole Pay (not Chapa)          | 🔴 Off        | Beta restaurants only — Horizon 2 |
+| Flag Key                | Description                                                              | Current State | Target State                      |
+| ----------------------- | ------------------------------------------------------------------------ | ------------- | --------------------------------- |
+| `payment_webhooks`      | Auto-confirm Telebirr and Chapa payments via webhook                     | 🔴 Off        | ✅ Global on — Sprint 1           |
+| `amharic_pos`           | Amharic default locale on POS waiter app                                 | 🔴 Off        | ✅ Global on — Sprint 2           |
+| `amharic_kds`           | Amharic default locale on all KDS stations                               | 🔴 Off        | ✅ Global on — Sprint 2           |
+| `amharic_dashboard`     | Amharic default on merchant dashboard                                    | 🔴 Off        | ✅ Global on — Sprint 2           |
+| `redis_event_bus`       | Publish/consume events via Upstash Redis Streams                         | 🔴 Off        | ✅ Global on — Sprint 3           |
+| `loyalty_earning`       | Award points on order.completed event                                    | 🔴 Off        | ✅ Global on — Sprint 3           |
+| `inventory_deduction`   | Auto-deduct stock on order confirm via DB trigger                        | 🔴 Off        | Canary 10% → Sprint 3             |
+| `powersync_offline`     | Replace Dexie.js polling with PowerSync CRDT sync                        | 🔴 Off        | Canary 20% → Sprint 4             |
+| `discount_engine`       | Discount picker in waiter POS and guest checkout                         | 🔴 Off        | Canary 25% → Sprint 5             |
+| `modifier_tables`       | Serve modifiers from new tables (not JSONB)                              | 🔴 Off        | Canary 10% → Sprint 5             |
+| `graphql_federation`    | Route POS/dashboard queries through Apollo Router                        | 🔴 Off        | Canary 5% → Sprint 6              |
+| `erca_submission`       | Auto-submit ERCA e-invoice on order.completed                            | 🔴 Off        | VAT restaurants only → Sprint 8   |
+| `subscription_gating`   | Enforce plan limits (Pro, Business features)                             | 🔴 Off        | Global on — Sprint 8              |
+| `eod_telegram_report`   | Send daily report to owner via Telegram at 10PM                          | 🔴 Off        | Global on — Sprint 7              |
+| `timescaledb_analytics` | Route analytics queries to TimescaleDB hypertable                        | 🔴 Off        | Global on — Sprint 7              |
+| `delivery_channels`     | Enable beU Delivery / Deliver Addis / klik / Zmall Delivery order intake | 🔴 Off        | Per-restaurant — Phase 2          |
+| `lole_now_app`          | Enable manager app API access                                            | 🔴 Off        | Per-restaurant — Phase 4          |
+| `multi_location`        | Consolidated cross-location dashboard                                    | 🔴 Off        | Enterprise only — Phase 4         |
+| `lole_pay`              | Route payments through lole Pay (not Chapa)                              | 🔴 Off        | Beta restaurants only — Horizon 2 |
 
 ---
 
@@ -233,7 +233,7 @@ Abort:   If error rate increases >0.5% above baseline at any stage → rollback 
 
 - [ ] Sentry: no new error group from the canary population
 - [ ] Supabase: no slow queries introduced by the new feature
-- [ ] Better Uptime: no degradation in `/api/health` response time
+- [ ] Prometheus: no degradation in `/api/health` response time
 - [ ] Order success rate: `SELECT COUNT(*) FROM orders WHERE created_at > NOW() - INTERVAL '24h' AND status = 'cancelled'` — should not increase
 
 ---

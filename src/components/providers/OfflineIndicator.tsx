@@ -52,6 +52,11 @@ export function OfflineIndicator({
         void sync();
     }, [sync]);
 
+    // Don't show the banner if we are fully online and synced
+    if (operatingMode === 'online') {
+        return null;
+    }
+
     return (
         <div
             className={cn(

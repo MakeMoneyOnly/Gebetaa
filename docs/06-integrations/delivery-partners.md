@@ -1,4 +1,4 @@
-# ገበጣ lole — Delivery Partner Integration Guide
+# lole — Delivery Partner Integration Guide
 
 **Version 1.0 · March 2026**
 **Confidential — Shared with Delivery Partners Under NDA**
@@ -37,12 +37,12 @@ lole is the POS and kitchen operating system inside the restaurant. You are the 
 
 The following partners have been issued credentials or are in the integration queue:
 
-| Partner       | Status                      | Protocol     | Notes           |
-| ------------- | --------------------------- | ------------ | --------------- |
-| BEU (ቤዩ)      | Integration spec agreed     | Webhook push | Ethiopian-first |
-| Deliver Addis | Integration spec agreed     | Webhook push | Ethiopian-first |
-| Zmall         | Pending credential issuance | Webhook push | —               |
-| Esoora        | Pending credential issuance | Webhook push | —               |
+| Partner                 | Status                      | Protocol     | Notes                       |
+| ----------------------- | --------------------------- | ------------ | --------------------------- |
+| beU (ቤዩ)                | Integration spec agreed     | Webhook push | Ethiopian-first             |
+| Deliver Addis           | Integration spec agreed     | Webhook push | Ethiopian-first             |
+| Zmall Delivery Delivery | Pending credential issuance | Webhook push | —                           |
+| klik                    | Pending integration spec    | Webhook push | Ethiopian delivery platform |
 
 To request integration credentials for a new platform, contact: integrations@lole.app
 
@@ -343,7 +343,7 @@ Submit a delivery order to a connected restaurant.
 ```json
 {
     "restaurant_slug": "cafe-lucia",
-    "partner_order_id": "BEU-20260307-004821",
+    "partner_order_id": "beU-20260307-004821",
     "estimated_pickup_at": "2026-03-07T19:15:00Z",
     "delivery_note": "Ring the bell twice",
     "items": [
@@ -386,7 +386,7 @@ Submit a delivery order to a connected restaurant.
 ```json
 {
     "lole_order_id": "uuid-of-new-order",
-    "partner_order_id": "BEU-20260307-004821",
+    "partner_order_id": "beU-20260307-004821",
     "status": "pending_confirmation",
     "restaurant_name_en": "Café Lucia",
     "estimated_ready_at": "2026-03-07T19:12:00Z",
@@ -422,7 +422,7 @@ GET /delivery/v1/orders/uuid-here
 ```json
 {
   "lole_order_id": "uuid-here",
-  "partner_order_id": "BEU-20260307-004821",
+  "partner_order_id": "beU-20260307-004821",
   "status": "preparing",
   "status_updated_at": "2026-03-07T18:54:00Z",
   "estimated_ready_at": "2026-03-07T19:12:00Z",
@@ -501,7 +501,7 @@ Kitchen has accepted the order. Prepare driver dispatch.
 {
     "event": "order.confirmed",
     "lole_order_id": "uuid-here",
-    "partner_order_id": "BEU-20260307-004821",
+    "partner_order_id": "beU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "estimated_ready_at": "2026-03-07T19:12:00Z",
     "confirmed_at": "2026-03-07T18:53:30Z"
@@ -516,7 +516,7 @@ Kitchen has started preparation. ETA is now reliable.
 {
     "event": "order.preparing",
     "lole_order_id": "uuid-here",
-    "partner_order_id": "BEU-20260307-004821",
+    "partner_order_id": "beU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "estimated_ready_at": "2026-03-07T19:11:00Z",
     "preparing_since": "2026-03-07T18:54:00Z"
@@ -531,7 +531,7 @@ All items are ready for pickup. Driver should be at the restaurant now.
 {
     "event": "order.ready",
     "lole_order_id": "uuid-here",
-    "partner_order_id": "BEU-20260307-004821",
+    "partner_order_id": "beU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "ready_at": "2026-03-07T19:10:00Z"
 }
@@ -545,7 +545,7 @@ Order was cancelled by the restaurant (kitchen cannot fulfill it).
 {
     "event": "order.cancelled",
     "lole_order_id": "uuid-here",
-    "partner_order_id": "BEU-20260307-004821",
+    "partner_order_id": "beU-20260307-004821",
     "restaurant_slug": "cafe-lucia",
     "cancelled_by": "restaurant",
     "reason": "item_unavailable",

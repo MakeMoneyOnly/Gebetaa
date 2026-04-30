@@ -12,6 +12,7 @@ import {
     ProvisionDeviceSchema,
     buildPairingExpiry,
     generatePairingCode,
+    getDeviceBootPathFromRecord,
     resolveProvisionedDeviceShape,
 } from '@/lib/devices/pairing';
 
@@ -130,6 +131,22 @@ export async function POST(request: Request) {
         );
     }
 
+    const { data: restaurant } = await adminClient
+        .from('restaurants')
+        .select('slug')
+        .eq('id', context.restaurantId)
+        .maybeSingle();
+
+    const setupPath = restaurant?.slug
+        ? `/${restaurant.slug}/setup?code=${encodeURIComponent(pairing_code)}`
+        : null;
+    const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? null;
+    const bootPath = getDeviceBootPathFromRecord({
+        device_profile: data?.device_profile ?? deviceProfile,
+        device_type: data?.device_type ?? deviceType,
+        restaurant_slug: restaurant?.slug ?? null,
+    });
+
     return apiSuccess(
         {
             device: data
@@ -137,6 +154,13 @@ export async function POST(request: Request) {
                       data as Parameters<typeof hydrateEnterpriseDeviceRecord>[0]
                   )
                 : data,
+            rollout: {
+                pairing_code,
+                pairing_code_expires_at: pairingCodeExpiresAt,
+                setup_path: setupPath,
+                setup_url: setupPath && appBaseUrl ? `${appBaseUrl}${setupPath}` : null,
+                boot_path: bootPath,
+            },
         },
         201
     );

@@ -1,4 +1,4 @@
-# ገበጣ lole — Support Playbook
+# lole — Support Playbook
 
 **Version 1.0 · March 2026**
 **Internal — For lole Support Staff**
@@ -435,7 +435,7 @@ Track these weekly. Report to founder on Monday mornings.
 | **Sentry**             | Error investigation — filter by restaurant_id  | sentry.io → lole project    |
 | **Axiom**              | Log search — filter by restaurant_id, endpoint | app.axiom.co                |
 | **Supabase Dashboard** | Direct DB lookup, account management           | supabase.com → lole project |
-| **Better Uptime**      | Current system status, outage history          | betteruptime.com            |
+| **Prometheus**         | Current system status, outage history          | betteruptime.com            |
 | **QStash Dashboard**   | Job queue status, failed jobs                  | console.upstash.com         |
 | **Vercel Dashboard**   | Deployment status, function logs               | vercel.com                  |
 

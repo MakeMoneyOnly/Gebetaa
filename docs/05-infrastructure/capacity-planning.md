@@ -1,4 +1,4 @@
-# ገበጣ lole — Capacity Planning Guide
+# lole — Capacity Planning Guide
 
 **Version 1.0 · March 2026**
 

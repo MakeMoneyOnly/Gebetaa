@@ -25,6 +25,30 @@ export interface StoredPrinterSelection {
 const DEVICE_SESSION_KEY = 'gebata_device_session_v2';
 const PRINTER_SELECTION_KEY = 'gebata_printer_selection_v1';
 
+function isValidPrinterConnectionType(value: unknown): value is PrinterConnectionType {
+    return value === 'bluetooth' || value === 'usb' || value === 'network' || value === 'none';
+}
+
+function resolvePrinterSelectionFromSession(
+    session: StoredDeviceSession | null
+): StoredPrinterSelection | null {
+    const printer =
+        session?.metadata && typeof session.metadata === 'object'
+            ? (session.metadata.printer as Record<string, unknown> | undefined)
+            : undefined;
+
+    if (!printer || !isValidPrinterConnectionType(printer.connection_type)) {
+        return null;
+    }
+
+    return {
+        connection_type: printer.connection_type,
+        device_id: typeof printer.device_id === 'string' ? printer.device_id : null,
+        device_name: typeof printer.device_name === 'string' ? printer.device_name : null,
+        mac_address: typeof printer.mac_address === 'string' ? printer.mac_address : null,
+    };
+}
+
 async function withPreferences<T>(
     run: (preferences: {
         get: (options: { key: string }) => Promise<{ value: string | null }>;
@@ -117,7 +141,19 @@ export async function getStoredPrinterSelection(): Promise<StoredPrinterSelectio
         return entry.value ? (JSON.parse(entry.value) as StoredPrinterSelection) : null;
     });
 
-    return nativeValue ?? readBrowserStorage<StoredPrinterSelection>(PRINTER_SELECTION_KEY);
+    const storedSelection =
+        nativeValue ?? readBrowserStorage<StoredPrinterSelection>(PRINTER_SELECTION_KEY);
+    if (storedSelection) {
+        return storedSelection;
+    }
+
+    const sessionFallback = resolvePrinterSelectionFromSession(await getStoredDeviceSession());
+    if (sessionFallback) {
+        await storePrinterSelection(sessionFallback);
+        return sessionFallback;
+    }
+
+    return null;
 }
 
 export async function storePrinterSelection(selection: StoredPrinterSelection): Promise<void> {

@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { writeAuditLog } from '@/lib/api/audit';
+import { AggregatorService } from '@/lib/delivery/aggregator';
+import { getStoreGatewayService } from '@/lib/gateway/service';
 import { z } from 'zod';
 import type { Json } from '@/types/database';
 
@@ -75,6 +77,26 @@ const PROVIDER_CONFIGS = {
 } as const;
 
 type Provider = keyof typeof PROVIDER_CONFIGS;
+
+function createDeliveryAggregatorService() {
+    return new AggregatorService({
+        publishLocalEvent: async event => {
+            const gateway = getStoreGatewayService();
+            if (!gateway) {
+                return;
+            }
+
+            await gateway.publishCommand({
+                type: event.type,
+                aggregate: event.aggregate,
+                aggregateId: event.aggregateId,
+                payload: event.payload,
+                restaurantId: event.restaurantId,
+                locationId: event.locationId,
+            });
+        },
+    });
+}
 
 /**
  * Normalize order status from different providers to our standard status
@@ -259,6 +281,66 @@ export async function POST(request: NextRequest) {
         return apiError('Failed to create order', 500, 'CREATE_FAILED', createError.message);
     }
 
+    const aggregatorService = createDeliveryAggregatorService();
+    const aggregatorResult = await aggregatorService.receiveAndBroadcastOrder(
+        supabase as never,
+        partner.restaurant_id,
+        partner.id,
+        {
+            external_order_id: providerOrderId,
+            external_order_number: payload.external_order_id ?? undefined,
+            raw_order_data: payload as unknown as Record<string, unknown>,
+            customer_name: payload.customer_name ?? undefined,
+            customer_phone: payload.customer_phone ?? undefined,
+            delivery_address:
+                typeof payload.delivery_address === 'string' ? payload.delivery_address : undefined,
+            delivery_notes: payload.notes ?? undefined,
+            items: Array.isArray(payload.items)
+                ? payload.items.flatMap(item => {
+                      if (!item || typeof item !== 'object') {
+                          return [];
+                      }
+
+                      const candidate = item as Record<string, unknown>;
+                      const name =
+                          typeof candidate.name === 'string'
+                              ? candidate.name
+                              : typeof candidate.item_name === 'string'
+                                ? candidate.item_name
+                                : 'Unknown Item';
+                      const quantity = Number(candidate.quantity ?? 1);
+                      const price = Number(
+                          candidate.price ?? candidate.unit_price ?? candidate.total_price ?? 0
+                      );
+                      const notes =
+                          typeof candidate.notes === 'string'
+                              ? candidate.notes
+                              : typeof candidate.special_instructions === 'string'
+                                ? candidate.special_instructions
+                                : undefined;
+
+                      return [
+                          {
+                              name,
+                              quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+                              price: Number.isFinite(price) ? price : 0,
+                              ...(notes ? { notes } : {}),
+                          },
+                      ];
+                  })
+                : [],
+            subtotal: totalAmount,
+            delivery_fee: 0,
+            platform_fee: 0,
+            total: totalAmount,
+            placed_at: payload.created_at ?? undefined,
+        }
+    );
+
+    if (!aggregatorResult.success && aggregatorResult.error !== 'Order already exists') {
+        console.error('Failed to inject webhook order into aggregator runtime:', aggregatorResult);
+    }
+
     // Check if auto-accept is enabled
     const { data: restaurant } = await supabase
         .from('restaurants')
@@ -284,6 +366,9 @@ export async function POST(request: NextRequest) {
             currency: payload.currency ?? 'ETB',
             status: normalizedStatus,
             auto_accept: autoAccept,
+            runtime_injected:
+                aggregatorResult.success || aggregatorResult.error === 'Order already exists',
+            aggregator_order_id: aggregatorResult.order?.id ?? null,
             processing_time_ms: Date.now() - startTime,
         },
     });
@@ -296,6 +381,9 @@ export async function POST(request: NextRequest) {
             provider_order_id: providerOrderId,
             status: normalizedStatus,
             auto_accepted: autoAccept,
+            runtime_injected:
+                aggregatorResult.success || aggregatorResult.error === 'Order already exists',
+            aggregator_order_id: aggregatorResult.order?.id ?? null,
             processing_time_ms: Date.now() - startTime,
         },
         201

@@ -14,7 +14,12 @@ import {
     type DeviceProfile,
 } from '@/lib/devices/config';
 import { useDeviceHeartbeat } from '@/hooks/useDeviceHeartbeat';
-import { getStoredDeviceSession, type StoredDeviceSession } from '@/lib/mobile/device-storage';
+import {
+    getStoredDeviceSession,
+    storeDeviceSession,
+    type StoredDeviceSession,
+} from '@/lib/mobile/device-storage';
+import { bootstrapGatewayForPairedDevice } from '@/lib/gateway/device-bootstrap';
 
 interface UseManagedDeviceSessionOptions {
     route: string;
@@ -50,6 +55,56 @@ export function useManagedDeviceSession({
             cancelled = true;
         };
     }, []);
+
+    useEffect(() => {
+        if (
+            !session?.device_token ||
+            !session.restaurant_id ||
+            !session.location_id ||
+            session.gateway_bootstrap_status === 'ready'
+        ) {
+            return;
+        }
+
+        let cancelled = false;
+        const deviceToken = session.device_token;
+        const restaurantId = session.restaurant_id;
+        const locationId = session.location_id;
+
+        void (async () => {
+            const gatewaySession = await bootstrapGatewayForPairedDevice({
+                deviceToken,
+                restaurantId,
+                locationId,
+                preferredBrokerUrl: process.env.NEXT_PUBLIC_LAN_MQTT_URL ?? null,
+                fallbackBootstrapUrl: process.env.NEXT_PUBLIC_GATEWAY_BOOTSTRAP_URL ?? null,
+            }).catch(() => null);
+
+            if (cancelled || !gatewaySession) {
+                return;
+            }
+
+            const nextSession: StoredDeviceSession = {
+                ...session,
+                gateway: gatewaySession,
+                gateway_bootstrap_status: 'ready',
+            };
+
+            await storeDeviceSession(nextSession);
+            if (!cancelled) {
+                setSession(nextSession);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        session?.device_token,
+        session?.restaurant_id,
+        session?.location_id,
+        session?.gateway_bootstrap_status,
+    ]);
 
     const resolvedProfile = useMemo(() => {
         if (DeviceProfileSchema.safeParse(session?.device_profile).success) {

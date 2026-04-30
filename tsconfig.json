@@ -37,6 +37,7 @@
         "fabrica",
         "SKILLS",
         "e2e",
+        "temp_vercel",
         ".next/types/validator.ts"
     ]
 }

@@ -243,14 +243,12 @@ async function getServerRecord(
         return null;
     }
 
+    const serverData = data as unknown as Record<string, unknown>;
+
     return {
-        version: tableConfig.usesVersion
-            ? Number((data as Record<string, unknown>).version ?? 1)
-            : 1,
-        lastModified:
-            ((data as Record<string, unknown>).updated_at as string | undefined) ??
-            new Date().toISOString(),
-        data: data as Record<string, unknown>,
+        version: tableConfig.usesVersion ? Number(serverData.version ?? 1) : 1,
+        lastModified: (serverData.updated_at as string | undefined) ?? new Date().toISOString(),
+        data: serverData,
     };
 }
 

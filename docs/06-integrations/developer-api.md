@@ -1,4 +1,4 @@
-# ገበጣ lole — Developer & Partner API Guide
+# lole — Developer & Partner API Guide
 
 **Version 1.0 · March 2026**
 **Confidential — Shared with Technology Partners Under NDA**

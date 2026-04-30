@@ -1,4 +1,4 @@
-# ገበጣ lole — ERCA Compliance Guide
+# lole — ERCA Compliance Guide
 
 **Version 1.0 · March 2026**
 
@@ -399,6 +399,12 @@ The `/merchant/finance` screen will include an ERCA compliance tab showing:
 - Monthly VAT report download (PDF for accountant)
 - Running VAT liability total
 - ERCA submission audit log with `erca_invoice_id` references
+
+---
+
+## MoR Fiscal Integration
+
+lole integrates with MoR Fiscal to automate monthly and quarterly revenue reporting to the Ethiopian tax authority. This complements ERCA e-invoicing by aggregating transaction data from `erca_submissions` and `payments` tables into standardized fiscal reports. Reports are generated via QStash CRON jobs and delivered to restaurant operators via Telegram and the finance dashboard.
 
 ---
 

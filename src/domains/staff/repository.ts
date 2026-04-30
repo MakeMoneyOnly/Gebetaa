@@ -213,11 +213,13 @@ export class StaffRepository {
             throw new Error(error.message);
         }
 
-        if (!data || !verifyStoredStaffPin(data.pin_code, pinCode)) {
+        const staff = data as unknown as StaffRow | null;
+
+        if (!staff || !verifyStoredStaffPin(staff.pin_code, pinCode)) {
             return null;
         }
 
-        return data as StaffRow;
+        return staff;
     }
 
     /**

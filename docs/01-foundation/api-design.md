@@ -1,4 +1,4 @@
-# ገበጣ lole — API Design Guide
+# lole — API Design Guide
 
 **Version 1.0 · March 2026**
 
@@ -562,7 +562,7 @@ Rate limit exceeded response:
 
 ## Third-Party Integration API (Delivery Partners)
 
-When BEU, Deliver Addis, Zmall, or Esoora integrate with lole, they receive:
+When beU Delivery, Deliver Addis, klik, or Zmall Delivery integrate with lole, they receive:
 
 ### Integration Credentials
 

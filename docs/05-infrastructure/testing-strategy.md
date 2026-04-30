@@ -1,4 +1,4 @@
-# ገበጣ lole — Testing Strategy
+# lole — Testing Strategy
 
 **Version 1.0 · March 2026**
 

@@ -88,7 +88,7 @@ describe('delivery aggregator orders route', () => {
                     total: 270,
                     created_at: '2026-04-29T08:00:00.000Z',
                 }),
-            })
+            }) as never
         );
         const payload = await response.json();
 
@@ -139,7 +139,7 @@ describe('delivery aggregator orders route', () => {
                     total: 360,
                     created_at: '2026-04-29T09:00:00.000Z',
                 }),
-            })
+            }) as never
         );
         const payload = await response.json();
 

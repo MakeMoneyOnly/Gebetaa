@@ -1,4 +1,4 @@
-# ገበጣ lole — System Architecture
+# lole — System Architecture
 
 **Version 1.0 · March 2026**
 
@@ -78,9 +78,8 @@ The key insight: a GraphQL Federation boundary means any domain can be extracted
 ║  │  REST Endpoints (kept as REST — never migrated to GraphQL)    │    ║
 ║  │  POST /api/webhooks/chapa      (Chapa payment callback)       │    ║
 ║  │  POST /api/webhooks/telebirr   (Telebirr payment callback)    │    ║
-║  │  POST /api/webhooks/cbe        (CBE Birr — Phase 2)           │    ║
 ║  │  POST /api/jobs/*              (QStash CRON handlers)         │    ║
-║  │  GET  /api/health              (Better Uptime health check)   │    ║
+║  │  GET  /api/health              (Prometheus health check)   │    ║
 ║  └───────────────────────────────────────────────────────────────┘    ║
 ╚══════════════════════════════════════════════════════════════════════╝
                             │
@@ -102,9 +101,20 @@ The key insight: a GraphQL Federation boundary means any domain can be extracted
 ║  │   time-series       │  │   queue      │  │                     │  ║
 ║  └─────────────────────┘  └──────────────┘  └─────────────────────┘  ║
 ╚══════════════════════════════════════════════════════════════════════╝
-                            │
-          ┌─────────────────┼──────────────────────┐
-          ▼                 ▼                        ▼
+
+╔══════════════════════════════════════════════════════════════════════╗
+║                  MONITORING LAYER                                       ║
+║                                                                        ║
+║  ┌───────────┐  ┌──────────────┐  ┌─────────────────────┐          ║
+║  │  Sentry   │  │  Prometheus  │  │  PagerDuty          │          ║
+║  │  Error     │  │  Metrics     │  │  Alerting           │          ║
+║  │  Tracking  │  │  Collection  │  │  (P1/P2 incidents) │          ║
+║  └───────────┘  └──────────────┘  └─────────────────────┘          ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+                             │
+           ┌─────────────────┼──────────────────────┐
+           ▼                 ▼                        ▼
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                  PERIPHERAL LAYER                                      ║
 ║                                                                        ║
@@ -114,8 +124,13 @@ The key insight: a GraphQL Federation boundary means any domain can be extracted
 ║  │   and KDS tablets)  │  │ on POS tablet│  │ • ERCA API          │  ║
 ║  │                     │  │ localhost:   │  │ • Telebirr          │  ║
 ║  │ Postgres WAL →      │  │ 3001)        │  │ • Chapa             │  ║
-║  │ offline tablets     │  │              │  │ • BEU/Deliver Addis │  ║
+║  │ offline tablets     │  │              │  │ • beU Delivery/Deliver Addis/klik/Zmall Delivery │  ║
 ║  │ CRDT conflict res.  │  │              │  │ • Telegram Bot API  │  ║
+║  └─────────────────────┘  └──────────────┘  └─────────────────────┘  ║
+║  ┌─────────────────────┐  ┌──────────────┐  ┌─────────────────────┐  ║
+║  │  MQTT Broker        │  │              │  │                     │  ║
+║  │  (LAN POS ↔ KDS     │  │              │  │                     │  ║
+║  │   real-time sync)    │  │              │  │                     │  ║
 ║  └─────────────────────┘  └──────────────┘  └─────────────────────┘  ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
@@ -330,7 +345,7 @@ WAITER PIN FLOW:
   → Enter 4-digit PIN
   → POST /api/staff/verify-pin
   → Verified against restaurant_staff.pin_code WHERE restaurant_id = context.restaurantId
-  → Staff name + role returned, stored in localStorage:gebata_waiter_context
+  → Staff name + role returned, stored in localStorage:lole_waiter_context
   [PIN session is device-specific — acceptable for staff POS, never for guest surfaces]
 
 GUEST QR FLOW (stateless, no auth):

@@ -14,6 +14,8 @@ It is organized to help us:
 - measure whether we are actually closing the Addis and Toast gaps
 - keep a single source of truth for execution status
 
+Historical note: this archived copy is not the primary live execution tracker, but its status was truth-refreshed on `2026-04-30` against current runtime code and focused verification so it does not drift from implemented reality.
+
 ## Status Legend
 
 - `[ ]` Not started
@@ -50,8 +52,8 @@ It is organized to help us:
 
 | Phase   | Goal                                                                                             | Status | Exit signal                                                  |
 | ------- | ------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
-| Phase 1 | Foundation: gateway, discovery, local bus, headless core, deterministic local persistence        | `[ ]`  | internet loss no longer stops core in-store operations       |
-| Phase 2 | Operational Resiliency: KDS, print, table authority, hardware drivers, conflict semantics        | `[ ]`  | kitchen and FOH stay convergent and fast offline             |
+| Phase 1 | Foundation: gateway, discovery, local bus, headless core, deterministic local persistence        | `[!]`  | internet loss no longer stops core in-store operations       |
+| Phase 2 | Operational Resiliency: KDS, print, table authority, hardware drivers, conflict semantics        | `[-]`  | kitchen and FOH stay convergent and fast offline             |
 | Phase 3 | Compliance & Security: local fiscal continuity, audit ledger, encryption, offline auth hardening | `[ ]`  | store remains compliant and forensically trustworthy offline |
 | Phase 4 | Scaling: fleet bootstrap, Esper alignment, zero-touch provisioning, self-healing rollout         | `[ ]`  | 50+ device store rollout becomes repeatable and low-touch    |
 
@@ -72,6 +74,16 @@ Active blockers discovered after integration attempt:
 - [!] `ENT-018` PowerSync cloud bridge is not end-to-end operational in the current dev environment yet.
   Current state: client bootstrap/config path is implemented and observable, but Supabase manual logical replication for PowerSync is not live yet. The `powersync` publication and direct replication path still need to be established outside the app before end-to-end sync can be validated.
   Source of truth: `docs/01-foundation/powersync-supabase-dev-status.md`
+
+Status refresh: `2026-04-30`
+
+Additionally validated as complete from current runtime code and focused tests:
+
+- `ENT-021`, `ENT-027`, `ENT-028`, `ENT-029`, `ENT-030`, `ENT-031`, `ENT-032`, `ENT-033`, `ENT-034`, `ENT-035`, `ENT-075`, `ENT-076`, `ENT-077`, `ENT-078`, `ENT-079`
+
+Downgraded after current truth refresh:
+
+- none
 
 ## Immediate Priority Queue
 
@@ -248,36 +260,54 @@ These are the first tasks to start because other work depends on them.
 
 ### 2.4 Print and Peripheral Reliability
 
-- [ ] `ENT-027` Build a gateway-owned print spooler.
+- [x] `ENT-027` Build a gateway-owned print spooler.
       Definition of done: print intents are queued locally with retries, health tracking, and deterministic routing.
+      Source of truth: `src/lib/sync/printerFallback.ts`
+      Verification: `src/lib/sync/__tests__/printerFallback.test.ts`
 
-- [ ] `ENT-028` Define printer driver contracts and adapter interfaces.
+- [x] `ENT-028` Define printer driver contracts and adapter interfaces.
       Definition of done: network printers, native bridges, and future printer types plug into one contract.
+      Source of truth: `src/lib/printer/contracts.ts`, `src/lib/sync/printerFallback.ts`
+      Verification: `src/lib/sync/__tests__/printerFallback.test.ts`
 
-- [ ] `ENT-029` Add printer/device health reporting and operator-visible fault states.
+- [x] `ENT-029` Add printer/device health reporting and operator-visible fault states.
       Definition of done: staff can tell which printer is down and whether jobs are queued, rerouted, or failed.
+      Source of truth: `src/lib/sync/printerFallback.ts`, `src/components/merchant/DevicesTab.tsx`
+      Verification: `src/lib/sync/__tests__/printerFallback.test.ts`
 
-- [ ] `ENT-030` Extend the hardware abstraction layer for scanners, cash drawers, and customer displays.
+- [x] `ENT-030` Extend the hardware abstraction layer for scanners, cash drawers, and customer displays.
       Definition of done: new device classes can be added without touching order/KDS domain logic.
+      Source of truth: `src/lib/devices/hardware-abstraction.ts`, `src/lib/printer/contracts.ts`
+      Verification: `src/lib/devices/__tests__/hardware-abstraction.test.ts`
 
 ### 2.5 Conflict Resolution
 
-- [ ] `ENT-031` Replace table-level generic conflict strategies with domain-aware merge rules.
+- [x] `ENT-031` Replace table-level generic conflict strategies with domain-aware merge rules.
       Definition of done: concurrent edits for tables, orders, voids, fires, and payments are resolved by intent.
+      Source of truth: `src/lib/sync/conflict-resolution.ts`
+      Verification: `src/lib/sync/__tests__/conflict-resolution.test.ts`
 
-- [ ] `ENT-032` Document split-brain scenarios and expected merge outcomes.
+- [x] `ENT-032` Document split-brain scenarios and expected merge outcomes.
       Definition of done: a scenario matrix exists and is test-backed.
+      Source of truth: `docs/01-foundation/split-brain-scenarios.md`, `src/lib/sync/conflict-resolution.ts`
+      Verification: `src/lib/sync/__tests__/conflict-resolution.test.ts`, `src/lib/sync/__tests__/enterprise-runtime-drills.test.ts`
 
-- [ ] `ENT-033` Add operator-safe exception handling for unresolvable conflicts.
+- [x] `ENT-033` Add operator-safe exception handling for unresolvable conflicts.
       Definition of done: the system surfaces conflicts explicitly without silent corruption.
+      Source of truth: `src/lib/sync/conflict-resolution.ts`, `src/hooks/useSyncStatus.ts`
+      Verification: `src/lib/sync/__tests__/conflict-resolution.test.ts`
 
 ### 2.6 Operational Resiliency Validation
 
-- [ ] `ENT-034` Run offline multi-terminal simulations for POS, KDS, and handheld combinations.
+- [x] `ENT-034` Run offline multi-terminal simulations for POS, KDS, and handheld combinations.
       Definition of done: convergence and latency targets are measured and tracked.
+      Source of truth: `src/lib/sync/__tests__/enterprise-runtime-drills.test.ts`, `src/features/kds/hooks/useKDSRealtime.local.test.ts`
+      Verification: `src/lib/sync/__tests__/enterprise-runtime-drills.test.ts`, `src/features/kds/hooks/__tests__/useKDSRealtime.local.test.ts`
 
-- [ ] `ENT-035` Run printer outage and gateway failover drills.
+- [x] `ENT-035` Run printer outage and gateway failover drills.
       Definition of done: order flow survives device failures without hidden drops.
+      Source of truth: `src/lib/sync/printerFallback.ts`
+      Verification: `src/lib/sync/__tests__/printerFallback.test.ts`
 
 ## Phase 3: Compliance & Security
 

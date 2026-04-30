@@ -47,27 +47,27 @@ if (isFeatureEnabled('ENABLE_OFFLINE_MODE')) {
 
 These flags are documented in `docs/03-product/feature-flags.md` but have **no implementation**. No migration, no `feature_flags` table, no `src/lib/flags/feature-flags.ts` file exists.
 
-| Flag Key                | Description                           | Target Rollout |
-| ----------------------- | ------------------------------------- | -------------- |
-| `payment_webhooks`      | Auto-confirm payments via webhook     | Sprint 1       |
-| `amharic_pos`           | Amharic default locale on POS         | Sprint 2       |
-| `amharic_kds`           | Amharic default locale on KDS         | Sprint 2       |
-| `amharic_dashboard`     | Amharic default on merchant dashboard | Sprint 2       |
-| `redis_event_bus`       | Events via Upstash Redis Streams      | Sprint 3       |
-| `loyalty_earning`       | Award points on order.completed       | Sprint 3       |
-| `inventory_deduction`   | Auto-deduct stock on order confirm    | Sprint 3       |
-| `powersync_offline`     | Replace Dexie.js with PowerSync CRDT  | Sprint 4       |
-| `discount_engine`       | Discount picker in POS and checkout   | Sprint 5       |
-| `modifier_tables`       | Serve modifiers from new tables       | Sprint 5       |
-| `graphql_federation`    | Route queries through Apollo Router   | Sprint 6       |
-| `eod_telegram_report`   | Daily report to owner via Telegram    | Sprint 7       |
-| `timescaledb_analytics` | Route analytics to TimescaleDB        | Sprint 7       |
-| `erca_submission`       | Auto-submit ERCA e-invoice            | Sprint 8       |
-| `subscription_gating`   | Enforce plan limits                   | Sprint 8       |
-| `delivery_channels`     | Enable BEU/Deliver Addis order intake | Phase 2        |
-| `lole_now_app`          | Enable manager app API access         | Phase 4        |
-| `multi_location`        | Cross-location dashboard              | Phase 4        |
-| `lole_pay`              | Route payments through lole Pay       | Horizon 2      |
+| Flag Key                | Description                                                        | Target Rollout |
+| ----------------------- | ------------------------------------------------------------------ | -------------- |
+| `payment_webhooks`      | Auto-confirm payments via webhook                                  | Sprint 1       |
+| `amharic_pos`           | Amharic default locale on POS                                      | Sprint 2       |
+| `amharic_kds`           | Amharic default locale on KDS                                      | Sprint 2       |
+| `amharic_dashboard`     | Amharic default on merchant dashboard                              | Sprint 2       |
+| `redis_event_bus`       | Events via Upstash Redis Streams                                   | Sprint 3       |
+| `loyalty_earning`       | Award points on order.completed                                    | Sprint 3       |
+| `inventory_deduction`   | Auto-deduct stock on order confirm                                 | Sprint 3       |
+| `powersync_offline`     | Replace Dexie.js with PowerSync CRDT                               | Sprint 4       |
+| `discount_engine`       | Discount picker in POS and checkout                                | Sprint 5       |
+| `modifier_tables`       | Serve modifiers from new tables                                    | Sprint 5       |
+| `graphql_federation`    | Route queries through Apollo Router                                | Sprint 6       |
+| `eod_telegram_report`   | Daily report to owner via Telegram                                 | Sprint 7       |
+| `timescaledb_analytics` | Route analytics to TimescaleDB                                     | Sprint 7       |
+| `erca_submission`       | Auto-submit ERCA e-invoice                                         | Sprint 8       |
+| `subscription_gating`   | Enforce plan limits                                                | Sprint 8       |
+| `delivery_channels`     | Enable beU Delivery/Deliver Addis/klik/Zmall Delivery order intake | Phase 2        |
+| `lole_now_app`          | Enable manager app API access                                      | Phase 4        |
+| `multi_location`        | Cross-location dashboard                                           | Phase 4        |
+| `lole_pay`              | Route payments through lole Pay                                    | Horizon 2      |
 
 ### Implementation Requirements
 

@@ -106,4 +106,7 @@ plans/
 
 # Added by ggshield
 
+# PowerSync WASM/Worker assets (copied from node_modules at install time)
+public/@powersync/
+
 .agents/

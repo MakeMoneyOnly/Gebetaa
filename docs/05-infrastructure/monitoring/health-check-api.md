@@ -18,7 +18,7 @@ All endpoints support `HEAD` requests for load-balancer checks. The comprehensiv
 
 ### Purpose
 
-Returns the full system health status including all dependency checks, payment provider status, circuit breaker states, and performance metrics. Used by Better Uptime for external monitoring with Telegram alerting.
+Returns the full system health status including all dependency checks, payment provider status, circuit breaker states, and performance metrics. Used by Prometheus for external monitoring with Telegram alerting.
 
 ### Checks Performed
 
@@ -343,7 +343,7 @@ spec:
 
 ---
 
-## Monitoring Setup — Better Uptime
+## Monitoring Setup — Prometheus
 
 ### Recommended Configuration
 
@@ -373,7 +373,7 @@ spec:
 2. Create a group or channel and add the bot.
 3. Get the chat ID from the group/channel.
 4. Configure `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ALERT_CHAT_ID` environment variables.
-5. In Better Uptime, add a Telegram integration pointing to the same chat.
+5. In Prometheus, add a Telegram integration pointing to the same chat.
 
 ---
 

@@ -1,4 +1,4 @@
-# ገበጣ lole — Tech Stack
+# lole — Tech Stack
 
 **Version 1.0 · March 2026 · Definitive Reference**
 
@@ -34,19 +34,19 @@ Every tool was evaluated against four Ethiopia-specific criteria:
 | **next-pwa / Serwist** | Latest          | PWA + service worker                           | Generates service worker from Next.js config. NetworkFirst strategy for menu, NetworkOnly for payments.                                                 |
 | **Noto Sans Ethiopic** | —               | Amharic typeface                               | Google Fonts — renders Ethiopic script correctly across all Android devices. Loaded via `next/font` with `display: swap`.                               |
 | **Framer Motion**      | Latest          | Animations                                     | **Dashboard only** — disabled on POS and KDS. Tablet responsiveness requires zero animation overhead.                                                   |
-| **CapacitorJS**        | Latest          | Native Shell / Hardware Bridge                 | Wraps the Next.js bundle for Android. Enables silent printing, Bluetooth/USB access, and PWA+ performance on tablets.                                   |
+| **Capacitor**          | 8 (^8.3.0)      | Native Shell / Hardware Bridge                 | Wraps the Next.js bundle for Android. Enables silent printing, Bluetooth/USB access, and PWA+ performance on tablets.                                   |
 
 ---
 
 ### Backend
 
-| Technology                  | Version | Role                                                          | Why This, Not X                                                                                                                                               |
-| --------------------------- | ------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Next.js API Routes**      | 16      | Domain API handlers (Phase 1 monolith)                        | Same codebase, same deploy, zero network hop for server-side calls. Considered: separate Express — adds complexity with no benefit at current scale.          |
-| **Apollo Server**           | 4       | GraphQL Federation subgraph server                            | Federation 2 compatible. `@as-integrations/next` for Next.js App Router. Considered: Yoga (smaller, but less Federation tooling).                             |
-| **Apollo Router**           | Latest  | GraphQL Federation gateway (Railway)                          | Rust binary — high performance, low memory. Centralized auth, rate limiting, schema registry. Considered: Apollo Gateway JS (deprecated in favour of Router). |
-| **NestJS**                  | 10      | Extracted microservices (Phase 2, 200+ restaurants)           | TypeScript-native, decorator-based, GraphQL Federation native support. Orders + Payments domain extraction target.                                            |
-| **Supabase Edge Functions** | —       | Lightweight edge workers (notifications, pg_notify consumers) | Runs on Deno at Supabase's edge. Used for: Telegram notifications, inventory low-stock events.                                                                |
+| Technology                  | Version    | Role                                                          | Why This, Not X                                                                                                                                               |
+| --------------------------- | ---------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Next.js API Routes**      | 16         | Domain API handlers (Phase 1 monolith)                        | Same codebase, same deploy, zero network hop for server-side calls. Considered: separate Express — adds complexity with no benefit at current scale.          |
+| **Apollo Server**           | 5 (^5.5.0) | GraphQL Federation subgraph server                            | Federation 2 compatible. `@as-integrations/next` for Next.js App Router. Considered: Yoga (smaller, but less Federation tooling).                             |
+| **Apollo Router**           | Latest     | GraphQL Federation gateway (Railway)                          | Rust binary — high performance, low memory. Centralized auth, rate limiting, schema registry. Considered: Apollo Gateway JS (deprecated in favour of Router). |
+| **NestJS**                  | 10         | Extracted microservices (Phase 2, 200+ restaurants)           | TypeScript-native, decorator-based, GraphQL Federation native support. Orders + Payments domain extraction target.                                            |
+| **Supabase Edge Functions** | —          | Lightweight edge workers (notifications, pg_notify consumers) | Runs on Deno at Supabase's edge. Used for: Telegram notifications, webhook processing.                                                                        |
 
 ---
 
@@ -84,21 +84,21 @@ All monetary values are stored as `INTEGER` in **Santim** (100 santim = 1 ETB). 
 
 ### Authentication
 
-| Technology               | Role                                                              | Why                                                                                                                   |
-| ------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Supabase Auth**        | Staff authentication (email + password), JWT generation           | Integrated with RLS — `auth.uid()` in RLS policies. `@supabase/ssr` for Next.js App Router cookie sessions.           |
-| **HMAC-SHA256 (custom)** | Guest QR code signing and validation (`src/lib/security/hmac.ts`) | Stateless, serverless-compatible, 24h expiry. No database lookup needed to validate a QR scan.                        |
-| **4-digit PIN (custom)** | Waiter POS quick staff login (`restaurant_staff.pin_code`)        | Verified via `POST /api/staff/verify-pin`. Session stored in `localStorage:gebata_waiter_context` on POS tablet only. |
+| Technology               | Role                                                              | Why                                                                                                                 |
+| ------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Supabase Auth**        | Staff authentication (email + password), JWT generation           | Integrated with RLS — `auth.uid()` in RLS policies. `@supabase/ssr` for Next.js App Router cookie sessions.         |
+| **HMAC-SHA256 (custom)** | Guest QR code signing and validation (`src/lib/security/hmac.ts`) | Stateless, serverless-compatible, 24h expiry. No database lookup needed to validate a QR scan.                      |
+| **4-digit PIN (custom)** | Waiter POS quick staff login (`restaurant_staff.pin_code`)        | Verified via `POST /api/staff/verify-pin`. Session stored in `localStorage:lole_waiter_context` on POS tablet only. |
 
 ---
 
 ### Payments
 
-| Provider     | Integration Method                                     | Status                                  | Priority |
-| ------------ | ------------------------------------------------------ | --------------------------------------- | -------- |
-| **Telebirr** | REST API — initiate USSD/app payment, webhook callback | ✅ Initiate + verify. Webhook: Sprint 1 | P0       |
-| **Chapa**    | REST API — initiate checkout, webhook callback         | ✅ Initiate + verify. Webhook: Sprint 1 | P0       |
-| **Cash**     | Record only — no API                                   | ✅ Live                                 | P0       |
+| Provider     | Integration Method                                     | Status  | Priority |
+| ------------ | ------------------------------------------------------ | ------- | -------- |
+| **Telebirr** | REST API — initiate USSD/app payment, webhook callback | ✅ Live | P0       |
+| **Chapa**    | Hosted checkout + webhook verification                 | ✅ Live | P0       |
+| **Cash**     | Record only — no API                                   | ✅ Live | P0       |
 
 **Webhook security:** All payment webhooks verified with HMAC-SHA256 timing-safe comparison before any processing. All webhook handlers return 200 immediately and publish to event bus — zero synchronous business logic in webhook handlers.
 
@@ -122,40 +122,54 @@ All monetary values are stored as `INTEGER` in **Santim** (100 santim = 1 ETB). 
 
 ### Monitoring & Observability
 
-| Tool                   | Role                                                                      | Cost              |
-| ---------------------- | ------------------------------------------------------------------------- | ----------------- |
-| **Sentry**             | Error tracking — POS + dashboard crashes, tagged by `restaurant_id`       | Free              |
-| **Better Uptime**      | Endpoint health monitoring, Telegram on-call alerts                       | Free              |
-| **Axiom**              | Structured log aggregation — GraphQL queries, payment events, sync events | Free (25GB/month) |
-| **Vercel Analytics**   | Real user monitoring — Core Web Vitals from actual devices in Addis       | Free              |
-| **Supabase Dashboard** | Database slow queries, connection pool, RLS policy hits                   | Included          |
-| **Railway Metrics**    | Apollo Router container CPU/memory                                        | Included          |
+| Tool                   | Role                                                                                                         | Cost                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------ |
+| **Sentry**             | Error tracking — POS + dashboard crashes, tagged by `restaurant_id`                                          | Free                     |
+| **Prometheus**         | Metrics collection (prom-client) — API P99 latency, DB pool utilization, QStash depth, payment success rates | $0 (self-hosted/Grafana) |
+| **PagerDuty**          | Alerting on critical incidents — Sentry integration, P1/P2 incident response                                 | Free tier                |
+| **MoR Fiscal**         | Revenue reporting for tax compliance — Monthly/quarterly fiscal reports to Ethiopian tax authority           | TBD                      |
+| **Axiom**              | Structured log aggregation — GraphQL queries, payment events, sync events                                    | Free (25GB/month)        |
+| **Vercel Analytics**   | Real user monitoring — Core Web Vitals from actual devices in Addis                                          | Free                     |
+| **Supabase Dashboard** | Database slow queries, connection pool, RLS policy hits                                                      | Included                 |
+| **Railway Metrics**    | Apollo Router container CPU/memory                                                                           | Included                 |
 
 ---
 
 ### CI/CD & Developer Tooling
 
-| Tool                       | Role                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| **GitHub Actions**         | CI pipeline: type-check → lint → test → Supabase migration → Vercel deploy → Railway deploy |
-| **Supabase CLI**           | `supabase db push` for migration deployment from CI                                         |
-| **graphql-code-generator** | Auto-generate TypeScript types from GraphQL schema for all clients                          |
-| **ESLint + Prettier**      | Code quality and formatting                                                                 |
-| **Husky**                  | Pre-commit hooks: type-check + lint before every commit                                     |
+| Tool                       | Role                                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------- |
+| **GitHub Actions**         | CI pipeline: type-check → lint → test → Supabase migration → Vercel deploy → Railway deploy   |
+| **Supabase CLI**           | `supabase db push` for migration deployment from CI                                           |
+| **graphql-code-generator** | Auto-generate TypeScript types from GraphQL schema for all clients                            |
+| **ESLint + Prettier**      | Code quality and formatting                                                                   |
+| **Husky**                  | Pre-commit hooks: type-check + lint before every commit                                       |
+| **n8n**                    | Workflow automation for marketing — SMS/email campaigns, event-driven workflows (Self-hosted) |
+
+---
+
+### Communications
+
+| Technology           | Role                                   | Notes                                                    |
+| -------------------- | -------------------------------------- | -------------------------------------------------------- |
+| **Resend**           | Transactional + marketing email        | Onboarding, password reset, marketing campaigns          |
+| **Telegram**         | Alerts and reports                     | Critical incidents, EOD reports, low stock notifications |
+| **Africa's Talking** | SMS notifications                      | Order confirmations, staff alerts in Ethiopia            |
+| **Firebase FCM**     | Push notifications (manager app + PWA) | Expo push handled via FCM/APNs abstraction               |
 
 ---
 
 ### Mobile (Phase 2)
 
-| Technology                     | Role                                           | Why                                                                                                                                                      |
-| ------------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **React Native (Expo SDK 52)** | lole Now manager app — iOS + Android           | One codebase, OTA updates, Expo EAS build for APK distribution. Ethiopian Play Store access is inconsistent — EAS direct APK distribution bypasses this. |
-| **Expo Router**                | Navigation                                     | File-based routing, consistent with Next.js mental model.                                                                                                |
-| **Apollo Client**              | GraphQL queries from Expo app                  | Consumes existing Federation endpoint — zero new backend work.                                                                                           |
-| **NativeWind**                 | Tailwind for React Native                      | Design system consistency between web and mobile.                                                                                                        |
-| **Expo Push Notifications**    | Low stock, payment failure, large order alerts | No FCM/APNs setup required — Expo handles provider abstraction.                                                                                          |
-| **Expo SecureStore**           | Auth session storage on device                 | Encrypted native storage — more secure than AsyncStorage for tokens.                                                                                     |
-| **Expo EAS Build**             | Android APK + iOS IPA production builds        | Hosted build service — no Mac required for iOS builds.                                                                                                   |
+| Technology                     | Role                                           | Why                                                                                                                                                                                                                                            |
+| ------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **React Native (Expo SDK 52)** | lole Now manager app — iOS + Android           | One codebase, OTA updates, Expo EAS build for APK distribution. Ethiopian Play Store access is inconsistent — EAS direct APK distribution bypasses this. Integrates with delivery partners: beU Delivery, Deliver Addis, klik, Zmall Delivery. |
+| **Expo Router**                | Navigation                                     | File-based routing, consistent with Next.js mental model.                                                                                                                                                                                      |
+| **Apollo Client**              | GraphQL queries from Expo app                  | Consumes existing Federation endpoint — zero new backend work.                                                                                                                                                                                 |
+| **NativeWind**                 | Tailwind for React Native                      | Design system consistency between web and mobile.                                                                                                                                                                                              |
+| **Expo Push Notifications**    | Low stock, payment failure, large order alerts | No FCM/APNs setup required — Expo handles provider abstraction.                                                                                                                                                                                |
+| **Expo SecureStore**           | Auth session storage on device                 | Encrypted native storage — more secure than AsyncStorage for tokens.                                                                                                                                                                           |
+| **Expo EAS Build**             | Android APK + iOS IPA production builds        | Hosted build service — no Mac required for iOS builds.                                                                                                                                                                                         |
 
 ---
 
@@ -167,6 +181,7 @@ All monetary values are stored as `INTEGER` in **Santim** (100 santim = 1 ETB). 
 | **ThermalPrinter Plugin**  | ESC/POS driver for silent printing | Native Capacitor plugin handling Bluetooth, USB OTG, and Network (TCP) printing directly from the app.   |
 | **Capacitor SQLite**       | High-performance local caching     | Local persistence for large datasets (e.g. offline menu search) that exceed browser localStorage limits. |
 | **Capacitor Device**       | Hardware identification            | Reliable serial/IMEI tracking for ERCA compliance and device-scoped security.                            |
+| **Esper**                  | Mobile Device Management (MDM)     | Remote config, kiosk mode, app push to POS tablets                                                       |
 
 **Legacy Transition:** The Termux/Node.js print server approach is deprecated and replaced by the native Capacitor hardware bridge for all new store deployments.
 
@@ -188,6 +203,41 @@ These decisions are final and are not revisited unless a major external constrai
 | Guest ordering  | Browser PWA (no native app) | Native app (too much friction for dine-in guests) |
 | CDN             | Cloudflare                  | AWS CloudFront (no Africa PoPs), Fastly           |
 | Auth            | Supabase Auth               | Auth0 (expensive at scale), custom JWT            |
+
+---
+
+## Architectural Relationships
+
+### Data Flow & Synchronization
+
+- **PowerSync ↔ Supabase**: Client-side CRDT sync. PowerSync client connects to Supabase via PowerSync Cloud. Changes sync via PostgreSQL logical replication.
+- **MQTT LAN**: POS tablets and KDS stations communicate via MQTT broker on local network. Orders sync in real-time without internet.
+
+### API & Federation
+
+- **Apollo Router (Rust)** runs on Railway, routes queries to **Apollo Server 5** subgraphs (orders, menu, payments, guests, staff) running on Vercel.
+- **Next.js API Routes** handle REST endpoints (webhooks, health checks) outside GraphQL.
+
+### Event-Driven Architecture
+
+- **Upstash Redis Streams**: Internal event bus. Services publish events (`order.created`, `payment.completed`). Consumer groups ensure exactly-once processing.
+- **Upstash QStash**: Durable job queue for background tasks (EOD reports, reconciliation). Survives serverless cold starts.
+
+### Caching & Edge
+
+- **Cloudflare KV**: Menu items cached at Nairobi/Johannesburg PoPs via Cloudflare Workers. POS menu load <100ms.
+- **Cloudflare R2**: Receipt PDFs, menu photos, export files. S3-compatible, no egress fees.
+
+### Monitoring Stack
+
+- **Sentry**: Error tracking with `restaurant_id` tagging.
+- **Prometheus** (prom-client): Metrics collected at `/api/metrics`. Grafana dashboard for visualization.
+- **PagerDuty**: Alerts on Sentry P1/P2 issues.
+
+### Compliance
+
+- **ERCA**: Tax e-invoicing. `src/lib/fiscal/erca-service.ts` generates compliant invoices.
+- **MoR Fiscal**: Revenue reporting to Ethiopian tax authority. Monthly/quarterly automated reports.
 
 ---
 

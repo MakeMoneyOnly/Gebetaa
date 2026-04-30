@@ -48,7 +48,7 @@ Order processing metrics:
 
 Payment processing metrics:
 
-- Payment success rate by provider (Cash, Telebirr, Chapa, CBE Birr, Amole)
+- Payment success rate by provider (Cash, Telebirr, Chapa)
 - Average payment processing time
 - Payment failure reasons
 - Refund rate

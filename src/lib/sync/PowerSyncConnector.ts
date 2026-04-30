@@ -60,21 +60,38 @@ export class Connector {
         const developmentToken = getDevelopmentToken();
 
         if (developmentToken) {
+            logger.info('[PowerSync] Using development/access token for remote sync', {
+                tokenPreview: developmentToken.substring(0, 10) + '...',
+            });
             return {
                 endpoint,
                 token: developmentToken,
             };
         }
 
+        logger.info('[PowerSync] Attempting to fetch credentials from Supabase session');
         const {
             data: { session },
+            error,
         } = await getSupabaseClient().auth.getSession();
 
-        const token = session?.access_token;
-        if (!token) {
+        if (error) {
+            logger.error('[PowerSync] Failed to fetch Supabase session', { error: error.message });
             return null;
         }
 
+        const token = session?.access_token;
+        if (!token) {
+            logger.warn('[PowerSync] No active Supabase session found for remote sync', {
+                hasSession: !!session,
+                userId: session?.user?.id,
+            });
+            return null;
+        }
+
+        logger.info('[PowerSync] Successfully retrieved Supabase access token', {
+            userId: session?.user?.id,
+        });
         return {
             endpoint,
             token,

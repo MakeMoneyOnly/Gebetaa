@@ -43,8 +43,8 @@ If the fiber cable is cut today, the system degrades unevenly and unpredictably.
 
 The original audit verdict above still stands at platform level, but the following Phase 2 operational slices now have concrete runtime coverage and focused verification:
 
-- `ENT-075` Delivery aggregator runtime wiring now routes inbound partner orders through `AggregatorService`, publishes the local-first gateway bus event, and accepts `telebirr_food` across delivery connect/listing surfaces.
-- `ENT-076` Tablet-triggered payment receipts now queue into the gateway-owned printer spooler when native silent printing is unavailable, with the paired device restaurant context forwarded from terminal runtime.
+- `ENT-075` Delivery aggregator runtime wiring now covers both direct aggregator intake and legacy delivery webhook intake: partner orders still land in `external_orders`, but they also inject through `AggregatorService` so the local-first gateway bus sees the same inbound order stream.
+- `ENT-076` Tablet-triggered payment receipts now queue into the gateway-owned printer spooler when native silent printing is unavailable, and paired devices can now recover printer memory plus re-bootstrap their gateway session after first-launch misses or local cache loss.
 - `ENT-077` Staff PIN verification now checks fetched active staff rows against stored hashed PINs, preserves session expiry issuance, and the payroll sync path now accepts `tip_allocations` for downstream labor reporting.
 - `ENT-078` Expanded KDS station runtime now recognizes `grill` and `cold` across queue filters, telemetry, board types, and dedicated KDS pages, closing the gap between routing rules and operator-visible station surfaces.
 - `ENT-079` PowerSync server sync now accepts `time_entries` and `tip_allocations`, matching the existing dashboard/labor KPI calculations so payroll-facing metrics can converge from local-first writes.

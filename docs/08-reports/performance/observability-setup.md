@@ -8,12 +8,12 @@ This document describes the complete observability stack for lole Restaurant OS,
 
 ## Overview
 
-| Layer             | Tool          | Purpose                                 | Cost      |
-| ----------------- | ------------- | --------------------------------------- | --------- |
-| Error tracking    | Sentry        | Crashes, exceptions, POS offline errors | Free tier |
-| Uptime monitoring | Better Uptime | Endpoint health, latency spikes         | Free tier |
-| Health checks     | `/api/health` | Database, Redis, QStash status          | Built-in  |
-| Alerting          | Telegram      | Critical incident notifications         | Free      |
+| Layer          | Tool          | Purpose                                                  | Cost      |
+| -------------- | ------------- | -------------------------------------------------------- | --------- |
+| Error tracking | Sentry        | Crashes, exceptions, POS offline errors                  | Free tier |
+| Metrics        | Prometheus    | API latency, DB connections, QStash depth, payment rates | Free tier |
+| Health checks  | `/api/health` | Database, Redis, QStash status                           | Built-in  |
+| Alerting       | Telegram      | Critical incident notifications                          | Free      |
 
 ---
 
@@ -124,51 +124,22 @@ Returns `200` if database is connected, `503` otherwise.
 
 ---
 
-## 3. Better Uptime Configuration
+## 3. Prometheus Configuration
 
-### Setup Steps
+Prometheus metrics are implemented at `src/lib/monitoring/prometheus.ts` to track production performance.
 
-1. Go to [betteruptime.com](https://betteruptime.com) and create a free account
-2. Create a new monitor:
-    - **URL**: `https://lole.app/api/health`
-    - **Check type**: HTTP
-    - **Check frequency**: 60 seconds
-    - **Timeout**: 30 seconds
-    - **Expected status**: 200
+### Tracked Metrics
 
-3. Configure incident escalation:
-    - Add Telegram integration
-    - Or use webhook to trigger `sendAlert()` directly
+- `api_request_duration_p99` — API P99 latency (ms)
+- `db_connection_pool_utilization` — Postgres connection pool (%)
+- `qstash_job_depth` — Pending QStash jobs (count)
+- `payment_success_rate` — Chapa/Telebirr success rate (%)
+- `pos_offline_duration` — POS offline time (seconds)
 
-### Telegram Integration
+### Access
 
-1. In Better Uptime, go to Integrations → Telegram
-2. Connect your Telegram account
-3. Select the chat/channel for alerts
-4. Customize the alert message template
-
-### Alternative: Webhook Integration
-
-Create a webhook endpoint that Better Uptime can call:
-
-```typescript
-// src/app/api/webhooks/uptime/route.ts
-import { sendCriticalAlert } from '@/lib/monitoring/alerts';
-
-export async function POST(request: Request) {
-    const body = await request.json();
-
-    if (body.alert_type === 'down') {
-        await sendCriticalAlert(`Endpoint ${body.monitor_url} is down`, {
-            monitor_name: body.monitor_name,
-            error: body.error_details,
-            checked_at: body.checked_at,
-        });
-    }
-
-    return Response.json({ received: true });
-}
-```
+- Metrics endpoint: `https://lole.app/api/metrics` (Prometheus scrape endpoint)
+- Dashboard: Grafana (self-hosted, access via internal VPN)
 
 ---
 
@@ -245,28 +216,27 @@ curl -X POST https://lole.app/api/test-alerts
 
 ---
 
-## 5. Critical Alerts Reference
+## 4. Critical Alerts Reference
 
 Configure these alerts before signing your first restaurant:
 
-| Alert                  | Trigger                                 | Severity | Response Time     |
-| ---------------------- | --------------------------------------- | -------- | ----------------- |
-| POS offline            | No sync for 5 min during business hours | Critical | 10 min            |
-| Payment webhook silent | No callback in 10 min after initiation  | Critical | 10 min            |
-| Payment failure rate   | >5% failures in 10-min window           | Critical | 10 min            |
-| API P99 latency        | >2s for 5 consecutive minutes           | Warning  | 1 hour            |
-| DB connection pool     | >80% utilization                        | Critical | 10 min            |
-| Job queue backlog      | QStash depth >100 jobs                  | Critical | 30 min            |
-| Low stock              | Stock <= reorder level                  | Warning  | Next business day |
+| Alert                  | Trigger                                                | Severity | Response Time     |
+| ---------------------- | ------------------------------------------------------ | -------- | ----------------- |
+| POS offline            | No sync for 5 min during business hours                | Critical | 10 min            |
+| Payment webhook silent | No callback in 10 min after initiation                 | Critical | 10 min            |
+| Payment failure rate   | >5% failures in 10-min window                          | Critical | 10 min            |
+| API P99 latency        | >2s for 5 consecutive minutes (tracked via Prometheus) | Warning  | 1 hour            |
+| DB connection pool     | >80% utilization                                       | Critical | 10 min            |
+| Job queue backlog      | QStash depth >100 jobs                                 | Critical | 30 min            |
+| Low stock              | Stock <= reorder level                                 | Warning  | Next business day |
 
 ---
 
-## 6. Monitoring Checklist
+## 5. Monitoring Checklist
 
 ### Daily (2 minutes)
 
 - [ ] Check Sentry for new error groups
-- [ ] Review Better Uptime status page
 - [ ] Check Telegram for overnight alerts
 - [ ] Verify EOD reports sent at 10PM EAT
 
@@ -275,6 +245,7 @@ Configure these alerts before signing your first restaurant:
 - [ ] Review Supabase dashboard: slow queries, connection pool
 - [ ] Check Upstash: Redis memory, QStash failure rate
 - [ ] Review Sentry error trends by restaurant_id
+- [ ] Check Prometheus metrics dashboard (Grafana)
 
 ### When Onboarding a New Restaurant
 
@@ -285,7 +256,7 @@ Configure these alerts before signing your first restaurant:
 
 ---
 
-## 7. Incident Response
+## 6. Incident Response
 
 ### POS Offline Alert
 
@@ -312,27 +283,27 @@ Configure these alerts before signing your first restaurant:
 
 ---
 
-## 8. Cost Summary
+## 7. Cost Summary
 
-| Service       | Tier | Monthly Cost |
-| ------------- | ---- | ------------ |
-| Sentry        | Free | $0           |
-| Better Uptime | Free | $0           |
-| Telegram      | Free | $0           |
-| **Total**     |      | **$0**       |
+| Service    | Tier        | Monthly Cost |
+| ---------- | ----------- | ------------ |
+| Sentry     | Free        | $0           |
+| Prometheus | Self-hosted | $0           |
+| Telegram   | Free        | $0           |
+| **Total**  |             | **$0**       |
 
 At 500+ restaurants, consider:
 
 - Sentry Team ($26/mo) for more events
-- Better Uptime Pro ($20/mo) for more endpoints
 - Axiom (free 25GB/mo) for structured logs
 
 ---
 
-## References
+## 8. References
 
 - [ENTERPRISE_MASTER_BLUEPRINT.md](../1.%20Engineering%20Foundation/0.%20ENTERPRISE_MASTER_BLUEPRINT.md) — Section 13: Monitoring & Observability
 - [ENGINEERING_RUNOOK.md](../1.%20Engineering%20Foundation/6.%20ENGINEERING_RUNOOK.md) — Incident runbook
 - [Sentry Documentation](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
-- [Better Uptime Documentation](https://betteruptime.com/docs)
+- [Prometheus Documentation](https://prometheus.io/docs)
+- [Prometheus Metrics Implementation](../../src/lib/monitoring/prometheus.ts)
 - [Telegram Bot API](https://core.telegram.org/bots/api)

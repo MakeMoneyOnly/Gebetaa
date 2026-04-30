@@ -9,7 +9,7 @@ This document defines the end-to-end incident response process for lole Restaura
 
 **When to activate this plan:**
 
-- An automated alert fires (Sentry, Better Uptime, rate-limit abuse trigger)
+- An automated alert fires (Sentry, Prometheus, rate-limit abuse trigger)
 - A merchant or staff member reports a production issue
 - An on-call engineer detects an anomaly during routine monitoring
 
@@ -60,7 +60,7 @@ When in doubt, classify at the higher severity and downgrade as you learn more.
 
 | Alert Type        | Tool            | Condition                                       | Notification Channel              |
 | ----------------- | --------------- | ----------------------------------------------- | --------------------------------- |
-| Uptime monitoring | Better Uptime   | 60s poll interval, any non-200 response         | PagerDuty → Telegram #incidents   |
+| Uptime monitoring | Prometheus      | 60s poll interval, any non-200 response         | PagerDuty → Telegram #incidents   |
 | Error rate        | Sentry          | >1% error rate over 5-minute window             | PagerDuty → Telegram #incidents   |
 | Performance       | Sentry / Vercel | P95 latency breach on P0 endpoints              | Telegram #engineering             |
 | Rate limit abuse  | Application     | `checkRateLimitAbuse()` triggers                | Telegram #engineering + PagerDuty |
@@ -78,7 +78,7 @@ When in doubt, classify at the higher severity and downgrade as you learn more.
 
 ### Step 1: Detect
 
-- Automated alert fires from monitoring (PagerDuty, Better Uptime, Sentry)
+- Automated alert fires from monitoring (PagerDuty, Prometheus, Sentry)
 - User report via Telegram, phone, or in-app feedback
 - On-call engineer observes anomaly during routine check
 

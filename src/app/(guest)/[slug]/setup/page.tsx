@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
     ArrowRight,
     CheckCircle2,
@@ -41,11 +41,24 @@ type PairResponse = {
 export default function DeviceSetupPage() {
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const slug = params?.slug as string;
     const [pairingCode, setPairingCode] = useState('');
     const [restaurantName, setRestaurantName] = useState('');
     const [status, setStatus] = useState<'idle' | 'pairing' | 'success' | 'invalid'>('idle');
     const [deviceInfo, setDeviceInfo] = useState<PairResponse | null>(null);
+    const [autoPairAttempted, setAutoPairAttempted] = useState(false);
+
+    useEffect(() => {
+        const codeFromLink = normalizePairingCode(searchParams?.get('code') ?? '').slice(
+            0,
+            DEVICE_PAIRING_CODE_LENGTH
+        );
+
+        if (codeFromLink.length === DEVICE_PAIRING_CODE_LENGTH) {
+            setPairingCode(current => (current === codeFromLink ? current : codeFromLink));
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (!slug) return;
@@ -87,13 +100,8 @@ export default function DeviceSetupPage() {
         return slug.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
     }, [restaurantName, slug]);
 
-    const handlePair = async (event: React.FormEvent) => {
-        event.preventDefault();
-
-        const normalizedCode = normalizePairingCode(pairingCode).slice(
-            0,
-            DEVICE_PAIRING_CODE_LENGTH
-        );
+    const pairDevice = async (rawCode: string) => {
+        const normalizedCode = normalizePairingCode(rawCode).slice(0, DEVICE_PAIRING_CODE_LENGTH);
         if (normalizedCode.length !== DEVICE_PAIRING_CODE_LENGTH) {
             return;
         }
@@ -171,6 +179,30 @@ export default function DeviceSetupPage() {
             toast.error('Pairing failed. Check connectivity and try again.');
         }
     };
+
+    const handlePair = async (event: React.FormEvent) => {
+        event.preventDefault();
+        await pairDevice(pairingCode);
+    };
+
+    useEffect(() => {
+        const codeFromLink = normalizePairingCode(searchParams?.get('code') ?? '').slice(
+            0,
+            DEVICE_PAIRING_CODE_LENGTH
+        );
+
+        if (
+            autoPairAttempted ||
+            codeFromLink.length !== DEVICE_PAIRING_CODE_LENGTH ||
+            status === 'pairing' ||
+            status === 'success'
+        ) {
+            return;
+        }
+
+        setAutoPairAttempted(true);
+        void pairDevice(codeFromLink);
+    }, [autoPairAttempted, searchParams, status]);
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#fbf6ef] text-[#131313]">

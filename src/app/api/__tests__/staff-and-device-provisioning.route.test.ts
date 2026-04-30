@@ -153,21 +153,42 @@ describe('staff and device provisioning routes', () => {
         setAuthContextOk();
 
         createServiceRoleClientMock.mockReturnValue({
-            from: vi.fn(() => ({
-                insert: vi.fn(() => ({
-                    select: vi.fn(() => ({
-                        single: vi.fn().mockResolvedValue({
-                            data: {
-                                id: 'device-1',
-                                pairing_code: 'A1B2C3',
-                                device_type: 'terminal',
-                                device_profile: 'cashier',
-                            },
-                            error: null,
-                        }),
-                    })),
-                })),
-            })),
+            from: vi.fn((table: string) => {
+                if (table === 'hardware_devices') {
+                    return {
+                        insert: vi.fn(() => ({
+                            select: vi.fn(() => ({
+                                single: vi.fn().mockResolvedValue({
+                                    data: {
+                                        id: 'device-1',
+                                        pairing_code: 'A1B2C3',
+                                        device_type: 'terminal',
+                                        device_profile: 'cashier',
+                                    },
+                                    error: null,
+                                }),
+                            })),
+                        })),
+                    };
+                }
+
+                if (table === 'restaurants') {
+                    return {
+                        select: vi.fn(() => ({
+                            eq: vi.fn(() => ({
+                                maybeSingle: vi.fn().mockResolvedValue({
+                                    data: {
+                                        slug: 'cafe-lucia',
+                                    },
+                                    error: null,
+                                }),
+                            })),
+                        })),
+                    };
+                }
+
+                throw new Error(`Unexpected table ${table}`);
+            }),
         } as any);
 
         const response = await postDeviceProvision(
@@ -185,6 +206,11 @@ describe('staff and device provisioning routes', () => {
         expect(response.status).toBe(201);
         expect(body.data.device.pairing_code).toMatch(/^[A-Z0-9]{6}$/);
         expect(body.data.device.device_profile).toBe('cashier');
+        expect(body.data.rollout.boot_path).toBe('/terminal');
+        expect(body.data.rollout.pairing_code).toMatch(/^[A-Z0-9]{6}$/);
+        expect(body.data.rollout.setup_path).toBe(
+            `/cafe-lucia/setup?code=${body.data.rollout.pairing_code}`
+        );
     });
 
     it('PATCH /api/devices/[deviceId] rotates identity by clearing live token and incrementing version', async () => {

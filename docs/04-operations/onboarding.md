@@ -1,4 +1,4 @@
-# ገበጣ lole — Restaurant Onboarding Guide
+# lole — Restaurant Onboarding Guide
 
 **Version 1.0 · March 2026**
 **For lole Staff & Founders Only — Not for Distribution**
@@ -42,7 +42,7 @@ Complete this before arriving. Do not show up without confirming all of these.
 [ ] KDS stations needed:
       [ ] Kitchen    [ ] Bar    [ ] Coffee    [ ] Dessert    [ ] Expeditor
 [ ] Payment methods:
-      [ ] Cash    [ ] Telebirr    [ ] Chapa    [ ] CBE Birr
+      [ ] Cash    [ ] Telebirr    [ ] Chapa
 [ ] VAT-registered?      [ ] Yes    [ ] No
 [ ] TIN number:          ________________________________
 [ ] VAT number:          ________________________________

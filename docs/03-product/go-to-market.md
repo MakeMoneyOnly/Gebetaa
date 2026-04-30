@@ -1,4 +1,4 @@
-# ገበጣ lole — Go-To-Market Strategy
+# lole — Go-To-Market Strategy
 
 **Version 1.0 · March 2026 · Confidential**
 

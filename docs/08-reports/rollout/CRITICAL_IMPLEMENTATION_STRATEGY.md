@@ -45,7 +45,6 @@ This document provides a comprehensive implementation strategy for all Critical 
 **Chapa is the sole payment gateway** — it provides unified access to:
 
 - Telebirr (mobile money)
-- CBE Birr (bank transfer)
 - Cards (Visa/Mastercard)
 - Other Ethiopian banks and wallets
 
@@ -509,7 +508,7 @@ This consolidation simplifies integration and provides a single webhook endpoint
     - Check Supabase, Redis, QStash
     - Return degraded mode on failures
 
-3. **Configure Better Uptime**
+3. **Configure Prometheus**
     - Poll /api/health every 60s
     - Telegram alerts
 

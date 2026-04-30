@@ -1,4 +1,4 @@
-# ገበጣ lole — Competitive Analysis
+# lole — Competitive Analysis
 
 **Version 1.0 · March 2026 · Confidential**
 
@@ -41,14 +41,14 @@ Before comparing against Toast, acknowledge what lole actually displaces:
 
 **Why they are not a real threat in Ethiopia (yet):**
 
-| Barrier             | Detail                                                                                                                                   |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Hardware dependency | Toast requires proprietary hardware ($600–900/device) imported through US supply chain. No distribution in Ethiopia.                     |
-| Payment integration | Toast Payments is US-only. No Telebirr, Chapa, or CBE Birr integration exists. Building it would require dedicated Ethiopia engineering. |
-| Language            | English only. No Amharic, no Ethiopic script rendering.                                                                                  |
-| Pricing             | $69–165/month in USD — 4–8× the Ethiopian market rate                                                                                    |
-| Local presence      | Zero offices, zero salespeople, zero support infrastructure in Ethiopia or East Africa                                                   |
-| ERCA                | No knowledge of Ethiopian VAT compliance requirements                                                                                    |
+| Barrier             | Detail                                                                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Hardware dependency | Toast requires proprietary hardware ($600–900/device) imported through US supply chain. No distribution in Ethiopia.        |
+| Payment integration | Toast Payments is US-only. No Telebirr, Chapa integration exists. Building it would require dedicated Ethiopia engineering. |
+| Language            | English only. No Amharic, no Ethiopic script rendering.                                                                     |
+| Pricing             | $69–165/month in USD — 4–8× the Ethiopian market rate                                                                       |
+| Local presence      | Zero offices, zero salespeople, zero support infrastructure in Ethiopia or East Africa                                      |
+| ERCA                | No knowledge of Ethiopian VAT compliance requirements                                                                       |
 
 **Where Toast is better than lole right now:**
 
@@ -120,16 +120,16 @@ Before comparing against Toast, acknowledge what lole actually displaces:
 
 **Weaknesses (based on market research and user conversations):**
 
-| Area                        | iKos                                                    | lole                                                        |
-| --------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
-| Technology stack            | Older web stack, reports of slow/unreliable performance | Next.js 16, React 19, Supabase Realtime — modern, fast      |
-| Offline capability          | Limited / unreliable                                    | PowerSync CRDT — 24h verified offline window                |
-| Guest ordering (QR)         | Not available or basic                                  | Full QR ordering with HMAC security, real-time tracker      |
-| KDS                         | Basic or absent                                         | 5-station KDS with real-time sync                           |
-| Analytics                   | Basic reporting                                         | Real-time analytics with TimescaleDB, period comparisons    |
-| ERCA integration            | Manual or absent                                        | Automated e-invoice submission                              |
-| API / delivery integrations | Limited                                                 | Full GraphQL Federation — BEU, Deliver Addis, Zmall, Esoora |
-| Support                     | Unclear SLA                                             | Founder-direct, Telegram response in minutes                |
+| Area                        | iKos                                                    | lole                                                                        |
+| --------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Technology stack            | Older web stack, reports of slow/unreliable performance | Next.js 16, React 19, Supabase Realtime — modern, fast                      |
+| Offline capability          | Limited / unreliable                                    | PowerSync CRDT — 24h verified offline window                                |
+| Guest ordering (QR)         | Not available or basic                                  | Full QR ordering with HMAC security, real-time tracker                      |
+| KDS                         | Basic or absent                                         | 5-station KDS with real-time sync                                           |
+| Analytics                   | Basic reporting                                         | Real-time analytics with TimescaleDB, period comparisons                    |
+| ERCA integration            | Manual or absent                                        | Automated e-invoice submission                                              |
+| API / delivery integrations | Limited                                                 | Full GraphQL Federation — beU Delivery, Deliver Addis, klik, Zmall Delivery |
+| Support                     | Unclear SLA                                             | Founder-direct, Telegram response in minutes                                |
 
 **The iKos competitive play:** Directly address their weaknesses in sales conversations. Ask prospects: "Does your current system work during power outages? Does it submit ERCA invoices automatically? Does your kitchen have a display screen or do they read paper slips?" The answers close the deal.
 

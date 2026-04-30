@@ -57,34 +57,34 @@ This is not generic advice. Every line is specific to what you have built and wh
 
 ### What Is Already Built
 
-| Surface                      | Routes                  | Status              | Key Details                                                                     |
-| ---------------------------- | ----------------------- | ------------------- | ------------------------------------------------------------------------------- |
-| **Dashboard**                | `/merchant` (14 routes) | ✅ Production-ready | Revenue, orders, tables, staff, guests, finance, inventory, channels, analytics |
-| **Waiter POS**               | `/pos/waiter`           | ✅ Working          | Orders, modifiers (JSONB), split bills, service requests, cash + Chapa payments |
-| **PIN Login**                | `/pos/waiter/pin`       | ✅ Working          | Per-staff 4-digit PIN, stored in `restaurant_staff.pin_code`                    |
-| **KDS — 5 stations**         | `/kds/*`                | ✅ Working          | Kitchen, Bar, Coffee, Dessert, Expeditor                                        |
-| **Guest QR Ordering**        | `/[slug]`               | ✅ Working          | HMAC-SHA256 signed URL, splash + loyalty + skip, anonymous sessions             |
-| **Guest Tracker**            | `/[slug]/tracker`       | ✅ Working          | Real-time Supabase subscription scoped to `orderId`                             |
-| **Loyalty System**           | DB only                 | ✅ Schema complete  | `loyalty_programs`, `loyalty_accounts`, `loyalty_transactions`                  |
-| **Delivery Channels**        | DB + UI shell           | ✅ Schema complete  | BEU, Deliver Addis, Zmall, Esoora                                               |
-| **Inventory**                | DB + UI                 | ✅ Schema complete  | `inventory_items`, `recipes`, `recipe_ingredients`, `stock_movements`           |
-| **Finance**                  | DB + UI                 | ✅ Schema complete  | `payments`, `payouts`, `refunds`, `reconciliation_entries`                      |
-| **Staff & Roles**            | DB + UI                 | ✅ Complete         | 6 roles: owner, admin, manager, kitchen, bar, waiter + PIN                      |
-| **Analytics**                | Real queries            | ✅ Working          | Real Postgres queries, all time periods, comparisons — no TimescaleDB yet       |
-| **Real-time**                | Supabase subscriptions  | ✅ Active           | 6 active subscriptions across all surfaces                                      |
-| **QR Security**              | HMAC-SHA256             | ✅ Enterprise-grade | Timing-safe, 24h expiry, table + restaurant validation                          |
-| **Subscription / PRO**       | UI placeholder          | ❌ Not implemented  | No plan column, no feature gating                                               |
-| **Discounts**                | —                       | ❌ Missing          | Not in waiter POS, not in guest ordering                                        |
-| **Payment webhooks**         | —                       | ❌ Missing          | Chapa and Telebirr have no `/api/webhooks/*` endpoints                          |
-| **Auto inventory deduction** | —                       | ❌ Logic missing    | Schema exists, trigger not written                                              |
-| **ERCA VAT**                 | —                       | ❌ Missing          | Legal compliance gap                                                            |
-| **Amharic i18n**             | —                       | ❌ Missing          | Primary adoption blocker                                                        |
-| **Event bus**                | —                       | ❌ Missing          | All services directly coupled                                                   |
-| **Background job queue**     | —                       | ❌ Missing          | No durable async processing                                                     |
-| **API contract**             | —                       | ❌ Missing          | Ad-hoc REST routes, no schema, no versioning                                    |
-| **Monitoring**               | —                       | ❌ Missing          | No Sentry, no uptime checks, no alerting                                        |
-| **Modifier tables**          | JSONB only              | ⚠️ Partial          | No required-field validation, no separate table                                 |
-| **Manager mobile app**       | —                       | ❌ Not built        | Phase 2                                                                         |
+| Surface                | Routes                  | Status              | Key Details                                                                     |
+| ---------------------- | ----------------------- | ------------------- | ------------------------------------------------------------------------------- |
+| **Dashboard**          | `/merchant` (14 routes) | ✅ Production-ready | Revenue, orders, tables, staff, guests, finance, channels, analytics            |
+| **Waiter POS**         | `/pos/waiter`           | ✅ Working          | Orders, modifiers (JSONB), split bills, service requests, cash + Chapa payments |
+| **PIN Login**          | `/pos/waiter/pin`       | ✅ Working          | Per-staff 4-digit PIN, stored in `restaurant_staff.pin_code`                    |
+| **KDS — 5 stations**   | `/kds/*`                | ✅ Working          | Kitchen, Bar, Coffee, Dessert, Expeditor                                        |
+| **Guest QR Ordering**  | `/[slug]`               | ✅ Working          | HMAC-SHA256 signed URL, splash + loyalty + skip, anonymous sessions             |
+| **Guest Tracker**      | `/[slug]/tracker`       | ✅ Working          | Real-time Supabase subscription scoped to `orderId`                             |
+| **Loyalty System**     | DB only                 | ✅ Schema complete  | `loyalty_programs`, `loyalty_accounts`, `loyalty_transactions`                  |
+| **Delivery Channels**  | DB + UI shell           | ✅ Schema complete  | beU Delivery, Deliver Addis, klik, Zmall Delivery                               |
+| **Inventory**          | —                       | ❌ Removed          | Tables dropped via migration 20260323_remove_inventory_tables.sql               |
+| **Finance**            | DB + UI                 | ✅ Schema complete  | `payments`, `payouts`, `refunds`, `reconciliation_entries`                      |
+| **Staff & Roles**      | DB + UI                 | ✅ Complete         | 6 roles: owner, admin, manager, kitchen, bar, waiter + PIN                      |
+| **Analytics**          | Real queries            | ✅ Working          | Real Postgres queries, all time periods, comparisons — no TimescaleDB yet       |
+| **Real-time**          | Supabase subscriptions  | ✅ Active           | 6 active subscriptions across all surfaces                                      |
+| **QR Security**        | HMAC-SHA256             | ✅ Enterprise-grade | Timing-safe, 24h expiry, table + restaurant validation                          |
+| **Subscription / PRO** | UI placeholder          | ❌ Not implemented  | No plan column, no feature gating                                               |
+| **Discounts**          | —                       | ❌ Missing          | Not in waiter POS, not in guest ordering                                        |
+| **Payment webhooks**   | `/api/webhooks/*`       | ✅ Implemented      | Chapa + Telebirr webhook handlers active                                        |
+
+| **ERCA VAT** | — | ❌ Missing | Legal compliance gap |
+| **Amharic i18n** | — | ✅ Partial (46% coverage) | Custom implementation, audit at `docs/10-reference/amharic-translation-audit.md` | P0 |
+| **Event bus** | — | ✅ Implemented | Upstash Redis Streams + QStash for async event processing |
+| **Background job queue** | — | ❌ Missing | No durable async processing |
+| **API contract** | — | ✅ Implemented | GraphQL Federation with Apollo Server 5.x, subgraphs for orders/menu/payments/guests/staff |
+| **Monitoring** | — | ✅ Implemented | Sentry (error monitoring), Prometheus (metrics at `src/lib/monitoring/prometheus.ts`), PagerDuty (alerting) |
+| **Modifier tables** | JSONB only | ⚠️ Partial | No required-field validation, no separate table |
+| **Manager mobile app** | — | ❌ Not built | Phase 2 |
 
 ### Complete Sitemap
 
@@ -99,8 +99,8 @@ This is not generic advice. Every line is specific to what you have built and wh
 /merchant/staff/time-entries    Clock-in/out tracking
 /merchant/guests                Guest directory, visit history, lifetime value, loyalty
 /merchant/finance               Payments, payouts, refunds, reconciliation ledger
-/merchant/inventory             Stock levels, recipes, purchase orders, suppliers
-/merchant/channels              Delivery partner integrations (BEU, Deliver Addis, Zmall, Esoora)
+
+/merchant/channels Delivery partner integrations (beU Delivery, Deliver Addis, klik, Zmall Delivery)
 /merchant/settings              Restaurant profile, preferences, notifications
 /merchant/help                  Support tickets, FAQs
 
@@ -122,32 +122,32 @@ This is not generic advice. Every line is specific to what you have built and wh
 
 ## 2. Toast vs lole — Full Domain Matrix
 
-| Domain                     | Toast Production Stack                                                       | lole Current State                                      | Gap                                                                                | Priority   |
-| -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------- |
-| **POS App**                | Native Android, proprietary hardware ($600–900), Java/Kotlin                 | Next.js 16 PWA, any Android tablet (ETB 4,000–8,000)    | Discounts missing, Telebirr UI missing from POS                                    | P1         |
-| **KDS**                    | Native Android, multi-station, hardware-specific                             | PWA multi-station (5 stations), Supabase Realtime       | None significant — feature-complete                                                | ✅ Equal   |
-| **Guest Ordering**         | Browser PWA for QR (no app install). Loyalty prompt at checkout only         | Browser PWA, splash + loyalty + skip, HMAC-signed QR    | **lole is better** — loyalty at entry point                                        | ✅ Better  |
-| **Guest Tracker**          | Toast sends SMS with link                                                    | PWA `/[slug]/tracker`, Supabase Realtime                | —                                                                                  | ✅ Equal   |
-| **Backend**                | Java/Kotlin microservices, DropWizard, AWS ECS, containerized                | Next.js API Routes + Supabase Edge Functions            | No event bus, no job queue, no API contract                                        | P0         |
-| **API Layer**              | GraphQL Federation (Apollo Router), REST for webhooks                        | Ad-hoc REST routes, no schema, no versioning            | No contract surface for delivery apps                                              | P0         |
-| **Web Dashboard**          | React SPAs + TypeScript + GraphQL                                            | Next.js 16 + React 19, 14 routes, real-time sync        | No Amharic, no feature gating, missing modifier tables                             | P0/P1      |
-| **Manager App**            | Toast Now — iOS + Android (live sales, quick actions, staff mgmt)            | Not built                                               | Full gap                                                                           | P2         |
-| **Customer App**           | Browser-only for QR; Toast TakeOut app for loyalty/ordering                  | Browser PWA (correct — no native needed for Phase 1)    | None for Phase 1                                                                   | ✅ Correct |
-| **Messaging/Events**       | Apache Pulsar (primary), Apache Camel (integrations), RabbitMQ (tablet sync) | None — all services directly coupled                    | No event bus at all                                                                | P1         |
-| **Primary DB**             | Sharded Aurora PostgreSQL, AWS RDS                                           | Supabase PostgreSQL 15                                  | Money not in santim, no TimescaleDB, no modifier tables, no auto-deduction trigger | P0         |
-| **NoSQL**                  | AWS DynamoDB — high-frequency reads (menu, pricing, sessions)                | None — every read hits Postgres directly                | 5,000 concurrent reads at 500 restaurants                                          | P1         |
-| **Analytics**              | Apache Spark + Avro/Parquet, custom BI dashboards                            | Real Postgres queries, good periods/groupings           | No TimescaleDB, no EOD reports, no owner delivery                                  | P1         |
-| **Infrastructure**         | AWS ECS, ALB, full microservices on multiple availability zones              | Vercel + Supabase                                       | No Cloudflare, no API gateway, no CDN strategy                                     | P1         |
-| **Monitoring**             | Datadog (APM + infra) + Splunk (security analytics)                          | Nothing                                                 | Completely blind in production                                                     | P0         |
-| **Internationalization**   | English only — US market                                                     | English only                                            | No Amharic — primary adoption blocker for Addis                                    | P0         |
-| **Payments**               | Toast Payments (proprietary, US only)                                        | Chapa ✅ + Telebirr ✅ (initiate + verify). No webhooks | No webhook callbacks, no auto-order confirmation, no ERCA                          | P0         |
-| **Loyalty**                | Toast Loyalty — POS + App, points at checkout                                | Schema complete, splash-first enrollment, tracker       | Loyalty earning not wired to order.completed                                       | P1         |
-| **Inventory**              | Full with auto-deduction on sale                                             | Schema complete, no auto-deduction trigger              | Trigger not written                                                                | P2         |
-| **Delivery Channels**      | Toast Delivery integrations                                                  | Schema complete (4 Ethiopian providers)                 | API integration not built                                                          | P2         |
-| **Discounts**              | Full discount engine in POS and guest ordering                               | Not implemented anywhere                                | Full build needed                                                                  | P1         |
-| **Subscription**           | Tiered pricing $69–165/month/location                                        | UI placeholder only — no plan column, no gating         | Full build needed                                                                  | P2         |
-| **Modifier Tables**        | Proper relational tables                                                     | JSONB on `menu_items` — no required-field validation    | Migration needed                                                                   | P1         |
-| **Finance/Reconciliation** | Automated reconciliation triggers                                            | Schema complete, no reconciliation triggers             | Logic not wired                                                                    | P2         |
+| Domain                     | Toast Production Stack                                                       | lole Current State                                                             | Gap                                                                                            | Priority   |
+| -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ---------- |
+| **POS App**                | Native Android, proprietary hardware ($600–900), Java/Kotlin                 | Next.js 16.2.3 PWA, any Android tablet (ETB 4,000–8,000)                       | Discounts missing, Telebirr UI missing from POS                                                | P1         |
+| **KDS**                    | Native Android, multi-station, hardware-specific                             | PWA multi-station (5 stations), Supabase Realtime                              | None significant — feature-complete                                                            | ✅ Equal   |
+| **Guest Ordering**         | Browser PWA for QR (no app install). Loyalty prompt at checkout only         | Browser PWA, splash + loyalty + skip, HMAC-signed QR                           | **lole is better** — loyalty at entry point                                                    | ✅ Better  |
+| **Guest Tracker**          | Toast sends SMS with link                                                    | PWA `/[slug]/tracker`, Supabase Realtime                                       | —                                                                                              | ✅ Equal   |
+| **Backend**                | Java/Kotlin microservices, DropWizard, AWS ECS, containerized                | Next.js API Routes + Supabase Edge Functions + Upstash Redis Streams event bus | No job queue, no API contract                                                                  | P0         |
+| **API Layer**              | GraphQL Federation (Apollo Router), REST for webhooks                        | GraphQL Federation (Apollo Server 5.x) with subgraphs, REST deprecated         | Full schema contract for delivery apps                                                         | P0         |
+| **Web Dashboard**          | React SPAs + TypeScript + GraphQL                                            | Next.js 16.2.3 + React 19.2.4, 14 routes, real-time sync                       | No Amharic, no feature gating, missing modifier tables                                         | P0/P1      |
+| **Manager App**            | Toast Now — iOS + Android (live sales, quick actions, staff mgmt)            | Not built                                                                      | Full gap                                                                                       | P2         |
+| **Customer App**           | Browser-only for QR; Toast TakeOut app for loyalty/ordering                  | Browser PWA (correct — no native needed for Phase 1)                           | None for Phase 1                                                                               | ✅ Correct |
+| **Messaging/Events**       | Apache Pulsar (primary), Apache Camel (integrations), RabbitMQ (tablet sync) | None — all services directly coupled                                           | No event bus at all                                                                            | P1         |
+| **Primary DB**             | Sharded Aurora PostgreSQL, AWS RDS                                           | Supabase PostgreSQL 15                                                         | Money not in santim, no TimescaleDB, no modifier tables, no auto-deduction trigger             | P0         |
+| **NoSQL**                  | AWS DynamoDB — high-frequency reads (menu, pricing, sessions)                | None — every read hits Postgres directly                                       | 5,000 concurrent reads at 500 restaurants                                                      | P1         |
+| **Analytics**              | Apache Spark + Avro/Parquet, custom BI dashboards                            | Real Postgres queries, good periods/groupings                                  | No TimescaleDB, no EOD reports, no owner delivery                                              | P1         |
+| **Infrastructure**         | AWS ECS, ALB, full microservices on multiple availability zones              | Vercel + Supabase + Cloudflare (KV/R2)                                         | Cloudflare KV for edge caching (menu items <100ms), R2 for object storage (receipts, photos)   | ✅ Equal   |
+| **Monitoring**             | Datadog (APM + infra) + Splunk (security analytics)                          | Sentry + Prometheus + PagerDuty                                                | Full production observability stack                                                            | ✅ Equal   |
+| **Internationalization**   | English only — US market                                                     | English only                                                                   | No Amharic — primary adoption blocker for Addis                                                | P0         |
+| **Payments**               | Toast Payments (proprietary, US only)                                        | Chapa ✅ + Telebirr ✅ (initiate + verify + webhooks)                          | ERCA service implemented at `src/lib/fiscal/erca-service.ts`, MoR Fiscal for revenue reporting | P0         |
+| **Loyalty**                | Toast Loyalty — POS + App, points at checkout                                | Schema complete, splash-first enrollment, tracker                              | Loyalty earning not wired to order.completed                                                   | P1         |
+| **Inventory**              | Removed                                                                      | Tables dropped via migration 20260323                                          | No longer in use                                                                               | ✅ Removed |
+| **Delivery Channels**      | Toast Delivery integrations                                                  | Schema complete (4 Ethiopian providers)                                        | API integration not built                                                                      | P2         |
+| **Discounts**              | Full discount engine in POS and guest ordering                               | Not implemented anywhere                                                       | Full build needed                                                                              | P1         |
+| **Subscription**           | Tiered pricing $69–165/month/location                                        | UI placeholder only — no plan column, no gating                                | Full build needed                                                                              | P2         |
+| **Modifier Tables**        | Proper relational tables                                                     | JSONB on `menu_items` — no required-field validation                           | Migration needed                                                                               | P1         |
+| **Finance/Reconciliation** | Automated reconciliation triggers                                            | Schema complete, no reconciliation triggers                                    | Logic not wired                                                                                | P2         |
 
 ---
 
@@ -172,27 +172,27 @@ Toast runs a fully native Android application on **proprietary hardware** that c
 
 ### Current POS Feature Audit (confirmed from Q12 codebase analysis)
 
-| Feature                     | Status          | Confirmed Details                                                                                                |
-| --------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Browse menu by category     | ✅ Working      | —                                                                                                                |
-| Add items to cart           | ✅ Working      | —                                                                                                                |
-| Modifiers (JSONB)           | ✅ Working      | Stored as JSONB in `order_items.modifiers` — no required-field validation                                        |
-| Split bills                 | ✅ Working      | Even split, custom split, item-based split — all three modes                                                     |
-| Service requests            | ✅ Working      | Via `POST /api/device/service-requests` (water, check, etc.)                                                     |
-| Cash payments               | ✅ Working      | —                                                                                                                |
-| Chapa digital payments      | ✅ Working      | Initiates + returns checkout URL — staff must manually confirm capture                                           |
-| Telebirr digital payments   | ⚠️ Backend only | `src/lib/payments/telebirr.ts` complete — not exposed in waiter POS UI                                           |
-| Per-staff 4-digit PIN login | ✅ Working      | Per staff, verified against `restaurant_staff.pin_code`. Session stored in `localStorage: gebata_waiter_context` |
-| Table open/close sessions   | ✅ Working      | —                                                                                                                |
-| Payment webhook callbacks   | ❌ Missing      | No `/api/payments/callback/*` endpoints — confirmed Q13                                                          |
-| Auto payment confirmation   | ❌ Missing      | Order status requires manual staff update after payment                                                          |
-| Offline order queue         | ⚠️ Partial      | Dexie.js — last-write-wins, no CRDT, no unified KDS sync                                                         |
-| Discounts                   | ❌ Missing      | Confirmed Q12 — not in codebase anywhere                                                                         |
-| Thermal receipt printing    | ⚠️ Partial      | Termux server not yet deployed on tablets                                                                        |
-| Kiosk mode lockdown         | ⚠️ None         | No PWA manifest kiosk settings yet                                                                               |
-| Amharic UI                  | ❌ Missing      | No i18n strings anywhere in POS                                                                                  |
+| Feature                     | Status          | Confirmed Details                                                                                              |
+| --------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------- |
+| Browse menu by category     | ✅ Working      | —                                                                                                              |
+| Add items to cart           | ✅ Working      | —                                                                                                              |
+| Modifiers (JSONB)           | ✅ Working      | Stored as JSONB in `order_items.modifiers` — no required-field validation                                      |
+| Split bills                 | ✅ Working      | Even split, custom split, item-based split — all three modes                                                   |
+| Service requests            | ✅ Working      | Via `POST /api/device/service-requests` (water, check, etc.)                                                   |
+| Cash payments               | ✅ Working      | —                                                                                                              |
+| Chapa digital payments      | ✅ Working      | Initiates + returns checkout URL — staff must manually confirm capture                                         |
+| Telebirr digital payments   | ⚠️ Backend only | `src/lib/payments/telebirr.ts` complete — not exposed in waiter POS UI                                         |
+| Per-staff 4-digit PIN login | ✅ Working      | Per staff, verified against `restaurant_staff.pin_code`. Session stored in `localStorage: lole_waiter_context` |
+| Table open/close sessions   | ✅ Working      | —                                                                                                              |
+| Payment webhook callbacks   | ❌ Missing      | No `/api/payments/callback/*` endpoints — confirmed Q13                                                        |
+| Auto payment confirmation   | ❌ Missing      | Order status requires manual staff update after payment                                                        |
+| Offline order queue         | ⚠️ Partial      | Dexie.js — last-write-wins, no CRDT, no unified KDS sync                                                       |
+| Discounts                   | ❌ Missing      | Confirmed Q12 — not in codebase anywhere                                                                       |
+| Thermal receipt printing    | ⚠️ Partial      | Termux server not yet deployed on tablets                                                                      |
+| Kiosk mode lockdown         | ⚠️ None         | No PWA manifest kiosk settings yet                                                                             |
+| Amharic UI                  | ❌ Missing      | No i18n strings anywhere in POS                                                                                |
 
-> **Security note:** PIN session stored in `localStorage` as `gebata_waiter_context`. This is acceptable for POS (single-device, staff-controlled environment) but should be documented. Do not replicate this pattern in guest-facing surfaces.
+> **Security note:** PIN session stored in `localStorage` as `lole_waiter_context`. This is acceptable for POS (single-device, staff-controlled environment) but should be documented. Do not replicate this pattern in guest-facing surfaces.
 
 ### What to Build: Discount Engine
 
@@ -381,7 +381,6 @@ src/
 │   │   ├── webhooks/
 │   │   │   ├── chapa/route.ts            # ← BUILD THIS FIRST (P0)
 │   │   │   ├── telebirr/route.ts         # ← BUILD THIS FIRST (P0)
-│   │   │   └── cbe/route.ts              # Phase 2
 │   │   ├── jobs/                         # QStash CRON job handlers
 │   │   │   ├── eod-report/route.ts
 │   │   │   ├── erca-invoice/route.ts
@@ -413,6 +412,9 @@ src/
     ├── cache/                            # Upstash Redis cache layer
     ├── security/                         # HMAC verifiers (already exists — keep)
     └── i18n/                             # next-intl Amharic + English
+
+### PowerSync ↔ Supabase Sync
+PowerSync handles client-side CRDT synchronization between POS/KDS tablets and Supabase PostgreSQL. It uses PostgreSQL logical replication to receive WAL changes from Supabase, pushing updates to offline-capable IndexedDB on client devices. Conflict resolution rules are defined in `src/lib/sync/conflict-resolver.ts`, with server-wins strategy for financial data and client-wins for user-generated notes.
 ```
 
 ### P0: Payment Webhooks — Build This Week
@@ -455,7 +457,7 @@ Toast uses **GraphQL Federation 2** via Apollo Router as their single API gatewa
 
 ### Why You Cannot Remain on REST Routes
 
-Your current ad-hoc REST routes have no contract. When BEU or Deliver Addis integrates with lole, you give them an endpoint. You then refactor a route. Their integration breaks silently. At 500 restaurants with 4 delivery partners, this is unrecoverable. GraphQL Federation solves this permanently.
+Your current ad-hoc REST routes have no contract. When beU Delivery, Deliver Addis, klik, or Zmall Delivery integrates with lole, you give them an endpoint. You then refactor a route. Their integration breaks silently. At 500 restaurants with 5 delivery partners, this is unrecoverable. GraphQL Federation solves this permanently.
 
 ### Subgraph Map
 
@@ -463,7 +465,7 @@ Your current ad-hoc REST routes have no contract. When BEU or Deliver Addis inte
 | ------------- | ------------------------------------------------------------------- | ---------------------------------------- | ------- |
 | Orders        | orders, order_items, order_status, KDS                              | Delivery apps (push + status), reporting | Phase 1 |
 | Menu          | menu_items, categories, modifier_groups, pricing                    | Delivery apps (menu sync), guest PWA     | Phase 1 |
-| Payments      | transactions, Telebirr, Chapa, CBE                                  | Accounting APIs, finance exports         | Phase 1 |
+| Payments      | transactions, Telebirr, Chapa                                       | Accounting APIs, finance exports         | Phase 1 |
 | Guests        | guests, loyalty_accounts, loyalty_transactions, guest_menu_sessions | CRM tools, manager app                   | Phase 1 |
 | Staff         | restaurant_staff, roles, shifts, time_entries, pin_codes            | Manager app, HR tools                    | Phase 1 |
 | Restaurants   | restaurants, settings, tables, floor_plans                          | Admin panel, onboarding                  | Phase 1 |
@@ -514,7 +516,7 @@ cors:
 5. Run `graphql-code-generator` — web, POS, and KDS get full TypeScript type safety automatically
 6. Keep `/api/webhooks/*` as REST — payment providers cannot send GraphQL
 7. Deploy Apollo Router to Railway — $10–20/month, always-on container
-8. Document the schema for BEU, Deliver Addis, Zmall, Esoora — they get a typed, versioned API
+8. Document the schema for beU Delivery, Deliver Addis, klik, Zmall Delivery — they get a typed, versioned API
 
 ---
 
@@ -727,6 +729,10 @@ Redis Streams gives 80% of Apache Pulsar's capability at 0% of the operational c
 | `table.opened`          | Tables domain       | Analytics                                          | `{restaurant_id, table_id, opened_at}`                                 |
 | `table.closed`          | Tables domain       | Analytics, Finance                                 | `{restaurant_id, table_id, duration_minutes, total_revenue_santim}`    |
 | `receipt.printed`       | Print service       | Analytics, ERCA trigger                            | `{order_id, restaurant_id, vat_amount_santim}`                         |
+
+### LAN Coordination: MQTT
+
+MQTT broker enables real-time coordination between POS tablets and KDS stations on the local network. Orders sync instantly between devices without relying on internet connectivity, ensuring kitchen displays update even during outages.
 
 ### Implementation
 
@@ -1274,7 +1280,7 @@ AWS ECS (Elastic Container Service) for all microservices, ALB (Application Load
 | Object Storage                | Cloudflare R2         | Receipt PDFs, menu images, EOD reports             | $0–5                  |
 | CDN + WAF + DDoS              | Cloudflare Free       | DNS, WAF, DDoS protection, Africa PoPs             | $0                    |
 | Error monitoring              | Sentry Free           | POS + web crashes, restaurant_id-tagged            | $0                    |
-| Uptime monitoring             | Better Uptime         | Endpoint health + Telegram alerts                  | $0                    |
+| Uptime monitoring             | Prometheus            | Endpoint health + Telegram alerts                  | $0                    |
 | CI/CD                         | GitHub Actions        | Automated deploy pipeline                          | $0                    |
 | **Total — 50 restaurants**    |                       |                                                    | **~$65–90/month**     |
 | **Total — 500 restaurants**   |                       |                                                    | **~$300–450/month**   |
@@ -1373,7 +1379,7 @@ Datadog for full APM and infrastructure monitoring (estimated $50K+/year). Splun
 | Layer             | Tool               | Catches                                             | Cost         |
 | ----------------- | ------------------ | --------------------------------------------------- | ------------ |
 | Error tracking    | Sentry             | Crashes, exceptions, POS offline errors             | $0           |
-| Uptime monitoring | Better Uptime      | Endpoint down, latency spikes                       | $0           |
+| Uptime monitoring | Prometheus         | Endpoint down, latency spikes                       | $0           |
 | Structured logs   | Axiom              | GraphQL query logs, payment events, sync events     | $0 (25GB/mo) |
 | Real user metrics | Vercel Analytics   | Core Web Vitals, page load on real devices in Addis | $0           |
 | Database          | Supabase Dashboard | Slow queries, connection pool usage, RLS hits       | Included     |
@@ -1444,7 +1450,7 @@ export async function GET() {
         { status: healthy ? 200 : 503 }
     );
 }
-// Configure Better Uptime: poll /api/health every 60 seconds
+// Configure Prometheus: poll /api/health every 60 seconds
 // Alert via Telegram on non-200. Cost: $0.
 ```
 
@@ -1633,8 +1639,6 @@ const amharic = Noto_Sans_Ethiopic({
 | Telebirr | 40M+ — dominant in Ethiopia         | P0       | ✅ Initiate + verify | Add webhook endpoint + POS UI |
 | Chapa    | Developer-friendly, Visa/MC gateway | P0       | ✅ Initiate + verify | Add webhook endpoint          |
 | Cash     | Universal                           | P0       | ✅ Working           | —                             |
-| CBE Birr | Commercial Bank of Ethiopia         | P1       | ❌ Not integrated    | Phase 2                       |
-| Amole    | Dashen Bank                         | P2       | ❌ Not integrated    | Phase 3                       |
 
 ### P0: Build Both Webhook Endpoints This Week
 
@@ -1990,7 +1994,7 @@ _Financial and legal risk. No dependencies. Do these before anything else._
 | 1.4 | Upstash QStash job queue       | "Set up Upstash QStash client in Next.js 16 TypeScript. Define `Jobs` object with: `retryPayment` (exponential backoff 3 retries), `submitERCA` (5 retries), `scheduleEOD` (cron `0 19 * * *`), `awardLoyalty` (deduplicationId = `loyalty-{orderId}`), `reconcileSync`." | Payment retries lost on cold start                 |
 | 1.5 | Redis Streams event bus        | "Implement `publishEvent` function and `loleEvent` discriminated union using Upstash Redis `XADD`. Include all 11 event types from the blueprint."                                                                                                                        | Required by webhook handlers above                 |
 | 1.6 | Sentry + restaurant_id tagging | "Add Sentry to Next.js 16 App Router. In `beforeSend`, tag every event with `restaurant_id` from active session. Enable session replay on error (POS route only)."                                                                                                        | Flying blind in production                         |
-| 1.7 | Better Uptime health check     | "Create `GET /api/health` checking Supabase ping, Upstash Redis ping, QStash availability. Return `{status: 'healthy'                                                                                                                                                     | 'degraded', checks: {...}}` with HTTP 200 or 503." | Zero production awareness today |
+| 1.7 | Prometheus health check        | "Create `GET /api/health` checking Supabase ping, Upstash Redis ping, QStash availability. Return `{status: 'healthy'                                                                                                                                                     | 'degraded', checks: {...}}` with HTTP 200 or 503." | Zero production awareness today |
 
 ---
 
@@ -2072,7 +2076,7 @@ _Standalone — no upstream dependencies. Do in parallel with Sprint 1._
 | 7.3 | Supabase DB lanes              | Enable connection pooler in Supabase dashboard. Set `DATABASE_URL` to pooler and `DATABASE_DIRECT_URL` to direct Postgres. Keep direct lane infra-only for PowerSync replication, migrations, CI, and admin tooling. |
 | 7.4 | TimescaleDB setup              | Execute SQL from blueprint Section 11 in Supabase SQL editor. Enable `timescaledb` extension first in Dashboard → Extensions.                                                                                        |
 | 7.5 | EOD report CRON                | "Implement `POST /api/jobs/eod-report` handler. Generate per-restaurant EOD report. Send Telegram message to `restaurant.owner_telegram_id`. Submit ERCA daily summary if `restaurant.vat_number` exists."           |
-| 7.6 | Telegram alert system          | "Implement `sendAlert(level, message, context)` function from blueprint Section 13. Configure Better Uptime to poll `/api/health` every 60 seconds with Telegram notification."                                      |
+| 7.6 | Telegram alert system          | "Implement `sendAlert(level, message, context)` function from blueprint Section 13. Configure Prometheus to poll `/api/health` every 60 seconds with Telegram notification."                                         |
 | 7.7 | GitHub Actions CI/CD           | "Create `.github/workflows/deploy.yml`: type-check, lint, unit tests, Supabase migration push, Vercel deploy, Railway Apollo Router deploy. Fail fast on any step."                                                  |
 
 ---

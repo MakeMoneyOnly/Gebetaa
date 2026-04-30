@@ -35,7 +35,8 @@
         "security:overrides:check": "node scripts/security/check-unused-overrides.mjs",
         "deps:update": "pnpm update --interactive --latest",
         "deps:clean": "pnpm store prune",
-        "ci:migration-check": "npx tsx scripts/ci/check-migration-conflicts.ts"
+        "ci:migration-check": "npx tsx scripts/ci/check-migration-conflicts.ts",
+        "postinstall": "npx powersync-web copy-assets --output ./public/@powersync"
     },
     "dependencies": {
         "@apollo/server": "^5.5.0",

@@ -1,4 +1,4 @@
-# ገበጣ lole — Security Policy & Threat Model
+# lole — Security Policy & Threat Model
 
 **Version 1.0 · March 2026 · Confidential**
 
@@ -158,13 +158,13 @@ CREATE POLICY "staff_restaurant_isolation" ON orders
 | Threat                      | Risk                                                | Control                                                                                                  | Status       |
 | --------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------ |
 | Payment API key exposure    | `CHAPA_SECRET_KEY` leaked via client bundle or logs | All payment keys in server-side Vercel env only. `NEXT_PUBLIC_` prefix forbidden. Bundle analysis in CI. | ✅           |
-| Card data storage           | lole inadvertently stores raw card numbers          | lole never handles raw card data. Chapa and CBE Birr tokenize all card data on their side.               | ✅ By design |
+| Card data storage           | lole inadvertently stores raw card numbers          | lole never handles raw card data. Chapa tokenize all card data on their side.                            | ✅ By design |
 | Payment amount manipulation | Client sends modified amount to payment endpoint    | Payment amount always calculated server-side from `orders.total_price`. Client input rejected.           | ✅           |
 | Refund fraud                | Staff member processes unauthorized refunds         | Refunds require `manager` or `admin` role. Every refund logged with `initiated_by` staff ID.             | ✅           |
 | Unsourced payment capture   | Payment marked captured without verified webhook    | `status = 'captured'` only set by webhook handler after HMAC verification. No manual override.           | Sprint 1     |
 
 **PCI-DSS Scope note:**
-lole is **outside PCI-DSS scope** for card data because lole never transmits, processes, or stores primary account numbers (PAN). All card tokenization occurs inside Chapa's and CBE Birr's PCI-compliant environments. lole stores only opaque `provider_transaction_id` tokens.
+lole is **outside PCI-DSS scope** for card data because lole never transmits, processes, or stores primary account numbers (PAN). All card tokenization occurs inside Chapa's PCI-compliant environments. lole stores only opaque `provider_transaction_id` tokens.
 
 ---
 

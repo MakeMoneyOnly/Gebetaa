@@ -1,4 +1,4 @@
-# ገበጣ lole — Staff Training Manual
+# lole — Staff Training Manual
 
 **የሰራተኞች የስልጠና መምሪያ**
 **Version 1.0 · March 2026 · Bilingual: Amharic + English**
@@ -37,13 +37,13 @@ Do not lecture. Let them touch the tablet within the first 10 minutes. Waitstaff
 
 ---
 
-### What is lole? / ገበጣ ምንድን ነው?
+### What is lole? / lole ምንድን ነው?
 
 **English:**
 lole is a restaurant management system built in Ethiopia, for Ethiopia. Everything on this tablet — the menu, the orders, the payments — is in Amharic. Your job as a waiter just got simpler: take the order on the tablet, send it to the kitchen, and bring the bill when the guest is ready. No paper. No shouting orders across the restaurant. No mistakes.
 
 **አማርኛ:**
-ገበጣ ለኢትዮጵያ ምግብ ቤቶች የተሰራ የምግብ ቤት አስተዳደር ስርዓት ነው። በዚህ ታብሌት ላይ ያለው ሁሉ — ምናሌ፣ ትዕዛዞች፣ ክፍያዎች — በአማርኛ ነው። እንደ አስተናጋጅ ሥራዎ ቀለል ያለ ሆኗል፦ ትዕዛዙን በታብሌቱ ያስገቡ፣ ወደ ኩሽናው ይላኩ፣ እና ደንበኛው ሲጠይቅ ሂሳቡን ይስጡ። ወረቀት የለም። ጩኸት የለም። ስህተት አይኖርም።
+ለኢትዮጵያ ምግብ ቤቶች የተሰራ የምግብ ቤት አስተዳደር ስርዓት ነው። በዚህ ታብሌት ላይ ያለው ሁሉ — ምናሌ፣ ትዕዛዞች፣ ክፍያዎች — በአማርኛ ነው። እንደ አስተናጋጅ ሥራዎ ቀለል ያለ ሆኗል፦ ትዕዛዙን በታብሌቱ ያስገቡ፣ ወደ ኩሽናው ይላኩ፣ እና ደንበኛው ሲጠይቅ ሂሳቡን ይስጡ። ወረቀት የለም። ጩኸት የለም። ስህተት አይኖርም።
 
 ---
 
@@ -446,7 +446,7 @@ You **cannot** process Telebirr or Chapa payments without internet. Tell guests 
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║         ገበጣ lole — ፈጣን ማጣቀሻ / QUICK REFERENCE        ║
+║         lole — ፈጣን ማጣቀሻ / QUICK REFERENCE        ║
 ╠══════════════════════════════════════════════════════════╣
 ║                                                          ║
 ║  1. ወደ ሥርዓቱ ይግቡ    LOGIN            → PIN ያስገቡ         ║

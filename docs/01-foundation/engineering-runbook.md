@@ -144,7 +144,7 @@ railway up --service apollo-router
 ### Daily (takes 2 minutes)
 
 - [ ] Check Sentry for new error groups
-- [ ] Review Better Uptime status page
+- [ ] Review Prometheus status page
 - [ ] Check Telegram for any overnight alerts
 - [ ] Verify EOD reports sent to Telegram at 10PM
 
@@ -169,7 +169,7 @@ railway up --service apollo-router
 
 ### POS Offline Alert
 
-**Symptom:** Better Uptime fires, or restaurant calls saying POS is broken.
+**Symptom:** Prometheus alert fires, or restaurant calls saying POS is broken.
 
 ```
 1. Check /api/health endpoint manually

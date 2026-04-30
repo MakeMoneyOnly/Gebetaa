@@ -1,4 +1,4 @@
-# ገበጣ lole — Database Schema
+# lole — Database Schema
 
 **Version 1.0 · March 2026**
 

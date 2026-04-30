@@ -1,4 +1,4 @@
-# ገበጣ lole — Disaster Recovery & Business Continuity Plan
+# lole — Disaster Recovery & Business Continuity Plan
 
 **Version 1.0 · March 2026 · Confidential — Engineering & Operations**
 
@@ -50,7 +50,7 @@
 ### Scenario A — Supabase Complete Outage
 
 **Probability:** Low (Supabase Pro SLA: 99.9%)
-**Detection:** Better Uptime alert in <60s · Sentry DB errors spike · Axiom shows `ECONNREFUSED`
+**Detection:** Prometheus alert in <60s · Sentry DB errors spike · Axiom shows `ECONNREFUSED`
 
 **Immediate restaurant impact:**
 
@@ -115,7 +115,7 @@ Step 6 — COMMUNICATE RESOLUTION
 ### Scenario B — Vercel Outage
 
 **Probability:** Very low (Vercel Pro ~99.9%)
-**Detection:** Better Uptime alert in <60s · lole.app returns 5xx or times out
+**Detection:** Prometheus alert in <60s · lole.app returns 5xx or times out
 
 **Restaurant impact:**
 
@@ -165,7 +165,7 @@ PREREQUISITE (do this now, before first restaurant):
 ### Scenario C — Railway (Apollo Router) Outage
 
 **Probability:** Low-medium
-**Detection:** Sentry GraphQL errors · Apollo Studio shows zero traffic · Better Uptime alert
+**Detection:** Sentry GraphQL errors · Apollo Studio shows zero traffic · Prometheus alert
 
 **Restaurant impact:**
 

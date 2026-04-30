@@ -218,7 +218,7 @@ The following analysis details the technical blueprint for the unimplemented das
 
 1. **Core Functional Objectives:** Manage all incoming revenue channels, receipt formatting, and hardware integrations.
 2. **Feature Breakdown:**
-    - **Method Configuration:** Toggles for Cash, Telebirr, CBE Birr, SantimPay, and Card Terminals.
+    - **Method Configuration:** Toggles for Cash, Telebirr, SantimPay, and Card Terminals.
     - **Tax & Surcharge Routing:** VAT configuration and NBE-mandated card surcharges.
     - **Digital Receipts:** SMS/Telegram delivery rules and MoR TIN inclusion.
 3. **Data Requirements:** API keys for 3rd party gateways, Tax percentage integers, Void reason lookup tables.
